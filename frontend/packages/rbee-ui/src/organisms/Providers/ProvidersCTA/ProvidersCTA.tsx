@@ -1,5 +1,5 @@
 import { Button } from '@rbee/ui/atoms/Button'
-import { StatsGrid } from '@rbee/ui/molecules/StatsGrid'
+import { StatsGrid } from '@rbee/ui/molecules'
 import { ArrowRight, Clock, Shield, Wallet, Zap } from 'lucide-react'
 import Image from 'next/image'
 import { gpuEarnings } from '@rbee/ui/assets'

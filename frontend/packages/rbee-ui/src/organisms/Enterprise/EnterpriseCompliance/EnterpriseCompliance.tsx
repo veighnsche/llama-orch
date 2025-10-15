@@ -1,5 +1,5 @@
 import { Button } from '@rbee/ui/atoms/Button'
-import { CompliancePillar } from '@rbee/ui/molecules/CompliancePillar'
+import { CompliancePillar } from '@rbee/ui/molecules'
 import { Globe, Lock, Shield } from 'lucide-react'
 import Image from 'next/image'
 import Link from 'next/link'

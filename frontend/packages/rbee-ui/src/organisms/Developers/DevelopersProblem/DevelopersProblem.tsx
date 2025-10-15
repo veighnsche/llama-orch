@@ -1,4 +1,4 @@
-import { ProblemSection } from '@rbee/ui/organisms/ProblemSection'
+import { ProblemSection } from '@rbee/ui/organisms'
 import { AlertTriangle, DollarSign, Lock } from 'lucide-react'
 
 /**

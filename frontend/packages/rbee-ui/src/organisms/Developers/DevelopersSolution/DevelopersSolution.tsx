@@ -1,4 +1,4 @@
-import { SolutionSection } from '@rbee/ui/organisms/SolutionSection'
+import { SolutionSection } from '@rbee/ui/organisms'
 import { Cpu, DollarSign, Lock, Zap } from 'lucide-react'
 
 export function DevelopersSolution() {

@@ -4,7 +4,7 @@ import { SectionContainer } from '@rbee/ui/molecules'
 import { Badge } from '@rbee/ui/atoms/Badge'
 import { Button } from '@rbee/ui/atoms/Button'
 import { Card } from '@rbee/ui/atoms/Card'
-import { UseCaseCard } from '@rbee/ui/molecules/UseCaseCard'
+import { UseCaseCard } from '@rbee/ui/molecules'
 import { UsecasesGridDark } from '@rbee/ui/icons'
 import { Briefcase, Building, Code, GraduationCap, Home, Laptop, Server, Users } from 'lucide-react'
 

@@ -1,4 +1,4 @@
-import { IconPlate } from '@rbee/ui/molecules/IconPlate'
+import { IconPlate } from '@rbee/ui/molecules'
 import { cn } from '@rbee/ui/utils'
 import { Eye, FileCheck, Lock, type LucideIcon, Shield } from 'lucide-react'
 

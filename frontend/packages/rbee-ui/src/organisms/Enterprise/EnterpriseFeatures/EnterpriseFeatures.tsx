@@ -1,4 +1,4 @@
-import { FeatureCard } from '@rbee/ui/molecules/FeatureCard'
+import { FeatureCard } from '@rbee/ui/molecules'
 import { Globe, Shield, Users, Wrench } from 'lucide-react'
 
 const FEATURES = [

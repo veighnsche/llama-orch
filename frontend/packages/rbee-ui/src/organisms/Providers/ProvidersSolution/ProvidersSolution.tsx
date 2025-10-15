@@ -1,4 +1,4 @@
-import { SolutionSection } from '@rbee/ui/organisms/SolutionSection'
+import { SolutionSection } from '@rbee/ui/organisms'
 import { DollarSign, Shield, Sliders, Zap } from 'lucide-react'
 
 export function ProvidersSolution() {

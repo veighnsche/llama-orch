@@ -1,5 +1,5 @@
 import { Badge } from '@rbee/ui/atoms/Badge'
-import { IconPlate } from '@rbee/ui/molecules/IconPlate'
+import { IconPlate } from '@rbee/ui/molecules'
 import { cn } from '@rbee/ui/utils'
 import Link from 'next/link'
 import type { ComponentType } from 'react'

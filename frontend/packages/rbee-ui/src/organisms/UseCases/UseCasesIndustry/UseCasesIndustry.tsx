@@ -7,7 +7,7 @@ import { Separator } from '@rbee/ui/atoms/Separator'
 import { IndustriesHero } from '@rbee/ui/icons'
 import { Banknote, Building2, Factory, FlaskConical, GraduationCap, Heart, Landmark, Scale, ShieldCheck } from 'lucide-react'
 import { SectionContainer } from '@rbee/ui/molecules'
-import { IndustryCard, type IndustryCardProps } from '@rbee/ui/molecules/IndustryCard'
+import { IndustryCard, type IndustryCardProps } from '@rbee/ui/molecules'
 
 const industries: IndustryCardProps[] = [
 	{

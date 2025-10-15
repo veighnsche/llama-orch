@@ -1,4 +1,4 @@
-import { TestimonialsRail } from '@rbee/ui/organisms/TestimonialsRail'
+import { TestimonialsRail } from '@rbee/ui/organisms'
 
 export function EnterpriseTestimonials() {
 	return (

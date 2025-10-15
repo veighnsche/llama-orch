@@ -1,5 +1,5 @@
 import { Button } from '@rbee/ui/atoms/Button'
-import { IndustryCaseCard } from '@rbee/ui/molecules/IndustryCaseCard'
+import { IndustryCaseCard } from '@rbee/ui/molecules'
 import { Building2, Heart, Scale, Shield } from 'lucide-react'
 import Image from 'next/image'
 import Link from 'next/link'

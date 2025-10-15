@@ -1,4 +1,4 @@
-import { StepsSection } from '@rbee/ui/organisms/StepsSection'
+import { StepsSection } from '@rbee/ui/organisms'
 import { Download, Globe, Settings, Wallet } from 'lucide-react'
 
 export function ProvidersHowItWorks() {

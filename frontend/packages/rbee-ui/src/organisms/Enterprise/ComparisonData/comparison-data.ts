@@ -1,4 +1,4 @@
-import type { Provider, Row } from '../../../molecules/MatrixTable'
+import type { Provider, Row } from '@rbee/ui/molecules'
 
 export const PROVIDERS: Provider[] = [
 	{ key: 'rbee', label: 'rbee (Self-Hosted)', accent: true },

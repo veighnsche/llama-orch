@@ -1,4 +1,4 @@
-import { StepCard } from '@rbee/ui/molecules/StepCard'
+import { StepCard } from '@rbee/ui/molecules'
 import { CheckCircle, Rocket, Server, Shield } from 'lucide-react'
 import Image from 'next/image'
 

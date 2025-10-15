@@ -1,6 +1,6 @@
 // Created by: TEAM-011
 import type { Meta, StoryObj } from '@storybook/react'
-import { Copy, Cut, Paste, Download, Share } from 'lucide-react'
+import { Copy, Download, Share, Scissors, ClipboardPaste } from 'lucide-react'
 
 const meta: Meta = {
 	title: 'Atoms/ContextMenu',
@@ -34,11 +34,11 @@ export const WithIcons: Story = {
 				<span>Copy</span>
 			</div>
 			<div className="flex items-center px-2 py-1.5 text-sm hover:bg-accent rounded-sm cursor-pointer">
-				<Cut className="mr-2 h-4 w-4" />
+				<Scissors className="mr-2 h-4 w-4" />
 				<span>Cut</span>
 			</div>
 			<div className="flex items-center px-2 py-1.5 text-sm hover:bg-accent rounded-sm cursor-pointer">
-				<Paste className="mr-2 h-4 w-4" />
+				<ClipboardPaste className="mr-2 h-4 w-4" />
 				<span>Paste</span>
 			</div>
 		</div>
@@ -68,12 +68,12 @@ export const WithSeparators: Story = {
 				<span>Copy</span>
 			</div>
 			<div className="flex items-center px-2 py-1.5 text-sm hover:bg-accent rounded-sm cursor-pointer">
-				<Cut className="mr-2 h-4 w-4" />
+				<Scissors className="mr-2 h-4 w-4" />
 				<span>Cut</span>
 			</div>
 			<div className="h-px bg-border my-1" />
 			<div className="flex items-center px-2 py-1.5 text-sm hover:bg-accent rounded-sm cursor-pointer">
-				<Paste className="mr-2 h-4 w-4" />
+				<ClipboardPaste className="mr-2 h-4 w-4" />
 				<span>Paste</span>
 			</div>
 			<div className="h-px bg-border my-1" />

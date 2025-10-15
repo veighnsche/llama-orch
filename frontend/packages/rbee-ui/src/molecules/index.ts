@@ -1,39 +1,70 @@
-export * from './ArchitectureDiagram/ArchitectureDiagram'
-export * from './AudienceCard/AudienceCard'
-export * from './BeeArchitecture/BeeArchitecture'
-export * from './BenefitCallout/BenefitCallout'
-export * from './BrandLogo/BrandLogo'
-export * from './BulletListItem/BulletListItem'
-export * from './CheckListItem/CheckListItem'
-export * from './CodeBlock/CodeBlock'
-export * from './ComparisonTableRow/ComparisonTableRow'
-export * from './ComplianceChip/ComplianceChip'
-export * from './CompliancePillar/CompliancePillar'
-export * from './CTAOptionCard/CTAOptionCard'
-export * from './EarningsCard/EarningsCard'
-export * from './FeatureCard/FeatureCard'
-export * from './FloatingKPICard/FloatingKPICard'
-export * from './FooterColumn/FooterColumn'
-export * from './GPUListItem/GPUListItem'
-export * from './IconBox/IconBox'
-export * from './IconPlate/IconPlate'
-export * from './IndustryCaseCard/IndustryCaseCard'
-export * from './MatrixCard/MatrixCard'
-export * from './MatrixTable/MatrixTable'
-export * from './NavLink/NavLink'
-export * from './PledgeCallout/PledgeCallout'
-export * from './PricingTier/PricingTier'
-export * from './ProgressBar/ProgressBar'
-export * from './PulseBadge/PulseBadge'
-export * from './SectionContainer/SectionContainer'
-export * from './SecurityCrate/SecurityCrate'
-export * from './SecurityCrateCard/SecurityCrateCard'
-export * from './StatsGrid/StatsGrid'
-export * from './StepCard/StepCard'
-export * from './StepNumber/StepNumber'
-export * from './TabButton/TabButton'
-export * from './TerminalWindow/TerminalWindow'
-export * from './TestimonialCard/TestimonialCard'
-export * from './ThemeToggle/ThemeToggle'
-export * from './TrustIndicator/TrustIndicator'
-export * from './UseCaseCard/UseCaseCard'
+// Barrel exports for all molecules - organized by category
+
+// Branding
+export * from './Branding/ArchitectureDiagram/ArchitectureDiagram'
+export * from './Branding/BeeArchitecture/BeeArchitecture'
+export * from './Branding/BrandLogo/BrandLogo'
+
+// Content
+export * from './Content/BenefitCallout/BenefitCallout'
+export * from './Content/BulletListItem/BulletListItem'
+export * from './Content/FeatureCard/FeatureCard'
+export * from './Content/PledgeCallout/PledgeCallout'
+export * from './Content/StepCard/StepCard'
+export * from './Content/StepNumber/StepNumber'
+export * from './Content/TestimonialCard/TestimonialCard'
+
+// Developers
+export * from './Developers/CodeBlock/CodeBlock'
+export * from './Developers/TerminalConsole/TerminalConsole'
+export * from './Developers/TerminalWindow/TerminalWindow'
+
+// Enterprise
+export * from './Enterprise/ComplianceChip/ComplianceChip'
+export * from './Enterprise/CompliancePillar/CompliancePillar'
+export * from './Enterprise/CTAOptionCard/CTAOptionCard'
+export * from './Enterprise/SecurityCrate/SecurityCrate'
+export * from './Enterprise/SecurityCrateCard/SecurityCrateCard'
+
+// ErrorHandling
+export * from './ErrorHandling/PlaybookAccordion/PlaybookAccordion'
+export * from './ErrorHandling/StatusKPI/StatusKPI'
+
+// Layout
+export * from './Layout/SectionContainer/SectionContainer'
+
+// Navigation
+export * from './Navigation/FooterColumn/FooterColumn'
+export * from './Navigation/NavLink/NavLink'
+export * from './Navigation/TabButton/TabButton'
+export * from './Navigation/ThemeToggle/ThemeToggle'
+
+// Pricing
+export * from './Pricing/CheckListItem/CheckListItem'
+export * from './Pricing/PricingTier/PricingTier'
+
+// Providers
+export * from './Providers/EarningsCard/EarningsCard'
+export * from './Providers/GPUListItem/GPUListItem'
+
+// Stats
+export * from './Stats/FloatingKPICard/FloatingKPICard'
+export * from './Stats/ProgressBar/ProgressBar'
+export * from './Stats/StatsGrid/StatsGrid'
+
+// Tables
+export * from './Tables/ComparisonTableRow/ComparisonTableRow'
+export * from './Tables/MatrixCard/MatrixCard'
+export * from './Tables/MatrixTable/MatrixTable'
+
+// UI
+export * from './UI/AudienceCard/AudienceCard'
+export * from './UI/IconBox/IconBox'
+export * from './UI/IconPlate/IconPlate'
+export * from './UI/PulseBadge/PulseBadge'
+export * from './UI/TrustIndicator/TrustIndicator'
+
+// UseCases
+export * from './UseCases/IndustryCard/IndustryCard'
+export * from './UseCases/IndustryCaseCard/IndustryCaseCard'
+export * from './UseCases/UseCaseCard/UseCaseCard'

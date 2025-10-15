@@ -1,5 +1,5 @@
-import { StatsGrid } from '@rbee/ui/molecules/StatsGrid'
-import { TestimonialsRail } from '@rbee/ui/organisms/TestimonialsRail'
+import { StatsGrid } from '@rbee/ui/molecules'
+import { TestimonialsRail } from '@rbee/ui/organisms'
 import { Cpu, Star, TrendingUp, Users } from 'lucide-react'
 
 export function SocialProofSection() {

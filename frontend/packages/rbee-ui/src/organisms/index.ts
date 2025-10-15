@@ -1,22 +1,32 @@
 // Barrel exports for all organisms
-export * from './AudienceSelector'
-export * from './CodeExamplesSection'
-export * from './ComparisonSection'
-export * from './CtaSection'
+
+// Home page organisms
+export * from './Home/CodeExamplesSection'
+export * from './Home/ComparisonSection'
+export * from './Home/CtaSection'
+export * from './Home/EmailCapture'
+export * from './Home/FaqSection'
+export * from './Home/FeaturesSection'
+export * from './Home/FeatureTabsSection'
+export * from './Home/HeroSection'
+export * from './Home/HowItWorksSection'
+export * from './Home/PricingSection'
+export * from './Home/ProblemSection'
+export * from './Home/SocialProofSection'
+export * from './Home/TestimonialsRail'
+export * from './Home/TopologyDiagram'
+export * from './Home/WhatIsRbee'
+
+// Shared organisms
+export * from './Shared/AudienceSelector'
+export * from './Shared/Footer'
+export * from './Shared/Navigation'
+
+// Page-specific organisms
 export * from './Developers'
-export * from './EmailCapture'
 export * from './Enterprise'
-export * from './FaqSection'
 export * from './Features'
-export * from './FeaturesSection'
-export * from './FeatureTabsSection'
-export * from './Footer'
-export * from './HeroSection'
-export * from './HowItWorksSection'
-export * from './Navigation'
 export * from './Pricing'
-export * from './PricingSection'
-export * from './ProblemSection'
 export type {
 	Case as ProvidersCase,
 	UseCasesSectionProps as ProvidersUseCasesSectionProps,
@@ -41,25 +51,20 @@ export {
 	UseCasesSection as ProvidersUseCasesSection,
 } from './Providers'
 
-// Standalone organisms (may have same names as Providers sub-components)
-export * from './SocialProofSection'
 export type {
 	EarningRow,
 	Earnings,
 	Feature as SolutionFeature,
 	SolutionSectionProps,
 	Step as SolutionStep,
-} from './SolutionSection'
+} from './Home/SolutionSection'
 
 // Solution section exports Step type which conflicts with StepsSection
-export { HomeSolutionSection, SolutionSection } from './SolutionSection'
-export type { Step as TimelineStep, StepsSectionProps } from './StepsSection'
+export { HomeSolutionSection, SolutionSection } from './Home/SolutionSection'
+export type { Step as TimelineStep, StepsSectionProps } from './Home/StepsSection'
 
 // Steps section exports Step type
-export { StepsSection } from './StepsSection'
-export * from './TechnicalSection'
-export * from './TestimonialsRail'
-export * from './TopologyDiagram'
+export { StepsSection } from './Home/StepsSection'
+export * from './Home/TechnicalSection'
 export * from './UseCases'
 export * from './UseCasesSection'
-export * from './WhatIsRbee'

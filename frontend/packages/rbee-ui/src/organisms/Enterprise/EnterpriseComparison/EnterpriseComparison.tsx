@@ -3,8 +3,8 @@
 import { cn } from '@rbee/ui/utils'
 import { useState } from 'react'
 import { Legend } from '../../../atoms/Legend'
-import { MatrixCard } from '../../../molecules/MatrixCard'
-import { MatrixTable } from '../../../molecules/MatrixTable'
+import { MatrixCard } from '@rbee/ui/molecules'
+import { MatrixTable } from '@rbee/ui/molecules'
 import { FEATURES, PROVIDERS } from '../ComparisonData/comparison-data'
 
 export function EnterpriseComparison() {

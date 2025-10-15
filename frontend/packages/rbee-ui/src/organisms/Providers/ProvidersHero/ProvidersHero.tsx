@@ -2,8 +2,8 @@
 
 import { Badge } from '@rbee/ui/atoms/Badge'
 import { Button } from '@rbee/ui/atoms/Button'
-import { ProgressBar } from '@rbee/ui/molecules/ProgressBar'
-import { StatsGrid } from '@rbee/ui/molecules/StatsGrid'
+import { ProgressBar } from '@rbee/ui/molecules'
+import { StatsGrid } from '@rbee/ui/molecules'
 import { ArrowRight, Clock, DollarSign, Shield, Zap } from 'lucide-react'
 import Link from 'next/link'
 

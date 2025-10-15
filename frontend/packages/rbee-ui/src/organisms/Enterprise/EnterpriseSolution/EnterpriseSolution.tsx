@@ -1,4 +1,4 @@
-import { SolutionSection } from '@rbee/ui/organisms/SolutionSection'
+import { SolutionSection } from '@rbee/ui/organisms'
 import { FileCheck, Lock, Server, Shield } from 'lucide-react'
 import Image from 'next/image'
 

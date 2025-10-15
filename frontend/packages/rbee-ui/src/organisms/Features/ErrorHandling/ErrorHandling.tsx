@@ -2,9 +2,9 @@
 
 import { Badge } from '@rbee/ui/atoms/Badge'
 import { SectionContainer } from '@rbee/ui/molecules'
-import { PlaybookHeader, PlaybookItem } from '@rbee/ui/molecules/PlaybookAccordion'
-import { StatusKPI } from '@rbee/ui/molecules/StatusKPI'
-import { TerminalConsole } from '@rbee/ui/molecules/TerminalConsole'
+import { PlaybookHeader, PlaybookItem } from '@rbee/ui/molecules'
+import { StatusKPI } from '@rbee/ui/molecules'
+import { TerminalConsole } from '@rbee/ui/molecules'
 import { Activity, AlertTriangle, CheckCircle2, Database, Network } from 'lucide-react'
 import { useCallback } from 'react'
 

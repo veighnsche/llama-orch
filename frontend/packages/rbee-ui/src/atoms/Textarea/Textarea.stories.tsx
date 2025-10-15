@@ -1,5 +1,6 @@
 // Created by: TEAM-008
 import type { Meta, StoryObj } from '@storybook/react'
+import { useState } from 'react'
 import { Textarea } from './Textarea'
 
 const meta: Meta<typeof Textarea> = {
@@ -57,7 +58,7 @@ export const Default: Story = {
 
 export const WithCounter: Story = {
 	render: () => {
-		const [value, setValue] = React.useState('')
+		const [value, setValue] = useState('')
 		const maxLength = 500
 
 		return (
