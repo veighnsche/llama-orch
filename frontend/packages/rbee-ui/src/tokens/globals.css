@@ -12,6 +12,7 @@
 
 @import "tailwindcss";
 @import "@repo/tailwind-config";
+@import "./fonts.css";
 @import "./theme-tokens.css";
 
 @source "../**/*.{ts,tsx}";
