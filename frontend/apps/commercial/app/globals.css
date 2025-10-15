@@ -18,3 +18,54 @@
  */
 @source "../app/**/*.{ts,tsx}";
 @source "../components/**/*.{ts,tsx}";
+
+/**
+ * CodeBlock syntax highlighting tokens
+ * Adapts to light/dark mode automatically via CSS variables
+ */
+@layer base {
+	:root {
+		/* Light mode code colors (Night Owl Light palette) */
+		--code-string: #4876d6; /* Blue for strings */
+		--code-variable: #c96765; /* Red for variables */
+		--code-number: #aa0982; /* Magenta for numbers */
+		--code-function: #005cc5; /* Deep blue for functions */
+		--code-punctuation: #994cc3; /* Purple for punctuation */
+		--code-class: #111111; /* Dark for class names */
+		--code-keyword: #0077aa; /* Teal for keywords */
+		--code-property: #0077aa; /* Teal for properties */
+	}
+
+	.dark {
+		/* Dark mode code colors (Night Owl palette) */
+		--code-string: #addb67; /* Green for strings */
+		--code-variable: #d6deeb; /* Light gray for variables */
+		--code-number: #f78c6c; /* Orange for numbers */
+		--code-function: #82aaff; /* Light blue for functions */
+		--code-punctuation: #c792ea; /* Light purple for punctuation */
+		--code-class: #ffcb8b; /* Yellow for class names */
+		--code-keyword: #7fdbca; /* Cyan for keywords */
+		--code-property: #80cbc4; /* Cyan for properties */
+	}
+}
+
+/**
+ * CodeBlock scrollbar styling
+ * Neutral, subtle scrollbars for code blocks
+ */
+pre::-webkit-scrollbar {
+	height: 10px;
+}
+
+pre::-webkit-scrollbar-track {
+	background: var(--secondary);
+}
+
+pre::-webkit-scrollbar-thumb {
+	background: var(--border);
+	border-radius: 999px;
+}
+
+pre::-webkit-scrollbar-thumb:hover {
+	background: var(--muted-foreground);
+}

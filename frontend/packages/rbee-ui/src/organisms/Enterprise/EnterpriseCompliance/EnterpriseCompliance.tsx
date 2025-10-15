@@ -1,5 +1,5 @@
-import { Button } from '@rbee/ui/atoms/Button'
-import { CompliancePillar } from '@rbee/ui/molecules'
+import { Button, Card, CardHeader, CardTitle, CardDescription, CardContent } from '@rbee/ui/atoms'
+import { IconPlate, BulletListItem } from '@rbee/ui/molecules'
 import { Globe, Lock, Shield } from 'lucide-react'
 import Image from 'next/image'
 import Link from 'next/link'
@@ -38,80 +38,119 @@ export function EnterpriseCompliance() {
 				{/* Three Pillars */}
 				<div className="animate-in fade-in-50 mb-12 grid gap-8 [animation-delay:120ms] lg:grid-cols-3">
 					{/* GDPR Pillar */}
-					<CompliancePillar
-						icon={<Globe className="h-6 w-6" aria-hidden="true" />}
-						title="GDPR"
-						subtitle="EU Regulation"
-						checklist={[
-							'7-year audit retention (Art. 30)',
-							'Data access records (Art. 15)',
-							'Erasure tracking (Art. 17)',
-							'Consent management (Art. 7)',
-							'Data residency controls (Art. 44)',
-							'Breach notification (Art. 33)',
-						]}
-						callout={
-							<div className="rounded-lg border border-chart-3/50 bg-chart-3/10 p-4">
-								<div className="mb-2 font-semibold text-chart-3">Compliance Endpoints</div>
-								<div className="space-y-1 font-mono text-xs text-foreground/85">
-									<div>GET /v2/compliance/data-access</div>
-									<div>POST /v2/compliance/data-export</div>
-									<div>POST /v2/compliance/data-deletion</div>
-									<div>GET /v2/compliance/audit-trail</div>
+					<Card
+						className="h-full rounded-2xl border-border bg-card/60 p-8 transition-shadow hover:shadow-lg"
+						aria-labelledby="compliance-gdpr"
+					>
+						<CardHeader className="mb-6 p-0">
+							<div className="flex items-center gap-3">
+								<IconPlate icon={<Globe className="h-6 w-6" />} size="lg" tone="primary" className="shrink-0" />
+								<div>
+									<CardTitle id="compliance-gdpr" className="text-2xl">
+										GDPR
+									</CardTitle>
+									<CardDescription>EU Regulation</CardDescription>
 								</div>
 							</div>
-						}
-					/>
+						</CardHeader>
+						<CardContent className="p-0">
+							<ul className="space-y-3" role="list">
+								<BulletListItem variant="check" title="7-year audit retention (Art. 30)" />
+								<BulletListItem variant="check" title="Data access records (Art. 15)" />
+								<BulletListItem variant="check" title="Erasure tracking (Art. 17)" />
+								<BulletListItem variant="check" title="Consent management (Art. 7)" />
+								<BulletListItem variant="check" title="Data residency controls (Art. 44)" />
+								<BulletListItem variant="check" title="Breach notification (Art. 33)" />
+							</ul>
+							<div className="mt-6">
+								<div className="rounded-lg border border-chart-3/50 bg-chart-3/10 p-4">
+									<div className="mb-2 font-semibold text-chart-3">Compliance Endpoints</div>
+									<div className="space-y-1 font-mono text-xs text-foreground/85">
+										<div>GET /v2/compliance/data-access</div>
+										<div>POST /v2/compliance/data-export</div>
+										<div>POST /v2/compliance/data-deletion</div>
+										<div>GET /v2/compliance/audit-trail</div>
+									</div>
+								</div>
+							</div>
+						</CardContent>
+					</Card>
 
 					{/* SOC2 Pillar */}
-					<CompliancePillar
-						icon={<Shield className="h-6 w-6" aria-hidden="true" />}
-						title="SOC2"
-						subtitle="US Standard"
-						checklist={[
-							'Auditor query API',
-							'32 audit event types',
-							'7-year retention (Type II)',
-							'Tamper-evident hash chains',
-							'Access control logging',
-							'Encryption at rest',
-						]}
-						callout={
-							<div className="rounded-lg border border-chart-3/50 bg-chart-3/10 p-4">
-								<div className="mb-2 font-semibold text-chart-3">Trust Service Criteria</div>
-								<div className="space-y-1 text-xs text-foreground/85">
-									<div>✓ Security (CC1-CC9)</div>
-									<div>✓ Availability (A1.1-A1.3)</div>
-									<div>✓ Confidentiality (C1.1-C1.2)</div>
+					<Card
+						className="h-full rounded-2xl border-border bg-card/60 p-8 transition-shadow hover:shadow-lg"
+						aria-labelledby="compliance-soc2"
+					>
+						<CardHeader className="mb-6 p-0">
+							<div className="flex items-center gap-3">
+								<IconPlate icon={<Shield className="h-6 w-6" />} size="lg" tone="primary" className="shrink-0" />
+								<div>
+									<CardTitle id="compliance-soc2" className="text-2xl">
+										SOC2
+									</CardTitle>
+									<CardDescription>US Standard</CardDescription>
 								</div>
 							</div>
-						}
-					/>
+						</CardHeader>
+						<CardContent className="p-0">
+							<ul className="space-y-3" role="list">
+								<BulletListItem variant="check" title="Auditor query API" />
+								<BulletListItem variant="check" title="32 audit event types" />
+								<BulletListItem variant="check" title="7-year retention (Type II)" />
+								<BulletListItem variant="check" title="Tamper-evident hash chains" />
+								<BulletListItem variant="check" title="Access control logging" />
+								<BulletListItem variant="check" title="Encryption at rest" />
+							</ul>
+							<div className="mt-6">
+								<div className="rounded-lg border border-chart-3/50 bg-chart-3/10 p-4">
+									<div className="mb-2 font-semibold text-chart-3">Trust Service Criteria</div>
+									<div className="space-y-1 text-xs text-foreground/85">
+										<div>✓ Security (CC1-CC9)</div>
+										<div>✓ Availability (A1.1-A1.3)</div>
+										<div>✓ Confidentiality (C1.1-C1.2)</div>
+									</div>
+								</div>
+							</div>
+						</CardContent>
+					</Card>
 
 					{/* ISO 27001 Pillar */}
-					<CompliancePillar
-						icon={<Lock className="h-6 w-6" aria-hidden="true" />}
-						title="ISO 27001"
-						subtitle="International Standard"
-						checklist={[
-							'Incident records (A.16)',
-							'3-year minimum retention',
-							'Access logging (A.9)',
-							'Crypto controls (A.10)',
-							'Ops security (A.12)',
-							'Security policies (A.5)',
-						]}
-						callout={
-							<div className="rounded-lg border border-chart-3/50 bg-chart-3/10 p-4">
-								<div className="mb-2 font-semibold text-chart-3">ISMS Controls</div>
-								<div className="space-y-1 text-xs text-foreground/85">
-									<div>✓ 114 controls implemented</div>
-									<div>✓ Risk assessment framework</div>
-									<div>✓ Continuous monitoring</div>
+					<Card
+						className="h-full rounded-2xl border-border bg-card/60 p-8 transition-shadow hover:shadow-lg"
+						aria-labelledby="compliance-iso27001"
+					>
+						<CardHeader className="mb-6 p-0">
+							<div className="flex items-center gap-3">
+								<IconPlate icon={<Lock className="h-6 w-6" />} size="lg" tone="primary" className="shrink-0" />
+								<div>
+									<CardTitle id="compliance-iso27001" className="text-2xl">
+										ISO 27001
+									</CardTitle>
+									<CardDescription>International Standard</CardDescription>
 								</div>
 							</div>
-						}
-					/>
+						</CardHeader>
+						<CardContent className="p-0">
+							<ul className="space-y-3" role="list">
+								<BulletListItem variant="check" title="Incident records (A.16)" />
+								<BulletListItem variant="check" title="3-year minimum retention" />
+								<BulletListItem variant="check" title="Access logging (A.9)" />
+								<BulletListItem variant="check" title="Crypto controls (A.10)" />
+								<BulletListItem variant="check" title="Ops security (A.12)" />
+								<BulletListItem variant="check" title="Security policies (A.5)" />
+							</ul>
+							<div className="mt-6">
+								<div className="rounded-lg border border-chart-3/50 bg-chart-3/10 p-4">
+									<div className="mb-2 font-semibold text-chart-3">ISMS Controls</div>
+									<div className="space-y-1 text-xs text-foreground/85">
+										<div>✓ 114 controls implemented</div>
+										<div>✓ Risk assessment framework</div>
+										<div>✓ Continuous monitoring</div>
+									</div>
+								</div>
+							</div>
+						</CardContent>
+					</Card>
 				</div>
 
 				{/* Audit Readiness Band */}

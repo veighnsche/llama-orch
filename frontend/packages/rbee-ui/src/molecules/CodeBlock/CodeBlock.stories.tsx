@@ -10,14 +10,23 @@ const meta: Meta<typeof CodeBlock> = {
 			description: {
 				component: `
 ## Overview
-The CodeBlock molecule displays code with syntax highlighting, copy button, optional title, line numbers, and line highlighting.
+The CodeBlock molecule displays code with **Prism-powered syntax highlighting**, adaptive dark/light themes, copy button, optional title, line numbers, and line highlighting.
+
+## Features
+- **Syntax Highlighting**: Uses prism-react-renderer with CSS token-based theming
+- **Theme Switching**: Automatically adapts to dark/light mode via CSS custom properties (no \`dark:\` prefix)
+- **Language Support**: Python, TypeScript, JavaScript, Bash, JSON, YAML, Rust, Go, SQL, and more
+- **Atomic Design**: Reuses Button atom for copy action
+- **Accessibility**: Screen reader announcements for copy feedback
+- **Line Highlighting**: Visual emphasis with border accent
 
 ## Composition
 This molecule is composed of:
 - **Header**: Optional title and language badge
-- **Copy Button**: Click to copy code
-- **Code Area**: Monospace font with optional line numbers
-- **Highlighting**: Optional line highlighting
+- **Copy Button**: Reuses atoms/Button with animated feedback
+- **Code Area**: Prism-tokenized code with theme-aware colors
+- **Line Numbers**: Optional 2-column grid layout
+- **Highlighting**: Optional line highlighting with bg-primary/10 and left border
 
 ## When to Use
 - Code examples
@@ -28,6 +37,9 @@ This molecule is composed of:
 
 ## Used In
 - **FeaturesSection**: Displays code examples for API usage and integration
+
+## Dependencies
+Requires \`prism-react-renderer\` for syntax highlighting. Colors defined via CSS custom properties in \`globals.css\` (\`--code-string\`, \`--code-variable\`, etc.) for automatic light/dark theme adaptation.
         `,
 			},
 		},
@@ -164,7 +176,24 @@ export const AllLanguages: Story = {
 	},
 }
 
-export const WithCopy: Story = {
+export const WithLineNumbers: Story = {
+	args: {
+		code: typescriptCode,
+		language: 'typescript',
+		title: 'Quick Start',
+		copyable: true,
+		showLineNumbers: true,
+	},
+	parameters: {
+		docs: {
+			description: {
+				story: 'CodeBlock with line numbers enabled. Uses a 2-column grid layout for perfect alignment.',
+			},
+		},
+	},
+}
+
+export const WithHighlighting: Story = {
 	args: {
 		code: typescriptCode,
 		language: 'typescript',
@@ -172,6 +201,13 @@ export const WithCopy: Story = {
 		copyable: true,
 		showLineNumbers: true,
 		highlight: [3, 4, 5],
+	},
+	parameters: {
+		docs: {
+			description: {
+				story: 'CodeBlock with line highlighting. Highlighted lines get bg-primary/10 background and a left border accent for emphasis.',
+			},
+		},
 	},
 }
 
