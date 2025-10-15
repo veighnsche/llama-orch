@@ -37,22 +37,22 @@ export function SocialProofSection() {
 					className="animate-in fade-in-50 slide-in-from-bottom-2 delay-300 motion-reduce:animate-none"
 					stats={[
 						{
-							icon: <Users className="h-5 w-5 text-primary" aria-hidden="true" />,
+							icon: Users,
 							value: '500+',
 							label: 'Active Providers',
 						},
 						{
-							icon: <Cpu className="h-5 w-5 text-primary" aria-hidden="true" />,
+							icon: Cpu,
 							value: '2,000+',
 							label: 'GPUs Earning',
 						},
 						{
-							icon: <TrendingUp className="h-5 w-5 text-primary" aria-hidden="true" />,
+							icon: TrendingUp,
 							value: '€180K+',
 							label: 'Paid to Providers',
 						},
 						{
-							icon: <Star className="h-5 w-5 text-primary" aria-hidden="true" />,
+							icon: Star,
 							value: '4.8/5',
 							label: 'Average Rating',
 						},

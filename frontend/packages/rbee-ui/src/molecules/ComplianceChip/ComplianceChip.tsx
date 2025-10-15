@@ -20,7 +20,7 @@ export function ComplianceChip({ icon, children, ariaLabel, className }: Complia
 	return (
 		<div
 			className={cn(
-				'inline-flex items-center gap-1.5 rounded-full border border-border/60 bg-card/40 px-3 py-1.5 text-xs',
+				'inline-flex items-center gap-1.5 rounded-full border/60 bg-card/40 px-3 py-1.5 text-xs',
 				'transition-all duration-200 hover:border-border/80 hover:bg-card/60',
 				className,
 			)}

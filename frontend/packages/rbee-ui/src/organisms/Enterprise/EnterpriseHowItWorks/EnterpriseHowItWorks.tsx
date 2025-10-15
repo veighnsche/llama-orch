@@ -115,19 +115,19 @@ export function EnterpriseHowItWorks() {
 
 							{/* Week chips */}
 							<ol className="space-y-3" role="list">
-								<li className="rounded-xl border border-border bg-background px-3 py-2 transition-colors hover:bg-secondary">
+								<li className="rounded-xl border bg-background px-3 py-2 transition-colors hover:bg-secondary">
 									<div className="text-sm font-semibold text-primary">Week 1-2</div>
 									<div className="text-xs text-muted-foreground">Compliance Assessment</div>
 								</li>
-								<li className="rounded-xl border border-border bg-background px-3 py-2 transition-colors hover:bg-secondary">
+								<li className="rounded-xl border bg-background px-3 py-2 transition-colors hover:bg-secondary">
 									<div className="text-sm font-semibold text-primary">Week 3-4</div>
 									<div className="text-xs text-muted-foreground">Deployment & Configuration</div>
 								</li>
-								<li className="rounded-xl border border-border bg-background px-3 py-2 transition-colors hover:bg-secondary">
+								<li className="rounded-xl border bg-background px-3 py-2 transition-colors hover:bg-secondary">
 									<div className="text-sm font-semibold text-primary">Week 5-6</div>
 									<div className="text-xs text-muted-foreground">Compliance Validation</div>
 								</li>
-								<li className="rounded-xl border border-border bg-background px-3 py-2 transition-colors hover:bg-secondary">
+								<li className="rounded-xl border bg-background px-3 py-2 transition-colors hover:bg-secondary">
 									<div className="text-sm font-semibold text-primary">Week 7</div>
 									<div className="text-xs text-muted-foreground">Production Launch</div>
 								</li>

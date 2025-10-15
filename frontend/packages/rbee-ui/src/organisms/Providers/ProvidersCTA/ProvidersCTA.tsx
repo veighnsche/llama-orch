@@ -79,17 +79,17 @@ export function CTASectionProviders() {
 						columns={3}
 						stats={[
 							{
-								icon: <Clock className="h-4 w-4 text-primary" aria-hidden="true" />,
+								icon: Clock,
 								value: '< 15 minutes',
 								label: 'Setup time',
 							},
 							{
-								icon: <Shield className="h-4 w-4 text-primary" aria-hidden="true" />,
+								icon: Shield,
 								value: '15% platform fee',
 								label: 'You keep 85%',
 							},
 							{
-								icon: <Wallet className="h-4 w-4 text-primary" aria-hidden="true" />,
+								icon: Wallet,
 								value: '€25 minimum',
 								label: 'Weekly payouts',
 							},

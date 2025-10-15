@@ -31,7 +31,7 @@ export function EnterpriseSecurity() {
 				{/* Security Crates Grid */}
 				<div className="animate-in fade-in-50 mb-12 grid gap-8 [animation-delay:120ms] lg:grid-cols-2">
 					<SecurityCrate
-						icon={<Lock className="h-6 w-6" aria-hidden="true" />}
+						icon={Lock}
 						title="auth-min: Zero-Trust Authentication"
 						subtitle="The Trickster Guardians"
 						intro="Constant-time token checks stop CWE-208 leaks. Fingerprints let you log safely. Bind policies block accidental exposure."
@@ -45,7 +45,7 @@ export function EnterpriseSecurity() {
 					/>
 
 					<SecurityCrate
-						icon={<Eye className="h-6 w-6" aria-hidden="true" />}
+						icon={Eye}
 						title="audit-logging: Compliance Engine"
 						subtitle="Legally Defensible Proof"
 						intro="Append-only audit trail with 32 event types. Hash-chain tamper detection. 7-year retention for GDPR."
@@ -59,7 +59,7 @@ export function EnterpriseSecurity() {
 					/>
 
 					<SecurityCrate
-						icon={<Shield className="h-6 w-6" aria-hidden="true" />}
+						icon={Shield}
 						title="input-validation: First Line of Defense"
 						subtitle="Trust No Input"
 						intro="Prevents injection and exhaustion. Validates identifiers, prompts, paths—before execution."
@@ -73,7 +73,7 @@ export function EnterpriseSecurity() {
 					/>
 
 					<SecurityCrate
-						icon={<Server className="h-6 w-6" aria-hidden="true" />}
+						icon={Server}
 						title="secrets-management: Credential Guardian"
 						subtitle="Never in Environment"
 						intro="File-scoped secrets with zeroization and systemd credentials. Timing-safe verification."
@@ -87,7 +87,7 @@ export function EnterpriseSecurity() {
 					/>
 
 					<SecurityCrate
-						icon={<KeyRound className="h-6 w-6" aria-hidden="true" />}
+						icon={KeyRound}
 						title="jwt-guardian: Token Lifecycle Manager"
 						subtitle="Stateless Yet Secure"
 						intro="RS256 signature validation with clock-skew tolerance. Revocation lists and short-lived refresh tokens."
@@ -101,7 +101,7 @@ export function EnterpriseSecurity() {
 					/>
 
 					<SecurityCrate
-						icon={<Clock className="h-6 w-6" aria-hidden="true" />}
+						icon={Clock}
 						title="deadline-propagation: Performance Enforcer"
 						subtitle="Every Millisecond Counts"
 						intro="Propagates time budgets end-to-end. Aborts doomed work to protect SLOs."

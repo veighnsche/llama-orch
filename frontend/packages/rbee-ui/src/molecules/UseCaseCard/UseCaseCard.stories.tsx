@@ -44,12 +44,12 @@ This molecule is composed of:
 				category: 'Content',
 			},
 		},
-		color: {
+		iconTone: {
 			control: 'select',
-			options: ['primary', 'chart-2', 'chart-3', 'chart-4'],
-			description: 'Icon color',
+			options: ['primary', 'muted', 'success', 'warning'],
+			description: 'Icon tone',
 			table: {
-				type: { summary: "'primary' | 'chart-2' | 'chart-3' | 'chart-4'" },
+				type: { summary: "'primary' | 'muted' | 'success' | 'warning'" },
 				category: 'Appearance',
 			},
 		},
@@ -77,9 +77,9 @@ This molecule is composed of:
 				category: 'Content',
 			},
 		},
-		highlights: {
+		tags: {
 			control: 'object',
-			description: 'Key benefits list',
+			description: 'Tag labels',
 			table: {
 				type: { summary: 'string[]' },
 				category: 'Content',
@@ -93,11 +93,11 @@ This molecule is composed of:
 				category: 'Behavior',
 			},
 		},
-		badge: {
-			control: 'text',
-			description: 'Optional badge text',
+		cta: {
+			control: 'object',
+			description: 'Optional CTA link',
 			table: {
-				type: { summary: 'string' },
+				type: { summary: '{ label: string; href: string }' },
 				category: 'Content',
 			},
 		},
@@ -110,47 +110,34 @@ type Story = StoryObj<typeof UseCaseCard>
 export const Default: Story = {
 	args: {
 		icon: MessageSquare,
-		color: 'primary',
+		iconTone: 'primary',
 		title: 'Customer Support Chatbots',
 		scenario: 'Your support team is overwhelmed with repetitive questions, and cloud AI services expose customer data.',
 		solution: 'Deploy a private chatbot that handles common queries 24/7 while keeping all conversations on your infrastructure.',
-		highlights: [
-			'Instant responses to common questions',
-			'Zero customer data leaves your servers',
-			'Scales to handle thousands of conversations',
-		],
+		tags: ['24/7 Support', 'Private', 'Scalable'],
 	},
 }
 
 export const WithIcon: Story = {
 	args: {
 		icon: FileText,
-		color: 'chart-2',
+		iconTone: 'primary',
 		title: 'Document Analysis',
 		scenario: 'Legal teams spend hours reviewing contracts and compliance documents manually.',
 		solution: 'Automate document review with AI that understands legal language and flags potential issues.',
-		highlights: [
-			'Review documents 10x faster',
-			'Identify risks and compliance issues',
-			'Maintain attorney-client privilege',
-		],
-		badge: 'Popular',
+		tags: ['Legal', 'Compliance', 'Fast'],
 	},
 }
 
 export const WithOutcome: Story = {
 	args: {
 		icon: Code,
-		color: 'chart-3',
+		iconTone: 'primary',
 		title: 'Code Generation & Review',
 		scenario: 'Developers need AI assistance but can\'t send proprietary code to external services.',
 		solution: 'Run code-aware LLMs on your infrastructure to assist with development without exposing IP.',
-		highlights: [
-			'Generate boilerplate and tests',
-			'Review code for bugs and security',
-			'Your code never leaves your network',
-			'Supports multiple languages',
-		],
+		outcome: 'Developers get AI assistance without exposing proprietary code.',
+		tags: ['Development', 'Security', 'Multi-language'],
 		anchor: 'code-generation',
 	},
 }
@@ -164,29 +151,20 @@ export const InUseCasesContext: Story = {
 			<div className="grid gap-6 md:grid-cols-2">
 				<UseCaseCard
 					icon={MessageSquare}
-					color="primary"
+					iconTone="primary"
 					title="Customer Support Chatbots"
 					scenario="Your support team is overwhelmed with repetitive questions, and cloud AI services expose customer data."
 					solution="Deploy a private chatbot that handles common queries 24/7 while keeping all conversations on your infrastructure."
-					highlights={[
-						'Instant responses to common questions',
-						'Zero customer data leaves your servers',
-						'Scales to handle thousands of conversations',
-					]}
-					badge="Most Popular"
+					tags={['24/7 Support', 'Private', 'Scalable']}
 					anchor="chatbots"
 				/>
 				<UseCaseCard
 					icon={Search}
-					color="chart-4"
+					iconTone="primary"
 					title="Semantic Search"
 					scenario="Traditional keyword search misses relevant documents and frustrates users."
 					solution="Implement AI-powered semantic search that understands meaning, not just keywords."
-					highlights={[
-						'Find documents by meaning, not exact words',
-						'Works across multiple languages',
-						'Private embeddings stay on your servers',
-					]}
+					tags={['Search', 'Multilingual', 'Private']}
 					anchor="search"
 				/>
 			</div>

@@ -84,7 +84,7 @@ export function TestimonialsSection({ title, subtitle, testimonials, stats, id, 
 								key={index}
 								tabIndex={0}
 								className={cn(
-									'rounded-xl border border-border/80 bg-card p-6 transition hover:bg-card/80',
+									'rounded-xl border/80 bg-card p-6 transition hover:bg-card/80',
 									'focus-visible:ring-2 focus-visible:ring-primary/40 focus-visible:outline-none',
 									'motion-safe:animate-in motion-safe:fade-in motion-safe:slide-in-from-bottom-2 motion-safe:duration-400',
 								)}

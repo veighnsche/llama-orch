@@ -172,7 +172,7 @@ export function ComparisonSection() {
 					{features.map((feature, index) => (
 						<div
 							key={feature.name}
-							className="bg-card border border-border rounded-xl p-4 space-y-3 animate-in slide-in-from-bottom-2 duration-400"
+							className="bg-card border rounded-xl p-4 space-y-3 animate-in slide-in-from-bottom-2 duration-400"
 							style={{ animationDelay: `${index * 100}ms` }}
 						>
 							<h3 className="font-semibold text-card-foreground text-sm">{feature.name}</h3>

@@ -85,7 +85,7 @@ export function HowItWorksSection({ title, subtitle, steps, id, className }: How
 										)}
 
 										{step.block.kind === 'note' && (
-											<div className="rounded-lg border border-border bg-card p-4 text-sm text-muted-foreground">
+											<div className="rounded-lg border bg-card p-4 text-sm text-muted-foreground">
 												{step.block.content}
 											</div>
 										)}

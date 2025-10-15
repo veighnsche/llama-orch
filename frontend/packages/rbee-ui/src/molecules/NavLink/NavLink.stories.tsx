@@ -99,7 +99,7 @@ export const Default: Story = {
 
 export const Active: Story = {
 	render: () => (
-		<div className="flex gap-6 p-4 bg-card rounded-lg border border-border">
+		<div className="flex gap-6 p-4 bg-card rounded-lg border">
 			<NavLink href="/" variant="default">
 				Home
 			</NavLink>
@@ -128,7 +128,7 @@ export const WithIcon: Story = {
 		<div className="space-y-4">
 			<div>
 				<h3 className="text-sm font-semibold mb-3">Desktop Navigation</h3>
-				<div className="flex gap-6 p-4 bg-card rounded-lg border border-border">
+				<div className="flex gap-6 p-4 bg-card rounded-lg border">
 					<NavLink href="/" variant="default">
 						Home
 					</NavLink>
@@ -148,7 +148,7 @@ export const WithIcon: Story = {
 			</div>
 			<div>
 				<h3 className="text-sm font-semibold mb-3">Mobile Navigation</h3>
-				<div className="flex flex-col gap-4 p-4 bg-card rounded-lg border border-border">
+				<div className="flex flex-col gap-4 p-4 bg-card rounded-lg border">
 					<NavLink href="/" variant="mobile">
 						Home
 					</NavLink>
@@ -181,7 +181,7 @@ export const InNavigationContext: Story = {
 	render: () => (
 		<div className="w-full">
 			<div className="mb-4 text-sm text-muted-foreground">Example: NavLink in Navigation component</div>
-			<div className="w-full bg-card rounded-lg border border-border">
+			<div className="w-full bg-card rounded-lg border">
 				<div className="flex items-center justify-between p-4">
 					<div className="flex items-center gap-3">
 						<div className="font-bold text-lg">rbee</div>

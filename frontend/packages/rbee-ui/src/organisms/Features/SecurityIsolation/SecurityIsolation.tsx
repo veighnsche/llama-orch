@@ -11,7 +11,7 @@ export function SecurityIsolation() {
 		>
 			<div className="max-w-6xl mx-auto space-y-8">
 				{/* Block 1: Crate Lattice */}
-				<div className="rounded-2xl border border-border bg-card p-6 md:p-8 animate-in fade-in slide-in-from-bottom-2">
+				<div className="rounded-2xl border bg-card p-6 md:p-8 animate-in fade-in slide-in-from-bottom-2">
 					<div className="flex items-start gap-3 mb-6">
 						<IconPlate icon={Shield} tone="chart-2" size="md" shape="rounded" />
 						<div>
@@ -24,27 +24,27 @@ export function SecurityIsolation() {
 
 					{/* Crate lattice grid */}
 					<div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
-						<div className="group rounded-lg bg-background border border-border p-4 transition-colors hover:border-chart-2/50">
+						<div className="group rounded-lg bg-background border p-4 transition-colors hover:border-chart-2/50">
 							<div className="font-semibold text-foreground mb-1">auth-min</div>
 							<p className="text-sm text-muted-foreground">Timing-safe tokens, zero-trust auth.</p>
 						</div>
 
-						<div className="group rounded-lg bg-background border border-border p-4 transition-colors hover:border-chart-3/50">
+						<div className="group rounded-lg bg-background border p-4 transition-colors hover:border-chart-3/50">
 							<div className="font-semibold text-foreground mb-1">audit-logging</div>
 							<p className="text-sm text-muted-foreground">Append-only logs, 7-year retention.</p>
 						</div>
 
-						<div className="group rounded-lg bg-background border border-border p-4 transition-colors hover:border-primary/50">
+						<div className="group rounded-lg bg-background border p-4 transition-colors hover:border-primary/50">
 							<div className="font-semibold text-foreground mb-1">input-validation</div>
 							<p className="text-sm text-muted-foreground">Injection prevention, schema validation.</p>
 						</div>
 
-						<div className="group rounded-lg bg-background border border-border p-4 transition-colors hover:border-amber-500/50">
+						<div className="group rounded-lg bg-background border p-4 transition-colors hover:border-amber-500/50">
 							<div className="font-semibold text-foreground mb-1">secrets-management</div>
 							<p className="text-sm text-muted-foreground">Encrypted storage, rotation, KMS-friendly.</p>
 						</div>
 
-						<div className="group rounded-lg bg-background border border-border p-4 transition-colors hover:border-chart-2/50">
+						<div className="group rounded-lg bg-background border p-4 transition-colors hover:border-chart-2/50">
 							<div className="font-semibold text-foreground mb-1">deadline-propagation</div>
 							<p className="text-sm text-muted-foreground">Timeouts, cleanup, cascading shutdown.</p>
 						</div>
@@ -53,7 +53,7 @@ export function SecurityIsolation() {
 
 				{/* Block 2: Process Isolation */}
 				<div className="grid md:grid-cols-2 gap-6 animate-in fade-in slide-in-from-bottom-2 delay-100">
-					<div className="rounded-2xl border border-border bg-card p-6">
+					<div className="rounded-2xl border bg-card p-6">
 						<div className="flex items-start gap-3 mb-4">
 							<IconPlate icon={Lock} tone="chart-3" size="sm" shape="rounded" />
 							<div>
@@ -79,7 +79,7 @@ export function SecurityIsolation() {
 						</div>
 					</div>
 
-					<div className="rounded-2xl border border-border bg-card p-6">
+					<div className="rounded-2xl border bg-card p-6">
 						<div className="flex items-start gap-3 mb-4">
 							<IconPlate icon={Shield} tone="chart-2" size="sm" shape="rounded" />
 							<div>

@@ -110,7 +110,7 @@ export function ProblemSection({
 
 			{/* CTA Banner */}
 			{(ctaCopy || ctaPrimary || ctaSecondary) && (
-				<div className="mt-10 rounded-2xl border border-border bg-card/60 p-6 text-center sm:mt-12 sm:p-7 animate-in fade-in slide-in-from-bottom-2 motion-reduce:animate-none delay-300">
+				<div className="mt-10 rounded-2xl border bg-card/60 p-6 text-center sm:mt-12 sm:p-7 animate-in fade-in slide-in-from-bottom-2 motion-reduce:animate-none delay-300">
 					{ctaCopy && <p className="text-balance text-lg font-medium text-foreground">{ctaCopy}</p>}
 					<div className="mt-4 flex flex-col items-center gap-3 sm:mt-5 sm:flex-row sm:justify-center">
 						{ctaPrimary && (

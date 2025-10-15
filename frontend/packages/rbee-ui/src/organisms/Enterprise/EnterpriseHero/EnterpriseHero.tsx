@@ -142,7 +142,7 @@ export function EnterpriseHero() {
 					<div className="animate-in fade-in-50 slide-in-from-right-2 flex items-center justify-center pb-12 [animation-delay:150ms]">
 						<div className="relative w-full max-w-lg lg:sticky lg:top-24">
 							{/* Immutable Audit Trail Console */}
-							<div className="rounded-xl border border-border bg-card p-6 shadow-2xl">
+							<div className="rounded-xl border bg-card p-6 shadow-2xl">
 								{/* Header */}
 								<div className="mb-4 flex items-center justify-between">
 									<div className="flex items-center gap-2">
@@ -180,7 +180,7 @@ export function EnterpriseHero() {
 									{auditEvents.map((log, i) => (
 										<li
 											key={i}
-											className="rounded-lg border border-border bg-background p-3"
+											className="rounded-lg border bg-background p-3"
 											aria-label={`${log.event} by ${log.user} at ${log.displayTime} – ${log.status}`}
 										>
 											<div className="mb-1 flex items-center justify-between">

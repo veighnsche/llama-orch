@@ -190,7 +190,7 @@ export const InUseCaseContext: Story = {
 				<p className="text-muted-foreground">Common scenarios for private LLM hosting</p>
 			</div>
 			<div className="space-y-4">
-				<div className="flex items-start gap-4 p-4 rounded-lg border border-border bg-card">
+				<div className="flex items-start gap-4 p-4 rounded-lg border bg-card">
 					<IconPlate icon={Shield} tone="primary" size="md" />
 					<div>
 						<h3 className="font-semibold mb-1">Healthcare Data Processing</h3>
@@ -199,7 +199,7 @@ export const InUseCaseContext: Story = {
 						</p>
 					</div>
 				</div>
-				<div className="flex items-start gap-4 p-4 rounded-lg border border-border bg-card">
+				<div className="flex items-start gap-4 p-4 rounded-lg border bg-card">
 					<IconPlate icon={Check} tone="success" size="md" />
 					<div>
 						<h3 className="font-semibold mb-1">Legal Document Analysis</h3>
@@ -208,7 +208,7 @@ export const InUseCaseContext: Story = {
 						</p>
 					</div>
 				</div>
-				<div className="flex items-start gap-4 p-4 rounded-lg border border-border bg-card">
+				<div className="flex items-start gap-4 p-4 rounded-lg border bg-card">
 					<IconPlate icon={Zap} tone="primary" size="md" />
 					<div>
 						<h3 className="font-semibold mb-1">Real-Time Customer Support</h3>

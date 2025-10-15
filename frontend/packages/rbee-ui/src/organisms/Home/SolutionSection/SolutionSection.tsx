@@ -96,7 +96,7 @@ export function SolutionSection({
 				{/* Feature Tiles */}
 				<div className="animate-in fade-in-50 mb-12 mt-12 grid gap-6 [animation-delay:100ms] md:grid-cols-2 lg:grid-cols-4">
 					{features.map((feature, idx) => (
-						<div key={idx} className="flex h-full items-start gap-4 rounded-2xl border border-border bg-card/50 p-6">
+						<div key={idx} className="flex h-full items-start gap-4 rounded-2xl border bg-card/50 p-6">
 							<div className="flex-shrink-0 rounded-xl bg-primary/10 p-3 text-primary">{feature.icon}</div>
 							<div className="flex-1">
 								<div className="mb-1 flex items-start justify-between gap-2">
@@ -116,7 +116,7 @@ export function SolutionSection({
 				{/* Timeline + Aside */}
 				<div className="grid gap-8 lg:grid-cols-[1.2fr_0.8fr] lg:gap-12">
 					{/* Steps Card */}
-					<div className="animate-in fade-in-50 rounded-2xl border border-border bg-card/40 p-6 [animation-delay:150ms] md:p-8">
+					<div className="animate-in fade-in-50 rounded-2xl border bg-card/40 p-6 [animation-delay:150ms] md:p-8">
 						<h3 className="mb-6 text-2xl font-bold">How It Works</h3>
 						<ol className="space-y-6" role="list">
 							{steps.map((step, idx) => (
@@ -142,7 +142,7 @@ export function SolutionSection({
 						aside
 					) : earnings ? (
 						<div className="animate-in fade-in-50 slide-in-from-right-2 [animation-delay:200ms] lg:sticky lg:top-24 lg:self-start">
-							<div className="rounded-2xl border border-border bg-card p-6">
+							<div className="rounded-2xl border bg-card p-6">
 								<div className="mb-4 text-sm font-semibold text-foreground">
 									{earnings.title || 'Compliance Metrics'}
 								</div>

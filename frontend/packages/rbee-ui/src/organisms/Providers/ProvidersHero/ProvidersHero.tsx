@@ -47,17 +47,17 @@ export function ProvidersHero() {
 							className="mb-6"
 							stats={[
 								{
-									icon: <DollarSign className="h-4 w-4 text-primary" />,
+									icon: DollarSign,
 									value: '€50–200',
 									label: 'per GPU / month',
 								},
 								{
-									icon: <Clock className="h-4 w-4 text-primary" />,
+									icon: Clock,
 									value: '24/7',
 									label: 'Passive income',
 								},
 								{
-									icon: <Shield className="h-4 w-4 text-primary" />,
+									icon: Shield,
 									value: '100%',
 									label: 'Secure payouts',
 								},
@@ -97,7 +97,7 @@ export function ProvidersHero() {
 							<div className="absolute -inset-4 rounded-2xl bg-primary/20 blur-3xl" />
 
 							{/* Card shell */}
-							<div className="relative rounded-2xl border border-border bg-card/70 p-6 shadow-[0_10px_40px_-12px_rgb(0_0_0_/_0.35)] backdrop-blur">
+							<div className="relative rounded-2xl border bg-card/70 p-6 shadow-[0_10px_40px_-12px_rgb(0_0_0_/_0.35)] backdrop-blur">
 								{/* Card header */}
 								<div className="mb-5 flex items-center justify-between">
 									<div className="text-sm font-medium text-muted-foreground">Your Earnings Dashboard</div>
@@ -125,11 +125,11 @@ export function ProvidersHero() {
 
 								{/* KPIs row */}
 								<div className="mb-6 grid grid-cols-2 gap-3">
-									<div className="rounded-lg border border-border bg-background/70 p-3">
+									<div className="rounded-lg border bg-background/70 p-3">
 										<div className="mb-0.5 text-xs uppercase tracking-wide text-muted-foreground">Total Hours</div>
 										<div className="tabular-nums text-3xl font-bold text-foreground">487</div>
 									</div>
-									<div className="rounded-lg border border-border bg-background/70 p-3">
+									<div className="rounded-lg border bg-background/70 p-3">
 										<div className="mb-0.5 text-xs uppercase tracking-wide text-muted-foreground">Avg Rate</div>
 										<div className="tabular-nums text-3xl font-bold text-foreground">€0.32/hr</div>
 									</div>
@@ -139,7 +139,7 @@ export function ProvidersHero() {
 								<div className="space-y-2">
 									<div className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Your GPUs</div>
 
-									<div className="group flex cursor-pointer items-center justify-between rounded-lg border border-border bg-background/50 p-3 transition-all hover:translate-x-0.5 hover:bg-background/70">
+									<div className="group flex cursor-pointer items-center justify-between rounded-lg border bg-background/50 p-3 transition-all hover:translate-x-0.5 hover:bg-background/70">
 										<div className="flex items-center gap-2.5">
 											<div className="h-2 w-2 rounded-full bg-emerald-400" />
 											<div>
@@ -153,7 +153,7 @@ export function ProvidersHero() {
 										</div>
 									</div>
 
-									<div className="group flex cursor-pointer items-center justify-between rounded-lg border border-border bg-background/50 p-3 transition-all hover:translate-x-0.5 hover:bg-background/70">
+									<div className="group flex cursor-pointer items-center justify-between rounded-lg border bg-background/50 p-3 transition-all hover:translate-x-0.5 hover:bg-background/70">
 										<div className="flex items-center gap-2.5">
 											<div className="h-2 w-2 rounded-full bg-emerald-400" />
 											<div>

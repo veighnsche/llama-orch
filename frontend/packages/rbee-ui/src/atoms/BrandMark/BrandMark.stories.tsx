@@ -109,7 +109,7 @@ export const InBrandLogo: Story = {
 	render: () => (
 		<div className="flex flex-col gap-6 p-8">
 			<div className="text-sm text-muted-foreground">Example: BrandMark is used inside BrandLogo molecule</div>
-			<div className="flex items-center gap-3 rounded-lg border border-border bg-card p-4">
+			<div className="flex items-center gap-3 rounded-lg border bg-card p-4">
 				<BrandMark size="md" />
 				<span className="text-xl font-bold text-foreground">rbee</span>
 			</div>

@@ -43,7 +43,7 @@ export function EnterpriseCompliance() {
 						aria-labelledby="compliance-gdpr"
 					>
 						<IconCardHeader
-							icon={<Globe className="h-6 w-6" />}
+							icon={Globe}
 							title="GDPR"
 							subtitle="EU Regulation"
 							titleId="compliance-gdpr"
@@ -77,7 +77,7 @@ export function EnterpriseCompliance() {
 						aria-labelledby="compliance-soc2"
 					>
 						<IconCardHeader
-							icon={<Shield className="h-6 w-6" />}
+							icon={Shield}
 							title="SOC2"
 							subtitle="US Standard"
 							titleId="compliance-soc2"
@@ -110,7 +110,7 @@ export function EnterpriseCompliance() {
 						aria-labelledby="compliance-iso27001"
 					>
 						<IconCardHeader
-							icon={<Lock className="h-6 w-6" />}
+							icon={Lock}
 							title="ISO 27001"
 							subtitle="International Standard"
 							titleId="compliance-iso27001"

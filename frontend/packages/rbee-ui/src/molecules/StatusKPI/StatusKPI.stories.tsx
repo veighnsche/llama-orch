@@ -146,7 +146,7 @@ export const InErrorHandlingContext: Story = {
 			<div className="mb-4 text-sm text-muted-foreground">
 				Example: StatusKPI in ErrorHandling organism
 			</div>
-			<div className="rounded-2xl border border-border bg-card p-6">
+			<div className="rounded-2xl border bg-card p-6">
 				<h3 className="text-xl font-semibold text-foreground mb-4">System Health</h3>
 				<div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
 					<StatusKPI icon={CheckCircle} color="chart-3" label="Uptime" value="99.9%" />

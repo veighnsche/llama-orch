@@ -231,7 +231,7 @@ export function FAQSection({
 							</div>
 
 							{/* Toolbar */}
-							<div className="space-y-4 rounded-lg border border-border bg-card/60 backdrop-blur-sm p-4 shadow-sm animate-fade-in">
+							<div className="space-y-4 rounded-lg border bg-card/60 backdrop-blur-sm p-4 shadow-sm animate-fade-in">
 								<div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
 									<div className="relative flex-1">
 										<SearchIcon className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground pointer-events-none" />
@@ -271,7 +271,7 @@ export function FAQSection({
 
 							{/* FAQ List */}
 							{filteredFAQs.length === 0 ? (
-								<div className="rounded-lg border border-border bg-card/60 backdrop-blur-sm p-8 text-center shadow-sm animate-fade-in">
+								<div className="rounded-lg border bg-card/60 backdrop-blur-sm p-8 text-center shadow-sm animate-fade-in">
 									<p className="text-muted-foreground">
 										No matches. Try keywords like <span className="font-medium">models</span>,{' '}
 										<span className="font-medium">Rust</span>, or <span className="font-medium">migrate</span>.
@@ -295,7 +295,7 @@ export function FAQSection({
 													<AccordionItem
 														key={item.value}
 														value={item.value}
-														className="rounded-lg border border-border bg-card/60 backdrop-blur-sm shadow-sm transition hover:shadow-md animate-fade-in px-6 !border-b"
+														className="rounded-lg border bg-card/60 backdrop-blur-sm shadow-sm transition hover:shadow-md animate-fade-in px-6 !border-b"
 													>
 														<AccordionTrigger className="text-left text-base font-semibold text-card-foreground hover:no-underline focus-visible:ring-1 focus-visible:ring-ring/50">
 															{item.question}
@@ -315,7 +315,7 @@ export function FAQSection({
 						{/* Right Column: Support Card */}
 						{showSupportCard && (
 							<aside className="hidden md:block md:col-span-1">
-								<div className="sticky top-24 rounded-xl border border-border bg-card p-5 shadow-sm animate-fade-in space-y-4">
+								<div className="sticky top-24 rounded-xl border bg-card p-5 shadow-sm animate-fade-in space-y-4">
 									{supportCardImage && (
 										<Image
 											src={supportCardImage}

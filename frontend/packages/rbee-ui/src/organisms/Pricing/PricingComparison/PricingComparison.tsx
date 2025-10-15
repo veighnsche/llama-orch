@@ -208,7 +208,7 @@ export function PricingComparison({ lastUpdated }: PricingComparisonProps) {
 				</div>
 
 				{/* Desktop Table */}
-				<Card className="rounded-xl border border-border bg-card shadow-sm overflow-hidden hidden md:block p-0">
+				<Card className="rounded-xl border bg-card shadow-sm overflow-hidden hidden md:block p-0">
 					<div className="overflow-x-auto">
 						<table className="w-full">
 							<caption className="sr-only">

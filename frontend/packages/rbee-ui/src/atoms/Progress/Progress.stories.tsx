@@ -189,7 +189,7 @@ export const CustomSizes: Story = {
 
 export const InMultiStepForm: Story = {
 	render: () => (
-		<div className="w-full max-w-2xl p-6 border border-border rounded-lg">
+		<div className="w-full max-w-2xl p-6 border rounded-lg">
 			<div className="mb-6">
 				<h3 className="text-lg font-semibold mb-2">Deploy Your Model</h3>
 				<p className="text-sm text-muted-foreground">Step 2 of 4: Configure Resources</p>

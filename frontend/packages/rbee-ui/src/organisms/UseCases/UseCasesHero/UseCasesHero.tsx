@@ -14,7 +14,7 @@ export function UseCasesHero() {
 				<div className="grid gap-10 lg:grid-cols-2 lg:items-center">
 					{/* Left: copy stack */}
 					<div className="max-w-2xl animate-in fade-in-50 slide-in-from-left-4">
-						<div className="mb-4 inline-flex items-center gap-2 rounded-full border border-border/60 bg-secondary px-3 py-1 text-sm text-secondary-foreground">
+						<div className="mb-4 inline-flex items-center gap-2 rounded-full border/60 bg-secondary px-3 py-1 text-sm text-secondary-foreground">
 							<span className="font-medium">OpenAI-compatible</span>
 							<span className="text-muted-foreground"> • your hardware, your rules</span>
 						</div>
@@ -44,19 +44,19 @@ export function UseCasesHero() {
 							<div className="sm:ml-4 flex flex-wrap gap-2">
 								<a
 									href="#developers"
-									className="inline-flex items-center rounded-full border border-border/60 bg-card px-3 py-1 text-sm text-foreground hover:bg-accent/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring transition-colors"
+									className="inline-flex items-center rounded-full border/60 bg-card px-3 py-1 text-sm text-foreground hover:bg-accent/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring transition-colors"
 								>
 									Developers
 								</a>
 								<a
 									href="#enterprise"
-									className="inline-flex items-center rounded-full border border-border/60 bg-card px-3 py-1 text-sm text-foreground hover:bg-accent/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring transition-colors"
+									className="inline-flex items-center rounded-full border/60 bg-card px-3 py-1 text-sm text-foreground hover:bg-accent/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring transition-colors"
 								>
 									Enterprise
 								</a>
 								<a
 									href="#homelab"
-									className="inline-flex items-center rounded-full border border-border/60 bg-card px-3 py-1 text-sm text-foreground hover:bg-accent/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring transition-colors"
+									className="inline-flex items-center rounded-full border/60 bg-card px-3 py-1 text-sm text-foreground hover:bg-accent/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring transition-colors"
 								>
 									Homelab
 								</a>
@@ -77,7 +77,7 @@ export function UseCasesHero() {
 
 					{/* Right: visual/story block */}
 					<div className="relative max-lg:order-first animate-in fade-in-50 slide-in-from-right-4">
-						<div className="rounded-2xl border border-border/60 bg-card/70 p-3 backdrop-blur">
+						<div className="rounded-2xl border/60 bg-card/70 p-3 backdrop-blur">
 							<Image
 								src={useCasesHero}
 								width={1080}

@@ -62,7 +62,7 @@ export function ErrorHandling() {
 				</div>
 
 				{/* 3. Playbook accordion */}
-				<div id="playbook" className="bg-card border border-border rounded-2xl overflow-hidden">
+				<div id="playbook" className="bg-card border rounded-2xl overflow-hidden">
 					<PlaybookHeader
 						title="Playbook"
 						description="19+ scenarios across 4 categories"

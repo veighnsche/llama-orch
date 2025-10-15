@@ -59,7 +59,7 @@ export function StepsSection({
 						src={diagramSrc}
 						width={1080}
 						height={360}
-						className="mx-auto mb-8 hidden rounded-xl border border-border/70 shadow-sm lg:block"
+						className="mx-auto mb-8 hidden rounded-xl border/70 shadow-sm lg:block"
 						alt="Process diagram showing how the system works"
 					/>
 				)}
@@ -70,7 +70,7 @@ export function StepsSection({
 						<div
 							key={idx}
 							className={cn(
-								'relative rounded-2xl border border-border bg-card/60 p-6 backdrop-blur supports-[backdrop-filter]:bg-background/60',
+								'relative rounded-2xl border bg-card/60 p-6 backdrop-blur supports-[backdrop-filter]:bg-background/60',
 								'animate-in fade-in slide-in-from-bottom-2 motion-reduce:animate-none',
 								idx === 0 && 'delay-75',
 								idx === 1 && 'delay-150',
@@ -127,7 +127,7 @@ export function StepsSection({
 							{step.stats && (
 								<div className="mt-4 grid grid-cols-2 gap-2 text-sm">
 									{step.stats.map((stat, i) => (
-										<div key={i} className="rounded-md border border-border bg-background/60 p-2">
+										<div key={i} className="rounded-md border bg-background/60 p-2">
 											<div className="text-muted-foreground">{stat.label}</div>
 											<div className="font-medium text-foreground">{stat.value}</div>
 										</div>

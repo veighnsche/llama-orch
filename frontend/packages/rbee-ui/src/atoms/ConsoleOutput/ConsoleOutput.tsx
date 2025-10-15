@@ -70,7 +70,7 @@ export function ConsoleOutput({
 	}
 
 	return (
-		<div className={cn('overflow-hidden rounded-lg border border-border shadow-sm', className)}>
+		<div className={cn('overflow-hidden rounded-lg border shadow-sm', className)}>
 			{showChrome && (
 				<div className="flex items-center justify-between border-b border-border bg-muted px-4 py-3">
 					<div className="flex items-center gap-2">

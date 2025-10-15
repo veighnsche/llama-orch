@@ -45,7 +45,7 @@ export function StepCard({ index, icon, title, intro, items, footnote, isLast, c
 			</div>
 
 			{/* Card content */}
-			<div className="flex-1 rounded-2xl border border-border bg-card/50 p-6 md:p-7">
+			<div className="flex-1 rounded-2xl border bg-card/50 p-6 md:p-7">
 				{/* Header */}
 				<div className="mb-4 flex items-center gap-3">
 					<div className="text-primary" aria-hidden="true">

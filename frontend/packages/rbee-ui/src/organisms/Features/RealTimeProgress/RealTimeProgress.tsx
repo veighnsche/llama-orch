@@ -21,7 +21,7 @@ export function RealTimeProgress() {
 						</div>
 					</div>
 
-					<div className="rounded-2xl border border-border bg-card overflow-hidden animate-in fade-in slide-in-from-bottom-2">
+					<div className="rounded-2xl border bg-card overflow-hidden animate-in fade-in slide-in-from-bottom-2">
 						{/* Terminal bar */}
 						<div className="flex items-center gap-1 bg-muted/60 px-4 py-2">
 							<span className="size-2 rounded-full bg-red-500/70" aria-hidden="true" />
@@ -79,21 +79,21 @@ export function RealTimeProgress() {
 
 				{/* Block 2: Stream Meter Row */}
 				<div className="grid sm:grid-cols-3 gap-3 animate-in fade-in slide-in-from-bottom-2 delay-100">
-					<div className="bg-card border border-border rounded-xl p-4 hover:-translate-y-0.5 transition-transform">
+					<div className="bg-card border rounded-xl p-4 hover:-translate-y-0.5 transition-transform">
 						<div className="text-xs text-muted-foreground">Throughput</div>
 						<div className="mt-1 text-lg font-semibold text-foreground">133 tok/s</div>
 						<div className="mt-2 h-2 rounded-full bg-muted overflow-hidden">
 							<div className="h-full w-[80%] bg-chart-3" />
 						</div>
 					</div>
-					<div className="bg-card border border-border rounded-xl p-4 hover:-translate-y-0.5 transition-transform">
+					<div className="bg-card border rounded-xl p-4 hover:-translate-y-0.5 transition-transform">
 						<div className="text-xs text-muted-foreground">First token latency</div>
 						<div className="mt-1 text-lg font-semibold text-foreground">150 ms</div>
 						<div className="mt-2 h-2 rounded-full bg-muted overflow-hidden">
 							<div className="h-full w-[60%] bg-primary" />
 						</div>
 					</div>
-					<div className="bg-card border border-border rounded-xl p-4 hover:-translate-y-0.5 transition-transform">
+					<div className="bg-card border rounded-xl p-4 hover:-translate-y-0.5 transition-transform">
 						<div className="text-xs text-muted-foreground">VRAM used</div>
 						<div className="mt-1 text-lg font-semibold text-foreground">669 MB</div>
 						<div className="mt-2 h-2 rounded-full bg-muted overflow-hidden">
@@ -103,7 +103,7 @@ export function RealTimeProgress() {
 				</div>
 
 				{/* Block 3: Cancellation Sequence Card */}
-				<div className="rounded-2xl border border-border bg-card p-6 animate-in fade-in slide-in-from-bottom-2 delay-150">
+				<div className="rounded-2xl border bg-card p-6 animate-in fade-in slide-in-from-bottom-2 delay-150">
 					<div className="flex items-start gap-3 mb-4">
 						<IconPlate icon={XCircle} tone="warning" size="md" shape="rounded" />
 						<div>
@@ -116,24 +116,24 @@ export function RealTimeProgress() {
 
 					{/* Sequence */}
 					<ol className="grid gap-3 sm:grid-cols-4 text-sm" aria-label="Cancellation sequence">
-						<li className="bg-background border border-border rounded-xl p-4 hover:ring-1 hover:ring-border transition-all">
+						<li className="bg-background border rounded-xl p-4 hover:ring-1 hover:ring-border transition-all">
 							<div className="text-xs text-muted-foreground">t+0ms</div>
 							<div className="font-semibold text-foreground">
 								Client sends <code className="bg-muted px-1 rounded text-xs">POST /v1/cancel</code>
 							</div>
 							<p className="mt-1 text-muted-foreground">Idempotent request.</p>
 						</li>
-						<li className="bg-background border border-border rounded-xl p-4 hover:ring-1 hover:ring-border transition-all">
+						<li className="bg-background border rounded-xl p-4 hover:ring-1 hover:ring-border transition-all">
 							<div className="text-xs text-muted-foreground">t+50ms</div>
 							<div className="font-semibold text-foreground">SSE disconnect detected</div>
 							<p className="mt-1 text-muted-foreground">Stream closes ≤ 1s.</p>
 						</li>
-						<li className="bg-background border border-border rounded-xl p-4 hover:ring-1 hover:ring-border transition-all">
+						<li className="bg-background border rounded-xl p-4 hover:ring-1 hover:ring-border transition-all">
 							<div className="text-xs text-muted-foreground">t+80ms</div>
 							<div className="font-semibold text-foreground">Immediate cleanup</div>
 							<p className="mt-1 text-muted-foreground">Stop tokens, release slot, log event.</p>
 						</li>
-						<li className="bg-background border border-border rounded-xl p-4 hover:ring-1 hover:ring-border transition-all">
+						<li className="bg-background border rounded-xl p-4 hover:ring-1 hover:ring-border transition-all">
 							<div className="text-xs text-muted-foreground">t+120ms</div>
 							<div className="font-semibold text-chart-3">Worker idle ✓</div>
 							<p className="mt-1 text-muted-foreground">Ready for next task.</p>

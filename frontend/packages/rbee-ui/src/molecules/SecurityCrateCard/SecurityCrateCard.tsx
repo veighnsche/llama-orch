@@ -20,7 +20,7 @@ export function SecurityCrateCard({
 	className,
 }: SecurityCrateCardProps) {
 	return (
-		<div className={cn('rounded-lg border border-border bg-card p-8', className)}>
+		<div className={cn('rounded-lg border bg-card p-8', className)}>
 			<div className="mb-4 flex items-center gap-3">
 				<IconPlate icon={Icon} size="lg" tone="primary" />
 				<div>

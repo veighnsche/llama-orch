@@ -203,7 +203,7 @@ export const InErrorHandlingContext: Story = {
 			<div className="mb-4 text-sm text-muted-foreground">
 				Example: PlaybookAccordion in ErrorHandling organism
 			</div>
-			<div className="rounded-2xl border border-border bg-card overflow-hidden">
+			<div className="rounded-2xl border bg-card overflow-hidden">
 				<PlaybookHeader
 					title="Error Playbooks"
 					description="24 automated checks"

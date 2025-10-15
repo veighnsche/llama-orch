@@ -86,7 +86,7 @@ export function CTASection({
 					{eyebrow && (
 						<div
 							className={cn(
-								'mb-3 inline-flex items-center rounded-full border border-border px-3 py-1 text-xs font-medium text-muted-foreground',
+								'mb-3 inline-flex items-center rounded-full border px-3 py-1 text-xs font-medium text-muted-foreground',
 								'motion-safe:animate-in motion-safe:fade-in-50 motion-safe:duration-300',
 							)}
 						>

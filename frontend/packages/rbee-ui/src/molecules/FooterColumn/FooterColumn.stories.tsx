@@ -168,7 +168,7 @@ export const InFooterContext: Story = {
 	render: () => (
 		<div className="w-full">
 			<div className="mb-4 text-sm text-muted-foreground">Example: FooterColumn in Footer component</div>
-			<div className="w-full bg-card rounded-lg border border-border p-8">
+			<div className="w-full bg-card rounded-lg border p-8">
 				<div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
 					<div>
 						<div className="font-bold text-lg mb-4">rbee</div>

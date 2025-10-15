@@ -64,7 +64,7 @@ export function ProvidersEarnings() {
 				<div className="mx-auto max-w-4xl">
 					<div className="grid gap-8 lg:grid-cols-2">
 						{/* Calculator Inputs */}
-						<div className="animate-in fade-in slide-in-from-bottom-2 rounded-2xl border border-border bg-gradient-to-b from-card to-background p-6 motion-reduce:animate-none sm:p-8">
+						<div className="animate-in fade-in slide-in-from-bottom-2 rounded-2xl border bg-gradient-to-b from-card to-background p-6 motion-reduce:animate-none sm:p-8">
 							<div className="mb-6 flex items-center gap-2">
 								<Cpu className="h-5 w-5 text-primary" aria-hidden="true" />
 								<h3 className="text-xl font-bold text-foreground">Your Configuration</h3>
@@ -116,7 +116,7 @@ export function ProvidersEarnings() {
 											<button
 												key={preset.label}
 												onClick={() => applyPreset(preset.hours, preset.utilization)}
-												className="rounded-md border border-border bg-background/60 px-3 py-2 text-xs transition-colors hover:bg-background"
+												className="rounded-md border bg-background/60 px-3 py-2 text-xs transition-colors hover:bg-background"
 											>
 												<div className="font-medium">{preset.label}</div>
 												<div className="text-muted-foreground">
@@ -173,7 +173,7 @@ export function ProvidersEarnings() {
 						</div>
 
 						{/* Earnings Display */}
-						<div className="animate-in fade-in slide-in-from-bottom-2 rounded-2xl border border-border bg-gradient-to-b from-card to-background p-6 motion-reduce:animate-none sm:p-8">
+						<div className="animate-in fade-in slide-in-from-bottom-2 rounded-2xl border bg-gradient-to-b from-card to-background p-6 motion-reduce:animate-none sm:p-8">
 							<h3 className="mb-6 text-xl font-bold text-foreground">Your Potential Earnings</h3>
 
 							<div className="space-y-6">
@@ -193,20 +193,20 @@ export function ProvidersEarnings() {
 
 								{/* Secondary KPIs */}
 								<div className="grid gap-4 sm:grid-cols-2">
-									<div className="rounded-lg border border-border bg-background/50 p-4">
+									<div className="rounded-lg border bg-background/50 p-4">
 										<div className="mb-1 text-sm text-muted-foreground">Daily</div>
 										<div className="tabular-nums text-2xl font-bold text-foreground">
 											{fmt(dailyEarnings, { maximumFractionDigits: 2 })}
 										</div>
 									</div>
-									<div className="rounded-lg border border-border bg-background/50 p-4">
+									<div className="rounded-lg border bg-background/50 p-4">
 										<div className="mb-1 text-sm text-muted-foreground">Yearly</div>
 										<div className="tabular-nums text-2xl font-bold text-foreground">{fmt(yearlyEarnings)}</div>
 									</div>
 								</div>
 
 								{/* Breakdown Box */}
-								<div className="space-y-3 rounded-lg border border-border bg-background/50 p-4">
+								<div className="space-y-3 rounded-lg border bg-background/50 p-4">
 									<div className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Breakdown</div>
 									<div className="flex justify-between text-sm">
 										<span className="text-xs uppercase tracking-wide text-muted-foreground">Hourly rate:</span>
@@ -269,7 +269,7 @@ export function ProvidersEarnings() {
 					</div>
 
 					{/* Disclaimer */}
-					<div className="mt-8 rounded-lg border border-border bg-card/50 p-6 text-center">
+					<div className="mt-8 rounded-lg border bg-card/50 p-6 text-center">
 						<p className="text-sm text-muted-foreground">
 							Earnings are estimates based on current market rates and may vary. Actual earnings depend on demand, your
 							pricing, and availability. Figures are estimates.

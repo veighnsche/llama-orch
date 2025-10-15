@@ -76,7 +76,7 @@ export function CoreFeaturesTabs() {
 								value="api"
 								className="animate-in fade-in slide-in-from-right-4 duration-300 data-[state=inactive]:absolute data-[state=inactive]:invisible"
 							>
-								<div className="bg-card border border-border rounded-2xl p-8 space-y-6">
+								<div className="bg-card border rounded-2xl p-8 space-y-6">
 									<div>
 										<div className="flex items-center gap-2 mb-3">
 											<h3 className="text-2xl font-bold text-foreground">OpenAI-compatible API</h3>
@@ -123,7 +123,7 @@ export function CoreFeaturesTabs() {
 								value="gpu"
 								className="animate-in fade-in slide-in-from-right-4 duration-300 data-[state=inactive]:absolute data-[state=inactive]:invisible"
 							>
-								<div className="bg-card border border-border rounded-2xl p-8 space-y-6">
+								<div className="bg-card border rounded-2xl p-8 space-y-6">
 									<div>
 										<div className="flex items-center gap-2 mb-3">
 											<h3 className="text-2xl font-bold text-foreground">Multi-GPU orchestration</h3>
@@ -226,7 +226,7 @@ export function CoreFeaturesTabs() {
 								value="scheduler"
 								className="animate-in fade-in slide-in-from-right-4 duration-300 data-[state=inactive]:absolute data-[state=inactive]:invisible"
 							>
-								<div className="bg-card border border-border rounded-2xl p-8 space-y-6">
+								<div className="bg-card border rounded-2xl p-8 space-y-6">
 									<div>
 										<div className="flex items-center gap-2 mb-3">
 											<h3 className="text-2xl font-bold text-foreground">Programmable scheduler (Rhai)</h3>
@@ -288,7 +288,7 @@ export function CoreFeaturesTabs() {
 								value="sse"
 								className="animate-in fade-in slide-in-from-right-4 duration-300 data-[state=inactive]:absolute data-[state=inactive]:invisible"
 							>
-								<div className="bg-card border border-border rounded-2xl p-8 space-y-6">
+								<div className="bg-card border rounded-2xl p-8 space-y-6">
 									<div>
 										<div className="flex items-center gap-2 mb-3">
 											<h3 className="text-2xl font-bold text-foreground">Task-based API with SSE</h3>
@@ -320,7 +320,7 @@ export function CoreFeaturesTabs() {
 										</div>
 									</div>
 
-									<div className="bg-secondary border border-border rounded-lg p-4 flex items-center gap-2">
+									<div className="bg-secondary border rounded-lg p-4 flex items-center gap-2">
 										<Check className="size-4 text-foreground shrink-0" />
 										<p className="text-foreground font-medium">Full visibility for every inference job.</p>
 									</div>

@@ -44,7 +44,7 @@ export function IndustryCaseCard({
 	return (
 		<div
 			className={cn(
-				'flex h-full flex-col rounded-2xl border border-border bg-card/60 p-6 md:p-7',
+				'flex h-full flex-col rounded-2xl border bg-card/60 p-6 md:p-7',
 				'transition-shadow hover:shadow-lg',
 				className,
 			)}
@@ -68,7 +68,7 @@ export function IndustryCaseCard({
 					{badges.map((badge) => (
 						<span
 							key={badge}
-							className="rounded-full border border-border bg-background px-2.5 py-0.5 text-xs text-muted-foreground"
+							className="rounded-full border bg-background px-2.5 py-0.5 text-xs text-muted-foreground"
 						>
 							{badge}
 						</span>
@@ -80,7 +80,7 @@ export function IndustryCaseCard({
 			<p className="mb-4 text-sm text-muted-foreground">{summary}</p>
 
 			{/* Challenge panel */}
-			<div className="mb-4 rounded-xl border border-border bg-background p-4">
+			<div className="mb-4 rounded-xl border bg-background p-4">
 				<div className="mb-2 font-semibold text-foreground">Challenge</div>
 				<ul className="space-y-1.5 text-sm text-muted-foreground" role="list">
 					{challenges.map((challenge) => (

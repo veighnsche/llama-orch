@@ -25,7 +25,7 @@ export function Legend({ className, style }: LegendProps) {
 			<span className="text-muted-foreground/40">·</span>
 			<span className="flex items-center gap-1.5">
 				<span
-					className="inline-flex rounded-full border border-border/60 bg-background px-1.5 py-0.5 text-[10px] text-foreground/80"
+					className="inline-flex rounded-full border/60 bg-background px-1.5 py-0.5 text-[10px] text-foreground/80"
 					aria-hidden="true"
 				>
 					Partial

@@ -217,7 +217,7 @@ export const InFeaturesContext: Story = {
 			<div className="mb-4 text-sm text-muted-foreground">
 				Example: CodeBlock in FeaturesSection organism
 			</div>
-			<div className="rounded-2xl border border-border bg-card p-8">
+			<div className="rounded-2xl border bg-card p-8">
 				<div className="mb-6">
 					<h2 className="text-2xl font-bold text-foreground mb-2">Simple API Integration</h2>
 					<p className="text-muted-foreground">

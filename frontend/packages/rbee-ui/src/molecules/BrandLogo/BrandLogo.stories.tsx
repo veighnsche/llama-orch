@@ -134,7 +134,7 @@ export const NavigationContext: Story = {
 	render: () => (
 		<div className="w-full">
 			<div className="mb-4 text-sm text-muted-foreground">Example: BrandLogo in Navigation component</div>
-			<div className="flex items-center justify-between rounded-lg border border-border bg-card p-4">
+			<div className="flex items-center justify-between rounded-lg border bg-card p-4">
 				<BrandLogo size="md" href="/" />
 				<div className="flex gap-6">
 					<a href="#" className="text-sm text-muted-foreground hover:text-foreground">Features</a>
@@ -157,7 +157,7 @@ export const FooterContext: Story = {
 	render: () => (
 		<div className="w-full">
 			<div className="mb-4 text-sm text-muted-foreground">Example: BrandLogo in Footer component</div>
-			<div className="rounded-lg border border-border bg-card p-8">
+			<div className="rounded-lg border bg-card p-8">
 				<div className="flex flex-col gap-4">
 					<BrandLogo size="md" href="/" />
 					<p className="max-w-xs text-sm text-muted-foreground">

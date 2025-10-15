@@ -110,7 +110,7 @@ export function FeatureCard({
 			role="group"
 			aria-labelledby={titleId}
 			className={cn(
-				'h-full flex flex-col rounded-2xl border border-border bg-card/60 p-6 md:p-8',
+				'h-full flex flex-col rounded-2xl border bg-card/60 p-6 md:p-8',
 				hover && 'transition-all hover:border-primary/50 hover:bg-card/80',
 				className,
 			)}

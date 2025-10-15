@@ -71,7 +71,7 @@ export function MultiBackendGpu() {
 
 				{/* 2. Detection Console (wide terminal) */}
 				<div
-					className="rounded-2xl border border-border bg-card p-0 overflow-hidden animate-in fade-in slide-in-from-bottom-2 delay-100"
+					className="rounded-2xl border bg-card p-0 overflow-hidden animate-in fade-in slide-in-from-bottom-2 delay-100"
 					role="region"
 					aria-label="Backend detection results"
 				>
@@ -107,7 +107,7 @@ export function MultiBackendGpu() {
 
 				{/* 3. Microcards strip (3-up) */}
 				<div className="grid sm:grid-cols-3 gap-3 animate-in fade-in slide-in-from-bottom-2 delay-150">
-					<div className="bg-background rounded-xl border border-border p-4 flex items-start gap-3 hover:-translate-y-0.5 transition-transform">
+					<div className="bg-background rounded-xl border p-4 flex items-start gap-3 hover:-translate-y-0.5 transition-transform">
 						<Cpu className="size-5 text-chart-2 shrink-0 mt-0.5" aria-hidden="true" />
 						<div>
 							<div className="font-semibold text-foreground text-sm">Detection</div>
@@ -115,7 +115,7 @@ export function MultiBackendGpu() {
 						</div>
 					</div>
 
-					<div className="bg-background rounded-xl border border-border p-4 flex items-start gap-3 hover:-translate-y-0.5 transition-transform">
+					<div className="bg-background rounded-xl border p-4 flex items-start gap-3 hover:-translate-y-0.5 transition-transform">
 						<CheckCircle2 className="size-5 text-primary shrink-0 mt-0.5" aria-hidden="true" />
 						<div>
 							<div className="font-semibold text-foreground text-sm">Explicit selection</div>
@@ -123,7 +123,7 @@ export function MultiBackendGpu() {
 						</div>
 					</div>
 
-					<div className="bg-background rounded-xl border border-border p-4 flex items-start gap-3 hover:-translate-y-0.5 transition-transform">
+					<div className="bg-background rounded-xl border p-4 flex items-start gap-3 hover:-translate-y-0.5 transition-transform">
 						<AlertTriangle className="size-5 text-destructive shrink-0 mt-0.5" aria-hidden="true" />
 						<div>
 							<div className="font-semibold text-foreground text-sm">Helpful suggestions</div>

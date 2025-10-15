@@ -85,7 +85,7 @@ export function FeatureTabsSection({ title, subtitle, items, defaultId, id, clas
 									value={item.id}
 									className="animate-in fade-in slide-in-from-right-4 duration-300 data-[state=inactive]:absolute data-[state=inactive]:invisible"
 								>
-									<div className="bg-card border border-border rounded-2xl p-8 space-y-6">
+									<div className="bg-card border rounded-2xl p-8 space-y-6">
 										{/* Header */}
 										<div>
 											<h3 className="text-2xl font-bold text-foreground mb-3">{item.title}</h3>
@@ -112,7 +112,7 @@ export function FeatureTabsSection({ title, subtitle, items, defaultId, id, clas
 													</ConsoleOutput>
 												)}
 												{item.example.kind === 'markdown' && (
-													<div className="overflow-hidden rounded-lg border border-border bg-card">
+													<div className="overflow-hidden rounded-lg border bg-card">
 														{item.example.title && (
 															<div className="border-b border-border bg-muted px-4 py-2">
 																<span className="text-sm text-muted-foreground">{item.example.title}</span>

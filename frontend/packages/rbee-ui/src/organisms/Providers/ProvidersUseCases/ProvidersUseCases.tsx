@@ -44,7 +44,7 @@ function CaseCard({ caseData, index }: { caseData: Case; index: number }) {
 	return (
 		<div
 			className={cn(
-				'group min-h-[320px] rounded-2xl border border-border/70 bg-gradient-to-b from-card/70 to-background/60 p-6 backdrop-blur transition-transform hover:translate-y-0.5 supports-[backdrop-filter]:bg-background/60 sm:p-7',
+				'group min-h-[320px] rounded-2xl border/70 bg-gradient-to-b from-card/70 to-background/60 p-6 backdrop-blur transition-transform hover:translate-y-0.5 supports-[backdrop-filter]:bg-background/60 sm:p-7',
 				'animate-in fade-in slide-in-from-bottom-2',
 				delay,
 			)}

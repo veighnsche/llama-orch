@@ -1,8 +1,6 @@
-import { Badge } from "@rbee/ui/atoms/Badge";
-import { IconPlate, SectionContainer } from "@rbee/ui/molecules";
+import { SectionContainer, UseCaseCard } from "@rbee/ui/molecules";
 import { cn } from "@rbee/ui/utils";
 import type { LucideIcon } from "lucide-react";
-import Link from "next/link";
 
 export type UseCase = {
   icon: LucideIcon;
@@ -53,90 +51,22 @@ export function UseCasesSection({
           gridCols
         )}
       >
-        {items.map((item, i) => {
-          const Icon = item.icon;
-          return (
-            <div
-              key={i}
-              tabIndex={0}
-              style={{ animationDelay: `${i * 80}ms` }}
-              className={cn(
-                "group rounded-xl border border-border/80 bg-card p-6 transition-all",
-                "hover:border-primary/40 hover:bg-card/80",
-                "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40",
-                "animate-in fade-in slide-in-from-bottom-2 duration-400"
-              )}
-            >
-              {/* Header row */}
-              <div className="mb-4 flex items-center gap-3">
-                <IconPlate icon={Icon} size="md" tone="primary" />
-                <h3 className="text-base font-semibold tracking-tight text-card-foreground">
-                  {item.title}
-                </h3>
-              </div>
-
-              {/* Body blocks */}
-              <div className="space-y-4">
-                {/* Scenario */}
-                <div>
-                  <div className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                    Scenario
-                  </div>
-                  <div className="mt-1 h-[3.5rem] text-sm leading-relaxed text-muted-foreground">
-                    {item.scenario}
-                  </div>
-                </div>
-
-                <div className="h-px bg-border/60" />
-
-                {/* Solution */}
-                <div>
-                  <div className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                    Solution
-                  </div>
-                  <div className="mt-1 h-[3.5rem] text-sm leading-relaxed text-muted-foreground">
-                    {item.solution}
-                  </div>
-                </div>
-
-                <div className="h-px bg-border/60" />
-
-                {/* Outcome callout */}
-                <div className="rounded-lg border border-primary/30 bg-primary/10 p-3">
-                  <div className="text-xs font-semibold uppercase tracking-wide text-primary font-sans">
-                    Outcome
-                  </div>
-                  <div className="mt-1 min-h-[2.5rem] text-sm text-foreground">
-                    {item.outcome}
-                  </div>
-                </div>
-              </div>
-
-              {/* Optional footer */}
-              {(item.tags || item.cta) && (
-                <div className="mt-4 flex flex-wrap items-center gap-2">
-                  {item.tags?.map((tag, idx) => (
-                    <Badge
-                      key={idx}
-                      variant="outline"
-                      className="rounded-full border px-2 py-0.5 text-[11px] text-muted-foreground"
-                    >
-                      {tag}
-                    </Badge>
-                  ))}
-                  {item.cta && (
-                    <Link
-                      href={item.cta.href}
-                      className="ml-auto text-sm font-medium text-primary hover:underline"
-                    >
-                      {item.cta.label}
-                    </Link>
-                  )}
-                </div>
-              )}
-            </div>
-          );
-        })}
+        {items.map((item, i) => (
+          <UseCaseCard
+            key={i}
+            icon={item.icon}
+            title={item.title}
+            scenario={item.scenario}
+            solution={item.solution}
+            outcome={item.outcome}
+            tags={item.tags}
+            cta={item.cta}
+            iconSize="md"
+            iconTone="primary"
+            style={{ animationDelay: `${i * 80}ms` }}
+            className="animate-in fade-in slide-in-from-bottom-2 duration-400"
+          />
+        ))}
       </div>
     </SectionContainer>
   );

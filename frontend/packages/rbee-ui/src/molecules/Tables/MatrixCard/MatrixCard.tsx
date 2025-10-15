@@ -29,7 +29,7 @@ export function MatrixCard({ provider, rows, className }: MatrixCardProps) {
 		if (value === 'Partial') {
 			return (
 				<span
-					className="inline-flex rounded-full border border-border/60 bg-background px-2 py-0.5 text-xs text-foreground/80"
+					className="inline-flex rounded-full border/60 bg-background px-2 py-0.5 text-xs text-foreground/80"
 					aria-label="Partial"
 					title="Available with constraints (region, SKU, or config)"
 				>
@@ -43,7 +43,7 @@ export function MatrixCard({ provider, rows, className }: MatrixCardProps) {
 	return (
 		<div
 			className={cn(
-				'mb-4 rounded-2xl border border-border bg-card/60 p-5',
+				'mb-4 rounded-2xl border bg-card/60 p-5',
 				provider.accent && 'border-primary/30 bg-primary/5',
 				className,
 			)}

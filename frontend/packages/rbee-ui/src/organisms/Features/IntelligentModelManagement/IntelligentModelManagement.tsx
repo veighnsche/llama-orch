@@ -16,7 +16,7 @@ export function IntelligentModelManagement() {
 				</div>
 
 				{/* Automatic Model Catalog - Full width */}
-				<div className="bg-card border border-border rounded-2xl p-8 space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-500">
+				<div className="bg-card border rounded-2xl p-8 space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-500">
 					<div className="flex items-start gap-4">
 						<IconPlate icon={Database} tone="chart-3" size="md" shape="rounded" className="flex-shrink-0" />
 						<div>
@@ -71,15 +71,15 @@ export function IntelligentModelManagement() {
 
 					{/* Feature strip */}
 					<div className="grid sm:grid-cols-3 gap-3">
-						<div className="bg-secondary/60 border border-border rounded-lg p-4 hover:-translate-y-0.5 transition-transform">
+						<div className="bg-secondary/60 border rounded-lg p-4 hover:-translate-y-0.5 transition-transform">
 							<div className="text-sm font-semibold text-chart-3 mb-1">Checksum validation</div>
 							<div className="text-xs text-muted-foreground">SHA256 check prevents corrupted downloads.</div>
 						</div>
-						<div className="bg-secondary/60 border border-border rounded-lg p-4 hover:-translate-y-0.5 transition-transform">
+						<div className="bg-secondary/60 border rounded-lg p-4 hover:-translate-y-0.5 transition-transform">
 							<div className="text-sm font-semibold text-chart-3 mb-1">Resume support</div>
 							<div className="text-xs text-muted-foreground">Interrupted network? Resume from checkpoint.</div>
 						</div>
-						<div className="bg-secondary/60 border border-border rounded-lg p-4 hover:-translate-y-0.5 transition-transform">
+						<div className="bg-secondary/60 border rounded-lg p-4 hover:-translate-y-0.5 transition-transform">
 							<div className="text-sm font-semibold text-chart-3 mb-1">SQLite catalog</div>
 							<div className="text-xs text-muted-foreground">Fast lookups. No duplicates.</div>
 						</div>
@@ -87,7 +87,7 @@ export function IntelligentModelManagement() {
 				</div>
 
 				{/* Resource Preflight Checks - Full width */}
-				<div className="bg-card border border-border rounded-2xl p-8 space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-500 delay-100">
+				<div className="bg-card border rounded-2xl p-8 space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-500 delay-100">
 					<div className="flex items-start gap-4">
 						<IconPlate icon={CheckCircle2} tone="chart-2" size="md" shape="rounded" className="flex-shrink-0" />
 						<div>

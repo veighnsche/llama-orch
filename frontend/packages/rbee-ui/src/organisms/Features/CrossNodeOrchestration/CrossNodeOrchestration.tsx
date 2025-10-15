@@ -18,7 +18,7 @@ export function CrossNodeOrchestration() {
 
 				<div className="grid gap-8 lg:grid-cols-2 items-start">
 					{/* Pool Registry Management Card */}
-					<div className="bg-card border border-border rounded-2xl p-8 space-y-6 animate-in fade-in slide-in-from-left-4 duration-500">
+					<div className="bg-card border rounded-2xl p-8 space-y-6 animate-in fade-in slide-in-from-left-4 duration-500">
 						<div className="flex items-start gap-4">
 							<IconPlate icon={Network} tone="primary" size="md" shape="rounded" className="flex-shrink-0" />
 							<div>
@@ -75,7 +75,7 @@ export function CrossNodeOrchestration() {
 					<Separator className="lg:hidden my-2 opacity-40" />
 
 					{/* Automatic Worker Provisioning Card */}
-					<div className="bg-card border border-border rounded-2xl p-8 space-y-6 animate-in fade-in slide-in-from-right-4 duration-500 delay-100">
+					<div className="bg-card border rounded-2xl p-8 space-y-6 animate-in fade-in slide-in-from-right-4 duration-500 delay-100">
 						<div className="flex items-start gap-4">
 							<IconPlate icon={GitBranch} tone="chart-2" size="md" shape="rounded" className="flex-shrink-0" />
 							<div>

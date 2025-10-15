@@ -46,13 +46,13 @@ export function SecuritySection({ kicker, title, subtitle, items, ribbon }: Secu
 							<div
 								key={idx}
 								className={cn(
-									'animate-in fade-in slide-in-from-bottom-2 rounded-2xl border border-border/70 bg-gradient-to-b from-card/70 to-background/60 p-6 backdrop-blur transition-transform hover:translate-y-0.5 motion-reduce:animate-none supports-[backdrop-filter]:bg-background/60 sm:p-7',
+									'animate-in fade-in slide-in-from-bottom-2 rounded-2xl border/70 bg-gradient-to-b from-card/70 to-background/60 p-6 backdrop-blur transition-transform hover:translate-y-0.5 motion-reduce:animate-none supports-[backpack-filter]:bg-background/60 sm:p-7',
 									delays[idx % delays.length],
 								)}
 							>
 								<div className="mb-5 flex items-center gap-4">
 									<IconPlate
-										icon={<Icon className="h-6 w-6" aria-hidden="true" />}
+										icon={Icon}
 										size="lg"
 										className="bg-emerald-400/10 text-emerald-400"
 									/>

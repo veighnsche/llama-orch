@@ -95,13 +95,13 @@ export function PlaybookHeader({
 				))}
 				<button
 					onClick={onExpandAll}
-					className="ml-2 px-2.5 py-1 rounded-md text-xs border border-border hover:bg-muted transition-colors"
+					className="ml-2 px-2.5 py-1 rounded-md text-xs border hover:bg-muted transition-colors"
 				>
 					Expand all
 				</button>
 				<button
 					onClick={onCollapseAll}
-					className="px-2.5 py-1 rounded-md text-xs border border-border hover:bg-muted transition-colors"
+					className="px-2.5 py-1 rounded-md text-xs border hover:bg-muted transition-colors"
 				>
 					Collapse all
 				</button>

@@ -84,7 +84,7 @@ export function TopologyDiagram({
 	return (
 		<figure
 			className={cn(
-				'relative isolate rounded-2xl border border-border bg-card/70 overflow-hidden',
+				'relative isolate rounded-2xl border bg-card/70 overflow-hidden',
 				compact ? 'p-4 md:p-6' : 'p-6 md:p-8',
 				className,
 			)}
@@ -213,7 +213,7 @@ export function TopologyDiagram({
 						const toneClasses = {
 							primary: 'bg-primary text-primary-foreground shadow-md font-semibold px-5 py-2.5',
 							accent: 'bg-primary/10 text-primary border border-primary/25 font-medium px-4 py-2',
-							muted: 'bg-muted text-muted-foreground border border-border font-medium px-3 py-2 text-sm',
+							muted: 'bg-muted text-muted-foreground border font-medium px-3 py-2 text-sm',
 						}
 
 						return (
@@ -240,11 +240,11 @@ export function TopologyDiagram({
 				{/* Legend */}
 				{showLegend && (
 					<div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-20 flex flex-wrap items-center justify-center gap-3 text-xs text-muted-foreground">
-						<span className="inline-flex items-center gap-2 rounded-full border border-border/70 bg-card/60 px-2.5 py-1 shadow-sm">
+						<span className="inline-flex items-center gap-2 rounded-full border/70 bg-card/60 px-2.5 py-1 shadow-sm">
 							<span className="w-6 h-[2px] bg-border/80 inline-block rounded-full" />
 							<span>Control / Task Flow</span>
 						</span>
-						<span className="inline-flex items-center gap-2 rounded-full border border-border/70 bg-card/60 px-2.5 py-1 shadow-sm">
+						<span className="inline-flex items-center gap-2 rounded-full border/70 bg-card/60 px-2.5 py-1 shadow-sm">
 							<span
 								className="w-6 h-[2px] bg-chart-3/60 inline-block rounded-full"
 								style={{

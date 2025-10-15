@@ -50,7 +50,7 @@ export const Default: Story = {}
 
 export const LightMode: Story = {
 	render: () => (
-		<div className="p-6 bg-background rounded-lg border border-border">
+		<div className="p-6 bg-background rounded-lg border">
 			<div className="flex items-center gap-4">
 				<span className="text-sm text-muted-foreground">Light mode active:</span>
 				<ThemeToggle />
@@ -68,7 +68,7 @@ export const LightMode: Story = {
 
 export const DarkMode: Story = {
 	render: () => (
-		<div className="p-6 bg-background rounded-lg border border-border">
+		<div className="p-6 bg-background rounded-lg border">
 			<div className="flex items-center gap-4">
 				<span className="text-sm text-muted-foreground">Dark mode active:</span>
 				<ThemeToggle />
@@ -91,7 +91,7 @@ export const InNavigationContext: Story = {
 	render: () => (
 		<div className="w-full">
 			<div className="mb-4 text-sm text-muted-foreground">Example: ThemeToggle in Navigation component</div>
-			<div className="w-full bg-card rounded-lg border border-border">
+			<div className="w-full bg-card rounded-lg border">
 				<div className="flex items-center justify-between p-4">
 					<div className="flex items-center gap-3">
 						<div className="font-bold text-lg">rbee</div>

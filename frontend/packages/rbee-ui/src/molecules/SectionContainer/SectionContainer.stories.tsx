@@ -157,15 +157,15 @@ export const Default: Story = {
 		description: 'This is a description that provides context about the section content.',
 		children: (
 			<div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-				<div className="p-6 bg-card rounded-lg border border-border">
+				<div className="p-6 bg-card rounded-lg border">
 					<h3 className="font-semibold mb-2">Feature 1</h3>
 					<p className="text-sm text-muted-foreground">Feature description</p>
 				</div>
-				<div className="p-6 bg-card rounded-lg border border-border">
+				<div className="p-6 bg-card rounded-lg border">
 					<h3 className="font-semibold mb-2">Feature 2</h3>
 					<p className="text-sm text-muted-foreground">Feature description</p>
 				</div>
-				<div className="p-6 bg-card rounded-lg border border-border">
+				<div className="p-6 bg-card rounded-lg border">
 					<h3 className="font-semibold mb-2">Feature 3</h3>
 					<p className="text-sm text-muted-foreground">Feature description</p>
 				</div>
@@ -181,11 +181,11 @@ export const WithBackground: Story = {
 		bgVariant: 'muted',
 		children: (
 			<div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-				<div className="p-6 bg-card rounded-lg border border-border">
+				<div className="p-6 bg-card rounded-lg border">
 					<h3 className="font-semibold mb-2">Card 1</h3>
 					<p className="text-sm text-muted-foreground">Content with background</p>
 				</div>
-				<div className="p-6 bg-card rounded-lg border border-border">
+				<div className="p-6 bg-card rounded-lg border">
 					<h3 className="font-semibold mb-2">Card 2</h3>
 					<p className="text-sm text-muted-foreground">Content with background</p>
 				</div>

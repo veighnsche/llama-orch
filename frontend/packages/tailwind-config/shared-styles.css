@@ -91,6 +91,10 @@
 	--radius-lg: var(--radius);
 	--radius-xl: calc(var(--radius) + 4px);
 
+	/* Border defaults - naked 'border' utility uses design system color */
+	--default-border-width: 1px;
+	--default-border-color: var(--border);
+
 	/* Shadows (for reference, Tailwind handles these natively) */
 	/* Use: shadow-xs, shadow-sm, shadow-md, shadow-lg, shadow-xl, shadow-2xl */
 }

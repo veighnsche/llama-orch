@@ -34,7 +34,7 @@ export const AllIcons: Story = {
               return (
                 <div
                   key={name}
-                  className="flex flex-col items-center gap-3 p-4 rounded-lg border border-border hover:bg-accent transition-colors"
+                  className="flex flex-col items-center gap-3 p-4 rounded-lg border hover:bg-accent transition-colors"
                 >
                   <IconComponent size={48} className="text-foreground" />
                   <span className="text-xs text-center font-mono text-muted-foreground">

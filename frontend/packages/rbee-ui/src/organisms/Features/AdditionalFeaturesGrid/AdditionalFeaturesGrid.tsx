@@ -20,7 +20,7 @@ export function AdditionalFeaturesGrid() {
 						{/* Cascading Shutdown */}
 						<a
 							href="#security-isolation"
-							className="group relative rounded-2xl border border-border bg-card p-6 transition-transform hover:-translate-y-0.5 animate-in fade-in slide-in-from-bottom-2 focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none before:absolute before:inset-x-0 before:top-0 before:h-[2px] before:bg-chart-2"
+							className="group relative rounded-2xl border bg-card p-6 transition-transform hover:-translate-y-0.5 animate-in fade-in slide-in-from-bottom-2 focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none before:absolute before:inset-x-0 before:top-0 before:h-[2px] before:bg-chart-2"
 							aria-label="Learn more about Cascading Shutdown"
 						>
 							<div className="flex items-start gap-4">
@@ -43,7 +43,7 @@ export function AdditionalFeaturesGrid() {
 						{/* Model Catalog */}
 						<a
 							href="#intelligent-model-management"
-							className="group relative rounded-2xl border border-border bg-card p-6 transition-transform hover:-translate-y-0.5 animate-in fade-in slide-in-from-bottom-2 delay-100 focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none before:absolute before:inset-x-0 before:top-0 before:h-[2px] before:bg-chart-3"
+							className="group relative rounded-2xl border bg-card p-6 transition-transform hover:-translate-y-0.5 animate-in fade-in slide-in-from-bottom-2 delay-100 focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none before:absolute before:inset-x-0 before:top-0 before:h-[2px] before:bg-chart-3"
 							aria-label="Learn more about Model Catalog"
 						>
 							<div className="flex items-start gap-4">
@@ -66,7 +66,7 @@ export function AdditionalFeaturesGrid() {
 						{/* Network Orchestration - Featured */}
 						<a
 							href="#cross-node-orchestration"
-							className="group lg:col-span-1 md:col-span-2 lg:col-span-1 relative rounded-2xl border border-border bg-card p-6 transition-transform hover:-translate-y-0.5 animate-in fade-in slide-in-from-bottom-2 delay-150 focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none overflow-hidden before:absolute before:inset-x-0 before:top-0 before:h-1.5 before:bg-gradient-to-r before:from-primary before:via-chart-3 before:to-amber-500"
+							className="group lg:col-span-1 md:col-span-2 lg:col-span-1 relative rounded-2xl border bg-card p-6 transition-transform hover:-translate-y-0.5 animate-in fade-in slide-in-from-bottom-2 delay-150 focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none overflow-hidden before:absolute before:inset-x-0 before:top-0 before:h-1.5 before:bg-gradient-to-r before:from-primary before:via-chart-3 before:to-amber-500"
 							aria-label="Learn more about Network Orchestration"
 						>
 							<div className="flex items-start gap-4">
@@ -97,7 +97,7 @@ export function AdditionalFeaturesGrid() {
 						{/* CLI & Web UI */}
 						<a
 							href="#cli-ui"
-							className="group relative rounded-2xl border border-border bg-card p-6 transition-transform hover:-translate-y-0.5 animate-in fade-in slide-in-from-bottom-2 delay-200 focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none before:absolute before:inset-x-0 before:top-0 before:h-[2px] before:bg-muted-foreground"
+							className="group relative rounded-2xl border bg-card p-6 transition-transform hover:-translate-y-0.5 animate-in fade-in slide-in-from-bottom-2 delay-200 focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none before:absolute before:inset-x-0 before:top-0 before:h-[2px] before:bg-muted-foreground"
 							aria-label="Learn more about CLI & Web UI"
 						>
 							<div className="flex items-start gap-4">
@@ -120,7 +120,7 @@ export function AdditionalFeaturesGrid() {
 						{/* TypeScript SDK */}
 						<a
 							href="#sdk"
-							className="group relative rounded-2xl border border-border bg-card p-6 transition-transform hover:-translate-y-0.5 animate-in fade-in slide-in-from-bottom-2 delay-300 focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none before:absolute before:inset-x-0 before:top-0 before:h-[2px] before:bg-primary"
+							className="group relative rounded-2xl border bg-card p-6 transition-transform hover:-translate-y-0.5 animate-in fade-in slide-in-from-bottom-2 delay-300 focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none before:absolute before:inset-x-0 before:top-0 before:h-[2px] before:bg-primary"
 							aria-label="Learn more about TypeScript SDK"
 						>
 							<div className="flex items-start gap-4">
@@ -143,7 +143,7 @@ export function AdditionalFeaturesGrid() {
 						{/* Security First */}
 						<a
 							href="#security-isolation"
-							className="group relative rounded-2xl border border-border bg-card p-6 transition-transform hover:-translate-y-0.5 animate-in fade-in slide-in-from-bottom-2 delay-400 focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none before:absolute before:inset-x-0 before:top-0 before:h-[2px] before:bg-chart-2"
+							className="group relative rounded-2xl border bg-card p-6 transition-transform hover:-translate-y-0.5 animate-in fade-in slide-in-from-bottom-2 delay-400 focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none before:absolute before:inset-x-0 before:top-0 before:h-[2px] before:bg-chart-2"
 							aria-label="Learn more about Security First"
 						>
 							<div className="flex items-start gap-4">

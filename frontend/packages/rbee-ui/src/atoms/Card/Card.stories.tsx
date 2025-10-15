@@ -188,7 +188,7 @@ export const WithIconHeader: Story = {
 		<div className="grid max-w-4xl gap-6 md:grid-cols-2">
 			<Card className="rounded-2xl border-border bg-card/60 p-8">
 				<IconCardHeader
-					icon={<Globe className="h-6 w-6" />}
+					icon={Globe}
 					title="GDPR"
 					subtitle="EU Regulation"
 					titleId="card-gdpr"
@@ -203,7 +203,7 @@ export const WithIconHeader: Story = {
 
 			<Card className="rounded-2xl border-border bg-card/60 p-8">
 				<IconCardHeader
-					icon={<Shield className="h-6 w-6" />}
+					icon={Shield}
 					title="SOC2"
 					subtitle="US Standard"
 					titleId="card-soc2"

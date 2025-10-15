@@ -30,7 +30,7 @@ export function MatrixTable({ columns, rows, className }: MatrixTableProps) {
 		if (value === 'Partial') {
 			return (
 				<span
-					className="inline-flex rounded-full border border-border/60 bg-background px-2 py-0.5 text-xs text-foreground/80"
+					className="inline-flex rounded-full border/60 bg-background px-2 py-0.5 text-xs text-foreground/80"
 					aria-label="Partial"
 					title="Available with constraints (region, SKU, or config)"
 				>

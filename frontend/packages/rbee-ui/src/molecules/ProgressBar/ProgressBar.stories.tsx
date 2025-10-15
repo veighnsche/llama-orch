@@ -173,7 +173,7 @@ export const Animated: Story = {
 	render: () => {
 		const ResourceMonitor = () => {
 			return (
-				<div className="w-full max-w-2xl p-6 bg-card rounded-lg border border-border">
+				<div className="w-full max-w-2xl p-6 bg-card rounded-lg border">
 					<h3 className="text-lg font-semibold mb-4">Resource Utilization</h3>
 					<div className="space-y-4">
 						<ProgressBar label="GPU 1 (RTX 4090)" percentage={85} color="chart-1" size="md" />

@@ -38,7 +38,7 @@ export function EnterpriseComparison() {
 				{/* Mobile Cards (<md) */}
 				<div className="md:hidden animate-in fade-in-50" style={{ animationDelay: '150ms' }}>
 					{/* Provider Switcher */}
-					<div className="mb-6 flex items-center justify-center gap-2 rounded-lg border border-border bg-card/60 p-1">
+					<div className="mb-6 flex items-center justify-center gap-2 rounded-lg border bg-card/60 p-1">
 						{PROVIDERS.map((provider, index) => (
 							<button
 								key={provider.key}

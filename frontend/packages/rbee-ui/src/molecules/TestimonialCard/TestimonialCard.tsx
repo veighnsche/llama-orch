@@ -69,7 +69,7 @@ function NewTestimonialCard({ t, className, showVerified = true, delayIndex = 0 
 	return (
 		<article
 			className={cn(
-				'h-full flex flex-col rounded-2xl border border-border bg-gradient-to-b from-card to-background p-6',
+				'h-full flex flex-col rounded-2xl border bg-gradient-to-b from-card to-background p-6',
 				'hover:shadow-md transition-shadow',
 				className,
 			)}
@@ -194,7 +194,7 @@ function LegacyTestimonialCard({
 	return (
 		<article
 			className={cn(
-				'bg-card/90 border border-border rounded-xl p-6 flex flex-col gap-4',
+				'bg-card/90 border rounded-xl p-6 flex flex-col gap-4',
 				'hover:border-primary/40 motion-safe:hover:translate-y-[-2px] motion-safe:hover:shadow-lg',
 				'motion-safe:transition-all motion-safe:duration-200',
 				className,

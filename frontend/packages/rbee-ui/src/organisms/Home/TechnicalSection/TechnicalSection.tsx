@@ -75,7 +75,7 @@ export function TechnicalSection() {
 							<article
 								role="group"
 								aria-label="Tech: Rust"
-								className="bg-muted/60 border border-border rounded-xl p-4 hover:border-primary/40 transition-colors motion-safe:animate-in motion-safe:slide-in-from-bottom-2 motion-safe:duration-400"
+								className="bg-muted/60 border rounded-xl p-4 hover:border-primary/40 transition-colors motion-safe:animate-in motion-safe:slide-in-from-bottom-2 motion-safe:duration-400"
 							>
 								<div className="font-semibold text-foreground">Rust</div>
 								<div className="text-sm text-muted-foreground">Performance + memory safety.</div>
@@ -84,7 +84,7 @@ export function TechnicalSection() {
 							<article
 								role="group"
 								aria-label="Tech: Candle ML"
-								className="bg-muted/60 border border-border rounded-xl p-4 hover:border-primary/40 transition-colors motion-safe:animate-in motion-safe:slide-in-from-bottom-2 motion-safe:duration-400 motion-safe:delay-100"
+								className="bg-muted/60 border rounded-xl p-4 hover:border-primary/40 transition-colors motion-safe:animate-in motion-safe:slide-in-from-bottom-2 motion-safe:duration-400 motion-safe:delay-100"
 							>
 								<div className="font-semibold text-foreground">Candle ML</div>
 								<div className="text-sm text-muted-foreground">Rust-native inference.</div>
@@ -93,7 +93,7 @@ export function TechnicalSection() {
 							<article
 								role="group"
 								aria-label="Tech: Rhai Scripting"
-								className="bg-muted/60 border border-border rounded-xl p-4 hover:border-primary/40 transition-colors motion-safe:animate-in motion-safe:slide-in-from-bottom-2 motion-safe:duration-400 motion-safe:delay-200"
+								className="bg-muted/60 border rounded-xl p-4 hover:border-primary/40 transition-colors motion-safe:animate-in motion-safe:slide-in-from-bottom-2 motion-safe:duration-400 motion-safe:delay-200"
 							>
 								<div className="font-semibold text-foreground">Rhai Scripting</div>
 								<div className="text-sm text-muted-foreground">Embedded, sandboxed policies.</div>
@@ -102,7 +102,7 @@ export function TechnicalSection() {
 							<article
 								role="group"
 								aria-label="Tech: SQLite"
-								className="bg-muted/60 border border-border rounded-xl p-4 hover:border-primary/40 transition-colors motion-safe:animate-in motion-safe:slide-in-from-bottom-2 motion-safe:duration-400 motion-safe:delay-300"
+								className="bg-muted/60 border rounded-xl p-4 hover:border-primary/40 transition-colors motion-safe:animate-in motion-safe:slide-in-from-bottom-2 motion-safe:duration-400 motion-safe:delay-300"
 							>
 								<div className="font-semibold text-foreground">SQLite</div>
 								<div className="text-sm text-muted-foreground">Embedded, zero-ops DB.</div>
@@ -111,7 +111,7 @@ export function TechnicalSection() {
 							<article
 								role="group"
 								aria-label="Tech: Axum + Vue.js"
-								className="bg-muted/60 border border-border rounded-xl p-4 hover:border-primary/40 transition-colors motion-safe:animate-in motion-safe:slide-in-from-bottom-2 motion-safe:duration-400 motion-safe:delay-400"
+								className="bg-muted/60 border rounded-xl p-4 hover:border-primary/40 transition-colors motion-safe:animate-in motion-safe:slide-in-from-bottom-2 motion-safe:duration-400 motion-safe:delay-400"
 							>
 								<div className="font-semibold text-foreground">Axum + Vue.js</div>
 								<div className="text-sm text-muted-foreground">Async backend + modern UI.</div>

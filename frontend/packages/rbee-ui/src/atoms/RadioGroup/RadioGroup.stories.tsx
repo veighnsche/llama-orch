@@ -214,7 +214,7 @@ export const DisabledState: Story = {
 
 export const InForm: Story = {
 	render: () => (
-		<form className="w-full max-w-md space-y-6 p-6 border border-border rounded-lg">
+		<form className="w-full max-w-md space-y-6 p-6 border rounded-lg">
 			<div>
 				<h3 className="text-lg font-semibold mb-2">Model Configuration</h3>
 				<p className="text-sm text-muted-foreground">Choose your deployment settings</p>
@@ -223,7 +223,7 @@ export const InForm: Story = {
 			<div className="space-y-2">
 				<label className="text-sm font-medium">Model Size</label>
 				<RadioGroup defaultValue="8b">
-					<div className="flex items-center justify-between p-3 border border-border rounded-lg">
+					<div className="flex items-center justify-between p-3 border rounded-lg">
 						<div className="flex items-center gap-3">
 							<RadioGroupItem value="8b" id="model-8b" />
 							<label htmlFor="model-8b" className="text-sm cursor-pointer">
@@ -232,7 +232,7 @@ export const InForm: Story = {
 						</div>
 						<span className="text-xs text-muted-foreground">8GB VRAM</span>
 					</div>
-					<div className="flex items-center justify-between p-3 border border-border rounded-lg">
+					<div className="flex items-center justify-between p-3 border rounded-lg">
 						<div className="flex items-center gap-3">
 							<RadioGroupItem value="70b" id="model-70b" />
 							<label htmlFor="model-70b" className="text-sm cursor-pointer">

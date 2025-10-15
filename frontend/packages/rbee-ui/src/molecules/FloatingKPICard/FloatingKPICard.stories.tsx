@@ -127,7 +127,7 @@ export const InHeroContext: Story = {
 					</div>
 				</div>
 				<div className="relative h-48 flex items-center justify-center">
-					<div className="w-64 h-32 bg-card/40 rounded-lg border border-border flex items-center justify-center">
+					<div className="w-64 h-32 bg-card/40 rounded-lg border flex items-center justify-center">
 						<span className="text-muted-foreground">Architecture Diagram</span>
 					</div>
 					<FloatingKPICard />

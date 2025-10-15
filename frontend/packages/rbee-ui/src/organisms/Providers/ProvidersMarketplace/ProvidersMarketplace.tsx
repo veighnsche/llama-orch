@@ -17,7 +17,7 @@ export function ProvidersMarketplace() {
 
 				{/* Feature Tiles */}
 				<div className="mb-16 grid gap-6 md:grid-cols-2 lg:grid-cols-4">
-					<div className="animate-in fade-in slide-in-from-bottom-2 delay-75 rounded-2xl border border-border/60 bg-card/60 p-6 text-center backdrop-blur motion-reduce:animate-none supports-[backdrop-filter]:bg-background/60">
+					<div className="animate-in fade-in slide-in-from-bottom-2 delay-75 rounded-2xl border/60 bg-card/60 p-6 text-center backdrop-blur motion-reduce:animate-none supports-[backdrop-filter]:bg-background/60">
 						<div className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-xl bg-primary/10">
 							<TrendingUp className="h-7 w-7 text-primary" aria-hidden="true" />
 						</div>
@@ -25,7 +25,7 @@ export function ProvidersMarketplace() {
 						<p className="text-sm text-muted-foreground">Set your own rate or use auto-pricing.</p>
 					</div>
 
-					<div className="animate-in fade-in slide-in-from-bottom-2 delay-150 rounded-2xl border border-border/60 bg-card/60 p-6 text-center backdrop-blur motion-reduce:animate-none supports-[backdrop-filter]:bg-background/60">
+					<div className="animate-in fade-in slide-in-from-bottom-2 delay-150 rounded-2xl border/60 bg-card/60 p-6 text-center backdrop-blur motion-reduce:animate-none supports-[backdrop-filter]:bg-background/60">
 						<div className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-xl bg-primary/10">
 							<Users className="h-7 w-7 text-primary" aria-hidden="true" />
 						</div>
@@ -33,7 +33,7 @@ export function ProvidersMarketplace() {
 						<p className="text-sm text-muted-foreground">Thousands of AI jobs posted monthly.</p>
 					</div>
 
-					<div className="animate-in fade-in slide-in-from-bottom-2 delay-200 rounded-2xl border border-border/60 bg-card/60 p-6 text-center backdrop-blur motion-reduce:animate-none supports-[backdrop-filter]:bg-background/60">
+					<div className="animate-in fade-in slide-in-from-bottom-2 delay-200 rounded-2xl border/60 bg-card/60 p-6 text-center backdrop-blur motion-reduce:animate-none supports-[backdrop-filter]:bg-background/60">
 						<div className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-xl bg-primary/10">
 							<Globe className="h-7 w-7 text-primary" aria-hidden="true" />
 						</div>
@@ -41,7 +41,7 @@ export function ProvidersMarketplace() {
 						<p className="text-sm text-muted-foreground">Your GPUs are discoverable worldwide.</p>
 					</div>
 
-					<div className="animate-in fade-in slide-in-from-bottom-2 delay-300 rounded-2xl border border-border/60 bg-card/60 p-6 text-center backdrop-blur motion-reduce:animate-none supports-[backdrop-filter]:bg-background/60">
+					<div className="animate-in fade-in slide-in-from-bottom-2 delay-300 rounded-2xl border/60 bg-card/60 p-6 text-center backdrop-blur motion-reduce:animate-none supports-[backdrop-filter]:bg-background/60">
 						<div className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-xl bg-primary/10">
 							<Shield className="h-7 w-7 text-primary" aria-hidden="true" />
 						</div>
@@ -51,7 +51,7 @@ export function ProvidersMarketplace() {
 				</div>
 
 				{/* Features & Commission Split */}
-				<div className="rounded-2xl border border-border bg-gradient-to-b from-card to-background p-8 sm:p-10">
+				<div className="rounded-2xl border bg-gradient-to-b from-card to-background p-8 sm:p-10">
 					<div className="grid gap-10 lg:grid-cols-[1.15fr_0.85fr]">
 						{/* Left: Marketplace Features */}
 						<div className="animate-in fade-in slide-in-from-bottom-2 delay-150 motion-reduce:animate-none">
@@ -110,7 +110,7 @@ export function ProvidersMarketplace() {
 							<h3 className="mb-6 text-2xl font-bold text-foreground">Commission Structure</h3>
 							<div className="space-y-4">
 								{/* Standard Commission Card */}
-								<div className="rounded-xl border border-border bg-background/60 p-6 transition-transform hover:translate-y-0.5">
+								<div className="rounded-xl border bg-background/60 p-6 transition-transform hover:translate-y-0.5">
 									<div className="mb-4 flex items-center justify-between">
 										<div className="text-xs uppercase tracking-wide text-muted-foreground">Standard Commission</div>
 										<div className="tabular-nums text-2xl font-extrabold text-primary">15%</div>
@@ -130,7 +130,7 @@ export function ProvidersMarketplace() {
 								</div>
 
 								{/* Example Table */}
-								<div className="space-y-2 rounded-lg border border-border bg-background/60 p-4 text-sm">
+								<div className="space-y-2 rounded-lg border bg-background/60 p-4 text-sm">
 									<div className="flex justify-between">
 										<span className="text-muted-foreground">Example job</span>
 										<span className="tabular-nums text-foreground">€100.00</span>

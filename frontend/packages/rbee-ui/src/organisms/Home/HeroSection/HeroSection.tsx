@@ -95,7 +95,7 @@ export function HeroSection() {
 							</li>
 							<li className="flex items-center gap-3 text-muted-foreground">
 								<div
-									className="h-5 px-1.5 flex items-center justify-center text-xs font-sans font-bold border border-border rounded-sm"
+									className="h-5 px-1.5 flex items-center justify-center text-xs font-sans font-bold border rounded-sm"
 									aria-hidden="true"
 								>
 									API

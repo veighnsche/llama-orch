@@ -87,7 +87,7 @@ export function UseCasesIndustry() {
 				<p className="text-center text-sm text-muted-foreground mb-6">Regulated sectors · Private-by-design</p>
 
 				{/* Hero banner */}
-				<div className="overflow-hidden rounded-lg border border-border/60 mb-8">
+				<div className="overflow-hidden rounded-lg border/60 mb-8">
 					<IndustriesHero
 						size="100%"
 						className="w-full h-auto"
@@ -104,7 +104,7 @@ export function UseCasesIndustry() {
 						<button
 							key={filter.label}
 							onClick={() => handleFilterClick(filter.anchor)}
-							className="inline-flex items-center rounded-full border border-border/60 bg-card px-4 py-2 text-sm font-medium text-foreground hover:bg-accent/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring transition-colors"
+							className="inline-flex items-center rounded-full border/60 bg-card px-4 py-2 text-sm font-medium text-foreground hover:bg-accent/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring transition-colors"
 						>
 							{filter.label}
 						</button>

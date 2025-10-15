@@ -33,7 +33,7 @@ export function CTAOptionCard({
       aria-describedby={bodyId}
       className={cn(
         // Base structure & surface
-        "group relative h-full flex flex-col rounded-2xl border border-border/70 bg-card/70 p-6 sm:p-7 backdrop-blur-sm shadow-sm",
+        "group relative h-full flex flex-col rounded-2xl border/70 bg-card/70 p-6 sm:p-7 backdrop-blur-sm shadow-sm",
         // Entrance animation
         "animate-in fade-in-50 zoom-in-95 duration-300",
         // Interactive depth

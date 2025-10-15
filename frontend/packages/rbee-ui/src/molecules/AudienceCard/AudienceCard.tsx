@@ -22,7 +22,7 @@ const audienceCardVariants = cva("", {
 });
 
 const cardContainerVariants = cva(
-  "group relative overflow-hidden transition-all duration-300 hover:scale-[1.02]",
+  "border border-border group relative overflow-hidden transition-all duration-300 hover:scale-[1.02]",
   {
     variants: {
       color: {

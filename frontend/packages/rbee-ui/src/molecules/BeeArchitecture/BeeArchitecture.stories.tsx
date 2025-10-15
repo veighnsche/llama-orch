@@ -194,21 +194,21 @@ export const Interactive: Story = {
 				}}
 			/>
 			<div className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-4 max-w-3xl mx-auto">
-				<div className="p-4 bg-card rounded-lg border border-border">
+				<div className="p-4 bg-card rounded-lg border">
 					<div className="flex items-center gap-2 mb-2">
 						<div className="h-3 w-3 rounded-full bg-amber-400/30 ring-1 ring-amber-400/30"></div>
 						<span className="font-semibold text-sm">CUDA Workers</span>
 					</div>
 					<p className="text-xs text-muted-foreground">NVIDIA GPUs with CUDA acceleration</p>
 				</div>
-				<div className="p-4 bg-card rounded-lg border border-border">
+				<div className="p-4 bg-card rounded-lg border">
 					<div className="flex items-center gap-2 mb-2">
 						<div className="h-3 w-3 rounded-full bg-sky-400/30 ring-1 ring-sky-400/30"></div>
 						<span className="font-semibold text-sm">Metal Workers</span>
 					</div>
 					<p className="text-xs text-muted-foreground">Apple Silicon with Metal acceleration</p>
 				</div>
-				<div className="p-4 bg-card rounded-lg border border-border">
+				<div className="p-4 bg-card rounded-lg border">
 					<div className="flex items-center gap-2 mb-2">
 						<div className="h-3 w-3 rounded-full bg-emerald-400/30 ring-1 ring-emerald-400/30"></div>
 						<span className="font-semibold text-sm">CPU Workers</span>

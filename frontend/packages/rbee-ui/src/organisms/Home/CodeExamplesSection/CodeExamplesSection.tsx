@@ -116,7 +116,7 @@ export function CodeExamplesSection({
 								role="tabpanel"
 								id={`panel-${activeExample.id}`}
 								aria-labelledby={`tab-${activeExample.id}`}
-								className="grid h-full grid-rows-[auto,1fr] overflow-hidden rounded-xl border border-border bg-card"
+								className="grid h-full grid-rows-[auto,1fr] overflow-hidden rounded-xl border bg-card"
 							>
 								<div key={activeExample.id} className="contents animate-in fade-in-50 duration-200">
 									{/* Chrome bar */}

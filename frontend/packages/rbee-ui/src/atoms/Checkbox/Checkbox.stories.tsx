@@ -142,7 +142,7 @@ export const WithLabels: Story = {
 
 export const InForm: Story = {
 	render: () => (
-		<form className="w-full max-w-md space-y-6 p-6 border border-border rounded-lg">
+		<form className="w-full max-w-md space-y-6 p-6 border rounded-lg">
 			<div>
 				<h3 className="text-lg font-semibold mb-2">Notification Preferences</h3>
 				<p className="text-sm text-muted-foreground">Choose what updates you want to receive.</p>
@@ -215,14 +215,14 @@ export const InForm: Story = {
 
 export const MultiSelect: Story = {
 	render: () => (
-		<div className="w-full max-w-md p-6 border border-border rounded-lg">
+		<div className="w-full max-w-md p-6 border rounded-lg">
 			<div className="mb-4">
 				<h3 className="text-sm font-semibold mb-2">Select Models</h3>
 				<p className="text-xs text-muted-foreground">Choose which models to deploy</p>
 			</div>
 
 			<div className="space-y-3">
-				<div className="flex items-center justify-between p-3 border border-border rounded-lg hover:bg-muted/40 transition-colors">
+				<div className="flex items-center justify-between p-3 border rounded-lg hover:bg-muted/40 transition-colors">
 					<div className="flex items-center gap-3">
 						<Checkbox id="llama-8b" defaultChecked />
 						<div>
@@ -235,7 +235,7 @@ export const MultiSelect: Story = {
 					<span className="text-xs text-muted-foreground">8GB VRAM</span>
 				</div>
 
-				<div className="flex items-center justify-between p-3 border border-border rounded-lg hover:bg-muted/40 transition-colors">
+				<div className="flex items-center justify-between p-3 border rounded-lg hover:bg-muted/40 transition-colors">
 					<div className="flex items-center gap-3">
 						<Checkbox id="llama-70b" />
 						<div>
@@ -248,7 +248,7 @@ export const MultiSelect: Story = {
 					<span className="text-xs text-muted-foreground">40GB VRAM</span>
 				</div>
 
-				<div className="flex items-center justify-between p-3 border border-border rounded-lg hover:bg-muted/40 transition-colors">
+				<div className="flex items-center justify-between p-3 border rounded-lg hover:bg-muted/40 transition-colors">
 					<div className="flex items-center gap-3">
 						<Checkbox id="mistral-7b" defaultChecked />
 						<div>

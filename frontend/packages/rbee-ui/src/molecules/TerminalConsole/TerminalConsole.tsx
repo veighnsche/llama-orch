@@ -9,7 +9,7 @@ interface TerminalConsoleProps {
 
 export function TerminalConsole({ title, children, footer, ariaLabel }: TerminalConsoleProps) {
 	return (
-		<div className="rounded-2xl border border-border bg-card overflow-hidden" role="region" aria-label={ariaLabel}>
+		<div className="rounded-2xl border bg-card overflow-hidden" role="region" aria-label={ariaLabel}>
 			{/* Terminal top bar */}
 			<div className="flex items-center gap-1 bg-muted/50 px-4 py-2">
 				<span className="size-2 rounded-full bg-red-500/70" aria-hidden="true" />

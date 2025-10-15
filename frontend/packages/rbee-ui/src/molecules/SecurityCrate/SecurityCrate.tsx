@@ -42,7 +42,7 @@ export function SecurityCrate({
 	return (
 		<div
 			className={cn(
-				'flex h-full flex-col rounded-2xl border border-border bg-card/60 p-6 md:p-8',
+				'flex h-full flex-col rounded-2xl border bg-card/60 p-6 md:p-8',
 				'transition-shadow hover:shadow-lg',
 				className,
 			)}
