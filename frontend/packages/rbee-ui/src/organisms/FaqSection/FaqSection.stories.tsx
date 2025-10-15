@@ -185,32 +185,6 @@ export const CustomContent: Story = {
 	},
 }
 
-export const MobileView: Story = {
-	parameters: {
-		viewport: {
-			defaultViewport: 'mobile1',
-		},
-		docs: {
-			description: {
-				story: 'Mobile view with stacked layout. Support card is hidden on mobile.',
-			},
-		},
-	},
-}
-
-export const TabletView: Story = {
-	parameters: {
-		viewport: {
-			defaultViewport: 'tablet',
-		},
-		docs: {
-			description: {
-				story: 'Tablet view showing responsive grid behavior.',
-			},
-		},
-	},
-}
-
 export const InteractiveSearch: Story = {
 	render: () => (
 		<div>

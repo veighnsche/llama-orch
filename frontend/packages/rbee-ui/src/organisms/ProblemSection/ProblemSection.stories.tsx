@@ -201,32 +201,6 @@ export const CustomProblems: Story = {
 	},
 }
 
-export const MobileView: Story = {
-	parameters: {
-		viewport: {
-			defaultViewport: 'mobile1',
-		},
-		docs: {
-			description: {
-				story: 'Mobile view with stacked single-column layout.',
-			},
-		},
-	},
-}
-
-export const TabletView: Story = {
-	parameters: {
-		viewport: {
-			defaultViewport: 'tablet',
-		},
-		docs: {
-			description: {
-				story: 'Tablet view showing responsive grid behavior.',
-			},
-		},
-	},
-}
-
 export const ToneVariations: Story = {
 	args: {
 		title: 'Problem tone variations',

@@ -76,33 +76,7 @@ export const Default: Story = {
 	parameters: {
 		docs: {
 			description: {
-				story: 'Default desktop navigation with all links and actions visible.',
-			},
-		},
-	},
-}
-
-export const MobileView: Story = {
-	parameters: {
-		viewport: {
-			defaultViewport: 'mobile1',
-		},
-		docs: {
-			description: {
-				story: 'Mobile view with hamburger menu. Click the menu icon to see the slide-out drawer.',
-			},
-		},
-	},
-}
-
-export const TabletView: Story = {
-	parameters: {
-		viewport: {
-			defaultViewport: 'tablet',
-		},
-		docs: {
-			description: {
-				story: 'Tablet view showing responsive breakpoint behavior.',
+				story: 'Default desktop navigation with all links and actions visible. Use the viewport toolbar to test mobile hamburger menu and responsive behavior.',
 			},
 		},
 	},

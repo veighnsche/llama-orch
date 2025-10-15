@@ -78,33 +78,7 @@ export const Default: Story = {
 		docs: {
 			description: {
 				story:
-					'Default audience selector with three cards. Use the theme toggle in the toolbar to switch between light and dark modes.',
-			},
-		},
-	},
-}
-
-export const MobileView: Story = {
-	parameters: {
-		viewport: {
-			defaultViewport: 'mobile1',
-		},
-		docs: {
-			description: {
-				story: 'Mobile view with stacked single-column layout.',
-			},
-		},
-	},
-}
-
-export const TabletView: Story = {
-	parameters: {
-		viewport: {
-			defaultViewport: 'tablet',
-		},
-		docs: {
-			description: {
-				story: 'Tablet view with two-column grid layout.',
+					'Default audience selector with three cards. Use the theme toggle in the toolbar to switch between light and dark modes. Use the viewport toolbar to test responsive behavior.',
 			},
 		},
 	},

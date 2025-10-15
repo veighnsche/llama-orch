@@ -86,33 +86,7 @@ export const Default: Story = {
 		docs: {
 			description: {
 				story:
-					'Default email capture form ready for input. Use the theme toggle in the toolbar to switch between light and dark modes.',
-			},
-		},
-	},
-}
-
-export const MobileView: Story = {
-	parameters: {
-		viewport: {
-			defaultViewport: 'mobile1',
-		},
-		docs: {
-			description: {
-				story: 'Mobile view with stacked form layout. Input and button stack vertically on small screens.',
-			},
-		},
-	},
-}
-
-export const TabletView: Story = {
-	parameters: {
-		viewport: {
-			defaultViewport: 'tablet',
-		},
-		docs: {
-			description: {
-				story: 'Tablet view showing responsive breakpoint behavior.',
+					'Default email capture form ready for input. Use the theme toggle in the toolbar to switch between light and dark modes. Use the viewport toolbar to test responsive behavior.',
 			},
 		},
 	},

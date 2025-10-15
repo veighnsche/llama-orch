@@ -262,31 +262,6 @@ export const MinimalWithEyebrow: Story = {
 	},
 }
 
-export const MobileView: Story = {
-	args: {
-		title: 'Get started with rbee',
-		subtitle: 'Run LLMs on your own hardware',
-		primary: {
-			label: 'Download Free',
-			href: '/download',
-		},
-		secondary: {
-			label: 'Learn More',
-			href: '/docs',
-		},
-	},
-	parameters: {
-		viewport: {
-			defaultViewport: 'mobile1',
-		},
-		docs: {
-			description: {
-				story: 'Mobile view with stacked buttons.',
-			},
-		},
-	},
-}
-
 export const AllVariants: Story = {
 	args: {
 		title: 'All Variants',

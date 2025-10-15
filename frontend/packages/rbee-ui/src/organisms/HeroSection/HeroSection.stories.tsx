@@ -86,34 +86,7 @@ export const Default: Story = {
 		docs: {
 			description: {
 				story:
-					'Default hero section with all elements. Use the theme toggle in the toolbar to switch between light and dark modes.',
-			},
-		},
-	},
-}
-
-export const MobileView: Story = {
-	parameters: {
-		viewport: {
-			defaultViewport: 'mobile1',
-		},
-		docs: {
-			description: {
-				story:
-					'Mobile view with stacked layout. Content and terminal demo stack vertically for optimal mobile experience.',
-			},
-		},
-	},
-}
-
-export const TabletView: Story = {
-	parameters: {
-		viewport: {
-			defaultViewport: 'tablet',
-		},
-		docs: {
-			description: {
-				story: 'Tablet view showing responsive breakpoint behavior.',
+					'Default hero section with all elements. Use the theme toggle in the toolbar to switch between light and dark modes. Use the viewport toolbar to test responsive behavior.',
 			},
 		},
 	},

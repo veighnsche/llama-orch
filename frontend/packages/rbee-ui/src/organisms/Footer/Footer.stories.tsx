@@ -76,33 +76,7 @@ export const Default: Story = {
 	parameters: {
 		docs: {
 			description: {
-				story: 'Default footer with all sections: newsletter signup, sitemap grid, and bottom bar with social links.',
-			},
-		},
-	},
-}
-
-export const MobileView: Story = {
-	parameters: {
-		viewport: {
-			defaultViewport: 'mobile1',
-		},
-		docs: {
-			description: {
-				story: 'Mobile view with stacked layout. All columns stack vertically for optimal mobile experience.',
-			},
-		},
-	},
-}
-
-export const TabletView: Story = {
-	parameters: {
-		viewport: {
-			defaultViewport: 'tablet',
-		},
-		docs: {
-			description: {
-				story: 'Tablet view showing responsive grid behavior.',
+				story: 'Default footer with all sections: newsletter signup, sitemap grid, and bottom bar with social links. Use the viewport toolbar to test responsive behavior.',
 			},
 		},
 	},
