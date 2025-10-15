@@ -1,9 +1,9 @@
 import type { Preview } from '@storybook/react'
 import { withThemeByClassName } from '@storybook/addon-themes'
-// For Storybook running WITHIN the UI package, import the built CSS directly
-// External consumers (apps) import via '@rbee/ui/styles.css'
-// This CSS includes all design tokens (no separate preview-theme.css needed)
-import '../dist/index.css'
+// ✅ TAILWIND V4 + STORYBOOK: Import SOURCE CSS, not pre-built dist
+// The @tailwindcss/vite plugin in main.ts handles JIT compilation
+// This enables arbitrary values like translate-y-[100px] to work in Storybook
+import '../src/tokens/globals.css'
 
 const preview: Preview = {
 	parameters: {

@@ -35,7 +35,7 @@ This molecule is composed of:
 Used in 3+ organisms including:
 - StatsGrid (stat icons)
 - FeatureCard (feature icons)
-- CheckListItem (checkmark icons)
+- BulletListItem (checkmark icons)
 - BenefitCallout (benefit icons)
 				`,
 			},

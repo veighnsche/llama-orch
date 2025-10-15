@@ -10,6 +10,16 @@
  */
 
 @import "tailwindcss";
+@import "@repo/tailwind-config";
+
+/**
+ * Tailwind v4 JIT: Scan app files for arbitrary values like translate-y-[2rem]
+ * This enables custom values in the user-docs app itself.
+ * The @rbee/ui package scans its own files separately.
+ */
+@source "../app/**/*.{ts,tsx,md,mdx}";
+@source "../components/**/*.{ts,tsx}";
+@source "../pages/**/*.{ts,tsx,md,mdx}";
 
 @layer base {
 	body {

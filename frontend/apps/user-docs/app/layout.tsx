@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
-import '@rbee/ui/styles.css'
+// Import order: app CSS (JIT scanning) → UI CSS (tokens) → Nextra theme
 import './globals.css'
+import '@rbee/ui/styles.css'
 import 'nextra-theme-docs/style.css'
 
 export const metadata: Metadata = {

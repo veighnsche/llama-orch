@@ -1,13 +1,15 @@
 /**
- * 🚨 TURBOREPO IDIOMATIC PATTERN 🚨
+ * 🚨 TAILWIND V4 SOURCE CSS 🚨
  * 
- * ✅ Single source of truth for design tokens
+ * This is the SOURCE file for Tailwind compilation.
+ * 
+ * ✅ Storybook imports THIS file directly (enables JIT for arbitrary values)
  * ✅ Apps import the pre-built CSS: import '@rbee/ui/styles.css'
- * ✅ Storybook imports this same file (no duplication)
- * ✅ Only scans UI package's own source files
+ * ✅ @source directive scans UI package files for Tailwind classes
+ * ✅ Vite plugin (@tailwindcss/vite) handles JIT compilation
  * 
- * See: https://turborepo.com/docs/guides/tools/tailwind
- * Example: https://github.com/vercel/turborepo/tree/main/examples/with-tailwind
+ * IMPORTANT: For arbitrary values to work in Storybook, you MUST import
+ * this source file, not the pre-built dist/index.css
  */
 
 @import "tailwindcss";
