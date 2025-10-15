@@ -8,7 +8,10 @@
 
 ## 📁 WHAT WAS CREATED
 
-I've split ALL the storybook work into **6 balanced teams** with **8 detailed documents**:
+I've split the storybook work into **14 balanced teams**:
+
+**Teams 1-6 (COMPLETE):** All organisms
+**Teams 7-14 (TODO):** All atoms/molecules - See `START_HERE_ATOMS_MOLECULES.md`
 
 ### 🎯 Team Assignment Documents (Read These!)
 
@@ -44,17 +47,16 @@ I've split ALL the storybook work into **6 balanced teams** with **8 detailed do
 
 ### 📚 Reference Documents
 
-7. **`STORYBOOK_TEAM_MASTER_PLAN.md`**
-   - Complete overview of all teams
-   - Timeline options (sequential/parallel/hybrid)
-   - Success criteria and coordination
-   - **READ THIS FIRST for big picture**
-
-8. **`TEAM_ASSIGNMENTS_SUMMARY.md`**
-   - Quick reference card
-   - One-page overview of all teams
+7. **`FINAL_TEAM_SUMMARY.md`**
+   - Complete overview of all 14 teams
    - Workload distribution table
-   - **READ THIS for quick overview**
+   - Entry points for organisms vs atoms/molecules
+   - **READ THIS for complete picture**
+
+8. **`START_HERE_ATOMS_MOLECULES.md`**
+   - Entry point for teams 7-14 (atoms/molecules)
+   - 8 balanced teams covering 106 components
+   - **READ THIS if working on atoms/molecules**
 
 ### 📊 Updated Progress Tracker
 
