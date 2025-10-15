@@ -1,7 +1,7 @@
 import {
   AdditionalFeaturesGrid,
-  CoreFeaturesTabs,
   CrossNodeOrchestration,
+  DefaultCoreFeaturesTabs,
   EmailCapture,
   ErrorHandling,
   FeaturesHero,
@@ -15,7 +15,7 @@ export default function FeaturesPage() {
   return (
     <>
       <FeaturesHero />
-      <CoreFeaturesTabs />
+      <DefaultCoreFeaturesTabs />
       <CrossNodeOrchestration />
       <IntelligentModelManagement />
       <MultiBackendGpu />

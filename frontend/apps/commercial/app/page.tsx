@@ -2,9 +2,9 @@ import {
   AudienceSelector,
   ComparisonSection,
   CTASection,
+  DefaultCoreFeaturesTabs,
   EmailCapture,
   FAQSection,
-  FeaturesSection,
   HeroSection,
   HomeSolutionSection,
   HowItWorksSection,
@@ -199,7 +199,7 @@ export default function Home() {
           },
         ]}
       />
-      <FeaturesSection />
+      <DefaultCoreFeaturesTabs />
       <UseCasesSection
         title="Built for those who value independence"
         subtitle="Run serious AI on your own hardware. Keep costs at zero, keep control at 100%."

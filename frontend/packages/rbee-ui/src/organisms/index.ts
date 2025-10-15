@@ -1,6 +1,7 @@
 // Barrel exports for all organisms
 
 // Page-specific organisms
+export * from './CoreFeaturesTabs'
 export * from './Developers'
 export * from './EmailCapture'
 export * from './Enterprise'

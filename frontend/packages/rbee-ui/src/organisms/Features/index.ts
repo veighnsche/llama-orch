@@ -1,5 +1,5 @@
 export * from './AdditionalFeaturesGrid'
-export * from './CoreFeaturesTabs'
+export * from '../CoreFeaturesTabs'
 export * from './CrossNodeOrchestration'
 export * from './ErrorHandling'
 export * from './FeaturesHero'

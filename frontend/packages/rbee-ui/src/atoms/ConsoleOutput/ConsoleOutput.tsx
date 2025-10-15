@@ -17,8 +17,6 @@ export interface ConsoleOutputProps {
   variant?: 'terminal' | 'code' | 'output'
   /** Additional CSS classes */
   className?: string
-  /** Background style */
-  background?: 'dark' | 'light' | 'card'
   /** Show copy button */
   copyable?: boolean
   /** Raw text to copy (if different from rendered children) */
@@ -32,7 +30,7 @@ export interface ConsoleOutputProps {
  * - Uses Geist Mono font for authentic console appearance
  * - Optional terminal window chrome (macOS-style traffic lights)
  * - Multiple variants for different use cases
- * - Dark/light background options
+ * - Theme-aware styling (automatically adapts to light/dark mode)
  * - Proper text selection and overflow handling
  *
  * @example
@@ -48,17 +46,10 @@ export function ConsoleOutput({
   title,
   variant = 'terminal',
   className,
-  background = 'dark',
   copyable = false,
   copyText,
 }: ConsoleOutputProps) {
   const [copied, setCopied] = useState(false)
-
-  const bgStyles = {
-    dark: 'bg-[var(--console-bg)] text-[var(--console-fg)]',
-    light: 'bg-background text-foreground',
-    card: 'bg-card text-card-foreground',
-  }
 
   const handleCopy = async () => {
     const textToCopy = copyText || (typeof children === 'string' ? children : '')
@@ -102,7 +93,7 @@ export function ConsoleOutput({
           )}
         </div>
       )}
-      <div className={cn('overflow-x-auto p-4 text-sm leading-relaxed font-mono', bgStyles[background])}>
+      <div className="overflow-x-auto p-4 text-sm leading-relaxed font-mono bg-[var(--console-bg)] text-[var(--console-fg)]">
         {children}
       </div>
     </div>
