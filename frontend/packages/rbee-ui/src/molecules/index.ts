@@ -19,6 +19,7 @@ export * from "./CTAOptionCard/CTAOptionCard";
 export * from "./CodeBlock/CodeBlock";
 export * from "./ComplianceChip/ComplianceChip";
 export * from "./FeatureCard/FeatureCard";
+export * from "./FeatureListItem/FeatureListItem";
 export * from "./FloatingKPICard/FloatingKPICard";
 export * from "./FooterColumn/FooterColumn";
 export * from "./GPUListItem/GPUListItem";

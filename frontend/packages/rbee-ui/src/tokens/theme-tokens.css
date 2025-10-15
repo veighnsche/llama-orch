@@ -36,7 +36,7 @@
 	--secondary: #f1f5f9;
 	--secondary-foreground: #0f172a;
 	--muted: #f1f5f9;
-	--muted-foreground: #64748b;
+	--muted-foreground: #5a6b7f; /* Darkened from #64748b for WCAG AA compliance (4.5:1 on secondary) */
 	--accent: #f59e0b;
 	--accent-foreground: #0f172a;
 	--destructive: #ef4444;
