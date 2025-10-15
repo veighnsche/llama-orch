@@ -8,6 +8,36 @@ const meta = {
 	component: Card,
 	parameters: {
 		layout: 'centered',
+		docs: {
+			description: {
+				component: `
+## Overview
+The Card component is a versatile container for card-based layouts. It provides a consistent structure with optional header, content, and footer sections.
+
+## Composition
+This molecule is composed of:
+- **Card**: The main container with border and background
+- **CardHeader**: Optional header section for title and description
+- **CardTitle**: Heading text styled with brand typography
+- **CardDescription**: Subtitle or description text
+- **CardContent**: Main content area
+- **CardFooter**: Optional footer section for actions or metadata
+
+## When to Use
+- In feature grids to showcase product capabilities
+- In problem/solution sections to list pain points or benefits
+- For testimonial cards with quotes and attribution
+- In pricing tables to display plan details
+- Anywhere you need a contained, elevated content block
+
+## Used In Commercial Site
+- **ProblemSection**: Cards listing customer pain points
+- **FeaturesSection**: Cards showcasing product features with badges
+- **UseCasesSection**: Cards for different user personas
+- **Enterprise/Providers Pages**: Feature and benefit cards
+        `,
+			},
+		},
 	},
 	tags: ['autodocs'],
 } satisfies Meta<typeof Card>
@@ -150,4 +180,53 @@ export const LongContent: Story = {
 			</CardFooter>
 		</Card>
 	),
+}
+
+export const ProblemCardExample: Story = {
+	render: () => (
+		<Card style={{ width: '350px' }}>
+			<CardHeader>
+				<CardTitle>Vendor Lock-In</CardTitle>
+				<CardDescription>Trapped in proprietary ecosystems</CardDescription>
+			</CardHeader>
+			<CardContent>
+				<p className="text-sm text-muted-foreground">
+					Once you commit to a cloud AI provider, switching becomes prohibitively expensive. Your data, workflows, and integrations are all locked in.
+				</p>
+			</CardContent>
+		</Card>
+	),
+	parameters: {
+		docs: {
+			description: {
+				story: 'Card as used in ProblemSection organism. Lists customer pain points with title, description, and body text.',
+			},
+		},
+	},
+}
+
+export const FeatureCardExample: Story = {
+	render: () => (
+		<Card style={{ width: '350px' }}>
+			<CardHeader>
+				<div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
+					<CardTitle>Cross-Node Orchestration</CardTitle>
+					<Badge>Core</Badge>
+				</div>
+				<CardDescription>Distribute workloads across multiple GPUs</CardDescription>
+			</CardHeader>
+			<CardContent>
+				<p className="text-sm text-muted-foreground">
+					Automatically route inference requests to available GPU nodes. Load balancing, failover, and health monitoring built-in.
+				</p>
+			</CardContent>
+		</Card>
+	),
+	parameters: {
+		docs: {
+			description: {
+				story: 'Card as used in FeaturesSection organism. Showcases product features with badge, title, description, and details.',
+			},
+		},
+	},
 }

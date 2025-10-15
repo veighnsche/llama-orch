@@ -46,6 +46,10 @@ import { DiscordIcon } from '@rbee/ui/atoms/DiscordIcon'
 - Uses \`aria-hidden="true"\` as it's decorative
 - Should be paired with visible text or aria-label on parent link
 - Inherits color for proper contrast in light/dark modes
+
+## Used In Commercial Site
+- **Footer**: Social media links section with hover effect to Discord brand color
+- **Community/Support Sections**: Links to Discord server for community support
         `,
 			},
 		},
