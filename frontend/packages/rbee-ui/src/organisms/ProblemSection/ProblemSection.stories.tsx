@@ -3,7 +3,7 @@ import { AlertTriangle, Cloud, DollarSign, Lock, Shield, TrendingDown } from 'lu
 import { ProblemSection } from './ProblemSection'
 
 const meta = {
-	title: 'Organisms/Home/ProblemSection',
+	title: 'Organisms/ProblemSection',
 	component: ProblemSection,
 	parameters: {
 		layout: 'fullscreen',
@@ -38,24 +38,6 @@ Implicit: **"We understand your pain"** — Empathy-driven problem framing.
 - **Loss tags**: Quantify monthly cost impact
 - **Optional CTA banner**: Drive to solution after problem framing
 
-### Problem Framing
-1. **Unpredictable API costs**: Usage-based pricing scales unpredictably
-2. **Vendor lock-in risk**: Proprietary APIs create dependencies
-3. **Privacy & compliance concerns**: Data leaves your network
-
-### Objection Handling
-- **"Is this really a problem?"** → Loss tags quantify impact
-- **"Can't I just use free tier?"** → Unpredictable costs, rate limits
-- **"Is vendor lock-in that bad?"** → Risk framing, dependency concerns
-- **"Do I need to worry about privacy?"** → Compliance concerns, audit requirements
-
-### Variations to Test
-- Alternative problem order: Lead with cost vs. privacy vs. lock-in
-- Alternative tone: More aggressive (fear) vs. neutral (facts)
-- Alternative loss tags: Monthly vs. annual vs. percentage
-
-## Composition
-
 ## Composition
 This organism contains:
 - **Header**: Optional kicker, title, and subtitle
@@ -74,14 +56,13 @@ This organism contains:
 - To establish pain points before presenting value
 
 ## Content Requirements
-- **Title**: Clear problem statement
-- **Subtitle**: Context or amplification
-- **Problem Items**: 3 cards with titles, descriptions, icons
+- **Title**: Clear problem statement (REQUIRED)
+- **Subtitle**: Context or amplification (optional)
+- **Problem Items**: Array of cards with titles, descriptions, icons (REQUIRED)
 - **Tags**: Optional loss indicators or metrics
-- **CTA**: Clear next action
+- **CTA**: Clear next action (optional)
 
 ## Variants
-- **Default**: Three problems with destructive/primary tones
 - **Custom Problems**: Override with custom items
 - **With CTA**: Include call-to-action banner
 - **Without CTA**: Problems only
@@ -90,9 +71,6 @@ This organism contains:
 \`\`\`tsx
 import { ProblemSection } from '@rbee/ui/organisms'
 import { AlertTriangle, DollarSign, Lock } from 'lucide-react'
-
-// Default usage
-<ProblemSection />
 
 // Custom problems
 <ProblemSection
@@ -128,8 +106,9 @@ import { AlertTriangle, DollarSign, Lock } from 'lucide-react'
 
 ## Used In
 - Home page (/)
-- Landing pages
-- Marketing pages
+- Developers page (/developers)
+- Enterprise page (/enterprise)
+- GPU Providers page (/gpu-providers)
 
 ## Related Components
 - Button
@@ -150,7 +129,7 @@ import { AlertTriangle, DollarSign, Lock } from 'lucide-react'
 	argTypes: {
 		title: {
 			control: 'text',
-			description: 'Section title',
+			description: 'Section title (REQUIRED)',
 			table: {
 				type: { summary: 'string' },
 				category: 'Content',
@@ -172,24 +151,45 @@ import { AlertTriangle, DollarSign, Lock } from 'lucide-react'
 				category: 'Content',
 			},
 		},
+		items: {
+			control: 'object',
+			description: 'Array of problem items (REQUIRED)',
+			table: {
+				type: { summary: 'ProblemItem[]' },
+				category: 'Content',
+			},
+		},
 	},
 } satisfies Meta<typeof ProblemSection>
 
 export default meta
 type Story = StoryObj<typeof meta>
 
-export const Default: Story = {
-	parameters: {
-		docs: {
-			description: {
-				story:
-					'Default problem section with three problems and CTA banner. Use the theme toggle in the toolbar to switch between light and dark modes. Use the viewport toolbar to test responsive behavior.',
-			},
-		},
-	},
-}
-
 export const HomePageContext: Story = {
+	args: {
+		title: 'The hidden risk of AI-assisted development',
+		subtitle: "You're building complex codebases with AI assistance. What happens when the provider changes the rules?",
+		items: [
+			{
+				title: 'The model changes',
+				body: 'Your assistant updates overnight. Code generation breaks; workflows stall; your team is blocked.',
+				icon: <AlertTriangle className="h-6 w-6" />,
+				tone: 'destructive' as const,
+			},
+			{
+				title: 'The price increases',
+				body: '$20/month becomes $200/month—multiplied by your team. Infrastructure costs spiral.',
+				icon: <DollarSign className="h-6 w-6" />,
+				tone: 'primary' as const,
+			},
+			{
+				title: 'The provider shuts down',
+				body: 'APIs get deprecated. Your AI-built code becomes unmaintainable overnight.',
+				icon: <Lock className="h-6 w-6" />,
+				tone: 'destructive' as const,
+			},
+		],
+	},
 	parameters: {
 		docs: {
 			description: {
@@ -200,34 +200,37 @@ export const HomePageContext: Story = {
 - **Visual hierarchy**: Icons + tone-based styling
 - **Optional CTA**: Drives to solution after problem framing
 
-**Problem 1: Unpredictable API costs**
-- **Icon**: DollarSign (red/destructive)
+**Problem 1: The model changes**
+- **Icon**: AlertTriangle (red/destructive)
 - **Tone**: Destructive (critical problem)
-- **Copy**: "Usage-based pricing scales unpredictably. What starts at $20/month becomes $2000/month."
-- **Tag**: "Loss €50/mo" (quantified impact)
-- **Target**: Cost-conscious developers, startups with budget pressure
+- **Copy**: "Your assistant updates overnight. Code generation breaks; workflows stall; your team is blocked."
+- **No tag**: Impact is immediate and qualitative
+- **Target**: Developers who experienced breaking changes from AI provider updates
+- **Why this pain point**: Addresses the #1 fear of AI-assisted development—loss of control. When Claude/GPT updates, code generation patterns change, breaking established workflows. This is a visceral, immediate pain that developers have experienced firsthand.
 
-**Problem 2: Vendor lock-in risk**
+**Problem 2: The price increases**
+- **Icon**: DollarSign (blue/primary)
+- **Tone**: Primary (important, cost-focused)
+- **Copy**: "$20/month becomes $200/month—multiplied by your team. Infrastructure costs spiral."
+- **No tag**: Copy already quantifies the impact (10x increase)
+- **Target**: Engineering managers, CTOs concerned about budget predictability
+- **Why this pain point**: Addresses the economic reality of AI tooling. GitHub Copilot started at $10/mo, now $19-39/mo. Cursor is $20/mo per seat. For a 10-person team, that's $200-400/month, and prices keep rising. This creates budget anxiety and makes AI tooling a line-item risk.
+
+**Problem 3: The provider shuts down**
 - **Icon**: Lock (red/destructive)
 - **Tone**: Destructive (critical problem)
-- **Copy**: "Your entire codebase depends on proprietary APIs. Switching providers means rewriting everything."
-- **Tag**: "High risk" (qualitative impact)
-- **Target**: Developers concerned about dependencies, long-term maintainability
-
-**Problem 3: Privacy & compliance concerns**
-- **Icon**: Shield (red/destructive)
-- **Tone**: Destructive (critical problem)
-- **Copy**: "Your code and prompts are sent to external servers. Compliance becomes a nightmare."
-- **No tag**: (impact is qualitative)
-- **Target**: Enterprise, regulated industries, privacy-conscious developers
+- **Copy**: "APIs get deprecated. Your AI-built code becomes unmaintainable overnight."
+- **No tag**: Existential threat doesn't need quantification
+- **Target**: Developers building long-term codebases with AI assistance
+- **Why this pain point**: Addresses the existential risk of dependency. When you build complex codebases with AI assistance, you're creating technical debt that's tied to a specific provider. If that provider shuts down or changes their API, your codebase becomes unmaintainable. This is the "vendor lock-in" fear taken to its logical extreme.
 
 **Conversion Strategy:**
-- Three problems cover main pain points (cost, lock-in, privacy)
-- Tone-based styling creates urgency (red = critical)
-- Loss tags quantify impact (not abstract)
-- Optional CTA drives to solution section
+- Three problems cover main pain points (workflow stability, cost predictability, long-term maintainability)
+- Tone-based styling creates urgency (red = critical, blue = important)
+- No CTA on home page—let the problem breathe before presenting solution
+- Copy is developer-focused but accessible to non-technical decision-makers
 
-**Tone**: Empathetic, urgent, problem-focused`,
+**Tone**: Empathetic, urgent, problem-focused. Not fear-mongering, but realistic about the risks of AI dependency.`,
 			},
 		},
 	},
@@ -235,9 +238,30 @@ export const HomePageContext: Story = {
 
 export const WithoutCTA: Story = {
 	args: {
-		ctaPrimary: undefined,
-		ctaSecondary: undefined,
-		ctaCopy: undefined,
+		title: 'Why cloud AI is risky',
+		subtitle: "Relying on external providers creates dependencies you can't control",
+		items: [
+			{
+				title: 'Vendor lock-in',
+				body: 'Your entire codebase depends on proprietary APIs. Switching providers means rewriting everything.',
+				icon: <Lock className="h-6 w-6" />,
+				tone: 'destructive' as const,
+				tag: 'High risk',
+			},
+			{
+				title: 'Unpredictable costs',
+				body: 'Usage-based pricing scales exponentially. What starts at $20/month becomes $2000/month.',
+				icon: <TrendingDown className="h-6 w-6" />,
+				tone: 'primary' as const,
+				tag: 'Loss €180/mo',
+			},
+			{
+				title: 'Data privacy concerns',
+				body: 'Your code and prompts are sent to external servers. Compliance becomes a nightmare.',
+				icon: <Shield className="h-6 w-6" />,
+				tone: 'destructive' as const,
+			},
+		],
 	},
 	parameters: {
 		docs: {

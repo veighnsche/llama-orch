@@ -1,6 +1,118 @@
 import type { Meta, StoryObj } from '@storybook/react'
-import { Building2, Code, Rocket } from 'lucide-react'
+import { Building2, Code, Rocket, ArrowRight } from 'lucide-react'
 import { AudienceCard } from './AudienceCard'
+import { Button } from '@rbee/ui/atoms/Button'
+import { cn } from '@rbee/ui/utils'
+import Link from 'next/link'
+import type { LucideIcon } from 'lucide-react'
+
+// Original AudienceCard component (before refactor)
+interface OriginalAudienceCardProps {
+	icon: LucideIcon
+	category: string
+	title: string
+	description: string
+	features: string[]
+	href: string
+	ctaText: string
+	color: string
+	className?: string
+}
+
+function OriginalAudienceCard({
+	icon: Icon,
+	category,
+	title,
+	description,
+	features,
+	href,
+	ctaText,
+	color,
+	className,
+}: OriginalAudienceCardProps) {
+	const colorClasses = {
+		primary: {
+			hoverBorder: 'hover:border-primary/50',
+			gradient: 'from-primary/0 via-primary/0 to-primary/0 group-hover:from-primary/5 group-hover:via-primary/10',
+			iconBg: 'from-primary to-primary',
+			text: 'text-primary',
+			button: 'bg-primary',
+		},
+		'chart-1': {
+			hoverBorder: 'hover:border-chart-1/50',
+			gradient: 'from-chart-1/0 via-chart-1/0 to-chart-1/0 group-hover:from-chart-1/5 group-hover:via-chart-1/10',
+			iconBg: 'from-chart-1 to-chart-1',
+			text: 'text-chart-1',
+			button: 'bg-chart-1',
+		},
+		'chart-3': {
+			hoverBorder: 'hover:border-chart-3/50',
+			gradient: 'from-chart-3/0 via-chart-3/0 to-chart-3/0 group-hover:from-chart-3/5 group-hover:via-chart-3/10',
+			iconBg: 'from-chart-3 to-chart-3',
+			text: 'text-chart-3',
+			button: 'bg-chart-3',
+		},
+	}
+
+	const colors = colorClasses[color as keyof typeof colorClasses] || colorClasses.primary
+	const descriptionId = `${title.toLowerCase().replace(/\s+/g, '-')}-description`
+
+	return (
+		<div className="flex flex-col">
+			<div
+				className={cn(
+					'group relative flex flex-col overflow-hidden border-border bg-card backdrop-blur-sm transition-all duration-300 hover:scale-[1.02] rounded-lg border p-6',
+					colors.hoverBorder,
+					className,
+				)}
+			>
+				<div
+					className={cn(
+						'absolute inset-0 -z-10 bg-gradient-to-br opacity-0 transition-all duration-500 group-hover:to-transparent group-hover:opacity-100',
+						colors.gradient,
+					)}
+				/>
+
+				<div className="mb-6 flex items-center gap-3">
+					<div
+						className={cn(
+							'flex h-14 w-14 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br shadow-lg',
+							colors.iconBg,
+						)}
+					>
+						<Icon className="h-7 w-7 text-primary-foreground" aria-hidden="true" />
+					</div>
+				</div>
+
+				<div className={cn('mb-2 text-sm font-medium uppercase tracking-wider', colors.text)}>{category}</div>
+				<h3 className="mb-3 text-2xl font-semibold text-card-foreground">{title}</h3>
+				<p id={descriptionId} className="mb-6 text-sm leading-relaxed text-muted-foreground sm:text-base">
+					{description}
+				</p>
+
+				<ul className="mb-8 space-y-3 text-sm text-muted-foreground sm:text-base">
+					{features.map((feature, index) => (
+						<li key={index} className="flex items-start gap-2">
+							<span className={cn('mt-1', colors.text)} aria-hidden="true">
+								→
+							</span>
+							<span>{feature}</span>
+						</li>
+					))}
+				</ul>
+
+				<div className="flex-1" />
+
+				<Link href={href}>
+					<Button className={cn('w-full', colors.button)} aria-describedby={descriptionId}>
+						{ctaText}
+						<ArrowRight className="ml-2 h-4 w-4" aria-hidden="true" />
+					</Button>
+				</Link>
+			</div>
+		</div>
+	)
+}
 
 const meta: Meta<typeof AudienceCard> = {
 	title: 'Molecules/AudienceCard',
@@ -206,6 +318,116 @@ export const AllColors: Story = {
 		docs: {
 			description: {
 				story: 'All available color variants. Each color creates a different visual hierarchy and emotional response.',
+			},
+		},
+	},
+}
+
+export const OriginalVsNew: Story = {
+	render: () => (
+		<div className="space-y-12 p-8 bg-background">
+			<div>
+				<h2 className="text-2xl font-bold mb-4 text-foreground">Original Design (Plain div, no Card atom)</h2>
+				<div className="grid grid-cols-1 gap-6 md:grid-cols-3">
+					<OriginalAudienceCard
+						icon={Code}
+						category="FOR DEVELOPERS"
+						title="Build on Your Hardware"
+						description="Power Zed, Cursor, and your own agents on YOUR GPUs. OpenAI-compatible—drop-in, zero API fees."
+						features={[
+							'Zero API costs, unlimited usage',
+							'Your code stays on your network',
+							'Agentic API + TypeScript utils',
+						]}
+						href="#"
+						ctaText="Explore Developer Path"
+						color="primary"
+					/>
+					<OriginalAudienceCard
+						icon={Building2}
+						category="FOR GPU OWNERS"
+						title="Monetize Your Hardware"
+						description="Join the rbee marketplace and earn from gaming rigs to server farms—set price, stay in control."
+						features={[
+							'Set pricing & availability',
+							'Audit trails and payouts',
+							'Passive income from idle GPUs',
+						]}
+						href="#"
+						ctaText="Become a Provider"
+						color="chart-1"
+					/>
+					<OriginalAudienceCard
+						icon={Rocket}
+						category="FOR ENTERPRISE"
+						title="Compliance & Security"
+						description="EU-native compliance, audit trails, and zero-trust architecture—from day one."
+						features={[
+							'GDPR with 7-year retention',
+							'SOC2 & ISO 27001 aligned',
+							'Private cloud or on-prem',
+						]}
+						href="#"
+						ctaText="Enterprise Solutions"
+						color="chart-3"
+					/>
+				</div>
+			</div>
+
+			<div>
+				<h2 className="text-2xl font-bold mb-4 text-foreground">New Design (Card atom + ButtonCardFooter)</h2>
+				<div className="grid grid-cols-1 gap-6 md:grid-cols-3">
+					<AudienceCard
+						icon={Code}
+						category="FOR DEVELOPERS"
+						title="Build on Your Hardware"
+						description="Power Zed, Cursor, and your own agents on YOUR GPUs. OpenAI-compatible—drop-in, zero API fees."
+						features={[
+							'Zero API costs, unlimited usage',
+							'Your code stays on your network',
+							'Agentic API + TypeScript utils',
+						]}
+						href="#"
+						ctaText="Explore Developer Path"
+						color="primary"
+					/>
+					<AudienceCard
+						icon={Building2}
+						category="FOR GPU OWNERS"
+						title="Monetize Your Hardware"
+						description="Join the rbee marketplace and earn from gaming rigs to server farms—set price, stay in control."
+						features={[
+							'Set pricing & availability',
+							'Audit trails and payouts',
+							'Passive income from idle GPUs',
+						]}
+						href="#"
+						ctaText="Become a Provider"
+						color="chart-1"
+					/>
+					<AudienceCard
+						icon={Rocket}
+						category="FOR ENTERPRISE"
+						title="Compliance & Security"
+						description="EU-native compliance, audit trails, and zero-trust architecture—from day one."
+						features={[
+							'GDPR with 7-year retention',
+							'SOC2 & ISO 27001 aligned',
+							'Private cloud or on-prem',
+						]}
+						href="#"
+						ctaText="Enterprise Solutions"
+						color="chart-3"
+					/>
+				</div>
+			</div>
+		</div>
+	),
+	parameters: {
+		layout: 'fullscreen',
+		docs: {
+			description: {
+				story: 'Side-by-side comparison of the original AudienceCard design vs the new refactored version with Card atom and ButtonCardFooter.',
 			},
 		},
 	},

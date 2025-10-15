@@ -12,10 +12,12 @@ export interface SectionContainerProps {
 	eyebrow?: string | ReactNode
 	/** Short lead-in sentence between eyebrow and title */
 	kicker?: string | ReactNode
+	/** Kicker color variant */
+	kickerVariant?: 'default' | 'destructive'
 	/** Right-aligned controls near the title (e.g., buttons) */
 	actions?: ReactNode
 	/** Background variant */
-	bgVariant?: 'background' | 'secondary' | 'card' | 'default' | 'muted' | 'subtle'
+	bgVariant?: 'background' | 'secondary' | 'card' | 'default' | 'muted' | 'subtle' | 'destructive-gradient'
 	/** Center the content (deprecated, use align) */
 	centered?: boolean
 	/** Content alignment */
@@ -47,6 +49,7 @@ const bgClasses = {
 	default: 'bg-background',
 	muted: 'bg-muted',
 	subtle: 'bg-background relative before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-border/60',
+	'destructive-gradient': 'bg-gradient-to-b from-background via-destructive/8 to-background border-b border-border',
 } as const
 
 const padY = {
@@ -87,6 +90,7 @@ export function SectionContainer({
 	description,
 	eyebrow,
 	kicker,
+	kickerVariant = 'default',
 	actions,
 	bgVariant = 'background',
 	centered = true,
@@ -127,12 +131,21 @@ export function SectionContainer({
 					>
 						<div className={cn(layout === 'split' && actions ? 'md:col-span-8 space-y-3' : 'space-y-3')}>
 							{eyebrow && (
-								<div className="text-xs font-medium text-muted-foreground uppercase tracking-wide animate-fade-in">
+								<div className="text-xs font-medium text-primary uppercase tracking-wide animate-fade-in">
 									{eyebrow}
 								</div>
 							)}
 
-							{kicker && <div className="text-sm text-muted-foreground animate-fade-in">{kicker}</div>}
+							{kicker && (
+								<div
+									className={cn(
+										'text-sm font-medium animate-fade-in',
+										kickerVariant === 'destructive' ? 'text-destructive/80' : 'text-muted-foreground',
+									)}
+								>
+									{kicker}
+								</div>
+							)}
 
 							<HTag
 								as={headlineLevel}

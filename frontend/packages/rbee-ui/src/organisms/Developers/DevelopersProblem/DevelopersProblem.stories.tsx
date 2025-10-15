@@ -134,8 +134,31 @@ export const DevelopersPageDefault: Story = {
 	parameters: {
 		docs: {
 			description: {
-				story:
-					'Default problem section for the Developers page with exact copy from `/developers`. Shows 3 developer-specific risks: model changes, price increases, and provider shutdown. Note the emphasis on "complex codebases built with AI assistance" as the asset at risk.',
+				story: `Default problem section for the Developers page with exact copy from \`/developers\`. Shows 3 developer-specific risks: model changes, price increases, and provider shutdown. Note the emphasis on "complex codebases built with AI assistance" as the asset at risk.
+
+**Problem 1: The Model Changes**
+- **Icon**: AlertTriangle (red/destructive)
+- **Tone**: Destructive (critical problem)
+- **Copy**: "Your AI assistant updates overnight. Suddenly, code generation breaks. Your workflow is destroyed. Your team is blocked."
+- **Tag**: "High risk"
+- **Target**: Developers using AI coding assistants (Cursor, Zed, Continue, GitHub Copilot)
+- **Why this pain point**: This is the #1 fear for developers building with AI assistance. When Claude/GPT/Copilot updates, code generation patterns change. What worked yesterday breaks today. Your team's velocity drops to zero. This is a visceral, immediate pain that developers have experienced firsthand. The copywriter chose this because it's the most relatable pain point—every developer using AI has experienced a breaking change.
+
+**Problem 2: The Price Increases**
+- **Icon**: DollarSign (blue/primary)
+- **Tone**: Primary (important, cost-focused)
+- **Copy**: "$20/month becomes $200/month. Multiply by your team size. Your AI infrastructure costs spiral out of control."
+- **Tag**: "Cost increase: 10x"
+- **Target**: Engineering managers, team leads, CTOs
+- **Why this pain point**: AI tooling costs are unpredictable and rising. GitHub Copilot went from $10/mo to $19-39/mo. Cursor is $20/mo per seat. For a 10-person team, that's $200-400/month. The copywriter chose "10x" because it's a realistic multiplier that's happened in the AI tooling market. This creates budget anxiety and makes AI tooling a line-item risk. The emphasis on "multiply by your team size" makes the pain concrete—it's not $20, it's $200-2000 depending on team size.
+
+**Problem 3: The Provider Shuts Down**
+- **Icon**: Lock (red/destructive)
+- **Tone**: Destructive (critical problem)
+- **Copy**: "API deprecated. Service discontinued. Your complex codebase—built with AI assistance—becomes unmaintainable overnight."
+- **Tag**: "Critical failure"
+- **Target**: Developers building long-term codebases with AI assistance
+- **Why this pain point**: This addresses the existential risk of dependency. When you build complex codebases with AI assistance, you're creating technical debt that's tied to a specific provider. If that provider shuts down or changes their API, your codebase becomes unmaintainable. The copywriter chose "complex codebase—built with AI assistance" to emphasize the asset at risk. This is the "vendor lock-in" fear taken to its logical extreme. The short, punchy sentences ("API deprecated. Service discontinued.") create urgency and finality.`,
 			},
 		},
 	},

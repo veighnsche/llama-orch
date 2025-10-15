@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from '@storybook/react'
 import { HowItWorksSection } from './HowItWorksSection'
 
 const meta = {
-	title: 'Organisms/Home/HowItWorksSection',
+	title: 'Organisms/HowItWorksSection',
 	component: HowItWorksSection,
 	parameters: {
 		layout: 'fullscreen',
@@ -49,7 +49,7 @@ Technical visitors evaluating feasibility. They need:
 
 ## Composition
 This organism contains:
-- **Header**: Title and optional subtitle
+- **Header**: Title and optional subtitle (via SectionContainer)
 - **Steps**: Array of step objects with labels and code blocks
 - **Step Badges**: Numbered circles for visual hierarchy
 - **ConsoleOutput**: Terminal/code blocks with syntax highlighting and copy buttons
@@ -62,8 +62,8 @@ This organism contains:
 - Landing pages: To reduce perceived complexity
 
 ## Content Requirements
-- **Title**: Clear, time-specific if possible
-- **Steps**: 3-5 steps with labels and code blocks
+- **Title**: Clear, time-specific if possible (required)
+- **Steps**: 3-5 steps with labels and code blocks (required)
 - **Code blocks**: Real, copyable commands
 - **Step labels**: Action-oriented (Install, Add, Configure, Build)
 
@@ -71,7 +71,10 @@ This organism contains:
 
 ### Home Page (/)
 \`\`\`tsx
-<HowItWorksSection />
+<HowItWorksSection
+  title="From zero to AI infrastructure in 15 minutes"
+  steps={[...]}
+/>
 \`\`\`
 
 **Context**: Appears after HomeSolutionSection, before FeaturesSection  
@@ -80,27 +83,35 @@ This organism contains:
 
 ## Examples
 \`\`\`tsx
-import { HowItWorksSection } from '@rbee/ui/organisms/HowItWorksSection'
-
-// Default usage with built-in steps
-<HowItWorksSection />
+import { HowItWorksSection } from '@rbee/ui/organisms'
 
 // Custom title and steps
 <HowItWorksSection
   title="Get started in minutes"
   subtitle="Four simple steps to your own AI infrastructure"
-  steps={[...]}
+  steps={[
+    {
+      label: 'Install rbee',
+      block: {
+        kind: 'terminal',
+        title: 'terminal',
+        lines: <div>curl -sSL https://rbee.dev/install.sh | sh</div>,
+        copyText: 'curl -sSL https://rbee.dev/install.sh | sh',
+      },
+    },
+    // ... more steps
+  ]}
 />
 \`\`\`
 
 ## Related Components
 - ConsoleOutput
-- CodeBlock
+- SectionContainer
 
 ## Accessibility
 - **Keyboard Navigation**: All interactive elements are keyboard accessible
 - **Focus States**: Visible focus indicators on copy buttons
-- **Semantic HTML**: Proper heading hierarchy
+- **Semantic HTML**: Proper heading hierarchy via SectionContainer
 - **Motion**: Respects prefers-reduced-motion
 - **Color Contrast**: Meets WCAG AA standards in both themes
 - **Code Blocks**: Copyable for assistive technology users
@@ -112,10 +123,9 @@ import { HowItWorksSection } from '@rbee/ui/organisms/HowItWorksSection'
 	argTypes: {
 		title: {
 			control: 'text',
-			description: 'Section title',
+			description: 'Section title (required)',
 			table: {
 				type: { summary: 'string' },
-				defaultValue: { summary: 'From zero to AI infrastructure in 15 minutes' },
 				category: 'Content',
 			},
 		},
@@ -134,6 +144,87 @@ export default meta
 type Story = StoryObj<typeof meta>
 
 export const HomePageDefault: Story = {
+	args: {
+		title: 'From zero to AI infrastructure in 15 minutes',
+		steps: [
+			{
+				label: 'Install rbee',
+				block: {
+					kind: 'terminal',
+					title: 'terminal',
+					lines: (
+						<>
+							<div>curl -sSL https://rbee.dev/install.sh | sh</div>
+							<div className="text-[var(--syntax-comment)]">rbee-keeper daemon start</div>
+						</>
+					),
+					copyText: 'curl -sSL https://rbee.dev/install.sh | sh\nrbee-keeper daemon start',
+				},
+			},
+			{
+				label: 'Add your machines',
+				block: {
+					kind: 'terminal',
+					title: 'terminal',
+					lines: (
+						<>
+							<div>rbee-keeper setup add-node --name workstation --ssh-host 192.168.1.10</div>
+							<div className="text-[var(--syntax-comment)]">rbee-keeper setup add-node --name mac --ssh-host 192.168.1.20</div>
+						</>
+					),
+					copyText:
+						'rbee-keeper setup add-node --name workstation --ssh-host 192.168.1.10\nrbee-keeper setup add-node --name mac --ssh-host 192.168.1.20',
+				},
+			},
+			{
+				label: 'Configure your IDE',
+				block: {
+					kind: 'terminal',
+					title: 'terminal',
+					lines: (
+						<>
+							<div>
+								<span className="text-[var(--syntax-keyword)]">export</span> OPENAI_API_BASE=http://localhost:8080/v1
+							</div>
+							<div className="text-[var(--syntax-comment)]"># OpenAI-compatible endpoint — works with Zed & Cursor</div>
+						</>
+					),
+					copyText: 'export OPENAI_API_BASE=http://localhost:8080/v1',
+				},
+			},
+			{
+				label: 'Build AI agents',
+				block: {
+					kind: 'code',
+					title: 'TypeScript',
+					language: 'ts',
+					lines: (
+						<>
+							<div>
+								<span className="text-[var(--syntax-import)]">import</span> {'{'} invoke {'}'}{' '}
+								<span className="text-[var(--syntax-import)]">from</span>{' '}
+								<span className="text-[var(--syntax-string)]">&apos;@rbee/utils&apos;</span>;
+							</div>
+							<div className="mt-2">
+								<span className="text-[var(--syntax-keyword)]">const</span> code = <span className="text-[var(--syntax-keyword)]">await</span>{' '}
+								<span className="text-[var(--syntax-function)]">invoke</span>
+								{'({'}
+							</div>
+							<div className="pl-4">
+								prompt: <span className="text-[var(--syntax-string)]">&apos;Generate API from schema&apos;</span>,
+							</div>
+							<div className="pl-4">
+								model: <span className="text-[var(--syntax-string)]">&apos;llama-3.1-70b&apos;</span>
+							</div>
+							<div>{'});'}</div>
+						</>
+					),
+					copyText:
+						"import { invoke } from '@rbee/utils';\n\nconst code = await invoke({\n  prompt: 'Generate API from schema',\n  model: 'llama-3.1-70b'\n});",
+				},
+			},
+		],
+	},
 	parameters: {
 		docs: {
 			description: {

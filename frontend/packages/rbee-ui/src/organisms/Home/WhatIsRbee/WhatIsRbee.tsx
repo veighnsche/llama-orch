@@ -29,7 +29,6 @@ export function WhatIsRbee() {
         </Badge>
       }
       title="What is rbee?"
-      description="rbee is an open-source AI orchestration platform that unifies every computer in your home or office into a single, OpenAI-compatible AI cluster—private, controllable, and yours forever."
       bgVariant="secondary"
       maxWidth="5xl"
       paddingY="xl"
@@ -59,6 +58,14 @@ export function WhatIsRbee() {
               </TooltipTrigger>
               <TooltipContent>Pronounced like "R.B."</TooltipContent>
             </Tooltip>
+
+            {/* Please put rbee description here, muted font color */}
+            <p className="text-lg text-muted-foreground">
+              <BrandWordmark className="text-muted-foreground" /> is an
+              open-source AI orchestration platform that unifies every computer
+              in your home or office into a single, OpenAI-compatible AI
+              cluster—private, controllable, and yours forever.
+            </p>
 
             {/* Value bullets */}
             <ul className="space-y-3">
@@ -100,11 +107,6 @@ export function WhatIsRbee() {
               ]}
             />
 
-            {/* Closing micro-copy */}
-            <p className="text-base text-muted-foreground leading-relaxed max-w-prose">
-              OpenAI-compatible API. Zed/Cursor-ready. Your models, your rules.
-            </p>
-
             {/* CTA row */}
             <div className="mt-6 flex flex-col sm:flex-row gap-3 justify-center md:justify-start">
               <Button size="lg" asChild>
@@ -120,6 +122,12 @@ export function WhatIsRbee() {
                 </a>
               </Button>
             </div>
+
+            {/* Closing micro-copy */}
+            <p className="text-base text-foreground leading-relaxed max-w-prose">
+              OpenAI-compatible API. Zed/Cursor-ready.
+              <br /> Your models, your rules.
+            </p>
           </div>
 
           {/* Right column: Visual */}

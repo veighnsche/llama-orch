@@ -99,7 +99,39 @@ type Story = StoryObj<typeof meta>
  * Default ProvidersProblem as used on /gpu-providers page.
  * Shows all three provider pain points with financial impact tags.
  */
-export const ProvidersPageDefault: Story = {}
+export const ProvidersPageDefault: Story = {
+	parameters: {
+		docs: {
+			description: {
+				story: `Default ProvidersProblem as used on /gpu-providers page. Shows all three provider pain points with financial impact tags.
+
+**Problem 1: Wasted Investment**
+- **Icon**: TrendingDown (red/destructive)
+- **Tone**: Destructive (critical financial waste)
+- **Copy**: "You paid €1,500+ for a high-end GPU. It's busy maybe 10% of the time—the other 90% earns €0."
+- **Tag**: "Potential earnings €50-200/mo"
+- **Target**: GPU owners with idle hardware (gamers, ML enthusiasts, homelab builders)
+- **Why this pain point**: This addresses the sunk cost fallacy. You spent €1,500+ on a GPU, but it's idle 90% of the time. The copywriter chose "€1,500+" because that's the realistic cost of a high-end GPU (RTX 4090, RTX 4080). "Busy maybe 10% of the time" is based on real usage patterns—most GPUs sit idle. The tag "Potential earnings €50-200/mo" quantifies the opportunity cost. This pain point was chosen first because it's the most emotionally resonant—you spent a lot of money, and it's doing nothing.
+
+**Problem 2: Electricity Costs**
+- **Icon**: Zap (red/destructive)
+- **Tone**: Destructive (direct financial loss)
+- **Copy**: "Idle GPUs still pull power. That's roughly €10-30 each month spent on doing nothing."
+- **Tag**: "Direct loss €10-30/mo"
+- **Target**: GPU owners concerned about electricity costs
+- **Why this pain point**: This addresses the ongoing cost of idle hardware. Idle GPUs still draw power (50-100W at idle). At €0.30/kWh (EU average), that's €10-30/month. The copywriter chose "spent on doing nothing" to emphasize the waste—you're paying for electricity to power hardware that's earning nothing. The tag "Direct loss €10-30/mo" makes the cost concrete. This pain point was chosen second because it's a recurring cost that adds up over time.
+
+**Problem 3: Missed Opportunity**
+- **Icon**: AlertCircle (red/destructive)
+- **Tone**: Destructive (opportunity cost)
+- **Copy**: "Developers rent GPU power every day. Your machine could join the marketplace and get paid automatically."
+- **Tag**: "Unrealized €50-200/mo"
+- **Target**: GPU owners who don't know about GPU rental marketplaces
+- **Why this pain point**: This addresses the opportunity cost of not participating in the GPU rental market. Developers rent GPU power every day (RunPod, Vast.ai, Lambda Labs). Your idle GPU could be earning €50-200/month. The copywriter chose "get paid automatically" to emphasize the passive income aspect—you don't have to do anything, the marketplace handles it. The tag "Unrealized €50-200/mo" quantifies the opportunity. This pain point was chosen last because it presents the solution—join the marketplace and start earning.`,
+			},
+		},
+	},
+}
 
 /**
  * Variant emphasizing wasted investment and ROI.

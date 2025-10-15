@@ -1,20 +1,25 @@
-import { BeeArchitecture, type BeeTopology, IconPlate } from '@rbee/ui/molecules'
-import { cn } from '@rbee/ui/utils'
-import type { ReactNode } from 'react'
+import {
+  BeeArchitecture,
+  type BeeTopology,
+  FeatureInfoCard,
+  SectionContainer,
+} from "@rbee/ui/molecules";
+import { cn } from "@rbee/ui/utils";
+import type { ReactNode } from "react";
 
 export type Benefit = {
-	icon: ReactNode
-	title: string
-	body: string
-}
+  icon: ReactNode;
+  title: string;
+  body: string;
+};
 
 export interface HomeSolutionSectionProps {
-	title: string
-	subtitle?: string
-	benefits: Benefit[]
-	topology: BeeTopology
-	id?: string
-	className?: string
+  title: string;
+  subtitle?: string;
+  benefits: Benefit[];
+  topology: BeeTopology;
+  id?: string;
+  className?: string;
 }
 
 /**
@@ -22,33 +27,41 @@ export interface HomeSolutionSectionProps {
  * with BeeArchitecture diagram. For conversion-focused solution sections
  * (providers, developers, enterprise), use SolutionSection instead.
  */
-export function HomeSolutionSection({ title, subtitle, benefits, topology, id, className }: HomeSolutionSectionProps) {
-	return (
-		<section id={id} className={cn('border-b border-border py-24', className)}>
-			<div className="mx-auto max-w-7xl px-6 lg:px-8">
-				{/* Header */}
-				<div className="mx-auto max-w-2xl text-center">
-					<h2 className="mb-4 text-3xl font-bold tracking-tight text-foreground sm:text-4xl">{title}</h2>
-					{subtitle && <p className="text-balance text-lg leading-relaxed text-muted-foreground">{subtitle}</p>}
-				</div>
+export function HomeSolutionSection({
+  title,
+  subtitle,
+  benefits,
+  topology,
+  id,
+  className,
+}: HomeSolutionSectionProps) {
+  return (
+    <SectionContainer
+      title={title}
+      description={subtitle}
+      bgVariant="background"
+      paddingY="2xl"
+      maxWidth="7xl"
+      align="center"
+      headingId={id}
+      className={cn("border-b border-border", className)}
+    >
+      {/* Benefits Grid */}
+      <div className="mx-auto grid max-w-5xl gap-8 sm:grid-cols-2 lg:grid-cols-4">
+        {benefits.map((benefit, idx) => (
+          <FeatureInfoCard
+            key={idx}
+            icon={benefit.icon}
+            title={benefit.title}
+            body={benefit.body}
+            tone="neutral"
+            size="sm"
+          />
+        ))}
+      </div>
 
-				{/* Benefits Grid */}
-				<div className="mx-auto mt-16 grid max-w-5xl gap-8 sm:grid-cols-2 lg:grid-cols-4">
-					{benefits.map((benefit, idx) => (
-						<div
-							key={idx}
-							className="group rounded-lg border border-border bg-card p-6 transition-all hover:border-primary/50 hover:bg-card/80"
-						>
-							<IconPlate icon={benefit.icon} size="lg" tone="primary" className="mb-4" />
-							<h3 className="mb-2 text-lg font-semibold text-card-foreground">{benefit.title}</h3>
-							<p className="text-balance text-sm leading-relaxed text-muted-foreground">{benefit.body}</p>
-						</div>
-					))}
-				</div>
-
-				{/* Architecture Diagram */}
-				<BeeArchitecture topology={topology} />
-			</div>
-		</section>
-	)
+      {/* Architecture Diagram */}
+      <BeeArchitecture topology={topology} />
+    </SectionContainer>
+  );
 }

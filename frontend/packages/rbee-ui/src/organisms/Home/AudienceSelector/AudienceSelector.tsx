@@ -1,17 +1,22 @@
 'use client'
 
 import { Badge } from '@rbee/ui/atoms/Badge'
-import { AudienceCard } from '@rbee/ui/molecules'
+import { AudienceCard, SectionContainer } from '@rbee/ui/molecules'
 import { DevGrid, GpuMarket, ComplianceShield } from '@rbee/ui/icons'
 import { ChevronRight, Code2, Server, Shield } from 'lucide-react'
 import Link from 'next/link'
 
 export function AudienceSelector() {
 	return (
-		<section className="relative bg-background py-24 sm:py-32">
-			{/* Enhanced top hairline with backdrop blur */}
-			<div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/30 to-transparent backdrop-blur-sm" />
-
+		<SectionContainer
+			eyebrow="Choose your path"
+			title="Where should you start?"
+			description="rbee adapts to how you work—build on your own GPUs, monetize idle capacity, or deploy compliant AI at scale."
+			bgVariant="subtle"
+			paddingY="2xl"
+			maxWidth="7xl"
+			align="center"
+		>
 			{/* Radial gradient backplate */}
 			<div
 				className="pointer-events-none absolute inset-x-0 top-0 h-[600px] opacity-40"
@@ -21,25 +26,11 @@ export function AudienceSelector() {
 				aria-hidden="true"
 			/>
 
-			<div className="relative mx-auto max-w-7xl px-6 lg:px-8">
-				{/* Header block with tighter max-width */}
-				<header className="mx-auto mb-10 max-w-2xl text-center sm:mb-12">
-					<p className="mb-4 font-sans text-sm font-medium uppercase tracking-wider text-primary">Choose your path</p>
-
-					<h2 className="mb-6 font-sans text-3xl font-semibold tracking-tight text-foreground sm:text-4xl lg:text-5xl">
-						Where should you start?
-					</h2>
-
-					<p className="font-sans text-lg leading-relaxed text-muted-foreground">
-						rbee adapts to how you work—build on your own GPUs, monetize idle capacity, or deploy compliant AI at scale.
-					</p>
-				</header>
-
-				{/* Grid with responsive 2→3 column layout and equal heights */}
-				<div
-					className="mx-auto grid max-w-6xl grid-cols-1 content-start gap-6 sm:grid-cols-2 xl:grid-cols-3 xl:gap-8"
-					aria-label="Audience options: Developers, GPU Owners, Enterprise"
-				>
+			{/* Grid with responsive 2→3 column layout and equal heights */}
+			<div
+				className="mx-auto grid max-w-6xl grid-cols-1 content-start gap-6 sm:grid-cols-2 xl:grid-cols-3 xl:gap-8"
+				aria-label="Audience options: Developers, GPU Owners, Enterprise"
+			>
 					{/* Developers Card */}
 					<div className="flex h-full">
 						<AudienceCard
@@ -55,7 +46,6 @@ export function AudienceSelector() {
 							href="/developers"
 							ctaText="Explore Developer Path"
 							color="chart-2"
-							className="h-full min-h-[22rem] p-6 transition-transform duration-300 hover:-translate-y-1 focus-visible:ring-2 focus-visible:ring-primary/40 sm:p-7 md:min-h-[22rem] lg:p-8"
 							imageSlot={
 								<DevGrid
 									size={56}
@@ -82,7 +72,6 @@ export function AudienceSelector() {
 							href="/gpu-providers"
 							ctaText="Become a Provider"
 							color="chart-3"
-							className="h-full min-h-[22rem] p-6 transition-transform duration-300 hover:-translate-y-1 focus-visible:ring-2 focus-visible:ring-primary/40 sm:p-7 md:min-h-[22rem] lg:p-8"
 							imageSlot={
 								<GpuMarket
 									size={56}
@@ -104,7 +93,6 @@ export function AudienceSelector() {
 							href="/enterprise"
 							ctaText="Enterprise Solutions"
 							color="primary"
-							className="h-full min-h-[22rem] p-6 transition-transform duration-300 hover:-translate-y-1 focus-visible:ring-2 focus-visible:ring-primary/40 sm:p-7 md:min-h-[22rem] lg:p-8"
 							imageSlot={
 								<ComplianceShield
 									size={56}
@@ -114,27 +102,26 @@ export function AudienceSelector() {
 							decisionLabel="Deploy with compliance"
 						/>
 					</div>
-				</div>
-
-				{/* Bottom helper links */}
-				<div className="mx-auto mt-12 text-center">
-					<Link
-						href="#compare"
-						className="inline-flex items-center gap-2 text-sm text-muted-foreground transition-colors hover:text-foreground focus-visible:ring-2 focus-visible:ring-primary/40"
-					>
-						Not sure? Compare paths
-						<ChevronRight className="h-3.5 w-3.5" />
-					</Link>
-					<span className="mx-3 text-muted-foreground/50">·</span>
-					<Link
-						href="#contact"
-						className="inline-flex items-center gap-2 text-sm text-muted-foreground transition-colors hover:text-foreground focus-visible:ring-2 focus-visible:ring-primary/40"
-					>
-						Talk to us
-						<ChevronRight className="h-3.5 w-3.5" />
-					</Link>
-				</div>
 			</div>
-		</section>
+
+			{/* Bottom helper links */}
+			<div className="mx-auto mt-12 text-center">
+				<Link
+					href="#compare"
+					className="inline-flex items-center gap-2 text-sm text-muted-foreground transition-colors hover:text-foreground focus-visible:ring-2 focus-visible:ring-primary/40"
+				>
+					Not sure? Compare paths
+					<ChevronRight className="h-3.5 w-3.5" />
+				</Link>
+				<span className="mx-3 text-muted-foreground/50">·</span>
+				<Link
+					href="#contact"
+					className="inline-flex items-center gap-2 text-sm text-muted-foreground transition-colors hover:text-foreground focus-visible:ring-2 focus-visible:ring-primary/40"
+				>
+					Talk to us
+					<ChevronRight className="h-3.5 w-3.5" />
+				</Link>
+			</div>
+		</SectionContainer>
 	)
 }
