@@ -2,6 +2,7 @@
 
 import { cn } from '@rbee/ui/utils'
 import { useEffect, useState } from 'react'
+import { KeyValuePair } from '../../atoms/KeyValuePair'
 
 export interface FloatingKPICardProps {
 	/** Additional CSS classes */
@@ -33,18 +34,9 @@ export function FloatingKPICard({ className }: FloatingKPICardProps) {
 				className,
 			)}
 		>
-			<div className="flex items-center justify-between gap-6 text-sm">
-				<span className="text-muted-foreground">GPU Pool</span>
-				<span className="font-semibold text-foreground">5 nodes / 8 GPUs</span>
-			</div>
-			<div className="flex items-center justify-between gap-6 text-sm">
-				<span className="text-muted-foreground">Cost</span>
-				<span className="font-bold text-chart-3">$0.00 / hr</span>
-			</div>
-			<div className="flex items-center justify-between gap-6 text-sm">
-				<span className="text-muted-foreground">Latency</span>
-				<span className="font-semibold text-foreground">~34 ms</span>
-			</div>
+			<KeyValuePair label="GPU Pool" value="5 nodes / 8 GPUs" valueVariant="semibold" />
+			<KeyValuePair label="Cost" value="$0.00 / hr" valueVariant="success" />
+			<KeyValuePair label="Latency" value="~34 ms" valueVariant="semibold" />
 		</div>
 	)
 }

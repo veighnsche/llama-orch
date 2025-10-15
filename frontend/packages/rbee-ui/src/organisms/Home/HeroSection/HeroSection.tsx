@@ -1,7 +1,7 @@
 'use client'
 
 import { Button } from '@rbee/ui/atoms/Button'
-import { FloatingKPICard, ProgressBar, PulseBadge, TerminalWindow } from '@rbee/ui/molecules'
+import { BulletListItem, FloatingKPICard, ProgressBar, PulseBadge, TerminalWindow } from '@rbee/ui/molecules'
 import { HoneycombPattern } from '@rbee/ui/icons'
 import { ArrowRight, DollarSign, Star } from 'lucide-react'
 import { useEffect, useState } from 'react'
@@ -52,25 +52,10 @@ export function HeroSection() {
 						</p>
 
 						{/* Micro-proof bullets */}
-						<ul className="space-y-2 text-sm text-muted-foreground">
-							<li className="flex items-center gap-2">
-								<span className="text-chart-3" aria-hidden="true">
-									✓
-								</span>
-								Your GPUs, your network
-							</li>
-							<li className="flex items-center gap-2">
-								<span className="text-chart-3" aria-hidden="true">
-									✓
-								</span>
-								Zero API fees
-							</li>
-							<li className="flex items-center gap-2">
-								<span className="text-chart-3" aria-hidden="true">
-									✓
-								</span>
-								Drop-in OpenAI API
-							</li>
+						<ul className="space-y-2 text-sm">
+							<BulletListItem title="Your GPUs, your network" variant="check" color="chart-3" />
+							<BulletListItem title="Zero API fees" variant="check" color="chart-3" />
+							<BulletListItem title="Drop-in OpenAI API" variant="check" color="chart-3" />
 						</ul>
 
 						{/* CTA Group */}
