@@ -1,7 +1,8 @@
 'use client'
 
+import { Alert, AlertDescription } from '@rbee/ui/atoms/Alert'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@rbee/ui/atoms/Tabs'
-import { BenefitCallout, CodeBlock, SectionContainer } from '@rbee/ui/molecules'
+import { CodeBlock, SectionContainer } from '@rbee/ui/molecules'
 import { Code, Cpu, Gauge, Zap } from 'lucide-react'
 
 export function FeaturesSection() {
@@ -91,7 +92,9 @@ export OPENAI_API_BASE=http://localhost:8080/v1
 echo "→ Clients now talk to rbee at http://localhost:8080/v1"`}
 								/>
 
-								<BenefitCallout variant="success" text="No code changes. Just point to localhost." />
+								<Alert variant="success">
+								<AlertDescription>No code changes. Just point to localhost.</AlertDescription>
+							</Alert>
 							</div>
 						</TabsContent>
 
@@ -171,7 +174,9 @@ echo "→ Clients now talk to rbee at http://localhost:8080/v1"`}
 									Live utilization varies per task; numbers here are illustrative.
 								</p>
 
-								<BenefitCallout variant="info" text="10× throughput by using all your hardware." />
+								<Alert variant="info">
+								<AlertDescription>10× throughput by using all your hardware.</AlertDescription>
+							</Alert>
 							</div>
 						</TabsContent>
 
@@ -211,7 +216,9 @@ else if task.region == "eu" { route_to("metal:labels=mac") }
 else { route_to("cheapest") }`}
 								/>
 
-								<BenefitCallout variant="primary" text="Optimize for cost, latency, or compliance—your rules." />
+								<Alert variant="primary">
+								<AlertDescription>Optimize for cost, latency, or compliance—your rules.</AlertDescription>
+							</Alert>
 							</div>
 						</TabsContent>
 
@@ -260,7 +267,9 @@ else { route_to("cheapest") }`}
 { "id": "task_123", "status": "success", "total_tokens": 1234, "cost": "€0.00" }`}
 								/>
 
-								<BenefitCallout text="Full visibility into every inference job." />
+								<Alert variant="success">
+								<AlertDescription>Full visibility into every inference job.</AlertDescription>
+							</Alert>
 							</div>
 						</TabsContent>
 					</div>

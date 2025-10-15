@@ -13,7 +13,7 @@ const meta: Meta<typeof Alert> = {
 	argTypes: {
 		variant: {
 			control: 'select',
-			options: ['default', 'destructive'],
+			options: ['default', 'destructive', 'success', 'primary', 'info', 'warning'],
 			description: 'Visual style variant of the alert',
 		},
 	},
@@ -62,6 +62,26 @@ export const AllVariants: Story = {
 				<AlertCircle />
 				<AlertTitle>Error</AlertTitle>
 				<AlertDescription>This is a destructive alert for errors or critical warnings.</AlertDescription>
+			</Alert>
+			<Alert variant="success">
+				<CheckCircle2 />
+				<AlertTitle>Success</AlertTitle>
+				<AlertDescription>Your data never leaves your infrastructure.</AlertDescription>
+			</Alert>
+			<Alert variant="primary">
+				<Info />
+				<AlertTitle>Primary</AlertTitle>
+				<AlertDescription>Lightning-fast inference with GPU acceleration.</AlertDescription>
+			</Alert>
+			<Alert variant="info">
+				<Info />
+				<AlertTitle>Info</AlertTitle>
+				<AlertDescription>GDPR compliant by design.</AlertDescription>
+			</Alert>
+			<Alert variant="warning">
+				<AlertCircle />
+				<AlertTitle>Warning</AlertTitle>
+				<AlertDescription>Bank-grade security with zero-trust architecture.</AlertDescription>
 			</Alert>
 		</div>
 	),

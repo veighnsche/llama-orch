@@ -1,5 +1,6 @@
 import { GeistMono } from 'geist/font/mono'
 import { GeistSans } from 'geist/font/sans'
+import { Source_Serif_4 } from 'next/font/google'
 import type { Metadata } from 'next'
 import type React from 'react'
 // 🚨 TURBOREPO PATTERN: Import pre-built UI CSS FIRST, then app CSS
@@ -10,6 +11,12 @@ import './globals.css'
 import { Footer, Navigation } from '@rbee/ui/organisms'
 import { Suspense } from 'react'
 import { ThemeProvider } from '@/components/providers/ThemeProvider/ThemeProvider'
+
+const sourceSerif = Source_Serif_4({
+	subsets: ['latin'],
+	variable: '--font-source-serif',
+	weight: ['400', '600', '700'],
+})
 
 export const metadata: Metadata = {
 	title: 'rbee - Build with AI. Own Your Infrastructure.',
@@ -24,7 +31,7 @@ export default function RootLayout({
 	children: React.ReactNode
 }>) {
 	return (
-		<html lang="en" suppressHydrationWarning className={`${GeistSans.variable} ${GeistMono.variable}`}>
+		<html lang="en" suppressHydrationWarning className={`${GeistSans.variable} ${GeistMono.variable} ${sourceSerif.variable}`}>
 			<body className="font-sans">
 				<ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
 					<Navigation />

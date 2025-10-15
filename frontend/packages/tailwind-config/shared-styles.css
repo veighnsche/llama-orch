@@ -22,6 +22,7 @@
 
 	/* Fonts */
 	--font-sans: var(--font-geist-sans);
+	--font-serif: var(--font-source-serif);
 	--font-mono: var(--font-geist-mono);
 
 	/* Semantic colors */
