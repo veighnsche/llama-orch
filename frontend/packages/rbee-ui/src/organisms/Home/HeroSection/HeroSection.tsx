@@ -52,7 +52,7 @@ export function HeroSection() {
 						</p>
 
 						{/* Micro-proof bullets */}
-						<ul className="space-y-2 text-sm">
+						<ul className="space-y-2">
 							<BulletListItem title="Your GPUs, your network" variant="check" color="chart-3" />
 							<BulletListItem title="Zero API fees" variant="check" color="chart-3" />
 							<BulletListItem title="Drop-in OpenAI API" variant="check" color="chart-3" />
@@ -89,22 +89,22 @@ export function HeroSection() {
 									className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 focus-visible:ring-offset-2 rounded-sm"
 								>
 									<Star className="h-5 w-5" aria-hidden="true" />
-									<span className="text-sm">Star on GitHub</span>
+									<span className="text-sm font-sans">Star on GitHub</span>
 									<ArrowRight className="h-3 w-3 transition-transform group-hover:translate-x-0.5" aria-hidden="true" />
 								</a>
 							</li>
 							<li className="flex items-center gap-3 text-muted-foreground">
 								<div
-									className="h-5 px-1.5 flex items-center justify-center text-xs font-bold border border-border rounded-sm"
+									className="h-5 px-1.5 flex items-center justify-center text-xs font-sans font-bold border border-border rounded-sm"
 									aria-hidden="true"
 								>
 									API
 								</div>
-								<span className="text-sm">OpenAI-Compatible</span>
+								<span className="text-sm font-sans">OpenAI-Compatible</span>
 							</li>
 							<li className="flex items-center gap-3 text-muted-foreground">
 								<DollarSign className="h-5 w-5" aria-hidden="true" />
-								<span className="text-sm">$0 • No Cloud Required</span>
+								<span className="text-sm font-sans">$0 • No Cloud Required</span>
 							</li>
 						</ul>
 					</div>
@@ -136,7 +136,7 @@ export function HeroSection() {
 
 									{/* GPU Utilization */}
 									<div className="pt-4 space-y-2">
-										<div className="text-muted-foreground text-xs">GPU Pool (5 nodes):</div>
+										<div className="text-muted-foreground text-xs font-sans">GPU Pool (5 nodes):</div>
 										<div className="space-y-1">
 											<ProgressBar label="Gaming PC 1" percentage={91} />
 											<ProgressBar label="Gaming PC 2" percentage={88} />
@@ -146,7 +146,7 @@ export function HeroSection() {
 									</div>
 
 									{/* Cost Counter */}
-									<div className="pt-2 flex items-center justify-between text-xs">
+									<div className="pt-2 flex items-center justify-between text-xs font-sans">
 										<span className="text-muted-foreground">Local Inference</span>
 										<span className="text-chart-3 font-bold">$0.00</span>
 									</div>

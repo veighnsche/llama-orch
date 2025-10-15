@@ -14,9 +14,19 @@ This package provides:
 
 The rbee design system is built around:
 - **Primary Color**: Honeycomb Yellow/Gold (#f59e0b, hue: 45)
+- **Typography**: Serif-first (IBM Plex Serif) for content, sans-serif (Geist Sans) for UI
 - **Dark Mode Support**: Automatic theme switching
 - **Consistent Spacing**: Predefined spacing scale
 - **Accessibility**: Focus states and ARIA support
+
+### Typography System
+
+rbee uses a **serif-first** approach:
+- **Default**: IBM Plex Serif (warm, readable, authoritative)
+- **UI Elements**: Geist Sans (clean, functional, modern)
+- **Code**: Geist Mono (technical, precise)
+
+See [TYPOGRAPHY_GUIDE.md](./TYPOGRAPHY_GUIDE.md) for detailed usage guidelines.
 
 ## Installation
 

@@ -71,7 +71,7 @@ export function WhatIsRbee() {
           <Separator className="hidden md:block my-6" />
 
           {/* Value bullets */}
-          <ul className="space-y-3 text-base text-foreground">
+          <ul className="space-y-3">
             <FeatureListItem
               icon={Zap}
               title="Independence"
@@ -104,16 +104,15 @@ export function WhatIsRbee() {
             columns={3}
             className="pt-4"
             stats={[
-              { value: "$0", label: "No API fees (electricity only)" },
-              { value: "100%", label: "Your code never leaves your network" },
-              { value: "All", label: "CUDA · Metal · CPU — orchestrated" },
+              { value: "$0", label: "No API fees" },
+              { value: "100%", label: "Private" },
+              { value: "All", label: "CUDA · Metal · CPU" },
             ]}
           />
 
           {/* Closing micro-copy */}
           <p className="text-base text-muted-foreground leading-relaxed max-w-prose">
-            Build AI coders on your own hardware. OpenAI-compatible API,
-            Zed/Cursor-ready. Your models, your rules.
+            OpenAI-compatible API. Zed/Cursor-ready. Your models, your rules.
           </p>
 
           {/* CTA row */}
@@ -131,12 +130,6 @@ export function WhatIsRbee() {
               </a>
             </Button>
           </div>
-
-          {/* Optional technical accent */}
-          <p className="text-xs text-muted-foreground pt-2 font-sans">
-            <strong>Architecture at a glance:</strong> Smart/Dumb separation •
-            Cascading shutdown • Multi-backend
-          </p>
         </div>
 
         {/* Right column: Visual */}
@@ -154,7 +147,7 @@ export function WhatIsRbee() {
               height={720}
               priority
               className="w-full h-full object-cover will-change-transform motion-safe:transition-transform motion-safe:duration-500 motion-safe:hover:scale-[1.01]"
-              alt="Isometric 3D illustration of a distributed homelab AI orchestration network in a cozy, dimly-lit room with warm ambient lighting. CENTRAL HUB: Small mini PC (Intel NUC or similar compact form factor) in the center, acting as orchestrator/coordinator, glowing amber status LED, compact and unassuming but clearly the network hub with cables radiating outward. WORKER NODES arranged in a spoke pattern around the hub: (1) Gaming PC #1 (front-left) - full tower with tempered glass showing large illuminated GPU (RTX 4090 style), RGB fans, prominent graphics card, (2) Gaming PC #2 (front-right) - mid-tower with visible dual-GPU setup, glowing amber accents, aggressive gaming aesthetic, (3) Gaming PC #3 (back-left) - compact gaming build with single high-end GPU visible through mesh panel, (4) Workstation tower (back-right) - professional black case with subtle RGB, multiple GPU configuration visible, (5) Mac Studio (back-center, smallest and least prominent) - small silver aluminum cube, minimal presence, tucked in background. NETWORK TOPOLOGY: Thick amber/orange (#f59e0b) ethernet cables connecting mini PC hub to each worker node in a clear star/hub-spoke pattern, suggesting centralized orchestration. Small animated data packets (glowing dots) flowing FROM mini PC TO worker nodes. Each machine labeled with clean sans-serif text: 'Orchestrator' (mini PC), 'Gaming PC 1', 'Gaming PC 2', 'Gaming PC 3', 'Workstation', 'Mac Studio'. HIERARCHY: Mini PC is visually central and elevated slightly, gaming PCs are largest and most prominent with glowing GPUs clearly visible, Mac Studio is smallest and in background. Floating UI overlay showing: GPU pool metrics (5 nodes, 8+ GPUs total), network topology diagram, 'Cost: $0.00/hr' badge in emerald green (#10b981). Background: deep navy blue (#0f172a) gradient. Cinematic volumetric lighting from top highlighting the mini PC hub. Style: minimal, technical, clear visual hierarchy showing distributed GPU compute coordinated by central orchestrator."
+              alt="Distributed homelab AI network diagram showing a central orchestrator mini PC coordinating multiple worker nodes (gaming PCs, workstation, Mac Studio) connected via ethernet cables in a star topology. Each node displays GPU utilization and the network shows zero-cost local inference."
             />
           </div>
         </div>
