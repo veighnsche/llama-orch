@@ -43,7 +43,12 @@
     "dev:components": "tsc --watch",
     "typecheck": "tsc --noEmit",
     "storybook": "storybook dev -p 6006 --no-open",
-    "build-storybook": "storybook build"
+    "build-storybook": "storybook build",
+    "test:ct": "playwright test",
+    "test:ct:headed": "playwright test --headed",
+    "test:ct:ui": "playwright test --ui",
+    "test:ct:debug": "playwright test --debug",
+    "test:ct:report": "playwright show-report"
   },
   "peerDependencies": {
     "react": ">=18",
@@ -51,8 +56,11 @@
   },
   "devDependencies": {
     "@chromatic-com/storybook": "^4.1.1",
+    "@playwright/experimental-ct-react": "^1.50.2",
+    "@playwright/test": "^1.50.2",
     "@repo/tailwind-config": "workspace:*",
     "@storybook/addon-docs": "^9.1.10",
+    "@storybook/addon-themes": "^9.1.10",
     "@storybook/nextjs": "^9.1.10",
     "@storybook/react": "^9.1.10",
     "@storybook/react-vite": "^9.1.10",

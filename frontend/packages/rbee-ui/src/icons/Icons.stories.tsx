@@ -26,17 +26,23 @@ export const AllIcons: Story = {
         </div>
 
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-6">
-          {iconEntries.map(([name, Component]) => (
-            <div
-              key={name}
-              className="flex flex-col items-center gap-3 p-4 rounded-lg border border-border hover:bg-accent transition-colors"
-            >
-              <Component size={48} className="text-foreground" />
-              <span className="text-xs text-center font-mono text-muted-foreground">
-                {name}
-              </span>
-            </div>
-          ))}
+          {iconEntries
+            .filter(([name]) => name !== 'HoneycombPattern' && name !== 'BeeGlyph')
+            .map(([name, Component]) => {
+              // Type assertion: filtered components all have numeric size prop
+              const IconComponent = Component as React.ComponentType<{ size?: number | string; className?: string }>
+              return (
+                <div
+                  key={name}
+                  className="flex flex-col items-center gap-3 p-4 rounded-lg border border-border hover:bg-accent transition-colors"
+                >
+                  <IconComponent size={48} className="text-foreground" />
+                  <span className="text-xs text-center font-mono text-muted-foreground">
+                    {name}
+                  </span>
+                </div>
+              )
+            })}
         </div>
 
         <div className="mt-12 p-6 rounded-lg bg-muted">
@@ -128,7 +134,7 @@ export const BrandIcons: Story = {
             <span className="text-sm font-medium">BeeMark</span>
           </div>
           <div className="flex flex-col items-center gap-3">
-            <Icons.BeeGlyph size={64} className="text-primary" />
+            <Icons.BeeGlyph className="text-primary" />
             <span className="text-sm font-medium">BeeGlyph</span>
           </div>
           <div className="flex flex-col items-center gap-3">
@@ -152,7 +158,7 @@ export const SocialIcons: Story = {
 
         <div className="flex gap-8 items-center flex-wrap">
           <div className="flex flex-col items-center gap-3">
-            <Icons.GithubIcon size={48} className="text-foreground" />
+            <Icons.GitHubIcon size={48} className="text-foreground" />
             <span className="text-sm">GitHub</span>
           </div>
           <div className="flex flex-col items-center gap-3">

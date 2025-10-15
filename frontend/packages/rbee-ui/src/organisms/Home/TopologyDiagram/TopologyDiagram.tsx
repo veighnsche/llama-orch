@@ -118,13 +118,13 @@ export function TopologyDiagram({
 				{showLaneLabels && (
 					<>
 						<span className="absolute left-0 -translate-y-1/2 top-[24%] text-[11px] text-muted-foreground font-medium">
-							Control
+							Orchestrator
 						</span>
 						<span className="absolute left-0 -translate-y-1/2 top-[50%] text-[11px] text-muted-foreground font-medium">
-							Managers
+							PCs / Hives
 						</span>
 						<span className="absolute left-0 -translate-y-1/2 top-[76%] text-[11px] text-muted-foreground font-medium">
-							Execution
+							Devices
 						</span>
 					</>
 				)}
@@ -202,8 +202,8 @@ export function TopologyDiagram({
 				</svg>
 
 				<p id="topology-desc" className="sr-only">
-					Queen-rbee schedules jobs to Hive Managers, which dispatch tasks to Workers. Workers report telemetry
-					upstream.
+					Queen-rbee orchestrates work across multiple PCs. Each PC runs its own rbee-hive that manages local
+					devices (GPUs, CPUs). Devices report telemetry back to their hive.
 				</p>
 
 				{/* Nodes (absolute positioned chips) */}

@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from '@storybook/react'
 import { AudienceSelector } from './AudienceSelector'
 
 const meta = {
-	title: 'Organisms/Shared/AudienceSelector',
+	title: 'Organisms/AudienceSelector',
 	component: AudienceSelector,
 	parameters: {
 		layout: 'fullscreen',

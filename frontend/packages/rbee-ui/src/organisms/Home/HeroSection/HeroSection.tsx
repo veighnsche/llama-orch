@@ -2,7 +2,7 @@
 
 import { Button } from '@rbee/ui/atoms/Button'
 import { FloatingKPICard, ProgressBar, PulseBadge, TerminalWindow } from '@rbee/ui/molecules'
-import { HoneycombPattern } from '@rbee/ui/patterns/HoneycombPattern'
+import { HoneycombPattern } from '@rbee/ui/icons'
 import { ArrowRight, DollarSign, Star } from 'lucide-react'
 import { useEffect, useState } from 'react'
 

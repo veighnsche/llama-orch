@@ -1,8 +1,8 @@
 'use client'
 
 import { Button } from '@rbee/ui/atoms/Button'
-import { GitHubIcon } from '@rbee/ui/atoms'
 import { IconButton } from '@rbee/ui/atoms/IconButton'
+import { GitHubIcon } from '@rbee/ui/icons'
 import { Separator } from '@rbee/ui/atoms/Separator'
 import { Sheet, SheetContent, SheetTitle, SheetTrigger } from '@rbee/ui/atoms/Sheet'
 import { NavLink } from '@rbee/ui/molecules'
@@ -53,7 +53,7 @@ export function Navigation() {
 								<div className="flex items-center gap-1 rounded-xl p-0.5 bg-muted/30 ring-1 ring-border/60">
 									<IconButton asChild aria-label="Open rbee on GitHub" title="GitHub">
 										<a href="https://github.com/veighnsche/llama-orch" target="_blank" rel="noopener noreferrer">
-											<GitHubIcon className="size-5" />
+											<GitHubIcon size={20} />
 										</a>
 									</IconButton>
 
@@ -115,7 +115,7 @@ export function Navigation() {
 											rel="noopener noreferrer"
 											className="flex items-center gap-2 py-2 text-muted-foreground hover:text-foreground transition-colors"
 										>
-											<GitHubIcon className="size-5" />
+											<GitHubIcon size={20} />
 											<span>GitHub</span>
 										</a>
 

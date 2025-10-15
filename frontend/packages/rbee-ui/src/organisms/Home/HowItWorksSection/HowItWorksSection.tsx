@@ -32,7 +32,7 @@ const DEFAULT_STEPS: Array<{
 			lines: (
 				<>
 					<div>curl -sSL https://rbee.dev/install.sh | sh</div>
-					<div className="text-slate-400">rbee-keeper daemon start</div>
+					<div className="text-[var(--syntax-comment)]">rbee-keeper daemon start</div>
 				</>
 			),
 			copyText: 'curl -sSL https://rbee.dev/install.sh | sh\nrbee-keeper daemon start',
@@ -46,7 +46,7 @@ const DEFAULT_STEPS: Array<{
 			lines: (
 				<>
 					<div>rbee-keeper setup add-node --name workstation --ssh-host 192.168.1.10</div>
-					<div className="text-slate-400">rbee-keeper setup add-node --name mac --ssh-host 192.168.1.20</div>
+					<div className="text-[var(--syntax-comment)]">rbee-keeper setup add-node --name mac --ssh-host 192.168.1.20</div>
 				</>
 			),
 			copyText:
@@ -61,9 +61,9 @@ const DEFAULT_STEPS: Array<{
 			lines: (
 				<>
 					<div>
-						<span className="text-blue-400">export</span> OPENAI_API_BASE=http://localhost:8080/v1
+						<span className="text-[var(--syntax-keyword)]">export</span> OPENAI_API_BASE=http://localhost:8080/v1
 					</div>
-					<div className="text-slate-400"># OpenAI-compatible endpoint — works with Zed & Cursor</div>
+					<div className="text-[var(--syntax-comment)]"># OpenAI-compatible endpoint — works with Zed & Cursor</div>
 				</>
 			),
 			copyText: 'export OPENAI_API_BASE=http://localhost:8080/v1',
@@ -78,20 +78,20 @@ const DEFAULT_STEPS: Array<{
 			lines: (
 				<>
 					<div>
-						<span className="text-purple-400">import</span> {'{'} invoke {'}'}{' '}
-						<span className="text-purple-400">from</span>{' '}
-						<span className="text-amber-400">&apos;@llama-orch/utils&apos;</span>;
+						<span className="text-[var(--syntax-import)]">import</span> {'{'} invoke {'}'}{' '}
+						<span className="text-[var(--syntax-import)]">from</span>{' '}
+						<span className="text-[var(--syntax-string)]">&apos;@llama-orch/utils&apos;</span>;
 					</div>
 					<div className="mt-2">
-						<span className="text-blue-400">const</span> code = <span className="text-blue-400">await</span>{' '}
-						<span className="text-green-400">invoke</span>
+						<span className="text-[var(--syntax-keyword)]">const</span> code = <span className="text-[var(--syntax-keyword)]">await</span>{' '}
+						<span className="text-[var(--syntax-function)]">invoke</span>
 						{'({'}
 					</div>
 					<div className="pl-4">
-						prompt: <span className="text-amber-400">&apos;Generate API from schema&apos;</span>,
+						prompt: <span className="text-[var(--syntax-string)]">&apos;Generate API from schema&apos;</span>,
 					</div>
 					<div className="pl-4">
-						model: <span className="text-amber-400">&apos;llama-3.1-70b&apos;</span>
+						model: <span className="text-[var(--syntax-string)]">&apos;llama-3.1-70b&apos;</span>
 					</div>
 					<div>{'});'}</div>
 				</>

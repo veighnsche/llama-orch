@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from '@storybook/react'
 import { Footer } from './Footer'
 
 const meta = {
-	title: 'Organisms/Shared/Footer',
+	title: 'Organisms/Footer',
 	component: Footer,
 	parameters: {
 		layout: 'fullscreen',

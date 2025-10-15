@@ -55,7 +55,7 @@ export function ConsoleOutput({
 	const [copied, setCopied] = useState(false)
 
 	const bgStyles = {
-		dark: 'bg-slate-950 text-slate-50',
+		dark: 'bg-[var(--console-bg)] text-[var(--console-fg)]',
 		light: 'bg-background text-foreground',
 		card: 'bg-card text-card-foreground',
 	}

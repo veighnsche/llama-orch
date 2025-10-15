@@ -1,26 +1,19 @@
+/**
+ * User Docs App - Global Styles
+ * 
+ * ✅ Design tokens imported from @rbee/ui (single source of truth)
+ * ✅ App-specific styles only
+ * 
+ * CSS variables (:root, .dark, @theme) are defined in:
+ * packages/rbee-ui/src/tokens/theme-tokens.css
+ * packages/tailwind-config/shared-styles.css
+ */
+
 @import "tailwindcss";
 
-:root {
-	--background: #ffffff;
-	--foreground: #171717;
-}
-
-@theme inline {
-	--color-background: var(--background);
-	--color-foreground: var(--foreground);
-	--font-sans: var(--font-geist-sans);
-	--font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-	:root {
-		--background: #0a0a0a;
-		--foreground: #ededed;
+@layer base {
+	body {
+		@apply bg-background text-foreground;
+		font-family: Arial, Helvetica, sans-serif;
 	}
-}
-
-body {
-	background: var(--background);
-	color: var(--foreground);
-	font-family: Arial, Helvetica, sans-serif;
 }

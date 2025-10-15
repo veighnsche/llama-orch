@@ -1,8 +1,9 @@
 /**
  * 🚨 TURBOREPO IDIOMATIC PATTERN 🚨
  * 
- * ✅ Minimal UI package CSS (no prefix needed for internal package)
+ * ✅ Single source of truth for design tokens
  * ✅ Apps import the pre-built CSS: import '@rbee/ui/styles.css'
+ * ✅ Storybook imports this same file (no duplication)
  * ✅ Only scans UI package's own source files
  * 
  * See: https://turborepo.com/docs/guides/tools/tailwind
@@ -11,5 +12,6 @@
 
 @import "tailwindcss";
 @import "@repo/tailwind-config";
+@import "./theme-tokens.css";
 
 @source "../**/*.{ts,tsx}";

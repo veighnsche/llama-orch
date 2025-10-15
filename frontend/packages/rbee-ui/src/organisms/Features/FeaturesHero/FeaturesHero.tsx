@@ -2,7 +2,7 @@ import { Badge } from '@rbee/ui/atoms/Badge'
 import { Button } from '@rbee/ui/atoms/Button'
 import { Card } from '@rbee/ui/atoms/Card'
 import { Separator } from '@rbee/ui/atoms/Separator'
-import { HoneycombPattern } from '@rbee/ui/patterns/HoneycombPattern'
+import { HoneycombPattern } from '@rbee/ui/icons'
 import { Cpu, Download, Power } from 'lucide-react'
 
 // Feature flags for quick toggles

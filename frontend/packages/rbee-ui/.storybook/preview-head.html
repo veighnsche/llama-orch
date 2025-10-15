@@ -1,18 +1,7 @@
-<script>
-  // Apply theme class to html element based on Storybook theme switcher
-  window.addEventListener('DOMContentLoaded', () => {
-    const observer = new MutationObserver(() => {
-      const darkMode = document.documentElement.classList.contains('dark');
-      if (darkMode) {
-        document.body.parentElement.classList.add('dark');
-      } else {
-        document.body.parentElement.classList.remove('dark');
-      }
-    });
-    
-    observer.observe(document.documentElement, {
-      attributes: true,
-      attributeFilter: ['class']
-    });
-  });
-</script>
+<style>
+  /* Ensure Storybook canvas respects theme tokens */
+  html, body, #storybook-root {
+    background-color: var(--background);
+    color: var(--foreground);
+  }
+</style>

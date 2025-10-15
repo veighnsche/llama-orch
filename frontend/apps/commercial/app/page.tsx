@@ -5,7 +5,6 @@ import {
 	EmailCapture,
 	FAQSection,
 	FeaturesSection,
-	Footer,
 	HeroSection,
 	HomeSolutionSection,
 	HowItWorksSection,

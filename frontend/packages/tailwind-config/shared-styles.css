@@ -1,15 +1,19 @@
 /**
- * Shared Tailwind CSS Configuration for rbee monorepo
+ * Shared Tailwind v4 Theme Configuration
  * 
- * This file contains shared design tokens and theme configuration
- * that should be consistent across all apps and packages.
+ * This @theme block maps CSS custom properties to Tailwind utilities.
+ * The actual values are defined in theme-tokens.css and inherited by all consumers.
  * 
- * Turborepo Pattern: Import this in app-level CSS to get shared theme.
- * See: https://turborepo.com/docs/guides/tools/tailwind
+ * Migrated from apps/commercial/styles/globals.css @theme inline block.
  */
 
-@theme {
-	/* Breakpoints - Tailwind v4 defaults */
+@theme inline {
+	/* ========================================
+   * TAILWIND THEME INTEGRATION
+   * Maps CSS custom properties to Tailwind utilities
+   * ======================================== */
+
+	/* Breakpoints - Tailwind v4 defaults (required when using @theme) */
 	--breakpoint-sm: 40rem; /* 640px */
 	--breakpoint-md: 48rem; /* 768px */
 	--breakpoint-lg: 64rem; /* 1024px */
@@ -19,9 +23,8 @@
 	/* Fonts */
 	--font-sans: var(--font-geist-sans);
 	--font-mono: var(--font-geist-mono);
-	--font-serif: 'Source Serif 4', 'Source Serif 4 Fallback';
 
-	/* Colors - CSS variables from :root */
+	/* Semantic colors */
 	--color-background: var(--background);
 	--color-foreground: var(--foreground);
 	--color-card: var(--card);
@@ -41,22 +44,24 @@
 	--color-border: var(--border);
 	--color-input: var(--input);
 	--color-ring: var(--ring);
+
+	/* Chart colors */
 	--color-chart-1: var(--chart-1);
 	--color-chart-2: var(--chart-2);
 	--color-chart-3: var(--chart-3);
 	--color-chart-4: var(--chart-4);
 	--color-chart-5: var(--chart-5);
+
+	/* Terminal colors */
 	--color-terminal-red: var(--terminal-red);
 	--color-terminal-amber: var(--terminal-amber);
 	--color-terminal-green: var(--terminal-green);
 
-	/* Border Radius */
-	--radius-sm: calc(var(--radius) - 4px);
-	--radius-md: calc(var(--radius) - 2px);
-	--radius-lg: var(--radius);
-	--radius-xl: calc(var(--radius) + 4px);
+	/* Error states */
+	--color-error-light: var(--error-light);
+	--color-error-dark: var(--error-dark);
 
-	/* Sidebar */
+	/* Sidebar colors */
 	--color-sidebar: var(--sidebar);
 	--color-sidebar-foreground: var(--sidebar-foreground);
 	--color-sidebar-primary: var(--sidebar-primary);
@@ -65,4 +70,23 @@
 	--color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
 	--color-sidebar-border: var(--sidebar-border);
 	--color-sidebar-ring: var(--sidebar-ring);
+
+	/* Spacing scale (for reference, Tailwind handles these natively) */
+	/* Use: p-4, m-8, gap-2, etc. */
+
+	/* Typography scale (for reference, Tailwind handles these natively) */
+	/* Use: text-sm, text-xl, text-4xl, etc. */
+
+	/* Icon sizes (custom utilities) */
+	/* Use: w-icon-sm h-icon-sm, etc. */
+
+	/* Border radius */
+	--radius-xs: calc(var(--radius) - 6px);
+	--radius-sm: calc(var(--radius) - 4px);
+	--radius-md: calc(var(--radius) - 2px);
+	--radius-lg: var(--radius);
+	--radius-xl: calc(var(--radius) + 4px);
+
+	/* Shadows (for reference, Tailwind handles these natively) */
+	/* Use: shadow-xs, shadow-sm, shadow-md, shadow-lg, shadow-xl, shadow-2xl */
 }

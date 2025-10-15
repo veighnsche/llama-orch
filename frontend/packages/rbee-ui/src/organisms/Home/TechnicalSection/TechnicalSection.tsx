@@ -2,7 +2,7 @@ import { Badge } from '@rbee/ui/atoms/Badge'
 import { Button } from '@rbee/ui/atoms/Button'
 import { Card } from '@rbee/ui/atoms/Card'
 import { SectionContainer } from '@rbee/ui/molecules'
-import { RbeeArch, GithubIcon } from '@rbee/ui/icons'
+import { RbeeArch, GitHubIcon } from '@rbee/ui/icons'
 import { Terminal } from 'lucide-react'
 import Link from 'next/link'
 
@@ -135,7 +135,7 @@ export function TechnicalSection() {
 									asChild
 								>
 									<a href="https://github.com/yourusername/rbee" target="_blank" rel="noopener noreferrer">
-										<GithubIcon size={16} />
+										<GitHubIcon size={16} />
 										View Source
 									</a>
 								</Button>
