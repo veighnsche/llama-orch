@@ -15,7 +15,49 @@ export interface BeeArchitectureProps {
 	className?: string
 }
 
-export function BeeArchitecture({ topology, className }: BeeArchitectureProps) {
+// Atom: BeeNode - Reusable component for queen and hive boxes
+interface BeeNodeProps {
+	emoji: string
+	label: string
+	sublabel: string
+	variant: 'queen' | 'hive'
+	size?: 'default' | 'small'
+	className?: string
+}
+
+function BeeNode({ emoji, label, sublabel, variant, size = 'default', className }: BeeNodeProps) {
+	const isQueen = variant === 'queen'
+	const isSmall = size === 'small'
+
+	return (
+		<div
+			className={cn(
+				'flex items-center gap-3 rounded-lg border',
+				isQueen
+					? 'border-primary/30 bg-primary/10 px-6 py-3'
+					: 'border-border bg-muted px-6 py-3',
+				isSmall && 'gap-2 px-4 py-2',
+				className,
+			)}
+		>
+			<span className={cn(isSmall ? 'text-xl' : 'text-2xl')} aria-hidden="true">
+				{emoji}
+			</span>
+			<div className={isSmall ? 'text-xs' : ''}>
+				<div className="font-semibold text-foreground">{label}</div>
+				{sublabel && <div className="text-sm text-muted-foreground font-sans">{sublabel}</div>}
+			</div>
+		</div>
+	)
+}
+
+// Atom: WorkerChip - Reusable component for worker nodes
+interface WorkerChipProps {
+	worker: WorkerNode
+	index: number
+}
+
+function WorkerChip({ worker, index }: WorkerChipProps) {
 	const getWorkerRing = (kind: WorkerNode['kind']) => {
 		switch (kind) {
 			case 'cuda':
@@ -25,10 +67,6 @@ export function BeeArchitecture({ topology, className }: BeeArchitectureProps) {
 			case 'cpu':
 				return 'ring-1 ring-emerald-400/30'
 		}
-	}
-
-	const getWorkerEmoji = (kind: WorkerNode['kind']) => {
-		return '🐝'
 	}
 
 	const getWorkerSubLabel = (kind: WorkerNode['kind']) => {
@@ -42,9 +80,8 @@ export function BeeArchitecture({ topology, className }: BeeArchitectureProps) {
 		}
 	}
 
-	const renderWorkerChip = (worker: WorkerNode, index: number) => (
+	return (
 		<div
-			key={worker.id}
 			className={cn(
 				'flex items-center gap-2 rounded-lg border border-border bg-muted px-3 py-2',
 				'animate-in zoom-in-50 duration-400',
@@ -53,14 +90,17 @@ export function BeeArchitecture({ topology, className }: BeeArchitectureProps) {
 			style={{ animationDelay: `${(index + 1) * 120}ms` }}
 		>
 			<span className="text-xl" aria-hidden="true">
-				{getWorkerEmoji(worker.kind)}
+				🐝
 			</span>
 			<div className="text-sm">
 				<div className="font-semibold text-foreground">{worker.label}</div>
-				<div className="text-muted-foreground">{getWorkerSubLabel(worker.kind)}</div>
+				<div className="text-muted-foreground font-sans">{getWorkerSubLabel(worker.kind)}</div>
 			</div>
 		</div>
 	)
+}
+
+export function BeeArchitecture({ topology, className }: BeeArchitectureProps) {
 
 	const renderSinglePC = () => {
 		if (topology.mode !== 'single-pc') return null
@@ -68,36 +108,36 @@ export function BeeArchitecture({ topology, className }: BeeArchitectureProps) {
 		return (
 			<>
 				{/* Queen */}
-				<div className="flex items-center gap-3 rounded-lg border border-primary/30 bg-primary/10 px-6 py-3 animate-in fade-in slide-in-from-top-2 duration-400 delay-100">
-					<span className="text-2xl" aria-hidden="true">
-						👑
-					</span>
-					<div>
-						<div className="font-semibold text-foreground">queen-rbee</div>
-						<div className="text-sm text-muted-foreground">Orchestrator (brain)</div>
-					</div>
-				</div>
+				<BeeNode
+					emoji="👑"
+					label="queen-rbee"
+					sublabel="Orchestrator (brain)"
+					variant="queen"
+					className="animate-in fade-in slide-in-from-top-2 duration-400 delay-100"
+				/>
 
 				{/* Connector */}
 				<div className="h-8 w-px bg-border" aria-hidden="true" />
 
 				{/* Host chassis with embedded hive */}
 				<div className="w-full rounded-xl border border-border bg-card/50 p-6 animate-in fade-in slide-in-from-top-2 duration-400 delay-200">
-					<div className="mb-4 text-center text-sm font-medium text-muted-foreground">{topology.hostLabel}</div>
+					<div className="mb-4 text-center text-sm font-medium text-muted-foreground font-sans">{topology.hostLabel}</div>
 					
 					{/* Hive (inside the PC) */}
-					<div className="mb-4 flex items-center justify-center gap-3 rounded-lg border border-border bg-muted px-6 py-3">
-						<span className="text-2xl" aria-hidden="true">
-							🍯
-						</span>
-						<div>
-							<div className="font-semibold text-foreground">rbee-hive</div>
-							<div className="text-sm text-muted-foreground">Resource manager</div>
-						</div>
-					</div>
+					<BeeNode
+						emoji="🍯"
+						label="rbee-hive"
+						sublabel="Resource manager"
+						variant="hive"
+						className="mb-4 w-fit mx-auto"
+					/>
 
 					{/* Workers */}
-					<div className="flex flex-wrap justify-center gap-4">{topology.workers.map(renderWorkerChip)}</div>
+					<div className="flex flex-wrap justify-center gap-4">
+						{topology.workers.map((worker, idx) => (
+							<WorkerChip key={worker.id} worker={worker} index={idx} />
+						))}
+					</div>
 				</div>
 			</>
 		)
@@ -109,15 +149,13 @@ export function BeeArchitecture({ topology, className }: BeeArchitectureProps) {
 		return (
 			<>
 				{/* Queen */}
-				<div className="flex items-center gap-3 rounded-lg border border-primary/30 bg-primary/10 px-6 py-3 animate-in fade-in slide-in-from-top-2 duration-400 delay-100">
-					<span className="text-2xl" aria-hidden="true">
-						👑
-					</span>
-					<div>
-						<div className="font-semibold text-foreground">queen-rbee</div>
-						<div className="text-sm text-muted-foreground">Orchestrator (brain)</div>
-					</div>
-				</div>
+				<BeeNode
+					emoji="👑"
+					label="queen-rbee"
+					sublabel="Orchestrator (brain)"
+					variant="queen"
+					className="animate-in fade-in slide-in-from-top-2 duration-400 delay-100"
+				/>
 
 				{/* Connector */}
 				<div className="h-8 w-px bg-border" aria-hidden="true" />
@@ -126,21 +164,23 @@ export function BeeArchitecture({ topology, className }: BeeArchitectureProps) {
 				<div className="grid w-full gap-6 sm:grid-cols-2 lg:grid-cols-3 animate-in fade-in slide-in-from-top-2 duration-400 delay-200">
 					{topology.hosts.map((host, hostIndex) => (
 						<div key={hostIndex} className="rounded-xl border border-border bg-card/50 p-4">
-							<div className="mb-3 text-center text-sm font-medium text-muted-foreground">{host.hostLabel}</div>
+							<div className="mb-3 text-center text-sm font-medium text-muted-foreground font-sans">{host.hostLabel}</div>
 							
 							{/* Hive (inside each PC) */}
-							<div className="mb-3 flex items-center justify-center gap-2 rounded-lg border border-border bg-muted px-4 py-2">
-								<span className="text-xl" aria-hidden="true">
-									🍯
-								</span>
-								<div className="text-xs">
-									<div className="font-semibold text-foreground">rbee-hive</div>
-								</div>
-							</div>
+							<BeeNode
+								emoji="🍯"
+								label="rbee-hive"
+								sublabel=""
+								variant="hive"
+								size="small"
+								className="mb-3 w-fit mx-auto"
+							/>
 
 							{/* Workers */}
 							<div className="flex flex-col gap-3">
-								{host.workers.map((worker, idx) => renderWorkerChip(worker, hostIndex * 10 + idx))}
+								{host.workers.map((worker, idx) => (
+									<WorkerChip key={worker.id} worker={worker} index={hostIndex * 10 + idx} />
+								))}
 							</div>
 						</div>
 					))}
