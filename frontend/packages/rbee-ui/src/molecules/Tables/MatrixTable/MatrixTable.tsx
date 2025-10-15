@@ -1,3 +1,4 @@
+import { Table, TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRow } from '@rbee/ui/atoms/Table'
 import { cn } from '@rbee/ui/utils'
 import { Check, X } from 'lucide-react'
 
@@ -42,46 +43,41 @@ export function MatrixTable({ columns, rows, className }: MatrixTableProps) {
 	}
 
 	return (
-		<div className={cn('overflow-x-auto', className)}>
-			<table className="w-full border-collapse">
-				<caption className="sr-only">Compliance & security feature comparison across providers</caption>
-				<thead>
-					<tr className="border-b border-border/80">
-						<th scope="col" className="p-3 text-left text-xs uppercase tracking-wide text-muted-foreground">
-							Feature
-						</th>
-						{columns.map((col) => (
-							<th
-								key={col.key}
-								scope="col"
-								className={cn(
-									'p-3 text-center text-xs uppercase tracking-wide',
-									col.accent ? 'bg-primary/5 font-bold text-primary' : 'text-muted-foreground',
-								)}
-							>
-								{col.label}
-							</th>
-						))}
-					</tr>
-				</thead>
-				<tbody>
-					{rows.map((row, i) => (
-						<tr
-							key={i}
-							className="border-b border-border/80 transition-colors hover:bg-secondary/30 odd:bg-background even:bg-background/60"
+		<Table className={className}>
+			<TableCaption className="sr-only">Compliance & security feature comparison across providers</TableCaption>
+			<TableHeader>
+				<TableRow className="border-b border-border/80">
+					<TableHead className="p-3 text-left text-xs uppercase tracking-wide text-muted-foreground">
+						Feature
+					</TableHead>
+					{columns.map((col) => (
+						<TableHead
+							key={col.key}
+							className={cn(
+								'p-3 text-center text-xs uppercase tracking-wide',
+								col.accent ? 'bg-primary/5 font-bold text-primary' : 'text-muted-foreground',
+							)}
 						>
-							<th scope="row" className="p-3 text-left text-sm font-normal text-muted-foreground">
-								{row.feature}
-							</th>
-							{columns.map((col) => (
-								<td key={col.key} className={cn('p-3 text-center', col.accent && 'bg-primary/5')}>
-									{renderCell(row.values[col.key], col.key)}
-								</td>
-							))}
-						</tr>
+							{col.label}
+						</TableHead>
 					))}
-				</tbody>
-			</table>
-		</div>
+				</TableRow>
+			</TableHeader>
+			<TableBody>
+				{rows.map((row, i) => (
+					<TableRow
+						key={i}
+						className="border-b border-border/80 transition-colors hover:bg-secondary/30 odd:bg-background even:bg-background/60"
+					>
+						<TableHead className="p-3 text-left text-sm font-normal text-muted-foreground">{row.feature}</TableHead>
+						{columns.map((col) => (
+							<TableCell key={col.key} className={cn('p-3 text-center', col.accent && 'bg-primary/5')}>
+								{renderCell(row.values[col.key], col.key)}
+							</TableCell>
+						))}
+					</TableRow>
+				))}
+			</TableBody>
+		</Table>
 	)
 }

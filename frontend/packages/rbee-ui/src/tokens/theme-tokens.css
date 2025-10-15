@@ -150,7 +150,7 @@
 
 .dark {
 	/* Base colors - dark mode overrides */
-	--background: #0f172a;
+	--background: #020617;
 	--foreground: #f1f5f9;
 	--card: #1e293b;
 	--card-foreground: #f1f5f9;
@@ -158,9 +158,9 @@
 	--popover-foreground: #f1f5f9;
 	--primary: #f59e0b;
 	--primary-foreground: #0f172a;
-	--secondary: #1e293b;
+	--secondary: #0f172a;
 	--secondary-foreground: #f1f5f9;
-	--muted: #1e293b;
+	--muted: #0f172a;
 	--muted-foreground: #94a3b8;
 	--accent: #f59e0b;
 	--accent-foreground: #0f172a;
@@ -198,7 +198,7 @@
 	--error-dark: #ef4444;
 
 	/* Sidebar colors - dark mode */
-	--sidebar: #0f172a;
+	--sidebar: #020617;
 	--sidebar-foreground: #f1f5f9;
 	--sidebar-primary: #f59e0b;
 	--sidebar-primary-foreground: #0f172a;

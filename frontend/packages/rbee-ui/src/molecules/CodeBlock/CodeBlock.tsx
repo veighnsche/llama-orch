@@ -130,12 +130,12 @@ export function CodeBlock({
   return (
     <div
       className={cn(
-        "rounded-xl border bg-card/60 shadow-sm overflow-hidden",
+        "rounded-xl border border-border bg-card/60 shadow-sm overflow-hidden",
         className
       )}
     >
       {(title || language || copyable) && (
-        <div className="flex items-center justify-between px-4 py-2.5 border-b bg-card/80">
+        <div className="flex items-center justify-between px-4 py-2.5 border-b border-border bg-card/80">
           <div className="flex items-center gap-3">
             {title && (
               <span className="text-sm font-medium text-foreground font-mono">

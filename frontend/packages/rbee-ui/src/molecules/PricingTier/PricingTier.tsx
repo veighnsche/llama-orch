@@ -1,6 +1,6 @@
 import { Button } from '@rbee/ui/atoms/Button'
+import { BulletListItem } from '@rbee/ui/molecules/BulletListItem'
 import { cn } from '@rbee/ui/utils'
-import { Check } from 'lucide-react'
 import Link from 'next/link'
 
 export interface PricingTierProps {
@@ -81,10 +81,7 @@ export function PricingTier({
 
 			<ul className="mt-5 space-y-2 text-sm" role="list" aria-label={`${title} features`}>
 				{features.map((feature, index) => (
-					<li key={index} className="flex items-start gap-2">
-						<Check className="h-5 w-5 text-chart-3 flex-shrink-0 mt-0.5" aria-hidden="true" />
-						<span className="text-muted-foreground">{feature}</span>
-					</li>
+					<BulletListItem key={index} title={feature} variant="check" color="chart-3" showPlate={false} />
 				))}
 			</ul>
 

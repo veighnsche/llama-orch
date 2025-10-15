@@ -22,7 +22,7 @@ export function FeaturesSection() {
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-10 md:space-y-14">
         <Tabs defaultValue="api" className="w-full">
-          <div className="rounded-xl border bg-card/60 p-1">
+          <div className="rounded-xl border border-border bg-card/60 p-1">
             <TabsList
               className="grid w-full grid-cols-2 lg:grid-cols-4 h-auto gap-2 rounded-none border-0 bg-transparent p-0"
               aria-label="Feature categories"

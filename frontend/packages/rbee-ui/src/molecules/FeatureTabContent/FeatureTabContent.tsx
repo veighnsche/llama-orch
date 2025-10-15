@@ -1,7 +1,7 @@
-import { ReactNode } from 'react'
+import { ReactNode } from "react";
 
 export interface FeatureTabContentProps {
-	children: ReactNode
+  children: ReactNode;
 }
 
 /**
@@ -9,9 +9,9 @@ export interface FeatureTabContentProps {
  * borders, animations, and motion-reduce support.
  */
 export function FeatureTabContent({ children }: FeatureTabContentProps) {
-	return (
-		<div className="rounded-2xl border bg-card p-6 md:p-8 space-y-6 shadow-sm animate-in fade-in slide-in-from-bottom-2 duration-300 motion-reduce:animate-none">
-			{children}
-		</div>
-	)
+  return (
+    <div className="rounded-2xl border border-border bg-card p-6 md:p-8 space-y-6 shadow-sm animate-in fade-in slide-in-from-bottom-2 duration-300 motion-reduce:animate-none">
+      {children}
+    </div>
+  );
 }

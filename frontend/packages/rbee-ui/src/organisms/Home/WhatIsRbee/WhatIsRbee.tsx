@@ -126,7 +126,8 @@ export function WhatIsRbee() {
             {/* Closing micro-copy */}
             <p className="text-base text-foreground leading-relaxed max-w-prose">
               OpenAI-compatible API. Zed/Cursor-ready.
-              <br /> Your models, your rules.
+              <br />
+              <span className="font-sans">Your models, your rules.</span>
             </p>
           </div>
 

@@ -41,6 +41,7 @@ export function FeatureListItem({
         size={iconSize}
         shape={iconVariant}
         tone={iconColor}
+        className="flex-shrink-0"
       />
       <div className="text-base text-foreground">
         <strong className="font-semibold">{title}:</strong> {description}

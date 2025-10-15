@@ -1,5 +1,6 @@
 import { cn } from "@rbee/ui/utils";
 import { cva, type VariantProps } from "class-variance-authority";
+import { Check } from "lucide-react";
 
 const bulletListItemVariants = cva("flex items-start gap-3", {
   variants: {
@@ -32,7 +33,9 @@ const bulletContainerVariants = cva(
       variant: {
         dot: "rounded-full",
         check: "rounded-full -translate-y-[4px]",
+        "check-plain": "-translate-y-[4px]",
         arrow: "-translate-y-[4px]",
+        "arrow-plain": "-translate-y-[4px]",
       },
     },
     compoundVariants: [
@@ -73,6 +76,13 @@ const bulletContainerVariants = cva(
         color: "chart-5",
         class: "bg-chart-5/20 text-chart-5",
       },
+      // Plain check variants (no background)
+      { variant: "check-plain", color: "primary", class: "text-primary" },
+      { variant: "check-plain", color: "chart-1", class: "text-chart-1" },
+      { variant: "check-plain", color: "chart-2", class: "text-chart-2" },
+      { variant: "check-plain", color: "chart-3", class: "text-chart-3" },
+      { variant: "check-plain", color: "chart-4", class: "text-chart-4" },
+      { variant: "check-plain", color: "chart-5", class: "text-chart-5" },
       // Text color variants for arrow
       { variant: "arrow", color: "primary", class: "text-primary" },
       { variant: "arrow", color: "chart-1", class: "text-chart-1" },
@@ -80,6 +90,13 @@ const bulletContainerVariants = cva(
       { variant: "arrow", color: "chart-3", class: "text-chart-3" },
       { variant: "arrow", color: "chart-4", class: "text-chart-4" },
       { variant: "arrow", color: "chart-5", class: "text-chart-5" },
+      // Plain arrow variants (same as regular arrow, kept for consistency)
+      { variant: "arrow-plain", color: "primary", class: "text-primary" },
+      { variant: "arrow-plain", color: "chart-1", class: "text-chart-1" },
+      { variant: "arrow-plain", color: "chart-2", class: "text-chart-2" },
+      { variant: "arrow-plain", color: "chart-3", class: "text-chart-3" },
+      { variant: "arrow-plain", color: "chart-4", class: "text-chart-4" },
+      { variant: "arrow-plain", color: "chart-5", class: "text-chart-5" },
     ],
     defaultVariants: {
       color: "chart-3",
@@ -114,6 +131,8 @@ export interface BulletListItemProps
   meta?: string;
   /** Bullet variant */
   variant?: "dot" | "check" | "arrow";
+  /** Show background plate for check/arrow (default: true) */
+  showPlate?: boolean;
   /** Additional CSS classes */
   className?: string;
 }
@@ -124,9 +143,15 @@ export function BulletListItem({
   meta,
   color = "chart-3",
   variant = "dot",
+  showPlate = true,
   className,
 }: BulletListItemProps) {
   const renderBullet = () => {
+    const effectiveVariant = 
+      (variant === "check" || variant === "arrow") && !showPlate
+        ? (`${variant}-plain` as const)
+        : variant;
+
     switch (variant) {
       case "dot":
         return (
@@ -136,11 +161,13 @@ export function BulletListItem({
         );
       case "check":
         return (
-          <div className={bulletContainerVariants({ color, variant })}>✓</div>
+          <div className={bulletContainerVariants({ color, variant: effectiveVariant })}>
+            <Check className="h-4 w-4" aria-hidden="true" />
+          </div>
         );
       case "arrow":
         return (
-          <div className={bulletContainerVariants({ color, variant })}>→</div>
+          <div className={bulletContainerVariants({ color, variant: effectiveVariant })}>→</div>
         );
     }
   };
