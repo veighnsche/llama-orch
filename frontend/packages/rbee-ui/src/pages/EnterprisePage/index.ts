@@ -1,10 +1,10 @@
 export { default as EnterprisePage } from './EnterprisePage'
 export {
-  enterpriseCTAProps,
   enterpriseComparisonContainerProps,
   enterpriseComparisonProps,
   enterpriseComplianceContainerProps,
   enterpriseComplianceProps,
+  enterpriseCTAProps,
   enterpriseEmailCaptureProps,
   enterpriseFeaturesContainerProps,
   enterpriseFeaturesProps,

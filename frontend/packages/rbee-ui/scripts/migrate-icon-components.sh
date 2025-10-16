@@ -74,8 +74,10 @@ for file in $FILES; do
     s/:\s*LucideIcon(\s*[;,\}])/: React.ReactNode$1/g;
     s/\?:\s*LucideIcon(\s*[;,\}])/?:  React.ReactNode$1/g;
     
-    # Step 2: Update import statements - remove LucideIcon import if it exists
-    # This will be handled separately
+    # Step 2: Rename icon prop to Icon in function destructuring for JSX rendering
+    # Pattern: { icon, -> { icon: Icon,
+    s/\{\s*icon,/{ icon: Icon,/g;
+    s/\{\s*icon:/{ icon: Icon:/g;
     
     # Step 3: Update IconPlate/IconCardHeader usage - icon={SomeIcon} to icon={<SomeIcon className="w-6 h-6" />}
     # Only match direct icon component references (PascalCase identifiers)

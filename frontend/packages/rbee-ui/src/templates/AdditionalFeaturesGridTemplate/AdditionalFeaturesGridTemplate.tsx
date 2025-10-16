@@ -59,7 +59,7 @@ export function AdditionalFeaturesGridTemplate({ rows, className }: AdditionalFe
                   >
                     <CardContent className="p-6">
                       <IconCardHeader
-                        icon={card.icon}
+                        icon={<card.icon className="w-6 h-6" />}
                         iconTone={card.iconTone}
                         iconSize="sm"
                         title={card.title}

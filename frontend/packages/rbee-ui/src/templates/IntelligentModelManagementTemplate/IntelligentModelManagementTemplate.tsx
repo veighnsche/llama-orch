@@ -69,7 +69,13 @@ export function IntelligentModelManagementTemplate({
         <Card className="animate-in fade-in slide-in-from-bottom-2 duration-500">
           <CardContent className="space-y-6 pt-6">
             <div className="flex items-start gap-4">
-              <IconPlate icon={Database} tone="chart-3" size="md" shape="rounded" className="flex-shrink-0" />
+              <IconPlate
+                icon={<Database className="w-6 h-6" />}
+                tone="chart-3"
+                size="md"
+                shape="rounded"
+                className="flex-shrink-0"
+              />
               <div>
                 <h3 className="text-2xl font-bold tracking-tight text-foreground mb-2">{catalogTitle}</h3>
                 <p className="text-muted-foreground leading-relaxed">{catalogDescription}</p>
@@ -104,7 +110,13 @@ export function IntelligentModelManagementTemplate({
         <Card className="animate-in fade-in slide-in-from-bottom-2 duration-500 delay-100">
           <CardContent className="space-y-6 pt-6">
             <div className="flex items-start gap-4">
-              <IconPlate icon={CheckCircle2} tone="chart-2" size="md" shape="rounded" className="flex-shrink-0" />
+              <IconPlate
+                icon={<CheckCircle2 className="w-6 h-6" />}
+                tone="chart-2"
+                size="md"
+                shape="rounded"
+                className="flex-shrink-0"
+              />
               <div>
                 <h3 className="text-2xl font-bold tracking-tight text-foreground mb-2">{preflightTitle}</h3>
                 <p className="text-muted-foreground leading-relaxed">{preflightDescription}</p>

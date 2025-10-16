@@ -1,5 +1,5 @@
-import type { Meta, StoryObj } from '@storybook/react'
 import { developersHeroProps } from '@rbee/ui/pages/DevelopersPage'
+import type { Meta, StoryObj } from '@storybook/react'
 import { DevelopersHeroTemplate } from './DevelopersHeroTemplate'
 
 const meta = {

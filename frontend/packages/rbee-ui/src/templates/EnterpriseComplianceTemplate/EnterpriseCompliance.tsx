@@ -41,7 +41,12 @@ export function EnterpriseCompliance() {
             className="h-full rounded-2xl border-border bg-card/60 p-8 transition-shadow hover:shadow-lg"
             aria-labelledby="compliance-gdpr"
           >
-            <IconCardHeader icon={Globe} title="GDPR" subtitle="EU Regulation" titleId="compliance-gdpr" />
+            <IconCardHeader
+              icon={<Globe className="w-6 h-6" />}
+              title="GDPR"
+              subtitle="EU Regulation"
+              titleId="compliance-gdpr"
+            />
             <CardContent className="p-0">
               <ul className="space-y-3">
                 <BulletListItem variant="check" title="7-year audit retention (Art. 30)" />
@@ -70,7 +75,12 @@ export function EnterpriseCompliance() {
             className="h-full rounded-2xl border-border bg-card/60 p-8 transition-shadow hover:shadow-lg"
             aria-labelledby="compliance-soc2"
           >
-            <IconCardHeader icon={Shield} title="SOC2" subtitle="US Standard" titleId="compliance-soc2" />
+            <IconCardHeader
+              icon={<Shield className="w-6 h-6" />}
+              title="SOC2"
+              subtitle="US Standard"
+              titleId="compliance-soc2"
+            />
             <CardContent className="p-0">
               <ul className="space-y-3">
                 <BulletListItem variant="check" title="Auditor query API" />
@@ -99,7 +109,7 @@ export function EnterpriseCompliance() {
             aria-labelledby="compliance-iso27001"
           >
             <IconCardHeader
-              icon={Lock}
+              icon={<Lock className="w-6 h-6" />}
               title="ISO 27001"
               subtitle="International Standard"
               titleId="compliance-iso27001"

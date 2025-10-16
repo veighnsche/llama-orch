@@ -1,10 +1,10 @@
 import { IconPlate } from '@rbee/ui/molecules'
 import { cn } from '@rbee/ui/utils'
-import type { LucideIcon } from 'lucide-react'
+import type * as React from 'react'
 
 export interface FeatureListItemProps {
-  /** Lucide icon component */
-  icon: LucideIcon
+  /** Rendered icon component */
+  icon: React.ReactNode
   /** Feature title (bold part) */
   title: string
   /** Feature description */

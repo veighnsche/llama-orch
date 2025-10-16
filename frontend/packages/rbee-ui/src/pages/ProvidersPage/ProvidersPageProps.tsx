@@ -55,17 +55,17 @@ export const providersHeroProps: ProvidersHeroProps = {
     'Join the rbee marketplace and get paid when developers use your spare compute. Plug in once, set your price, and start earning automatically.',
   stats: [
     {
-      icon: DollarSign,
+      icon: <DollarSign className="w-6 h-6" />,
       value: '€50–200',
       label: 'per GPU / month',
     },
     {
-      icon: Clock,
+      icon: <Clock className="w-6 h-6" />,
       value: '24/7',
       label: 'Passive income',
     },
     {
-      icon: Shield,
+      icon: <Shield className="w-6 h-6" />,
       value: '100%',
       label: 'Secure payouts',
     },
@@ -80,6 +80,7 @@ export const providersHeroProps: ProvidersHeroProps = {
   },
   trustLine: 'No tech expertise needed • Set your own prices • Pause anytime',
   dashboard: {
+    icon: <BarChart3 className="w-6 h-6" />,
     title: 'Your Earnings Dashboard',
     statusBadge: 'Active',
     monthLabel: 'This Month',
@@ -329,11 +330,7 @@ export const providersFeaturesProps: FeaturesTabsProps = {
         text: 'Dynamic pricing based on demand with automatic adjustments',
         variant: 'primary',
       },
-      benefits: [
-        { text: 'Set custom rates' },
-        { text: 'Demand-based pricing' },
-        { text: 'Schedule multipliers' },
-      ],
+      benefits: [{ text: 'Set custom rates' }, { text: 'Demand-based pricing' }, { text: 'Schedule multipliers' }],
     },
     {
       value: 'availability',
@@ -695,22 +692,22 @@ export const providersTestimonialsProps: ProvidersTestimonialsTemplateProps = {
   sectorFilter: 'provider',
   stats: [
     {
-      icon: Users,
+      icon: <Users className="w-6 h-6" />,
       value: '500+',
       label: 'Active Providers',
     },
     {
-      icon: Cpu,
+      icon: <Cpu className="w-6 h-6" />,
       value: '2,000+',
       label: 'GPUs Earning',
     },
     {
-      icon: TrendingUp,
+      icon: <TrendingUp className="w-6 h-6" />,
       value: '€180K+',
       label: 'Paid to Providers',
     },
     {
-      icon: Star,
+      icon: <Star className="w-6 h-6" />,
       value: '4.8/5',
       label: 'Average Rating',
     },

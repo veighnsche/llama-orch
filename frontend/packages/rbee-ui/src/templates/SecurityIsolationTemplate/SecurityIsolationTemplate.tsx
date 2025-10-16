@@ -49,7 +49,7 @@ export function SecurityIsolationTemplate({
         <Card className="animate-in fade-in slide-in-from-bottom-2">
           <CardContent className="p-6 md:p-8">
             <IconCardHeader
-              icon={Shield}
+              icon={<Shield className="w-6 h-6" />}
               iconTone="chart-2"
               iconSize="md"
               title={cratesTitle}
@@ -75,7 +75,7 @@ export function SecurityIsolationTemplate({
           <Card>
             <CardContent className="p-6">
               <IconCardHeader
-                icon={Lock}
+                icon={<Lock className="w-6 h-6" />}
                 iconTone="chart-3"
                 iconSize="sm"
                 title={processIsolationTitle}
@@ -102,7 +102,7 @@ export function SecurityIsolationTemplate({
           <Card>
             <CardContent className="p-6">
               <IconCardHeader
-                icon={Shield}
+                icon={<Shield className="w-6 h-6" />}
                 iconTone="chart-2"
                 iconSize="sm"
                 title={zeroTrustTitle}

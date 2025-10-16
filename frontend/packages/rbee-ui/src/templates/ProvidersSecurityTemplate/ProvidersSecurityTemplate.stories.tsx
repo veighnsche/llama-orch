@@ -1,6 +1,6 @@
-import type { Meta, StoryObj } from '@storybook/react'
-import { providersSecurityContainerProps, providersSecurityProps } from '@rbee/ui/pages/ProvidersPage'
 import { TemplateContainer } from '@rbee/ui/molecules'
+import { providersSecurityContainerProps, providersSecurityProps } from '@rbee/ui/pages/ProvidersPage'
+import type { Meta, StoryObj } from '@storybook/react'
 import { ProvidersSecurityTemplate } from './ProvidersSecurityTemplate'
 
 const meta = {

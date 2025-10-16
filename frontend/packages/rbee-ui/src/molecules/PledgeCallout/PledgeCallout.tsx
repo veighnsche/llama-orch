@@ -15,7 +15,7 @@ export function PledgeCallout({ className }: PledgeCalloutProps) {
     <div className={cn('rounded-2xl border bg-card p-6 md:p-7 shadow-sm', className)}>
       <div className="flex gap-4 items-start">
         {/* Icon */}
-        <IconPlate icon={Shield} size="md" shape="circle" tone="chart-2" className="shrink-0" />
+        <IconPlate icon={<Shield className="w-6 h-6" />} size="md" shape="circle" tone="chart-2" className="shrink-0" />
 
         {/* Content */}
         <div className="flex-1 space-y-1">

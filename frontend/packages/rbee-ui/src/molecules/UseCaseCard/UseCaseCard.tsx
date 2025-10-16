@@ -2,11 +2,11 @@ import { Badge } from '@rbee/ui/atoms/Badge'
 import { Card, CardContent, CardFooter } from '@rbee/ui/atoms/Card'
 import { IconCardHeader } from '@rbee/ui/molecules'
 import { cn } from '@rbee/ui/utils'
-import type { LucideIcon } from 'lucide-react'
+import type * as React from 'react'
 import Link from 'next/link'
 
 export interface UseCaseCardProps {
-  icon: LucideIcon
+  icon: React.ReactNode
   color?: 'primary' | 'chart-1' | 'chart-2' | 'chart-3' | 'chart-4' | 'chart-5' | 'muted' | 'success' | 'warning'
   iconTone?: 'primary' | 'muted' | 'success' | 'warning' | 'chart-1' | 'chart-2' | 'chart-3' | 'chart-4' | 'chart-5'
   iconSize?: 'sm' | 'md' | 'lg'

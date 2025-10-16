@@ -22,7 +22,7 @@ export function SecurityCrateCard({
   return (
     <div className={cn('rounded-lg border bg-card p-8', className)}>
       <div className="mb-4 flex items-center gap-3">
-        <IconPlate icon={Icon} size="lg" tone="primary" />
+        <IconPlate icon={<Icon className="w-6 h-6" />} size="lg" tone="primary" />
         <div>
           <h3 className="text-xl font-bold text-foreground">{title}</h3>
           <p className="text-sm text-muted-foreground">{subtitle}</p>

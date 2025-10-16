@@ -1,14 +1,14 @@
 import { IconPlate } from '@rbee/ui/molecules'
 import { cn } from '@rbee/ui/utils'
-import type { LucideIcon } from 'lucide-react'
+import type * as React from 'react'
 
 export interface StatItem {
   /** Stat value (e.g., "100%", "€50-200", "24/7") */
   value: string | number
   /** Stat label/description */
   label: string
-  /** Optional Lucide icon component */
-  icon?: LucideIcon
+  /** Optional rendered icon component */
+  icon?: React.ReactNode
   /** Optional help text for accessibility */
   helpText?: string
   /** Optional color tone for the value */
@@ -49,7 +49,7 @@ export function StatsGrid({ stats, variant = 'cards', columns = 3, className }: 
             <div className="flex items-center gap-2.5">
               {stat.icon && (
                 <IconPlate
-                  icon={<stat.icon className="w-6 h-6" />}
+                  icon={stat.icon}
                   size="md"
                   tone="primary"
                   className="transition-colors group-hover:bg-primary/20"
@@ -84,11 +84,7 @@ export function StatsGrid({ stats, variant = 'cards', columns = 3, className }: 
             role="group"
             aria-label={`${stat.value} ${stat.label}`}
           >
-            {stat.icon && (
-              <div className="mb-3">
-                <stat.icon className="h-8 w-8 text-primary" aria-hidden="true" />
-              </div>
-            )}
+            {stat.icon && <div className="mb-3">{stat.icon}</div>}
             <div
               className={cn(
                 'mb-2 text-3xl font-bold',
@@ -112,7 +108,7 @@ export function StatsGrid({ stats, variant = 'cards', columns = 3, className }: 
           <div key={idx} className="rounded-xl border/60 bg-card/40 p-4">
             {stat.icon && (
               <div className="mb-2 flex justify-center">
-                <IconPlate icon={<stat.icon className="w-6 h-6" />} size="sm" tone="primary" />
+                <IconPlate icon={stat.icon} size="sm" tone="primary" />
               </div>
             )}
             <div className={cn('font-medium', stat.valueTone === 'primary' ? 'text-primary' : 'text-foreground')}>
@@ -131,11 +127,7 @@ export function StatsGrid({ stats, variant = 'cards', columns = 3, className }: 
     <div className={cn('grid gap-4', gridClasses[columns], className)}>
       {stats.map((stat, idx) => (
         <div key={idx} className="text-center">
-          {stat.icon && (
-            <div className="mb-2 flex justify-center">
-              <stat.icon className="h-10 w-10 text-primary" aria-hidden="true" />
-            </div>
-          )}
+          {stat.icon && <div className="mb-2 flex justify-center">{stat.icon}</div>}
           <div
             className={cn(
               'mb-2 text-4xl font-bold',

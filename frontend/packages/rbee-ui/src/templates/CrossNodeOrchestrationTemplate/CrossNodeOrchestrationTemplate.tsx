@@ -75,7 +75,7 @@ export function CrossNodeOrchestrationTemplate({
           {/* Pool Registry Management Card */}
           <Card className="animate-in fade-in slide-in-from-left-4 duration-500">
             <IconCardHeader
-              icon={Network}
+              icon={<Network className="w-6 h-6" />}
               title="Pool Registry Management"
               subtitle="Configure remote machines once. rbee-keeper handles SSH, validates connectivity, and keeps your pool registry synced."
               iconTone="primary"
@@ -115,7 +115,13 @@ export function CrossNodeOrchestrationTemplate({
           <Card className="animate-in fade-in slide-in-from-right-4 duration-500 delay-100">
             <CardContent className="space-y-6 pt-6">
               <div className="flex items-start gap-4">
-                <IconPlate icon={GitBranch} tone="chart-2" size="md" shape="rounded" className="flex-shrink-0" />
+                <IconPlate
+                  icon={<GitBranch className="w-6 h-6" />}
+                  tone="chart-2"
+                  size="md"
+                  shape="rounded"
+                  className="flex-shrink-0"
+                />
                 <div>
                   <h3 className="text-2xl font-bold tracking-tight text-foreground mb-2">{provisioningTitle}</h3>
                   <p className="text-muted-foreground leading-relaxed">{provisioningSubtitle}</p>

@@ -53,15 +53,10 @@ export function UseCasesTemplate({ items, columns = 3, className }: UseCasesTemp
       {/* Cards grid */}
       <div className={cn('mx-auto grid max-w-6xl gap-6 animate-in fade-in-50 duration-400', gridCols)}>
         {items.map((item, i) => {
-          // Extract the icon component type from the rendered element
-          // This allows us to pass it to UseCaseCard which expects LucideIcon
-          const iconElement = item.icon as React.ReactElement
-          const IconComponent = iconElement?.type as any
-
           return (
             <UseCaseCard
               key={i}
-              icon={IconComponent}
+              icon={item.icon}
               title={item.title}
               scenario={item.scenario}
               solution={item.solution}

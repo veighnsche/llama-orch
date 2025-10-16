@@ -52,7 +52,11 @@ export function ProvidersSecurityTemplate({ items, ribbon }: ProvidersSecurityTe
               )}
             >
               <div className="mb-5 flex items-center gap-4">
-                <IconPlate icon={Icon} size="lg" className="bg-emerald-400/10 text-emerald-400" />
+                <IconPlate
+                  icon={<Icon className="w-6 h-6" />}
+                  size="lg"
+                  className="bg-emerald-400/10 text-emerald-400"
+                />
                 <div>
                   <h3 className="text-lg font-semibold text-foreground">{item.title}</h3>
                   {item.subtitle && <div className="text-xs text-muted-foreground">{item.subtitle}</div>}

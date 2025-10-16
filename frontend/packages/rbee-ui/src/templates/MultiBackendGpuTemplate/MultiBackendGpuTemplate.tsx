@@ -87,7 +87,7 @@ export function MultiBackendGpuTemplate({
         <Card className="relative overflow-hidden border-primary/40 bg-gradient-to-b from-primary/10 to-background animate-in fade-in slide-in-from-bottom-2">
           <CardContent className="p-8 md:p-10 space-y-6">
             <IconCardHeader
-              icon={AlertTriangle}
+              icon={<AlertTriangle className="w-6 h-6" />}
               title={policyTitle}
               subtitle={policySubtitle}
               iconTone="primary"

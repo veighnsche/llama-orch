@@ -1,7 +1,5 @@
 // Barrel exports for all organisms
 
-export * from './MonthlyEarningsPanel'
-
 // Page-specific organisms
 export * from './CoreFeaturesTabs'
 export * from './Enterprise'
@@ -10,6 +8,7 @@ export * from './Home/FeatureTabsSection'
 export * from './Home/StepsSection'
 export * from './Home/TopologyDiagram'
 export * from './HowItWorksSection'
+export * from './MonthlyEarningsPanel'
 // Pricing organisms migrated to templates
 // Providers exports (most migrated to templates)
 export {

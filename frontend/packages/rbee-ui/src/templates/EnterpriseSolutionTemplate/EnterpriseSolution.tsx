@@ -1,6 +1,6 @@
-import { EnterpriseSolutionTemplate } from './EnterpriseSolutionTemplate'
 import { FileCheck, Lock, Server, Shield } from 'lucide-react'
 import Image from 'next/image'
+import { EnterpriseSolutionTemplate } from './EnterpriseSolutionTemplate'
 
 export function EnterpriseSolution() {
   return (

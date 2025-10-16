@@ -1,6 +1,6 @@
-import type { Meta, StoryObj } from '@storybook/react'
-import { providersMarketplaceContainerProps, providersMarketplaceProps } from '@rbee/ui/pages/ProvidersPage'
 import { TemplateContainer } from '@rbee/ui/molecules'
+import { providersMarketplaceContainerProps, providersMarketplaceProps } from '@rbee/ui/pages/ProvidersPage'
+import type { Meta, StoryObj } from '@storybook/react'
 import { ProvidersMarketplace } from './ProvidersMarketplace'
 
 const meta = {

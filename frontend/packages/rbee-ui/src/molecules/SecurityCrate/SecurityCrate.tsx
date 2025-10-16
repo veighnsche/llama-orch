@@ -1,12 +1,12 @@
 import { CheckItem } from '@rbee/ui/atoms/CheckItem'
 import { IconPlate } from '@rbee/ui/molecules'
 import { cn } from '@rbee/ui/utils'
-import type { LucideIcon } from 'lucide-react'
+import type * as React from 'react'
 import Link from 'next/link'
 
 export interface SecurityCrateProps {
-  /** Lucide icon component (e.g., Lock, Shield, Eye) */
-  icon: LucideIcon
+  /** Rendered icon component (e.g., <Lock className="w-6 h-6" />) */
+  icon: React.ReactNode
   /** Crate title (e.g., "auth-min: Zero-Trust Authentication") */
   title: string
   /** Optional subtitle (e.g., "The Trickster Guardians") */

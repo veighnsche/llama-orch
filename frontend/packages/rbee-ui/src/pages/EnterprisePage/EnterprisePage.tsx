@@ -16,11 +16,11 @@ import {
   ProblemTemplate,
 } from '@rbee/ui/templates'
 import {
-  enterpriseCTAProps,
   enterpriseComparisonContainerProps,
   enterpriseComparisonProps,
   enterpriseComplianceContainerProps,
   enterpriseComplianceProps,
+  enterpriseCTAProps,
   enterpriseEmailCaptureProps,
   enterpriseFeaturesContainerProps,
   enterpriseFeaturesProps,

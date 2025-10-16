@@ -75,7 +75,12 @@ export function RealTimeProgressTemplate({
         <div className="grid sm:grid-cols-3 gap-3 animate-in fade-in slide-in-from-bottom-2 delay-100">
           {metricKPIs.map((kpi, idx) => (
             <div key={idx} className="hover:-translate-y-0.5 transition-transform">
-              <StatusKPI icon={kpi.icon} color={kpi.color} label={kpi.label} value={kpi.value} />
+              <StatusKPI
+                icon={<kpi.icon className="w-6 h-6" />}
+                color={kpi.color}
+                label={kpi.label}
+                value={kpi.value}
+              />
               <div className="mt-2 h-2 rounded-full bg-muted overflow-hidden">
                 <div className={`h-full bg-${kpi.color}`} style={{ width: `${kpi.progressPercentage}%` }} />
               </div>

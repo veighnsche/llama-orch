@@ -1,6 +1,6 @@
-"use client";
+'use client'
 
-import { TemplateContainer } from "@rbee/ui/molecules";
+import { TemplateContainer } from '@rbee/ui/molecules'
 import {
   CodeExamplesTemplate,
   CTATemplate,
@@ -13,7 +13,7 @@ import {
   SolutionTemplate,
   TestimonialsTemplate,
   UseCasesTemplate,
-} from "@rbee/ui/templates";
+} from '@rbee/ui/templates'
 import {
   codeExamplesContainerProps,
   codeExamplesProps,
@@ -21,10 +21,10 @@ import {
   ctaTemplateProps,
   developersEmailCaptureProps,
   developersHeroProps,
-  howItWorksContainerProps,
-  howItWorksProps,
   developersPricingTemplateContainerProps,
   developersPricingTemplateProps,
+  howItWorksContainerProps,
+  howItWorksProps,
   problemTemplateContainerProps,
   problemTemplateProps,
   solutionTemplateContainerProps,
@@ -33,7 +33,7 @@ import {
   testimonialsTemplateProps,
   useCasesTemplateContainerProps,
   useCasesTemplateProps,
-} from "./DevelopersPageProps";
+} from './DevelopersPageProps'
 
 // ============================================================================
 // Props Objects
@@ -80,5 +80,5 @@ export default function DevelopersPage() {
 
       <CTATemplate {...ctaTemplateProps} />
     </main>
-  );
+  )
 }

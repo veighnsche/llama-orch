@@ -80,7 +80,7 @@ export function EnterpriseComplianceTemplate({
               aria-labelledby={pillar.titleId}
             >
               <IconCardHeader
-                icon={pillar.icon}
+                icon={<pillar.icon className="w-6 h-6" />}
                 title={pillar.title}
                 subtitle={pillar.subtitle}
                 titleId={pillar.titleId}

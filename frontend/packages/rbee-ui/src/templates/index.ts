@@ -1,10 +1,10 @@
 // Barrel exports for all templates
 export * from './AdditionalFeaturesGridTemplate'
 export * from './AudienceSelector'
+export * from './CodeExamples'
 export * from './ComparisonTemplate'
 export * from './CrossNodeOrchestrationTemplate'
 export * from './CTATemplate'
-export * from './CodeExamples'
 export * from './DevelopersHero'
 export * from './EmailCapture'
 export * from './EnterpriseComparisonTemplate'

@@ -1,14 +1,14 @@
 import { type Sector, TESTIMONIALS } from '@rbee/ui/data/testimonials'
 import { StatsGrid, TestimonialCard } from '@rbee/ui/molecules'
 import { cn } from '@rbee/ui/utils'
-import type { LucideIcon } from 'lucide-react'
+import type * as React from 'react'
 
 // ────────────────────────────────────────────────────────────────────────────
 // Types
 // ────────────────────────────────────────────────────────────────────────────
 
 export type ProvidersTestimonialsStat = {
-  icon: LucideIcon
+  icon: React.ReactNode
   value: string
   label: string
 }
