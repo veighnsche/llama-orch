@@ -39,8 +39,20 @@ Pages = props objects + composition. Templates = reusable UI sections from `/org
 - ✅ Storybook stories created for all templates
 - ✅ Templates exported from barrel file
 
-**Next Pages (Phase D - Ready to Start):**
-- Pricing Page (dedicated)
+**✅ Pricing Page (Phase D - COMPLETE):**
+- ✅ Page structure created with `'use client'` directive
+- ✅ All 2 new templates created and integrated:
+  - ✅ PricingHeroTemplate
+  - ✅ PricingComparisonTemplate
+- ✅ PricingSection reused from organisms
+- ✅ FAQTemplate reused with pricing-specific data
+- ✅ EmailCapture props migrated
+- ✅ Props organized in single file: PricingPageProps.tsx (302 lines)
+- ✅ Commercial app replaced with clean `<PricingPage />` import (30 lines → 6 lines)
+- ✅ Storybook stories created for all templates
+- ✅ Templates exported from barrel file
+
+**Next Pages (Phase E - Ready to Start):**
 - Developers Page
 - Enterprise Page
 
@@ -351,5 +363,23 @@ export default function [Page]() {
 }
 ```
 
-**✅ Completed:** HomePage, FeaturesPage, UseCasesPage
-**🔄 Next:** Pricing Page, Developers Page, Enterprise Page
+**✅ Completed:** HomePage, FeaturesPage, UseCasesPage, PricingPage
+**🔄 Next:** Developers Page, Enterprise Page
+
+## Reused Templates - Multi-Page Stories
+
+The following templates are reused across multiple pages and have stories showing each usage:
+
+**EmailCapture** (4 pages):
+- `OnHomePage` - Badge with dev status, community focus, GitHub/Discord links
+- `OnFeaturesPage` - Feature updates and performance improvements
+- `OnUseCasesPage` - Use cases and best practices focus
+- `OnPricingPage` - Pricing updates and billing notifications
+
+**FAQTemplate** (2 pages):
+- `OnHomePage` - 8 general questions, 6 categories (Setup, Models, Performance, etc.), support card with beehive illustration
+- `OnPricingPage` - 6 pricing questions, 4 categories (Licensing, Plans, Billing, Trials), no support card
+
+**FeaturesTabs** (2 pages):
+- `OnHomePage` - Core capabilities section mid-page
+- `OnFeaturesPage` - Core capabilities after hero for deep dive

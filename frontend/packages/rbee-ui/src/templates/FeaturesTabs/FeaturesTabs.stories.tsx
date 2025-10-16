@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react'
+import { featuresTabsProps, featuresFeaturesTabsProps } from '@rbee/ui/pages'
 import { FeaturesTabs } from './FeaturesTabs'
-import { defaultTabConfigs } from './tabConfigs'
 
 const meta = {
   title: 'Templates/FeaturesTabs',
@@ -131,114 +131,24 @@ import { FeaturesTabs } from '@rbee/ui/templates/FeaturesTabs'
 export default meta
 type Story = StoryObj<typeof meta>
 
-export const FeaturesPageDefault: Story = {
-  args: {
-    title: 'Core capabilities',
-    description: 'Swap in the API, scale across your hardware, route with code, and watch jobs stream in real time.',
-    tabs: defaultTabConfigs,
-    defaultTab: 'api',
-  },
-  parameters: {
-    docs: {
-      description: {
-        story:
-          'Default core features tabs for the Features page. Shows 4 interactive tabs: OpenAI-compatible API, Multi-GPU orchestration, Programmable scheduler (Rhai), and Real-time SSE. Each tab includes technical details, code examples or visualizations, and business value ("Why it matters").',
-      },
-    },
-  },
+/**
+ * FeaturesTabs as used on the Home page
+ * - Title: "Core capabilities"
+ * - Description: "Swap in the API, scale across your hardware, route with code, and watch jobs stream in real time."
+ * - 4 tabs: API, GPU, Scheduler, SSE
+ * - Same content as Features page but positioned differently in page flow
+ */
+export const OnHomePage: Story = {
+  args: featuresTabsProps,
 }
 
-export const SingleTabFocus: Story = {
-  args: {
-    title: 'Core capabilities',
-    description: 'Swap in the API, scale across your hardware, route with code, and watch jobs stream in real time.',
-    tabs: defaultTabConfigs,
-    defaultTab: 'api',
-  },
-  render: (args) => (
-    <div className="space-y-8">
-      <FeaturesTabs {...args} />
-      <div className="bg-muted p-8">
-        <h3 className="text-xl font-bold mb-4 text-center">Alternative: Single Tab Deep Dive</h3>
-        <div className="max-w-2xl mx-auto">
-          <p className="text-sm text-muted-foreground mb-4">
-            For landing pages targeting a specific capability (e.g., "OpenAI-Compatible API"), consider showing just one
-            tab with more detail, more code examples, and a stronger CTA.
-          </p>
-          <div className="bg-background p-4 rounded-lg">
-            <strong className="block mb-2">Example: API-Only Landing Page</strong>
-            <ul className="space-y-2 text-sm text-muted-foreground">
-              <li>• Show multiple API examples (chat, completion, embeddings)</li>
-              <li>• Compare to OpenAI, Anthropic, Cohere APIs</li>
-              <li>• Show migration guide (3 steps)</li>
-              <li>• Strong CTA: "Try the API in 5 minutes"</li>
-            </ul>
-          </div>
-        </div>
-      </div>
-    </div>
-  ),
-  parameters: {
-    docs: {
-      description: {
-        story: 'Alternative approach: Deep dive on a single capability for targeted landing pages or campaigns.',
-      },
-    },
-  },
-}
-
-export const InteractiveDemo: Story = {
-  args: {
-    title: 'Core capabilities',
-    description: 'Swap in the API, scale across your hardware, route with code, and watch jobs stream in real time.',
-    tabs: defaultTabConfigs,
-    defaultTab: 'api',
-  },
-  render: (args) => (
-    <div className="space-y-8">
-      <div className="bg-primary/10 p-6 text-center">
-        <h3 className="text-xl font-bold">Interactive Tabs Demo</h3>
-        <p className="text-muted-foreground">Click tabs to explore each capability. Animations show transitions.</p>
-      </div>
-      <FeaturesTabs {...args} />
-      <div className="bg-muted p-8">
-        <h3 className="text-xl font-bold mb-4 text-center">Tab Order Strategy</h3>
-        <div className="max-w-3xl mx-auto space-y-4 text-sm">
-          <div>
-            <strong>Current Order:</strong> API → GPU → Scheduler → SSE
-            <br />
-            <span className="text-muted-foreground">
-              → Leads with most important (API), builds to advanced (Scheduler)
-            </span>
-          </div>
-          <div>
-            <strong>Alternative A:</strong> GPU → API → SSE → Scheduler
-            <br />
-            <span className="text-muted-foreground">
-              → Leads with visual proof (GPU bars), ends with advanced feature
-            </span>
-          </div>
-          <div>
-            <strong>Alternative B:</strong> API → SSE → GPU → Scheduler
-            <br />
-            <span className="text-muted-foreground">
-              → Groups developer experience features (API, SSE) before infrastructure features
-            </span>
-          </div>
-          <div className="pt-2">
-            <strong>Testing Recommendation:</strong> A/B test the order. Current order (API first) likely converts best
-            for developers. Alternative A (GPU first) may convert better for infrastructure teams.
-          </div>
-        </div>
-      </div>
-    </div>
-  ),
-  parameters: {
-    docs: {
-      description: {
-        story:
-          'Interactive demo showing tab transitions and animations. Includes analysis of tab order strategy for A/B testing.',
-      },
-    },
-  },
+/**
+ * FeaturesTabs as used on the Features page
+ * - Title: "Core capabilities"
+ * - Description: "Swap in the API, scale across your hardware, route with code, and watch jobs stream in real time."
+ * - 4 tabs: API, GPU, Scheduler, SSE
+ * - Appears after hero section for deep technical dive
+ */
+export const OnFeaturesPage: Story = {
+  args: featuresFeaturesTabsProps,
 }
