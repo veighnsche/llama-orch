@@ -23,6 +23,6 @@
       "@rbee/ui": ["./src/index.ts"]
     }
   },
-  "include": ["src/**/*", "src/assets/images.d.ts"],
+  "include": ["src/**/*"],
   "exclude": ["node_modules", "dist"]
 }

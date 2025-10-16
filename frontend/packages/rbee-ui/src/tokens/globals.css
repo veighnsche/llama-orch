@@ -12,9 +12,11 @@
  * this source file, not the pre-built dist/index.css
  */
 
+/* @import for fonts must come first */
+@import "./fonts.css";
+
 @import "tailwindcss";
 @import "@repo/tailwind-config";
-@import "./fonts.css";
 @import "./theme-tokens.css";
 
 @source "../**/*.{ts,tsx}";

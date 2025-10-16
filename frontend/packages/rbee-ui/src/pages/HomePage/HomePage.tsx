@@ -14,13 +14,14 @@ import {
   PricingSection,
   TechnicalSection,
   TestimonialsSection,
-  UseCasesSection,
 } from "@rbee/ui/organisms";
 import {
   AudienceSelector,
   type AudienceSelectorProps,
   EmailCapture,
   type EmailCaptureProps,
+  FeaturesTabs,
+  type FeaturesTabsProps,
   HomeHero,
   type HomeHeroProps,
   HowItWorks,
@@ -29,6 +30,8 @@ import {
   type ProblemTemplateProps,
   SolutionTemplate,
   type SolutionTemplateProps,
+  UseCasesTemplate,
+  type UseCasesTemplateProps,
   type WhatIsRbeeProps,
   WhatIsRbee,
 } from "@rbee/ui/templates";
@@ -257,6 +260,34 @@ export const audienceSelectorProps: AudienceSelectorProps = {
   ],
 };
 
+// === Email Capture Section ===
+export const emailCaptureProps: EmailCaptureProps = {
+  badge: {
+    text: "In Development · M0 · 68%",
+    showPulse: true,
+  },
+  headline: "Get Updates. Own Your AI.",
+  subheadline:
+    "Join the rbee waitlist to get early access, build notes, and launch perks for running AI on your own hardware.",
+  emailInput: {
+    placeholder: "you@company.com",
+    label: "Email address",
+  },
+  submitButton: {
+    label: "Join Waitlist",
+  },
+  trustMessage: "No spam. Unsubscribe anytime.",
+  successMessage: "Thanks! You're on the list — we'll keep you posted.",
+  communityFooter: {
+    text: "Follow progress & contribute on GitHub",
+    linkText: "View Repository",
+    linkHref: "https://github.com/veighnsche/llama-orch",
+    subtext: "Weekly dev notes. Roadmap issues tagged M0–M2.",
+  },
+  showBeeGlyphs: true,
+  showIllustration: true,
+};
+
 // === Problem Template ===
 export const problemTemplateContainerProps: Omit<
   TemplateContainerProps,
@@ -444,32 +475,229 @@ const code = await invoke({
   ],
 };
 
-// === Email Capture Section ===
-export const emailCaptureProps: EmailCaptureProps = {
-  badge: {
-    text: "In Development · M0 · 68%",
-    showPulse: true,
-  },
-  headline: "Get Updates. Own Your AI.",
-  subheadline:
-    "Join the rbee waitlist to get early access, build notes, and launch perks for running AI on your own hardware.",
-  emailInput: {
-    placeholder: "you@company.com",
-    label: "Email address",
-  },
-  submitButton: {
-    label: "Join Waitlist",
-  },
-  trustMessage: "No spam. Unsubscribe anytime.",
-  successMessage: "Thanks! You're on the list — we'll keep you posted.",
-  communityFooter: {
-    text: "Follow progress & contribute on GitHub",
-    linkText: "View Repository",
-    linkHref: "https://github.com/veighnsche/llama-orch",
-    subtext: "Weekly dev notes. Roadmap issues tagged M0–M2.",
-  },
-  showBeeGlyphs: true,
-  showIllustration: true,
+// === Features Tabs Section ===
+export const featuresTabsProps: FeaturesTabsProps = {
+  title: "Core capabilities",
+  description: "Swap in the API, scale across your hardware, route with code, and watch jobs stream in real time.",
+  tabs: [
+    {
+      value: "api",
+      icon: Code,
+      label: "OpenAI-Compatible",
+      mobileLabel: "API",
+      subtitle: "Drop-in API",
+      badge: "Drop-in",
+      description: "Swap endpoints, keep your code. Works with Zed, Cursor, Continue—any OpenAI client.",
+      content: (
+        <CodeBlock
+          code={`# Before: OpenAI
+export OPENAI_API_KEY=sk-...
+
+# After: rbee (same code)
+export OPENAI_API_BASE=http://localhost:8080/v1`}
+          language="bash"
+          copyable={true}
+        />
+      ),
+      highlight: {
+        text: "Drop-in replacement. Point to localhost.",
+        variant: "success",
+      },
+      benefits: [
+        { text: "No vendor lock-in" },
+        { text: "Use your models + GPUs" },
+        { text: "Keep existing tooling" },
+      ],
+    },
+    {
+      value: "gpu",
+      icon: Cpu,
+      label: "Multi-GPU",
+      mobileLabel: "GPU",
+      subtitle: "Use every GPU",
+      badge: "Scale",
+      description: "Run across CUDA, Metal, and CPU backends. Use every GPU across your network.",
+      content: (
+        <div className="space-y-3">
+          <GPUUtilizationBar label="RTX 4090 #1" percentage={92} />
+          <GPUUtilizationBar label="RTX 4090 #2" percentage={88} />
+          <GPUUtilizationBar label="M2 Ultra" percentage={76} />
+          <GPUUtilizationBar label="CPU Backend" percentage={34} variant="secondary" />
+        </div>
+      ),
+      highlight: {
+        text: "Higher throughput by saturating all devices.",
+        variant: "success",
+      },
+      benefits: [
+        { text: "Bigger models fit" },
+        { text: "Lower latency under load" },
+        { text: "No single-machine bottleneck" },
+      ],
+    },
+    {
+      value: "scheduler",
+      icon: Gauge,
+      label: "Programmable scheduler (Rhai)",
+      mobileLabel: "Rhai",
+      subtitle: "Route with Rhai",
+      badge: "Control",
+      description: "Write routing rules. Send 70B to multi-GPU, images to CUDA, everything else to cheapest.",
+      content: (
+        <CodeBlock
+          code={`// Custom routing logic
+if task.model.contains("70b") {
+  route_to("multi-gpu-cluster")
+}
+else if task.type == "image" {
+  route_to("cuda-only")
+}
+else {
+  route_to("cheapest")
+}`}
+          language="rust"
+          copyable={true}
+        />
+      ),
+      highlight: {
+        text: "Optimize for cost, latency, or compliance—your rules.",
+        variant: "primary",
+      },
+      benefits: [
+        { text: "Deterministic routing" },
+        { text: "Policy & compliance ready" },
+        { text: "Easy to evolve" },
+      ],
+    },
+    {
+      value: "sse",
+      icon: Zap,
+      label: "Task-based API with SSE",
+      mobileLabel: "SSE",
+      subtitle: "Live job stream",
+      badge: "Observe",
+      description: "See model loading, token generation, and costs stream in as they happen.",
+      content: (
+        <TerminalWindow
+          showChrome={false}
+          copyable={true}
+          copyText={`→ event: task.created
+{ "id": "task_123", "status": "pending" }
+
+→ event: model.loading
+{ "progress": 0.45, "eta": "2.1s" }
+
+→ event: token.generated
+{ "token": "const", "total": 1 }
+
+→ event: token.generated
+{ "token": " api", "total": 2 }`}
+        >
+          <div className="space-y-2" role="log" aria-live="polite">
+            <div role="status">
+              <div className="text-muted-foreground">→ event: task.created</div>
+              <div className="pl-4">{'{ "id": "task_123", "status": "pending" }'}</div>
+            </div>
+            <div role="status">
+              <div className="text-muted-foreground mt-2">→ event: model.loading</div>
+              <div className="pl-4">{'{ "progress": 0.45, "eta": "2.1s" }'}</div>
+            </div>
+            <div role="status">
+              <div className="text-muted-foreground mt-2">→ event: token.generated</div>
+              <div className="pl-4">{'{ "token": "const", "total": 1 }'}</div>
+            </div>
+            <div role="status">
+              <div className="text-muted-foreground mt-2">→ event: token.generated</div>
+              <div className="pl-4">{'{ "token": " api", "total": 2 }'}</div>
+            </div>
+          </div>
+        </TerminalWindow>
+      ),
+      highlight: {
+        text: "Full visibility for every inference job.",
+        variant: "default",
+      },
+      benefits: [
+        { text: "Faster debugging" },
+        { text: "UX you can trust" },
+        { text: "Accurate cost tracking" },
+      ],
+    },
+  ],
+  defaultTab: "api",
+};
+
+// === Use Cases Template ===
+export const useCasesTemplateContainerProps: Omit<
+  TemplateContainerProps,
+  "children"
+> = {
+  title: "Built for those who value independence",
+  description:
+    "Run serious AI on your own hardware. Keep costs at zero, keep control at 100%.",
+  bgVariant: "secondary",
+  paddingY: "2xl",
+  maxWidth: "6xl",
+  align: "center",
+};
+
+export const useCasesTemplateProps: UseCasesTemplateProps = {
+  items: [
+    {
+      icon: Laptop,
+      title: "The solo developer",
+      scenario:
+        "Shipping a SaaS with AI features; wants control without vendor lock-in.",
+      solution:
+        "Run rbee on your gaming PC + spare workstation. Llama 70B for coding, SD for assets—local & fast.",
+      outcome: "$0/month AI costs. Full control. No rate limits.",
+    },
+    {
+      icon: Users,
+      title: "The small team",
+      scenario: "5-person startup burning $500/mo on APIs.",
+      solution:
+        "Pool 3 workstations + 2 Macs into one rbee cluster. Shared models, faster inference, fewer blockers.",
+      outcome: "$6,000+ saved per year. GDPR-friendly by design.",
+    },
+    {
+      icon: HomeIcon,
+      title: "The homelab enthusiast",
+      scenario: "Four GPUs gathering dust.",
+      solution:
+        "Spread workers across your LAN in minutes. Build agents: coder, doc generator, code reviewer.",
+      outcome: "Idle GPUs → productive. Auto-download models, clean shutdowns.",
+    },
+    {
+      icon: Building,
+      title: "The enterprise",
+      scenario: "50-dev org. Code cannot leave the premises.",
+      solution:
+        "On-prem rbee with audit trails and policy routing. Rhai-based rules for data residency & access.",
+      outcome: "EU-only compliance. Zero external dependencies.",
+    },
+    {
+      icon: Code,
+      title: "The AI-dependent coder",
+      scenario:
+        "Building complex codebases with Claude/GPT-4. Fears provider changes, shutdowns, or price hikes.",
+      solution:
+        "Build your own AI coders with rbee + llama-orch-utils. OpenAI-compatible API runs on YOUR hardware.",
+      outcome:
+        "Complete independence. Models never change without permission. $0/month forever.",
+    },
+    {
+      icon: Workflow,
+      title: "The agentic AI builder",
+      scenario:
+        "Needs to build custom AI agents: code generators, doc writers, test creators, code reviewers.",
+      solution:
+        "Use llama-orch-utils TypeScript library: file ops, LLM invocation, prompt management, response extraction.",
+      outcome:
+        "Build production AI agents in hours. Full control. No rate limits. Test reproducibility built-in.",
+    },
+  ],
+  columns: 3,
 };
 
 export default function HomePage() {
@@ -491,6 +719,10 @@ export default function HomePage() {
       </TemplateContainer>
       <TemplateContainer {...howItWorksContainerProps}>
         <HowItWorks {...howItWorksProps} />
+      </TemplateContainer>
+      <FeaturesTabs {...featuresTabsProps} />
+      <TemplateContainer {...useCasesTemplateContainerProps}>
+        <UseCasesTemplate {...useCasesTemplateProps} />
       </TemplateContainer>
     </main>
   );

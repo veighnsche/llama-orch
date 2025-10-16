@@ -1,15 +1,18 @@
-export { 
-  homeHeroProps, 
-  whatIsRbeeContainerProps,
-  whatIsRbeeProps,
+export {
   audienceSelectorContainerProps,
   audienceSelectorProps,
+  emailCaptureProps,
+  featuresTabsProps,
+  homeHeroProps,
+  howItWorksContainerProps,
+  howItWorksProps,
   problemTemplateContainerProps,
   problemTemplateProps,
   solutionTemplateContainerProps,
   solutionTemplateProps,
-  howItWorksContainerProps,
-  howItWorksProps,
-  emailCaptureProps
-} from './HomePage'
+  useCasesTemplateContainerProps,
+  useCasesTemplateProps,
+  whatIsRbeeContainerProps,
+  whatIsRbeeProps,
+} from "./HomePage";
 export { default as HomePage } from './HomePage'
