@@ -8,8 +8,6 @@ import {
   CTASection,
   EmailCapture,
   FAQSection,
-  HomeHero,
-  type HomeHeroProps,
   HomeSolutionSection,
   HowItWorksSection,
   PricingSection,
@@ -19,6 +17,7 @@ import {
   UseCasesSection,
   WhatIsRbee,
 } from '@rbee/ui/organisms'
+import { HomeHero, type HomeHeroProps } from '@rbee/ui/templates'
 import { CoreFeaturesTabs } from '@rbee/ui/organisms/CoreFeaturesTabs'
 import {
   AlertTriangle,
