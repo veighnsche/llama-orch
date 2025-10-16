@@ -5,8 +5,8 @@ import { CodeBlock } from '@rbee/ui/molecules/CodeBlock'
 import { GPUUtilizationBar } from '@rbee/ui/molecules/GPUUtilizationBar'
 import { TerminalWindow } from '@rbee/ui/molecules/TerminalWindow'
 import type {
+  CodeExamplesTemplateProps,
   CTATemplateProps,
-  DevelopersCodeExamplesProps,
   DevelopersHeroProps,
   EmailCaptureProps,
   FeaturesTabsProps,
@@ -562,14 +562,20 @@ export const useCasesTemplateProps: UseCasesTemplateProps = {
   ],
 }
 
-// === Developers Code Examples ===
 
 /**
  * Developers Code Examples - Build AI agents with llama-orch-utils
  */
-export const developersCodeExamplesProps: DevelopersCodeExamplesProps = {
+export const codeExamplesContainerProps: Omit<TemplateContainerProps, 'children'> = {
   title: 'Build AI agents with llama-orch-utils',
-  subtitle: 'TypeScript utilities for LLM pipelines and agentic workflows.',
+  description: 'TypeScript utilities for LLM pipelines and agentic workflows.',
+  bgVariant: 'default',
+  paddingY: '2xl',
+  maxWidth: '7xl',
+  align: 'center',
+}
+
+export const codeExamplesProps: CodeExamplesTemplateProps = {
   footerNote: 'Works with any OpenAI-compatible client.',
   items: [
     {

@@ -1,6 +1,6 @@
 import { TESTIMONIAL_STATS } from '@rbee/ui/data/testimonials'
 import type { TemplateContainerProps } from '@rbee/ui/molecules'
-import { FEATURES, PROVIDERS } from '@rbee/ui/organisms/Enterprise/ComparisonData/comparison-data'
+import { FEATURES, PROVIDERS } from '@rbee/ui/organisms/Enterprise/ComparisonData'
 import type {
   EmailCaptureProps,
   EnterpriseComparisonTemplateProps,

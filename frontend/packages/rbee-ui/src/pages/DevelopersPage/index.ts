@@ -1,8 +1,9 @@
 export { default as DevelopersPage } from './DevelopersPage'
 export {
+  codeExamplesContainerProps,
+  codeExamplesProps,
   coreFeatureTabsProps,
   ctaTemplateProps,
-  developersCodeExamplesProps,
   developersEmailCaptureProps,
   developersHeroProps,
   developersPricingTemplateContainerProps,

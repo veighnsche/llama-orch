@@ -1,10 +1,10 @@
-import { SolutionSection } from '@rbee/ui/organisms'
+import { EnterpriseSolutionTemplate } from './EnterpriseSolutionTemplate'
 import { FileCheck, Lock, Server, Shield } from 'lucide-react'
 import Image from 'next/image'
 
 export function EnterpriseSolution() {
   return (
-    <SolutionSection
+    <EnterpriseSolutionTemplate
       id="how-it-works"
       kicker="How rbee Works"
       eyebrowIcon={<Shield className="h-4 w-4" aria-hidden="true" />}

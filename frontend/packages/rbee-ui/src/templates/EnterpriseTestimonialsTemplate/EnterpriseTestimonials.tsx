@@ -1,4 +1,4 @@
-import { TestimonialsRail } from '@rbee/ui/organisms'
+import { EnterpriseTestimonialsTemplate } from './EnterpriseTestimonialsTemplate'
 
 export function EnterpriseTestimonials() {
   return (
@@ -15,7 +15,7 @@ export function EnterpriseTestimonials() {
         </div>
 
         {/* Testimonials Rail */}
-        <TestimonialsRail
+        <EnterpriseTestimonialsTemplate
           sectorFilter={['finance', 'healthcare', 'legal']}
           layout="grid"
           showStats

@@ -2,8 +2,8 @@
 
 import { TemplateContainer } from "@rbee/ui/molecules";
 import {
+  CodeExamplesTemplate,
   CTATemplate,
-  DevelopersCodeExamplesTemplate,
   DevelopersHeroTemplate,
   EmailCapture,
   FeaturesTabs,
@@ -15,9 +15,10 @@ import {
   UseCasesTemplate,
 } from "@rbee/ui/templates";
 import {
+  codeExamplesContainerProps,
+  codeExamplesProps,
   coreFeatureTabsProps,
   ctaTemplateProps,
-  developersCodeExamplesProps,
   developersEmailCaptureProps,
   developersHeroProps,
   howItWorksContainerProps,
@@ -65,7 +66,9 @@ export default function DevelopersPage() {
         <UseCasesTemplate {...useCasesTemplateProps} />
       </TemplateContainer>
 
-      <DevelopersCodeExamplesTemplate {...developersCodeExamplesProps} />
+      <TemplateContainer {...codeExamplesContainerProps}>
+        <CodeExamplesTemplate {...codeExamplesProps} />
+      </TemplateContainer>
 
       <TemplateContainer {...developersPricingTemplateContainerProps}>
         <PricingTemplate {...developersPricingTemplateProps} />

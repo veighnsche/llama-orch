@@ -1,9 +1,9 @@
-import { SolutionSection } from '@rbee/ui/organisms'
+import { EnterpriseSolutionTemplate } from '@rbee/ui/templates'
 import { DollarSign, Shield, Sliders, Zap } from 'lucide-react'
 
 export function ProvidersSolution() {
   return (
-    <SolutionSection
+    <EnterpriseSolutionTemplate
       id="how-it-works"
       kicker="How rbee Works"
       title="Turn Idle GPUs Into Reliable Monthly Income"
