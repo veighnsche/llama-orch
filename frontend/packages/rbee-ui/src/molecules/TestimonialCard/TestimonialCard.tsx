@@ -1,4 +1,14 @@
-import { Avatar, AvatarFallback, AvatarImage, Badge, Card, CardContent, CardFooter, CardHeader } from '@rbee/ui/atoms'
+import {
+  Avatar,
+  AvatarFallback,
+  AvatarImage,
+  Badge,
+  Card,
+  CardContent,
+  CardFooter,
+  CardHeader,
+  QuoteBlock,
+} from '@rbee/ui/atoms'
 import { RatingStars } from '@rbee/ui/atoms/RatingStars'
 import { cn } from '@rbee/ui/utils'
 import Image from 'next/image'
@@ -93,13 +103,9 @@ export function TestimonialCard({
         {rating && <RatingStars rating={rating} size="sm" />}
 
         {/* Quote block */}
-        <blockquote>
-          <p className="text-sm leading-6 text-muted-foreground" itemProp="reviewBody">
-            <span className="text-primary mr-1">&ldquo;</span>
-            {quote}
-            <span className="text-primary ml-1">&rdquo;</span>
-          </p>
-        </blockquote>
+        <QuoteBlock size="sm" showClosingQuote itemProp="reviewBody">
+          {quote}
+        </QuoteBlock>
       </CardContent>
 
       {/* Footer row */}

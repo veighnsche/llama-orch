@@ -491,6 +491,11 @@ export const providersUseCasesContainerProps: Omit<
   paddingY: "2xl",
   maxWidth: "7xl",
   align: "center",
+  ctas: {
+    label: "Ready to join them?",
+    primary: { label: "Start Earning", href: "/signup" },
+    secondary: { label: "Estimate My Payout", href: "#earnings-calculator" },
+  },
 };
 
 export const providersUseCasesProps: ProvidersUseCasesTemplateProps = {
@@ -506,10 +511,6 @@ export const providersUseCasesProps: ProvidersUseCasesTemplateProps = {
         { label: "Availability:", value: "16–20 h/day" },
         { label: "Monthly:", value: "€120–180" },
       ],
-      image: {
-        Component: GamingPcOwner,
-        alt: "illustration of a modern gaming PC setup with RGB-lit tower showing GPU fans through tempered glass panel, dual monitors, and mechanical keyboard with colorful backlighting",
-      },
     },
     {
       icon: <Server />,
@@ -522,10 +523,6 @@ export const providersUseCasesProps: ProvidersUseCasesTemplateProps = {
         { label: "Availability:", value: "20–24 h/day" },
         { label: "Monthly:", value: "€300–600" },
       ],
-      image: {
-        Component: HomelabEnthusiast,
-        alt: "illustration of a professional server rack with 19-inch rails, 4U chassis showing multiple GPUs through ventilated panel, blue LED status indicators, and color-coded ethernet cables with cable management",
-      },
     },
     {
       icon: <Cpu />,
@@ -538,10 +535,6 @@ export const providersUseCasesProps: ProvidersUseCasesTemplateProps = {
         { label: "Availability:", value: "24 h/day" },
         { label: "Monthly:", value: "€600–1,200" },
       ],
-      image: {
-        Component: FormerCryptoMiner,
-        alt: "illustration of a repurposed open-air mining frame with aluminum rails, 8 GPUs mounted horizontally with PCIe risers, clean cable management with zip ties, LED strip lighting, and industrial power supply",
-      },
     },
     {
       icon: <Monitor />,
@@ -554,16 +547,8 @@ export const providersUseCasesProps: ProvidersUseCasesTemplateProps = {
         { label: "Availability:", value: "12–16 h/day" },
         { label: "Monthly:", value: "€80–140" },
       ],
-      image: {
-        Component: WorkstationOwner,
-        alt: "illustration of a creative workstation with 34-inch ultrawide curved monitor displaying 3D modeling software, graphics tablet with stylus, and powerful tower with mesh front panel and white LED accents",
-      },
     },
   ],
-  ctas: {
-    primary: { label: "Start Earning", href: "/signup" },
-    secondary: { label: "Estimate My Payout", href: "#earnings-calculator" },
-  },
 };
 
 // === ProvidersEarnings Template ===

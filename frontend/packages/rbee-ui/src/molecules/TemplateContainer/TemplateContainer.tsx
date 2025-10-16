@@ -1,3 +1,4 @@
+import { Button } from '@rbee/ui/atoms'
 import { cn } from '@rbee/ui/utils'
 import type { ReactNode } from 'react'
 
@@ -40,6 +41,17 @@ export interface TemplateContainerProps {
   headlineLevel?: 1 | 2 | 3
   /** Show a subtle separator under the header block */
   divider?: boolean
+  /** Optional bottom CTAs */
+  ctas?: {
+    /** Label text above buttons */
+    label?: string
+    /** Primary CTA button */
+    primary?: { label: string; href: string; ariaLabel?: string }
+    /** Secondary CTA button */
+    secondary?: { label: string; href: string; ariaLabel?: string }
+    /** Optional caption below buttons */
+    caption?: string
+  }
 }
 
 const bgClasses = {
@@ -104,6 +116,7 @@ export function TemplateContainer({
   headingId,
   headlineLevel = 2,
   divider = false,
+  ctas,
 }: TemplateContainerProps) {
   // Resolve alignment: prefer align prop, fallback to centered
   const resolvedAlign = align ?? (centered ? 'center' : 'start')
@@ -187,6 +200,35 @@ export function TemplateContainer({
         )}
 
         {children}
+
+        {/* Bottom CTAs */}
+        {ctas && (ctas.primary || ctas.secondary) && (
+          <div className={cn('mt-12 text-center', maxWidthClasses[maxWidth], 'mx-auto')}>
+            {ctas.label && <p className="mb-4 text-sm font-medium text-muted-foreground">{ctas.label}</p>}
+            <div className="flex flex-col items-center justify-center gap-3 sm:flex-row">
+              {ctas.primary && (
+                <Button asChild size="lg" className="transition-transform active:scale-[0.98]">
+                  <a href={ctas.primary.href} aria-label={ctas.primary.ariaLabel || ctas.primary.label}>
+                    {ctas.primary.label}
+                  </a>
+                </Button>
+              )}
+              {ctas.secondary && (
+                <Button
+                  asChild
+                  size="lg"
+                  variant="outline"
+                  className="transition-transform active:scale-[0.98]"
+                >
+                  <a href={ctas.secondary.href} aria-label={ctas.secondary.ariaLabel || ctas.secondary.label}>
+                    {ctas.secondary.label}
+                  </a>
+                </Button>
+              )}
+            </div>
+            {ctas.caption && <p className="mt-4 text-xs text-muted-foreground">{ctas.caption}</p>}
+          </div>
+        )}
       </div>
     </section>
   )
