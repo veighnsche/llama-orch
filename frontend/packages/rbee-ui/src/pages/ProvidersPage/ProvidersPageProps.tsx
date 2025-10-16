@@ -15,11 +15,12 @@ import type {
   ProvidersCTAProps,
   ProvidersEarningsProps,
   ProvidersHeroProps,
-  ProvidersMarketplaceProps,
   ProvidersSecurityTemplateProps,
   ProvidersTestimonialsTemplateProps,
   ProvidersUseCasesTemplateProps,
 } from "@rbee/ui/templates";
+import type { CommissionStructureCardProps } from "@rbee/ui/molecules/CommissionStructureCard";
+import type { Feature } from "@rbee/ui/templates/SolutionTemplate";
 import type { ProblemTemplateProps } from "@rbee/ui/templates/ProblemTemplate";
 import type { SolutionTemplateProps } from "@rbee/ui/templates/SolutionTemplate";
 import {
@@ -253,13 +254,16 @@ export const providersSolutionProps: SolutionTemplateProps = {
 /**
  * Providers How It Works container - Layout configuration
  */
-export const providersHowItWorksContainerProps: Omit<TemplateContainerProps, 'children'> = {
-  title: 'Start Earning in 4 Simple Steps',
-  bgVariant: 'secondary',
-  paddingY: '2xl',
-  maxWidth: '6xl',
-  align: 'center',
-}
+export const providersHowItWorksContainerProps: Omit<
+  TemplateContainerProps,
+  "children"
+> = {
+  title: "Start Earning in 4 Simple Steps",
+  bgVariant: "secondary",
+  paddingY: "2xl",
+  maxWidth: "6xl",
+  align: "center",
+};
 
 /**
  * Providers How It Works - Step-by-step guide to start earning
@@ -635,64 +639,66 @@ export const providersMarketplaceContainerProps: Omit<
   align: "center",
 };
 
-export const providersMarketplaceProps: ProvidersMarketplaceProps = {
-  featureTiles: [
+export const providersMarketplaceCommissionProps: CommissionStructureCardProps =
+  {
+    title: "Commission Structure",
+    standardCommissionLabel: "Standard Commission",
+    standardCommissionValue: "15%",
+    standardCommissionDescription:
+      "Covers marketplace operations, payouts, and support.",
+    youKeepLabel: "You Keep",
+    youKeepValue: "85%",
+    youKeepDescription: "No hidden fees or surprise deductions.",
+    exampleItems: [
+      { label: "Example job", value: "€100.00" },
+      { label: "rbee commission (15%)", value: "−€15.00" },
+    ],
+    exampleTotalLabel: "Your earnings",
+    exampleTotalValue: "€85.00",
+    exampleBadgeText: "Effective take-home: 85%",
+  };
+
+export const providersMarketplaceSolutionProps: SolutionTemplateProps = {
+  features: [
     {
       icon: <TrendingUp className="size-6" />,
       title: "Dynamic Pricing",
-      description: "Set your own rate or use auto-pricing.",
+      body: "Set your own rate or use auto-pricing.",
     },
     {
       icon: <Users className="size-6" />,
       title: "Growing Demand",
-      description: "Thousands of AI jobs posted monthly.",
+      body: "Thousands of AI jobs posted monthly.",
     },
     {
       icon: <Globe className="size-6" />,
       title: "Global Reach",
-      description: "Your GPUs are discoverable worldwide.",
+      body: "Your GPUs are discoverable worldwide.",
     },
     {
       icon: <Shield className="size-6" />,
       title: "Fair Commission",
-      description: "Keep 85% of every payout.",
+      body: "Keep 85% of every payout.",
     },
   ],
-  marketplaceFeaturesTitle: "Marketplace Features",
-  marketplaceFeatures: [
+  steps: [
     {
       title: "Automatic Matching",
-      description: "Jobs match your GPUs based on specs and your pricing.",
+      body: "Jobs match your GPUs based on specs and your pricing.",
     },
     {
       title: "Rating System",
-      description: "Higher ratings unlock more jobs and better rates.",
+      body: "Higher ratings unlock more jobs and better rates.",
     },
     {
       title: "Guaranteed Payments",
-      description: "Customers pre-pay. Every completed job is paid.",
+      body: "Customers pre-pay. Every completed job is paid.",
     },
     {
       title: "Dispute Resolution",
-      description: "A fair process protects both providers and customers.",
+      body: "A fair process protects both providers and customers.",
     },
   ],
-  commissionStructureTitle: "Commission Structure",
-  standardCommissionLabel: "Standard Commission",
-  standardCommissionValue: "15%",
-  standardCommissionDescription:
-    "Covers marketplace operations, payouts, and support.",
-  youKeepLabel: "You Keep",
-  youKeepValue: "85%",
-  youKeepDescription: "No hidden fees or surprise deductions.",
-  exampleTitle: "Example",
-  exampleItems: [
-    { label: "Example job", value: "€100.00" },
-    { label: "rbee commission (15%)", value: "−€15.00" },
-  ],
-  exampleTotalLabel: "Your earnings",
-  exampleTotalValue: "€85.00",
-  exampleBadgeText: "Effective take-home: 85%",
 };
 
 // === ProvidersSecurity Template ===

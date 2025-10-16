@@ -26,6 +26,7 @@ const sampleGPUs: GPUSelectorModel[] = [
 const formatHourly = (rate: number) => `€${rate.toFixed(2)}/hr`
 
 export const Default: Story = {
+  args: {} as any,
   render: () => {
     const [selected, setSelected] = useState(sampleGPUs[0])
     return (
@@ -43,6 +44,7 @@ export const Default: Story = {
 }
 
 export const FewOptions: Story = {
+  args: {} as any,
   render: () => {
     const [selected, setSelected] = useState(sampleGPUs[0])
     return (
@@ -60,6 +62,7 @@ export const FewOptions: Story = {
 }
 
 export const ManyOptions: Story = {
+  args: {} as any,
   render: () => {
     const manyGPUs = [
       ...sampleGPUs,

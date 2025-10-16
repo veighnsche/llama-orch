@@ -1,6 +1,6 @@
 "use client";
 
-import { TemplateContainer } from "@rbee/ui/molecules";
+import { CommissionStructureCard, TemplateContainer } from "@rbee/ui/molecules";
 import {
   FeaturesTabs,
   HowItWorks,
@@ -8,7 +8,6 @@ import {
   ProvidersCTA,
   ProvidersEarnings,
   ProvidersHero,
-  ProvidersMarketplace,
   ProvidersSecurityTemplate,
   ProvidersTestimonialsTemplate,
   ProvidersUseCasesTemplate,
@@ -23,7 +22,8 @@ import {
   providersHowItWorksContainerProps,
   providersHowItWorksProps,
   providersMarketplaceContainerProps,
-  providersMarketplaceProps,
+  providersMarketplaceSolutionProps,
+  providersMarketplaceCommissionProps,
   providersProblemContainerProps,
   providersProblemProps,
   providersSecurityContainerProps,
@@ -57,7 +57,14 @@ export default function ProvidersPage() {
         <ProvidersEarnings {...providersEarningsProps} />
       </TemplateContainer>
       <TemplateContainer {...providersMarketplaceContainerProps}>
-        <ProvidersMarketplace {...providersMarketplaceProps} />
+        <SolutionTemplate
+          {...providersMarketplaceSolutionProps}
+          aside={
+            <div className="animate-in fade-in-50 slide-in-from-right-2 [animation-delay:200ms] lg:sticky lg:top-24 lg:self-start">
+              <CommissionStructureCard {...providersMarketplaceCommissionProps} />
+            </div>
+          }
+        />
       </TemplateContainer>
       <TemplateContainer {...providersSecurityContainerProps}>
         <ProvidersSecurityTemplate {...providersSecurityProps} />
