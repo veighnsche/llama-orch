@@ -1,6 +1,5 @@
 'use client'
 
-import { Button } from '@rbee/ui/atoms/Button'
 import { cn } from '@rbee/ui/utils'
 import { Check, Copy } from 'lucide-react'
 import { Highlight, type PrismTheme } from 'prism-react-renderer'
@@ -11,7 +10,7 @@ import { resolveLang } from './prism'
 const tokenBasedTheme: PrismTheme = {
   plain: {
     color: 'var(--foreground)',
-    backgroundColor: 'var(--muted)',
+    backgroundColor: 'var(--background)',
   },
   styles: [
     {
@@ -128,30 +127,28 @@ export function CodeBlock({
   }
 
   return (
-    <div className={cn('rounded-xl border border-border bg-card/60 shadow-sm overflow-hidden', className)}>
+    <div className={cn('border border-border bg-card overflow-hidden', className)}>
       {(title || language || copyable) && (
-        <div className="flex items-center justify-between px-4 py-2.5 border-b border-border bg-card/80">
+        <div className="flex items-center justify-between gap-1 bg-muted/50 px-4 py-2">
           <div className="flex items-center gap-3">
-            {title && <span className="text-sm font-medium text-foreground font-mono">{title}</span>}
-            {language && (
-              <span className="text-[11px] uppercase tracking-wide text-muted-foreground font-medium translate-y-[1px] font-mono">
+            {title && <span className="font-mono text-xs text-muted-foreground">{title}</span>}
+            {language && !title && (
+              <span className="font-mono text-xs text-muted-foreground">
                 {language}
               </span>
             )}
           </div>
           {copyable && (
             <>
-              <Button
-                variant="ghost"
-                size="sm"
+              <button
                 onClick={handleCopy}
-                className="gap-1.5 rounded-md"
+                className="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium font-sans text-muted-foreground hover:text-foreground transition-colors rounded-md hover:bg-accent/50"
                 aria-label="Copy code to clipboard"
               >
                 {copied ? (
                   <>
                     <Check className="h-3.5 w-3.5" />
-                    <span className="animate-in fade-in zoom-in-95 duration-200">Copied</span>
+                    <span>Copied</span>
                   </>
                 ) : (
                   <>
@@ -159,7 +156,7 @@ export function CodeBlock({
                     <span>Copy</span>
                   </>
                 )}
-              </Button>
+              </button>
               <div className="sr-only" aria-live="polite">
                 {copied ? 'Code copied to clipboard' : ''}
               </div>
@@ -169,7 +166,7 @@ export function CodeBlock({
       )}
       <Highlight code={code} language={resolveLang(language)} theme={tokenBasedTheme}>
         {({ className: prismClass, style, tokens, getLineProps, getTokenProps }) => (
-          <pre className={cn('overflow-x-auto rounded-b-xl px-0', prismClass)} style={style}>
+          <pre className={cn('overflow-x-auto px-0 py-6', prismClass)} style={style}>
             <code
               className={cn('block text-[13px] sm:text-sm leading-6 font-mono', showLineNumbers ? 'grid' : 'block')}
               style={showLineNumbers ? { gridTemplateColumns: 'theme(spacing.10) 1fr' } : undefined}
@@ -186,7 +183,7 @@ export function CodeBlock({
                       key={i}
                       {...lineProps}
                       className={cn(
-                        'px-4 sm:px-6 py-0.5 whitespace-pre tab-size-[2]',
+                        'px-6 py-0.5 whitespace-pre tab-size-[2]',
                         isHighlighted && 'bg-primary/10 border-l-2 border-l-primary/60',
                       )}
                     >
@@ -203,7 +200,7 @@ export function CodeBlock({
                     key={i}
                     {...lineProps}
                     className={cn(
-                      'grid gap-4 px-4 sm:px-6 min-w-full tabular-nums',
+                      'grid gap-4 px-6 min-w-full tabular-nums',
                       '[grid-template-columns:theme(spacing.10)_1fr]',
                       isHighlighted && 'bg-primary/10 border-l-2 border-l-primary/60',
                     )}

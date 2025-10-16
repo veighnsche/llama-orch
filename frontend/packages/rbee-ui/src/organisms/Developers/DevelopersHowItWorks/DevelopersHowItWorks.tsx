@@ -57,29 +57,12 @@ export function DevelopersHowItWorks() {
             kind: 'code',
             title: 'TypeScript',
             language: 'ts',
-            lines: (
-              <>
-                <div>
-                  <span className="text-purple-400">import</span> {'{'} invoke {'}'}{' '}
-                  <span className="text-purple-400">from</span>{' '}
-                  <span className="text-amber-400">&apos;@llama-orch/utils&apos;</span>;
-                </div>
-                <div className="mt-2">
-                  <span className="text-blue-400">const</span> code = <span className="text-blue-400">await</span>{' '}
-                  <span className="text-green-400">invoke</span>
-                  {'({'}
-                </div>
-                <div className="pl-4">
-                  prompt: <span className="text-amber-400">&apos;Generate API from schema&apos;</span>,
-                </div>
-                <div className="pl-4">
-                  model: <span className="text-amber-400">&apos;llama-3.1-70b&apos;</span>
-                </div>
-                <div>{'});'}</div>
-              </>
-            ),
-            copyText:
-              "import { invoke } from '@llama-orch/utils';\n\nconst code = await invoke({\n  prompt: 'Generate API from schema',\n  model: 'llama-3.1-70b'\n});",
+            code: `import { invoke } from '@llama-orch/utils';
+
+const code = await invoke({
+  prompt: 'Generate API from schema',
+  model: 'llama-3.1-70b'
+});`,
           },
         },
       ]}

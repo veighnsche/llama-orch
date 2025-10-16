@@ -1,10 +1,10 @@
-import { SectionContainer, TerminalWindow } from '@rbee/ui/molecules'
+import { CodeBlock, SectionContainer, StepNumber, TerminalWindow } from '@rbee/ui/molecules'
 import { cn } from '@rbee/ui/utils'
 import type { ReactNode } from 'react'
 
 export type StepBlock =
   | { kind: 'terminal'; title?: string; lines: ReactNode; copyText?: string }
-  | { kind: 'code'; title?: string; language?: string; lines: ReactNode; copyText?: string }
+  | { kind: 'code'; title?: string; language?: string; code: string }
   | { kind: 'note'; content: ReactNode }
 
 export type HowItWorksSectionProps = {
@@ -45,12 +45,12 @@ export function HowItWorksSection({ title, subtitle, steps, id, className }: How
               style={{ animationDelay: `${index * 120}ms` }}
             >
               {/* Step badge */}
-              <div
-                className="grid h-12 w-12 flex-shrink-0 place-content-center rounded-lg bg-primary text-xl font-bold text-primary-foreground"
-                aria-hidden="true"
-              >
-                {stepNumber}
-              </div>
+              <StepNumber
+                number={stepNumber}
+                size="md"
+                variant="primary"
+                className="flex-shrink-0 rounded-lg"
+              />
 
               {/* Step content */}
               <div className="flex-1">
@@ -71,14 +71,12 @@ export function HowItWorksSection({ title, subtitle, steps, id, className }: How
                     )}
 
                     {step.block.kind === 'code' && (
-                      <TerminalWindow
-                        showChrome
-                        title={step.block.title || step.block.language || 'code'}
+                      <CodeBlock
+                        code={step.block.code}
+                        language={step.block.language}
+                        title={step.block.title}
                         copyable
-                        copyText={step.block.copyText}
-                      >
-                        {step.block.lines}
-                      </TerminalWindow>
+                      />
                     )}
 
                     {step.block.kind === 'note' && (

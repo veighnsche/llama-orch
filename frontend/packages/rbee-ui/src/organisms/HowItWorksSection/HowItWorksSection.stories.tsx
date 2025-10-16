@@ -200,30 +200,12 @@ export const HomePageDefault: Story = {
           kind: 'code',
           title: 'TypeScript',
           language: 'ts',
-          lines: (
-            <>
-              <div>
-                <span className="text-[var(--syntax-import)]">import</span> {'{'} invoke {'}'}{' '}
-                <span className="text-[var(--syntax-import)]">from</span>{' '}
-                <span className="text-[var(--syntax-string)]">&apos;@rbee/utils&apos;</span>;
-              </div>
-              <div className="mt-2">
-                <span className="text-[var(--syntax-keyword)]">const</span> code ={' '}
-                <span className="text-[var(--syntax-keyword)]">await</span>{' '}
-                <span className="text-[var(--syntax-function)]">invoke</span>
-                {'({'}
-              </div>
-              <div className="pl-4">
-                prompt: <span className="text-[var(--syntax-string)]">&apos;Generate API from schema&apos;</span>,
-              </div>
-              <div className="pl-4">
-                model: <span className="text-[var(--syntax-string)]">&apos;llama-3.1-70b&apos;</span>
-              </div>
-              <div>{'});'}</div>
-            </>
-          ),
-          copyText:
-            "import { invoke } from '@rbee/utils';\n\nconst code = await invoke({\n  prompt: 'Generate API from schema',\n  model: 'llama-3.1-70b'\n});",
+          code: `import { invoke } from '@rbee/utils';
+
+const code = await invoke({
+  prompt: 'Generate API from schema',
+  model: 'llama-3.1-70b'
+});`,
         },
       },
     ],
@@ -312,25 +294,11 @@ export const AlternativeSteps: Story = {
           kind: 'code',
           title: 'TypeScript',
           language: 'ts',
-          lines: (
-            <>
-              <div>
-                <span className="text-purple-400">import</span> OpenAI <span className="text-purple-400">from</span>{' '}
-                <span className="text-amber-400">'openai'</span>;
-              </div>
-              <div className="mt-2">
-                <span className="text-blue-400">const</span> client = <span className="text-blue-400">new</span>{' '}
-                <span className="text-green-400">OpenAI</span>
-                {'({'}
-              </div>
-              <div className="pl-4">
-                baseURL: <span className="text-amber-400">'http://localhost:8080/v1'</span>
-              </div>
-              <div>{'});'}</div>
-            </>
-          ),
-          copyText:
-            "import OpenAI from 'openai';\n\nconst client = new OpenAI({\n  baseURL: 'http://localhost:8080/v1'\n});",
+          code: `import OpenAI from 'openai';
+
+const client = new OpenAI({
+  baseURL: 'http://localhost:8080/v1'
+});`,
         },
       },
     ],

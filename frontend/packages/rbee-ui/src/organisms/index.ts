@@ -23,9 +23,9 @@ export type {
   Feature as SolutionFeature,
   SolutionSectionProps,
   Step as SolutionStep,
-} from './Home/SolutionSection'
+} from './SolutionSection'
 // Solution section exports Step type which conflicts with StepsSection
-export { HomeSolutionSection, SolutionSection } from './Home/SolutionSection'
+export { HomeSolutionSection, SolutionSection } from './SolutionSection'
 export type { Step as TimelineStep, StepsSectionProps } from './Home/StepsSection'
 // Steps section exports Step type
 export { StepsSection } from './Home/StepsSection'

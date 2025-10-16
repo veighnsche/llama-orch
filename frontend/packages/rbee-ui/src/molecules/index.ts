@@ -49,6 +49,7 @@ export * from './SecurityCrateCard/SecurityCrateCard'
 export * from './StatsGrid/StatsGrid'
 export * from './StatusKPI/StatusKPI'
 export * from './StepCard/StepCard'
+export * from './StepListItem/StepListItem'
 export * from './StepNumber/StepNumber'
 export * from './TabButton/TabButton'
 // Tables - grouped because they work TOGETHER to compose table organisms
