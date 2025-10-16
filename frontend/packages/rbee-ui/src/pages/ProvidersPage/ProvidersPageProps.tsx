@@ -7,10 +7,10 @@ import { CodeBlock } from '@rbee/ui/molecules/CodeBlock'
 import type {
   FeaturesTabsProps,
   HowItWorksProps,
-  ProvidersCTATemplateProps,
-  ProvidersEarningsTemplateProps,
-  ProvidersHeroTemplateProps,
-  ProvidersMarketplaceTemplateProps,
+  ProvidersCTAProps,
+  ProvidersEarningsProps,
+  ProvidersHeroProps,
+  ProvidersMarketplaceProps,
   ProvidersSecurityTemplateProps,
   ProvidersTestimonialsTemplateProps,
   ProvidersUseCasesTemplateProps,
@@ -47,7 +47,7 @@ import {
 // ============================================================================
 
 // === ProvidersHero Template ===
-export const providersHeroProps: ProvidersHeroTemplateProps = {
+export const providersHeroProps: ProvidersHeroProps = {
   kickerIcon: <Zap className="h-3.5 w-3.5" />,
   kickerText: '💡 Turn Idle GPUs Into Income',
   headline: 'Your GPUs Can Pay You Every Month',
@@ -523,7 +523,7 @@ export const providersEarningsContainerProps: Omit<TemplateContainerProps, 'chil
   align: 'center',
 }
 
-export const providersEarningsProps: ProvidersEarningsTemplateProps = {
+export const providersEarningsProps: ProvidersEarningsProps = {
   gpuModels: [
     { name: 'RTX 4090', baseRate: 0.45, vram: 24 },
     { name: 'RTX 4080', baseRate: 0.35, vram: 16 },
@@ -575,7 +575,7 @@ export const providersMarketplaceContainerProps: Omit<TemplateContainerProps, 'c
   align: 'center',
 }
 
-export const providersMarketplaceProps: ProvidersMarketplaceTemplateProps = {
+export const providersMarketplaceProps: ProvidersMarketplaceProps = {
   featureTiles: [
     {
       icon: TrendingUp,
@@ -718,7 +718,7 @@ export const providersTestimonialsProps: ProvidersTestimonialsTemplateProps = {
 }
 
 // === ProvidersCTA Template ===
-export const providersCTAProps: ProvidersCTATemplateProps = {
+export const providersCTAProps: ProvidersCTAProps = {
   badgeIcon: <Zap className="h-4 w-4" aria-hidden="true" />,
   badgeText: 'Start earning today',
   title: 'Turn Idle GPUs Into Weekly Payouts',

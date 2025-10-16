@@ -21,7 +21,7 @@ export type ProvidersMarketplaceCommissionExample = {
   value: string
 }
 
-export type ProvidersMarketplaceTemplateProps = {
+export type ProvidersMarketplaceProps = {
   featureTiles: ProvidersMarketplaceFeatureTile[]
   marketplaceFeaturesTitle: string
   marketplaceFeatures: ProvidersMarketplaceFeatureItem[]
@@ -44,18 +44,18 @@ export type ProvidersMarketplaceTemplateProps = {
 // ────────────────────────────────────────────────────────────────────────────
 
 /**
- * ProvidersMarketplaceTemplate - Marketplace features and commission structure
+ * ProvidersMarketplace - Marketplace features and commission structure
  *
  * @example
  * ```tsx
- * <ProvidersMarketplaceTemplate
+ * <ProvidersMarketplace
  *   featureTiles={[...]}
  *   marketplaceFeatures={[...]}
  *   // ... other props
  * />
  * ```
  */
-export function ProvidersMarketplaceTemplate({
+export function ProvidersMarketplace({
   featureTiles,
   marketplaceFeaturesTitle,
   marketplaceFeatures,
@@ -71,7 +71,7 @@ export function ProvidersMarketplaceTemplate({
   exampleTotalLabel,
   exampleTotalValue,
   exampleBadgeText,
-}: ProvidersMarketplaceTemplateProps) {
+}: ProvidersMarketplaceProps) {
   return (
     <div>
       {/* Feature Tiles */}

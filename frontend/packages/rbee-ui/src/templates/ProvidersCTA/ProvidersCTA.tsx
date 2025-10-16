@@ -14,7 +14,7 @@ export type ProvidersCTAStat = {
   label: string
 }
 
-export type ProvidersCTATemplateProps = {
+export type ProvidersCTAProps = {
   badgeIcon: React.ReactNode
   badgeText: string
   title: string
@@ -40,11 +40,11 @@ export type ProvidersCTATemplateProps = {
 // ────────────────────────────────────────────────────────────────────────────
 
 /**
- * ProvidersCTATemplate - Final CTA section for GPU providers page
+ * ProvidersCTA - Final CTA section for GPU providers page
  *
  * @example
  * ```tsx
- * <ProvidersCTATemplate
+ * <ProvidersCTA
  *   badgeIcon={<Zap className="h-4 w-4" />}
  *   badgeText="Start earning today"
  *   title="Turn Idle GPUs Into Weekly Payouts"
@@ -54,7 +54,7 @@ export type ProvidersCTATemplateProps = {
  * />
  * ```
  */
-export function ProvidersCTATemplate({
+export function ProvidersCTA({
   badgeIcon,
   badgeText,
   title,
@@ -64,7 +64,7 @@ export function ProvidersCTATemplate({
   disclaimerText,
   stats,
   backgroundImage,
-}: ProvidersCTATemplateProps) {
+}: ProvidersCTAProps) {
   return (
     <section
       aria-labelledby="providers-cta-h2"

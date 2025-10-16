@@ -22,7 +22,7 @@ export type ProvidersEarningsPreset = {
   utilization: number
 }
 
-export type ProvidersEarningsTemplateProps = {
+export type ProvidersEarningsProps = {
   gpuModels: ProvidersEarningsGPUModel[]
   presets: ProvidersEarningsPreset[]
   commission: number
@@ -56,11 +56,11 @@ export type ProvidersEarningsTemplateProps = {
 // ────────────────────────────────────────────────────────────────────────────
 
 /**
- * ProvidersEarningsTemplate - Interactive earnings calculator for GPU providers
+ * ProvidersEarnings - Interactive earnings calculator for GPU providers
  *
  * @example
  * ```tsx
- * <ProvidersEarningsTemplate
+ * <ProvidersEarnings
  *   kicker="Estimate Your Earnings"
  *   title="Calculate Your Potential Earnings"
  *   gpuModels={[...]}
@@ -71,7 +71,7 @@ export type ProvidersEarningsTemplateProps = {
  * />
  * ```
  */
-export function ProvidersEarningsTemplate({
+export function ProvidersEarnings({
   gpuModels,
   presets,
   commission,
@@ -98,7 +98,7 @@ export function ProvidersEarningsTemplate({
   disclaimerText,
   formatCurrency,
   formatHourly,
-}: ProvidersEarningsTemplateProps) {
+}: ProvidersEarningsProps) {
   const [selectedGPU, setSelectedGPU] = useState(gpuModels[0])
   const [utilization, setUtilization] = useState([80])
   const [hoursPerDay, setHoursPerDay] = useState([20])

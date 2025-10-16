@@ -18,7 +18,7 @@ export type ProvidersHeroGPU = {
   status: 'active' | 'idle'
 }
 
-export type ProvidersHeroTemplateProps = {
+export type ProvidersHeroProps = {
   kickerIcon: React.ReactNode
   kickerText: string
   headline: string
@@ -56,11 +56,11 @@ export type ProvidersHeroTemplateProps = {
 // ────────────────────────────────────────────────────────────────────────────
 
 /**
- * ProvidersHeroTemplate - Hero section for GPU providers page
+ * ProvidersHero - Hero section for GPU providers page
  *
  * @example
  * ```tsx
- * <ProvidersHeroTemplate
+ * <ProvidersHero
  *   kickerIcon={<Zap className="h-3.5 w-3.5" />}
  *   kickerText="💡 Turn Idle GPUs Into Income"
  *   headline="Your GPUs Can Pay You Every Month"
@@ -68,7 +68,7 @@ export type ProvidersHeroTemplateProps = {
  * />
  * ```
  */
-export function ProvidersHeroTemplate({
+export function ProvidersHero({
   kickerIcon,
   kickerText,
   headline,
@@ -78,7 +78,7 @@ export function ProvidersHeroTemplate({
   secondaryCTA,
   trustLine,
   dashboard,
-}: ProvidersHeroTemplateProps) {
+}: ProvidersHeroProps) {
   return (
     <section className="relative overflow-hidden border-b border-border bg-gradient-to-b from-background via-card to-background px-6 py-20 lg:py-28">
       {/* Background layer: subtle grid + beam */}

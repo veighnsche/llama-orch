@@ -111,7 +111,7 @@ export function CodeExamplesTemplate({
 
             {/* Optional footer note */}
             {footerNote && (
-              <p className="mt-4 text-center text-sm text-muted-foreground">
+              <p className="mt-4 text-center text-sm text-muted-foreground font-sans">
                 {footerNote}
               </p>
             )}

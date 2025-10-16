@@ -1,19 +1,25 @@
-import { Button } from '@rbee/ui/atoms/Button'
-import { cn } from '@rbee/ui/utils'
-import Link from 'next/link'
-import type React from 'react'
+import { Button } from "@rbee/ui/atoms/Button";
+import { cn } from "@rbee/ui/utils";
+import Link from "next/link";
+import type React from "react";
 
 // ──────────────────────────────────────────────────────────────────────────────
 // Types
 // ──────────────────────────────────────────────────────────────────────────────
 
 export type CTAAction = {
-  label: string
-  href: string
-  iconLeft?: React.ComponentType<{ className?: string }>
-  iconRight?: React.ComponentType<{ className?: string }>
-  variant?: 'default' | 'outline' | 'ghost' | 'secondary' | 'link' | 'destructive'
-}
+  label: string;
+  href: string;
+  iconLeft?: React.ComponentType<{ className?: string }>;
+  iconRight?: React.ComponentType<{ className?: string }>;
+  variant?:
+    | "default"
+    | "outline"
+    | "ghost"
+    | "secondary"
+    | "link"
+    | "destructive";
+};
 
 /**
  * CTATemplate displays a call-to-action section with title, subtitle, and action buttons.
@@ -33,26 +39,26 @@ export type CTAAction = {
  */
 export type CTATemplateProps = {
   /** Optional eyebrow text above title */
-  eyebrow?: string
+  eyebrow?: string;
   /** Main heading text */
-  title: string
+  title: string;
   /** Optional subtitle below title */
-  subtitle?: string
+  subtitle?: string;
   /** Primary action button */
-  primary: CTAAction
+  primary: CTAAction;
   /** Optional secondary action button */
-  secondary?: CTAAction
+  secondary?: CTAAction;
   /** Optional trust note below buttons */
-  note?: string
+  note?: string;
   /** Text alignment */
-  align?: 'center' | 'left'
+  align?: "center" | "left";
   /** Background emphasis style */
-  emphasis?: 'none' | 'gradient'
+  emphasis?: "none" | "gradient";
   /** Section ID for anchor links */
-  id?: string
+  id?: string;
   /** Custom class name for the root element */
-  className?: string
-}
+  className?: string;
+};
 
 // ──────────────────────────────────────────────────────────────────────────────
 // Main Component
@@ -65,18 +71,19 @@ export function CTATemplate({
   primary,
   secondary,
   note,
-  align = 'center',
-  emphasis = 'none',
+  align = "center",
+  emphasis = "none",
   id,
   className,
 }: CTATemplateProps) {
-  const alignClasses = align === 'center' ? 'text-center' : 'text-left'
-  const justifyClasses = align === 'center' ? 'justify-center' : 'justify-start'
+  const alignClasses = align === "center" ? "text-center" : "text-left";
+  const justifyClasses =
+    align === "center" ? "justify-center" : "justify-start";
 
   const renderAction = (action: CTAAction, isPrimary: boolean) => {
-    const IconLeft = action.iconLeft
-    const IconRight = action.iconRight
-    const variant = action.variant || (isPrimary ? undefined : 'outline')
+    const IconLeft = action.iconLeft;
+    const IconRight = action.iconRight;
+    const variant = action.variant || (isPrimary ? undefined : "outline");
 
     return (
       <Button
@@ -86,8 +93,8 @@ export function CTATemplate({
         variant={variant}
         className={cn(
           isPrimary
-            ? 'group bg-primary text-primary-foreground hover:bg-primary/90'
-            : 'bg-transparent border-border text-foreground hover:bg-secondary',
+            ? "group bg-primary text-primary-foreground hover:bg-primary/90"
+            : "bg-transparent border-border text-foreground hover:bg-secondary"
         )}
       >
         <Link href={action.href}>
@@ -95,33 +102,36 @@ export function CTATemplate({
           {action.label}
           {IconRight && (
             <IconRight
-              className={cn('ml-2 h-4 w-4', isPrimary && 'transition-transform group-hover:translate-x-1')}
+              className={cn(
+                "ml-2 h-4 w-4",
+                isPrimary && "transition-transform group-hover:translate-x-1"
+              )}
               aria-hidden="true"
             />
           )}
         </Link>
       </Button>
-    )
-  }
+    );
+  };
 
   return (
     <section
       id={id}
       className={cn(
-        'border-b border-border bg-background py-24',
-        emphasis === 'gradient' &&
-          'relative isolate before:absolute before:inset-0 before:bg-[radial-gradient(70%_50%_at_50%_0%,theme(colors.primary/10),transparent_60%)] before:pointer-events-none',
-        className,
+        "border-b border-border bg-background py-24",
+        emphasis === "gradient" &&
+          "relative isolate before:absolute before:inset-0 before:bg-[radial-gradient(70%_50%_at_50%_0%,theme(colors.primary/10),transparent_60%)] before:pointer-events-none",
+        className
       )}
     >
       <div className="mx-auto max-w-7xl px-6 lg:px-8">
-        <div className={cn('mx-auto max-w-3xl', alignClasses)}>
+        <div className={cn("mx-auto max-w-3xl", alignClasses)}>
           {/* Eyebrow */}
           {eyebrow && (
             <div
               className={cn(
-                'mb-3 inline-flex items-center rounded-full border px-3 py-1 text-xs font-medium text-muted-foreground',
-                'motion-safe:animate-in motion-safe:fade-in-50 motion-safe:duration-300',
+                "mb-3 inline-flex items-center rounded-full border px-3 py-1 text-xs font-medium text-muted-foreground",
+                "motion-safe:animate-in motion-safe:fade-in-50 motion-safe:duration-300"
               )}
             >
               {eyebrow}
@@ -131,8 +141,8 @@ export function CTATemplate({
           {/* Title */}
           <h2
             className={cn(
-              'text-4xl font-bold tracking-tight text-foreground sm:text-5xl',
-              'motion-safe:animate-in motion-safe:fade-in motion-safe:slide-in-from-bottom-2 motion-safe:duration-400 motion-safe:delay-100',
+              "text-4xl font-bold tracking-tight text-foreground sm:text-5xl",
+              "motion-safe:animate-in motion-safe:fade-in motion-safe:slide-in-from-bottom-2 motion-safe:duration-400 motion-safe:delay-100"
             )}
           >
             {title}
@@ -142,8 +152,8 @@ export function CTATemplate({
           {subtitle && (
             <p
               className={cn(
-                'mt-3 text-lg text-muted-foreground',
-                'motion-safe:animate-in motion-safe:fade-in-50 motion-safe:duration-400 motion-safe:delay-150',
+                "mt-3 text-lg text-muted-foreground",
+                "motion-safe:animate-in motion-safe:fade-in-50 motion-safe:duration-400 motion-safe:delay-150"
               )}
             >
               {subtitle}
@@ -153,9 +163,9 @@ export function CTATemplate({
           {/* Actions */}
           <div
             className={cn(
-              'mt-8 flex flex-col items-center gap-3 sm:flex-row',
+              "mt-8 flex flex-col items-center gap-3 sm:flex-row",
               justifyClasses,
-              'motion-safe:animate-in motion-safe:zoom-in-50 motion-safe:duration-300 motion-safe:delay-200',
+              "motion-safe:animate-in motion-safe:zoom-in-50 motion-safe:duration-300 motion-safe:delay-200"
             )}
           >
             {renderAction(primary, true)}
@@ -166,8 +176,8 @@ export function CTATemplate({
           {note && (
             <p
               className={cn(
-                'mt-6 text-sm text-muted-foreground',
-                'motion-safe:animate-in motion-safe:fade-in-50 motion-safe:duration-300 motion-safe:delay-300',
+                "mt-6 text-sm text-muted-foreground font-sans",
+                "motion-safe:animate-in motion-safe:fade-in-50 motion-safe:duration-300 motion-safe:delay-300"
               )}
             >
               {note}
@@ -176,5 +186,5 @@ export function CTATemplate({
         </div>
       </div>
     </section>
-  )
+  );
 }

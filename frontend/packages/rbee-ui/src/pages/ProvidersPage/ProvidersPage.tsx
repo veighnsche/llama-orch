@@ -5,10 +5,10 @@ import {
   FeaturesTabs,
   HowItWorks,
   ProblemTemplate,
-  ProvidersCTATemplate,
-  ProvidersEarningsTemplate,
-  ProvidersHeroTemplate,
-  ProvidersMarketplaceTemplate,
+  ProvidersCTA,
+  ProvidersEarnings,
+  ProvidersHero,
+  ProvidersMarketplace,
   ProvidersSecurityTemplate,
   ProvidersTestimonialsTemplate,
   ProvidersUseCasesTemplate,
@@ -38,7 +38,7 @@ import {
 export default function ProvidersPage() {
   return (
     <main>
-      <ProvidersHeroTemplate {...providersHeroProps} />
+      <ProvidersHero {...providersHeroProps} />
       <TemplateContainer {...providersProblemContainerProps}>
         <ProblemTemplate {...providersProblemProps} />
       </TemplateContainer>
@@ -51,10 +51,10 @@ export default function ProvidersPage() {
         <ProvidersUseCasesTemplate {...providersUseCasesProps} />
       </TemplateContainer>
       <TemplateContainer {...providersEarningsContainerProps}>
-        <ProvidersEarningsTemplate {...providersEarningsProps} />
+        <ProvidersEarnings {...providersEarningsProps} />
       </TemplateContainer>
       <TemplateContainer {...providersMarketplaceContainerProps}>
-        <ProvidersMarketplaceTemplate {...providersMarketplaceProps} />
+        <ProvidersMarketplace {...providersMarketplaceProps} />
       </TemplateContainer>
       <TemplateContainer {...providersSecurityContainerProps}>
         <ProvidersSecurityTemplate {...providersSecurityProps} />
@@ -62,7 +62,7 @@ export default function ProvidersPage() {
       <TemplateContainer {...providersTestimonialsContainerProps}>
         <ProvidersTestimonialsTemplate {...providersTestimonialsProps} />
       </TemplateContainer>
-      <ProvidersCTATemplate {...providersCTAProps} />
+      <ProvidersCTA {...providersCTAProps} />
     </main>
   )
 }

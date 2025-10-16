@@ -1,22 +1,22 @@
 import type { Meta, StoryObj } from '@storybook/react'
 import { providersMarketplaceContainerProps, providersMarketplaceProps } from '@rbee/ui/pages/ProvidersPage'
 import { TemplateContainer } from '@rbee/ui/molecules'
-import { ProvidersMarketplaceTemplate } from './ProvidersMarketplaceTemplate'
+import { ProvidersMarketplace } from './ProvidersMarketplace'
 
 const meta = {
-  title: 'Templates/ProvidersMarketplaceTemplate',
-  component: ProvidersMarketplaceTemplate,
+  title: 'Templates/ProvidersMarketplace',
+  component: ProvidersMarketplace,
   parameters: {
     layout: 'fullscreen',
   },
   tags: ['autodocs'],
-} satisfies Meta<typeof ProvidersMarketplaceTemplate>
+} satisfies Meta<typeof ProvidersMarketplace>
 
 export default meta
 type Story = StoryObj<typeof meta>
 
 /**
- * ProvidersMarketplaceTemplate as used on the Providers page
+ * ProvidersMarketplace as used on the Providers page
  * - Explains the marketplace model and listing process
  * - Shows how providers connect with customers
  * - Features marketplace benefits and competitive advantages
@@ -24,7 +24,7 @@ type Story = StoryObj<typeof meta>
 export const OnProvidersPage: Story = {
   render: (args) => (
     <TemplateContainer {...providersMarketplaceContainerProps}>
-      <ProvidersMarketplaceTemplate {...args} />
+      <ProvidersMarketplace {...args} />
     </TemplateContainer>
   ),
   args: providersMarketplaceProps,
