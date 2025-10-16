@@ -5,11 +5,22 @@ import { useEffect, useState } from 'react'
 import { KeyValuePair } from '../../atoms/KeyValuePair'
 
 export interface FloatingKPICardProps {
+  /** GPU Pool label and value */
+  gpuPool?: { label: string; value: string }
+  /** Cost label and value */
+  cost?: { label: string; value: string }
+  /** Latency label and value */
+  latency?: { label: string; value: string }
   /** Additional CSS classes */
   className?: string
 }
 
-export function FloatingKPICard({ className }: FloatingKPICardProps) {
+export function FloatingKPICard({
+  gpuPool = { label: 'GPU Pool', value: '5 nodes / 8 GPUs' },
+  cost = { label: 'Cost', value: '$0.00 / hr' },
+  latency = { label: 'Latency', value: '~34 ms' },
+  className,
+}: FloatingKPICardProps) {
   const [isVisible, setIsVisible] = useState(false)
 
   useEffect(() => {
@@ -34,9 +45,9 @@ export function FloatingKPICard({ className }: FloatingKPICardProps) {
         className,
       )}
     >
-      <KeyValuePair label="GPU Pool" value="5 nodes / 8 GPUs" valueVariant="semibold" />
-      <KeyValuePair label="Cost" value="$0.00 / hr" valueVariant="success" />
-      <KeyValuePair label="Latency" value="~34 ms" valueVariant="semibold" />
+      <KeyValuePair label={gpuPool.label} value={gpuPool.value} valueVariant="semibold" />
+      <KeyValuePair label={cost.label} value={cost.value} valueVariant="success" />
+      <KeyValuePair label={latency.label} value={latency.value} valueVariant="semibold" />
     </div>
   )
 }

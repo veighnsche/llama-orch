@@ -9,6 +9,8 @@ import { useState } from 'react'
 export function EnterpriseComparison() {
   const [selectedProvider, setSelectedProvider] = useState(0)
 
+  // WARNING: This component has hardcoded text that should be moved to props
+  // Use EnterpriseComparisonTemplate instead for configurable content
   return (
     <section aria-labelledby="comparison-h2" className="border-b border-border bg-background px-6 py-24">
       <div className="mx-auto max-w-7xl">

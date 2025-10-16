@@ -58,6 +58,14 @@ export type FAQTemplateProps = {
   jsonLdEnabled?: boolean
   /** Custom class name for the root element */
   className?: string
+  /** Search placeholder text */
+  searchPlaceholder?: string
+  /** Example keywords for empty search results */
+  emptySearchKeywords?: string[]
+  /** Expand all button label */
+  expandAllLabel?: string
+  /** Collapse all button label */
+  collapseAllLabel?: string
 }
 
 // ──────────────────────────────────────────────────────────────────────────────
@@ -71,6 +79,10 @@ export function FAQTemplate({
   supportCard,
   jsonLdEnabled,
   className,
+  searchPlaceholder = 'Search questions…',
+  emptySearchKeywords = ['models', 'Rust', 'migrate'],
+  expandAllLabel = 'Expand all',
+  collapseAllLabel = 'Collapse all',
 }: FAQTemplateProps) {
   const [searchQuery, setSearchQuery] = React.useState('')
   const [selectedCategory, setSelectedCategory] = React.useState<string | null>(null)
@@ -151,7 +163,7 @@ export function FAQTemplate({
                 <div className="relative flex-1">
                   <SearchIcon className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground pointer-events-none" />
                   <Input
-                    placeholder="Search questions…"
+                    placeholder={searchPlaceholder}
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     className="pl-9"
@@ -160,10 +172,10 @@ export function FAQTemplate({
                 </div>
                 <div className="flex items-center gap-2">
                   <Button variant="ghost" size="sm" onClick={handleExpandAll}>
-                    Expand all
+                    {expandAllLabel}
                   </Button>
                   <Button variant="ghost" size="sm" onClick={handleCollapseAll}>
-                    Collapse all
+                    {collapseAllLabel}
                   </Button>
                 </div>
               </div>
@@ -188,8 +200,13 @@ export function FAQTemplate({
             {filteredFAQs.length === 0 ? (
               <div className="rounded-lg border border-border bg-card/60 backdrop-blur-sm p-8 text-center shadow-sm animate-fade-in">
                 <p className="text-muted-foreground">
-                  No matches. Try keywords like <span className="font-medium">models</span>,{' '}
-                  <span className="font-medium">Rust</span>, or <span className="font-medium">migrate</span>.
+                  No matches. Try keywords like{' '}
+                  {emptySearchKeywords.map((keyword, idx) => (
+                    <span key={keyword}>
+                      {idx > 0 && (idx === emptySearchKeywords.length - 1 ? ', or ' : ', ')}
+                      <span className="font-medium">{keyword}</span>
+                    </span>
+                  ))}.
                 </p>
               </div>
             ) : (

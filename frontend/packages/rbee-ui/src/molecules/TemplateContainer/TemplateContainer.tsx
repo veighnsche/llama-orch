@@ -77,7 +77,7 @@ const bgClasses = {
   default: 'bg-background',
   muted: 'bg-muted',
   subtle: 'bg-background relative before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-border/60',
-  'destructive-gradient': 'bg-gradient-to-b from-background via-destructive/8 to-background',
+  'destructive-gradient': 'bg-gradient-to-b from-background via-destructive/8 to-background border-b border-border',
 } as const
 
 const padY = {

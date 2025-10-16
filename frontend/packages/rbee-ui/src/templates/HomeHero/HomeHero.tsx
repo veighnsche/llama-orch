@@ -70,6 +70,13 @@ export interface HomeHeroProps {
   // Cost display
   costLabel: string
   costValue: string
+
+  // Floating KPI card
+  floatingKPI?: {
+    gpuPool?: { label: string; value: string }
+    cost?: { label: string; value: string }
+    latency?: { label: string; value: string }
+  }
 }
 
 export function HomeHero({
@@ -88,6 +95,7 @@ export function HomeHero({
   gpuProgress,
   costLabel,
   costValue,
+  floatingKPI,
 }: HomeHeroProps) {
   const [isVisible, setIsVisible] = useState(false)
 
@@ -267,7 +275,7 @@ export function HomeHero({
               </TerminalWindow>
 
               {/* Floating KPI Card */}
-              <FloatingKPICard />
+              <FloatingKPICard {...floatingKPI} />
             </div>
           </div>
         </div>

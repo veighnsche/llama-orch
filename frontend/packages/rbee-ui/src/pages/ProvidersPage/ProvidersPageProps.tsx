@@ -7,7 +7,7 @@ import { CommissionStructureCard } from '@rbee/ui/molecules'
 import { CodeBlock } from '@rbee/ui/molecules/CodeBlock'
 import type { CommissionStructureCardProps } from '@rbee/ui/molecules/CommissionStructureCard'
 import type { ProvidersSecurityCardProps } from '@rbee/ui/molecules/ProvidersSecurityCard'
-import type { SectionContainerProps } from '@rbee/ui/organisms'
+import type { TemplateContainerProps } from '@rbee/ui/molecules'
 import type { ProvidersCaseCardProps } from '@rbee/ui/organisms/ProvidersCaseCard'
 import type {
   FeaturesTabsProps,
@@ -110,7 +110,7 @@ export const providersHeroProps: ProvidersHeroProps = {
 }
 
 // === ProvidersProblem Template ===
-export const providersProblemContainerProps: Omit<SectionContainerProps, 'children'> = {
+export const providersProblemContainerProps: Omit<TemplateContainerProps, 'children'> = {
   kicker: 'The Cost of Idle GPUs',
   title: 'Stop Letting Your Hardware Bleed Money',
   description: 'Most GPUs sit idle ~90% of the time. They still draw power—and earn nothing.',
@@ -150,7 +150,7 @@ export const providersProblemProps: ProblemTemplateProps = {
 }
 
 // === ProvidersSolution Template ===
-export const providersSolutionContainerProps: Omit<SectionContainerProps, 'children'> = {
+export const providersSolutionContainerProps: Omit<TemplateContainerProps, 'children'> = {
   kicker: 'How rbee Works',
   title: 'Turn Idle GPUs Into Reliable Monthly Income',
   description:
@@ -241,7 +241,7 @@ export const providersSolutionProps: SolutionTemplateProps = {
 /**
  * Providers How It Works container - Layout configuration
  */
-export const providersHowItWorksContainerProps: Omit<SectionContainerProps, 'children'> = {
+export const providersHowItWorksContainerProps: Omit<TemplateContainerProps, 'children'> = {
   title: 'Start Earning in 4 Simple Steps',
   bgVariant: 'secondary',
   paddingY: '2xl',
@@ -442,7 +442,7 @@ export const providersFeaturesProps: FeaturesTabsProps = {
 }
 
 // === ProvidersUseCases Template ===
-export const providersUseCasesContainerProps: Omit<SectionContainerProps, 'children'> = {
+export const providersUseCasesContainerProps: Omit<TemplateContainerProps, 'children'> = {
   kicker: 'Real Providers, Real Earnings',
   title: "Who's Earning with rbee?",
   description: 'From gamers to homelab builders, anyone with a spare GPU can turn idle time into income.',
@@ -512,7 +512,7 @@ const fmt = (n: number, opts: Intl.NumberFormatOptions = {}) =>
 
 const fmtHr = (n: number) => `${fmt(n, { maximumFractionDigits: 2 })}/hr`
 
-export const providersEarningsContainerProps: Omit<SectionContainerProps, 'children'> = {
+export const providersEarningsContainerProps: Omit<TemplateContainerProps, 'children'> = {
   kicker: 'Estimate Your Earnings',
   title: 'Calculate Your Potential Earnings',
   description: 'See what you could earn based on GPU model, availability, and utilization.',
@@ -562,7 +562,7 @@ export const providersEarningsProps: ProvidersEarningsProps = {
 }
 
 // === ProvidersMarketplace Template ===
-export const providersMarketplaceContainerProps: Omit<SectionContainerProps, 'children'> = {
+export const providersMarketplaceContainerProps: Omit<TemplateContainerProps, 'children'> = {
   kicker: 'Why rbee',
   title: 'How the rbee Marketplace Works',
   description: 'A fair, transparent marketplace connecting GPU providers with developers.',
@@ -638,7 +638,7 @@ export const providersMarketplaceSolutionProps: SolutionTemplateProps = {
 }
 
 // === ProvidersSecurity Template ===
-export const providersSecurityContainerProps: Omit<SectionContainerProps, 'children'> = {
+export const providersSecurityContainerProps: Omit<TemplateContainerProps, 'children'> = {
   kicker: 'Security & Trust',
   title: 'Your Security Is Our Priority',
   description: 'Enterprise-grade protections for your hardware, data, and earnings.',
@@ -682,7 +682,7 @@ export const providersSecurityProps: { items: ProvidersSecurityCardProps[] } = {
 }
 
 // === ProvidersTestimonials Template ===
-export const providersTestimonialsContainerProps: Omit<SectionContainerProps, 'children'> = {
+export const providersTestimonialsContainerProps: Omit<TemplateContainerProps, 'children'> = {
   kicker: 'Provider Stories',
   title: 'What Real Providers Are Earning',
   description:

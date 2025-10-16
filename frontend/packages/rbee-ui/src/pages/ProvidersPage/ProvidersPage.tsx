@@ -1,7 +1,7 @@
 'use client'
 
-import { ProvidersSecurityCard } from '@rbee/ui/molecules'
-import { ProvidersCaseCard, SectionContainer } from '@rbee/ui/organisms'
+import { ProvidersSecurityCard, TemplateContainer } from '@rbee/ui/molecules'
+import { ProvidersCaseCard } from '@rbee/ui/organisms'
 import {
   CardGridTemplate,
   FeaturesTabs,
@@ -39,17 +39,17 @@ export default function ProvidersPage() {
   return (
     <main>
       <ProvidersHero {...providersHeroProps} />
-      <SectionContainer {...providersProblemContainerProps}>
+      <TemplateContainer {...providersProblemContainerProps}>
         <ProblemTemplate {...providersProblemProps} />
-      </SectionContainer>
-      <SectionContainer {...providersSolutionContainerProps}>
+      </TemplateContainer>
+      <TemplateContainer {...providersSolutionContainerProps}>
         <SolutionTemplate {...providersSolutionProps} />
-      </SectionContainer>
-      <SectionContainer {...providersHowItWorksContainerProps}>
+      </TemplateContainer>
+      <TemplateContainer {...providersHowItWorksContainerProps}>
         <HowItWorks {...providersHowItWorksProps} />
-      </SectionContainer>
+      </TemplateContainer>
       <FeaturesTabs {...providersFeaturesProps} />
-      <SectionContainer {...providersUseCasesContainerProps}>
+      <TemplateContainer {...providersUseCasesContainerProps}>
         <CardGridTemplate>
           {providersUseCasesProps.cases.map((caseData, index) => (
             <ProvidersCaseCard
@@ -64,14 +64,14 @@ export default function ProvidersPage() {
             />
           ))}
         </CardGridTemplate>
-      </SectionContainer>
-      <SectionContainer {...providersEarningsContainerProps}>
+      </TemplateContainer>
+      <TemplateContainer {...providersEarningsContainerProps}>
         <ProvidersEarnings {...providersEarningsProps} />
-      </SectionContainer>
-      <SectionContainer {...providersMarketplaceContainerProps}>
+      </TemplateContainer>
+      <TemplateContainer {...providersMarketplaceContainerProps}>
         <SolutionTemplate {...providersMarketplaceSolutionProps} />
-      </SectionContainer>
-      <SectionContainer {...providersSecurityContainerProps}>
+      </TemplateContainer>
+      <TemplateContainer {...providersSecurityContainerProps}>
         <CardGridTemplate>
           {providersSecurityProps.items.map((item, index) => (
             <ProvidersSecurityCard
@@ -85,10 +85,10 @@ export default function ProvidersPage() {
             />
           ))}
         </CardGridTemplate>
-      </SectionContainer>
-      <SectionContainer {...providersTestimonialsContainerProps}>
+      </TemplateContainer>
+      <TemplateContainer {...providersTestimonialsContainerProps}>
         <TestimonialsTemplate {...providersTestimonialsProps} />
-      </SectionContainer>
+      </TemplateContainer>
       <ProvidersCTA {...providersCTAProps} />
     </main>
   )

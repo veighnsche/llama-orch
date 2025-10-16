@@ -2,8 +2,7 @@
 
 import { pricingHero } from '@rbee/ui/assets'
 import { PricingScaleVisual } from '@rbee/ui/icons'
-import type { Provider, Row, RowGroup } from '@rbee/ui/molecules'
-import type { SectionContainerProps } from '@rbee/ui/organisms'
+import type { Provider, Row, RowGroup, TemplateContainerProps } from '@rbee/ui/molecules'
 import type {
   EmailCaptureProps,
   FAQItem,
@@ -60,7 +59,7 @@ export const pricingHeroProps: PricingHeroTemplateProps = {
 // === PricingTemplate ===
 
 /** Pricing template container - wraps the pricing tiers section */
-export const pricingTemplateContainerProps: Omit<SectionContainerProps, 'children'> = {
+export const pricingTemplateContainerProps: Omit<TemplateContainerProps, 'children'> = {
   title: 'Simple, honest pricing.',
   description:
     "Every plan includes the full rbee orchestrator—no feature gates, no artificial limits. Start free and grow when you're ready.",
@@ -139,7 +138,7 @@ export const pricingTemplateProps: PricingTemplateProps = {
 // === PricingComparison Template ===
 
 /** Pricing comparison container - wraps the comparison table */
-export const pricingComparisonContainerProps: Omit<SectionContainerProps, 'children'> = {
+export const pricingComparisonContainerProps: Omit<TemplateContainerProps, 'children'> = {
   title: '',
   bgVariant: 'secondary',
   paddingY: '2xl',
@@ -267,7 +266,7 @@ export const pricingComparisonProps: PricingComparisonTemplateProps = {
 // === FAQ Template ===
 
 /** FAQ container - wraps the pricing FAQ section */
-export const pricingFaqContainerProps: Omit<SectionContainerProps, 'children'> = {
+export const pricingFaqContainerProps: Omit<TemplateContainerProps, 'children'> = {
   title: 'Pricing FAQs',
   subtitle: 'Answers on licensing, upgrades, trials, and payments.',
   bgVariant: 'background',
