@@ -7,8 +7,6 @@ export * from './EmailCapture'
 export * from './Enterprise'
 export * from './FaqSection'
 export * from './Features'
-// Shared organisms
-export * from './Home/AudienceSelector'
 // Home page organisms
 export * from './Home/CodeExamplesSection'
 export * from './Home/ComparisonSection'

@@ -8,7 +8,6 @@ import { CodeBlock } from "@rbee/ui/molecules/CodeBlock";
 import { GPUUtilizationBar } from "@rbee/ui/molecules/GPUUtilizationBar";
 import { TerminalWindow } from "@rbee/ui/molecules/TerminalWindow";
 import {
-  AudienceSelector,
   ComparisonSection,
   CTASection,
   EmailCapture,
@@ -22,12 +21,15 @@ import {
   UseCasesSection,
 } from "@rbee/ui/organisms";
 import {
+  AudienceSelector,
+  type AudienceSelectorProps,
   HomeHero,
   type HomeHeroProps,
   type WhatIsRbeeProps,
   WhatIsRbee,
 } from "@rbee/ui/templates";
 import { CoreFeaturesTabs } from "@rbee/ui/organisms/CoreFeaturesTabs";
+import { ComplianceShield, DevGrid, GpuMarket } from "@rbee/ui/icons";
 import {
   AlertTriangle,
   Anchor,
@@ -35,12 +37,14 @@ import {
   BookOpen,
   Building,
   Code,
+  Code2,
   Cpu,
   DollarSign,
   Gauge,
   Home as HomeIcon,
   Laptop,
   Lock,
+  Server,
   Shield,
   Users,
   Workflow,
@@ -164,12 +168,79 @@ export const whatIsRbeeProps: WhatIsRbeeProps = {
   visualBadgeText: "Local Network",
 };
 
+export const audienceSelectorContainerProps: Omit<TemplateContainerProps, "children"> = {
+  eyebrow: "Choose your path",
+  title: "Where should you start?",
+  description: "rbee adapts to how you work—build on your own GPUs, monetize idle capacity, or deploy compliant AI at scale.",
+  bgVariant: "subtle",
+  paddingY: "2xl",
+  maxWidth: "7xl",
+  align: "center",
+};
+
+export const audienceSelectorProps: AudienceSelectorProps = {
+  cards: [
+    {
+      icon: Code2,
+      category: "For Developers",
+      title: "Build on Your Hardware",
+      description: "Power Zed, Cursor, and your own agents on YOUR GPUs. OpenAI-compatible—drop-in, zero API fees.",
+      features: [
+        "Zero API costs, unlimited usage",
+        "Your code stays on your network",
+        "Agentic API + TypeScript utils",
+      ],
+      href: "/developers",
+      ctaText: "Explore Developer Path",
+      color: "chart-2",
+      imageSlot: <DevGrid size={56} aria-hidden />,
+      badgeSlot: (
+        <Badge variant="outline" className="border-chart-2/30 bg-chart-2/5 text-chart-2">
+          Homelab-ready
+        </Badge>
+      ),
+      decisionLabel: "Code with AI locally",
+    },
+    {
+      icon: Server,
+      category: "For GPU Owners",
+      title: "Monetize Your Hardware",
+      description: "Join the rbee marketplace and earn from gaming rigs to server farms—set price, stay in control.",
+      features: ["Set pricing & availability", "Audit trails and payouts", "Passive income from idle GPUs"],
+      href: "/gpu-providers",
+      ctaText: "Become a Provider",
+      color: "chart-3",
+      imageSlot: <GpuMarket size={56} aria-hidden />,
+      decisionLabel: "Earn from idle GPUs",
+    },
+    {
+      icon: Shield,
+      category: "For Enterprise",
+      title: "Compliance & Security",
+      description: "EU-native compliance, audit trails, and zero-trust architecture—from day one.",
+      features: ["GDPR with 7-year retention", "SOC2 & ISO 27001 aligned", "Private cloud or on-prem"],
+      href: "/enterprise",
+      ctaText: "Enterprise Solutions",
+      color: "primary",
+      imageSlot: <ComplianceShield size={56} aria-hidden />,
+      decisionLabel: "Deploy with compliance",
+    },
+  ],
+  helperLinks: [
+    { label: "Not sure? Compare paths", href: "#compare" },
+    { label: "Talk to us", href: "#contact" },
+  ],
+};
+
 export default function HomePage() {
   return (
     <main>
       <HomeHero {...homeHeroProps} />
       <TemplateContainer {...whatIsRbeeContainerProps}>
         <WhatIsRbee {...whatIsRbeeProps} />
+      </TemplateContainer>
+      <TemplateContainer {...audienceSelectorContainerProps}>
+        <AudienceSelector {...audienceSelectorProps} />
       </TemplateContainer>
     </main>
   );
