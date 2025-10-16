@@ -14,6 +14,8 @@ export {
   problemTemplateProps,
   solutionTemplateContainerProps,
   solutionTemplateProps,
+  testimonialsTemplateContainerProps,
+  testimonialsTemplateProps,
   useCasesTemplateContainerProps,
   useCasesTemplateProps,
   whatIsRbeeContainerProps,

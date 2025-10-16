@@ -11,7 +11,6 @@ import {
   CTASection,
   FAQSection,
   TechnicalSection,
-  TestimonialsSection,
 } from "@rbee/ui/organisms";
 import {
   AudienceSelector,
@@ -32,6 +31,8 @@ import {
   type ProblemTemplateProps,
   SolutionTemplate,
   type SolutionTemplateProps,
+  TestimonialsTemplate,
+  type TestimonialsTemplateProps,
   UseCasesTemplate,
   type UseCasesTemplateProps,
   type WhatIsRbeeProps,
@@ -905,6 +906,58 @@ export const pricingTemplateProps: PricingTemplateProps = {
   },
 };
 
+// === Testimonials Template ===
+export const testimonialsTemplateContainerProps: Omit<
+  TemplateContainerProps,
+  "children"
+> = {
+  title: "Trusted by developers who value independence",
+  bgVariant: "default",
+  paddingY: "2xl",
+  maxWidth: "7xl",
+  align: "center",
+};
+
+export const testimonialsTemplateProps: TestimonialsTemplateProps = {
+  testimonials: [
+    {
+      avatar: "👨‍💻",
+      author: "Alex K.",
+      role: "Solo Developer",
+      quote:
+        "Spent $80/mo on Claude. Now I run Llama-70B on my gaming PC + old workstation. Same quality, $0 cost.",
+    },
+    {
+      avatar: "👩‍💼",
+      author: "Sarah M.",
+      role: "CTO",
+      quote:
+        "We pooled our team's hardware and cut AI spend from $500/mo to zero. OpenAI-compatible API—no code changes.",
+    },
+    {
+      avatar: "👨‍🔧",
+      author: "Marcus T.",
+      role: "DevOps",
+      quote:
+        "Cascading shutdown ends orphaned processes and VRAM leaks. Ctrl+C and everything cleans up.",
+    },
+  ],
+  stats: [
+    { value: "1,200+", label: "GitHub stars", valueTone: "foreground" },
+    {
+      value: "500+",
+      label: "Active installations",
+      valueTone: "foreground",
+    },
+    {
+      value: "8,000+",
+      label: "GPUs orchestrated",
+      valueTone: "foreground",
+    },
+    { value: "€0", label: "Avg. monthly cost", valueTone: "primary" },
+  ],
+};
+
 export default function HomePage() {
   return (
     <main>
@@ -934,6 +987,9 @@ export default function HomePage() {
       </TemplateContainer>
       <TemplateContainer {...pricingTemplateContainerProps}>
         <PricingTemplate {...pricingTemplateProps} />
+      </TemplateContainer>
+      <TemplateContainer {...testimonialsTemplateContainerProps}>
+        <TestimonialsTemplate {...testimonialsTemplateProps} />
       </TemplateContainer>
     </main>
   );

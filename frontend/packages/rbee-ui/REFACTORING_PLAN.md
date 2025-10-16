@@ -6,8 +6,8 @@ Pages = props objects + composition. Templates = reusable UI sections from `/org
 ## Components to Migrate
 
 **Home Page (Phase A - High Priority):**
-- ✅ AudienceSelector, ProblemTemplate, HowItWorks, SolutionTemplate, EmailCapture, UseCasesSection, ComparisonSection, PricingSection
-- TestimonialsSection, TechnicalSection, FeaturesSection, CTASection
+- ✅ AudienceSelector, ProblemTemplate, HowItWorks, SolutionTemplate, EmailCapture, UseCasesSection, ComparisonSection, PricingSection, TestimonialsSection
+- TechnicalSection, FeaturesSection, CTASection
 
 **Shared (Phase B):**
 - CoreFeaturesTabs
