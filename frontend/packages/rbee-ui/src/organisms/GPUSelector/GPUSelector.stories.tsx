@@ -3,7 +3,7 @@ import { useState } from 'react'
 import { GPUSelector, type GPUSelectorModel } from './GPUSelector'
 
 const meta = {
-  title: 'Molecules/GPUSelector',
+  title: 'Organisms/GPUSelector',
   component: GPUSelector,
   parameters: {
     layout: 'padded',

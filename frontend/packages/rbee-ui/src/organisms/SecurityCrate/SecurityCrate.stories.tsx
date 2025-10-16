@@ -3,7 +3,7 @@ import { Eye, Lock, Shield } from 'lucide-react'
 import { SecurityCrate } from './SecurityCrate'
 
 const meta: Meta<typeof SecurityCrate> = {
-  title: 'Molecules/SecurityCrate',
+  title: 'Organisms/SecurityCrate',
   component: SecurityCrate,
   parameters: {
     layout: 'centered',

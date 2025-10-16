@@ -1,6 +1,7 @@
 import { Button, Card, CardContent, CardHeader, CardTitle } from '@rbee/ui/atoms'
-import { BeeArchitecture, type BeeTopology, EarningsCard, FeatureInfoCard } from '@rbee/ui/molecules'
+import { FeatureInfoCard } from '@rbee/ui/molecules'
 import { StepListItem } from '@rbee/ui/molecules/StepListItem'
+import { BeeArchitecture, type BeeTopology, EarningsCard } from '@rbee/ui/organisms'
 import { cn } from '@rbee/ui/utils'
 import Link from 'next/link'
 import type { ReactNode } from 'react'

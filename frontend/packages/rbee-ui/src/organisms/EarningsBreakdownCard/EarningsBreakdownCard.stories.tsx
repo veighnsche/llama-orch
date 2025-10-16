@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from '@storybook/react'
 import { EarningsBreakdownCard } from './EarningsBreakdownCard'
 
 const meta = {
-  title: 'Molecules/EarningsBreakdownCard',
+  title: 'Organisms/EarningsBreakdownCard',
   component: EarningsBreakdownCard,
   parameters: {
     layout: 'padded',

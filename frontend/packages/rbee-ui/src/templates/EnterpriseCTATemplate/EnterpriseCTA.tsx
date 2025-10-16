@@ -1,6 +1,6 @@
 import { Button } from '@rbee/ui/atoms/Button'
 import { TESTIMONIAL_STATS } from '@rbee/ui/data/testimonials'
-import { CTAOptionCard } from '@rbee/ui/molecules'
+import { CTAOptionCard } from '@rbee/ui/organisms'
 import { Calendar, FileText, MessageSquare } from 'lucide-react'
 import Link from 'next/link'
 

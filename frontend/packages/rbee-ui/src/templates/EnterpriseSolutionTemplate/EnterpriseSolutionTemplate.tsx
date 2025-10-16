@@ -1,7 +1,7 @@
 import { Button, Card, CardContent, CardHeader, CardTitle } from '@rbee/ui/atoms'
 import { FeatureInfoCard } from '@rbee/ui/molecules/FeatureInfoCard'
-import { SectionContainer } from '@rbee/ui/molecules/SectionContainer'
 import { StepListItem } from '@rbee/ui/molecules/StepListItem'
+import { SectionContainer } from '@rbee/ui/organisms'
 import { cn } from '@rbee/ui/utils'
 import Link from 'next/link'
 import type { ReactNode } from 'react'

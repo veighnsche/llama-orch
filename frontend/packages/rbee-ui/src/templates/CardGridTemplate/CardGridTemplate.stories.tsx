@@ -1,4 +1,5 @@
-import { ProvidersCaseCard, ProvidersSecurityCard } from '@rbee/ui/molecules'
+import { ProvidersSecurityCard } from '@rbee/ui/molecules'
+import { ProvidersCaseCard } from '@rbee/ui/organisms'
 import type { Meta, StoryObj } from '@storybook/react'
 import { Cpu, Eye, FileCheck, Gamepad2, Lock, Monitor, Server, Shield } from 'lucide-react'
 import { CardGridTemplate } from './CardGridTemplate'

@@ -11,7 +11,7 @@ export {
   enterpriseHeroProps,
   enterpriseHowItWorksContainerProps,
   enterpriseHowItWorksProps,
-  enterpriseProblemTemplateContainerProps,
+  enterpriseProblemSectionContainerProps,
   enterpriseProblemTemplateProps,
   enterpriseSecurityContainerProps,
   enterpriseSecurityProps,

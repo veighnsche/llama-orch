@@ -1,5 +1,5 @@
 import { Button } from '@rbee/ui/atoms/Button'
-import { CTAOptionCard } from '@rbee/ui/molecules'
+import { CTAOptionCard } from '@rbee/ui/organisms'
 import Link from 'next/link'
 import type * as React from 'react'
 import type { ReactNode } from 'react'

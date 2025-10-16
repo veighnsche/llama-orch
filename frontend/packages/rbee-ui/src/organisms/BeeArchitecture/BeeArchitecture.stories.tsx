@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from '@storybook/react'
 import { BeeArchitecture } from './BeeArchitecture'
 
 const meta: Meta<typeof BeeArchitecture> = {
-  title: 'Molecules/BeeArchitecture',
+  title: 'Organisms/BeeArchitecture',
   component: BeeArchitecture,
   parameters: {
     layout: 'padded',

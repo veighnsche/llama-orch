@@ -1,6 +1,6 @@
 'use client'
 
-import { TemplateContainer } from '@rbee/ui/molecules'
+import { SectionContainer } from '@rbee/ui/organisms'
 import {
   EmailCapture,
   FAQTemplate,
@@ -31,17 +31,17 @@ export default function PricingPage() {
     <main>
       <PricingHeroTemplate {...pricingHeroProps} />
 
-      <TemplateContainer {...pricingTemplateContainerProps}>
+      <SectionContainer {...pricingTemplateContainerProps}>
         <PricingTemplate {...pricingTemplateProps} />
-      </TemplateContainer>
+      </SectionContainer>
 
-      <TemplateContainer {...pricingComparisonContainerProps}>
+      <SectionContainer {...pricingComparisonContainerProps}>
         <PricingComparisonTemplate {...pricingComparisonProps} />
-      </TemplateContainer>
+      </SectionContainer>
 
-      <TemplateContainer {...pricingFaqContainerProps}>
+      <SectionContainer {...pricingFaqContainerProps}>
         <FAQTemplate {...pricingFaqProps} />
-      </TemplateContainer>
+      </SectionContainer>
 
       <EmailCapture {...pricingEmailCaptureProps} />
     </main>

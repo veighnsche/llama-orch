@@ -1,4 +1,4 @@
-import { SecurityCrate } from '@rbee/ui/molecules'
+import { SecurityCrate } from '@rbee/ui/organisms'
 import { Clock, Eye, KeyRound, Lock, Server, Shield } from 'lucide-react'
 import Image from 'next/image'
 

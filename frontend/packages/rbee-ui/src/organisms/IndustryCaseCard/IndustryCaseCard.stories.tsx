@@ -3,7 +3,7 @@ import { Building2, Heart, Scale } from 'lucide-react'
 import { IndustryCaseCard } from './IndustryCaseCard'
 
 const meta: Meta<typeof IndustryCaseCard> = {
-  title: 'Molecules/IndustryCaseCard',
+  title: 'Organisms/IndustryCaseCard',
   component: IndustryCaseCard,
   parameters: {
     layout: 'centered',

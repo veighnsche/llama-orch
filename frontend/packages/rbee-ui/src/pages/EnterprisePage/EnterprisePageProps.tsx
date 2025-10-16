@@ -1,6 +1,6 @@
-import { TESTIMONIAL_STATS } from '@rbee/ui/data/testimonials'
 import { FEATURES, PROVIDERS } from '@rbee/ui/data/enterprise-comparison'
-import type { TemplateContainerProps } from '@rbee/ui/molecules'
+import { TESTIMONIAL_STATS } from '@rbee/ui/data/testimonials'
+import type { SectionContainerProps } from '@rbee/ui/organisms'
 import type {
   EmailCaptureProps,
   EnterpriseComparisonTemplateProps,
@@ -193,7 +193,7 @@ export const enterpriseEmailCaptureProps: EmailCaptureProps = {
 /**
  * Problem template container - wraps the problem cards section
  */
-export const enterpriseProblemTemplateContainerProps: Omit<TemplateContainerProps, 'children'> = {
+export const enterpriseProblemSectionContainerProps: Omit<SectionContainerProps, 'children'> = {
   title: 'The Compliance Challenge of Cloud AI',
   description:
     'Using external AI providers creates compliance risks that can cost millions in fines and damage your reputation.',
@@ -254,7 +254,7 @@ export const enterpriseProblemTemplateProps: ProblemTemplateProps = {
 /**
  * Enterprise Solution container - wraps the solution section
  */
-export const enterpriseSolutionContainerProps: Omit<TemplateContainerProps, 'children'> = {
+export const enterpriseSolutionContainerProps: Omit<SectionContainerProps, 'children'> = {
   title: 'EU-Native AI Infrastructure That Meets Compliance by Design',
   description:
     'Enterprise-grade, self-hosted AI that keeps data sovereign, auditable, and under your control—EU resident, zero US cloud dependencies.',
@@ -368,7 +368,7 @@ export const enterpriseSolutionProps: EnterpriseSolutionTemplateProps = {
 /**
  * Enterprise Compliance container - wraps the compliance section
  */
-export const enterpriseComplianceContainerProps: Omit<TemplateContainerProps, 'children'> = {
+export const enterpriseComplianceContainerProps: Omit<SectionContainerProps, 'children'> = {
   kicker: 'Security & Certifications',
   title: 'Compliance by Design',
   description:
@@ -477,7 +477,7 @@ export const enterpriseComplianceProps: EnterpriseComplianceTemplateProps = {
 /**
  * Enterprise Security container - wraps the security section
  */
-export const enterpriseSecurityContainerProps: Omit<TemplateContainerProps, 'children'> = {
+export const enterpriseSecurityContainerProps: Omit<SectionContainerProps, 'children'> = {
   kicker: 'Defense-in-Depth',
   title: 'Enterprise-Grade Security',
   description:
@@ -605,7 +605,7 @@ export const enterpriseSecurityProps: EnterpriseSecurityTemplateProps = {
 /**
  * Enterprise How It Works container - wraps the deployment process section
  */
-export const enterpriseHowItWorksContainerProps: Omit<TemplateContainerProps, 'children'> = {
+export const enterpriseHowItWorksContainerProps: Omit<SectionContainerProps, 'children'> = {
   kicker: 'Deployment & Compliance',
   title: 'Enterprise Deployment Process',
   description: 'From consultation to production, we guide every step of your compliance journey.',
@@ -694,7 +694,7 @@ export const enterpriseHowItWorksProps: EnterpriseHowItWorksTemplateProps = {
 /**
  * Enterprise Use Cases container - wraps the industry playbooks section
  */
-export const enterpriseUseCasesContainerProps: Omit<TemplateContainerProps, 'children'> = {
+export const enterpriseUseCasesContainerProps: Omit<SectionContainerProps, 'children'> = {
   kicker: 'Industry Playbooks',
   title: 'Built for Regulated Industries',
   description:
@@ -798,7 +798,7 @@ export const enterpriseUseCasesProps: EnterpriseUseCasesTemplateProps = {
 /**
  * Enterprise Comparison container - wraps the feature matrix section
  */
-export const enterpriseComparisonContainerProps: Omit<TemplateContainerProps, 'children'> = {
+export const enterpriseComparisonContainerProps: Omit<SectionContainerProps, 'children'> = {
   kicker: 'Feature Matrix',
   title: 'Why Enterprises Choose rbee',
   description: "See how rbee's compliance and security compare to external AI providers.",
@@ -822,7 +822,7 @@ export const enterpriseComparisonProps: EnterpriseComparisonTemplateProps = {
 /**
  * Enterprise Features container - wraps the enterprise capabilities section
  */
-export const enterpriseFeaturesContainerProps: Omit<TemplateContainerProps, 'children'> = {
+export const enterpriseFeaturesContainerProps: Omit<SectionContainerProps, 'children'> = {
   kicker: 'Enterprise Capabilities',
   title: 'Enterprise Features',
   description: 'Everything you need for compliant, resilient, EU-resident AI infrastructure.',
@@ -884,7 +884,7 @@ export const enterpriseFeaturesProps: EnterpriseFeaturesTemplateProps = {
 /**
  * Enterprise Testimonials container - wraps the testimonials section
  */
-export const enterpriseTestimonialsContainerProps: Omit<TemplateContainerProps, 'children'> = {
+export const enterpriseTestimonialsContainerProps: Omit<SectionContainerProps, 'children'> = {
   title: 'Trusted by Regulated Industries',
   description: 'Organizations in highly regulated industries trust rbee for compliance-first AI infrastructure.',
   bgVariant: 'default',

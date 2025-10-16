@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from '@storybook/react'
 import { SectionContainer } from './SectionContainer'
 
 const meta: Meta<typeof SectionContainer> = {
-  title: 'Molecules/SectionContainer',
+  title: 'Organisms/SectionContainer',
   component: SectionContainer,
   parameters: {
     layout: 'fullscreen',

@@ -4,7 +4,7 @@ import { Building2, Users } from 'lucide-react'
 import { CTAOptionCard } from './CTAOptionCard'
 
 const meta: Meta<typeof CTAOptionCard> = {
-  title: 'Molecules/CTAOptionCard',
+  title: 'Organisms/CTAOptionCard',
   component: CTAOptionCard,
   parameters: {
     layout: 'centered',

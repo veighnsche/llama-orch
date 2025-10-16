@@ -115,7 +115,7 @@ function OriginalAudienceCard({
 }
 
 const meta: Meta<typeof AudienceCard> = {
-  title: 'Molecules/AudienceCard',
+  title: 'Organisms/AudienceCard',
   component: AudienceCard,
   parameters: {
     layout: 'centered',

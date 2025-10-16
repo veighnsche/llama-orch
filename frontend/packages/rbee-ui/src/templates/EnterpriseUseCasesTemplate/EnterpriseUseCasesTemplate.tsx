@@ -1,8 +1,8 @@
 import { Button } from '@rbee/ui/atoms/Button'
-import { IndustryCaseCard } from '@rbee/ui/molecules'
+import { IndustryCaseCard } from '@rbee/ui/organisms'
 import Image from 'next/image'
 import Link from 'next/link'
-import type { ReactNode } from 'react'
+import React, { type ReactNode } from 'react'
 
 // ──────────────────────────────────────────────────────────────────────────────
 // Types
@@ -96,12 +96,12 @@ export function EnterpriseUseCasesTemplate({ backgroundImage, industryCases, cta
           </div>
           <div className="mt-4 flex flex-wrap justify-center gap-3 text-sm text-muted-foreground">
             {cta.links.map((link, idx) => (
-              <>
-                {idx > 0 && <span key={`sep-${idx}`}>•</span>}
-                <Link key={idx} href={link.href} className="hover:text-primary hover:underline">
+              <React.Fragment key={idx}>
+                {idx > 0 && <span>•</span>}
+                <Link href={link.href} className="hover:text-primary hover:underline">
                   {link.text}
                 </Link>
-              </>
+              </React.Fragment>
             ))}
           </div>
         </div>

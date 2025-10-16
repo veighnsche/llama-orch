@@ -1,4 +1,4 @@
-import { SecurityCrate } from '@rbee/ui/molecules'
+import { SecurityCrate } from '@rbee/ui/organisms'
 import Image from 'next/image'
 import type { ReactNode } from 'react'
 

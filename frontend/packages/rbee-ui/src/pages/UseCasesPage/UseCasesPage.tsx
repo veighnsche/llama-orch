@@ -1,6 +1,6 @@
 'use client'
 
-import { TemplateContainer } from '@rbee/ui/molecules'
+import { SectionContainer } from '@rbee/ui/organisms'
 import {
   EmailCapture,
   UseCasesHeroTemplate,
@@ -28,13 +28,13 @@ export default function UseCasesPage() {
     <main>
       <UseCasesHeroTemplate {...useCasesHeroProps} />
 
-      <TemplateContainer {...useCasesPrimaryContainerProps}>
+      <SectionContainer {...useCasesPrimaryContainerProps}>
         <UseCasesPrimaryTemplate {...useCasesPrimaryProps} />
-      </TemplateContainer>
+      </SectionContainer>
 
-      <TemplateContainer {...useCasesIndustryContainerProps}>
+      <SectionContainer {...useCasesIndustryContainerProps}>
         <UseCasesIndustryTemplate {...useCasesIndustryProps} />
-      </TemplateContainer>
+      </SectionContainer>
 
       <EmailCapture {...useCasesEmailCaptureProps} />
     </main>

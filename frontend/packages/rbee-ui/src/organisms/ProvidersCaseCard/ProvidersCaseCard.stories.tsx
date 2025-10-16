@@ -3,7 +3,7 @@ import { Cpu, Gamepad2, Monitor, Server } from 'lucide-react'
 import { ProvidersCaseCard } from './ProvidersCaseCard'
 
 const meta = {
-  title: 'Molecules/ProvidersCaseCard',
+  title: 'Organisms/ProvidersCaseCard',
   component: ProvidersCaseCard,
   parameters: {
     layout: 'centered',

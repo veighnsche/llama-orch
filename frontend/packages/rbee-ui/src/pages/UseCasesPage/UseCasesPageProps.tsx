@@ -2,7 +2,8 @@
 
 import { useCasesHero } from '@rbee/ui/assets'
 import { IndustriesHero, UsecasesGridDark } from '@rbee/ui/icons'
-import type { IndustryCardProps, TemplateContainerProps } from '@rbee/ui/molecules'
+import type { IndustryCardProps } from '@rbee/ui/molecules'
+import type { SectionContainerProps } from '@rbee/ui/organisms'
 import type {
   EmailCaptureProps,
   UseCaseIndustryFilterItem,
@@ -65,7 +66,7 @@ export const useCasesHeroProps: UseCasesHeroTemplateProps = {
 // === UseCasesPrimary Template ===
 
 /** Primary use cases container - wraps the use cases grid */
-export const useCasesPrimaryContainerProps: Omit<TemplateContainerProps, 'children'> = {
+export const useCasesPrimaryContainerProps: Omit<SectionContainerProps, 'children'> = {
   title: 'Use Cases That Pay Off',
   bgVariant: 'background',
 }
@@ -196,7 +197,7 @@ export const useCasesPrimaryProps: UseCasesPrimaryTemplateProps = {
 // === UseCasesIndustry Template ===
 
 /** Industry use cases container - wraps the industry grid */
-export const useCasesIndustryContainerProps: Omit<TemplateContainerProps, 'children'> = {
+export const useCasesIndustryContainerProps: Omit<SectionContainerProps, 'children'> = {
   title: 'Industry-Specific Solutions',
   subtitle: 'rbee adapts to the unique compliance and security requirements of regulated industries.',
   bgVariant: 'secondary',
