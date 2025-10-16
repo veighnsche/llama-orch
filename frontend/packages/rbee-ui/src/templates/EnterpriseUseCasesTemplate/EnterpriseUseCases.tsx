@@ -6,7 +6,7 @@ import Link from 'next/link'
 
 const industryCases = [
   {
-    icon: Building2,
+    icon: <Building2 className="size-6" />,
     industry: 'Financial Services',
     segments: 'Banks, Insurance, FinTech',
     badges: ['PCI-DSS', 'GDPR', 'SOC2'],
@@ -26,7 +26,7 @@ const industryCases = [
     href: '/industries/finance',
   },
   {
-    icon: Heart,
+    icon: <Heart className="size-6" />,
     industry: 'Healthcare',
     segments: 'Hospitals, MedTech, Pharma',
     badges: ['HIPAA', 'GDPR Art. 9'],
@@ -41,7 +41,7 @@ const industryCases = [
     href: '/industries/healthcare',
   },
   {
-    icon: Scale,
+    icon: <Scale className="size-6" />,
     industry: 'Legal Services',
     segments: 'Law Firms, LegalTech',
     badges: ['GDPR', 'Legal Hold'],
@@ -51,7 +51,7 @@ const industryCases = [
     href: '/industries/legal',
   },
   {
-    icon: Shield,
+    icon: <Shield className="size-6" />,
     industry: 'Government',
     segments: 'Public Sector, Defense',
     badges: ['ISO 27001', 'Sovereignty'],

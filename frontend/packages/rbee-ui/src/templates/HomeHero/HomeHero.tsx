@@ -3,7 +3,7 @@
 import { Button } from '@rbee/ui/atoms/Button'
 import { HoneycombPattern } from '@rbee/ui/icons'
 import { BulletListItem, FloatingKPICard, ProgressBar, PulseBadge, TerminalWindow } from '@rbee/ui/molecules'
-import { ArrowRight, DollarSign, LucideIcon, Star } from 'lucide-react'
+import { ArrowRight, DollarSign, Star } from 'lucide-react'
 import { useEffect, useState } from 'react'
 
 export interface BulletItem {

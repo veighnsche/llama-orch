@@ -2,12 +2,12 @@ import { Alert, AlertDescription } from '@rbee/ui/atoms/Alert'
 import { Badge } from '@rbee/ui/atoms/Badge'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@rbee/ui/atoms/Tabs'
 import { BulletListItem } from '@rbee/ui/molecules/BulletListItem'
-import { Check, type LucideIcon } from 'lucide-react'
+import { Check } from 'lucide-react'
 import type { ReactNode } from 'react'
 
 export interface TabConfig {
   value: string
-  icon: LucideIcon
+  icon: ReactNode
   label: string
   mobileLabel: string
   subtitle: string
@@ -60,7 +60,7 @@ export function CoreFeaturesTabs({
                     className="flex-col lg:flex-row items-start lg:items-center"
                   >
                     <span className="flex items-center gap-3 w-full">
-                      <tab.icon className="size-4 text-muted-foreground group-data-[state=active]:text-primary" />
+                      {tab.icon}
                       <span className="font-semibold">
                         <span className="hidden sm:inline">{tab.label}</span>
                         <span className="sm:hidden">{tab.mobileLabel}</span>

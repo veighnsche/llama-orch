@@ -1,5 +1,5 @@
 import { SecurityCrate } from '@rbee/ui/molecules'
-import type { LucideIcon } from 'lucide-react'
+import type { ReactNode } from 'react'
 import Image from 'next/image'
 
 // ──────────────────────────────────────────────────────────────────────────────
@@ -7,7 +7,7 @@ import Image from 'next/image'
 // ──────────────────────────────────────────────────────────────────────────────
 
 export type SecurityCrateData = {
-  icon: LucideIcon
+  icon: ReactNode
   title: string
   subtitle: string
   intro: string

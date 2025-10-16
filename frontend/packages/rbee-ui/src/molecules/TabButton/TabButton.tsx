@@ -1,10 +1,10 @@
 import { cn } from '@rbee/ui/utils'
-import type { LucideIcon } from 'lucide-react'
+import type { ReactNode } from 'react'
 
 export interface TabButtonProps {
   id: string
   label: string
-  icon: LucideIcon
+  icon: ReactNode
   active: boolean
   onClick: () => void
   className?: string
@@ -22,7 +22,7 @@ export function TabButton({ id, label, icon: Icon, active, onClick, className }:
         className,
       )}
     >
-      <Icon className="h-4 w-4" />
+      <div className="h-4 w-4">{Icon}</div>
       {label}
     </button>
   )

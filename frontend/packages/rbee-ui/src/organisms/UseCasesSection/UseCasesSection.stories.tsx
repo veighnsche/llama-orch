@@ -83,7 +83,7 @@ This organism contains:
   subtitle="Run serious AI on your own hardware. Keep costs at zero, keep control at 100%."
   items={[
     {
-      icon: Laptop,
+      icon: <Laptop className="size-6" />,
       title: 'The solo developer',
       scenario: 'Shipping a SaaS with AI features; wants control without vendor lock-in.',
       solution: 'Run rbee on your gaming PC + spare workstation. Llama 70B for coding, SD for assets—local & fast.',
@@ -173,14 +173,14 @@ export const HomePageDefault: Story = {
     subtitle: 'Run serious AI on your own hardware. Keep costs at zero, keep control at 100%.',
     items: [
       {
-        icon: Laptop,
+        icon: <Laptop className="size-6" />,
         title: 'The solo developer',
         scenario: 'Shipping a SaaS with AI features; wants control without vendor lock-in.',
         solution: 'Run rbee on your gaming PC + spare workstation. Llama 70B for coding, SD for assets—local & fast.',
         outcome: '$0/month AI costs. Full control. No rate limits.',
       },
       {
-        icon: Users,
+        icon: <Users className="size-6" />,
         title: 'The small team',
         scenario: '5-person startup burning $500/mo on APIs.',
         solution:
@@ -188,14 +188,14 @@ export const HomePageDefault: Story = {
         outcome: '$6,000+ saved per year. GDPR-friendly by design.',
       },
       {
-        icon: HomeIcon,
+        icon: <HomeIcon className="size-6" />,
         title: 'The homelab enthusiast',
         scenario: 'Four GPUs gathering dust.',
         solution: 'Spread workers across your LAN in minutes. Build agents: coder, doc generator, code reviewer.',
         outcome: 'Idle GPUs → productive. Auto-download models, clean shutdowns.',
       },
       {
-        icon: Building,
+        icon: <Building className="size-6" />,
         title: 'The enterprise',
         scenario: '50-dev org. Code cannot leave the premises.',
         solution: 'On-prem rbee with audit trails and policy routing. Rhai-based rules for data residency & access.',
@@ -258,7 +258,7 @@ export const SoloDeveloperOnly: Story = {
     subtitle: 'Build AI features without burning cash on APIs.',
     items: [
       {
-        icon: Laptop,
+        icon: <Laptop className="size-6" />,
         title: 'The solo developer',
         scenario: 'Shipping a SaaS with AI features; wants control without vendor lock-in.',
         solution: 'Run rbee on your gaming PC + spare workstation. Llama 70B for coding, SD for assets—local & fast.',
@@ -288,21 +288,21 @@ export const AlternativePersonas: Story = {
     subtitle: 'From indie hackers to Fortune 500s.',
     items: [
       {
-        icon: Laptop,
+        icon: <Laptop className="size-6" />,
         title: 'Indie hacker',
         scenario: 'Building AI-powered SaaS on nights and weekends.',
         solution: 'Use your gaming rig. No cloud bills, no rate limits, no vendor lock-in.',
         outcome: 'Ship faster. Keep 100% of revenue.',
       },
       {
-        icon: Users,
+        icon: <Users className="size-6" />,
         title: 'Agency',
         scenario: 'Building AI features for clients. API costs eat margins.',
         solution: 'Pool agency hardware. Bill clients for AI features, keep costs at zero.',
         outcome: '80% margin improvement on AI projects.',
       },
       {
-        icon: Building,
+        icon: <Building className="size-6" />,
         title: 'Regulated industry',
         scenario: 'Healthcare/finance. Data cannot leave premises.',
         solution: 'On-prem rbee. Audit trails. Policy routing by data classification.',

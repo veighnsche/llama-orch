@@ -79,16 +79,16 @@ export default meta
 type Story = StoryObj<typeof StatsGrid>
 
 const sampleStats = [
-  { value: '100%', label: 'GDPR Compliant', icon: Shield },
-  { value: '<50ms', label: 'Latency', icon: Zap },
-  { value: '24/7', label: 'Support', icon: Clock },
+  { value: '100%', label: 'GDPR Compliant', icon: <Shield className="size-6" /> },
+  { value: '<50ms', label: 'Latency', icon: <Zap className="size-6" /> },
+  { value: '24/7', label: 'Support', icon: <Clock className="size-6" /> },
 ]
 
 const fourStats = [
-  { value: '100%', label: 'GDPR Compliant', icon: Shield },
-  { value: '<50ms', label: 'Latency', icon: Zap },
-  { value: '24/7', label: 'Support', icon: Clock },
-  { value: '500+', label: 'Users', icon: Users },
+  { value: '100%', label: 'GDPR Compliant', icon: <Shield className="size-6" /> },
+  { value: '<50ms', label: 'Latency', icon: <Zap className="size-6" /> },
+  { value: '24/7', label: 'Support', icon: <Clock className="size-6" /> },
+  { value: '500+', label: 'Users', icon: <Users className="size-6" /> },
 ]
 
 export const Default: Story = {

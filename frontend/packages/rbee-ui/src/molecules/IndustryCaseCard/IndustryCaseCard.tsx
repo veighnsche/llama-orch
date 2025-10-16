@@ -1,11 +1,11 @@
 import { IconPlate } from '@rbee/ui/molecules'
 import { cn } from '@rbee/ui/utils'
-import type { LucideIcon } from 'lucide-react'
+import type { ReactNode } from 'react'
 import Link from 'next/link'
 
 export interface IndustryCaseCardProps {
   /** Lucide icon component (e.g., Building2, Heart, Scale, Shield) */
-  icon: LucideIcon
+  icon: ReactNode
   /** Industry name (e.g., "Financial Services") */
   industry: string
   /** Segment description (e.g., "Banks, Insurance, FinTech") */

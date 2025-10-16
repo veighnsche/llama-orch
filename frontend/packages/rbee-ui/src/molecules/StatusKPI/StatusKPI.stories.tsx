@@ -75,7 +75,7 @@ type Story = StoryObj<typeof StatusKPI>
 
 export const Default: Story = {
   args: {
-    icon: Activity,
+    icon: <Activity className="size-6" />,
     color: 'chart-3',
     label: 'Uptime',
     value: '99.9%',
@@ -87,10 +87,10 @@ export const AllStates: Story = {
     <div className="flex flex-col gap-4 p-8">
       <h3 className="text-lg font-semibold text-foreground mb-2">All Status States</h3>
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <StatusKPI icon={CheckCircle} color="chart-3" label="Uptime" value="99.9%" />
-        <StatusKPI icon={Activity} color="primary" label="Active Workers" value="12" />
-        <StatusKPI icon={Clock} color="chart-2" label="Avg Response" value="45ms" />
-        <StatusKPI icon={TrendingUp} color="chart-4" label="Requests/min" value="1.2k" />
+        <StatusKPI icon={<CheckCircle className="size-6" />} color="chart-3" label="Uptime" value="99.9%" />
+        <StatusKPI icon={<Activity className="size-6" />} color="primary" label="Active Workers" value="12" />
+        <StatusKPI icon={<Clock className="size-6" />} color="chart-2" label="Avg Response" value="45ms" />
+        <StatusKPI icon={<TrendingUp className="size-6" />} color="chart-4" label="Requests/min" value="1.2k" />
       </div>
     </div>
   ),
@@ -109,21 +109,21 @@ export const WithTrend: Story = {
       <h3 className="text-lg font-semibold text-foreground mb-2">KPIs with Trend Indicators</h3>
       <div className="grid gap-4 sm:grid-cols-3">
         <div className="space-y-2">
-          <StatusKPI icon={Activity} color="chart-3" label="Uptime" value="99.9%" />
+          <StatusKPI icon={<Activity className="size-6" />} color="chart-3" label="Uptime" value="99.9%" />
           <div className="text-xs text-chart-3 flex items-center gap-1 pl-4">
             <TrendingUp className="h-3 w-3" />
             <span>+0.1% from last week</span>
           </div>
         </div>
         <div className="space-y-2">
-          <StatusKPI icon={Clock} color="primary" label="Response Time" value="42ms" />
+          <StatusKPI icon={<Clock className="size-6" />} color="primary" label="Response Time" value="42ms" />
           <div className="text-xs text-chart-3 flex items-center gap-1 pl-4">
             <TrendingUp className="h-3 w-3" />
             <span>-8ms improvement</span>
           </div>
         </div>
         <div className="space-y-2">
-          <StatusKPI icon={CheckCircle} color="chart-2" label="Success Rate" value="99.8%" />
+          <StatusKPI icon={<CheckCircle className="size-6" />} color="chart-2" label="Success Rate" value="99.8%" />
           <div className="text-xs text-muted-foreground flex items-center gap-1 pl-4">
             <span>Stable</span>
           </div>
@@ -147,10 +147,10 @@ export const InErrorHandlingContext: Story = {
       <div className="rounded-2xl border bg-card p-6">
         <h3 className="text-xl font-semibold text-foreground mb-4">System Health</h3>
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          <StatusKPI icon={CheckCircle} color="chart-3" label="Uptime" value="99.9%" />
-          <StatusKPI icon={Activity} color="primary" label="Active Workers" value="12" />
-          <StatusKPI icon={Clock} color="chart-2" label="Avg Response" value="45ms" />
-          <StatusKPI icon={TrendingUp} color="chart-4" label="Requests/min" value="1.2k" />
+          <StatusKPI icon={<CheckCircle className="size-6" />} color="chart-3" label="Uptime" value="99.9%" />
+          <StatusKPI icon={<Activity className="size-6" />} color="primary" label="Active Workers" value="12" />
+          <StatusKPI icon={<Clock className="size-6" />} color="chart-2" label="Avg Response" value="45ms" />
+          <StatusKPI icon={<TrendingUp className="size-6" />} color="chart-4" label="Requests/min" value="1.2k" />
         </div>
       </div>
     </div>

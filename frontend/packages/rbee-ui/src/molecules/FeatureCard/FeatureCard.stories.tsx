@@ -113,7 +113,7 @@ type Story = StoryObj<typeof FeatureCard>
 
 export const Default: Story = {
   args: {
-    icon: Zap,
+    icon: <Zap className="size-6" />,
     title: 'Lightning Fast',
     intro: 'Optimized inference with GPU acceleration for sub-second response times.',
     bullets: ['CUDA and ROCm support', 'Batch processing', 'Model quantization'],
@@ -123,7 +123,7 @@ export const Default: Story = {
 
 export const WithIcon: Story = {
   args: {
-    icon: Shield,
+    icon: <Shield className="size-6" />,
     title: 'Enterprise Security',
     intro: 'Bank-grade security with end-to-end encryption and compliance certifications.',
     bullets: ['AES-256 encryption', 'SOC 2 Type II certified', 'GDPR compliant', 'Zero-trust architecture'],
@@ -134,7 +134,7 @@ export const WithIcon: Story = {
 
 export const WithLink: Story = {
   args: {
-    icon: Globe,
+    icon: <Globe className="size-6" />,
     title: 'Global Infrastructure',
     intro: 'Deploy across multiple regions with automatic failover and load balancing.',
     bullets: ['EU and US datacenters', '99.99% uptime SLA', 'Auto-scaling', 'CDN integration'],
@@ -150,7 +150,7 @@ export const InFeaturesContext: Story = {
       <div className="mb-4 text-sm text-muted-foreground">Example: FeatureCard in AdditionalFeaturesGrid organism</div>
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
         <FeatureCard
-          icon={Zap}
+          icon={<Zap className="size-6" />}
           title="Lightning Fast"
           intro="Optimized inference with GPU acceleration for sub-second response times."
           bullets={['CUDA and ROCm support', 'Batch processing', 'Model quantization']}
@@ -158,7 +158,7 @@ export const InFeaturesContext: Story = {
           hover={true}
         />
         <FeatureCard
-          icon={Shield}
+          icon={<Shield className="size-6" />}
           title="Enterprise Security"
           intro="Bank-grade security with end-to-end encryption and compliance certifications."
           bullets={['AES-256 encryption', 'SOC 2 Type II certified', 'GDPR compliant']}
@@ -166,7 +166,7 @@ export const InFeaturesContext: Story = {
           hover={true}
         />
         <FeatureCard
-          icon={Clock}
+          icon={<Clock className="size-6" />}
           title="24/7 Monitoring"
           intro="Real-time monitoring and alerting for your entire infrastructure."
           bullets={['Prometheus metrics', 'Custom dashboards', 'Slack/PagerDuty integration']}

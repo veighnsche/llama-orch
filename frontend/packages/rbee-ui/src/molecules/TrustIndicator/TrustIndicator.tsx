@@ -1,9 +1,9 @@
 import { cn } from '@rbee/ui/utils'
-import type { LucideIcon } from 'lucide-react'
+import type { ReactNode } from 'react'
 
 export interface TrustIndicatorProps {
   /** Lucide icon component */
-  icon: LucideIcon
+  icon: ReactNode
   /** Indicator text */
   text: string
   /** Color variant */
@@ -21,7 +21,7 @@ export function TrustIndicator({ icon: Icon, text, variant = 'default', classNam
 
   return (
     <div className={cn('flex items-center gap-2', variantClasses[variant], className)}>
-      <Icon className="h-5 w-5" />
+      <div className="h-5 w-5">{Icon}</div>
       <span className="text-sm">{text}</span>
     </div>
   )

@@ -1,9 +1,9 @@
 import { SectionContainer, UseCaseCard } from '@rbee/ui/molecules'
 import { cn } from '@rbee/ui/utils'
-import type { LucideIcon } from 'lucide-react'
+import type { ReactNode } from 'react'
 
 export type UseCase = {
-  icon: LucideIcon
+  icon: ReactNode
   title: string
   scenario: string
   solution: string

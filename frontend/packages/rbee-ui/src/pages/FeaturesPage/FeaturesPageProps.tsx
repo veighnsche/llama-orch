@@ -56,7 +56,7 @@ export const featuresFeaturesTabsProps: FeaturesTabsProps = {
   tabs: [
     {
       value: 'api',
-      icon: Code,
+      icon: <Code className="size-6" />,
       label: 'OpenAI-Compatible',
       mobileLabel: 'API',
       subtitle: 'Drop-in API',
@@ -81,7 +81,7 @@ export OPENAI_API_BASE=http://localhost:8080/v1`}
     },
     {
       value: 'gpu',
-      icon: Cpu,
+      icon: <Cpu className="size-6" />,
       label: 'Multi-GPU',
       mobileLabel: 'GPU',
       subtitle: 'Use every GPU',
@@ -107,7 +107,7 @@ export OPENAI_API_BASE=http://localhost:8080/v1`}
     },
     {
       value: 'scheduler',
-      icon: Gauge,
+      icon: <Gauge className="size-6" />,
       label: 'Programmable scheduler (Rhai)',
       mobileLabel: 'Rhai',
       subtitle: 'Route with Rhai',
@@ -137,7 +137,7 @@ else {
     },
     {
       value: 'sse',
-      icon: Zap,
+      icon: <Zap className="size-6" />,
       label: 'Task-based API with SSE',
       mobileLabel: 'SSE',
       subtitle: 'Live job stream',
@@ -236,17 +236,17 @@ export const crossNodeOrchestrationProps: CrossNodeOrchestrationTemplateProps = 
   terminalCopyText: `# Add a remote machine to your pool\n$ rbee-keeper setup add-node \\\n  --name workstation \\\n  --ssh-host workstation.home.arpa \\\n  --ssh-user vince \\\n  --ssh-key ~/.ssh/id_ed25519\n\n# Run inference on that machine\n$ rbee-keeper infer --node workstation \\\n  --model hf:meta-llama/Llama-3.1-8B \\\n  --prompt "write a short story"`,
   benefits: [
     {
-      icon: CheckCircle2,
+      icon: <CheckCircle2 className="size-6" />,
       title: 'SSH Tunneling',
       description: 'Secure connections over SSH.',
     },
     {
-      icon: CheckCircle2,
+      icon: <CheckCircle2 className="size-6" />,
       title: 'Auto Shutdown',
       description: 'Workers exit cleanly after tasks.',
     },
     {
-      icon: CheckCircle2,
+      icon: <CheckCircle2 className="size-6" />,
       title: 'Minimal Footprint',
       description: 'No persistent daemons on nodes.',
     },
@@ -394,17 +394,17 @@ export const multiBackendGpuProps: MultiBackendGpuTemplateProps = {
   terminalFooter: 'Cached in the registry for fast lookups and policy routing.',
   featureCards: [
     {
-      icon: Cpu,
+      icon: <Cpu className="size-6" />,
       title: 'Detection',
       description: 'Scans CUDA, Metal, CPU and counts devices.',
     },
     {
-      icon: CheckCircle2,
+      icon: <CheckCircle2 className="size-6" />,
       title: 'Explicit selection',
       description: 'Choose backend & device—no surprises.',
     },
     {
-      icon: AlertTriangle,
+      icon: <AlertTriangle className="size-6" />,
       title: 'Helpful suggestions',
       description: 'Actionable fixes on error.',
     },
@@ -431,9 +431,9 @@ export const errorHandlingContainerProps: Omit<TemplateContainerProps, 'children
  */
 export const errorHandlingProps: ErrorHandlingTemplateProps = {
   statusKPIs: [
-    { icon: CheckCircle2, color: 'chart-3', label: 'Scenarios covered', value: '19+' },
-    { icon: Network, color: 'primary', label: 'Auto-retries', value: 'SSH • HTTP • DL' },
-    { icon: Database, color: 'chart-2', label: 'Fail-fast', value: 'Clear suggestions' },
+    { icon: <CheckCircle2 className="size-6" />, color: 'chart-3', label: 'Scenarios covered', value: '19+' },
+    { icon: <Network className="size-6" />, color: 'primary', label: 'Auto-retries', value: 'SSH • HTTP • DL' },
+    { icon: <Database className="size-6" />, color: 'chart-2', label: 'Fail-fast', value: 'Clear suggestions' },
   ],
   terminalContent: (
     <div role="log" aria-live="polite">
@@ -457,7 +457,7 @@ export const errorHandlingProps: ErrorHandlingTemplateProps = {
   ),
   playbookCategories: [
     {
-      icon: Network,
+      icon: <Network className="size-6" />,
       color: 'warning',
       title: 'Network & Connectivity',
       checkCount: 4,
@@ -513,7 +513,7 @@ export const errorHandlingProps: ErrorHandlingTemplateProps = {
       ),
     },
     {
-      icon: AlertTriangle,
+      icon: <AlertTriangle className="size-6" />,
       color: 'primary',
       title: 'Resource Errors',
       checkCount: 4,
@@ -567,7 +567,7 @@ export const errorHandlingProps: ErrorHandlingTemplateProps = {
       ),
     },
     {
-      icon: Database,
+      icon: <Database className="size-6" />,
       color: 'chart-2',
       title: 'Model & Backend',
       checkCount: 4,
@@ -621,7 +621,7 @@ export const errorHandlingProps: ErrorHandlingTemplateProps = {
       ),
     },
     {
-      icon: Activity,
+      icon: <Activity className="size-6" />,
       color: 'chart-3',
       title: 'Process Lifecycle',
       checkCount: 4,
@@ -746,9 +746,9 @@ export const realTimeProgressProps: RealTimeProgressTemplateProps = {
     </div>
   ),
   metricKPIs: [
-    { icon: Gauge, color: 'chart-3', label: 'Throughput', value: '133 tok/s', progressPercentage: 80 },
-    { icon: Timer, color: 'primary', label: 'First token latency', value: '150 ms', progressPercentage: 60 },
-    { icon: MemoryStick, color: 'chart-2', label: 'VRAM used', value: '669 MB', progressPercentage: 45 },
+    { icon: <Gauge className="size-6" />, color: 'chart-3', label: 'Throughput', value: '133 tok/s', progressPercentage: 80 },
+    { icon: <Timer className="size-6" />, color: 'primary', label: 'First token latency', value: '150 ms', progressPercentage: 60 },
+    { icon: <MemoryStick className="size-6" />, color: 'chart-2', label: 'VRAM used', value: '669 MB', progressPercentage: 45 },
   ],
   cancellationTitle: 'Request Cancellation',
   cancellationSubtitle: 'Ctrl+C or API cancel stops the job, frees resources, and leaves no orphaned processes.',
@@ -870,7 +870,7 @@ export const additionalFeaturesGridProps: AdditionalFeaturesGridTemplateProps = 
         {
           href: '#security-isolation',
           ariaLabel: 'Learn more about Cascading Shutdown',
-          icon: Shield,
+          icon: <Shield className="size-6" />,
           iconTone: 'chart-2',
           title: 'Cascading Shutdown',
           subtitle: 'Ctrl+C tears down keeper → queen → hive → workers. No orphans, no VRAM leaks.',
@@ -879,7 +879,7 @@ export const additionalFeaturesGridProps: AdditionalFeaturesGridTemplateProps = 
         {
           href: '#intelligent-model-management',
           ariaLabel: 'Learn more about Model Catalog',
-          icon: Database,
+          icon: <Database className="size-6" />,
           iconTone: 'chart-3',
           title: 'Model Catalog',
           subtitle: 'Auto-provision models from Hugging Face with checksum verify and local cache.',
@@ -888,7 +888,7 @@ export const additionalFeaturesGridProps: AdditionalFeaturesGridTemplateProps = 
         {
           href: '#cross-node-orchestration',
           ariaLabel: 'Learn more about Network Orchestration',
-          icon: Network,
+          icon: <Network className="size-6" />,
           iconTone: 'primary',
           title: 'Network Orchestration',
           subtitle: 'Run jobs across gaming PCs, workstations, and Macs as one homelab cluster.',
@@ -904,7 +904,7 @@ export const additionalFeaturesGridProps: AdditionalFeaturesGridTemplateProps = 
         {
           href: '#cli-ui',
           ariaLabel: 'Learn more about CLI & Web UI',
-          icon: Terminal,
+          icon: <Terminal className="size-6" />,
           iconTone: 'muted',
           title: 'CLI & Web UI',
           subtitle: 'Automate with a fast CLI or manage visually in the web UI—your call.',
@@ -913,7 +913,7 @@ export const additionalFeaturesGridProps: AdditionalFeaturesGridTemplateProps = 
         {
           href: '#sdk',
           ariaLabel: 'Learn more about TypeScript SDK',
-          icon: Code,
+          icon: <Code className="size-6" />,
           iconTone: 'primary',
           title: 'TypeScript SDK',
           subtitle: 'Type-safe utilities for building agents; async/await with full IDE help.',
@@ -922,7 +922,7 @@ export const additionalFeaturesGridProps: AdditionalFeaturesGridTemplateProps = 
         {
           href: '#security-isolation',
           ariaLabel: 'Learn more about Security First',
-          icon: Shield,
+          icon: <Shield className="size-6" />,
           iconTone: 'chart-2',
           title: 'Security First',
           subtitle: 'Six Rust crates: auth, audit logs, input validation, secrets, JWT guardian, and deadlines.',

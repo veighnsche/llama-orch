@@ -31,7 +31,7 @@ export const Default: Story = {
   args: {
     id: 'api',
     label: 'API',
-    icon: Code,
+    icon: <Code className="size-6" />,
     active: false,
     onClick: () => {},
   },
@@ -41,7 +41,7 @@ export const Active: Story = {
   args: {
     id: 'deployment',
     label: 'Deployment',
-    icon: Server,
+    icon: <Server className="size-6" />,
     active: true,
     onClick: () => {},
   },
@@ -51,7 +51,7 @@ export const WithIcon: Story = {
   args: {
     id: 'security',
     label: 'Security',
-    icon: Shield,
+    icon: <Shield className="size-6" />,
     active: false,
     onClick: () => {},
   },
@@ -60,8 +60,8 @@ export const WithIcon: Story = {
 export const Disabled: Story = {
   render: () => (
     <div className="flex gap-2 p-8">
-      <TabButton id="tab1" label="Available" icon={Code} active={false} onClick={() => {}} />
-      <TabButton id="tab2" label="Active" icon={Server} active={true} onClick={() => {}} />
+      <TabButton id="tab1" label="Available" icon={<Code className="size-6" />} active={false} onClick={() => {}} />
+      <TabButton id="tab2" label="Active" icon={<Server className="size-6" />} active={true} onClick={() => {}} />
     </div>
   ),
 }

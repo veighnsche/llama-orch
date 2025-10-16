@@ -1,6 +1,6 @@
 import { Button, Card, CardContent } from '@rbee/ui/atoms'
 import { BulletListItem, IconCardHeader } from '@rbee/ui/molecules'
-import type { LucideIcon } from 'lucide-react'
+import type { ReactNode } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
 
@@ -18,7 +18,7 @@ export type ComplianceBox = {
 }
 
 export type CompliancePillar = {
-  icon: LucideIcon
+  icon: ReactNode
   title: string
   subtitle: string
   titleId: string
@@ -80,7 +80,7 @@ export function EnterpriseComplianceTemplate({
               aria-labelledby={pillar.titleId}
             >
               <IconCardHeader
-                icon={<pillar.icon className="w-6 h-6" />}
+                icon={pillar.icon}
                 title={pillar.title}
                 subtitle={pillar.subtitle}
                 titleId={pillar.titleId}

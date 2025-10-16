@@ -1,7 +1,7 @@
 import { Badge } from '@rbee/ui/atoms/Badge'
 import { Button } from '@rbee/ui/atoms/Button'
 import { ComplianceChip, StatsGrid } from '@rbee/ui/molecules'
-import type { LucideIcon } from 'lucide-react'
+import type { ReactNode } from 'react'
 import Link from 'next/link'
 import type * as React from 'react'
 
@@ -44,7 +44,7 @@ export type FloatingBadge = {
 
 export type EnterpriseHeroTemplateProps = {
   badge: {
-    icon: LucideIcon
+    icon: ReactNode
     text: string
   }
   heading: string
@@ -105,7 +105,7 @@ export function EnterpriseHeroTemplate({
               variant="outline"
               className="mb-6 w-fit border-primary/20 bg-primary/10 px-4 py-2 text-sm text-primary"
             >
-              <BadgeIcon className="h-4 w-4" />
+              <div className="h-4 w-4">{BadgeIcon}</div>
               <span>{badge.text}</span>
             </Badge>
 
@@ -170,7 +170,7 @@ export function EnterpriseHeroTemplate({
                 {/* Header */}
                 <div className="mb-4 flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    <BadgeIcon className="h-5 w-5 text-primary" aria-hidden="true" />
+                    <div className="h-5 w-5 text-primary" aria-hidden="true">{BadgeIcon}</div>
                     <span className="font-semibold text-foreground">{auditConsole.title}</span>
                   </div>
                   <Badge variant="secondary" className="bg-chart-3/20 text-xs text-chart-3">
@@ -180,7 +180,7 @@ export function EnterpriseHeroTemplate({
 
                 {/* Filter Strip */}
                 <div className="mb-4 flex items-center gap-2 text-xs text-muted-foreground" role="presentation">
-                  <BadgeIcon className="h-3 w-3" aria-hidden="true" />
+                  <div className="h-3 w-3" aria-hidden="true">{BadgeIcon}</div>
                   {auditConsole.filterButtons.map((filter, idx) => (
                     <button
                       key={idx}
@@ -225,7 +225,7 @@ export function EnterpriseHeroTemplate({
                 <div className="mt-4 flex items-center justify-between border-t border-border pt-4 text-xs text-foreground/85">
                   <span>{auditConsole.footer.retention}</span>
                   <span className="flex items-center gap-1">
-                    <BadgeIcon className="h-3 w-3" aria-hidden="true" />
+                    <div className="h-3 w-3" aria-hidden="true">{BadgeIcon}</div>
                     {auditConsole.footer.tamperProof}
                   </span>
                 </div>

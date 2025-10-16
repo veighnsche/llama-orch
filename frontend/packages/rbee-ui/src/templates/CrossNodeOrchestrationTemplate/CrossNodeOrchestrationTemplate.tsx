@@ -3,7 +3,6 @@
 import { Badge, Card, CardContent, Separator } from '@rbee/ui/atoms'
 import { IconCardHeader, IconPlate, TerminalWindow } from '@rbee/ui/molecules'
 import { cn } from '@rbee/ui/utils'
-import type { LucideIcon } from 'lucide-react'
 import { ArrowDown, CheckCircle2, GitBranch, Network } from 'lucide-react'
 import type { ReactNode } from 'react'
 
@@ -18,7 +17,7 @@ export interface LegendItem {
 }
 
 export interface BenefitCard {
-  icon: LucideIcon
+  icon: ReactNode
   title: string
   description: string
 }
@@ -98,7 +97,7 @@ export function CrossNodeOrchestrationTemplate({
                     key={idx}
                     className="bg-background rounded-xl border border-border p-4 flex items-start gap-3 hover:-translate-y-0.5 transition-transform"
                   >
-                    <benefit.icon className="size-5 shrink-0 mt-0.5 text-chart-3" aria-hidden="true" />
+                    <div className="size-5 shrink-0 mt-0.5 text-chart-3" aria-hidden="true">{benefit.icon}</div>
                     <div>
                       <div className="font-semibold text-foreground text-sm">{benefit.title}</div>
                       <div className="text-xs text-muted-foreground mt-1">{benefit.description}</div>

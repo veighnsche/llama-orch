@@ -93,7 +93,7 @@ export const Default: Story = {
   args: {
     title: 'Financial Services',
     copy: 'Banks, insurance companies, and fintech startups use rbee for secure, compliant AI processing of sensitive financial data.',
-    icon: Building2,
+    icon: <Building2 className="size-6" />,
     color: 'primary',
   },
 }
@@ -102,7 +102,7 @@ export const WithIcon: Story = {
   args: {
     title: 'Education',
     copy: 'Universities and online learning platforms leverage rbee for personalized learning experiences while protecting student data.',
-    icon: GraduationCap,
+    icon: <GraduationCap className="size-6" />,
     color: 'chart-2',
     badge: 'Popular',
   },
@@ -112,7 +112,7 @@ export const WithExamples: Story = {
   args: {
     title: 'Professional Services',
     copy: 'Consulting firms, law offices, and accounting practices use rbee to analyze documents and generate insights while maintaining client confidentiality.',
-    icon: Briefcase,
+    icon: <Briefcase className="size-6" />,
     color: 'chart-3',
     anchor: 'professional-services',
   },
@@ -126,7 +126,7 @@ export const InIndustryContext: Story = {
         <IndustryCard
           title="Financial Services"
           copy="Banks, insurance companies, and fintech startups use rbee for secure, compliant AI processing."
-          icon={Building2}
+          icon={<Building2 className="size-6" />}
           color="primary"
           badge="GDPR Ready"
           anchor="financial"
@@ -134,7 +134,7 @@ export const InIndustryContext: Story = {
         <IndustryCard
           title="Education"
           copy="Universities and online learning platforms leverage rbee for personalized learning experiences."
-          icon={GraduationCap}
+          icon={<GraduationCap className="size-6" />}
           color="chart-2"
           badge="Popular"
           anchor="education"
@@ -142,7 +142,7 @@ export const InIndustryContext: Story = {
         <IndustryCard
           title="E-commerce"
           copy="Online retailers use rbee for product recommendations, customer support, and inventory optimization."
-          icon={ShoppingCart}
+          icon={<ShoppingCart className="size-6" />}
           color="chart-3"
           anchor="ecommerce"
         />

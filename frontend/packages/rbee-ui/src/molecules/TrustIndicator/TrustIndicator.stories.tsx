@@ -29,7 +29,7 @@ type Story = StoryObj<typeof TrustIndicator>
 
 export const Default: Story = {
   args: {
-    icon: Shield,
+    icon: <Shield className="size-6" />,
     text: 'GDPR Compliant',
     variant: 'default',
   },
@@ -37,7 +37,7 @@ export const Default: Story = {
 
 export const WithIcon: Story = {
   args: {
-    icon: Lock,
+    icon: <Lock className="size-6" />,
     text: 'End-to-End Encrypted',
     variant: 'primary',
   },
@@ -46,16 +46,16 @@ export const WithIcon: Story = {
 export const AllVariants: Story = {
   render: () => (
     <div className="flex flex-col gap-4 p-8">
-      <TrustIndicator icon={Shield} text="Default variant" variant="default" />
-      <TrustIndicator icon={Lock} text="Primary variant" variant="primary" />
-      <TrustIndicator icon={CheckCircle} text="Success variant" variant="success" />
+      <TrustIndicator icon={<Shield className="size-6" />} text="Default variant" variant="default" />
+      <TrustIndicator icon={<Lock className="size-6" />} text="Primary variant" variant="primary" />
+      <TrustIndicator icon={<CheckCircle className="size-6" />} text="Success variant" variant="success" />
     </div>
   ),
 }
 
 export const WithTooltip: Story = {
   args: {
-    icon: Shield,
+    icon: <Shield className="size-6" />,
     text: 'SOC2 Type II',
     variant: 'success',
   },

@@ -3,7 +3,6 @@
 import { Alert, AlertDescription, AlertTitle, Badge, Card, CardContent } from '@rbee/ui/atoms'
 import { IconCardHeader, TerminalWindow } from '@rbee/ui/molecules'
 import { cn } from '@rbee/ui/utils'
-import type { LucideIcon } from 'lucide-react'
 import { AlertTriangle, CheckCircle2, Cpu, X } from 'lucide-react'
 import type { ReactNode } from 'react'
 
@@ -18,7 +17,7 @@ export interface BackendDetection {
 }
 
 export interface FeatureCard {
-  icon: LucideIcon
+  icon: ReactNode
   title: string
   description: string
 }
@@ -160,7 +159,7 @@ export function MultiBackendGpuTemplate({
               key={idx}
               className="bg-background rounded-xl border border-border p-4 flex items-start gap-3 hover:-translate-y-0.5 transition-transform"
             >
-              <card.icon className="size-5 shrink-0 mt-0.5 text-chart-2" aria-hidden="true" />
+              <div className="size-5 shrink-0 mt-0.5 text-chart-2" aria-hidden="true">{card.icon}</div>
               <div>
                 <div className="font-semibold text-foreground text-sm">{card.title}</div>
                 <div className="text-xs text-muted-foreground mt-1">{card.description}</div>

@@ -3,11 +3,10 @@
 import { Badge, Card, CardContent } from '@rbee/ui/atoms'
 import { IconCardHeader, StatusKPI, TerminalWindow, TimelineStep } from '@rbee/ui/molecules'
 import { cn } from '@rbee/ui/utils'
-import type { LucideIcon } from 'lucide-react'
 import type { ReactNode } from 'react'
 
 export interface MetricKPI {
-  icon: LucideIcon
+  icon: ReactNode
   color: 'chart-3' | 'primary' | 'chart-2'
   label: string
   value: string
@@ -76,7 +75,7 @@ export function RealTimeProgressTemplate({
           {metricKPIs.map((kpi, idx) => (
             <div key={idx} className="hover:-translate-y-0.5 transition-transform">
               <StatusKPI
-                icon={<kpi.icon className="w-6 h-6" />}
+                icon={kpi.icon}
                 color={kpi.color}
                 label={kpi.label}
                 value={kpi.value}

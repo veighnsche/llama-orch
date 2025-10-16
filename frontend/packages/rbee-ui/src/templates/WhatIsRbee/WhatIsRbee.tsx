@@ -1,58 +1,67 @@
-'use client'
+"use client";
 
-import { Badge, BrandMark, BrandWordmark, Button, Tooltip, TooltipContent, TooltipTrigger } from '@rbee/ui/atoms'
-import { FeatureListItem, StatsGrid } from '@rbee/ui/molecules'
-import { ArrowRight, type LucideIcon } from 'lucide-react'
-import Image from 'next/image'
+import {
+  Badge,
+  BrandMark,
+  BrandWordmark,
+  Button,
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@rbee/ui/atoms";
+import { FeatureListItem, StatsGrid } from "@rbee/ui/molecules";
+import { ArrowRight } from "lucide-react";
+import Image from "next/image";
+import type { ReactNode } from "react";
 
 export interface WhatIsRbeeFeature {
-  icon: LucideIcon
-  title: string
-  description: string
+  icon: ReactNode;
+  title: string;
+  description: string;
 }
 
 export interface WhatIsRbeeStat {
-  value: string
-  label: string
+  value: string;
+  label: string;
 }
 
 export interface WhatIsRbeeCTA {
-  label: string
-  href: string
-  variant?: 'default' | 'ghost'
-  showIcon?: boolean
+  label: string;
+  href: string;
+  variant?: "default" | "ghost";
+  showIcon?: boolean;
 }
 
 export interface WhatIsRbeeProps {
   // Headline
-  headlinePrefix: string
-  headlineSuffix: string
+  headlinePrefix: string;
+  headlineSuffix: string;
 
   // Pronunciation
-  pronunciationText: string
-  pronunciationTooltip: string
+  pronunciationText: string;
+  pronunciationTooltip: string;
 
   // Description
-  description: string
+  description: string;
 
   // Features
-  features: WhatIsRbeeFeature[]
+  features: WhatIsRbeeFeature[];
 
   // Stats
-  stats: WhatIsRbeeStat[]
+  stats: WhatIsRbeeStat[];
 
   // CTAs
-  primaryCTA: WhatIsRbeeCTA
-  secondaryCTA: WhatIsRbeeCTA
+  primaryCTA: WhatIsRbeeCTA;
+  secondaryCTA: WhatIsRbeeCTA;
 
   // Closing copy
-  closingCopyLine1: string
-  closingCopyLine2: string
+  closingCopyLine1: string;
+  closingCopyLine2: string;
 
   // Visual
-  visualImage: string
-  visualImageAlt: string
-  visualBadgeText: string
+  visualImage: string;
+  visualImageAlt: string;
+  visualBadgeText: string;
 }
 
 export function WhatIsRbee({
@@ -119,17 +128,28 @@ export function WhatIsRbee({
             </ul>
 
             {/* Stat cards grid */}
-            <StatsGrid variant="cards" columns={3} className="pt-4" stats={stats} />
+            <StatsGrid
+              variant="cards"
+              columns={3}
+              className="pt-4"
+              stats={stats}
+            />
 
             {/* CTA row */}
             <div className="mt-6 flex flex-col sm:flex-row gap-3 justify-center md:justify-start">
               <Button size="lg" variant={primaryCTA.variant} asChild>
                 <a href={primaryCTA.href}>
                   {primaryCTA.label}
-                  {primaryCTA.showIcon && <ArrowRight className="ml-2 size-4" />}
+                  {primaryCTA.showIcon && (
+                    <ArrowRight className="ml-2 size-4" />
+                  )}
                 </a>
               </Button>
-              <Button size="lg" variant={secondaryCTA.variant || 'ghost'} asChild>
+              <Button
+                size="lg"
+                variant={secondaryCTA.variant || "ghost"}
+                asChild
+              >
                 <a href={secondaryCTA.href} className="flex items-center gap-2">
                   {secondaryCTA.label}
                   {secondaryCTA.showIcon && <ArrowRight className="size-4" />}
@@ -167,5 +187,5 @@ export function WhatIsRbee({
         </div>
       </div>
     </>
-  )
+  );
 }

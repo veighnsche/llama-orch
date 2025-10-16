@@ -48,7 +48,7 @@ export interface UseCasesIndustryTemplateProps {
  *   industries={[
  *     {
  *       title: 'Financial Services',
- *       icon: Banknote,
+ *       icon: <Banknote className="size-6" />,
  *       color: 'primary',
  *       badge: 'GDPR',
  *       copy: 'GDPR-ready with audit trails...',

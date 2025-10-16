@@ -109,7 +109,7 @@ type Story = StoryObj<typeof PlaybookItem>
 
 export const Default: Story = {
   args: {
-    icon: Network,
+    icon: <Network className="size-6" />,
     color: 'primary',
     title: 'Network & Connectivity',
     checkCount: 4,
@@ -163,7 +163,7 @@ export const Default: Story = {
 
 export const ResourceErrors: Story = {
   args: {
-    icon: Server,
+    icon: <Server className="size-6" />,
     color: 'chart-2',
     title: 'Resource Errors',
     checkCount: 4,
@@ -212,7 +212,7 @@ export const ResourceErrors: Story = {
 
 export const ModelBackend: Story = {
   args: {
-    icon: AlertTriangle,
+    icon: <AlertTriangle className="size-6" />,
     color: 'chart-4',
     title: 'Model & Backend',
     checkCount: 4,
@@ -261,7 +261,7 @@ export const ModelBackend: Story = {
 
 export const ProcessLifecycle: Story = {
   args: {
-    icon: Activity,
+    icon: <Activity className="size-6" />,
     color: 'chart-3',
     title: 'Process Lifecycle',
     checkCount: 4,
@@ -318,7 +318,7 @@ export const FullPlaybook: Story = {
     const categories = [
       {
         id: 'network',
-        icon: Network,
+        icon: <Network className="size-6" />,
         color: 'primary' as const,
         title: 'Network & Connectivity',
         checkCount: 4,
@@ -365,7 +365,7 @@ export const FullPlaybook: Story = {
       },
       {
         id: 'resource',
-        icon: Server,
+        icon: <Server className="size-6" />,
         color: 'chart-2' as const,
         title: 'Resource Errors',
         checkCount: 4,
@@ -412,7 +412,7 @@ export const FullPlaybook: Story = {
       },
       {
         id: 'model',
-        icon: AlertTriangle,
+        icon: <AlertTriangle className="size-6" />,
         color: 'chart-4' as const,
         title: 'Model & Backend',
         checkCount: 4,
@@ -459,7 +459,7 @@ export const FullPlaybook: Story = {
       },
       {
         id: 'process',
-        icon: Activity,
+        icon: <Activity className="size-6" />,
         color: 'chart-3' as const,
         title: 'Process Lifecycle',
         checkCount: 4,

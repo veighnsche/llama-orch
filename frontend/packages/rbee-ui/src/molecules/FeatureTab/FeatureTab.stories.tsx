@@ -27,7 +27,7 @@ type Story = StoryObj<typeof meta>
 export const API: Story = {
   args: {
     value: 'api',
-    icon: Code,
+    icon: <Code className="size-6" />,
     label: 'OpenAI-Compatible',
     mobileLabel: 'OpenAI',
   },
@@ -36,7 +36,7 @@ export const API: Story = {
 export const GPU: Story = {
   args: {
     value: 'gpu',
-    icon: Cpu,
+    icon: <Cpu className="size-6" />,
     label: 'Multi-GPU',
     mobileLabel: 'GPU',
   },
@@ -45,7 +45,7 @@ export const GPU: Story = {
 export const Scheduler: Story = {
   args: {
     value: 'scheduler',
-    icon: Gauge,
+    icon: <Gauge className="size-6" />,
     label: 'Scheduler',
     mobileLabel: 'Rhai',
   },
@@ -54,7 +54,7 @@ export const Scheduler: Story = {
 export const RealTime: Story = {
   args: {
     value: 'sse',
-    icon: Zap,
+    icon: <Zap className="size-6" />,
     label: 'Real‑time',
     mobileLabel: 'SSE',
   },
@@ -63,7 +63,7 @@ export const RealTime: Story = {
 export const WithoutMobileLabel: Story = {
   args: {
     value: 'feature',
-    icon: Sparkles,
+    icon: <Sparkles className="size-6" />,
     label: 'Feature Name',
   },
 }
@@ -71,17 +71,17 @@ export const WithoutMobileLabel: Story = {
 export const AllTabs: Story = {
   args: {
     value: 'api',
-    icon: Code,
+    icon: <Code className="size-6" />,
     label: 'OpenAI-Compatible',
   },
   decorators: [
     () => (
       <Tabs defaultValue="api" className="w-full max-w-4xl">
         <TabsList className="grid w-full grid-cols-2 lg:grid-cols-4 h-auto rounded-xl border bg-card/60 p-1 gap-1">
-          <FeatureTab value="api" icon={Code} label="OpenAI-Compatible" mobileLabel="OpenAI" />
-          <FeatureTab value="gpu" icon={Cpu} label="Multi-GPU" mobileLabel="GPU" />
-          <FeatureTab value="scheduler" icon={Gauge} label="Scheduler" mobileLabel="Rhai" />
-          <FeatureTab value="sse" icon={Zap} label="Real‑time" mobileLabel="SSE" />
+          <FeatureTab value="api" icon={<Code className="size-6" />} label="OpenAI-Compatible" mobileLabel="OpenAI" />
+          <FeatureTab value="gpu" icon={<Cpu className="size-6" />} label="Multi-GPU" mobileLabel="GPU" />
+          <FeatureTab value="scheduler" icon={<Gauge className="size-6" />} label="Scheduler" mobileLabel="Rhai" />
+          <FeatureTab value="sse" icon={<Zap className="size-6" />} label="Real‑time" mobileLabel="SSE" />
         </TabsList>
       </Tabs>
     ),

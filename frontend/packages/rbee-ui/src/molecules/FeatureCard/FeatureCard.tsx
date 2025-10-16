@@ -1,11 +1,10 @@
 import { CheckItem } from '@rbee/ui/atoms/CheckItem'
 import { cn } from '@rbee/ui/utils'
-import type { LucideIcon } from 'lucide-react'
 import type { ReactNode } from 'react'
 
 export interface FeatureCardProps {
   /** Lucide icon component */
-  icon: LucideIcon | ReactNode
+  icon: ReactNode | ReactNode
   /** Card title */
   title: string
   /** Card intro/description */
@@ -48,7 +47,7 @@ export function FeatureCard({
   id,
   description, // Legacy support
 }: FeatureCardProps) {
-  const IconComponent = typeof icon === 'function' ? (icon as LucideIcon) : null
+  const IconComponent = typeof icon === 'function' ? icon : null
   const displayIntro = intro || description || ''
   const _sizeClasses = {
     sm: 'p-4 space-y-2',
@@ -119,11 +118,7 @@ export function FeatureCard({
       {/* Header Row */}
       <div className="mb-4 flex items-center gap-3">
         <div className={cn('rounded-xl flex items-center justify-center shrink-0 p-3', colors.bg)} aria-hidden="true">
-          {IconComponent ? (
-            <IconComponent aria-hidden="true" focusable="false" className={cn('h-6 w-6', colors.text)} />
-          ) : (
-            (icon as ReactNode)
-          )}
+          {icon}
         </div>
         <h3 id={titleId} className="text-xl font-semibold text-foreground">
           {title}

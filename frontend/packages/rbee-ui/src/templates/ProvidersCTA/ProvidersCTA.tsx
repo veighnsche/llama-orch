@@ -1,39 +1,39 @@
-import { Button } from '@rbee/ui/atoms/Button'
-import { StatsGrid } from '@rbee/ui/molecules'
-import type { LucideIcon } from 'lucide-react'
-import Image from 'next/image'
-import type * as React from 'react'
+import { Button } from "@rbee/ui/atoms/Button";
+import { StatsGrid } from "@rbee/ui/molecules";
+import type { ReactNode } from 'react';
+import Image from "next/image";
+import type * as React from "react";
 
 // ────────────────────────────────────────────────────────────────────────────
 // Types
 // ────────────────────────────────────────────────────────────────────────────
 
 export type ProvidersCTAStat = {
-  icon: LucideIcon
-  value: string
-  label: string
-}
+  icon: React.ReactNode;
+  value: string;
+  label: string;
+};
 
 export type ProvidersCTAProps = {
-  badgeIcon: React.ReactNode
-  badgeText: string
-  title: string
-  subtitle: string
+  badgeIcon: React.ReactNode;
+  badgeText: string;
+  title: string;
+  subtitle: string;
   primaryCTA: {
-    label: string
-    ariaLabel: string
-  }
+    label: string;
+    ariaLabel: string;
+  };
   secondaryCTA: {
-    label: string
-    ariaLabel: string
-  }
-  disclaimerText: string
-  stats: ProvidersCTAStat[]
+    label: string;
+    ariaLabel: string;
+  };
+  disclaimerText: string;
+  stats: ProvidersCTAStat[];
   backgroundImage: {
-    src: string
-    alt: string
-  }
-}
+    src: string;
+    alt: string;
+  };
+};
 
 // ────────────────────────────────────────────────────────────────────────────
 // Main Component
@@ -92,11 +92,16 @@ export function ProvidersCTA({
             {badgeText}
           </div>
 
-          <h2 id="providers-cta-h2" className="mb-6 text-balance text-4xl font-bold text-foreground lg:text-5xl">
+          <h2
+            id="providers-cta-h2"
+            className="mb-6 text-balance text-4xl font-bold text-foreground lg:text-5xl"
+          >
             {title}
           </h2>
 
-          <p className="mx-auto mb-8 max-w-2xl text-balance text-lg text-muted-foreground">{subtitle}</p>
+          <p className="mx-auto mb-8 max-w-2xl text-balance text-lg text-muted-foreground">
+            {subtitle}
+          </p>
         </div>
 
         {/* CTA Actions */}
@@ -123,7 +128,9 @@ export function ProvidersCTA({
         </div>
 
         {/* Micro-credibility */}
-        <p className="mb-10 text-xs text-muted-foreground/70">{disclaimerText}</p>
+        <p className="mb-10 text-xs text-muted-foreground/70">
+          {disclaimerText}
+        </p>
 
         {/* Reassurance Bar */}
         <div
@@ -134,5 +141,5 @@ export function ProvidersCTA({
         </div>
       </div>
     </section>
-  )
+  );
 }

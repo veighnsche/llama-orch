@@ -3,14 +3,13 @@
 import { Badge, Card, CardContent } from '@rbee/ui/atoms'
 import { IconCardHeader } from '@rbee/ui/molecules'
 import { cn } from '@rbee/ui/utils'
-import type { LucideIcon } from 'lucide-react'
-import { ChevronRight } from 'lucide-react'
 import type { ReactNode } from 'react'
+import { ChevronRight } from 'lucide-react'
 
 export interface FeatureGridCard {
   href: string
   ariaLabel: string
-  icon: LucideIcon
+  icon: ReactNode
   iconTone: 'chart-2' | 'chart-3' | 'primary' | 'muted'
   title: string
   subtitle: string
@@ -59,7 +58,7 @@ export function AdditionalFeaturesGridTemplate({ rows, className }: AdditionalFe
                   >
                     <CardContent className="p-6">
                       <IconCardHeader
-                        icon={<card.icon className="w-6 h-6" />}
+                        icon={card.icon}
                         iconTone={card.iconTone}
                         iconSize="sm"
                         title={card.title}

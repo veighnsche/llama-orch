@@ -3,7 +3,6 @@
 import { Alert, Badge, Card, CardContent } from '@rbee/ui/atoms'
 import { IconPlate } from '@rbee/ui/molecules'
 import { cn } from '@rbee/ui/utils'
-import type { LucideIcon } from 'lucide-react'
 import { Check, CheckCircle2, Database } from 'lucide-react'
 import type { ReactNode } from 'react'
 

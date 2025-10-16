@@ -50,7 +50,7 @@ import Image from 'next/image'
  */
 export const enterpriseHeroProps: EnterpriseHeroTemplateProps = {
   badge: {
-    icon: Shield,
+    icon: <Shield className="size-6" />,
     text: 'EU-Native AI Infrastructure',
   },
   heading: 'AI Infrastructure That Meets Your Compliance Requirements',
@@ -390,7 +390,7 @@ export const enterpriseComplianceProps: EnterpriseComplianceTemplateProps = {
   },
   pillars: [
     {
-      icon: Globe,
+      icon: <Globe className="size-6" />,
       title: 'GDPR',
       subtitle: 'EU Regulation',
       titleId: 'compliance-gdpr',
@@ -413,7 +413,7 @@ export const enterpriseComplianceProps: EnterpriseComplianceTemplateProps = {
       },
     },
     {
-      icon: Shield,
+      icon: <Shield className="size-6" />,
       title: 'SOC2',
       subtitle: 'US Standard',
       titleId: 'compliance-soc2',
@@ -431,7 +431,7 @@ export const enterpriseComplianceProps: EnterpriseComplianceTemplateProps = {
       },
     },
     {
-      icon: Lock,
+      icon: <Lock className="size-6" />,
       title: 'ISO 27001',
       subtitle: 'International Standard',
       titleId: 'compliance-iso27001',
@@ -498,7 +498,7 @@ export const enterpriseSecurityProps: EnterpriseSecurityTemplateProps = {
   },
   securityCrates: [
     {
-      icon: Lock,
+      icon: <Lock className="size-6" />,
       title: 'auth-min: Zero-Trust Authentication',
       subtitle: 'The Trickster Guardians',
       intro:
@@ -512,7 +512,7 @@ export const enterpriseSecurityProps: EnterpriseSecurityTemplateProps = {
       docsHref: '/docs/security/auth-min',
     },
     {
-      icon: Eye,
+      icon: <Eye className="size-6" />,
       title: 'audit-logging: Compliance Engine',
       subtitle: 'Legally Defensible Proof',
       intro: 'Append-only audit trail with 32 event types. Hash-chain tamper detection. 7-year retention for GDPR.',
@@ -525,7 +525,7 @@ export const enterpriseSecurityProps: EnterpriseSecurityTemplateProps = {
       docsHref: '/docs/security/audit-logging',
     },
     {
-      icon: Shield,
+      icon: <Shield className="size-6" />,
       title: 'input-validation: First Line of Defense',
       subtitle: 'Trust No Input',
       intro: 'Prevents injection and exhaustion. Validates identifiers, prompts, paths—before execution.',
@@ -538,7 +538,7 @@ export const enterpriseSecurityProps: EnterpriseSecurityTemplateProps = {
       docsHref: '/docs/security/input-validation',
     },
     {
-      icon: Server,
+      icon: <Server className="size-6" />,
       title: 'secrets-management: Credential Guardian',
       subtitle: 'Never in Environment',
       intro: 'File-scoped secrets with zeroization and systemd credentials. Timing-safe verification.',
@@ -551,7 +551,7 @@ export const enterpriseSecurityProps: EnterpriseSecurityTemplateProps = {
       docsHref: '/docs/security/secrets-management',
     },
     {
-      icon: KeyRound,
+      icon: <KeyRound className="size-6" />,
       title: 'jwt-guardian: Token Lifecycle Manager',
       subtitle: 'Stateless Yet Secure',
       intro: 'RS256 signature validation with clock-skew tolerance. Revocation lists and short-lived refresh tokens.',
@@ -564,7 +564,7 @@ export const enterpriseSecurityProps: EnterpriseSecurityTemplateProps = {
       docsHref: '/docs/security/jwt-guardian',
     },
     {
-      icon: Clock,
+      icon: <Clock className="size-6" />,
       title: 'deadline-propagation: Performance Enforcer',
       subtitle: 'Every Millisecond Counts',
       intro: 'Propagates time budgets end-to-end. Aborts doomed work to protect SLOs.',
@@ -715,7 +715,7 @@ export const enterpriseUseCasesProps: EnterpriseUseCasesTemplateProps = {
   },
   industryCases: [
     {
-      icon: Building2,
+      icon: <Building2 className="size-6" />,
       industry: 'Financial Services',
       segments: 'Banks, Insurance, FinTech',
       badges: ['PCI-DSS', 'GDPR', 'SOC2'],
@@ -735,7 +735,7 @@ export const enterpriseUseCasesProps: EnterpriseUseCasesTemplateProps = {
       href: '/industries/finance',
     },
     {
-      icon: Heart,
+      icon: <Heart className="size-6" />,
       industry: 'Healthcare',
       segments: 'Hospitals, MedTech, Pharma',
       badges: ['HIPAA', 'GDPR Art. 9'],
@@ -750,7 +750,7 @@ export const enterpriseUseCasesProps: EnterpriseUseCasesTemplateProps = {
       href: '/industries/healthcare',
     },
     {
-      icon: Scale,
+      icon: <Scale className="size-6" />,
       industry: 'Legal Services',
       segments: 'Law Firms, LegalTech',
       badges: ['GDPR', 'Legal Hold'],
@@ -760,7 +760,7 @@ export const enterpriseUseCasesProps: EnterpriseUseCasesTemplateProps = {
       href: '/industries/legal',
     },
     {
-      icon: Shield,
+      icon: <Shield className="size-6" />,
       industry: 'Government',
       segments: 'Public Sector, Defense',
       badges: ['ISO 27001', 'Sovereignty'],

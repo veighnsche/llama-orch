@@ -3,7 +3,6 @@
 import { Badge } from '@rbee/ui/atoms'
 import { PlaybookHeader, PlaybookItem, StatusKPI, TerminalWindow } from '@rbee/ui/molecules'
 import { cn } from '@rbee/ui/utils'
-import type { LucideIcon } from 'lucide-react'
 import type { ReactNode } from 'react'
 import { useCallback } from 'react'
 
@@ -18,7 +17,7 @@ export interface PlaybookCheck {
 }
 
 export interface PlaybookCategory {
-  icon: LucideIcon
+  icon: ReactNode
   color: 'warning' | 'primary' | 'chart-2' | 'chart-3'
   title: string
   checkCount: number
@@ -29,7 +28,7 @@ export interface PlaybookCategory {
 }
 
 export interface StatusKPIData {
-  icon: LucideIcon
+  icon: ReactNode
   color: 'chart-3' | 'primary' | 'chart-2'
   label: string
   value: string

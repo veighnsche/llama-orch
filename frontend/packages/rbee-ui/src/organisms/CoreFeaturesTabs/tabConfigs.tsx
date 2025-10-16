@@ -7,7 +7,7 @@ import type { CoreFeaturesTabsProps } from './CoreFeaturesTabs'
 export const defaultTabConfigs: CoreFeaturesTabsProps['tabs'] = [
   {
     value: 'api',
-    icon: Code,
+    icon: <Code className="size-6" />,
     label: 'OpenAI-Compatible',
     mobileLabel: 'API',
     subtitle: 'Drop-in API',
@@ -32,7 +32,7 @@ export OPENAI_API_BASE=http://localhost:8080/v1`}
   },
   {
     value: 'gpu',
-    icon: Cpu,
+    icon: <Cpu className="size-6" />,
     label: 'Multi-GPU',
     mobileLabel: 'GPU',
     subtitle: 'Use every GPU',
@@ -58,7 +58,7 @@ export OPENAI_API_BASE=http://localhost:8080/v1`}
   },
   {
     value: 'scheduler',
-    icon: Gauge,
+    icon: <Gauge className="size-6" />,
     label: 'Programmable scheduler (Rhai)',
     mobileLabel: 'Rhai',
     subtitle: 'Route with Rhai',
@@ -88,7 +88,7 @@ else {
   },
   {
     value: 'sse',
-    icon: Zap,
+    icon: <Zap className="size-6" />,
     label: 'Task-based API with SSE',
     mobileLabel: 'SSE',
     subtitle: 'Live job stream',

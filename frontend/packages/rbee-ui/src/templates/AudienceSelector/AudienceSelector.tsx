@@ -3,11 +3,12 @@
 import { Badge } from '@rbee/ui/atoms/Badge'
 import { ComplianceShield, DevGrid, GpuMarket } from '@rbee/ui/icons'
 import { AudienceCard } from '@rbee/ui/molecules'
-import { ChevronRight, Code2, type LucideIcon, Server, Shield } from 'lucide-react'
+import { ChevronRight, Code2, Server, Shield } from 'lucide-react'
 import Link from 'next/link'
+import type { ReactNode } from 'react'
 
 export interface AudienceCardData {
-  icon: LucideIcon
+  icon: ReactNode
   category: string
   title: string
   description: string

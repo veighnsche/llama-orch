@@ -81,7 +81,7 @@ const useCasesPrimaryFilters: UseCasePrimaryFilterItem[] = [
 
 const useCasesPrimaryItems: UseCasePrimaryItem[] = [
   {
-    icon: Laptop,
+    icon: <Laptop className="size-6" />,
     color: 'chart-2',
     title: 'Solo Developer',
     scenario:
@@ -94,7 +94,7 @@ const useCasesPrimaryItems: UseCasePrimaryItem[] = [
     anchor: 'developers',
   },
   {
-    icon: Users,
+    icon: <Users className="size-6" />,
     color: 'primary',
     title: 'Small Team Startup',
     scenario:
@@ -107,7 +107,7 @@ const useCasesPrimaryItems: UseCasePrimaryItem[] = [
     badge: 'Most Popular',
   },
   {
-    icon: Home,
+    icon: <Home className="size-6" />,
     color: 'chart-3',
     title: 'Homelab Builder',
     scenario:
@@ -120,7 +120,7 @@ const useCasesPrimaryItems: UseCasePrimaryItem[] = [
     anchor: 'homelab',
   },
   {
-    icon: Building,
+    icon: <Building className="size-6" />,
     color: 'chart-4',
     title: 'Enterprise',
     scenario:
@@ -134,7 +134,7 @@ const useCasesPrimaryItems: UseCasePrimaryItem[] = [
     badge: 'GDPR',
   },
   {
-    icon: Briefcase,
+    icon: <Briefcase className="size-6" />,
     color: 'primary',
     title: 'Freelance Developer',
     scenario:
@@ -146,7 +146,7 @@ const useCasesPrimaryItems: UseCasePrimaryItem[] = [
     highlights: ['Client confidentiality', 'Pro-grade tools', 'Zero subscriptions'],
   },
   {
-    icon: GraduationCap,
+    icon: <GraduationCap className="size-6" />,
     color: 'chart-2',
     title: 'Research Lab',
     scenario:
@@ -158,7 +158,7 @@ const useCasesPrimaryItems: UseCasePrimaryItem[] = [
     highlights: ['Maximize budget', 'Reproducible runs', 'No vendor lock-in'],
   },
   {
-    icon: Code,
+    icon: <Code className="size-6" />,
     color: 'chart-3',
     title: 'Open Source Maintainer',
     scenario:
@@ -170,7 +170,7 @@ const useCasesPrimaryItems: UseCasePrimaryItem[] = [
     highlights: ['Sustainable tooling', 'Community-aligned', 'No ongoing fees'],
   },
   {
-    icon: Server,
+    icon: <Server className="size-6" />,
     color: 'chart-4',
     title: 'GPU Provider',
     scenario:
@@ -216,7 +216,7 @@ const useCasesIndustryFilters: UseCaseIndustryFilterItem[] = [
 const useCasesIndustryItems: IndustryCardProps[] = [
   {
     title: 'Financial Services',
-    icon: Banknote,
+    icon: <Banknote className="size-6" />,
     color: 'primary',
     badge: 'GDPR',
     copy: 'GDPR-ready with audit trails and data residency. Run AI code review and risk analysis without sending financial data to external APIs.',
@@ -224,7 +224,7 @@ const useCasesIndustryItems: IndustryCardProps[] = [
   },
   {
     title: 'Healthcare',
-    icon: Heart,
+    icon: <Heart className="size-6" />,
     color: 'chart-2',
     badge: 'HIPAA',
     copy: 'HIPAA-compliant by design. Patient data stays on your network while AI assists with medical coding, documentation, and research.',
@@ -232,14 +232,14 @@ const useCasesIndustryItems: IndustryCardProps[] = [
   },
   {
     title: 'Legal',
-    icon: Scale,
+    icon: <Scale className="size-6" />,
     color: 'chart-3',
     copy: 'Preserve attorney–client privilege. Perform document/contract analysis and legal research with AI—without client data leaving your environment.',
     anchor: 'legal',
   },
   {
     title: 'Government',
-    icon: Landmark,
+    icon: <Landmark className="size-6" />,
     color: 'chart-4',
     badge: 'ITAR',
     copy: 'Sovereign, no foreign cloud dependency. Full auditability and policy-enforced routing to meet government security standards.',
@@ -247,7 +247,7 @@ const useCasesIndustryItems: IndustryCardProps[] = [
   },
   {
     title: 'Education',
-    icon: GraduationCap,
+    icon: <GraduationCap className="size-6" />,
     color: 'chart-2',
     badge: 'FERPA',
     copy: 'Protect student information (FERPA-friendly). AI tutoring, grading assistance, and research tools with zero third-party data sharing.',
@@ -255,7 +255,7 @@ const useCasesIndustryItems: IndustryCardProps[] = [
   },
   {
     title: 'Manufacturing',
-    icon: Factory,
+    icon: <Factory className="size-6" />,
     color: 'primary',
     copy: 'Safeguard IP and trade secrets. AI-assisted CAD review, quality control, and process optimization—no exposure of proprietary designs.',
     anchor: 'manufacturing',

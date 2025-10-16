@@ -3,7 +3,7 @@ import { BulletListItem } from '@rbee/ui/molecules/BulletListItem'
 import { ButtonCardFooter } from '@rbee/ui/molecules/ButtonCardFooter'
 import { cn } from '@rbee/ui/utils'
 import { cva, type VariantProps } from 'class-variance-authority'
-import type { LucideIcon } from 'lucide-react'
+import type { ReactNode } from 'react'
 
 const audienceCardVariants = cva('', {
   variants: {
@@ -95,7 +95,7 @@ const textVariants = cva('', {
 })
 
 export interface AudienceCardProps extends VariantProps<typeof audienceCardVariants> {
-  icon: LucideIcon
+  icon: ReactNode
   category: string
   title: string
   description: string
@@ -138,7 +138,7 @@ export function AudienceCard({
           {/* Icons side-by-side at top */}
           <div className="mb-6 flex items-top gap-3 min-h-[64px]">
             <div className={iconBgVariants({ color })}>
-              <Icon className="h-7 w-7 text-primary-foreground" aria-hidden="true" />
+              <div className="h-7 w-7 text-primary-foreground" aria-hidden="true">{Icon}</div>
             </div>
             {imageSlot && (
               <div className="h-14 w-14 shrink-0 overflow-hidden rounded-lg bg-card ring-1 ring-border">

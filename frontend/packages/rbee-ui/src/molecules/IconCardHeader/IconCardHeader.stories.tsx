@@ -103,7 +103,7 @@ type Story = StoryObj<typeof IconCardHeader>
 
 export const Default: Story = {
   args: {
-    icon: Globe,
+    icon: <Globe className="size-6" />,
     title: 'GDPR',
     subtitle: 'EU Regulation',
     titleId: 'example-gdpr',
@@ -112,7 +112,7 @@ export const Default: Story = {
 
 export const WithoutSubtitle: Story = {
   args: {
-    icon: Zap,
+    icon: <Zap className="size-6" />,
     title: 'Performance',
     titleId: 'example-performance',
   },
@@ -120,7 +120,7 @@ export const WithoutSubtitle: Story = {
 
 export const SmallIcon: Story = {
   args: {
-    icon: Shield,
+    icon: <Shield className="size-6" />,
     title: 'Security',
     subtitle: 'Enterprise Grade',
     iconSize: 'sm',
@@ -130,7 +130,7 @@ export const SmallIcon: Story = {
 
 export const MutedTone: Story = {
   args: {
-    icon: Database,
+    icon: <Database className="size-6" />,
     title: 'Storage',
     subtitle: 'Encrypted at Rest',
     iconTone: 'muted',
@@ -140,7 +140,7 @@ export const MutedTone: Story = {
 
 export const CustomTitleSize: Story = {
   args: {
-    icon: Lock,
+    icon: <Lock className="size-6" />,
     title: 'ISO 27001',
     subtitle: 'International Standard',
     titleClassName: 'text-xl',
@@ -152,7 +152,7 @@ export const InCard: Story = {
   render: () => (
     <div className="w-96">
       <Card className="rounded-2xl border-border bg-card/60 p-8">
-        <IconCardHeader icon={Globe} title="GDPR" subtitle="EU Regulation" titleId="card-example-gdpr" />
+        <IconCardHeader icon={<Globe className="size-6" />} title="GDPR" subtitle="EU Regulation" titleId="card-example-gdpr" />
         <CardContent className="p-0">
           <p className="text-sm text-foreground/85">
             Built from the ground up to meet GDPR requirements with data processing agreements, right to erasure, and
@@ -175,21 +175,21 @@ export const MultipleCards: Story = {
   render: () => (
     <div className="grid max-w-4xl gap-6 md:grid-cols-3">
       <Card className="rounded-2xl border-border bg-card/60 p-6">
-        <IconCardHeader icon={Globe} title="GDPR" subtitle="EU Regulation" titleId="multi-gdpr" />
+        <IconCardHeader icon={<Globe className="size-6" />} title="GDPR" subtitle="EU Regulation" titleId="multi-gdpr" />
         <CardContent className="p-0">
           <p className="text-sm text-muted-foreground">EU data protection compliance</p>
         </CardContent>
       </Card>
 
       <Card className="rounded-2xl border-border bg-card/60 p-6">
-        <IconCardHeader icon={Shield} title="SOC2" subtitle="US Standard" titleId="multi-soc2" />
+        <IconCardHeader icon={<Shield className="size-6" />} title="SOC2" subtitle="US Standard" titleId="multi-soc2" />
         <CardContent className="p-0">
           <p className="text-sm text-muted-foreground">Security and availability controls</p>
         </CardContent>
       </Card>
 
       <Card className="rounded-2xl border-border bg-card/60 p-6">
-        <IconCardHeader icon={Lock} title="ISO 27001" subtitle="International" titleId="multi-iso" />
+        <IconCardHeader icon={<Lock className="size-6" />} title="ISO 27001" subtitle="International" titleId="multi-iso" />
         <CardContent className="p-0">
           <p className="text-sm text-muted-foreground">Information security management</p>
         </CardContent>

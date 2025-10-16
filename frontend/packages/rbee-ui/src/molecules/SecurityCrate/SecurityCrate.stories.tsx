@@ -102,7 +102,7 @@ type Story = StoryObj<typeof SecurityCrate>
 
 export const Default: Story = {
   args: {
-    icon: Lock,
+    icon: <Lock className="size-6" />,
     title: 'auth-min: Zero-Trust Authentication',
     subtitle: 'The Trickster Guardians',
     intro: 'Minimal authentication with maximum security. Every request is verified, every token is short-lived.',
@@ -118,7 +118,7 @@ export const Default: Story = {
 
 export const WithIcon: Story = {
   args: {
-    icon: Shield,
+    icon: <Shield className="size-6" />,
     title: 'audit-core: Compliance Logging',
     subtitle: 'The Watchers',
     intro: 'Every action is logged, every change is tracked. Immutable audit trails for compliance.',
@@ -129,7 +129,7 @@ export const WithIcon: Story = {
 
 export const WithDetails: Story = {
   args: {
-    icon: Eye,
+    icon: <Eye className="size-6" />,
     title: 'secrets-vault: Encrypted Secrets',
     subtitle: 'The Keepers',
     intro: 'Secrets are encrypted at rest and in transit. Access is logged and audited.',
@@ -152,7 +152,7 @@ export const InSecurityContext: Story = {
       <div className="mb-4 text-sm text-muted-foreground">Example: SecurityCrate in EnterpriseSecurity organism</div>
       <div className="grid gap-6 md:grid-cols-3">
         <SecurityCrate
-          icon={Lock}
+          icon={<Lock className="size-6" />}
           title="auth-min"
           subtitle="Zero-Trust Authentication"
           intro="Minimal authentication with maximum security. Every request is verified."
@@ -160,7 +160,7 @@ export const InSecurityContext: Story = {
           docsHref="/docs/security/auth-min"
         />
         <SecurityCrate
-          icon={Shield}
+          icon={<Shield className="size-6" />}
           title="audit-core"
           subtitle="Compliance Logging"
           intro="Every action is logged, every change is tracked. Immutable audit trails."
@@ -168,7 +168,7 @@ export const InSecurityContext: Story = {
           docsHref="/docs/security/audit-core"
         />
         <SecurityCrate
-          icon={Eye}
+          icon={<Eye className="size-6" />}
           title="secrets-vault"
           subtitle="Encrypted Secrets"
           intro="Secrets are encrypted at rest and in transit. Access is logged and audited."

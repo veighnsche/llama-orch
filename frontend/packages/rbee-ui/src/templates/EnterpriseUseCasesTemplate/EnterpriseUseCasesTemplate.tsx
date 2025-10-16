@@ -1,6 +1,6 @@
 import { Button } from '@rbee/ui/atoms/Button'
 import { IndustryCaseCard } from '@rbee/ui/molecules'
-import type { LucideIcon } from 'lucide-react'
+import type { ReactNode } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
 
@@ -9,7 +9,7 @@ import Link from 'next/link'
 // ──────────────────────────────────────────────────────────────────────────────
 
 export type IndustryCase = {
-  icon: LucideIcon
+  icon: ReactNode
   industry: string
   segments: string
   badges: string[]

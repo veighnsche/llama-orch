@@ -40,10 +40,10 @@ export const pricingHeroProps: PricingHeroTemplateProps = {
     text: 'Talk to Sales',
   },
   assuranceItems: [
-    { text: 'Full orchestrator on every tier', icon: Sparkles },
-    { text: 'No feature gates or limits', icon: Sparkles },
-    { text: 'OpenAI-compatible API', icon: Sparkles },
-    { text: 'Cancel anytime', icon: Sparkles },
+    { text: 'Full orchestrator on every tier', icon: <Sparkles className="size-6" /> },
+    { text: 'No feature gates or limits', icon: <Sparkles className="size-6" /> },
+    { text: 'OpenAI-compatible API', icon: <Sparkles className="size-6" /> },
+    { text: 'Cancel anytime', icon: <Sparkles className="size-6" /> },
   ],
   visual: (
     <PricingScaleVisual

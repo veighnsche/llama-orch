@@ -110,7 +110,7 @@ type Story = StoryObj<typeof IndustryCaseCard>
 
 export const Default: Story = {
   args: {
-    icon: Building2,
+    icon: <Building2 className="size-6" />,
     industry: 'Financial Services',
     segments: 'Banks, Insurance, FinTech',
     summary: 'Process sensitive financial data while maintaining strict regulatory compliance.',
@@ -129,7 +129,7 @@ export const Default: Story = {
 
 export const WithIcon: Story = {
   args: {
-    icon: Heart,
+    icon: <Heart className="size-6" />,
     industry: 'Healthcare',
     segments: 'Hospitals, Clinics, Research',
     summary: 'Analyze patient data and medical records with HIPAA and GDPR compliance.',
@@ -141,7 +141,7 @@ export const WithIcon: Story = {
 
 export const WithMetrics: Story = {
   args: {
-    icon: Scale,
+    icon: <Scale className="size-6" />,
     industry: 'Legal Services',
     segments: 'Law Firms, Courts, Compliance',
     summary: 'Analyze legal documents and contracts while maintaining attorney-client privilege.',
@@ -168,7 +168,7 @@ export const InUseCasesContext: Story = {
       <div className="mb-4 text-sm text-muted-foreground">Example: IndustryCaseCard in EnterpriseUseCases organism</div>
       <div className="grid gap-6 md:grid-cols-2">
         <IndustryCaseCard
-          icon={Building2}
+          icon={<Building2 className="size-6" />}
           industry="Financial Services"
           segments="Banks, Insurance, FinTech"
           summary="Process sensitive financial data while maintaining strict regulatory compliance."
@@ -186,7 +186,7 @@ export const InUseCasesContext: Story = {
           href="/industries/financial"
         />
         <IndustryCaseCard
-          icon={Heart}
+          icon={<Heart className="size-6" />}
           industry="Healthcare"
           segments="Hospitals, Clinics, Research"
           summary="Analyze patient data and medical records with HIPAA and GDPR compliance."

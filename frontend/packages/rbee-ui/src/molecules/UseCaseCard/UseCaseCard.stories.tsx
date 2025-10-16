@@ -109,7 +109,7 @@ type Story = StoryObj<typeof UseCaseCard>
 
 export const Default: Story = {
   args: {
-    icon: MessageSquare,
+    icon: <MessageSquare className="size-6" />,
     iconTone: 'primary',
     title: 'Customer Support Chatbots',
     scenario: 'Your support team is overwhelmed with repetitive questions, and cloud AI services expose customer data.',
@@ -121,7 +121,7 @@ export const Default: Story = {
 
 export const WithIcon: Story = {
   args: {
-    icon: FileText,
+    icon: <FileText className="size-6" />,
     iconTone: 'primary',
     title: 'Document Analysis',
     scenario: 'Legal teams spend hours reviewing contracts and compliance documents manually.',
@@ -132,7 +132,7 @@ export const WithIcon: Story = {
 
 export const WithOutcome: Story = {
   args: {
-    icon: Code,
+    icon: <Code className="size-6" />,
     iconTone: 'primary',
     title: 'Code Generation & Review',
     scenario: "Developers need AI assistance but can't send proprietary code to external services.",
@@ -149,7 +149,7 @@ export const InUseCasesContext: Story = {
       <div className="mb-4 text-sm text-muted-foreground">Example: UseCaseCard in UseCasesPrimary organism</div>
       <div className="grid gap-6 md:grid-cols-2">
         <UseCaseCard
-          icon={MessageSquare}
+          icon={<MessageSquare className="size-6" />}
           iconTone="primary"
           title="Customer Support Chatbots"
           scenario="Your support team is overwhelmed with repetitive questions, and cloud AI services expose customer data."
@@ -158,7 +158,7 @@ export const InUseCasesContext: Story = {
           anchor="chatbots"
         />
         <UseCaseCard
-          icon={Search}
+          icon={<Search className="size-6" />}
           iconTone="primary"
           title="Semantic Search"
           scenario="Traditional keyword search misses relevant documents and frustrates users."

@@ -1,7 +1,6 @@
 'use client'
 
 import { UseCaseCard } from '@rbee/ui/molecules'
-import type { LucideIcon } from 'lucide-react'
 import type { ReactNode } from 'react'
 
 // ────────────────────────────────────────────────────────────────────────────
@@ -9,7 +8,7 @@ import type { ReactNode } from 'react'
 // ────────────────────────────────────────────────────────────────────────────
 
 export interface UseCasePrimaryItem {
-  icon: LucideIcon
+  icon: ReactNode
   color: 'chart-2' | 'primary' | 'chart-3' | 'chart-4'
   title: string
   scenario: string
@@ -60,7 +59,7 @@ export interface UseCasesPrimaryTemplateProps {
  *   ]}
  *   useCases={[
  *     {
- *       icon: Laptop,
+ *       icon: <Laptop className="size-6" />,
  *       color: 'chart-2',
  *       title: 'Solo Developer',
  *       scenario: '...',

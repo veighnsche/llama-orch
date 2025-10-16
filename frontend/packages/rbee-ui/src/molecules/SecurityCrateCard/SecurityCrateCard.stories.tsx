@@ -28,7 +28,7 @@ type Story = StoryObj<typeof SecurityCrateCard>
 
 export const Default: Story = {
   args: {
-    icon: Shield,
+    icon: <Shield className="size-6" />,
     title: 'Zero-Trust Auth',
     subtitle: 'Authentication',
     description: 'Every request requires valid credentials. No implicit trust.',
@@ -38,7 +38,7 @@ export const Default: Story = {
 
 export const WithIcon: Story = {
   args: {
-    icon: Shield,
+    icon: <Shield className="size-6" />,
     title: 'Audit Trails',
     subtitle: 'Compliance',
     description: 'Immutable logs for all operations.',
@@ -48,7 +48,7 @@ export const WithIcon: Story = {
 
 export const WithDetails: Story = {
   args: {
-    icon: Shield,
+    icon: <Shield className="size-6" />,
     title: 'Data Encryption',
     subtitle: 'Security',
     description: 'End-to-end encryption for all data.',
@@ -58,7 +58,7 @@ export const WithDetails: Story = {
 
 export const Highlighted: Story = {
   args: {
-    icon: Shield,
+    icon: <Shield className="size-6" />,
     title: 'GDPR Compliance',
     subtitle: 'Regulatory',
     description: 'Full GDPR compliance out of the box.',

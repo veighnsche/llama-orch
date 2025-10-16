@@ -139,17 +139,17 @@ export const whatIsRbeeProps: WhatIsRbeeProps = {
     'is an open-source AI orchestration platform that unifies every computer in your home or office into a single, OpenAI-compatible AI cluster—private, controllable, and yours forever.',
   features: [
     {
-      icon: Zap,
+      icon: <Zap className="size-6" />,
       title: 'Independence',
       description: 'Build on your hardware. No surprise model or pricing changes.',
     },
     {
-      icon: Shield,
+      icon: <Shield className="size-6" />,
       title: 'Privacy',
       description: 'Code and data never leave your network.',
     },
     {
-      icon: Cpu,
+      icon: <Cpu className="size-6" />,
       title: 'All GPUs together',
       description: 'CUDA, Metal, and CPU—scheduled as one.',
     },
@@ -198,7 +198,7 @@ export const audienceSelectorContainerProps: Omit<TemplateContainerProps, 'child
 export const audienceSelectorProps: AudienceSelectorProps = {
   cards: [
     {
-      icon: Code2,
+      icon: <Code2 className="size-6" />,
       category: 'For Developers',
       title: 'Build on Your Hardware',
       description: 'Power Zed, Cursor, and your own agents on YOUR GPUs. OpenAI-compatible—drop-in, zero API fees.',
@@ -219,7 +219,7 @@ export const audienceSelectorProps: AudienceSelectorProps = {
       decisionLabel: 'Code with AI locally',
     },
     {
-      icon: Server,
+      icon: <Server className="size-6" />,
       category: 'For GPU Owners',
       title: 'Monetize Your Hardware',
       description: 'Join the rbee marketplace and earn from gaming rigs to server farms—set price, stay in control.',
@@ -231,7 +231,7 @@ export const audienceSelectorProps: AudienceSelectorProps = {
       decisionLabel: 'Earn from idle GPUs',
     },
     {
-      icon: Shield,
+      icon: <Shield className="size-6" />,
       category: 'For Enterprise',
       title: 'Compliance & Security',
       description: 'EU-native compliance, audit trails, and zero-trust architecture—from day one.',
@@ -472,7 +472,7 @@ export const featuresTabsProps: FeaturesTabsProps = {
   tabs: [
     {
       value: 'api',
-      icon: Code,
+      icon: <Code className="size-6" />,
       label: 'OpenAI-Compatible',
       mobileLabel: 'API',
       subtitle: 'Drop-in API',
@@ -497,7 +497,7 @@ export OPENAI_API_BASE=http://localhost:8080/v1`}
     },
     {
       value: 'gpu',
-      icon: Cpu,
+      icon: <Cpu className="size-6" />,
       label: 'Multi-GPU',
       mobileLabel: 'GPU',
       subtitle: 'Use every GPU',
@@ -523,7 +523,7 @@ export OPENAI_API_BASE=http://localhost:8080/v1`}
     },
     {
       value: 'scheduler',
-      icon: Gauge,
+      icon: <Gauge className="size-6" />,
       label: 'Programmable scheduler (Rhai)',
       mobileLabel: 'Rhai',
       subtitle: 'Route with Rhai',
@@ -553,7 +553,7 @@ else {
     },
     {
       value: 'sse',
-      icon: Zap,
+      icon: <Zap className="size-6" />,
       label: 'Task-based API with SSE',
       mobileLabel: 'SSE',
       subtitle: 'Live job stream',

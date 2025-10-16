@@ -3,7 +3,6 @@
 import { Badge, Card, CardContent } from '@rbee/ui/atoms'
 import { BulletListItem, CrateCard, IconCardHeader } from '@rbee/ui/molecules'
 import { cn } from '@rbee/ui/utils'
-import type { LucideIcon } from 'lucide-react'
 import { Lock, Shield } from 'lucide-react'
 import type { ReactNode } from 'react'
 
