@@ -1,1 +1,1 @@
-export { homeHeroProps } from './HomeContent'
+export { homeHeroProps, whatIsRbeeProps } from './HomeContent'

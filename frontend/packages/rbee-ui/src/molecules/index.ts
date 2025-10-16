@@ -52,6 +52,7 @@ export * from './StepCard/StepCard'
 export * from './StepListItem/StepListItem'
 export * from './StepNumber/StepNumber'
 export * from './TabButton/TabButton'
+export * from './TemplateContainer/TemplateContainer'
 // Tables - grouped because they work TOGETHER to compose table organisms
 export * from './Tables/ComparisonTableRow/ComparisonTableRow'
 export * from './Tables/MatrixCard/MatrixCard'
