@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react'
+import { testimonialsSectionProps } from '@rbee/ui/pages/DevelopersPage'
 import { TestimonialsSection } from './SocialProofSection'
 
 const meta = {
@@ -334,6 +335,17 @@ export const MetricsOnly: Story = {
       description: {
         story:
           'Stats-only variant without testimonials. Useful for tighter layouts or when testimonials are shown elsewhere.',
+      },
+    },
+  },
+}
+
+export const OnDevelopersPage: Story = {
+  args: testimonialsSectionProps,
+  parameters: {
+    docs: {
+      description: {
+        story: '**Developers page context** — Testimonials from developers who value independence with stats (GitHub stars, installations, GPUs orchestrated).',
       },
     },
   },

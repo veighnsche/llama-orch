@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react'
+import { developersHowItWorksProps } from '@rbee/ui/pages/DevelopersPage'
 import { HowItWorksSection } from './HowItWorksSection'
 
 const meta = {
@@ -378,6 +379,17 @@ export const WithoutVisuals: Story = {
       description: {
         story:
           'Text-only variant without code blocks. Useful for high-level overview or when code examples might overwhelm.',
+      },
+    },
+  },
+}
+
+export const OnDevelopersPage: Story = {
+  args: developersHowItWorksProps,
+  parameters: {
+    docs: {
+      description: {
+        story: '**Developers page context** — 15-minute setup guide with terminal commands and code examples.',
       },
     },
   },

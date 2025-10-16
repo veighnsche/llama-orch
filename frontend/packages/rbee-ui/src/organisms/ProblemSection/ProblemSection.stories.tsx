@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react'
+import { problemSectionProps } from '@rbee/ui/pages/DevelopersPage'
 import { AlertTriangle, Cloud, DollarSign, Lock, Shield, TrendingDown } from 'lucide-react'
 import { ProblemSection } from './ProblemSection'
 
@@ -343,6 +344,17 @@ export const ToneVariations: Story = {
     docs: {
       description: {
         story: 'Demonstrates the three tone options: destructive, primary, and muted.',
+      },
+    },
+  },
+}
+
+export const OnDevelopersPage: Story = {
+  args: problemSectionProps,
+  parameters: {
+    docs: {
+      description: {
+        story: '**Developers page context** — Problem section highlighting risks of AI-assisted development dependency.',
       },
     },
   },

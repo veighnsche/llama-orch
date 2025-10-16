@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react'
+import { developersPricingSectionProps } from '@rbee/ui/pages/DevelopersPage'
 import { PricingSection } from './PricingSection'
 
 const meta = {
@@ -416,6 +417,17 @@ export const PricingFeatures: Story = {
     docs: {
       description: {
         story: 'Overview of the three pricing tiers and their key differentiators.',
+      },
+    },
+  },
+}
+
+export const OnDevelopersPage: Story = {
+  args: developersPricingSectionProps,
+  parameters: {
+    docs: {
+      description: {
+        story: '**Developers page context** — Pricing section variant without kicker or editorial image.',
       },
     },
   },

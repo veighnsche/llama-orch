@@ -1,4 +1,7 @@
+export * from './DevelopersPage'
+export * from './EnterprisePage'
 export * from './FeaturesPage'
 export * from './HomePage'
 export * from './PricingPage'
+export * from './ProvidersPage'
 export * from './UseCasesPage'

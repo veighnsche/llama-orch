@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react'
+import { useCasesSectionProps } from '@rbee/ui/pages/DevelopersPage'
 import { Building, Home as HomeIcon, Laptop, Users } from 'lucide-react'
 import { UseCasesSection } from './UseCasesSection'
 
@@ -318,6 +319,17 @@ export const AlternativePersonas: Story = {
 - **Regulated industry**: Focuses on compliance (healthcare/finance)
 
 **Use case**: Test with different audience segments. Agency persona may resonate with B2B visitors.`,
+      },
+    },
+  },
+}
+
+export const OnDevelopersPage: Story = {
+  args: useCasesSectionProps,
+  parameters: {
+    docs: {
+      description: {
+        story: '**Developers page context** — 5 developer use cases: AI coder, docs generators, test generators, code review agents, refactoring agents.',
       },
     },
   },

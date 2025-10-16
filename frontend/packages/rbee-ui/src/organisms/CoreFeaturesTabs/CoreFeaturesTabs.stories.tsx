@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react'
+import { coreFeatureTabsProps } from '@rbee/ui/pages/DevelopersPage'
 import { CoreFeaturesTabs } from './CoreFeaturesTabs'
 import { defaultTabConfigs } from './tabConfigs'
 
@@ -238,6 +239,17 @@ export const InteractiveDemo: Story = {
       description: {
         story:
           'Interactive demo showing tab transitions and animations. Includes analysis of tab order strategy for A/B testing.',
+      },
+    },
+  },
+}
+
+export const OnDevelopersPage: Story = {
+  args: coreFeatureTabsProps,
+  parameters: {
+    docs: {
+      description: {
+        story: '**Developers page context** — Core capabilities tabs (API, GPU, Scheduler, SSE) with interactive examples.',
       },
     },
   },

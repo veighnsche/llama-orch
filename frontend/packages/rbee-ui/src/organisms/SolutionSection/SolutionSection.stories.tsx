@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react'
+import { solutionSectionProps } from '@rbee/ui/pages/DevelopersPage'
 import { Anchor, DollarSign, Laptop, Shield } from 'lucide-react'
 import { SolutionSection } from './SolutionSection'
 
@@ -339,6 +340,17 @@ export const AlternativeBenefits: Story = {
 - Steps emphasize speed ("15 minutes") and simplicity
 
 **Use case**: Test with cost-conscious audience or developers frustrated with API rate limits.`,
+      },
+    },
+  },
+}
+
+export const OnDevelopersPage: Story = {
+  args: solutionSectionProps,
+  parameters: {
+    docs: {
+      description: {
+        story: '**Developers page context** — Solution section emphasizing developer control and OpenAI compatibility.',
       },
     },
   },

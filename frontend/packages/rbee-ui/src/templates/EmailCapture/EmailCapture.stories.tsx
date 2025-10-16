@@ -4,6 +4,8 @@ import {
   featuresEmailCaptureProps,
   useCasesEmailCaptureProps,
   pricingEmailCaptureProps,
+  developersEmailCaptureProps,
+  enterpriseEmailCaptureProps,
 } from '@rbee/ui/pages'
 import { EmailCapture } from './EmailCapture'
 
@@ -57,4 +59,24 @@ export const OnUseCasesPage: Story = {
  */
 export const OnPricingPage: Story = {
   args: pricingEmailCaptureProps,
+}
+
+/**
+ * EmailCapture as used on the Developers page
+ * - Developer-focused messaging
+ * - Build AI tools without vendor lock-in
+ * - GitHub and Discord community links
+ */
+export const OnDevelopersPage: Story = {
+  args: developersEmailCaptureProps,
+}
+
+/**
+ * EmailCapture as used on the Enterprise page
+ * - Enterprise-focused messaging
+ * - GDPR-compliant AI infrastructure
+ * - Compliance and security focus
+ */
+export const OnEnterprisePage: Story = {
+  args: enterpriseEmailCaptureProps,
 }
