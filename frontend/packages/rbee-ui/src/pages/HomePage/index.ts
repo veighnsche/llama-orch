@@ -5,6 +5,7 @@ export {
   comparisonTemplateProps,
   ctaTemplateProps,
   emailCaptureProps,
+  faqTemplateContainerProps,
   faqTemplateProps,
   featuresTabsProps,
   homeHeroProps,

@@ -1,3 +1,5 @@
+'use client'
+
 import { Badge } from "@rbee/ui/atoms";
 import {
   TemplateContainer,
@@ -40,7 +42,6 @@ import {
   type WhatIsRbeeProps,
   WhatIsRbee,
 } from "@rbee/ui/templates";
-import { CoreFeaturesTabs } from "@rbee/ui/organisms/CoreFeaturesTabs";
 import { ComplianceShield, DevGrid, GpuMarket, RbeeArch } from "@rbee/ui/icons";
 import {
   AlertTriangle,
@@ -67,6 +68,14 @@ import {
   Zap,
 } from "lucide-react";
 
+// ============================================================================
+// Props Objects (in visual order matching page composition)
+// ============================================================================
+
+/**
+ * Hero section props - Above-the-fold content with headline, terminal demo,
+ * and GPU utilization visualization
+ */
 export const homeHeroProps: HomeHeroProps = {
   badgeText: "100% Open Source • GPL-3.0-or-later",
   headlinePrefix: "AI Infrastructure.",
@@ -123,6 +132,9 @@ export const homeHeroProps: HomeHeroProps = {
   costValue: "$0.00",
 };
 
+/**
+ * "What is rbee?" section container - Layout configuration
+ */
 export const whatIsRbeeContainerProps: Omit<
   TemplateContainerProps,
   "children"
@@ -139,6 +151,10 @@ export const whatIsRbeeContainerProps: Omit<
   align: "center",
 };
 
+/**
+ * "What is rbee?" section content - Explanation with features, stats,
+ * and visual diagram
+ */
 export const whatIsRbeeProps: WhatIsRbeeProps = {
   headlinePrefix: ": your private AI infrastructure",
   headlineSuffix: "",
@@ -187,6 +203,9 @@ export const whatIsRbeeProps: WhatIsRbeeProps = {
   visualBadgeText: "Local Network",
 };
 
+/**
+ * Audience selector container - Layout configuration for persona cards
+ */
 export const audienceSelectorContainerProps: Omit<
   TemplateContainerProps,
   "children"
@@ -201,6 +220,10 @@ export const audienceSelectorContainerProps: Omit<
   align: "center",
 };
 
+/**
+ * Audience selector content - Three persona cards (Developers, GPU Owners, Enterprise)
+ * with decision paths
+ */
 export const audienceSelectorProps: AudienceSelectorProps = {
   cards: [
     {
@@ -297,7 +320,9 @@ export const emailCaptureProps: EmailCaptureProps = {
   showIllustration: true,
 };
 
-// === Problem Template ===
+/**
+ * Problem template container - Layout for "hidden risk" messaging
+ */
 export const problemTemplateContainerProps: Omit<
   TemplateContainerProps,
   "children"
@@ -312,6 +337,10 @@ export const problemTemplateContainerProps: Omit<
   align: "center",
 };
 
+/**
+ * Problem template content - Three pain points (model changes, price increases,
+ * provider shutdowns)
+ */
 export const problemTemplateProps: ProblemTemplateProps = {
   items: [
     {
@@ -335,7 +364,9 @@ export const problemTemplateProps: ProblemTemplateProps = {
   ],
 };
 
-// === Solution Template ===
+/**
+ * Solution template container - Layout for solution messaging
+ */
 export const solutionTemplateContainerProps: Omit<
   TemplateContainerProps,
   "children"
@@ -349,6 +380,9 @@ export const solutionTemplateContainerProps: Omit<
   align: "center",
 };
 
+/**
+ * Solution template content - Four benefits with topology visualization
+ */
 export const solutionTemplateProps: SolutionTemplateProps = {
   features: [
     {
@@ -397,7 +431,9 @@ export const solutionTemplateProps: SolutionTemplateProps = {
   },
 };
 
-// === How It Works ===
+/**
+ * How It Works container - Layout for step-by-step guide
+ */
 export const howItWorksContainerProps: Omit<
   TemplateContainerProps,
   "children"
@@ -409,6 +445,9 @@ export const howItWorksContainerProps: Omit<
   align: "center",
 };
 
+/**
+ * How It Works content - Four-step installation guide with terminal/code blocks
+ */
 export const howItWorksProps: HowItWorksProps = {
   steps: [
     {
@@ -484,7 +523,10 @@ const code = await invoke({
   ],
 };
 
-// === Features Tabs Section ===
+/**
+ * Features tabs content - Four core capabilities (API, GPU, Scheduler, SSE)
+ * with interactive examples. Self-contained, no container props.
+ */
 export const featuresTabsProps: FeaturesTabsProps = {
   title: "Core capabilities",
   description: "Swap in the API, scale across your hardware, route with code, and watch jobs stream in real time.",
@@ -636,7 +678,9 @@ else {
   defaultTab: "api",
 };
 
-// === Use Cases Template ===
+/**
+ * Use Cases template container - Layout for persona-based use case cards
+ */
 export const useCasesTemplateContainerProps: Omit<
   TemplateContainerProps,
   "children"
@@ -650,6 +694,10 @@ export const useCasesTemplateContainerProps: Omit<
   align: "center",
 };
 
+/**
+ * Use Cases template content - Six persona cards (solo dev, team, homelab,
+ * enterprise, AI-dependent coder, agentic builder)
+ */
 export const useCasesTemplateProps: UseCasesTemplateProps = {
   items: [
     {
@@ -709,7 +757,9 @@ export const useCasesTemplateProps: UseCasesTemplateProps = {
   columns: 3,
 };
 
-// === Comparison Template ===
+/**
+ * Comparison template container - Layout for feature comparison matrix
+ */
 export const comparisonTemplateContainerProps: Omit<
   TemplateContainerProps,
   "children"
@@ -723,6 +773,10 @@ export const comparisonTemplateContainerProps: Omit<
   align: "center",
 };
 
+/**
+ * Comparison template content - Feature matrix comparing rbee vs OpenAI/Anthropic,
+ * Ollama, and Runpod/Vast.ai
+ */
 export const comparisonTemplateProps: ComparisonTemplateProps = {
   columns: [
     { key: "rbee", label: "rbee", accent: true },
@@ -805,7 +859,9 @@ export const comparisonTemplateProps: ComparisonTemplateProps = {
   ],
 };
 
-// === Pricing Template ===
+/**
+ * Pricing template container - Layout for pricing tiers
+ */
 export const pricingTemplateContainerProps: Omit<
   TemplateContainerProps,
   "children"
@@ -819,6 +875,10 @@ export const pricingTemplateContainerProps: Omit<
   align: "center",
 };
 
+/**
+ * Pricing template content - Three tiers (Home/Lab, Team, Enterprise) with
+ * monthly/yearly toggle and editorial image
+ */
 export const pricingTemplateProps: PricingTemplateProps = {
   kickerBadges: [
     {
@@ -908,7 +968,9 @@ export const pricingTemplateProps: PricingTemplateProps = {
   },
 };
 
-// === Testimonials Template ===
+/**
+ * Testimonials template container - Layout for social proof section
+ */
 export const testimonialsTemplateContainerProps: Omit<
   TemplateContainerProps,
   "children"
@@ -920,6 +982,10 @@ export const testimonialsTemplateContainerProps: Omit<
   align: "center",
 };
 
+/**
+ * Testimonials template content - Three testimonials with stats
+ * (GitHub stars, installations, GPUs orchestrated, avg cost)
+ */
 export const testimonialsTemplateProps: TestimonialsTemplateProps = {
   testimonials: [
     {
@@ -960,7 +1026,9 @@ export const testimonialsTemplateProps: TestimonialsTemplateProps = {
   ],
 };
 
-// === Technical Template ===
+/**
+ * Technical template container - Layout for architecture deep-dive
+ */
 export const technicalTemplateContainerProps: Omit<
   TemplateContainerProps,
   "children"
@@ -974,6 +1042,10 @@ export const technicalTemplateContainerProps: Omit<
   align: "center",
 };
 
+/**
+ * Technical template content - Architecture highlights, BDD coverage,
+ * diagram, and tech stack (Rust, Candle ML, Rhai, SQLite, Axum+Vue)
+ */
 export const technicalTemplateProps: TechnicalTemplateProps = {
   architectureHighlights: [
     {
@@ -1041,8 +1113,26 @@ export const technicalTemplateProps: TechnicalTemplateProps = {
   },
 };
 
-// === FAQ Template ===
-// Note: Self-contained section with internal <section>, no TemplateContainer wrapper
+/**
+ * FAQ template container - Layout for FAQ section
+ */
+export const faqTemplateContainerProps: Omit<
+  TemplateContainerProps,
+  "children"
+> = {
+  title: "rbee FAQ",
+  description:
+    "Quick answers about setup, models, orchestration, and security.",
+  bgVariant: "secondary",
+  paddingY: "2xl",
+  maxWidth: "7xl",
+  align: "center",
+};
+
+/**
+ * FAQ template content - Eight questions across six categories with searchable,
+ * filterable accordion and support card
+ */
 export const faqTemplateProps: FAQTemplateProps = {
   badgeText: "Support • Self-hosted AI",
   categories: [
@@ -1183,8 +1273,10 @@ export const faqTemplateProps: FAQTemplateProps = {
   jsonLdEnabled: true,
 };
 
-// === CTA Template ===
-// Note: Self-contained section with internal <section>, no TemplateContainer wrapper
+/**
+ * CTA template content - Final call-to-action with gradient emphasis.
+ * Self-contained with internal <section>.
+ */
 export const ctaTemplateProps: CTATemplateProps = {
   title: "Stop depending on AI providers. Start building today.",
   subtitle:
@@ -1240,7 +1332,9 @@ export default function HomePage() {
       <TemplateContainer {...technicalTemplateContainerProps}>
         <TechnicalTemplate {...technicalTemplateProps} />
       </TemplateContainer>
-      <FAQTemplate {...faqTemplateProps} />
+      <TemplateContainer {...faqTemplateContainerProps}>
+        <FAQTemplate {...faqTemplateProps} />
+      </TemplateContainer>
       <CTATemplate {...ctaTemplateProps} />
     </main>
   );

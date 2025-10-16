@@ -5,18 +5,36 @@ Pages = props objects + composition. Templates = reusable UI sections from `/org
 
 ## Components to Migrate
 
-**Home Page (Phase A - High Priority):**
-- ✅ AudienceSelector, ProblemTemplate, HowItWorks, SolutionTemplate, EmailCapture, UseCasesSection, ComparisonSection, PricingSection, TestimonialsSection, TechnicalSection, FAQSection, CTASection
-- FeaturesSection
+**✅ Home Page (Phase A - COMPLETE):**
+- ✅ All 12 sections refactored and integrated
+- ✅ Commercial app replaced with clean `<HomePage />` import
+- ✅ 1,324 lines of well-documented props objects
+- ✅ 5-line commercial app implementation
 
-**Shared (Phase B):**
-- CoreFeaturesTabs
+**✅ Features Page (Phase B - COMPLETE):**
+- ✅ Page structure created with `'use client'` directive
+- ✅ All 8 templates created and integrated:
+  - ✅ FeaturesHero
+  - ✅ CrossNodeOrchestrationTemplate
+  - ✅ IntelligentModelManagementTemplate
+  - ✅ MultiBackendGpuTemplate
+  - ✅ ErrorHandlingTemplate
+  - ✅ RealTimeProgressTemplate
+  - ✅ SecurityIsolationTemplate
+  - ✅ AdditionalFeaturesGridTemplate
+- ✅ FeaturesTabs props migrated (reused from HomePage pattern)
+- ✅ EmailCapture props migrated
+- ✅ Props organized in 3 files: featuresPageProps.tsx, featuresPagePropsExtended.tsx, errorAndProgressProps.tsx
+- ✅ Commercial app replaced with clean `<FeaturesPage />` import (265 lines → 10 lines)
 
-**Features Page (Phase C):**
-- MultiBackendGpu, CrossNodeOrchestration, IntelligentModelManagement, RealTimeProgress, ErrorHandling, SecurityIsolation, AdditionalFeaturesGrid
+**Next Pages (Phase C - Ready to Start):**
+- Use Cases Page
+- Pricing Page (dedicated)
+- Developers Page
+- Enterprise Page
 
-**Use Cases (Phase D):**
-- UseCasesIndustry, UseCasesPrimary
+**Shared Components (Phase D):**
+- CoreFeaturesTabs (used across multiple pages)
 
 ## Rules
 
@@ -164,12 +182,163 @@ export const OnHomePage: Story = {
 - Mark completed components with ✅ immediately after finishing
 - Update phase completion status (move from pending to completed list)
 
-## Commercial App Integration
+## Lessons Learned from HomePage Refactoring
 
-**CRITICAL**: Do NOT touch commercial app until HomePage refactoring is complete.
+### ✅ What Went Well
 
-When ready:
+**1. Systematic Approach:**
+- Following the 7-step migration process for each section kept work organized
+- Refactoring one section at a time prevented overwhelming changes
+- Marking sections as complete (✅) provided clear progress tracking
+
+**2. Props Object Organization:**
+- Adding descriptive JSDoc comments above each props object improved readability
+- Maintaining visual order (props match page composition order) made navigation intuitive
+- Section separators (`// === X Template ===`) created clear boundaries
+- The header comment block helped orient developers quickly
+
+**3. Icon Handling:**
+- Converting icon references to rendered components (`<Icon className="h-6 w-6" />`) early prevented serialization issues
+- Documenting this in props comments saved debugging time
+- Consistent icon sizing (h-6 w-6 for most, h-3.5 w-3.5 for badges) maintained visual harmony
+
+**4. Type Safety:**
+- Exporting both container and template props from page index enabled reuse
+- Using `Omit<TemplateContainerProps, "children">` for container props prevented type errors
+- Sub-types for complex structures (e.g., `ComparisonLegendItem`) improved maintainability
+
+**5. Template Reusability:**
+- Removing all hardcoded content made templates truly reusable
+- Accepting images, icons, and complex React nodes as props provided maximum flexibility
+- Self-contained templates (FAQ, CTA) with internal `<section>` tags worked well for full-width layouts
+
+**6. Commercial App Integration:**
+- Final replacement was trivial: 642 lines → 5 lines
+- Single source of truth eliminated duplication
+- Changes to HomePage automatically propagate to commercial app
+
+### ⚠️ Critical Requirements for Next Pages
+
+**1. Client Component Directive:**
 ```typescript
-import { HomePage } from '@rbee/ui/pages'  // ✅ Correct
-// NOT: import { AudienceSelector } from '@rbee/ui/templates'  ❌ Wrong
+'use client'  // MUST be first line if page uses icon component references
 ```
+- Required when passing `LucideIcon` components (not rendered) to templates
+- Next.js Server Components cannot serialize component classes
+- Add immediately to avoid serialization errors
+
+**2. Icon Consistency:**
+- **Templates expecting `LucideIcon`** (WhatIsRbee, AudienceSelector): Pass component reference `icon: Zap`
+- **Templates expecting `React.ReactNode`** (ProblemTemplate, UseCaseCard): Pass rendered `icon: <Zap className="h-6 w-6" />`
+- Check template type definitions before creating props
+- Document icon expectations in template JSDoc
+
+**3. Data Migration:**
+- Copy exact content from commercial app (don't paraphrase)
+- Preserve emoji avatars, pricing, testimonials verbatim
+- Maintain URLs, GitHub links, email addresses
+- Keep code examples and terminal commands identical
+
+**4. Props Comments:**
+- Add descriptive comment above EVERY props object
+- Format: `/** [Section] container/content - [Brief description] */`
+- Include key features in comment (e.g., "Six persona cards with decision paths")
+- Note special cases (self-contained, no container, client-side state)
+
+**5. Import Organization:**
+```typescript
+'use client'  // If needed
+
+// 1. UI Components
+import { Badge } from "@rbee/ui/atoms"
+import { TemplateContainer } from "@rbee/ui/molecules"
+
+// 2. Assets
+import { image1, image2 } from "@rbee/ui/assets"
+
+// 3. Templates (alphabetical)
+import {
+  Template1,
+  type Template1Props,
+  Template2,
+  type Template2Props,
+} from "@rbee/ui/templates"
+
+// 4. Icons (alphabetical)
+import { Icon1, Icon2, Icon3 } from "lucide-react"
+```
+
+**6. Export Pattern:**
+```typescript
+// In /pages/[PageName]/index.ts - ALWAYS export both container and template props
+export {
+  section1ContainerProps,
+  section1Props,
+  section2ContainerProps,
+  section2Props,
+  // ... alphabetical order
+} from "./[PageName]"
+export { default as [PageName] } from './[PageName]'
+```
+
+**7. Refactoring Order:**
+- Start with sections that have NO dependencies
+- Refactor templates BEFORE creating page props
+- Test each template in Storybook before integration
+- Update refactoring plan after EACH section completion
+
+### 📋 Page Creation Checklist
+
+For each new page, verify:
+
+- [ ] `'use client'` directive added (if using icon references)
+- [ ] All imports organized by category (UI → Assets → Templates → Icons)
+- [ ] Props objects have descriptive JSDoc comments
+- [ ] Props objects in visual order matching page composition
+- [ ] Section separators added (`// === X Template ===`)
+- [ ] Icons rendered correctly (check template expectations)
+- [ ] Container props use `Omit<TemplateContainerProps, "children">`
+- [ ] Template props match data from commercial app exactly
+- [ ] All props exported from page index (alphabetical)
+- [ ] Page composition uses `<TemplateContainer>` wrappers (except self-contained)
+- [ ] Storybook stories created for each template
+- [ ] Commercial app file updated to import page component
+- [ ] Refactoring plan updated with ✅ completion markers
+
+### 🚀 Starting a New Page
+
+1. **Identify sections** in commercial app page
+2. **Check if templates exist** - if not, create them first (follow 7-step process)
+3. **Create page file** at `/packages/rbee-ui/src/pages/[PageName]/[PageName].tsx`
+4. **Add `'use client'`** if needed (check icon usage)
+5. **Copy imports** from HomePage as starting point
+6. **Create props objects** in visual order with comments
+7. **Build composition** with TemplateContainer wrappers
+8. **Create index.ts** with exports
+9. **Update commercial app** to use new page
+10. **Mark complete** in refactoring plan
+
+### 🎯 Success Metrics
+
+A page is complete when:
+- Commercial app file is ≤10 lines (just import + export)
+- All content comes from props (zero hardcoded strings)
+- Props objects have descriptive comments
+- All templates have Storybook stories
+- TypeScript has zero errors
+- Page renders identically to original commercial app version
+
+## Commercial App Integration Pattern
+
+**After page refactoring is complete:**
+```typescript
+// apps/commercial/app/[page]/page.tsx
+import { [PageName] } from '@rbee/ui/pages'
+
+export default function [Page]() {
+  return <[PageName] />
+}
+```
+
+**✅ Completed:** HomePage
+**🔄 Next:** Features Page, Use Cases Page, Pricing Page
