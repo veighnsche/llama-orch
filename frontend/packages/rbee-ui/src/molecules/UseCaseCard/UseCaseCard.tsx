@@ -2,8 +2,8 @@ import { Badge } from '@rbee/ui/atoms/Badge'
 import { Card, CardContent, CardFooter } from '@rbee/ui/atoms/Card'
 import { IconCardHeader } from '@rbee/ui/molecules'
 import { cn } from '@rbee/ui/utils'
-import type * as React from 'react'
 import Link from 'next/link'
+import type * as React from 'react'
 
 export interface UseCaseCardProps {
   icon: React.ReactNode

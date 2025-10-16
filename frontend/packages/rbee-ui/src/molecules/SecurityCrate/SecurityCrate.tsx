@@ -1,8 +1,8 @@
 import { CheckItem } from '@rbee/ui/atoms/CheckItem'
 import { IconPlate } from '@rbee/ui/molecules'
 import { cn } from '@rbee/ui/utils'
-import type * as React from 'react'
 import Link from 'next/link'
+import type * as React from 'react'
 
 export interface SecurityCrateProps {
   /** Rendered icon component (e.g., <Lock className="w-6 h-6" />) */

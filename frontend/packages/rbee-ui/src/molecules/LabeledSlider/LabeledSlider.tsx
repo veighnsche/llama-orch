@@ -1,32 +1,32 @@
-import { Slider } from "@rbee/ui/atoms/Slider";
-import { cn } from "@rbee/ui/utils";
-import type * as React from "react";
+import { Slider } from '@rbee/ui/atoms/Slider'
+import { cn } from '@rbee/ui/utils'
+import type * as React from 'react'
 
 export interface LabeledSliderProps {
   /** Label text */
-  label: string;
+  label: string
   /** Current value (array for Slider component) */
-  value: number[];
+  value: number[]
   /** Callback when value changes */
-  onValueChange: (value: number[]) => void;
+  onValueChange: (value: number[]) => void
   /** Minimum value */
-  min: number;
+  min: number
   /** Maximum value */
-  max: number;
+  max: number
   /** Step increment */
-  step?: number;
+  step?: number
   /** Aria label for accessibility */
-  ariaLabel: string;
+  ariaLabel: string
   /** Format function for the displayed value */
-  formatValue: (value: number) => string;
+  formatValue: (value: number) => string
   /** Optional min label (displayed below slider) */
-  minLabel?: string;
+  minLabel?: string
   /** Optional max label (displayed below slider) */
-  maxLabel?: string;
+  maxLabel?: string
   /** Optional helper text below the slider */
-  helperText?: string | ((value: number) => string);
+  helperText?: string | ((value: number) => string)
   /** Additional CSS classes */
-  className?: string;
+  className?: string
 }
 
 /**
@@ -63,19 +63,14 @@ export function LabeledSlider({
   helperText,
   className,
 }: LabeledSliderProps) {
-  const currentValue = value[0];
-  const resolvedHelperText =
-    typeof helperText === "function" ? helperText(currentValue) : helperText;
+  const currentValue = value[0]
+  const resolvedHelperText = typeof helperText === 'function' ? helperText(currentValue) : helperText
 
   return (
-    <div className={cn("font-sans", className)}>
+    <div className={cn('font-sans', className)}>
       <div className="mb-3 flex items-center justify-between">
-        <label className="text-sm font-medium text-muted-foreground">
-          {label}
-        </label>
-        <span className="tabular-nums text-lg font-bold text-primary font-serif">
-          {formatValue(currentValue)}
-        </span>
+        <label className="text-sm font-medium text-muted-foreground">{label}</label>
+        <span className="tabular-nums text-lg font-bold text-primary font-serif">{formatValue(currentValue)}</span>
       </div>
       <Slider
         value={value}
@@ -92,13 +87,9 @@ export function LabeledSlider({
           <span>{maxLabel}</span>
         </div>
       )}
-      {helperText && (
-        <div className="mt-1 text-xs text-muted-foreground">
-          {resolvedHelperText}
-        </div>
-      )}
+      {helperText && <div className="mt-1 text-xs text-muted-foreground">{resolvedHelperText}</div>}
     </div>
-  );
+  )
 }
 
-export { LabeledSlider as default };
+export { LabeledSlider as default }

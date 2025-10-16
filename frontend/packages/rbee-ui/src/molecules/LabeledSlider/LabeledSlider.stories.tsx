@@ -1,23 +1,23 @@
-import type { Meta, StoryObj } from "@storybook/react";
-import { useState } from "react";
-import { LabeledSlider } from "./LabeledSlider";
+import type { Meta, StoryObj } from '@storybook/react'
+import { useState } from 'react'
+import { LabeledSlider } from './LabeledSlider'
 
 const meta = {
-  title: "Molecules/LabeledSlider",
+  title: 'Molecules/LabeledSlider',
   component: LabeledSlider,
   parameters: {
-    layout: "padded",
+    layout: 'padded',
   },
-  tags: ["autodocs"],
-} satisfies Meta<typeof LabeledSlider>;
+  tags: ['autodocs'],
+} satisfies Meta<typeof LabeledSlider>
 
-export default meta;
-type Story = StoryObj<typeof meta>;
+export default meta
+type Story = StoryObj<typeof meta>
 
 export const HoursPerDay: Story = {
   args: {} as any,
   render: () => {
-    const [value, setValue] = useState([20]);
+    const [value, setValue] = useState([20])
     return (
       <div className="max-w-md">
         <LabeledSlider
@@ -34,14 +34,14 @@ export const HoursPerDay: Story = {
           helperText={(v) => `≈ ${v * 30}h / mo`}
         />
       </div>
-    );
+    )
   },
-};
+}
 
 export const Utilization: Story = {
   args: {} as any,
   render: () => {
-    const [value, setValue] = useState([80]);
+    const [value, setValue] = useState([80])
     return (
       <div className="max-w-md">
         <LabeledSlider
@@ -57,14 +57,14 @@ export const Utilization: Story = {
           maxLabel="100%"
         />
       </div>
-    );
+    )
   },
-};
+}
 
 export const Volume: Story = {
   args: {} as any,
   render: () => {
-    const [value, setValue] = useState([50]);
+    const [value, setValue] = useState([50])
     return (
       <div className="max-w-md">
         <LabeledSlider
@@ -80,14 +80,14 @@ export const Volume: Story = {
           maxLabel="Max"
         />
       </div>
-    );
+    )
   },
-};
+}
 
 export const Price: Story = {
   args: {} as any,
   render: () => {
-    const [value, setValue] = useState([500]);
+    const [value, setValue] = useState([500])
     return (
       <div className="max-w-md">
         <LabeledSlider
@@ -104,14 +104,14 @@ export const Price: Story = {
           helperText="Monthly budget limit"
         />
       </div>
-    );
+    )
   },
-};
+}
 
 export const WithoutLabels: Story = {
   args: {} as any,
   render: () => {
-    const [value, setValue] = useState([5]);
+    const [value, setValue] = useState([5])
     return (
       <div className="max-w-md">
         <LabeledSlider
@@ -125,15 +125,15 @@ export const WithoutLabels: Story = {
           formatValue={(v) => `${v}/10`}
         />
       </div>
-    );
+    )
   },
-};
+}
 
 export const MultipleSliders: Story = {
   args: {} as any,
   render: () => {
-    const [hours, setHours] = useState([20]);
-    const [util, setUtil] = useState([80]);
+    const [hours, setHours] = useState([20])
+    const [util, setUtil] = useState([80])
     return (
       <div className="max-w-md space-y-6">
         <LabeledSlider
@@ -162,6 +162,6 @@ export const MultipleSliders: Story = {
           maxLabel="100%"
         />
       </div>
-    );
+    )
   },
-};
+}

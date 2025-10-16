@@ -244,12 +244,7 @@ export function TemplateContainer({
                 </Button>
               )}
               {ctas.secondary && (
-                <Button
-                  asChild
-                  size="lg"
-                  variant="outline"
-                  className="transition-transform active:scale-[0.98]"
-                >
+                <Button asChild size="lg" variant="outline" className="transition-transform active:scale-[0.98]">
                   <a href={ctas.secondary.href} aria-label={ctas.secondary.ariaLabel || ctas.secondary.label}>
                     {ctas.secondary.label}
                   </a>

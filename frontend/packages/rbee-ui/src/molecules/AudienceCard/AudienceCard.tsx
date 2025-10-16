@@ -138,7 +138,9 @@ export function AudienceCard({
           {/* Icons side-by-side at top */}
           <div className="mb-6 flex items-top gap-3 min-h-[64px]">
             <div className={iconBgVariants({ color })}>
-              <div className="h-7 w-7 text-primary-foreground" aria-hidden="true">{Icon}</div>
+              <div className="h-7 w-7 text-primary-foreground" aria-hidden="true">
+                {Icon}
+              </div>
             </div>
             {imageSlot && (
               <div className="h-14 w-14 shrink-0 overflow-hidden rounded-lg bg-card ring-1 ring-border">

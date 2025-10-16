@@ -27,7 +27,12 @@ export function FeaturesSection() {
               className="grid w-full grid-cols-2 lg:grid-cols-4 h-auto gap-2 rounded-none border-0 bg-transparent p-0"
               aria-label="Feature categories"
             >
-              <FeatureTab value="api" icon={<Code className="w-6 h-6" />} label="OpenAI-Compatible" mobileLabel="OpenAI" />
+              <FeatureTab
+                value="api"
+                icon={<Code className="w-6 h-6" />}
+                label="OpenAI-Compatible"
+                mobileLabel="OpenAI"
+              />
               <FeatureTab value="gpu" icon={<Cpu className="w-6 h-6" />} label="Multi-GPU" mobileLabel="GPU" />
               <FeatureTab value="scheduler" icon={<Gauge className="w-6 h-6" />} label="Scheduler" mobileLabel="Rhai" />
               <FeatureTab value="sse" icon={<Zap className="w-6 h-6" />} label="Real‑time" mobileLabel="SSE" />

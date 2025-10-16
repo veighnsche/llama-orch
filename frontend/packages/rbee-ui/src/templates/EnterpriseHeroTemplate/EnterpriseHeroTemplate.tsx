@@ -1,9 +1,9 @@
 import { Badge } from '@rbee/ui/atoms/Badge'
 import { Button } from '@rbee/ui/atoms/Button'
 import { ComplianceChip, StatsGrid } from '@rbee/ui/molecules'
-import type { ReactNode } from 'react'
 import Link from 'next/link'
 import type * as React from 'react'
+import type { ReactNode } from 'react'
 
 // ──────────────────────────────────────────────────────────────────────────────
 // Types
@@ -170,7 +170,9 @@ export function EnterpriseHeroTemplate({
                 {/* Header */}
                 <div className="mb-4 flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    <div className="h-5 w-5 text-primary" aria-hidden="true">{BadgeIcon}</div>
+                    <div className="h-5 w-5 text-primary" aria-hidden="true">
+                      {BadgeIcon}
+                    </div>
                     <span className="font-semibold text-foreground">{auditConsole.title}</span>
                   </div>
                   <Badge variant="secondary" className="bg-chart-3/20 text-xs text-chart-3">
@@ -180,7 +182,9 @@ export function EnterpriseHeroTemplate({
 
                 {/* Filter Strip */}
                 <div className="mb-4 flex items-center gap-2 text-xs text-muted-foreground" role="presentation">
-                  <div className="h-3 w-3" aria-hidden="true">{BadgeIcon}</div>
+                  <div className="h-3 w-3" aria-hidden="true">
+                    {BadgeIcon}
+                  </div>
                   {auditConsole.filterButtons.map((filter, idx) => (
                     <button
                       key={idx}
@@ -225,7 +229,9 @@ export function EnterpriseHeroTemplate({
                 <div className="mt-4 flex items-center justify-between border-t border-border pt-4 text-xs text-foreground/85">
                   <span>{auditConsole.footer.retention}</span>
                   <span className="flex items-center gap-1">
-                    <div className="h-3 w-3" aria-hidden="true">{BadgeIcon}</div>
+                    <div className="h-3 w-3" aria-hidden="true">
+                      {BadgeIcon}
+                    </div>
                     {auditConsole.footer.tamperProof}
                   </span>
                 </div>

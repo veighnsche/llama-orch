@@ -1,7 +1,7 @@
 import { IconPlate } from '@rbee/ui/molecules'
 import { cn } from '@rbee/ui/utils'
-import type { ReactNode } from 'react'
 import Link from 'next/link'
+import type { ReactNode } from 'react'
 
 export interface IndustryCaseCardProps {
   /** Lucide icon component (e.g., Building2, Heart, Scale, Shield) */

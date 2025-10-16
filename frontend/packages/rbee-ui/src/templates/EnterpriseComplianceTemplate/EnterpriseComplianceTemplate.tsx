@@ -1,8 +1,8 @@
 import { Button, Card, CardContent } from '@rbee/ui/atoms'
 import { BulletListItem, IconCardHeader } from '@rbee/ui/molecules'
-import type { ReactNode } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
+import type { ReactNode } from 'react'
 
 // ──────────────────────────────────────────────────────────────────────────────
 // Types

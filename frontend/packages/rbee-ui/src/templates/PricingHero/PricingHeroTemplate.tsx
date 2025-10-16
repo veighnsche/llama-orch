@@ -112,7 +112,9 @@ export function PricingHeroTemplate({
             <ul className="mt-6 grid grid-cols-2 gap-3 text-sm text-muted-foreground">
               {assuranceItems.map((item, index) => (
                 <li key={index} className="flex items-center gap-2">
-                  <div className="h-4 w-4 text-primary shrink-0" aria-hidden="true">{item.icon}</div>
+                  <div className="h-4 w-4 text-primary shrink-0" aria-hidden="true">
+                    {item.icon}
+                  </div>
                   <span>{item.text}</span>
                 </li>
               ))}

@@ -115,11 +115,7 @@ export function SolutionTemplate({
               aside
             ) : earnings ? (
               <div className="animate-in fade-in-50 slide-in-from-right-2 [animation-delay:200ms] lg:sticky lg:top-24 lg:self-start">
-                <EarningsCard
-                  title={earnings.title}
-                  rows={earnings.rows}
-                  disclaimer={earnings.disclaimer}
-                />
+                <EarningsCard title={earnings.title} rows={earnings.rows} disclaimer={earnings.disclaimer} />
               </div>
             ) : null}
           </div>

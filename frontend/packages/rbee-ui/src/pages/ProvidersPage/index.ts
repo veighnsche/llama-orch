@@ -1,4 +1,4 @@
-export { default as ProvidersPage } from "./ProvidersPage";
+export { default as ProvidersPage } from './ProvidersPage'
 export {
   providersCTAProps,
   providersEarningsContainerProps,
@@ -7,9 +7,9 @@ export {
   providersHeroProps,
   providersHowItWorksContainerProps,
   providersHowItWorksProps,
+  providersMarketplaceCommissionProps,
   providersMarketplaceContainerProps,
   providersMarketplaceSolutionProps,
-  providersMarketplaceCommissionProps,
   providersProblemContainerProps,
   providersProblemProps,
   providersSecurityContainerProps,
@@ -20,4 +20,4 @@ export {
   providersTestimonialsProps,
   providersUseCasesContainerProps,
   providersUseCasesProps,
-} from "./ProvidersPageProps";
+} from './ProvidersPageProps'

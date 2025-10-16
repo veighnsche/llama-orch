@@ -1,2 +1,2 @@
-export { CardGridTemplate } from "./CardGridTemplate";
-export type { CardGridTemplateProps } from "./CardGridTemplate";
+export type { CardGridTemplateProps } from './CardGridTemplate'
+export { CardGridTemplate } from './CardGridTemplate'

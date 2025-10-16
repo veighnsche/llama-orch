@@ -1,29 +1,21 @@
 // Created by: TEAM-007
-import type { Meta, StoryObj } from "@storybook/react";
-import { Globe, Shield } from "lucide-react";
-import { IconCardHeader } from "../../molecules/IconCardHeader/IconCardHeader";
-import { Button } from "../Button/Button";
-import {
-  Card,
-  CardAction,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "./Card";
+import type { Meta, StoryObj } from '@storybook/react'
+import { Globe, Shield } from 'lucide-react'
+import { IconCardHeader } from '../../molecules/IconCardHeader/IconCardHeader'
+import { Button } from '../Button/Button'
+import { Card, CardAction, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from './Card'
 
 const meta: Meta<typeof Card> = {
-  title: "Atoms/Card",
+  title: 'Atoms/Card',
   component: Card,
   parameters: {
-    layout: "centered",
+    layout: 'centered',
   },
-  tags: ["autodocs"],
-};
+  tags: ['autodocs'],
+}
 
-export default meta;
-type Story = StoryObj<typeof Card>;
+export default meta
+type Story = StoryObj<typeof Card>
 
 /**
  * ## Overview
@@ -66,7 +58,7 @@ export const Default: Story = {
       </CardContent>
     </Card>
   ),
-};
+}
 
 export const WithHeader: Story = {
   render: () => (
@@ -89,7 +81,7 @@ export const WithHeader: Story = {
       </CardContent>
     </Card>
   ),
-};
+}
 
 export const WithFooter: Story = {
   render: () => (
@@ -100,8 +92,7 @@ export const WithFooter: Story = {
       </CardHeader>
       <CardContent>
         <p className="text-sm text-muted-foreground">
-          Choose from our curated collection of open-source LLMs and start
-          serving requests immediately.
+          Choose from our curated collection of open-source LLMs and start serving requests immediately.
         </p>
       </CardContent>
       <CardFooter className="gap-2">
@@ -112,7 +103,7 @@ export const WithFooter: Story = {
       </CardFooter>
     </Card>
   ),
-};
+}
 
 export const InPricingContext: Story = {
   render: () => (
@@ -190,49 +181,39 @@ export const InPricingContext: Story = {
       </Card>
     </div>
   ),
-};
+}
 
 export const WithIconHeader: Story = {
   render: () => (
     <div className="grid max-w-4xl gap-6 md:grid-cols-2">
       <Card className="rounded-2xl border-border bg-card/60 p-8">
-        <IconCardHeader
-          icon={<Globe className="size-6" />}
-          title="GDPR"
-          subtitle="EU Regulation"
-          titleId="card-gdpr"
-        />
+        <IconCardHeader icon={<Globe className="size-6" />} title="GDPR" subtitle="EU Regulation" titleId="card-gdpr" />
         <CardContent className="p-0">
           <p className="text-sm text-foreground/85">
-            Built from the ground up to meet GDPR requirements with data
-            processing agreements, right to erasure, and privacy by design.
+            Built from the ground up to meet GDPR requirements with data processing agreements, right to erasure, and
+            privacy by design.
           </p>
         </CardContent>
       </Card>
 
       <Card className="rounded-2xl border-border bg-card/60 p-8">
-        <IconCardHeader
-          icon={<Shield className="size-6" />}
-          title="SOC2"
-          subtitle="US Standard"
-          titleId="card-soc2"
-        />
+        <IconCardHeader icon={<Shield className="size-6" />} title="SOC2" subtitle="US Standard" titleId="card-soc2" />
         <CardContent className="p-0">
           <p className="text-sm text-foreground/85">
-            Security and availability controls with auditor query API,
-            tamper-evident hash chains, and encryption at rest.
+            Security and availability controls with auditor query API, tamper-evident hash chains, and encryption at
+            rest.
           </p>
         </CardContent>
       </Card>
     </div>
   ),
   parameters: {
-    layout: "padded",
+    layout: 'padded',
     docs: {
       description: {
         story:
-          "Cards can use IconCardHeader molecule for headers with icons. This pattern is commonly used in compliance cards, feature cards, and status cards.",
+          'Cards can use IconCardHeader molecule for headers with icons. This pattern is commonly used in compliance cards, feature cards, and status cards.',
       },
     },
   },
-};
+}

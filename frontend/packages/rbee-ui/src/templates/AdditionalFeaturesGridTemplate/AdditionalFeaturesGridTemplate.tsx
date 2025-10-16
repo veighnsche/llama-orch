@@ -3,8 +3,8 @@
 import { Badge, Card, CardContent } from '@rbee/ui/atoms'
 import { IconCardHeader } from '@rbee/ui/molecules'
 import { cn } from '@rbee/ui/utils'
-import type { ReactNode } from 'react'
 import { ChevronRight } from 'lucide-react'
+import type { ReactNode } from 'react'
 
 export interface FeatureGridCard {
   href: string

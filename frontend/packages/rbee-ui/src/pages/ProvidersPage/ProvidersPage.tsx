@@ -1,6 +1,6 @@
-"use client";
+'use client'
 
-import { ProvidersCaseCard, ProvidersSecurityCard, TemplateContainer } from "@rbee/ui/molecules";
+import { ProvidersCaseCard, ProvidersSecurityCard, TemplateContainer } from '@rbee/ui/molecules'
 import {
   CardGridTemplate,
   FeaturesTabs,
@@ -11,7 +11,7 @@ import {
   ProvidersHero,
   ProvidersTestimonialsTemplate,
   SolutionTemplate,
-} from "@rbee/ui/templates";
+} from '@rbee/ui/templates'
 import {
   providersCTAProps,
   providersEarningsContainerProps,
@@ -32,7 +32,7 @@ import {
   providersTestimonialsProps,
   providersUseCasesContainerProps,
   providersUseCasesProps,
-} from "./ProvidersPageProps";
+} from './ProvidersPageProps'
 
 export default function ProvidersPage() {
   return (
@@ -90,5 +90,5 @@ export default function ProvidersPage() {
       </TemplateContainer>
       <ProvidersCTA {...providersCTAProps} />
     </main>
-  );
+  )
 }

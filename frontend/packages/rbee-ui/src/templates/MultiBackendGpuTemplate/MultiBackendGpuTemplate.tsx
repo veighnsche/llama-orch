@@ -159,7 +159,9 @@ export function MultiBackendGpuTemplate({
               key={idx}
               className="bg-background rounded-xl border border-border p-4 flex items-start gap-3 hover:-translate-y-0.5 transition-transform"
             >
-              <div className="size-5 shrink-0 mt-0.5 text-chart-2" aria-hidden="true">{card.icon}</div>
+              <div className="size-5 shrink-0 mt-0.5 text-chart-2" aria-hidden="true">
+                {card.icon}
+              </div>
               <div>
                 <div className="font-semibold text-foreground text-sm">{card.title}</div>
                 <div className="text-xs text-muted-foreground mt-1">{card.description}</div>

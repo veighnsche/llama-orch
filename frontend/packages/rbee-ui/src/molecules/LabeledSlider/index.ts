@@ -1,2 +1,2 @@
-export { LabeledSlider, default } from "./LabeledSlider";
-export type { LabeledSliderProps } from "./LabeledSlider";
+export type { LabeledSliderProps } from './LabeledSlider'
+export { default, LabeledSlider } from './LabeledSlider'

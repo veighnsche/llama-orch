@@ -1,8 +1,8 @@
 import { Button } from '@rbee/ui/atoms/Button'
 import { IndustryCaseCard } from '@rbee/ui/molecules'
-import type { ReactNode } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
+import type { ReactNode } from 'react'
 
 // ──────────────────────────────────────────────────────────────────────────────
 // Types

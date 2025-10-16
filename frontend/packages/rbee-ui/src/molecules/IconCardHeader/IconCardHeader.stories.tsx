@@ -152,7 +152,12 @@ export const InCard: Story = {
   render: () => (
     <div className="w-96">
       <Card className="rounded-2xl border-border bg-card/60 p-8">
-        <IconCardHeader icon={<Globe className="size-6" />} title="GDPR" subtitle="EU Regulation" titleId="card-example-gdpr" />
+        <IconCardHeader
+          icon={<Globe className="size-6" />}
+          title="GDPR"
+          subtitle="EU Regulation"
+          titleId="card-example-gdpr"
+        />
         <CardContent className="p-0">
           <p className="text-sm text-foreground/85">
             Built from the ground up to meet GDPR requirements with data processing agreements, right to erasure, and
@@ -175,7 +180,12 @@ export const MultipleCards: Story = {
   render: () => (
     <div className="grid max-w-4xl gap-6 md:grid-cols-3">
       <Card className="rounded-2xl border-border bg-card/60 p-6">
-        <IconCardHeader icon={<Globe className="size-6" />} title="GDPR" subtitle="EU Regulation" titleId="multi-gdpr" />
+        <IconCardHeader
+          icon={<Globe className="size-6" />}
+          title="GDPR"
+          subtitle="EU Regulation"
+          titleId="multi-gdpr"
+        />
         <CardContent className="p-0">
           <p className="text-sm text-muted-foreground">EU data protection compliance</p>
         </CardContent>
@@ -189,7 +199,12 @@ export const MultipleCards: Story = {
       </Card>
 
       <Card className="rounded-2xl border-border bg-card/60 p-6">
-        <IconCardHeader icon={<Lock className="size-6" />} title="ISO 27001" subtitle="International" titleId="multi-iso" />
+        <IconCardHeader
+          icon={<Lock className="size-6" />}
+          title="ISO 27001"
+          subtitle="International"
+          titleId="multi-iso"
+        />
         <CardContent className="p-0">
           <p className="text-sm text-muted-foreground">Information security management</p>
         </CardContent>

@@ -97,7 +97,9 @@ export function CrossNodeOrchestrationTemplate({
                     key={idx}
                     className="bg-background rounded-xl border border-border p-4 flex items-start gap-3 hover:-translate-y-0.5 transition-transform"
                   >
-                    <div className="size-5 shrink-0 mt-0.5 text-chart-3" aria-hidden="true">{benefit.icon}</div>
+                    <div className="size-5 shrink-0 mt-0.5 text-chart-3" aria-hidden="true">
+                      {benefit.icon}
+                    </div>
                     <div>
                       <div className="font-semibold text-foreground text-sm">{benefit.title}</div>
                       <div className="text-xs text-muted-foreground mt-1">{benefit.description}</div>

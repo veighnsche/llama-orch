@@ -746,9 +746,27 @@ export const realTimeProgressProps: RealTimeProgressTemplateProps = {
     </div>
   ),
   metricKPIs: [
-    { icon: <Gauge className="size-6" />, color: 'chart-3', label: 'Throughput', value: '133 tok/s', progressPercentage: 80 },
-    { icon: <Timer className="size-6" />, color: 'primary', label: 'First token latency', value: '150 ms', progressPercentage: 60 },
-    { icon: <MemoryStick className="size-6" />, color: 'chart-2', label: 'VRAM used', value: '669 MB', progressPercentage: 45 },
+    {
+      icon: <Gauge className="size-6" />,
+      color: 'chart-3',
+      label: 'Throughput',
+      value: '133 tok/s',
+      progressPercentage: 80,
+    },
+    {
+      icon: <Timer className="size-6" />,
+      color: 'primary',
+      label: 'First token latency',
+      value: '150 ms',
+      progressPercentage: 60,
+    },
+    {
+      icon: <MemoryStick className="size-6" />,
+      color: 'chart-2',
+      label: 'VRAM used',
+      value: '669 MB',
+      progressPercentage: 45,
+    },
   ],
   cancellationTitle: 'Request Cancellation',
   cancellationSubtitle: 'Ctrl+C or API cancel stops the job, frees resources, and leaves no orphaned processes.',

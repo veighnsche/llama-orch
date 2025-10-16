@@ -1,13 +1,13 @@
-import type * as React from "react";
+import type * as React from 'react'
 
 // ────────────────────────────────────────────────────────────────────────────
 // Types
 // ────────────────────────────────────────────────────────────────────────────
 
 export type CardGridTemplateProps = {
-  children: React.ReactNode;
-  className?: string;
-};
+  children: React.ReactNode
+  className?: string
+}
 
 // ────────────────────────────────────────────────────────────────────────────
 // Main Component
@@ -23,16 +23,11 @@ export type CardGridTemplateProps = {
  * </CardGridTemplate>
  * ```
  */
-export function CardGridTemplate({
-  children,
-  className,
-}: CardGridTemplateProps) {
+export function CardGridTemplate({ children, className }: CardGridTemplateProps) {
   return (
     <div className={className}>
       {/* Grid - centered with max-width and 2 columns */}
-      <div className="mx-auto max-w-[60%] grid gap-6 grid-cols-2">
-        {children}
-      </div>
+      <div className="mx-auto max-w-[60%] grid gap-6 grid-cols-2">{children}</div>
     </div>
-  );
+  )
 }

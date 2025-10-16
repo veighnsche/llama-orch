@@ -23,7 +23,7 @@ export const GamingPcOwner: Story = {
     icon: <Gamepad2 />,
     title: 'Gaming PC Owners',
     subtitle: 'Most common provider type',
-    quote: 'I game ~3-4 hours/day. The rest, my 4090 was idle. Now it earns ~€150/mo while I\'m at work or asleep.',
+    quote: "I game ~3-4 hours/day. The rest, my 4090 was idle. Now it earns ~€150/mo while I'm at work or asleep.",
     facts: [
       { label: 'Typical GPU:', value: 'RTX 4080–4090' },
       { label: 'Availability:', value: '16–20 h/day' },
@@ -95,7 +95,7 @@ export const WithHighlight: Story = {
     icon: <Gamepad2 />,
     title: 'Gaming PC Owners',
     subtitle: 'Most common provider type',
-    quote: 'I game ~3-4 hours/day. The rest, my 4090 was idle. Now it earns ~€150/mo while I\'m at work or asleep.',
+    quote: "I game ~3-4 hours/day. The rest, my 4090 was idle. Now it earns ~€150/mo while I'm at work or asleep.",
     facts: [
       { label: 'Typical GPU:', value: 'RTX 4080–4090' },
       { label: 'Availability:', value: '16–20 h/day' },
