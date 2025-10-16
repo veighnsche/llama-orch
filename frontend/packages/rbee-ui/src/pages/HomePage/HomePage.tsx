@@ -10,7 +10,6 @@ import { TerminalWindow } from "@rbee/ui/molecules/TerminalWindow";
 import {
   ComparisonSection,
   CTASection,
-  EmailCapture,
   FAQSection,
   HomeSolutionSection,
   HowItWorksSection,
@@ -23,6 +22,8 @@ import {
 import {
   AudienceSelector,
   type AudienceSelectorProps,
+  EmailCapture,
+  type EmailCaptureProps,
   HomeHero,
   type HomeHeroProps,
   type WhatIsRbeeProps,
@@ -107,7 +108,10 @@ export const homeHeroProps: HomeHeroProps = {
   costValue: "$0.00",
 };
 
-export const whatIsRbeeContainerProps: Omit<TemplateContainerProps, "children"> = {
+export const whatIsRbeeContainerProps: Omit<
+  TemplateContainerProps,
+  "children"
+> = {
   eyebrow: (
     <Badge variant="secondary" className="uppercase tracking-wide">
       Open-source • Self-hosted
@@ -168,10 +172,14 @@ export const whatIsRbeeProps: WhatIsRbeeProps = {
   visualBadgeText: "Local Network",
 };
 
-export const audienceSelectorContainerProps: Omit<TemplateContainerProps, "children"> = {
+export const audienceSelectorContainerProps: Omit<
+  TemplateContainerProps,
+  "children"
+> = {
   eyebrow: "Choose your path",
   title: "Where should you start?",
-  description: "rbee adapts to how you work—build on your own GPUs, monetize idle capacity, or deploy compliant AI at scale.",
+  description:
+    "rbee adapts to how you work—build on your own GPUs, monetize idle capacity, or deploy compliant AI at scale.",
   bgVariant: "subtle",
   paddingY: "2xl",
   maxWidth: "7xl",
@@ -184,7 +192,8 @@ export const audienceSelectorProps: AudienceSelectorProps = {
       icon: Code2,
       category: "For Developers",
       title: "Build on Your Hardware",
-      description: "Power Zed, Cursor, and your own agents on YOUR GPUs. OpenAI-compatible—drop-in, zero API fees.",
+      description:
+        "Power Zed, Cursor, and your own agents on YOUR GPUs. OpenAI-compatible—drop-in, zero API fees.",
       features: [
         "Zero API costs, unlimited usage",
         "Your code stays on your network",
@@ -195,7 +204,10 @@ export const audienceSelectorProps: AudienceSelectorProps = {
       color: "chart-2",
       imageSlot: <DevGrid size={56} aria-hidden />,
       badgeSlot: (
-        <Badge variant="outline" className="border-chart-2/30 bg-chart-2/5 text-chart-2">
+        <Badge
+          variant="outline"
+          className="border-chart-2/30 bg-chart-2/5 text-chart-2"
+        >
           Homelab-ready
         </Badge>
       ),
@@ -205,8 +217,13 @@ export const audienceSelectorProps: AudienceSelectorProps = {
       icon: Server,
       category: "For GPU Owners",
       title: "Monetize Your Hardware",
-      description: "Join the rbee marketplace and earn from gaming rigs to server farms—set price, stay in control.",
-      features: ["Set pricing & availability", "Audit trails and payouts", "Passive income from idle GPUs"],
+      description:
+        "Join the rbee marketplace and earn from gaming rigs to server farms—set price, stay in control.",
+      features: [
+        "Set pricing & availability",
+        "Audit trails and payouts",
+        "Passive income from idle GPUs",
+      ],
       href: "/gpu-providers",
       ctaText: "Become a Provider",
       color: "chart-3",
@@ -217,8 +234,13 @@ export const audienceSelectorProps: AudienceSelectorProps = {
       icon: Shield,
       category: "For Enterprise",
       title: "Compliance & Security",
-      description: "EU-native compliance, audit trails, and zero-trust architecture—from day one.",
-      features: ["GDPR with 7-year retention", "SOC2 & ISO 27001 aligned", "Private cloud or on-prem"],
+      description:
+        "EU-native compliance, audit trails, and zero-trust architecture—from day one.",
+      features: [
+        "GDPR with 7-year retention",
+        "SOC2 & ISO 27001 aligned",
+        "Private cloud or on-prem",
+      ],
       href: "/enterprise",
       ctaText: "Enterprise Solutions",
       color: "primary",
@@ -232,6 +254,34 @@ export const audienceSelectorProps: AudienceSelectorProps = {
   ],
 };
 
+// === Email Capture Section ===
+export const emailCaptureProps: EmailCaptureProps = {
+  badge: {
+    text: "In Development · M0 · 68%",
+    showPulse: true,
+  },
+  headline: "Get Updates. Own Your AI.",
+  subheadline:
+    "Join the rbee waitlist to get early access, build notes, and launch perks for running AI on your own hardware.",
+  emailInput: {
+    placeholder: "you@company.com",
+    label: "Email address",
+  },
+  submitButton: {
+    label: "Join Waitlist",
+  },
+  trustMessage: "No spam. Unsubscribe anytime.",
+  successMessage: "Thanks! You're on the list — we'll keep you posted.",
+  communityFooter: {
+    text: "Follow progress & contribute on GitHub",
+    linkText: "View Repository",
+    linkHref: "https://github.com/veighnsche/llama-orch",
+    subtext: "Weekly dev notes. Roadmap issues tagged M0–M2.",
+  },
+  showBeeGlyphs: true,
+  showIllustration: true,
+};
+
 export default function HomePage() {
   return (
     <main>
@@ -242,6 +292,7 @@ export default function HomePage() {
       <TemplateContainer {...audienceSelectorContainerProps}>
         <AudienceSelector {...audienceSelectorProps} />
       </TemplateContainer>
+      <EmailCapture {...emailCaptureProps} />
     </main>
   );
 }

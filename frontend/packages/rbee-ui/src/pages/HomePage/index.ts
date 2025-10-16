@@ -3,6 +3,7 @@ export {
   whatIsRbeeContainerProps,
   whatIsRbeeProps,
   audienceSelectorContainerProps,
-  audienceSelectorProps 
+  audienceSelectorProps,
+  emailCaptureProps
 } from './HomePage'
 export { default as HomePage } from './HomePage'
