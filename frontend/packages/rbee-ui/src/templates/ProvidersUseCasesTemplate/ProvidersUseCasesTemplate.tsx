@@ -34,8 +34,8 @@ export type ProvidersUseCasesTemplateProps = {
 export function ProvidersUseCasesTemplate({ cases, className }: ProvidersUseCasesTemplateProps) {
   return (
     <div className={className}>
-      {/* Grid */}
-      <div className="grid gap-6 md:grid-cols-2">
+      {/* Grid - centered with max-width and 2 columns */}
+      <div className="mx-auto max-w-[60%] grid gap-6 grid-cols-2">
         {cases.map((caseData, index) => (
           <ProvidersCaseCard
             key={index}

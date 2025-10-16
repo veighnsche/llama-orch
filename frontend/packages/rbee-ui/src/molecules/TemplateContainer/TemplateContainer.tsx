@@ -1,4 +1,5 @@
 import { Button } from '@rbee/ui/atoms'
+import { Disclaimer } from '@rbee/ui/molecules/Disclaimer'
 import { cn } from '@rbee/ui/utils'
 import type { ReactNode } from 'react'
 
@@ -51,6 +52,15 @@ export interface TemplateContainerProps {
     secondary?: { label: string; href: string; ariaLabel?: string }
     /** Optional caption below buttons */
     caption?: string
+  }
+  /** Optional disclaimer text */
+  disclaimer?: {
+    /** Disclaimer content */
+    text: string | ReactNode
+    /** Visual variant */
+    variant?: 'default' | 'info' | 'warning' | 'muted'
+    /** Show icon */
+    showIcon?: boolean
   }
 }
 
@@ -117,6 +127,7 @@ export function TemplateContainer({
   headlineLevel = 2,
   divider = false,
   ctas,
+  disclaimer,
 }: TemplateContainerProps) {
   // Resolve alignment: prefer align prop, fallback to centered
   const resolvedAlign = align ?? (centered ? 'center' : 'start')
@@ -227,6 +238,15 @@ export function TemplateContainer({
               )}
             </div>
             {ctas.caption && <p className="mt-4 text-xs text-muted-foreground">{ctas.caption}</p>}
+          </div>
+        )}
+
+        {/* Disclaimer */}
+        {disclaimer && (
+          <div className={cn('mt-12', maxWidthClasses[maxWidth], 'mx-auto')}>
+            <Disclaimer variant={disclaimer.variant ?? 'muted'} showIcon={disclaimer.showIcon}>
+              {disclaimer.text}
+            </Disclaimer>
           </div>
         )}
       </div>

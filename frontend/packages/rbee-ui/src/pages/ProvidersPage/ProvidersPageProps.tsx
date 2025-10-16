@@ -572,8 +572,12 @@ export const providersEarningsContainerProps: Omit<
     "See what you could earn based on GPU model, availability, and utilization.",
   bgVariant: "default",
   paddingY: "2xl",
-  maxWidth: "7xl",
+  maxWidth: "4xl",
   align: "center",
+  disclaimer: {
+    text: "Earnings are estimates based on current market rates and may vary. Actual earnings depend on demand, your pricing, and availability. Figures are estimates.",
+    variant: "muted",
+  },
 };
 
 export const providersEarningsProps: ProvidersEarningsProps = {
@@ -612,8 +616,6 @@ export const providersEarningsProps: ProvidersEarningsProps = {
   ctaLabel: "Start Earning Now",
   ctaAriaLabel: "Start earning with rbee",
   secondaryCTALabel: "Estimate on another GPU",
-  disclaimerText:
-    "Earnings are estimates based on current market rates and may vary. Actual earnings depend on demand, your pricing, and availability. Figures are estimates.",
   formatCurrency: fmt,
   formatHourly: fmtHr,
 };
