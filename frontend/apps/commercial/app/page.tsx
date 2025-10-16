@@ -2,7 +2,6 @@ import {
   AudienceSelector,
   ComparisonSection,
   CTASection,
-  DefaultCoreFeaturesTabs,
   EmailCapture,
   FAQSection,
   HeroSection,
