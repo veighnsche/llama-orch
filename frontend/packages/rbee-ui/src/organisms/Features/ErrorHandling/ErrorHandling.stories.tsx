@@ -104,14 +104,14 @@ rbee addresses all three:
 ## Technical Implementation
 - Uses SectionContainer for consistent layout
 - PlaybookAccordion for expandable categories
-- TerminalConsole for error timeline
+- TerminalWindow for error timeline
 - StatusKPI for metrics
 - Interactive expand/collapse all buttons
 
 ## Related Components
 - SectionContainer
 - PlaybookAccordion
-- TerminalConsole
+- TerminalWindow
 - StatusKPI
 
 ## Accessibility

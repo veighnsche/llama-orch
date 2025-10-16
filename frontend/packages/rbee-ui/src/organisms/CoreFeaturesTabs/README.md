@@ -136,14 +136,14 @@ import { GPUUtilizationBar } from '@rbee/ui/molecules/GPUUtilizationBar'
 <GPUUtilizationBar label="CPU" percentage={34} variant="secondary" />
 ```
 
-### ConsoleOutput (from atoms)
+### TerminalWindow (from molecules)
 
 ```tsx
-import { ConsoleOutput } from '@rbee/ui/atoms/ConsoleOutput'
+import { TerminalWindow } from '@rbee/ui/molecules/TerminalWindow'
 
-<ConsoleOutput background="dark" copyable={true}>
+<TerminalWindow showChrome={false} copyable={true}>
   $ npm install rbee
-</ConsoleOutput>
+</TerminalWindow>
 ```
 
 ## Current Usage

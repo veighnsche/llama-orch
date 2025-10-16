@@ -31,22 +31,22 @@
     --card-foreground: #0f172a;
     --popover: #ffffff;
     --popover-foreground: #0f172a;
-    --primary: #f59e0b;
+    --primary: #b45309;
     --primary-foreground: #ffffff;
     --secondary: #f1f5f9;
     --secondary-foreground: #0f172a;
     --muted: #f1f5f9;
     --muted-foreground: #5a6b7f; /* Darkened from #64748b for WCAG AA compliance (4.5:1 on secondary) */
-    --accent: #f59e0b;
-    --accent-foreground: #0f172a;
-    --destructive: #ef4444;
+    --accent: #b45309;
+    --accent-foreground: #ffffff;
+    --destructive: #dc2626;
     --destructive-foreground: #ffffff;
     --border: #e2e8f0;
     --input: #e2e8f0;
-    --ring: #f59e0b;
+    --ring: #b45309;
 
     /* Chart colors */
-    --chart-1: #f59e0b;
+    --chart-1: #b45309;
     --chart-2: #3b82f6;
     --chart-3: #10b981;
     --chart-4: #8b5cf6;
@@ -54,7 +54,7 @@
 
     /* Terminal colors (for TerminalWindow component) */
     --terminal-red: #ef4444;
-    --terminal-amber: #f59e0b;
+    --terminal-amber: #b45309;
     --terminal-green: #10b981;
 
     /* Code/Console backgrounds */
@@ -64,7 +64,7 @@
     /* Syntax highlighting colors */
     --syntax-keyword: #3b82f6; /* blue - for keywords like const, await, export */
     --syntax-import: #8b5cf6; /* purple - for import/from statements */
-    --syntax-string: #f59e0b; /* amber - for string literals */
+    --syntax-string: #b45309; /* amber - for string literals */
     --syntax-function: #10b981; /* green - for function names */
     --syntax-comment: #64748b; /* muted - for comments and secondary text */
 
@@ -75,12 +75,12 @@
     /* Sidebar colors */
     --sidebar: #f1f5f9;
     --sidebar-foreground: #0f172a;
-    --sidebar-primary: #f59e0b;
+    --sidebar-primary: #b45309;
     --sidebar-primary-foreground: #ffffff;
-    --sidebar-accent: #f59e0b;
+    --sidebar-accent: #b45309;
     --sidebar-accent-foreground: #0f172a;
     --sidebar-border: #e2e8f0;
-    --sidebar-ring: #f59e0b;
+    --sidebar-ring: #b45309;
 
     /* ========================================
    * SPACING SCALE
@@ -156,22 +156,22 @@
     --card-foreground: #f1f5f9;
     --popover: #1e293b;
     --popover-foreground: #f1f5f9;
-    --primary: #f59e0b;
-    --primary-foreground: #0f172a;
+    --primary: #b45309;
+    --primary-foreground: #ffffff;
     --secondary: #0f172a;
     --secondary-foreground: #f1f5f9;
     --muted: #0f172a;
     --muted-foreground: #94a3b8;
-    --accent: #f59e0b;
-    --accent-foreground: #0f172a;
-    --destructive: #ef4444;
-    --destructive-foreground: #0f172a;
+    --accent: #b45309;
+    --accent-foreground: #ffffff;
+    --destructive: #dc2626;
+    --destructive-foreground: #ffffff;
     --border: #334155;
     --input: #334155;
-    --ring: #f59e0b;
+    --ring: #b45309;
 
     /* Chart colors - dark mode */
-    --chart-1: #f59e0b;
+    --chart-1: #b45309;
     --chart-2: #3b82f6;
     --chart-3: #10b981;
     --chart-4: #8b5cf6;
@@ -179,7 +179,7 @@
 
     /* Terminal colors - dark mode (same as light) */
     --terminal-red: #ef4444;
-    --terminal-amber: #f59e0b;
+    --terminal-amber: #b45309;
     --terminal-green: #10b981;
 
     /* Code/Console backgrounds - dark mode */
@@ -200,12 +200,12 @@
     /* Sidebar colors - dark mode */
     --sidebar: #020617;
     --sidebar-foreground: #f1f5f9;
-    --sidebar-primary: #f59e0b;
-    --sidebar-primary-foreground: #0f172a;
-    --sidebar-accent: #f59e0b;
-    --sidebar-accent-foreground: #0f172a;
+    --sidebar-primary: #b45309;
+    --sidebar-primary-foreground: #ffffff;
+    --sidebar-accent: #b45309;
+    --sidebar-accent-foreground: #ffffff;
     --sidebar-border: #334155;
-    --sidebar-ring: #f59e0b;
+    --sidebar-ring: #b45309;
 }
 
 /* ========================================

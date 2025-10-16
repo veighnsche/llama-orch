@@ -7,6 +7,7 @@
 // Note: bee-mark.png was always empty in git history, removed from exports
 export { default as ctaIndependenceHero } from './images/cta-independence-hero.png'
 export { default as faqBeehive } from './images/faq-beehive.png'
+export { default as featuresHeroImage } from './images/features-hero-image.png'
 export { default as gpuEarnings } from './images/gpu-earnings.png'
 export { default as homelabHardwareMontage } from './images/homelab-hardware-montage.png'
 export { default as homelabNetwork } from './images/homelab-network.png'

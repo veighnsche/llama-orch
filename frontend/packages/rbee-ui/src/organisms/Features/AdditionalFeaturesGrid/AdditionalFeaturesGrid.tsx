@@ -1,16 +1,22 @@
-import { Badge } from '@rbee/ui/atoms/Badge'
-import { SectionContainer } from '@rbee/ui/molecules'
-import { ChevronRight, Code, Database, Network, Shield, Terminal } from 'lucide-react'
+import { Badge, Card, CardContent } from "@rbee/ui/atoms";
+import { IconCardHeader, SectionContainer } from "@rbee/ui/molecules";
+import {
+  ChevronRight,
+  Code,
+  Database,
+  Network,
+  Shield,
+  Terminal,
+} from "lucide-react";
 
 export function AdditionalFeaturesGrid() {
   return (
-    <SectionContainer title="Everything You Need for AI Infrastructure" bgVariant="background">
+    <SectionContainer
+      title="Everything You Need for AI Infrastructure"
+      bgVariant="background"
+      eyebrow={<Badge variant="secondary">Capabilities overview</Badge>}
+    >
       <div className="max-w-6xl mx-auto space-y-8">
-        {/* Overline badge */}
-        <div className="flex justify-center">
-          <Badge variant="secondary">Capabilities overview</Badge>
-        </div>
-
         {/* Row 1: Core Platform */}
         <div>
           <div className="flex items-center gap-2 mb-4">
@@ -20,70 +26,79 @@ export function AdditionalFeaturesGrid() {
             {/* Cascading Shutdown */}
             <a
               href="#security-isolation"
-              className="group relative rounded-2xl border bg-card p-6 transition-transform hover:-translate-y-0.5 animate-in fade-in slide-in-from-bottom-2 focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none before:absolute before:inset-x-0 before:top-0 before:h-[2px] before:bg-chart-2"
+              className="group block transition-transform hover:-translate-y-0.5 animate-in fade-in slide-in-from-bottom-2 focus-visible:outline-none"
               aria-label="Learn more about Cascading Shutdown"
             >
-              <div className="flex items-start gap-4">
-                <div className="rounded-lg bg-chart-2/10 p-3">
-                  <Shield className="size-6 text-chart-2" />
-                </div>
-                <div className="flex-1">
-                  <h3 className="text-lg font-bold text-foreground mb-2">Cascading Shutdown</h3>
-                  <p className="text-sm text-muted-foreground">
-                    Ctrl+C tears down keeper → queen → hive → workers. No orphans, no VRAM leaks.
-                  </p>
-                </div>
-              </div>
-              <div className="mt-4 text-sm text-primary inline-flex items-center gap-1 group-hover:gap-2 transition-all">
-                <span>Learn more</span>
-                <ChevronRight className="size-3" />
-              </div>
+              <Card className="h-full before:absolute before:inset-x-0 before:top-0 before:h-[2px] before:bg-chart-2 before:rounded-t-xl relative overflow-hidden">
+                <CardContent className="p-6">
+                  <IconCardHeader
+                    icon={Shield}
+                    iconTone="chart-2"
+                    iconSize="sm"
+                    title="Cascading Shutdown"
+                    subtitle="Ctrl+C tears down keeper → queen → hive → workers. No orphans, no VRAM leaks."
+                    titleClassName="text-lg"
+                    subtitleClassName="text-sm mt-2"
+                    useCardHeader={false}
+                  />
+                  <div className="mt-4 text-sm text-primary inline-flex items-center gap-1 group-hover:gap-2 transition-all">
+                    <span>Learn more</span>
+                    <ChevronRight className="size-3" />
+                  </div>
+                </CardContent>
+              </Card>
             </a>
 
             {/* Model Catalog */}
             <a
               href="#intelligent-model-management"
-              className="group relative rounded-2xl border bg-card p-6 transition-transform hover:-translate-y-0.5 animate-in fade-in slide-in-from-bottom-2 delay-100 focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none before:absolute before:inset-x-0 before:top-0 before:h-[2px] before:bg-chart-3"
+              className="group block transition-transform hover:-translate-y-0.5 animate-in fade-in slide-in-from-bottom-2 delay-100 focus-visible:outline-none"
               aria-label="Learn more about Model Catalog"
             >
-              <div className="flex items-start gap-4">
-                <div className="rounded-lg bg-chart-3/10 p-3">
-                  <Database className="size-6 text-chart-3" />
-                </div>
-                <div className="flex-1">
-                  <h3 className="text-lg font-bold text-foreground mb-2">Model Catalog</h3>
-                  <p className="text-sm text-muted-foreground">
-                    Auto-provision models from Hugging Face with checksum verify and local cache.
-                  </p>
-                </div>
-              </div>
-              <div className="mt-4 text-sm text-primary inline-flex items-center gap-1 group-hover:gap-2 transition-all">
-                <span>Learn more</span>
-                <ChevronRight className="size-3" />
-              </div>
+              <Card className="h-full before:absolute before:inset-x-0 before:top-0 before:h-[2px] before:bg-chart-3 before:rounded-t-xl relative overflow-hidden">
+                <CardContent className="p-6">
+                  <IconCardHeader
+                    icon={Database}
+                    iconTone="chart-3"
+                    iconSize="sm"
+                    title="Model Catalog"
+                    subtitle="Auto-provision models from Hugging Face with checksum verify and local cache."
+                    titleClassName="text-lg"
+                    subtitleClassName="text-sm mt-2"
+                    useCardHeader={false}
+                  />
+                  <div className="mt-4 text-sm text-primary inline-flex items-center gap-1 group-hover:gap-2 transition-all">
+                    <span>Learn more</span>
+                    <ChevronRight className="size-3" />
+                  </div>
+                </CardContent>
+              </Card>
             </a>
 
             {/* Network Orchestration - Featured */}
             <a
               href="#cross-node-orchestration"
-              className="group lg:col-span-1 md:col-span-2 lg:col-span-1 relative rounded-2xl border bg-card p-6 transition-transform hover:-translate-y-0.5 animate-in fade-in slide-in-from-bottom-2 delay-150 focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none overflow-hidden before:absolute before:inset-x-0 before:top-0 before:h-1.5 before:bg-gradient-to-r before:from-primary before:via-chart-3 before:to-amber-500"
+              className="group lg:col-span-1 md:col-span-2 lg:col-span-1 block transition-transform hover:-translate-y-0.5 animate-in fade-in slide-in-from-bottom-2 delay-150 focus-visible:outline-none"
               aria-label="Learn more about Network Orchestration"
             >
-              <div className="flex items-start gap-4">
-                <div className="rounded-lg bg-primary/10 p-3">
-                  <Network className="size-6 text-primary" />
-                </div>
-                <div className="flex-1">
-                  <h3 className="text-lg font-bold text-foreground mb-2">Network Orchestration</h3>
-                  <p className="text-sm text-muted-foreground">
-                    Run jobs across gaming PCs, workstations, and Macs as one homelab cluster.
-                  </p>
-                </div>
-              </div>
-              <div className="mt-4 text-sm text-primary inline-flex items-center gap-1 group-hover:gap-2 transition-all">
-                <span>Learn more</span>
-                <ChevronRight className="size-3" />
-              </div>
+              <Card className="h-full before:absolute before:inset-x-0 before:top-0 before:h-1.5 before:bg-gradient-to-r before:from-primary before:via-chart-3 before:to-amber-500 before:rounded-t-xl relative overflow-hidden">
+                <CardContent className="p-6">
+                  <IconCardHeader
+                    icon={Network}
+                    iconTone="primary"
+                    iconSize="sm"
+                    title="Network Orchestration"
+                    subtitle="Run jobs across gaming PCs, workstations, and Macs as one homelab cluster."
+                    titleClassName="text-lg"
+                    subtitleClassName="text-sm mt-2"
+                    useCardHeader={false}
+                  />
+                  <div className="mt-4 text-sm text-primary inline-flex items-center gap-1 group-hover:gap-2 transition-all">
+                    <span>Learn more</span>
+                    <ChevronRight className="size-3" />
+                  </div>
+                </CardContent>
+              </Card>
             </a>
           </div>
         </div>
@@ -97,74 +112,83 @@ export function AdditionalFeaturesGrid() {
             {/* CLI & Web UI */}
             <a
               href="#cli-ui"
-              className="group relative rounded-2xl border bg-card p-6 transition-transform hover:-translate-y-0.5 animate-in fade-in slide-in-from-bottom-2 delay-200 focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none before:absolute before:inset-x-0 before:top-0 before:h-[2px] before:bg-muted-foreground"
+              className="group block transition-transform hover:-translate-y-0.5 animate-in fade-in slide-in-from-bottom-2 delay-200 focus-visible:outline-none"
               aria-label="Learn more about CLI & Web UI"
             >
-              <div className="flex items-start gap-4">
-                <div className="rounded-lg bg-muted/30 p-3">
-                  <Terminal className="size-6 text-muted-foreground" />
-                </div>
-                <div className="flex-1">
-                  <h3 className="text-lg font-bold text-foreground mb-2">CLI & Web UI</h3>
-                  <p className="text-sm text-muted-foreground">
-                    Automate with a fast CLI or manage visually in the web UI—your call.
-                  </p>
-                </div>
-              </div>
-              <div className="mt-4 text-sm text-primary inline-flex items-center gap-1 group-hover:gap-2 transition-all">
-                <span>Learn more</span>
-                <ChevronRight className="size-3" />
-              </div>
+              <Card className="h-full before:absolute before:inset-x-0 before:top-0 before:h-[2px] before:bg-muted-foreground before:rounded-t-xl relative overflow-hidden">
+                <CardContent className="p-6">
+                  <IconCardHeader
+                    icon={Terminal}
+                    iconTone="muted"
+                    iconSize="sm"
+                    title="CLI & Web UI"
+                    subtitle="Automate with a fast CLI or manage visually in the web UI—your call."
+                    titleClassName="text-lg"
+                    subtitleClassName="text-sm mt-2"
+                    useCardHeader={false}
+                  />
+                  <div className="mt-4 text-sm text-primary inline-flex items-center gap-1 group-hover:gap-2 transition-all">
+                    <span>Learn more</span>
+                    <ChevronRight className="size-3" />
+                  </div>
+                </CardContent>
+              </Card>
             </a>
 
             {/* TypeScript SDK */}
             <a
               href="#sdk"
-              className="group relative rounded-2xl border bg-card p-6 transition-transform hover:-translate-y-0.5 animate-in fade-in slide-in-from-bottom-2 delay-300 focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none before:absolute before:inset-x-0 before:top-0 before:h-[2px] before:bg-primary"
+              className="group block transition-transform hover:-translate-y-0.5 animate-in fade-in slide-in-from-bottom-2 delay-300 focus-visible:outline-none"
               aria-label="Learn more about TypeScript SDK"
             >
-              <div className="flex items-start gap-4">
-                <div className="rounded-lg bg-primary/10 p-3">
-                  <Code className="size-6 text-primary" />
-                </div>
-                <div className="flex-1">
-                  <h3 className="text-lg font-bold text-foreground mb-2">TypeScript SDK</h3>
-                  <p className="text-sm text-muted-foreground">
-                    Type-safe utilities for building agents; async/await with full IDE help.
-                  </p>
-                </div>
-              </div>
-              <div className="mt-4 text-sm text-primary inline-flex items-center gap-1 group-hover:gap-2 transition-all">
-                <span>Learn more</span>
-                <ChevronRight className="size-3" />
-              </div>
+              <Card className="h-full before:absolute before:inset-x-0 before:top-0 before:h-[2px] before:bg-primary before:rounded-t-xl relative overflow-hidden">
+                <CardContent className="p-6">
+                  <IconCardHeader
+                    icon={Code}
+                    iconTone="primary"
+                    iconSize="sm"
+                    title="TypeScript SDK"
+                    subtitle="Type-safe utilities for building agents; async/await with full IDE help."
+                    titleClassName="text-lg"
+                    subtitleClassName="text-sm mt-2"
+                    useCardHeader={false}
+                  />
+                  <div className="mt-4 text-sm text-primary inline-flex items-center gap-1 group-hover:gap-2 transition-all">
+                    <span>Learn more</span>
+                    <ChevronRight className="size-3" />
+                  </div>
+                </CardContent>
+              </Card>
             </a>
 
             {/* Security First */}
             <a
               href="#security-isolation"
-              className="group relative rounded-2xl border bg-card p-6 transition-transform hover:-translate-y-0.5 animate-in fade-in slide-in-from-bottom-2 delay-400 focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none before:absolute before:inset-x-0 before:top-0 before:h-[2px] before:bg-chart-2"
+              className="group block transition-transform hover:-translate-y-0.5 animate-in fade-in slide-in-from-bottom-2 delay-400 focus-visible:outline-none"
               aria-label="Learn more about Security First"
             >
-              <div className="flex items-start gap-4">
-                <div className="rounded-lg bg-chart-2/10 p-3">
-                  <Shield className="size-6 text-chart-2" />
-                </div>
-                <div className="flex-1">
-                  <h3 className="text-lg font-bold text-foreground mb-2">Security First</h3>
-                  <p className="text-sm text-muted-foreground">
-                    Five Rust crates: auth, audit logs, input validation, secrets, and deadlines.
-                  </p>
-                </div>
-              </div>
-              <div className="mt-4 text-sm text-primary inline-flex items-center gap-1 group-hover:gap-2 transition-all">
-                <span>Learn more</span>
-                <ChevronRight className="size-3" />
-              </div>
+              <Card className="h-full before:absolute before:inset-x-0 before:top-0 before:h-[2px] before:bg-chart-2 before:rounded-t-xl relative overflow-hidden">
+                <CardContent className="p-6">
+                  <IconCardHeader
+                    icon={Shield}
+                    iconTone="chart-2"
+                    iconSize="sm"
+                    title="Security First"
+                    subtitle="Six Rust crates: auth, audit logs, input validation, secrets, JWT guardian, and deadlines."
+                    titleClassName="text-lg"
+                    subtitleClassName="text-sm mt-2"
+                    useCardHeader={false}
+                  />
+                  <div className="mt-4 text-sm text-primary inline-flex items-center gap-1 group-hover:gap-2 transition-all">
+                    <span>Learn more</span>
+                    <ChevronRight className="size-3" />
+                  </div>
+                </CardContent>
+              </Card>
             </a>
           </div>
         </div>
       </div>
     </SectionContainer>
-  )
+  );
 }

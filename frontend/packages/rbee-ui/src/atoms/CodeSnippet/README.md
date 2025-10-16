@@ -48,7 +48,7 @@ import { CodeSnippet } from '@/components/atoms'
 
 - **CodeSnippet (inline)** - For commands or code within text: "Run `npm install`"
 - **CodeSnippet (block)** - For short, standalone commands without terminal chrome
-- **ConsoleOutput** - For terminal output with chrome and multiple lines
+- **TerminalWindow** - For terminal output with chrome and multiple lines
 - **CodeBlock** - For larger code blocks with line numbers and syntax highlighting
 
 ## Examples

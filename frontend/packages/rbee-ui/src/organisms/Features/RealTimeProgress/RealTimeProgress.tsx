@@ -1,5 +1,6 @@
-import { IconPlate, SectionContainer } from '@rbee/ui/molecules'
-import { Activity, XCircle } from 'lucide-react'
+import { Badge, Card, CardContent } from '@rbee/ui/atoms'
+import { IconCardHeader, SectionContainer, StatusKPI, TerminalWindow, TimelineStep } from '@rbee/ui/molecules'
+import { Activity, Gauge, Timer, MemoryStick, XCircle } from 'lucide-react'
 
 export function RealTimeProgress() {
   return (
@@ -11,36 +12,35 @@ export function RealTimeProgress() {
       <div className="max-w-6xl mx-auto space-y-10">
         {/* Block 1: Live Terminal Timeline */}
         <div>
-          <div className="flex items-start gap-3 mb-4">
-            <IconPlate icon={Activity} tone="primary" size="md" shape="rounded" />
-            <div>
-              <h3 className="text-2xl font-bold tracking-tight text-foreground">SSE Narration Architecture</h3>
-              <p className="text-muted-foreground">
-                Workers stream every step as Server-Sent Events—from model load to token generation.
-              </p>
-            </div>
-          </div>
+          <IconCardHeader
+            icon={Activity}
+            iconTone="primary"
+            iconSize="md"
+            title="SSE Narration Architecture"
+            subtitle="Workers stream every step as Server-Sent Events—from model load to token generation."
+            useCardHeader={false}
+            className="mb-4"
+          />
 
-          <div className="rounded-2xl border bg-card overflow-hidden animate-in fade-in slide-in-from-bottom-2">
-            {/* Terminal bar */}
-            <div className="flex items-center gap-1 bg-muted/60 px-4 py-2">
-              <span className="size-2 rounded-full bg-red-500/70" aria-hidden="true" />
-              <span className="size-2 rounded-full bg-yellow-500/70" aria-hidden="true" />
-              <span className="size-2 rounded-full bg-green-500/70" aria-hidden="true" />
-              <span className="ml-3 font-mono text-xs text-muted-foreground">SSE narration — worker 8001</span>
-              <div className="ml-auto hidden sm:flex items-center gap-2 text-[10px]">
-                <span className="rounded px-1.5 py-0.5 bg-chart-3/15 text-chart-3">OK</span>
-                <span className="rounded px-1.5 py-0.5 bg-primary/15 text-primary">IO</span>
-                <span className="rounded px-1.5 py-0.5 bg-destructive/15 text-destructive">ERR</span>
+          <TerminalWindow
+            title="SSE narration — worker 8001"
+            ariaLabel="Server-sent events narration log"
+            className="animate-in fade-in slide-in-from-bottom-2"
+            footer={
+              <div className="flex items-center justify-between">
+                <div className="text-xs text-muted-foreground">
+                  Narration → <code className="bg-muted px-1 rounded">stderr</code> · Tokens →{' '}
+                  <code className="bg-muted px-1 rounded">stdout</code>
+                </div>
+                <div className="hidden sm:flex items-center gap-2">
+                  <Badge variant="outline" className="bg-chart-3/15 text-chart-3 border-chart-3/30">OK</Badge>
+                  <Badge variant="outline" className="bg-primary/15 text-primary border-primary/30">IO</Badge>
+                  <Badge variant="outline" className="bg-destructive/15 text-destructive border-destructive/30">ERR</Badge>
+                </div>
               </div>
-            </div>
-
-            {/* Scrollable log */}
-            <div
-              className="bg-background p-6 font-mono text-sm leading-relaxed max-h-[340px] overflow-auto"
-              role="log"
-              aria-live="polite"
-            >
+            }
+          >
+            <div className="max-h-[340px] overflow-auto" role="log" aria-live="polite">
               <div className="text-muted-foreground animate-in fade-in duration-300">
                 [00:00.00] [worker] start :8001
               </div>
@@ -68,34 +68,25 @@ export function RealTimeProgress() {
                 [00:01.26] [candle] generated 20 tokens (133 tok/s) ✓
               </div>
             </div>
-
-            {/* Footer hint */}
-            <div className="border-t border-border px-6 py-3 text-xs text-muted-foreground">
-              Narration → <code className="bg-muted px-1 rounded">stderr</code> · Tokens →{' '}
-              <code className="bg-muted px-1 rounded">stdout</code>
-            </div>
-          </div>
+          </TerminalWindow>
         </div>
 
         {/* Block 2: Stream Meter Row */}
         <div className="grid sm:grid-cols-3 gap-3 animate-in fade-in slide-in-from-bottom-2 delay-100">
-          <div className="bg-card border rounded-xl p-4 hover:-translate-y-0.5 transition-transform">
-            <div className="text-xs text-muted-foreground">Throughput</div>
-            <div className="mt-1 text-lg font-semibold text-foreground">133 tok/s</div>
+          <div className="hover:-translate-y-0.5 transition-transform">
+            <StatusKPI icon={Gauge} color="chart-3" label="Throughput" value="133 tok/s" />
             <div className="mt-2 h-2 rounded-full bg-muted overflow-hidden">
               <div className="h-full w-[80%] bg-chart-3" />
             </div>
           </div>
-          <div className="bg-card border rounded-xl p-4 hover:-translate-y-0.5 transition-transform">
-            <div className="text-xs text-muted-foreground">First token latency</div>
-            <div className="mt-1 text-lg font-semibold text-foreground">150 ms</div>
+          <div className="hover:-translate-y-0.5 transition-transform">
+            <StatusKPI icon={Timer} color="primary" label="First token latency" value="150 ms" />
             <div className="mt-2 h-2 rounded-full bg-muted overflow-hidden">
               <div className="h-full w-[60%] bg-primary" />
             </div>
           </div>
-          <div className="bg-card border rounded-xl p-4 hover:-translate-y-0.5 transition-transform">
-            <div className="text-xs text-muted-foreground">VRAM used</div>
-            <div className="mt-1 text-lg font-semibold text-foreground">669 MB</div>
+          <div className="hover:-translate-y-0.5 transition-transform">
+            <StatusKPI icon={MemoryStick} color="chart-2" label="VRAM used" value="669 MB" />
             <div className="mt-2 h-2 rounded-full bg-muted overflow-hidden">
               <div className="h-full w-[45%] bg-emerald-500/80" />
             </div>
@@ -103,43 +94,49 @@ export function RealTimeProgress() {
         </div>
 
         {/* Block 3: Cancellation Sequence Card */}
-        <div className="rounded-2xl border bg-card p-6 animate-in fade-in slide-in-from-bottom-2 delay-150">
-          <div className="flex items-start gap-3 mb-4">
-            <IconPlate icon={XCircle} tone="warning" size="md" shape="rounded" />
-            <div>
-              <h3 className="text-2xl font-bold tracking-tight text-foreground">Request Cancellation</h3>
-              <p className="text-muted-foreground">
-                Ctrl+C or API cancel stops the job, frees resources, and leaves no orphaned processes.
-              </p>
-            </div>
-          </div>
+        <Card className="animate-in fade-in slide-in-from-bottom-2 delay-150">
+          <CardContent className="p-6">
+            <IconCardHeader
+              icon={XCircle}
+              iconTone="warning"
+              iconSize="md"
+              title="Request Cancellation"
+              subtitle="Ctrl+C or API cancel stops the job, frees resources, and leaves no orphaned processes."
+              useCardHeader={false}
+              className="mb-4"
+            />
 
-          {/* Sequence */}
-          <ol className="grid gap-3 sm:grid-cols-4 text-sm" aria-label="Cancellation sequence">
-            <li className="bg-background border rounded-xl p-4 hover:ring-1 hover:ring-border transition-all">
-              <div className="text-xs text-muted-foreground">t+0ms</div>
-              <div className="font-semibold text-foreground">
-                Client sends <code className="bg-muted px-1 rounded text-xs">POST /v1/cancel</code>
-              </div>
-              <p className="mt-1 text-muted-foreground">Idempotent request.</p>
-            </li>
-            <li className="bg-background border rounded-xl p-4 hover:ring-1 hover:ring-border transition-all">
-              <div className="text-xs text-muted-foreground">t+50ms</div>
-              <div className="font-semibold text-foreground">SSE disconnect detected</div>
-              <p className="mt-1 text-muted-foreground">Stream closes ≤ 1s.</p>
-            </li>
-            <li className="bg-background border rounded-xl p-4 hover:ring-1 hover:ring-border transition-all">
-              <div className="text-xs text-muted-foreground">t+80ms</div>
-              <div className="font-semibold text-foreground">Immediate cleanup</div>
-              <p className="mt-1 text-muted-foreground">Stop tokens, release slot, log event.</p>
-            </li>
-            <li className="bg-background border rounded-xl p-4 hover:ring-1 hover:ring-border transition-all">
-              <div className="text-xs text-muted-foreground">t+120ms</div>
-              <div className="font-semibold text-chart-3">Worker idle ✓</div>
-              <p className="mt-1 text-muted-foreground">Ready for next task.</p>
-            </li>
-          </ol>
-        </div>
+            {/* Sequence */}
+            <ol className="grid gap-3 sm:grid-cols-4 text-sm" aria-label="Cancellation sequence">
+              <TimelineStep
+                timestamp="t+0ms"
+                title={
+                  <>
+                    Client sends{" "}
+                    <code className="bg-muted px-1 rounded text-xs">POST /v1/cancel</code>
+                  </>
+                }
+                description="Idempotent request."
+              />
+              <TimelineStep
+                timestamp="t+50ms"
+                title="SSE disconnect detected"
+                description="Stream closes ≤ 1s."
+              />
+              <TimelineStep
+                timestamp="t+80ms"
+                title="Immediate cleanup"
+                description="Stop tokens, release slot, log event."
+              />
+              <TimelineStep
+                timestamp="t+120ms"
+                title={<span className="text-chart-3">Worker idle ✓</span>}
+                description="Ready for next task."
+                variant="success"
+              />
+            </ol>
+          </CardContent>
+        </Card>
       </div>
     </SectionContainer>
   )

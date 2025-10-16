@@ -2,7 +2,7 @@ import { Code, Cpu, Gauge, Zap } from 'lucide-react'
 import { TabConfig } from './CoreFeaturesTabs'
 import { CodeBlock } from '@rbee/ui/molecules/CodeBlock'
 import { GPUUtilizationBar } from '@rbee/ui/molecules/GPUUtilizationBar'
-import { ConsoleOutput } from '@rbee/ui/atoms/ConsoleOutput'
+import { TerminalWindow } from '@rbee/ui/molecules/TerminalWindow'
 
 export const defaultTabConfigs: TabConfig[] = [
   {
@@ -103,7 +103,7 @@ else {
     badge: 'Observe',
     description: 'See model loading, token generation, and costs stream in as they happen.',
     content: (
-      <ConsoleOutput copyable={true} copyText={`→ event: task.created
+      <TerminalWindow showChrome={false} copyable={true} copyText={`→ event: task.created
 { "id": "task_123", "status": "pending" }
 
 → event: model.loading
@@ -132,7 +132,7 @@ else {
             <div className="pl-4">{'{ "token": " api", "total": 2 }'}</div>
           </div>
         </div>
-      </ConsoleOutput>
+      </TerminalWindow>
     ),
     highlight: {
       text: 'Full visibility for every inference job.',

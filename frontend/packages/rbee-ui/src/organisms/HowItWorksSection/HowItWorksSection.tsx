@@ -1,5 +1,4 @@
-import { ConsoleOutput } from '@rbee/ui/atoms'
-import { SectionContainer } from '@rbee/ui/molecules'
+import { SectionContainer, TerminalWindow } from '@rbee/ui/molecules'
 import { cn } from '@rbee/ui/utils'
 import type { ReactNode } from 'react'
 
@@ -61,27 +60,25 @@ export function HowItWorksSection({ title, subtitle, steps, id, className }: How
                 {step.block && (
                   <>
                     {step.block.kind === 'terminal' && (
-                      <ConsoleOutput
+                      <TerminalWindow
                         showChrome
                         title={step.block.title || 'terminal'}
-                        background="dark"
                         copyable
                         copyText={step.block.copyText}
                       >
                         {step.block.lines}
-                      </ConsoleOutput>
+                      </TerminalWindow>
                     )}
 
                     {step.block.kind === 'code' && (
-                      <ConsoleOutput
+                      <TerminalWindow
                         showChrome
                         title={step.block.title || step.block.language || 'code'}
-                        background="dark"
                         copyable
                         copyText={step.block.copyText}
                       >
                         {step.block.lines}
-                      </ConsoleOutput>
+                      </TerminalWindow>
                     )}
 
                     {step.block.kind === 'note' && (

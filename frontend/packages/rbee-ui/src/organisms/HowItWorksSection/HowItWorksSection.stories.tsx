@@ -52,7 +52,7 @@ This organism contains:
 - **Header**: Title and optional subtitle (via SectionContainer)
 - **Steps**: Array of step objects with labels and code blocks
 - **Step Badges**: Numbered circles for visual hierarchy
-- **ConsoleOutput**: Terminal/code blocks with syntax highlighting and copy buttons
+- **TerminalWindow**: Terminal/code blocks with syntax highlighting and copy buttons
 - **Staggered Animations**: Steps animate in with delays
 
 ## When to Use
@@ -105,7 +105,7 @@ import { HowItWorksSection } from '@rbee/ui/organisms'
 \`\`\`
 
 ## Related Components
-- ConsoleOutput
+- TerminalWindow
 - SectionContainer
 
 ## Accessibility

@@ -7,7 +7,8 @@ import Link from 'next/link'
 
 export interface UseCaseCardProps {
   icon: LucideIcon
-  iconTone?: 'primary' | 'muted' | 'success' | 'warning'
+  color?: 'primary' | 'chart-1' | 'chart-2' | 'chart-3' | 'chart-4' | 'chart-5' | 'muted' | 'success' | 'warning'
+  iconTone?: 'primary' | 'muted' | 'success' | 'warning' | 'chart-1' | 'chart-2' | 'chart-3' | 'chart-4' | 'chart-5'
   iconSize?: 'sm' | 'md' | 'lg'
   title: string
   scenario: string
@@ -16,12 +17,14 @@ export interface UseCaseCardProps {
   tags?: string[]
   cta?: { label: string; href: string }
   anchor?: string
+  badge?: string
   className?: string
   style?: React.CSSProperties
 }
 
 export function UseCaseCard({
   icon,
+  color,
   iconTone = 'primary',
   iconSize = 'md',
   title,
@@ -31,19 +34,29 @@ export function UseCaseCard({
   tags,
   cta,
   anchor,
+  badge,
   className,
   style,
 }: UseCaseCardProps) {
+  // Use color if provided, otherwise fall back to iconTone
+  const resolvedIconTone = color || iconTone
   return (
     <Card id={anchor} tabIndex={0} className={cn('group transition-all', className)} style={style}>
-      <IconCardHeader
-        icon={icon}
-        title={title}
-        iconSize={iconSize}
-        iconTone={iconTone}
-        titleClassName="text-base font-semibold tracking-tight text-card-foreground"
-        titleId={anchor ? `${anchor}-title` : undefined}
-      />
+      <div className="flex items-start justify-between pr-6">
+        <IconCardHeader
+          icon={icon}
+          title={title}
+          iconSize={iconSize}
+          iconTone={resolvedIconTone}
+          titleClassName="text-base font-semibold tracking-tight text-card-foreground"
+          titleId={anchor ? `${anchor}-title` : undefined}
+        />
+        {badge && (
+          <Badge variant="secondary" className="ml-2 mt-4 text-xs shrink-0">
+            {badge}
+          </Badge>
+        )}
+      </div>
 
       <CardContent className="space-y-4">
         {/* Scenario */}

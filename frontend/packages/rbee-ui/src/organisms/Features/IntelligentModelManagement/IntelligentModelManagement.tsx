@@ -11,13 +11,9 @@ export function IntelligentModelManagement() {
       title="Intelligent Model Management"
       bgVariant="background"
       subtitle="Automatic model provisioning, caching, and validation. Download once; use everywhere."
+      eyebrow={<Badge variant="secondary">Provision • Cache • Validate</Badge>}
     >
       <div className="max-w-5xl mx-auto space-y-8">
-        {/* Overline badge */}
-        <div className="flex justify-center mb-8">
-          <Badge variant="secondary">Provision • Cache • Validate</Badge>
-        </div>
-
         {/* Automatic Model Catalog - Full width */}
         <Card className="animate-in fade-in slide-in-from-bottom-2 duration-500">
           <CardContent className="space-y-6 pt-6">
@@ -93,25 +89,19 @@ export function IntelligentModelManagement() {
             </div>
 
             {/* Feature strip */}
-            <div className="grid sm:grid-cols-3 gap-3">
-              <FeatureMiniCard
-                title="Checksum validation"
-                description="SHA256 check prevents corrupted downloads."
-                tone="chart-3"
-                variant="secondary"
-              />
-              <FeatureMiniCard
-                title="Resume support"
-                description="Interrupted network? Resume from checkpoint."
-                tone="chart-3"
-                variant="secondary"
-              />
-              <FeatureMiniCard
-                title="SQLite catalog"
-                description="Fast lookups. No duplicates."
-                tone="chart-3"
-                variant="secondary"
-              />
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mt-4">
+              <div className="bg-secondary/60 border border-border rounded-lg p-4 hover:-translate-y-0.5 transition-transform">
+                <div className="text-sm font-semibold mb-1 text-chart-3">Hugging Face</div>
+                <div className="text-xs text-muted-foreground">hf:meta-llama/Llama-3.1-8B</div>
+              </div>
+              <div className="bg-secondary/60 border border-border rounded-lg p-4 hover:-translate-y-0.5 transition-transform">
+                <div className="text-sm font-semibold mb-1 text-chart-3">Local GGUF</div>
+                <div className="text-xs text-muted-foreground">file:./models/llama-3.1.gguf</div>
+              </div>
+              <div className="bg-secondary/60 border border-border rounded-lg p-4 hover:-translate-y-0.5 transition-transform">
+                <div className="text-sm font-semibold mb-1 text-chart-3">HTTP URL</div>
+                <div className="text-xs text-muted-foreground">https://example.com/model.gguf</div>
+              </div>
             </div>
           </CardContent>
         </Card>
@@ -140,26 +130,34 @@ export function IntelligentModelManagement() {
 
             {/* Checklist grid */}
             <div className="grid sm:grid-cols-2 gap-4">
-              <ChecklistItem
-                icon={CheckCircle2}
-                title="RAM check"
-                description="Requires available RAM ≥ model size × 1.2"
-              />
-              <ChecklistItem
-                icon={CheckCircle2}
-                title="VRAM check"
-                description="Sufficient GPU VRAM for selected backend"
-              />
-              <ChecklistItem
-                icon={CheckCircle2}
-                title="Disk space"
-                description="Free space verified before download"
-              />
-              <ChecklistItem
-                icon={CheckCircle2}
-                title="Backend availability"
-                description="CUDA • Metal • CPU presence"
-              />
+              <div className="bg-background rounded-lg p-4 flex items-start gap-3">
+                <CheckCircle2 className="size-5 text-chart-3 mt-0.5 shrink-0" aria-hidden="true" />
+                <div>
+                  <div className="font-semibold text-foreground">RAM check</div>
+                  <div className="text-sm text-muted-foreground">Requires available RAM ≥ model size × 1.2</div>
+                </div>
+              </div>
+              <div className="bg-background rounded-lg p-4 flex items-start gap-3">
+                <CheckCircle2 className="size-5 text-chart-3 mt-0.5 shrink-0" aria-hidden="true" />
+                <div>
+                  <div className="font-semibold text-foreground">VRAM check</div>
+                  <div className="text-sm text-muted-foreground">Sufficient GPU VRAM for selected backend</div>
+                </div>
+              </div>
+              <div className="bg-background rounded-lg p-4 flex items-start gap-3">
+                <CheckCircle2 className="size-5 text-chart-3 mt-0.5 shrink-0" aria-hidden="true" />
+                <div>
+                  <div className="font-semibold text-foreground">Disk space</div>
+                  <div className="text-sm text-muted-foreground">Free space verified before download</div>
+                </div>
+              </div>
+              <div className="bg-background rounded-lg p-4 flex items-start gap-3">
+                <CheckCircle2 className="size-5 text-chart-3 mt-0.5 shrink-0" aria-hidden="true" />
+                <div>
+                  <div className="font-semibold text-foreground">Backend availability</div>
+                  <div className="text-sm text-muted-foreground">CUDA • Metal • CPU presence</div>
+                </div>
+              </div>
             </div>
 
             {/* Info bar */}
@@ -174,59 +172,3 @@ export function IntelligentModelManagement() {
   );
 }
 
-// ──────────────────────────────────────────────────────────────────────────────
-// Helper Components
-// ──────────────────────────────────────────────────────────────────────────────
-
-interface FeatureMiniCardProps {
-  title: string;
-  description: string;
-  tone?: "chart-3";
-  variant?: "secondary";
-}
-
-function FeatureMiniCard({
-  title,
-  description,
-  tone = "chart-3",
-  variant = "secondary",
-}: FeatureMiniCardProps) {
-  const bgClass = variant === "secondary" ? "bg-secondary/60" : "bg-background";
-  const titleColorClass =
-    tone === "chart-3" ? "text-chart-3" : "text-foreground";
-
-  return (
-    <div
-      className={cn(
-        bgClass,
-        "border border-border rounded-lg p-4 hover:-translate-y-0.5 transition-transform"
-      )}
-    >
-      <div className={cn("text-sm font-semibold mb-1", titleColorClass)}>
-        {title}
-      </div>
-      <div className="text-xs text-muted-foreground">{description}</div>
-    </div>
-  );
-}
-
-interface ChecklistItemProps {
-  icon: typeof CheckCircle2;
-  title: string;
-  description: string;
-}
-
-function ChecklistItem({ icon: Icon, title, description }: ChecklistItemProps) {
-  return (
-    <div className="bg-background rounded-lg p-4 flex items-start gap-3">
-      <Icon
-        className="size-5 text-chart-3 mt-0.5 shrink-0"
-        aria-hidden="true"
-      />
-      <div>
-        <div className="font-semibold text-foreground">{title}</div>
-        <div className="text-sm text-muted-foreground">{description}</div>
-      </div>
-    </div>
-  );
-}

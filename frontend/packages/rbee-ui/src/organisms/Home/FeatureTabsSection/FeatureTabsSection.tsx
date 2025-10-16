@@ -1,7 +1,7 @@
 'use client'
 
-import { ConsoleOutput } from '@rbee/ui/atoms'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@rbee/ui/atoms/Tabs'
+import { TerminalWindow } from '@rbee/ui/molecules'
 import { cn } from '@rbee/ui/utils'
 import type { ReactNode } from 'react'
 
@@ -95,20 +95,19 @@ export function FeatureTabsSection({ title, subtitle, items, defaultId, id, clas
                     {item.example && (
                       <>
                         {(item.example.kind === 'terminal' || item.example.kind === 'code') && (
-                          <ConsoleOutput
+                          <TerminalWindow
                             showChrome
                             title={
                               item.example.title ||
                               (item.example.kind === 'terminal' ? 'terminal' : item.example.language || 'code')
                             }
-                            background="dark"
                             copyable
                             copyText={item.example.copyText || item.example.content}
                           >
                             <pre className="text-sm">
                               <code>{item.example.content}</code>
                             </pre>
-                          </ConsoleOutput>
+                          </TerminalWindow>
                         )}
                         {item.example.kind === 'markdown' && (
                           <div className="overflow-hidden rounded-lg border bg-card">

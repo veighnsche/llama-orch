@@ -13,6 +13,36 @@ Shared utilities for WCAG color contrast calculations.
 - `get_contrast_ratio(color1, color2)` - Calculate WCAG contrast ratio
 - `check_wcag_compliance(ratio)` - Check against WCAG standards
 
+### `check_contrast.py` ⭐ **RECOMMENDED**
+
+**Generic, reusable WCAG contrast checker for ANY component.**
+
+**Usage:**
+```bash
+# Check a single color pair
+python check_contrast.py --fg "#ffffff" --bg "#b45309"
+
+# With custom label
+python check_contrast.py --fg "#ffffff" --bg "#dc2626" --label "Error Button"
+
+# Batch check from JSON
+python check_contrast.py --input badge_colors.json
+
+# Verbose output with full details
+python check_contrast.py --fg "#ffffff" --bg "#3b82f6" --verbose
+
+# Save results to JSON
+python check_contrast.py --input colors.json --output results.json
+```
+
+**JSON Format:**
+```json
+[
+  {"label": "Primary Button", "fg": "#ffffff", "bg": "#b45309"},
+  {"label": "Destructive Alert", "fg": "#ffffff", "bg": "#dc2626"}
+]
+```
+
 ### `check_components.py`
 
 Scans all TSX/Vue components and generates a compliance report.
@@ -130,8 +160,11 @@ Update `LIGHT_MODE_COLORS` and `DARK_MODE_COLORS` in `check_components.py` when 
 ### Testing
 
 ```bash
-# Test individual color combinations
+# Test individual color combinations (use the generic tool!)
 cd frontend/tools/wcag
+python check_contrast.py --fg "#64748b" --bg "#f1f5f9" --verbose
+
+# Or for quick checks
 python -c "
 from wcag_utils import parse_color, get_contrast_ratio, check_wcag_compliance
 text = parse_color('#64748b')
@@ -140,4 +173,26 @@ ratio = get_contrast_ratio(text, bg)
 print(f'Ratio: {ratio:.2f}:1')
 print(check_wcag_compliance(ratio))
 "
+```
+
+## Creating Color Checks for New Components
+
+**DO NOT create component-specific Python scripts!**
+
+Instead, create a JSON file with your color pairs:
+
+```bash
+# 1. Create colors JSON file
+cat > my_component_colors.json << 'EOF'
+[
+  {"label": "MyComponent Primary", "fg": "#ffffff", "bg": "#your-color"},
+  {"label": "MyComponent Secondary", "fg": "#another", "bg": "#color"}
+]
+EOF
+
+# 2. Run the generic checker
+python check_contrast.py --input my_component_colors.json
+
+# 3. Optional: Save results
+python check_contrast.py --input my_component_colors.json --output results.json
 ```

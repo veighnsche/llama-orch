@@ -1,10 +1,14 @@
 import { Badge } from "@rbee/ui/atoms/Badge";
 import { Card, CardContent } from "@rbee/ui/atoms/Card";
-import { ConsoleOutput } from "@rbee/ui/atoms/ConsoleOutput";
 import { Separator } from "@rbee/ui/atoms/Separator";
-import { IconCardHeader, IconPlate, SectionContainer } from "@rbee/ui/molecules";
+import {
+  IconCardHeader,
+  IconPlate,
+  SectionContainer,
+  TerminalWindow,
+} from "@rbee/ui/molecules";
 import { cn } from "@rbee/ui/utils";
-import { ArrowDown, GitBranch, Network } from "lucide-react";
+import { ArrowDown, CheckCircle2, GitBranch, Network } from "lucide-react";
 
 export function CrossNodeOrchestration() {
   return (
@@ -12,13 +16,9 @@ export function CrossNodeOrchestration() {
       title="Cross-Pool Orchestration"
       bgVariant="background"
       subtitle="Seamlessly orchestrate AI workloads across your entire network. One command runs inference on any machine in your pool."
+      eyebrow={<Badge variant="secondary">Distributed execution</Badge>}
     >
       <div className="max-w-6xl mx-auto">
-        {/* Overline badge */}
-        <div className="flex justify-center mb-8">
-          <Badge variant="secondary">Distributed execution</Badge>
-        </div>
-
         <div className="grid gap-8 lg:grid-cols-2 items-start">
           {/* Pool Registry Management Card */}
           <Card className="animate-in fade-in slide-in-from-left-4 duration-500">
@@ -30,8 +30,8 @@ export function CrossNodeOrchestration() {
               iconSize="md"
             />
             <CardContent className="space-y-6">
-
-              <ConsoleOutput
+              <TerminalWindow
+                showChrome={false}
                 variant="terminal"
                 copyable
                 copyText={`# Add a remote machine to your pool\n$ rbee-keeper setup add-node \\\n  --name workstation \\\n  --ssh-host workstation.home.arpa \\\n  --ssh-user vince \\\n  --ssh-key ~/.ssh/id_ed25519\n\n# Run inference on that machine\n$ rbee-keeper infer --node workstation \\\n  --model hf:meta-llama/Llama-3.1-8B \\\n  --prompt "write a short story"`}
@@ -61,21 +61,51 @@ export function CrossNodeOrchestration() {
                   <br />
                   {"  "}--prompt &quot;write a short story&quot;
                 </div>
-              </ConsoleOutput>
+              </TerminalWindow>
 
               <div className="grid sm:grid-cols-3 gap-3">
-                <FeatureMiniCard
-                  title="Automatic Detection"
-                  description="Detects CUDA, Metal, CPU & device counts."
-                />
-                <FeatureMiniCard
-                  title="SSH Validation"
-                  description="Connectivity tested before save."
-                />
-                <FeatureMiniCard
-                  title="Zero Config"
-                  description="No manual setup on remote nodes."
-                />
+                <div className="bg-background rounded-xl border border-border p-4 flex items-start gap-3 hover:-translate-y-0.5 transition-transform">
+                  <CheckCircle2
+                    className="size-5 shrink-0 mt-0.5 text-chart-3"
+                    aria-hidden="true"
+                  />
+                  <div>
+                    <div className="font-semibold text-foreground text-sm">
+                      SSH Tunneling
+                    </div>
+                    <div className="text-xs text-muted-foreground mt-1">
+                      Secure connections over SSH.
+                    </div>
+                  </div>
+                </div>
+                <div className="bg-background rounded-xl border border-border p-4 flex items-start gap-3 hover:-translate-y-0.5 transition-transform">
+                  <CheckCircle2
+                    className="size-5 shrink-0 mt-0.5 text-chart-3"
+                    aria-hidden="true"
+                  />
+                  <div>
+                    <div className="font-semibold text-foreground text-sm">
+                      Auto Shutdown
+                    </div>
+                    <div className="text-xs text-muted-foreground mt-1">
+                      Workers exit cleanly after tasks.
+                    </div>
+                  </div>
+                </div>
+                <div className="bg-background rounded-xl border border-border p-4 flex items-start gap-3 hover:-translate-y-0.5 transition-transform">
+                  <CheckCircle2
+                    className="size-5 shrink-0 mt-0.5 text-chart-3"
+                    aria-hidden="true"
+                  />
+                  <div>
+                    <div className="font-semibold text-foreground text-sm">
+                      Minimal Footprint
+                    </div>
+                    <div className="text-xs text-muted-foreground mt-1">
+                      No persistent daemons on nodes.
+                    </div>
+                  </div>
+                </div>
               </div>
             </CardContent>
           </Card>
@@ -98,7 +128,8 @@ export function CrossNodeOrchestration() {
                     Automatic Worker Provisioning
                   </h3>
                   <p className="text-muted-foreground leading-relaxed">
-                    rbee spawns workers via SSH on demand and shuts them down cleanly. No manual daemons.
+                    rbee spawns workers via SSH on demand and shuts them down
+                    cleanly. No manual daemons.
                   </p>
                 </div>
               </div>
@@ -109,7 +140,11 @@ export function CrossNodeOrchestration() {
                   {/* Row 1: queen-rbee */}
                   <div className="flex items-center gap-3">
                     <div className="flex-1">
-                      <DiagramNode name="queen-rbee" label="Orchestrator" tone="primary" />
+                      <DiagramNode
+                        name="queen-rbee"
+                        label="Orchestrator"
+                        tone="primary"
+                      />
                     </div>
                   </div>
 
@@ -119,7 +154,11 @@ export function CrossNodeOrchestration() {
                   {/* Row 2: rbee-hive */}
                   <div className="flex items-center gap-3 pl-8">
                     <div className="flex-1">
-                      <DiagramNode name="rbee-hive" label="Pool manager" tone="chart-2" />
+                      <DiagramNode
+                        name="rbee-hive"
+                        label="Pool manager"
+                        tone="chart-2"
+                      />
                     </div>
                   </div>
 
@@ -129,7 +168,11 @@ export function CrossNodeOrchestration() {
                   {/* Row 3: worker-rbee */}
                   <div className="flex items-center gap-3 pl-16">
                     <div className="flex-1">
-                      <DiagramNode name="worker-rbee" label="Inference worker" tone="chart-3" />
+                      <DiagramNode
+                        name="worker-rbee"
+                        label="Inference worker"
+                        tone="chart-3"
+                      />
                     </div>
                   </div>
                 </div>
@@ -149,24 +192,6 @@ export function CrossNodeOrchestration() {
   );
 }
 
-// ──────────────────────────────────────────────────────────────────────────────
-// Helper Components
-// ──────────────────────────────────────────────────────────────────────────────
-
-interface FeatureMiniCardProps {
-  title: string;
-  description: string;
-}
-
-function FeatureMiniCard({ title, description }: FeatureMiniCardProps) {
-  return (
-    <div className="bg-background rounded-lg p-4 transition-transform hover:-translate-y-0.5">
-      <div className="text-sm font-semibold text-foreground mb-1">{title}</div>
-      <div className="text-xs text-muted-foreground">{description}</div>
-    </div>
-  );
-}
-
 interface DiagramNodeProps {
   name: string;
   label: string;
@@ -183,16 +208,14 @@ function DiagramNode({ name, label, tone }: DiagramNodeProps) {
   return (
     <div
       className={cn(
-        "inline-flex items-center gap-2 border rounded-lg px-4 py-2",
+        "rounded-lg border-2 p-3 transition-all hover:scale-105",
         toneClasses[tone]
       )}
     >
-      <span className="font-mono text-sm font-semibold text-foreground">
+      <div className="font-mono text-sm font-semibold text-foreground">
         {name}
-      </span>
-      <Badge variant="secondary" className="text-xs">
-        {label}
-      </Badge>
+      </div>
+      <div className="text-xs text-muted-foreground mt-1">{label}</div>
     </div>
   );
 }
@@ -202,11 +225,11 @@ interface DiagramArrowProps {
   indent?: string;
 }
 
-function DiagramArrow({ label, indent = "" }: DiagramArrowProps) {
+function DiagramArrow({ label, indent }: DiagramArrowProps) {
   return (
     <div className={cn("flex items-center gap-2", indent)}>
       <ArrowDown className="size-4 text-muted-foreground" aria-hidden="true" />
-      <span className="text-xs text-muted-foreground font-medium">{label}</span>
+      <span className="text-xs text-muted-foreground font-mono">{label}</span>
     </div>
   );
 }

@@ -1,0 +1,42 @@
+[
+  {
+    "label": "Badge Default (Light)",
+    "fg": "#ffffff",
+    "bg": "#b45309"
+  },
+  {
+    "label": "Badge Default (Dark)",
+    "fg": "#ffffff",
+    "bg": "#b45309"
+  },
+  {
+    "label": "Badge Secondary (Light)",
+    "fg": "#0f172a",
+    "bg": "#f1f5f9"
+  },
+  {
+    "label": "Badge Secondary (Dark)",
+    "fg": "#f1f5f9",
+    "bg": "#0f172a"
+  },
+  {
+    "label": "Badge Destructive (Light)",
+    "fg": "#ffffff",
+    "bg": "#dc2626"
+  },
+  {
+    "label": "Badge Destructive (Dark)",
+    "fg": "#ffffff",
+    "bg": "#dc2626"
+  },
+  {
+    "label": "Badge Outline (Light)",
+    "fg": "#0f172a",
+    "bg": "#ffffff"
+  },
+  {
+    "label": "Badge Outline (Dark)",
+    "fg": "#f1f5f9",
+    "bg": "#020617"
+  }
+]
