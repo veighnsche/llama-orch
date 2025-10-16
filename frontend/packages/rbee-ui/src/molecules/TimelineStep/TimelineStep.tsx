@@ -1,17 +1,17 @@
-import { cn } from "@rbee/ui/utils";
-import type { ReactNode } from "react";
+import { cn } from '@rbee/ui/utils'
+import type { ReactNode } from 'react'
 
 export interface TimelineStepProps {
   /** Timestamp or step label */
-  timestamp: string;
+  timestamp: string
   /** Step title/heading */
-  title: ReactNode;
+  title: ReactNode
   /** Step description */
-  description?: string;
+  description?: string
   /** Additional CSS classes */
-  className?: string;
+  className?: string
   /** Variant for different visual styles */
-  variant?: "default" | "success" | "warning" | "error";
+  variant?: 'default' | 'success' | 'warning' | 'error'
 }
 
 /**
@@ -33,33 +33,25 @@ export interface TimelineStepProps {
  *   variant="success"
  * />
  */
-export function TimelineStep({
-  timestamp,
-  title,
-  description,
-  className,
-  variant = "default",
-}: TimelineStepProps) {
+export function TimelineStep({ timestamp, title, description, className, variant = 'default' }: TimelineStepProps) {
   const variantClasses = {
-    default: "",
-    success: "border-chart-3/30",
-    warning: "border-warning/30",
-    error: "border-destructive/30",
-  };
+    default: '',
+    success: 'border-chart-3/30',
+    warning: 'border-warning/30',
+    error: 'border-destructive/30',
+  }
 
   return (
     <div
       className={cn(
-        "bg-background border border-border rounded-xl p-4 hover:ring-1 hover:ring-border transition-all",
+        'bg-background border border-border rounded-xl p-4 hover:ring-1 hover:ring-border transition-all',
         variantClasses[variant],
-        className
+        className,
       )}
     >
       <div className="text-xs text-muted-foreground">{timestamp}</div>
       <div className="font-semibold text-foreground mt-1">{title}</div>
-      {description && (
-        <p className="mt-1 text-sm text-muted-foreground">{description}</p>
-      )}
+      {description && <p className="mt-1 text-sm text-muted-foreground">{description}</p>}
     </div>
-  );
+  )
 }

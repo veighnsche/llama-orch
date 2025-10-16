@@ -1,3 +1,6 @@
+import { CodeBlock } from '@rbee/ui/molecules/CodeBlock'
+import { GPUUtilizationBar } from '@rbee/ui/molecules/GPUUtilizationBar'
+import { TerminalWindow } from '@rbee/ui/molecules/TerminalWindow'
 import {
   AdditionalFeaturesGrid,
   CrossNodeOrchestration,
@@ -8,12 +11,9 @@ import {
   MultiBackendGpu,
   RealTimeProgress,
   SecurityIsolation,
-} from "@rbee/ui/organisms";
-import { CoreFeaturesTabs } from "@rbee/ui/organisms/CoreFeaturesTabs";
-import { Code, Cpu, Gauge, Zap } from "lucide-react";
-import { CodeBlock } from "@rbee/ui/molecules/CodeBlock";
-import { GPUUtilizationBar } from "@rbee/ui/molecules/GPUUtilizationBar";
-import { TerminalWindow } from "@rbee/ui/molecules/TerminalWindow";
+} from '@rbee/ui/organisms'
+import { CoreFeaturesTabs } from '@rbee/ui/organisms/CoreFeaturesTabs'
+import { Code, Cpu, Gauge, Zap } from 'lucide-react'
 
 export default function FeaturesPage() {
   return (
@@ -24,14 +24,13 @@ export default function FeaturesPage() {
         description="Swap in the API, scale across your hardware, route with code, and watch jobs stream in real time."
         tabs={[
           {
-            value: "api",
+            value: 'api',
             icon: Code,
-            label: "OpenAI-Compatible",
-            mobileLabel: "API",
-            subtitle: "Drop-in API",
-            badge: "Drop-in",
-            description:
-              "Swap endpoints, keep your code. Works with Zed, Cursor, Continue—any OpenAI client.",
+            label: 'OpenAI-Compatible',
+            mobileLabel: 'API',
+            subtitle: 'Drop-in API',
+            badge: 'Drop-in',
+            description: 'Swap endpoints, keep your code. Works with Zed, Cursor, Continue—any OpenAI client.',
             content: (
               <CodeBlock
                 code={`# Before: OpenAI
@@ -44,55 +43,49 @@ export OPENAI_API_BASE=http://localhost:8080/v1`}
               />
             ),
             highlight: {
-              text: "Drop-in replacement. Point to localhost.",
-              variant: "success",
+              text: 'Drop-in replacement. Point to localhost.',
+              variant: 'success',
             },
             benefits: [
-              { text: "No vendor lock-in" },
-              { text: "Use your models + GPUs" },
-              { text: "Keep existing tooling" },
+              { text: 'No vendor lock-in' },
+              { text: 'Use your models + GPUs' },
+              { text: 'Keep existing tooling' },
             ],
           },
           {
-            value: "gpu",
+            value: 'gpu',
             icon: Cpu,
-            label: "Multi-GPU",
-            mobileLabel: "GPU",
-            subtitle: "Use every GPU",
-            badge: "Scale",
-            description:
-              "Run across CUDA, Metal, and CPU backends. Use every GPU across your network.",
+            label: 'Multi-GPU',
+            mobileLabel: 'GPU',
+            subtitle: 'Use every GPU',
+            badge: 'Scale',
+            description: 'Run across CUDA, Metal, and CPU backends. Use every GPU across your network.',
             content: (
               <div className="space-y-3">
                 <GPUUtilizationBar label="RTX 4090 #1" percentage={92} />
                 <GPUUtilizationBar label="RTX 4090 #2" percentage={88} />
                 <GPUUtilizationBar label="M2 Ultra" percentage={76} />
-                <GPUUtilizationBar
-                  label="CPU Backend"
-                  percentage={34}
-                  variant="secondary"
-                />
+                <GPUUtilizationBar label="CPU Backend" percentage={34} variant="secondary" />
               </div>
             ),
             highlight: {
-              text: "Higher throughput by saturating all devices.",
-              variant: "success",
+              text: 'Higher throughput by saturating all devices.',
+              variant: 'success',
             },
             benefits: [
-              { text: "Bigger models fit" },
-              { text: "Lower latency under load" },
-              { text: "No single-machine bottleneck" },
+              { text: 'Bigger models fit' },
+              { text: 'Lower latency under load' },
+              { text: 'No single-machine bottleneck' },
             ],
           },
           {
-            value: "scheduler",
+            value: 'scheduler',
             icon: Gauge,
-            label: "Programmable scheduler (Rhai)",
-            mobileLabel: "Rhai",
-            subtitle: "Route with Rhai",
-            badge: "Control",
-            description:
-              "Write routing rules. Send 70B to multi-GPU, images to CUDA, everything else to cheapest.",
+            label: 'Programmable scheduler (Rhai)',
+            mobileLabel: 'Rhai',
+            subtitle: 'Route with Rhai',
+            badge: 'Control',
+            description: 'Write routing rules. Send 70B to multi-GPU, images to CUDA, everything else to cheapest.',
             content: (
               <CodeBlock
                 code={`// Custom routing logic
@@ -110,24 +103,23 @@ else {
               />
             ),
             highlight: {
-              text: "Optimize for cost, latency, or compliance—your rules.",
-              variant: "primary",
+              text: 'Optimize for cost, latency, or compliance—your rules.',
+              variant: 'primary',
             },
             benefits: [
-              { text: "Deterministic routing" },
-              { text: "Policy & compliance ready" },
-              { text: "Easy to evolve" },
+              { text: 'Deterministic routing' },
+              { text: 'Policy & compliance ready' },
+              { text: 'Easy to evolve' },
             ],
           },
           {
-            value: "sse",
+            value: 'sse',
             icon: Zap,
-            label: "Task-based API with SSE",
-            mobileLabel: "SSE",
-            subtitle: "Live job stream",
-            badge: "Observe",
-            description:
-              "See model loading, token generation, and costs stream in as they happen.",
+            label: 'Task-based API with SSE',
+            mobileLabel: 'SSE',
+            subtitle: 'Live job stream',
+            badge: 'Observe',
+            description: 'See model loading, token generation, and costs stream in as they happen.',
             content: (
               <TerminalWindow
                 showChrome={false}
@@ -146,53 +138,33 @@ else {
               >
                 <div className="space-y-2" role="log" aria-live="polite">
                   <div role="status">
-                    <div className="text-muted-foreground">
-                      → event: task.created
-                    </div>
-                    <div className="pl-4">
-                      {'{ "id": "task_123", "status": "pending" }'}
-                    </div>
+                    <div className="text-muted-foreground">→ event: task.created</div>
+                    <div className="pl-4">{'{ "id": "task_123", "status": "pending" }'}</div>
                   </div>
                   <div role="status">
-                    <div className="text-muted-foreground mt-2">
-                      → event: model.loading
-                    </div>
-                    <div className="pl-4">
-                      {'{ "progress": 0.45, "eta": "2.1s" }'}
-                    </div>
+                    <div className="text-muted-foreground mt-2">→ event: model.loading</div>
+                    <div className="pl-4">{'{ "progress": 0.45, "eta": "2.1s" }'}</div>
                   </div>
                   <div role="status">
-                    <div className="text-muted-foreground mt-2">
-                      → event: token.generated
-                    </div>
-                    <div className="pl-4">
-                      {'{ "token": "const", "total": 1 }'}
-                    </div>
+                    <div className="text-muted-foreground mt-2">→ event: token.generated</div>
+                    <div className="pl-4">{'{ "token": "const", "total": 1 }'}</div>
                   </div>
                   <div role="status">
-                    <div className="text-muted-foreground mt-2">
-                      → event: token.generated
-                    </div>
-                    <div className="pl-4">
-                      {'{ "token": " api", "total": 2 }'}
-                    </div>
+                    <div className="text-muted-foreground mt-2">→ event: token.generated</div>
+                    <div className="pl-4">{'{ "token": " api", "total": 2 }'}</div>
                   </div>
                 </div>
               </TerminalWindow>
             ),
             highlight: {
-              text: "Full visibility for every inference job.",
-              variant: "default",
+              text: 'Full visibility for every inference job.',
+              variant: 'default',
             },
-            benefits: [
-              { text: "Faster debugging" },
-              { text: "UX you can trust" },
-              { text: "Accurate cost tracking" },
-            ],
+            benefits: [{ text: 'Faster debugging' }, { text: 'UX you can trust' }, { text: 'Accurate cost tracking' }],
           },
         ]}
         defaultTab="api"
-      />{" "}
+      />{' '}
       <CrossNodeOrchestration />
       <IntelligentModelManagement />
       <MultiBackendGpu />
@@ -202,5 +174,5 @@ else {
       <AdditionalFeaturesGrid />
       <EmailCapture />
     </>
-  );
+  )
 }

@@ -1,6 +1,6 @@
 import { Badge, Card, CardContent } from '@rbee/ui/atoms'
 import { IconCardHeader, SectionContainer, StatusKPI, TerminalWindow, TimelineStep } from '@rbee/ui/molecules'
-import { Activity, Gauge, Timer, MemoryStick, XCircle } from 'lucide-react'
+import { Activity, Gauge, MemoryStick, Timer, XCircle } from 'lucide-react'
 
 export function RealTimeProgress() {
   return (
@@ -33,9 +33,15 @@ export function RealTimeProgress() {
                   <code className="bg-muted px-1 rounded">stdout</code>
                 </div>
                 <div className="hidden sm:flex items-center gap-2">
-                  <Badge variant="outline" className="bg-chart-3/15 text-chart-3 border-chart-3/30">OK</Badge>
-                  <Badge variant="outline" className="bg-primary/15 text-primary border-primary/30">IO</Badge>
-                  <Badge variant="outline" className="bg-destructive/15 text-destructive border-destructive/30">ERR</Badge>
+                  <Badge variant="outline" className="bg-chart-3/15 text-chart-3 border-chart-3/30">
+                    OK
+                  </Badge>
+                  <Badge variant="outline" className="bg-primary/15 text-primary border-primary/30">
+                    IO
+                  </Badge>
+                  <Badge variant="outline" className="bg-destructive/15 text-destructive border-destructive/30">
+                    ERR
+                  </Badge>
                 </div>
               </div>
             }
@@ -112,17 +118,12 @@ export function RealTimeProgress() {
                 timestamp="t+0ms"
                 title={
                   <>
-                    Client sends{" "}
-                    <code className="bg-muted px-1 rounded text-xs">POST /v1/cancel</code>
+                    Client sends <code className="bg-muted px-1 rounded text-xs">POST /v1/cancel</code>
                   </>
                 }
                 description="Idempotent request."
               />
-              <TimelineStep
-                timestamp="t+50ms"
-                title="SSE disconnect detected"
-                description="Stream closes ≤ 1s."
-              />
+              <TimelineStep timestamp="t+50ms" title="SSE disconnect detected" description="Stream closes ≤ 1s." />
               <TimelineStep
                 timestamp="t+80ms"
                 title="Immediate cleanup"

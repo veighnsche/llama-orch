@@ -5,6 +5,7 @@ export * from './CoreFeaturesTabs'
 export * from './Developers'
 export * from './EmailCapture'
 export * from './Enterprise'
+export * from './FaqSection'
 export * from './Features'
 // Shared organisms
 export * from './Home/AudienceSelector'
@@ -12,20 +13,10 @@ export * from './Home/AudienceSelector'
 export * from './Home/CodeExamplesSection'
 export * from './Home/ComparisonSection'
 export * from './Home/CtaSection'
-export * from './FaqSection'
 export * from './Home/FeaturesSection'
 export * from './Home/FeatureTabsSection'
 export * from './Home/HeroSection'
 export * from './Home/SocialProofSection'
-export type {
-  EarningRow,
-  Earnings,
-  Feature as SolutionFeature,
-  SolutionSectionProps,
-  Step as SolutionStep,
-} from './SolutionSection'
-// Solution section exports Step type which conflicts with StepsSection
-export { HomeSolutionSection, SolutionSection } from './SolutionSection'
 export type { Step as TimelineStep, StepsSectionProps } from './Home/StepsSection'
 // Steps section exports Step type
 export { StepsSection } from './Home/StepsSection'
@@ -62,5 +53,14 @@ export {
 } from './Providers'
 export * from './Shared/Footer'
 export * from './Shared/Navigation'
+export type {
+  EarningRow,
+  Earnings,
+  Feature as SolutionFeature,
+  SolutionSectionProps,
+  Step as SolutionStep,
+} from './SolutionSection'
+// Solution section exports Step type which conflicts with StepsSection
+export { HomeSolutionSection, SolutionSection } from './SolutionSection'
 export * from './UseCases'
 export * from './UseCasesSection'

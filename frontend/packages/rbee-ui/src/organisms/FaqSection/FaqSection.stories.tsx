@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react'
-import { FAQSection, type FAQItem } from './FaqSection'
+import { type FAQItem, FAQSection } from './FaqSection'
 
 const defaultCategories = ['Setup', 'Models', 'Performance', 'Marketplace', 'Security', 'Production']
 
@@ -23,7 +23,9 @@ const defaultFaqItems: FAQItem[] = [
     question: 'Do I need to be a Rust expert?',
     answer: (
       <div className="prose prose-neutral dark:prose-invert max-w-none prose-p:my-2 prose-code:px-1.5 prose-code:py-0.5 prose-code:bg-muted prose-code:rounded">
-        <p>No. Use prebuilt binaries via CLI or Web UI. Customize routing with simple Rhai scripts or YAML if needed.</p>
+        <p>
+          No. Use prebuilt binaries via CLI or Web UI. Customize routing with simple Rhai scripts or YAML if needed.
+        </p>
       </div>
     ),
     category: 'Setup',

@@ -1,9 +1,9 @@
-import { Alert, AlertDescription, AlertTitle } from "@rbee/ui/atoms/Alert";
-import { Badge } from "@rbee/ui/atoms/Badge";
-import { Card, CardContent } from "@rbee/ui/atoms/Card";
-import { IconCardHeader, SectionContainer, TerminalWindow } from "@rbee/ui/molecules";
-import { cn } from "@rbee/ui/utils";
-import { AlertTriangle, CheckCircle2, Cpu, X } from "lucide-react";
+import { Alert, AlertDescription, AlertTitle } from '@rbee/ui/atoms/Alert'
+import { Badge } from '@rbee/ui/atoms/Badge'
+import { Card, CardContent } from '@rbee/ui/atoms/Card'
+import { IconCardHeader, SectionContainer, TerminalWindow } from '@rbee/ui/molecules'
+import { cn } from '@rbee/ui/utils'
+import { AlertTriangle, CheckCircle2, Cpu, X } from 'lucide-react'
 
 export function MultiBackendGpu() {
   return (
@@ -29,9 +29,7 @@ export function MultiBackendGpu() {
 
             {/* Prohibited pills (red) */}
             <div>
-              <div className="text-sm font-semibold text-muted-foreground mb-2">
-                Prohibited:
-              </div>
+              <div className="text-sm font-semibold text-muted-foreground mb-2">Prohibited:</div>
               <div className="flex flex-wrap gap-2">
                 <Badge variant="destructive">No GPU→CPU fallback</Badge>
                 <Badge variant="destructive">No graceful degradation</Badge>
@@ -41,9 +39,7 @@ export function MultiBackendGpu() {
 
             {/* What happens pills (green) */}
             <div>
-              <div className="text-sm font-semibold text-muted-foreground mb-2">
-                What happens:
-              </div>
+              <div className="text-sm font-semibold text-muted-foreground mb-2">What happens:</div>
               <div className="flex flex-wrap gap-2">
                 <SuccessBadge>Fail fast (exit 1)</SuccessBadge>
                 <SuccessBadge>Helpful error message</SuccessBadge>
@@ -54,9 +50,7 @@ export function MultiBackendGpu() {
             {/* Inline error alert */}
             <Alert variant="destructive">
               <X />
-              <AlertTitle className="font-mono">
-                Insufficient VRAM: need 4000 MB, have 2000 MB
-              </AlertTitle>
+              <AlertTitle className="font-mono">Insufficient VRAM: need 4000 MB, have 2000 MB</AlertTitle>
               <AlertDescription>
                 <ul className="list-disc pl-5 space-y-1">
                   <li>Use smaller quantized model (Q4_K_M instead of Q8_0)</li>
@@ -113,7 +107,7 @@ export function MultiBackendGpu() {
         </div>
       </div>
     </SectionContainer>
-  );
+  )
 }
 
 // ──────────────────────────────────────────────────────────────────────────────
@@ -121,7 +115,7 @@ export function MultiBackendGpu() {
 // ──────────────────────────────────────────────────────────────────────────────
 
 interface SuccessBadgeProps {
-  children: React.ReactNode;
+  children: React.ReactNode
 }
 
 function SuccessBadge({ children }: SuccessBadgeProps) {
@@ -129,29 +123,20 @@ function SuccessBadge({ children }: SuccessBadgeProps) {
     <span className="inline-flex items-center gap-2 rounded-full bg-chart-3/10 text-chart-3 px-3 py-1 text-xs font-semibold">
       {children}
     </span>
-  );
+  )
 }
 
 interface BackendBadgeProps {
-  variant: "primary" | "muted" | "success";
-  children: React.ReactNode;
+  variant: 'primary' | 'muted' | 'success'
+  children: React.ReactNode
 }
 
 function BackendBadge({ variant, children }: BackendBadgeProps) {
   const variantClasses = {
-    primary: "bg-primary/10 text-primary",
-    muted: "bg-muted text-foreground/80",
-    success: "bg-emerald-500/10 text-emerald-400",
-  };
+    primary: 'bg-primary/10 text-primary',
+    muted: 'bg-muted text-foreground/80',
+    success: 'bg-emerald-500/10 text-emerald-400',
+  }
 
-  return (
-    <span
-      className={cn(
-        "rounded-md px-2 py-1 text-xs font-semibold",
-        variantClasses[variant]
-      )}
-    >
-      {children}
-    </span>
-  );
+  return <span className={cn('rounded-md px-2 py-1 text-xs font-semibold', variantClasses[variant])}>{children}</span>
 }

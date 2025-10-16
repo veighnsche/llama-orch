@@ -1,12 +1,12 @@
-import { homelabHardwareMontage } from "@rbee/ui/assets";
-import { BrandWordmark, GitHubIcon } from "@rbee/ui/atoms";
-import { Badge } from "@rbee/ui/atoms/Badge";
-import { Button } from "@rbee/ui/atoms/Button";
-import { Card } from "@rbee/ui/atoms/Card";
-import { TerminalWindow } from "@rbee/ui/molecules";
-import { ArrowRight, Check } from "lucide-react";
-import Image from "next/image";
-import Link from "next/link";
+import { homelabHardwareMontage } from '@rbee/ui/assets'
+import { BrandWordmark, GitHubIcon } from '@rbee/ui/atoms'
+import { Badge } from '@rbee/ui/atoms/Badge'
+import { Button } from '@rbee/ui/atoms/Button'
+import { Card } from '@rbee/ui/atoms/Card'
+import { TerminalWindow } from '@rbee/ui/molecules'
+import { ArrowRight, Check } from 'lucide-react'
+import Image from 'next/image'
+import Link from 'next/link'
 
 export function DevelopersHero() {
   return (
@@ -16,11 +16,7 @@ export function DevelopersHero() {
           {/* Left Column: Content */}
           <div className="lg:col-span-7 space-y-8">
             {/* Announcement Badge */}
-            <div
-              className="animate-in fade-in duration-500 delay-100"
-              aria-live="polite"
-              aria-atomic="true"
-            >
+            <div className="animate-in fade-in duration-500 delay-100" aria-live="polite" aria-atomic="true">
               <Badge
                 variant="outline"
                 className="inline-flex items-center gap-2 rounded-full border-primary/20 bg-primary/10 px-4 py-2 text-sm text-primary"
@@ -45,17 +41,11 @@ export function DevelopersHero() {
 
             {/* Benefit Subline */}
             <p className="animate-in fade-in-50 duration-500 delay-300 text-balance text-xl leading-relaxed text-muted-foreground max-w-2xl">
-              Stop depending on external AI. <BrandWordmark size="lg" /> (pronounced
-              &quot;are-bee&quot;) gives you an OpenAI-compatible API that runs
-              on{" "}
-              <strong className="font-semibold text-foreground">
-                ALL your home network hardware
-              </strong>
-              —GPUs, Macs, workstations—with{" "}
-              <strong className="font-semibold text-foreground">
-                zero ongoing costs
-              </strong>
-              .
+              Stop depending on external AI. <BrandWordmark size="lg" /> (pronounced &quot;are-bee&quot;) gives you an
+              OpenAI-compatible API that runs on{' '}
+              <strong className="font-semibold text-foreground">ALL your home network hardware</strong>
+              —GPUs, Macs, workstations—with{' '}
+              <strong className="font-semibold text-foreground">zero ongoing costs</strong>.
             </p>
 
             {/* CTA Row */}
@@ -63,18 +53,11 @@ export function DevelopersHero() {
               <Button asChild size="lg" className="group">
                 <Link href="#get-started">
                   Get started free
-                  <ArrowRight
-                    className="h-4 w-4 transition-transform group-hover:translate-x-1"
-                    aria-hidden="true"
-                  />
+                  <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" aria-hidden="true" />
                 </Link>
               </Button>
               <Button asChild size="lg" variant="outline">
-                <Link
-                  href="https://github.com/orchyra/rbee"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
+                <Link href="https://github.com/orchyra/rbee" target="_blank" rel="noopener noreferrer">
                   <GitHubIcon className="h-4 w-4" aria-hidden="true" />
                   View on GitHub
                 </Link>
@@ -95,10 +78,10 @@ export function DevelopersHero() {
             {/* Trust Chips */}
             <div className="flex flex-wrap items-center gap-3 text-sm">
               {[
-                { label: "Open source (GPL-3.0)", delay: "delay-500" },
-                { label: "OpenAI-compatible API", delay: "delay-[600ms]" },
-                { label: "Works with Zed & Cursor", delay: "delay-[700ms]" },
-                { label: "No cloud required", delay: "delay-[800ms]" },
+                { label: 'Open source (GPL-3.0)', delay: 'delay-500' },
+                { label: 'OpenAI-compatible API', delay: 'delay-[600ms]' },
+                { label: 'Works with Zed & Cursor', delay: 'delay-[700ms]' },
+                { label: 'No cloud required', delay: 'delay-[800ms]' },
               ].map(({ label, delay }) => (
                 <Badge
                   key={label}
@@ -119,33 +102,28 @@ export function DevelopersHero() {
               <TerminalWindow title="terminal">
                 <div className="space-y-2">
                   <div className="text-muted-foreground">
-                    <span className="text-chart-3">$</span> rbee-keeper infer
-                    --model llama-3.1-70b --prompt &quot;Generate API&quot;
+                    <span className="text-chart-3">$</span> rbee-keeper infer --model llama-3.1-70b --prompt
+                    &quot;Generate API&quot;
                   </div>
                   <div className="text-muted-foreground">
                     <span className="animate-pulse">▊</span> Streaming tokens...
                   </div>
                   <div className="space-y-1 text-foreground pt-2">
                     <div>
-                      <span className="text-chart-2">export</span>{" "}
-                      <span className="text-primary">async</span>{" "}
-                      <span className="text-chart-4">function</span>{" "}
-                      <span className="text-chart-3">getUsers</span>() {"{"}
+                      <span className="text-chart-2">export</span> <span className="text-primary">async</span>{' '}
+                      <span className="text-chart-4">function</span> <span className="text-chart-3">getUsers</span>(){' '}
+                      {'{'}
                     </div>
                     <div className="pl-4">
-                      <span className="text-chart-2">const</span> response ={" "}
-                      <span className="text-chart-2">await</span>{" "}
+                      <span className="text-chart-2">const</span> response = <span className="text-chart-2">await</span>{' '}
                       <span className="text-chart-3">fetch</span>(
-                      <span className="text-primary">
-                        &apos;/api/users&apos;
-                      </span>
-                      )
+                      <span className="text-primary">&apos;/api/users&apos;</span>)
                     </div>
                     <div className="pl-4">
                       <span className="text-chart-2">return</span> response.
                       <span className="text-chart-3">json</span>()
                     </div>
-                    <div>{"}"}</div>
+                    <div>{'}'}</div>
                   </div>
                   <div className="flex items-center gap-4 text-muted-foreground pt-2">
                     <div>GPU 1: 87%</div>
@@ -183,5 +161,5 @@ export function DevelopersHero() {
         </div>
       </div>
     </section>
-  );
+  )
 }

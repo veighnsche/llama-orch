@@ -1,16 +1,16 @@
-import { Clock, Eye, KeyRound, Lock, Server, Shield } from 'lucide-react';
-import type { LucideIcon } from 'lucide-react';
+import type { LucideIcon } from 'lucide-react'
+import { Clock, Eye, KeyRound, Lock, Server, Shield } from 'lucide-react'
 
 export interface SecurityCrateData {
-  name: string;
-  description: string;
-  icon?: LucideIcon;
-  hoverColor?: string;
+  name: string
+  description: string
+  icon?: LucideIcon
+  hoverColor?: string
 }
 
 /**
  * Shared security crates data used across Features and Enterprise sections
- * 
+ *
  * Features section shows 5 core crates (simplified view)
  * Enterprise section shows all 6 crates with full details
  */
@@ -51,11 +51,9 @@ export const SECURITY_CRATES: SecurityCrateData[] = [
     icon: Clock,
     hoverColor: 'hover:border-chart-3/50',
   },
-];
+]
 
 /**
  * Core 5 crates shown in Features section (excludes jwt-guardian)
  */
-export const CORE_SECURITY_CRATES = SECURITY_CRATES.filter(
-  (crate) => crate.name !== 'jwt-guardian'
-);
+export const CORE_SECURITY_CRATES = SECURITY_CRATES.filter((crate) => crate.name !== 'jwt-guardian')

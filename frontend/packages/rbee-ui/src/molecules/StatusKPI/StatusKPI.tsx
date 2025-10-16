@@ -1,12 +1,12 @@
-import type { IconPlateProps } from "@rbee/ui/molecules";
-import { IconPlate } from "@rbee/ui/molecules";
-import type { LucideIcon } from "lucide-react";
+import type { IconPlateProps } from '@rbee/ui/molecules'
+import { IconPlate } from '@rbee/ui/molecules'
+import type { LucideIcon } from 'lucide-react'
 
 interface StatusKPIProps {
-  icon: LucideIcon;
-  color: IconPlateProps["tone"];
-  label: string;
-  value: string | number;
+  icon: LucideIcon
+  color: IconPlateProps['tone']
+  label: string
+  value: string | number
 }
 
 export function StatusKPI({ icon, color, label, value }: StatusKPIProps) {
@@ -18,5 +18,5 @@ export function StatusKPI({ icon, color, label, value }: StatusKPIProps) {
         <div className="text-lg font-semibold text-foreground">{value}</div>
       </div>
     </div>
-  );
+  )
 }

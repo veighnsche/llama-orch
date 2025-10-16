@@ -1,10 +1,10 @@
-import React from 'react'
 import { Badge } from '@rbee/ui/atoms/Badge'
 import { Separator } from '@rbee/ui/atoms/Separator'
 import { Table, TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRow } from '@rbee/ui/atoms/Table'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@rbee/ui/atoms/Tooltip'
 import { cn } from '@rbee/ui/utils'
 import { Check, X } from 'lucide-react'
+import React from 'react'
 
 export interface Provider {
   key: string
@@ -119,9 +119,7 @@ export function MatrixTable({ columns, rows, groups, caption, className }: Matri
 
   return (
     <Table className={className}>
-      <TableCaption className="sr-only">
-        {caption || 'Feature comparison table'}
-      </TableCaption>
+      <TableCaption className="sr-only">{caption || 'Feature comparison table'}</TableCaption>
       <TableHeader>
         <TableRow className="border-b border-border/80">
           <TableHead className="p-3 text-left text-xs uppercase tracking-wide text-muted-foreground sticky left-0 z-10 bg-card">
@@ -130,22 +128,17 @@ export function MatrixTable({ columns, rows, groups, caption, className }: Matri
           {columns.map((col) => (
             <TableHead
               key={col.key}
-              className={cn(
-                'p-3 text-center',
-                col.accent && 'bg-primary/5 ring-1 ring-primary/10',
-              )}
+              className={cn('p-3 text-center', col.accent && 'bg-primary/5 ring-1 ring-primary/10')}
             >
-              <div className={cn(
-                'text-xs uppercase tracking-wide font-semibold',
-                col.accent ? 'text-primary' : 'text-muted-foreground',
-              )}>
+              <div
+                className={cn(
+                  'text-xs uppercase tracking-wide font-semibold',
+                  col.accent ? 'text-primary' : 'text-muted-foreground',
+                )}
+              >
                 {col.label}
               </div>
-              {col.subtitle && (
-                <div className="text-xs text-muted-foreground font-normal mt-0.5">
-                  {col.subtitle}
-                </div>
-              )}
+              {col.subtitle && <div className="text-xs text-muted-foreground font-normal mt-0.5">{col.subtitle}</div>}
               {col.badge && (
                 <Badge variant="outline" className="mt-1 rounded-full text-xs animate-in fade-in">
                   {col.badge}
@@ -156,18 +149,16 @@ export function MatrixTable({ columns, rows, groups, caption, className }: Matri
         </TableRow>
       </TableHeader>
       <TableBody>
-        {groupedRows && groups ? (
-          // Render grouped rows
-          groups.map((group) => (
-            <React.Fragment key={group.id}>
-              {renderRowGroupLabel(group.label)}
-              {groupedRows[group.id]?.map((row, rowIndex) => renderRow(row, rowIndex))}
-            </React.Fragment>
-          ))
-        ) : (
-          // Render ungrouped rows
-          rows.map((row, i) => renderRow(row, i))
-        )}
+        {groupedRows && groups
+          ? // Render grouped rows
+            groups.map((group) => (
+              <React.Fragment key={group.id}>
+                {renderRowGroupLabel(group.label)}
+                {groupedRows[group.id]?.map((row, rowIndex) => renderRow(row, rowIndex))}
+              </React.Fragment>
+            ))
+          : // Render ungrouped rows
+            rows.map((row, i) => renderRow(row, i))}
       </TableBody>
     </Table>
   )

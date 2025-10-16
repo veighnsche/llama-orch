@@ -1,13 +1,6 @@
-import { Badge, Card, CardContent } from "@rbee/ui/atoms";
-import { IconCardHeader, SectionContainer } from "@rbee/ui/molecules";
-import {
-  ChevronRight,
-  Code,
-  Database,
-  Network,
-  Shield,
-  Terminal,
-} from "lucide-react";
+import { Badge, Card, CardContent } from '@rbee/ui/atoms'
+import { IconCardHeader, SectionContainer } from '@rbee/ui/molecules'
+import { ChevronRight, Code, Database, Network, Shield, Terminal } from 'lucide-react'
 
 export function AdditionalFeaturesGrid() {
   return (
@@ -190,5 +183,5 @@ export function AdditionalFeaturesGrid() {
         </div>
       </div>
     </SectionContainer>
-  );
+  )
 }

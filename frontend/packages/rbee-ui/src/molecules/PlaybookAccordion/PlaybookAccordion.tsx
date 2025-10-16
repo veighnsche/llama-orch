@@ -1,58 +1,45 @@
-"use client";
+'use client'
 
-import type { IconPlateProps } from "@rbee/ui/molecules";
-import { IconPlate } from "@rbee/ui/molecules";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableRow,
-} from "@rbee/ui/atoms/Table";
-import type { LucideIcon } from "lucide-react";
-import { useEffect, useRef } from "react";
+import { Table, TableBody, TableCell, TableRow } from '@rbee/ui/atoms/Table'
+import type { IconPlateProps } from '@rbee/ui/molecules'
+import { IconPlate } from '@rbee/ui/molecules'
+import type { LucideIcon } from 'lucide-react'
+import { useEffect, useRef } from 'react'
 
-type Severity = "destructive" | "primary" | "chart-2" | "chart-3";
+type Severity = 'destructive' | 'primary' | 'chart-2' | 'chart-3'
 
 export const severityBg = {
-  destructive: "bg-destructive",
-  primary: "bg-primary",
-  "chart-2": "bg-chart-2",
-  "chart-3": "bg-chart-3",
-} as const;
+  destructive: 'bg-destructive',
+  primary: 'bg-primary',
+  'chart-2': 'bg-chart-2',
+  'chart-3': 'bg-chart-3',
+} as const
 
 interface SeverityDotProps {
-  tone: Severity;
+  tone: Severity
 }
 
 export function SeverityDot({ tone }: SeverityDotProps) {
-  const bg = severityBg[tone];
+  const bg = severityBg[tone]
   return (
     <span
       className={`${bg} opacity-80 size-1.5 rounded-full outline outline-1 outline-border/40 shrink-0 mt-2`}
       aria-hidden="true"
     />
-  );
+  )
 }
 
 interface CheckRowProps {
-  severity: Severity;
-  title: string;
-  meaning: string;
-  actionLabel: string;
-  href: string;
-  guideLabel?: string;
-  guideHref?: string;
+  severity: Severity
+  title: string
+  meaning: string
+  actionLabel: string
+  href: string
+  guideLabel?: string
+  guideHref?: string
 }
 
-export function CheckRow({
-  severity,
-  title,
-  meaning,
-  actionLabel,
-  href,
-  guideLabel,
-  guideHref,
-}: CheckRowProps) {
+export function CheckRow({ severity, title, meaning, actionLabel, href, guideLabel, guideHref }: CheckRowProps) {
   return (
     <TableRow className="animate-in fade-in duration-150">
       <TableCell className="w-[280px]">
@@ -66,10 +53,7 @@ export function CheckRow({
       </TableCell>
       <TableCell className="w-[200px] text-right">
         <div className="flex gap-3 justify-end">
-          <a
-            href={href}
-            className="text-xs underline decoration-dotted hover:decoration-solid text-primary"
-          >
+          <a href={href} className="text-xs underline decoration-dotted hover:decoration-solid text-primary">
             {actionLabel}
           </a>
           {guideLabel && guideHref && (
@@ -83,28 +67,28 @@ export function CheckRow({
         </div>
       </TableCell>
     </TableRow>
-  );
+  )
 }
 
 interface PlaybookItemProps {
-  icon: LucideIcon;
-  color: IconPlateProps["tone"];
-  title: string;
-  checkCount: number;
-  severityDots: ReadonlyArray<Severity>;
-  description: string;
+  icon: LucideIcon
+  color: IconPlateProps['tone']
+  title: string
+  checkCount: number
+  severityDots: ReadonlyArray<Severity>
+  description: string
   checks: ReadonlyArray<{
-    severity: Severity;
-    title: string;
-    meaning: string;
-    actionLabel: string;
-    href: string;
-    guideLabel?: string;
-    guideHref?: string;
-  }>;
-  footer?: React.ReactNode;
-  illustrationSrc?: string;
-  onToggle?: (isOpen: boolean) => void;
+    severity: Severity
+    title: string
+    meaning: string
+    actionLabel: string
+    href: string
+    guideLabel?: string
+    guideHref?: string
+  }>
+  footer?: React.ReactNode
+  illustrationSrc?: string
+  onToggle?: (isOpen: boolean) => void
 }
 
 export function PlaybookItem({
@@ -119,86 +103,69 @@ export function PlaybookItem({
   illustrationSrc,
   onToggle,
 }: PlaybookItemProps) {
-  const detailsRef = useRef<HTMLDetailsElement>(null);
+  const detailsRef = useRef<HTMLDetailsElement>(null)
 
   useEffect(() => {
-    const details = detailsRef.current;
-    if (!details) return;
+    const details = detailsRef.current
+    if (!details) return
 
     const handleToggle = () => {
-      const isOpen = details.open;
-      onToggle?.(isOpen);
+      const isOpen = details.open
+      onToggle?.(isOpen)
 
       // Announce to screen readers
       if (isOpen) {
-        const announcement = `${title} opened`;
-        const liveRegion = document.createElement("div");
-        liveRegion.setAttribute("role", "status");
-        liveRegion.setAttribute("aria-live", "polite");
-        liveRegion.className = "sr-only";
-        liveRegion.textContent = announcement;
-        document.body.appendChild(liveRegion);
-        setTimeout(() => document.body.removeChild(liveRegion), 1000);
+        const announcement = `${title} opened`
+        const liveRegion = document.createElement('div')
+        liveRegion.setAttribute('role', 'status')
+        liveRegion.setAttribute('aria-live', 'polite')
+        liveRegion.className = 'sr-only'
+        liveRegion.textContent = announcement
+        document.body.appendChild(liveRegion)
+        setTimeout(() => document.body.removeChild(liveRegion), 1000)
       }
-    };
+    }
 
-    details.addEventListener("toggle", handleToggle);
-    return () => details.removeEventListener("toggle", handleToggle);
-  }, [title, onToggle]);
+    details.addEventListener('toggle', handleToggle)
+    return () => details.removeEventListener('toggle', handleToggle)
+  }, [title, onToggle])
 
   return (
-    <details
-      ref={detailsRef}
-      className="group border-b border-border last:border-b-0"
-    >
+    <details ref={detailsRef} className="group border-b border-border last:border-b-0">
       <summary
         className="flex items-center justify-between gap-3 cursor-pointer px-5 py-4 hover:bg-muted/50 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
         onKeyDown={(e) => {
-          if (e.key === "Enter" || e.key === " ") {
-            e.preventDefault();
-            detailsRef.current?.toggleAttribute("open");
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault()
+            detailsRef.current?.toggleAttribute('open')
           }
         }}
       >
         <span className="flex items-center gap-3">
           <IconPlate icon={icon} tone={color} size="sm" shape="rounded" />
-          <span className="font-semibold text-base md:text-lg text-foreground">
-            {title}
-          </span>
+          <span className="font-semibold text-base md:text-lg text-foreground">{title}</span>
           <span className="text-xs text-muted-foreground">•</span>
-          <span className="text-xs text-muted-foreground">
-            {checkCount} checks
-          </span>
+          <span className="text-xs text-muted-foreground">{checkCount} checks</span>
         </span>
         <span className="flex items-center gap-2 mr-1" aria-hidden="true">
-          {illustrationSrc && (
-            <img
-              src={illustrationSrc}
-              alt=""
-              className="hidden md:block w-12 h-12 opacity-90"
-            />
-          )}
+          {illustrationSrc && <img src={illustrationSrc} alt="" className="hidden md:block w-12 h-12 opacity-90" />}
           <span className="hidden sm:flex items-center gap-1.5">
             {severityDots.slice(0, 3).map((severity, i) => {
-              const bg = severityBg[severity];
+              const bg = severityBg[severity]
               return (
                 <span
                   key={i}
                   className={`${bg} opacity-80 size-1.5 rounded-full outline outline-1 outline-border/40`}
                 />
-              );
+              )
             })}
             <span className="text-muted-foreground text-xs ml-1">severity</span>
           </span>
-          <span className="text-muted-foreground text-xs ml-2 group-open:rotate-180 transition-transform">
-            ▾
-          </span>
+          <span className="text-muted-foreground text-xs ml-2 group-open:rotate-180 transition-transform">▾</span>
         </span>
       </summary>
       <div className="px-6 pb-5 animate-in fade-in duration-200 group-open:border-t group-open:border-border/80">
-        <p className="text-sm text-muted-foreground/90 mb-4 mt-4 max-w-3xl">
-          {description}
-        </p>
+        <p className="text-sm text-muted-foreground/90 mb-4 mt-4 max-w-3xl">{description}</p>
         <Table>
           <TableBody>
             {checks.map((check, i) => (
@@ -206,12 +173,10 @@ export function PlaybookItem({
             ))}
           </TableBody>
         </Table>
-        {footer && (
-          <div className="mt-3 pt-3 border-t border-border/70">{footer}</div>
-        )}
+        {footer && <div className="mt-3 pt-3 border-t border-border/70">{footer}</div>}
       </div>
     </details>
-  );
+  )
 }
 
 export function SeverityLegend() {
@@ -239,18 +204,18 @@ export function SeverityLegend() {
         <span className="text-foreground">Low</span>
       </span>
     </div>
-  );
+  )
 }
 
 interface PlaybookHeaderProps {
-  title: string;
-  description: string;
-  filterCategories: string[];
-  selectedCategories?: string[];
-  onFilterToggle?: (category: string) => void;
-  onExpandAll: () => void;
-  onCollapseAll: () => void;
-  allExpanded?: boolean;
+  title: string
+  description: string
+  filterCategories: string[]
+  selectedCategories?: string[]
+  onFilterToggle?: (category: string) => void
+  onExpandAll: () => void
+  onCollapseAll: () => void
+  allExpanded?: boolean
 }
 
 export function PlaybookHeader({
@@ -270,39 +235,33 @@ export function PlaybookHeader({
           <span className="inline-flex items-center justify-center rounded-md border border-transparent bg-secondary text-secondary-foreground px-2 py-0.5 text-xs font-medium">
             {title}
           </span>
-          <span className="text-sm font-semibold text-foreground">
-            {description}
-          </span>
+          <span className="text-sm font-semibold text-foreground">{description}</span>
         </div>
         <div className="flex items-center gap-2 flex-wrap">
           {filterCategories.map((category) => {
-            const isSelected =
-              selectedCategories.length === 0 ||
-              selectedCategories.includes(category);
+            const isSelected = selectedCategories.length === 0 || selectedCategories.includes(category)
             return (
               <button
                 key={category}
                 onClick={() => onFilterToggle?.(category)}
                 className={`px-2.5 py-1 rounded-md text-xs transition-colors ${
-                  isSelected
-                    ? "bg-primary text-primary-foreground"
-                    : "bg-muted/50 text-muted-foreground hover:bg-muted"
+                  isSelected ? 'bg-primary text-primary-foreground' : 'bg-muted/50 text-muted-foreground hover:bg-muted'
                 }`}
                 aria-pressed={isSelected}
               >
                 {category}
               </button>
-            );
+            )
           })}
           <button
             onClick={allExpanded ? onCollapseAll : onExpandAll}
             className="ml-2 px-2.5 py-1 rounded-md text-xs border border-border hover:bg-muted transition-colors hidden md:inline-flex"
           >
-            {allExpanded ? "Collapse all" : "Expand all"}
+            {allExpanded ? 'Collapse all' : 'Expand all'}
           </button>
         </div>
       </div>
       <SeverityLegend />
     </>
-  );
+  )
 }

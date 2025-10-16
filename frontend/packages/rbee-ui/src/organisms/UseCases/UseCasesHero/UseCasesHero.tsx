@@ -1,15 +1,12 @@
-import { useCasesHero } from "@rbee/ui/assets";
-import { Button } from "@rbee/ui/atoms/Button";
-import Image from "next/image";
+import { useCasesHero } from '@rbee/ui/assets'
+import { Button } from '@rbee/ui/atoms/Button'
+import Image from 'next/image'
 
 export function UseCasesHero() {
   return (
     <section className="relative overflow-hidden py-20 lg:py-24 bg-gradient-to-b from-background to-card">
       {/* Soft radial glow */}
-      <div
-        aria-hidden
-        className="pointer-events-none absolute inset-0"
-      >
+      <div aria-hidden className="pointer-events-none absolute inset-0">
         <div className="absolute top-0 right-1/4 h-[40rem] w-[40rem] rounded-full bg-primary/10 blur-3xl" />
       </div>
 
@@ -22,30 +19,23 @@ export function UseCasesHero() {
             </div>
 
             <h1 className="text-balance text-5xl lg:text-6xl xl:text-7xl font-bold text-foreground tracking-tight leading-[1.1]">
-              Built for Those Who Value{" "}
+              Built for Those Who Value{' '}
               <span className="bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
                 Independence
               </span>
             </h1>
 
             <p className="mt-6 text-lg lg:text-xl text-muted-foreground leading-relaxed max-w-xl">
-              Own your AI infrastructure. From solo developers to enterprises,
-              rbee adapts to your needs without compromising power or flexibility.
+              Own your AI infrastructure. From solo developers to enterprises, rbee adapts to your needs without
+              compromising power or flexibility.
             </p>
 
             {/* Two clear CTAs */}
             <div className="mt-8 flex flex-col sm:flex-row gap-3">
-              <Button
-                className="h-12 px-8 text-base"
-                asChild
-              >
+              <Button className="h-12 px-8 text-base" asChild>
                 <a href="#use-cases">Explore use cases</a>
               </Button>
-              <Button
-                variant="outline"
-                className="h-12 px-8 text-base"
-                asChild
-              >
+              <Button variant="outline" className="h-12 px-8 text-base" asChild>
                 <a href="#architecture">See architecture</a>
               </Button>
             </div>
@@ -74,12 +64,10 @@ export function UseCasesHero() {
               />
             </div>
 
-            <p className="mt-4 text-center text-sm text-muted-foreground">
-              Your models, your hardware — no lock-in.
-            </p>
+            <p className="mt-4 text-center text-sm text-muted-foreground">Your models, your hardware — no lock-in.</p>
           </div>
         </div>
       </div>
     </section>
-  );
+  )
 }

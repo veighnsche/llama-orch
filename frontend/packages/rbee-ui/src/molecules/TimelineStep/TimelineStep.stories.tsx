@@ -1,11 +1,11 @@
-import type { Meta, StoryObj } from "@storybook/react";
-import { TimelineStep } from "./TimelineStep";
+import type { Meta, StoryObj } from '@storybook/react'
+import { TimelineStep } from './TimelineStep'
 
 const meta: Meta<typeof TimelineStep> = {
-  title: "Molecules/TimelineStep",
+  title: 'Molecules/TimelineStep',
   component: TimelineStep,
   parameters: {
-    layout: "padded",
+    layout: 'padded',
     docs: {
       description: {
         component: `
@@ -27,102 +27,101 @@ TimelineStep molecule displays a single step in a timeline or sequence with time
       },
     },
   },
-  tags: ["autodocs"],
+  tags: ['autodocs'],
   argTypes: {
     timestamp: {
-      control: "text",
-      description: "Timestamp or step label",
+      control: 'text',
+      description: 'Timestamp or step label',
       table: {
-        type: { summary: "string" },
-        category: "Content",
+        type: { summary: 'string' },
+        category: 'Content',
       },
     },
     title: {
-      control: "text",
-      description: "Step title/heading (can be ReactNode)",
+      control: 'text',
+      description: 'Step title/heading (can be ReactNode)',
       table: {
-        type: { summary: "ReactNode" },
-        category: "Content",
+        type: { summary: 'ReactNode' },
+        category: 'Content',
       },
     },
     description: {
-      control: "text",
-      description: "Optional step description",
+      control: 'text',
+      description: 'Optional step description',
       table: {
-        type: { summary: "string" },
-        category: "Content",
+        type: { summary: 'string' },
+        category: 'Content',
       },
     },
     variant: {
-      control: "select",
-      options: ["default", "success", "warning", "error"],
-      description: "Visual variant",
+      control: 'select',
+      options: ['default', 'success', 'warning', 'error'],
+      description: 'Visual variant',
       table: {
-        type: { summary: "default | success | warning | error" },
-        defaultValue: { summary: "default" },
-        category: "Appearance",
+        type: { summary: 'default | success | warning | error' },
+        defaultValue: { summary: 'default' },
+        category: 'Appearance',
       },
     },
   },
-};
+}
 
-export default meta;
-type Story = StoryObj<typeof TimelineStep>;
+export default meta
+type Story = StoryObj<typeof TimelineStep>
 
 export const Default: Story = {
   args: {
-    timestamp: "t+0ms",
-    title: "Client sends POST /v1/cancel",
-    description: "Idempotent request.",
+    timestamp: 't+0ms',
+    title: 'Client sends POST /v1/cancel',
+    description: 'Idempotent request.',
   },
-};
+}
 
 export const WithCode: Story = {
   args: {
-    timestamp: "t+0ms",
+    timestamp: 't+0ms',
     title: (
       <>
-        Client sends{" "}
-        <code className="bg-muted px-1 rounded text-xs">POST /v1/cancel</code>
+        Client sends <code className="bg-muted px-1 rounded text-xs">POST /v1/cancel</code>
       </>
     ),
-    description: "Idempotent request.",
+    description: 'Idempotent request.',
   },
-};
+}
 
 export const Success: Story = {
   args: {
-    timestamp: "t+120ms",
+    timestamp: 't+120ms',
     title: <span className="text-chart-3">Worker idle ✓</span>,
-    description: "Ready for next task.",
-    variant: "success",
+    description: 'Ready for next task.',
+    variant: 'success',
   },
-};
+}
 
 export const Warning: Story = {
   args: {
-    timestamp: "t+50ms",
-    title: "SSE disconnect detected",
-    description: "Stream closes ≤ 1s.",
-    variant: "warning",
+    timestamp: 't+50ms',
+    title: 'SSE disconnect detected',
+    description: 'Stream closes ≤ 1s.',
+    variant: 'warning',
   },
-};
+}
 
 export const Error: Story = {
   args: {
-    timestamp: "t+100ms",
+    timestamp: 't+100ms',
     title: <span className="text-destructive">Connection failed</span>,
-    description: "Retry with exponential backoff.",
-    variant: "error",
+    description: 'Retry with exponential backoff.',
+    variant: 'error',
   },
-};
+}
 
 export const WithoutDescription: Story = {
   args: {
-    timestamp: "Step 1",
-    title: "Initialize worker process",
+    timestamp: 'Step 1',
+    title: 'Initialize worker process',
   },
-};
+}
 
 export const CancellationSequence: Story = {
   render: () => (
@@ -132,17 +131,12 @@ export const CancellationSequence: Story = {
           timestamp="t+0ms"
           title={
             <>
-              Client sends{" "}
-              <code className="bg-muted px-1 rounded text-xs">POST /v1/cancel</code>
+              Client sends <code className="bg-muted px-1 rounded text-xs">POST /v1/cancel</code>
             </>
           }
           description="Idempotent request."
         />
-        <TimelineStep
-          timestamp="t+50ms"
-          title="SSE disconnect detected"
-          description="Stream closes ≤ 1s."
-        />
+        <TimelineStep timestamp="t+50ms" title="SSE disconnect detected" description="Stream closes ≤ 1s." />
         <TimelineStep
           timestamp="t+80ms"
           title="Immediate cleanup"
@@ -160,9 +154,8 @@ export const CancellationSequence: Story = {
   parameters: {
     docs: {
       description: {
-        story:
-          "Example of TimelineStep used in a 4-step cancellation sequence grid.",
+        story: 'Example of TimelineStep used in a 4-step cancellation sequence grid.',
       },
     },
   },
-};
+}

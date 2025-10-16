@@ -1,9 +1,9 @@
-import { Alert } from "@rbee/ui/atoms/Alert";
-import { Badge } from "@rbee/ui/atoms/Badge";
-import { Card, CardContent } from "@rbee/ui/atoms/Card";
-import { IconPlate, SectionContainer } from "@rbee/ui/molecules";
-import { cn } from "@rbee/ui/utils";
-import { Check, CheckCircle2, Database } from "lucide-react";
+import { Alert } from '@rbee/ui/atoms/Alert'
+import { Badge } from '@rbee/ui/atoms/Badge'
+import { Card, CardContent } from '@rbee/ui/atoms/Card'
+import { IconPlate, SectionContainer } from '@rbee/ui/molecules'
+import { cn } from '@rbee/ui/utils'
+import { Check, CheckCircle2, Database } from 'lucide-react'
 
 export function IntelligentModelManagement() {
   return (
@@ -18,21 +18,12 @@ export function IntelligentModelManagement() {
         <Card className="animate-in fade-in slide-in-from-bottom-2 duration-500">
           <CardContent className="space-y-6 pt-6">
             <div className="flex items-start gap-4">
-              <IconPlate
-                icon={Database}
-                tone="chart-3"
-                size="md"
-                shape="rounded"
-                className="flex-shrink-0"
-              />
+              <IconPlate icon={Database} tone="chart-3" size="md" shape="rounded" className="flex-shrink-0" />
               <div>
-                <h3 className="text-2xl font-bold tracking-tight text-foreground mb-2">
-                  Automatic Model Catalog
-                </h3>
+                <h3 className="text-2xl font-bold tracking-tight text-foreground mb-2">Automatic Model Catalog</h3>
                 <p className="text-muted-foreground leading-relaxed">
-                  Request any model from Hugging Face. rbee downloads, verifies
-                  checksums, and caches locally so you never fetch the same
-                  model twice.
+                  Request any model from Hugging Face. rbee downloads, verifies checksums, and caches locally so you
+                  never fetch the same model twice.
                 </p>
               </div>
             </div>
@@ -50,27 +41,17 @@ export function IntelligentModelManagement() {
 
                 {/* 20% progress */}
                 <div className="animate-in fade-in duration-300 delay-75">
-                  <div className="text-foreground">
-                    → [model-provisioner] 20% (1 MB / 5 MB)
-                  </div>
+                  <div className="text-foreground">→ [model-provisioner] 20% (1 MB / 5 MB)</div>
                   <div className="h-2 w-full bg-muted rounded-full overflow-hidden mt-2">
-                    <div
-                      className="h-full bg-chart-3 animate-in grow-in origin-left"
-                      style={{ width: "20%" }}
-                    />
+                    <div className="h-full bg-chart-3 animate-in grow-in origin-left" style={{ width: '20%' }} />
                   </div>
                 </div>
 
                 {/* 100% progress */}
                 <div className="animate-in fade-in duration-300 delay-150">
-                  <div className="text-foreground">
-                    → [model-provisioner] 100% (5 MB / 5 MB)
-                  </div>
+                  <div className="text-foreground">→ [model-provisioner] 100% (5 MB / 5 MB)</div>
                   <div className="h-2 w-full bg-muted rounded-full overflow-hidden mt-2">
-                    <div
-                      className="h-full bg-chart-3 animate-in grow-in origin-left"
-                      style={{ width: "100%" }}
-                    />
+                    <div className="h-full bg-chart-3 animate-in grow-in origin-left" style={{ width: '100%' }} />
                   </div>
                 </div>
 
@@ -110,20 +91,12 @@ export function IntelligentModelManagement() {
         <Card className="animate-in fade-in slide-in-from-bottom-2 duration-500 delay-100">
           <CardContent className="space-y-6 pt-6">
             <div className="flex items-start gap-4">
-              <IconPlate
-                icon={CheckCircle2}
-                tone="chart-2"
-                size="md"
-                shape="rounded"
-                className="flex-shrink-0"
-              />
+              <IconPlate icon={CheckCircle2} tone="chart-2" size="md" shape="rounded" className="flex-shrink-0" />
               <div>
-                <h3 className="text-2xl font-bold tracking-tight text-foreground mb-2">
-                  Resource Preflight Checks
-                </h3>
+                <h3 className="text-2xl font-bold tracking-tight text-foreground mb-2">Resource Preflight Checks</h3>
                 <p className="text-muted-foreground leading-relaxed">
-                  Before any load, rbee validates RAM, VRAM, and disk capacity
-                  to fail fast with clear errors—no mystery crashes.
+                  Before any load, rbee validates RAM, VRAM, and disk capacity to fail fast with clear errors—no mystery
+                  crashes.
                 </p>
               </div>
             </div>
@@ -169,6 +142,5 @@ export function IntelligentModelManagement() {
         </Card>
       </div>
     </SectionContainer>
-  );
+  )
 }
-

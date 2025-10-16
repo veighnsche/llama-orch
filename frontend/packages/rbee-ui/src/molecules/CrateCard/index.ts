@@ -1,2 +1,2 @@
-export { CrateCard } from './CrateCard';
-export type { CrateCardProps } from './CrateCard';
+export type { CrateCardProps } from './CrateCard'
+export { CrateCard } from './CrateCard'

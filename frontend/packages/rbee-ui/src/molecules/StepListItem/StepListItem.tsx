@@ -1,5 +1,5 @@
-import { cn } from '@rbee/ui/utils'
 import { StepNumber } from '@rbee/ui/molecules/StepNumber'
+import { cn } from '@rbee/ui/utils'
 import type { ReactNode } from 'react'
 
 export interface StepListItemProps {
@@ -17,13 +17,13 @@ export interface StepListItemProps {
 
 /**
  * StepListItem - A molecule for displaying numbered steps in a list
- * 
+ *
  * Features:
  * - Numbered badge using StepNumber component
  * - Two-line layout with title and description
  * - Optional custom icon support
  * - Grid-based layout for alignment
- * 
+ *
  * @example
  * ```tsx
  * <ol className="space-y-6">
@@ -40,36 +40,16 @@ export interface StepListItemProps {
  * </ol>
  * ```
  */
-export function StepListItem({
-  number,
-  title,
-  body,
-  icon,
-  className,
-}: StepListItemProps) {
+export function StepListItem({ number, title, body, icon, className }: StepListItemProps) {
   return (
     <li
-      className={cn(
-        'grid grid-cols-[auto_1fr] items-start gap-4',
-        className
-      )}
+      className={cn('grid grid-cols-[auto_1fr] items-start gap-4', className)}
       aria-label={`Step ${number}: ${title}`}
     >
-      {icon || (
-        <StepNumber
-          number={number}
-          size="sm"
-          variant="outline"
-          className="bg-primary/10 border-0"
-        />
-      )}
+      {icon || <StepNumber number={number} size="sm" variant="outline" className="bg-primary/10 border-0" />}
       <div>
-        <div className="mb-1 font-semibold text-foreground">
-          {title}
-        </div>
-        <div className="text-sm leading-relaxed text-muted-foreground">
-          {body}
-        </div>
+        <div className="mb-1 font-semibold text-foreground">{title}</div>
+        <div className="text-sm leading-relaxed text-muted-foreground">{body}</div>
       </div>
     </li>
   )

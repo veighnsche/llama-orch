@@ -1,9 +1,4 @@
-import {
-  EmailCapture,
-  UseCasesHero,
-  UseCasesIndustry,
-  UseCasesPrimary,
-} from "@rbee/ui/organisms";
+import { EmailCapture, UseCasesHero, UseCasesIndustry, UseCasesPrimary } from '@rbee/ui/organisms'
 
 export default function UseCasesPage() {
   return (
@@ -13,5 +8,5 @@ export default function UseCasesPage() {
       <UseCasesIndustry />
       <EmailCapture />
     </>
-  );
+  )
 }

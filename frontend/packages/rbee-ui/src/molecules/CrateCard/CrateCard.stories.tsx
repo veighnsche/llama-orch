@@ -1,11 +1,11 @@
-import type { Meta, StoryObj } from "@storybook/react";
-import { CrateCard } from "./CrateCard";
+import type { Meta, StoryObj } from '@storybook/react'
+import { CrateCard } from './CrateCard'
 
 const meta: Meta<typeof CrateCard> = {
-  title: "Molecules/CrateCard",
+  title: 'Molecules/CrateCard',
   component: CrateCard,
   parameters: {
-    layout: "padded",
+    layout: 'padded',
     docs: {
       description: {
         component: `
@@ -29,61 +29,60 @@ Minimal card with just name + description. No icons, no features list—just the
       },
     },
   },
-  tags: ["autodocs"],
+  tags: ['autodocs'],
   argTypes: {
     name: {
-      control: "text",
-      description: "Crate/package name",
+      control: 'text',
+      description: 'Crate/package name',
       table: {
-        type: { summary: "string" },
-        category: "Content",
+        type: { summary: 'string' },
+        category: 'Content',
       },
     },
     description: {
-      control: "text",
-      description: "Brief description",
+      control: 'text',
+      description: 'Brief description',
       table: {
-        type: { summary: "string" },
-        category: "Content",
+        type: { summary: 'string' },
+        category: 'Content',
       },
     },
     hoverColor: {
-      control: "text",
-      description: "Tailwind hover border color class",
+      control: 'text',
+      description: 'Tailwind hover border color class',
       table: {
-        type: { summary: "string" },
-        defaultValue: { summary: "hover:border-primary/50" },
-        category: "Appearance",
+        type: { summary: 'string' },
+        defaultValue: { summary: 'hover:border-primary/50' },
+        category: 'Appearance',
       },
     },
   },
-};
+}
 
-export default meta;
-type Story = StoryObj<typeof CrateCard>;
+export default meta
+type Story = StoryObj<typeof CrateCard>
 
 export const Default: Story = {
   args: {
-    name: "auth-min",
-    description: "Timing-safe tokens, zero-trust auth.",
+    name: 'auth-min',
+    description: 'Timing-safe tokens, zero-trust auth.',
   },
-};
+}
 
 export const WithCustomHoverColor: Story = {
   args: {
-    name: "audit-logging",
-    description: "Append-only logs, 7-year retention.",
-    hoverColor: "hover:border-chart-3/50",
+    name: 'audit-logging',
+    description: 'Append-only logs, 7-year retention.',
+    hoverColor: 'hover:border-chart-3/50',
   },
-};
+}
 
 export const LongDescription: Story = {
   args: {
-    name: "input-validation",
-    description:
-      "Comprehensive injection prevention, schema validation, and resource exhaustion protection.",
+    name: 'input-validation',
+    description: 'Comprehensive injection prevention, schema validation, and resource exhaustion protection.',
   },
-};
+}
 
 export const SecurityCratesGrid: Story = {
   render: () => (
@@ -124,42 +123,26 @@ export const SecurityCratesGrid: Story = {
     docs: {
       description: {
         story:
-          "Example of CrateCard used in a 3-column grid showing all 6 security crates with different hover colors.",
+          'Example of CrateCard used in a 3-column grid showing all 6 security crates with different hover colors.',
       },
     },
   },
-};
+}
 
 export const TechnologyStack: Story = {
   render: () => (
     <div className="grid sm:grid-cols-2 gap-3 max-w-2xl">
-      <CrateCard
-        name="tokio"
-        description="Async runtime for Rust."
-        hoverColor="hover:border-primary/50"
-      />
-      <CrateCard
-        name="axum"
-        description="Web framework built on tokio."
-        hoverColor="hover:border-chart-2/50"
-      />
-      <CrateCard
-        name="serde"
-        description="Serialization framework."
-        hoverColor="hover:border-chart-3/50"
-      />
-      <CrateCard
-        name="tracing"
-        description="Application-level tracing."
-        hoverColor="hover:border-chart-4/50"
-      />
+      <CrateCard name="tokio" description="Async runtime for Rust." hoverColor="hover:border-primary/50" />
+      <CrateCard name="axum" description="Web framework built on tokio." hoverColor="hover:border-chart-2/50" />
+      <CrateCard name="serde" description="Serialization framework." hoverColor="hover:border-chart-3/50" />
+      <CrateCard name="tracing" description="Application-level tracing." hoverColor="hover:border-chart-4/50" />
     </div>
   ),
   parameters: {
     docs: {
       description: {
-        story: "CrateCard can be used for any technology stack or dependency listing.",
+        story: 'CrateCard can be used for any technology stack or dependency listing.',
       },
     },
   },
-};
+}

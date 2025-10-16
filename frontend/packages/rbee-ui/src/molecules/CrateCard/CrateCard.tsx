@@ -1,14 +1,14 @@
-import { cn } from "@rbee/ui/utils";
+import { cn } from '@rbee/ui/utils'
 
 export interface CrateCardProps {
   /** Crate name */
-  name: string;
+  name: string
   /** Crate description */
-  description: string;
+  description: string
   /** Hover border color class */
-  hoverColor?: string;
+  hoverColor?: string
   /** Additional CSS classes */
-  className?: string;
+  className?: string
 }
 
 /**
@@ -22,22 +22,13 @@ export interface CrateCardProps {
  *   hoverColor="hover:border-chart-2/50"
  * />
  */
-export function CrateCard({
-  name,
-  description,
-  hoverColor = "hover:border-primary/50",
-  className,
-}: CrateCardProps) {
+export function CrateCard({ name, description, hoverColor = 'hover:border-primary/50', className }: CrateCardProps) {
   return (
     <div
-      className={cn(
-        "group rounded-lg bg-background border border-border p-4 transition-colors",
-        hoverColor,
-        className
-      )}
+      className={cn('group rounded-lg bg-background border border-border p-4 transition-colors', hoverColor, className)}
     >
       <div className="font-semibold text-foreground mb-1">{name}</div>
       <p className="text-sm text-muted-foreground">{description}</p>
     </div>
-  );
+  )
 }

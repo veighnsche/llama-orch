@@ -132,11 +132,7 @@ export function CodeBlock({
         <div className="flex items-center justify-between gap-1 bg-muted/50 px-4 py-2">
           <div className="flex items-center gap-3">
             {title && <span className="font-mono text-xs text-muted-foreground">{title}</span>}
-            {language && !title && (
-              <span className="font-mono text-xs text-muted-foreground">
-                {language}
-              </span>
-            )}
+            {language && !title && <span className="font-mono text-xs text-muted-foreground">{language}</span>}
           </div>
           {copyable && (
             <>

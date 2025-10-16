@@ -26,16 +26,16 @@ export interface TerminalWindowProps {
   className?: string
 }
 
-export function TerminalWindow({ 
-  title, 
-  children, 
+export function TerminalWindow({
+  title,
+  children,
   showChrome = true,
-  footer, 
-  ariaLabel, 
+  footer,
+  ariaLabel,
   copyable = false,
   copyText,
   variant = 'terminal',
-  className 
+  className,
 }: TerminalWindowProps) {
   const [copied, setCopied] = useState(false)
 
@@ -49,7 +49,11 @@ export function TerminalWindow({
   }
 
   return (
-    <div className={cn('rounded-2xl border border-border bg-card overflow-hidden', className)} role="region" aria-label={ariaLabel}>
+    <div
+      className={cn('rounded-2xl border border-border bg-card overflow-hidden', className)}
+      role="region"
+      aria-label={ariaLabel}
+    >
       {/* Terminal top bar */}
       {showChrome && (
         <div className="flex items-center justify-between gap-1 bg-muted/50 px-4 py-2">

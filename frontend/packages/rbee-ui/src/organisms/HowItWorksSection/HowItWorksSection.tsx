@@ -45,12 +45,7 @@ export function HowItWorksSection({ title, subtitle, steps, id, className }: How
               style={{ animationDelay: `${index * 120}ms` }}
             >
               {/* Step badge */}
-              <StepNumber
-                number={stepNumber}
-                size="md"
-                variant="primary"
-                className="flex-shrink-0 rounded-lg"
-              />
+              <StepNumber number={stepNumber} size="md" variant="primary" className="flex-shrink-0 rounded-lg" />
 
               {/* Step content */}
               <div className="flex-1">
