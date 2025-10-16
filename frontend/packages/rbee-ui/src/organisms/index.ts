@@ -16,6 +16,7 @@ export * from './Home/CtaSection'
 export * from './Home/FeaturesSection'
 export * from './Home/FeatureTabsSection'
 export * from './Home/HeroSection'
+export * from './Home/HomeHero'
 export * from './Home/SocialProofSection'
 export type { Step as TimelineStep, StepsSectionProps } from './Home/StepsSection'
 // Steps section exports Step type
