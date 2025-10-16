@@ -6,11 +6,11 @@ Pages = props objects + composition. Templates = reusable UI sections from `/org
 ## Components to Migrate
 
 **Home Page (Phase A - High Priority):**
-- ✅ AudienceSelector, ProblemTemplate, HowItWorks, SolutionTemplate, EmailCapture, UseCasesSection
-- TestimonialsSection, TechnicalSection, ComparisonSection, FeaturesSection, CTASection
+- ✅ AudienceSelector, ProblemTemplate, HowItWorks, SolutionTemplate, EmailCapture, UseCasesSection, ComparisonSection, PricingSection
+- TestimonialsSection, TechnicalSection, FeaturesSection, CTASection
 
 **Shared (Phase B):**
-- PricingSection, CoreFeaturesTabs
+- CoreFeaturesTabs
 
 **Features Page (Phase C):**
 - MultiBackendGpu, CrossNodeOrchestration, IntelligentModelManagement, RealTimeProgress, ErrorHandling, SecurityIsolation, AdditionalFeaturesGrid
@@ -37,8 +37,9 @@ Pages = props objects + composition. Templates = reusable UI sections from `/org
 - Clean composition only
 
 **Icons:**
-- `FeatureInfoCard` → pass rendered: `icon: <AlertTriangle className="h-6 w-6" />`
-- `IconPlate`/`FeatureListItem` → pass component: `icon: Zap`
+- **Templates that use `FeatureInfoCard` or `UseCaseCard`** → pass rendered: `icon: <AlertTriangle className="h-6 w-6" />`
+- **Templates that use `IconPlate`/`FeatureListItem`** → pass component: `icon: Zap`
+- **Consistency rule**: All icons in props objects must be rendered React components (`<Icon />`) not component references (`Icon`)
 
 **Stories:**
 - Import props from page files
@@ -59,7 +60,11 @@ Pages = props objects + composition. Templates = reusable UI sections from `/org
 ```typescript
 // At top of HomePage.tsx
 export const xContainerProps: Omit<TemplateContainerProps, "children"> = { /* layout */ }
-export const xProps: XProps = { /* content */ }
+export const xProps: XProps = { 
+  // IMPORTANT: Icons must be RENDERED components, not references
+  icon: <AlertTriangle className="h-6 w-6" />,  // ✅ Correct
+  // NOT: icon: AlertTriangle,  // ❌ Wrong
+}
 ```
 
 **4. Add to page composition:**

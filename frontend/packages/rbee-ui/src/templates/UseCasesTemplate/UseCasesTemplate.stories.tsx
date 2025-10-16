@@ -29,14 +29,14 @@ export const OnHomePage: Story = {
   args: {
     items: [
       {
-        icon: Laptop,
+        icon: <Laptop className="h-6 w-6" />,
         title: 'The solo developer',
         scenario: 'Shipping a SaaS with AI features; wants control without vendor lock-in.',
         solution: 'Run rbee on your gaming PC + spare workstation. Llama 70B for coding, SD for assets—local & fast.',
         outcome: '$0/month AI costs. Full control. No rate limits.',
       },
       {
-        icon: Users,
+        icon: <Users className="h-6 w-6" />,
         title: 'The small team',
         scenario: '5-person startup burning $500/mo on APIs.',
         solution:
@@ -44,21 +44,21 @@ export const OnHomePage: Story = {
         outcome: '$6,000+ saved per year. GDPR-friendly by design.',
       },
       {
-        icon: HomeIcon,
+        icon: <HomeIcon className="h-6 w-6" />,
         title: 'The homelab enthusiast',
         scenario: 'Four GPUs gathering dust.',
         solution: 'Spread workers across your LAN in minutes. Build agents: coder, doc generator, code reviewer.',
         outcome: 'Idle GPUs → productive. Auto-download models, clean shutdowns.',
       },
       {
-        icon: Building,
+        icon: <Building className="h-6 w-6" />,
         title: 'The enterprise',
         scenario: '50-dev org. Code cannot leave the premises.',
         solution: 'On-prem rbee with audit trails and policy routing. Rhai-based rules for data residency & access.',
         outcome: 'EU-only compliance. Zero external dependencies.',
       },
       {
-        icon: Code,
+        icon: <Code className="h-6 w-6" />,
         title: 'The AI-dependent coder',
         scenario:
           'Building complex codebases with Claude/GPT-4. Fears provider changes, shutdowns, or price hikes.',
@@ -68,7 +68,7 @@ export const OnHomePage: Story = {
           'Complete independence. Models never change without permission. $0/month forever.',
       },
       {
-        icon: Workflow,
+        icon: <Workflow className="h-6 w-6" />,
         title: 'The agentic AI builder',
         scenario:
           'Needs to build custom AI agents: code generators, doc writers, test creators, code reviewers.',

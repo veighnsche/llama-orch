@@ -1,13 +1,14 @@
 import { UseCaseCard } from '@rbee/ui/molecules'
 import { cn } from '@rbee/ui/utils'
-import type { LucideIcon } from 'lucide-react'
+import type * as React from 'react'
 
 // ──────────────────────────────────────────────────────────────────────────────
 // Types
 // ──────────────────────────────────────────────────────────────────────────────
 
 export type UseCase = {
-  icon: LucideIcon
+  /** Rendered icon component (e.g., <Laptop className="h-6 w-6" />) */
+  icon: React.ReactNode
   title: string
   scenario: string
   solution: string
@@ -24,8 +25,8 @@ export type UseCase = {
  * ```tsx
  * <UseCasesTemplate
  *   items={[
- *     { icon: Code, title: 'AI Coding', scenario: '...', solution: '...', outcome: '...' },
- *     { icon: Server, title: 'API Generation', scenario: '...', solution: '...', outcome: '...' },
+ *     { icon: <Code className="h-6 w-6" />, title: 'AI Coding', scenario: '...', solution: '...', outcome: '...' },
+ *     { icon: <Server className="h-6 w-6" />, title: 'API Generation', scenario: '...', solution: '...', outcome: '...' },
  *   ]}
  *   columns={3}
  * />
@@ -51,22 +52,29 @@ export function UseCasesTemplate({ items, columns = 3, className }: UseCasesTemp
     <div className={className}>
       {/* Cards grid */}
       <div className={cn('mx-auto grid max-w-6xl gap-6 animate-in fade-in-50 duration-400', gridCols)}>
-        {items.map((item, i) => (
-          <UseCaseCard
-            key={i}
-            icon={item.icon}
-            title={item.title}
-            scenario={item.scenario}
-            solution={item.solution}
-            outcome={item.outcome}
-            tags={item.tags}
-            cta={item.cta}
-            iconSize="md"
-            iconTone="primary"
-            style={{ animationDelay: `${i * 80}ms` }}
-            className="animate-in fade-in slide-in-from-bottom-2 duration-400"
-          />
-        ))}
+        {items.map((item, i) => {
+          // Extract the icon component type from the rendered element
+          // This allows us to pass it to UseCaseCard which expects LucideIcon
+          const iconElement = item.icon as React.ReactElement
+          const IconComponent = iconElement?.type as any
+          
+          return (
+            <UseCaseCard
+              key={i}
+              icon={IconComponent}
+              title={item.title}
+              scenario={item.scenario}
+              solution={item.solution}
+              outcome={item.outcome}
+              tags={item.tags}
+              cta={item.cta}
+              iconSize="md"
+              iconTone="primary"
+              style={{ animationDelay: `${i * 80}ms` }}
+              className="animate-in fade-in slide-in-from-bottom-2 duration-400"
+            />
+          )
+        })}
       </div>
     </div>
   )

@@ -1,9 +1,11 @@
 // Barrel exports for all templates
 export * from './AudienceSelector'
+export * from './ComparisonTemplate'
 export * from './EmailCapture'
 export * from './FeaturesTabs'
 export * from './HomeHero'
 export * from './HowItWorks'
+export * from './PricingTemplate'
 export * from './ProblemTemplate'
 export * from './SolutionTemplate'
 export * from './UseCasesTemplate'

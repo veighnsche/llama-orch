@@ -3,21 +3,21 @@ import {
   TemplateContainer,
   type TemplateContainerProps,
 } from "@rbee/ui/molecules";
-import { faqBeehive, homelabNetwork } from "@rbee/ui/assets";
+import { faqBeehive, homelabNetwork, pricingHero } from "@rbee/ui/assets";
 import { CodeBlock } from "@rbee/ui/molecules/CodeBlock";
 import { GPUUtilizationBar } from "@rbee/ui/molecules/GPUUtilizationBar";
 import { TerminalWindow } from "@rbee/ui/molecules/TerminalWindow";
 import {
-  ComparisonSection,
   CTASection,
   FAQSection,
-  PricingSection,
   TechnicalSection,
   TestimonialsSection,
 } from "@rbee/ui/organisms";
 import {
   AudienceSelector,
   type AudienceSelectorProps,
+  ComparisonTemplate,
+  type ComparisonTemplateProps,
   EmailCapture,
   type EmailCaptureProps,
   FeaturesTabs,
@@ -26,6 +26,8 @@ import {
   type HomeHeroProps,
   HowItWorks,
   type HowItWorksProps,
+  PricingTemplate,
+  type PricingTemplateProps,
   ProblemTemplate,
   type ProblemTemplateProps,
   SolutionTemplate,
@@ -43,6 +45,7 @@ import {
   ArrowRight,
   BookOpen,
   Building,
+  Check,
   Code,
   Code2,
   Cpu,
@@ -50,11 +53,14 @@ import {
   Gauge,
   Home as HomeIcon,
   Laptop,
+  Layers,
   Lock,
   Server,
   Shield,
+  Unlock,
   Users,
   Workflow,
+  X,
   Zap,
 } from "lucide-react";
 
@@ -644,7 +650,7 @@ export const useCasesTemplateContainerProps: Omit<
 export const useCasesTemplateProps: UseCasesTemplateProps = {
   items: [
     {
-      icon: Laptop,
+      icon: <Laptop className="h-6 w-6" />,
       title: "The solo developer",
       scenario:
         "Shipping a SaaS with AI features; wants control without vendor lock-in.",
@@ -653,7 +659,7 @@ export const useCasesTemplateProps: UseCasesTemplateProps = {
       outcome: "$0/month AI costs. Full control. No rate limits.",
     },
     {
-      icon: Users,
+      icon: <Users className="h-6 w-6" />,
       title: "The small team",
       scenario: "5-person startup burning $500/mo on APIs.",
       solution:
@@ -661,7 +667,7 @@ export const useCasesTemplateProps: UseCasesTemplateProps = {
       outcome: "$6,000+ saved per year. GDPR-friendly by design.",
     },
     {
-      icon: HomeIcon,
+      icon: <HomeIcon className="h-6 w-6" />,
       title: "The homelab enthusiast",
       scenario: "Four GPUs gathering dust.",
       solution:
@@ -669,7 +675,7 @@ export const useCasesTemplateProps: UseCasesTemplateProps = {
       outcome: "Idle GPUs → productive. Auto-download models, clean shutdowns.",
     },
     {
-      icon: Building,
+      icon: <Building className="h-6 w-6" />,
       title: "The enterprise",
       scenario: "50-dev org. Code cannot leave the premises.",
       solution:
@@ -677,7 +683,7 @@ export const useCasesTemplateProps: UseCasesTemplateProps = {
       outcome: "EU-only compliance. Zero external dependencies.",
     },
     {
-      icon: Code,
+      icon: <Code className="h-6 w-6" />,
       title: "The AI-dependent coder",
       scenario:
         "Building complex codebases with Claude/GPT-4. Fears provider changes, shutdowns, or price hikes.",
@@ -687,7 +693,7 @@ export const useCasesTemplateProps: UseCasesTemplateProps = {
         "Complete independence. Models never change without permission. $0/month forever.",
     },
     {
-      icon: Workflow,
+      icon: <Workflow className="h-6 w-6" />,
       title: "The agentic AI builder",
       scenario:
         "Needs to build custom AI agents: code generators, doc writers, test creators, code reviewers.",
@@ -698,6 +704,205 @@ export const useCasesTemplateProps: UseCasesTemplateProps = {
     },
   ],
   columns: 3,
+};
+
+// === Comparison Template ===
+export const comparisonTemplateContainerProps: Omit<
+  TemplateContainerProps,
+  "children"
+> = {
+  title: "Why Developers Choose rbee",
+  description:
+    "Local-first AI that's faster, private, and costs $0 on your hardware.",
+  bgVariant: "secondary",
+  paddingY: "2xl",
+  maxWidth: "7xl",
+  align: "center",
+};
+
+export const comparisonTemplateProps: ComparisonTemplateProps = {
+  columns: [
+    { key: "rbee", label: "rbee", accent: true },
+    { key: "openai", label: "OpenAI & Anthropic" },
+    { key: "ollama", label: "Ollama" },
+    { key: "runpod", label: "Runpod & Vast.ai" },
+  ],
+  rows: [
+    {
+      feature: "Total Cost",
+      values: {
+        rbee: "$0 (runs on your hardware)",
+        openai: "$20–100/mo per dev",
+        ollama: "$0",
+        runpod: "$0.50–2/hr",
+      },
+    },
+    {
+      feature: "Privacy / Data Residency",
+      values: {
+        rbee: true,
+        openai: false,
+        ollama: true,
+        runpod: false,
+      },
+      note: "Complete data control vs. limited",
+    },
+    {
+      feature: "Multi-GPU Utilization",
+      values: {
+        rbee: true,
+        openai: "N/A",
+        ollama: "Limited",
+        runpod: true,
+      },
+    },
+    {
+      feature: "OpenAI-Compatible API",
+      values: {
+        rbee: true,
+        openai: true,
+        ollama: "Partial",
+        runpod: false,
+      },
+    },
+    {
+      feature: "Custom Routing Policies",
+      values: {
+        rbee: true,
+        openai: false,
+        ollama: false,
+        runpod: false,
+      },
+    },
+    {
+      feature: "Rate Limits / Quotas",
+      values: {
+        rbee: "None",
+        openai: "Yes",
+        ollama: "None",
+        runpod: "Yes",
+      },
+    },
+  ],
+  legend: [
+    {
+      icon: <Check className="h-3.5 w-3.5 text-chart-3" aria-hidden="true" />,
+      label: "Available",
+    },
+    {
+      icon: <X className="h-3.5 w-3.5 text-destructive" aria-hidden="true" />,
+      label: "Not available",
+    },
+  ],
+  legendNote: '"Partial" = limited coverage',
+  footerMessage: "Bring your own GPUs, keep your data in-house.",
+  ctas: [
+    { label: "See Quickstart", href: "/docs/quickstart" },
+    { label: "Architecture", href: "/docs/architecture", variant: "ghost" },
+  ],
+};
+
+// === Pricing Template ===
+export const pricingTemplateContainerProps: Omit<
+  TemplateContainerProps,
+  "children"
+> = {
+  title: "Start Free. Scale When Ready.",
+  description:
+    "Run rbee free at home. Add collaboration and governance when your team grows.",
+  bgVariant: "default",
+  paddingY: "2xl",
+  maxWidth: "7xl",
+  align: "center",
+};
+
+export const pricingTemplateProps: PricingTemplateProps = {
+  kickerBadges: [
+    {
+      icon: <Unlock className="h-3.5 w-3.5" aria-hidden="true" />,
+      label: "Open source",
+    },
+    {
+      icon: <Zap className="h-3.5 w-3.5" aria-hidden="true" />,
+      label: "OpenAI-compatible",
+    },
+    {
+      icon: <Layers className="h-3.5 w-3.5" aria-hidden="true" />,
+      label: "Multi-GPU",
+    },
+    {
+      icon: <Shield className="h-3.5 w-3.5" aria-hidden="true" />,
+      label: "No feature gates",
+    },
+  ],
+  tiers: [
+    {
+      title: "Home/Lab",
+      price: "€0",
+      period: "forever",
+      features: [
+        "Unlimited GPUs on your hardware",
+        "OpenAI-compatible API",
+        "Multi-modal models",
+        "Active community support",
+        "Open source core",
+      ],
+      ctaText: "Download rbee",
+      ctaHref: "/download",
+      ctaVariant: "outline",
+      footnote: "Local use. No feature gates.",
+      className:
+        "col-span-12 md:col-span-4 motion-safe:animate-in motion-safe:slide-in-from-bottom-2 motion-safe:duration-500",
+    },
+    {
+      title: "Team",
+      price: "€99",
+      priceYearly: "€990",
+      period: "/month",
+      features: [
+        "Everything in Home/Lab",
+        "Web UI for cluster & models",
+        "Shared workspaces & quotas",
+        "Priority support (business hours)",
+        "Rhai policy templates (rate/data)",
+      ],
+      ctaText: "Start 30-Day Trial",
+      ctaHref: "/signup?plan=team",
+      highlighted: true,
+      badge: "Most Popular",
+      footnote: "Cancel anytime during trial.",
+      saveBadge: "2 months free",
+      className:
+        "col-span-12 md:col-span-4 order-first md:order-none motion-safe:animate-in motion-safe:slide-in-from-bottom-2 motion-safe:duration-500 motion-safe:delay-100",
+    },
+    {
+      title: "Enterprise",
+      price: "Custom",
+      features: [
+        "Everything in Team",
+        "Dedicated, isolated instances",
+        "Custom SLAs & onboarding",
+        "White-label & SSO options",
+        "Enterprise security & support",
+      ],
+      ctaText: "Contact Sales",
+      ctaHref: "/contact?type=enterprise",
+      ctaVariant: "outline",
+      footnote: "We'll reply within 1 business day.",
+      className:
+        "col-span-12 md:col-span-4 motion-safe:animate-in motion-safe:slide-in-from-bottom-2 motion-safe:duration-500 motion-safe:delay-200",
+    },
+  ],
+  editorialImage: {
+    src: pricingHero,
+    alt:
+      "Detailed isometric 3D illustration in dark mode showing a progression from left to right: a compact single-GPU homelab server rack (glowing neon teal accents) seamlessly transforming into a large-scale multi-node GPU cluster with interconnected nodes (amber and teal lighting). Clean editorial photography style with dramatic cinematic lighting, sharp focus on hardware details, floating UI panels showing metrics, dark navy background with subtle grid, professional tech marketing aesthetic, 4K quality, Octane render look",
+  },
+  footer: {
+    mainText:
+      "Every plan includes the full rbee orchestrator. No feature gates. No artificial limits.",
+    subText: "Prices exclude VAT. OSS license applies to Home/Lab.",
+  },
 };
 
 export default function HomePage() {
@@ -723,6 +928,12 @@ export default function HomePage() {
       <FeaturesTabs {...featuresTabsProps} />
       <TemplateContainer {...useCasesTemplateContainerProps}>
         <UseCasesTemplate {...useCasesTemplateProps} />
+      </TemplateContainer>
+      <TemplateContainer {...comparisonTemplateContainerProps}>
+        <ComparisonTemplate {...comparisonTemplateProps} />
+      </TemplateContainer>
+      <TemplateContainer {...pricingTemplateContainerProps}>
+        <PricingTemplate {...pricingTemplateProps} />
       </TemplateContainer>
     </main>
   );
