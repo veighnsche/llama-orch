@@ -1,6 +1,7 @@
 import { Button } from '@rbee/ui/atoms'
 import { Disclaimer } from '@rbee/ui/molecules/Disclaimer'
 import { cn } from '@rbee/ui/utils'
+import { Shield } from 'lucide-react'
 import type { ReactNode } from 'react'
 
 export interface TemplateContainerProps {
@@ -61,6 +62,11 @@ export interface TemplateContainerProps {
     variant?: 'default' | 'info' | 'warning' | 'muted'
     /** Show icon */
     showIcon?: boolean
+  }
+  /** Optional ribbon banner (e.g., insurance coverage) */
+  ribbon?: {
+    /** Ribbon text content */
+    text: string
   }
 }
 
@@ -128,6 +134,7 @@ export function TemplateContainer({
   divider = false,
   ctas,
   disclaimer,
+  ribbon,
 }: TemplateContainerProps) {
   // Resolve alignment: prefer align prop, fallback to centered
   const resolvedAlign = align ?? (centered ? 'center' : 'start')
@@ -211,6 +218,18 @@ export function TemplateContainer({
         )}
 
         {children}
+
+        {/* Ribbon Banner */}
+        {ribbon && (
+          <div className={cn('mt-10', maxWidthClasses[maxWidth], 'mx-auto')}>
+            <div className="rounded-2xl border border-emerald-400/30 bg-emerald-400/10 p-5 text-center">
+              <p className="flex items-center justify-center gap-2 text-balance text-base font-medium text-emerald-400 lg:text-lg">
+                <Shield className="h-4 w-4" aria-hidden="true" />
+                <span className="tabular-nums">{ribbon.text}</span>
+              </p>
+            </div>
+          </div>
+        )}
 
         {/* Bottom CTAs */}
         {ctas && (ctas.primary || ctas.secondary) && (

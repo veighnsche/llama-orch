@@ -1,54 +1,38 @@
-import { ProvidersCaseCard, type ProvidersCaseCardProps } from '@rbee/ui/molecules'
-import type * as React from 'react'
+import type * as React from "react";
 
 // ────────────────────────────────────────────────────────────────────────────
 // Types
 // ────────────────────────────────────────────────────────────────────────────
 
-export type ProvidersUseCaseItem = {
-  icon: React.ReactNode
-  title: string
-  subtitle?: string
-  quote: string
-  facts: { label: string; value: string }[]
-  highlight?: string
-}
-
-export type ProvidersUseCasesTemplateProps = {
-  cases: ProvidersUseCaseItem[]
-  className?: string
-}
+export type CardGridTemplateProps = {
+  children: React.ReactNode;
+  className?: string;
+};
 
 // ────────────────────────────────────────────────────────────────────────────
 // Main Component
 // ────────────────────────────────────────────────────────────────────────────
 
 /**
- * ProvidersUseCasesTemplate - Use cases section for GPU providers
+ * CardGridTemplate - Generic 2-column grid layout for cards
  *
  * @example
  * ```tsx
- * <ProvidersUseCasesTemplate cases={[...]} />
+ * <CardGridTemplate>
+ *   {items.map((item, i) => <Card key={i} {...item} />)}
+ * </CardGridTemplate>
  * ```
  */
-export function ProvidersUseCasesTemplate({ cases, className }: ProvidersUseCasesTemplateProps) {
+export function CardGridTemplate({
+  children,
+  className,
+}: CardGridTemplateProps) {
   return (
     <div className={className}>
       {/* Grid - centered with max-width and 2 columns */}
       <div className="mx-auto max-w-[60%] grid gap-6 grid-cols-2">
-        {cases.map((caseData, index) => (
-          <ProvidersCaseCard
-            key={index}
-            icon={caseData.icon}
-            title={caseData.title}
-            subtitle={caseData.subtitle}
-            quote={caseData.quote}
-            facts={caseData.facts}
-            highlight={caseData.highlight}
-            index={index}
-          />
-        ))}
+        {children}
       </div>
     </div>
-  )
+  );
 }

@@ -1,16 +1,15 @@
 "use client";
 
-import { CommissionStructureCard, TemplateContainer } from "@rbee/ui/molecules";
+import { ProvidersCaseCard, ProvidersSecurityCard, TemplateContainer } from "@rbee/ui/molecules";
 import {
+  CardGridTemplate,
   FeaturesTabs,
   HowItWorks,
   ProblemTemplate,
   ProvidersCTA,
   ProvidersEarnings,
   ProvidersHero,
-  ProvidersSecurityTemplate,
   ProvidersTestimonialsTemplate,
-  ProvidersUseCasesTemplate,
   SolutionTemplate,
 } from "@rbee/ui/templates";
 import {
@@ -23,7 +22,6 @@ import {
   providersHowItWorksProps,
   providersMarketplaceContainerProps,
   providersMarketplaceSolutionProps,
-  providersMarketplaceCommissionProps,
   providersProblemContainerProps,
   providersProblemProps,
   providersSecurityContainerProps,
@@ -51,23 +49,41 @@ export default function ProvidersPage() {
       </TemplateContainer>
       <FeaturesTabs {...providersFeaturesProps} />
       <TemplateContainer {...providersUseCasesContainerProps}>
-        <ProvidersUseCasesTemplate {...providersUseCasesProps} />
+        <CardGridTemplate>
+          {providersUseCasesProps.cases.map((caseData, index) => (
+            <ProvidersCaseCard
+              key={index}
+              icon={caseData.icon}
+              title={caseData.title}
+              subtitle={caseData.subtitle}
+              quote={caseData.quote}
+              facts={caseData.facts}
+              highlight={caseData.highlight}
+              index={index}
+            />
+          ))}
+        </CardGridTemplate>
       </TemplateContainer>
       <TemplateContainer {...providersEarningsContainerProps}>
         <ProvidersEarnings {...providersEarningsProps} />
       </TemplateContainer>
       <TemplateContainer {...providersMarketplaceContainerProps}>
-        <SolutionTemplate
-          {...providersMarketplaceSolutionProps}
-          aside={
-            <div className="animate-in fade-in-50 slide-in-from-right-2 [animation-delay:200ms] lg:sticky lg:top-24 lg:self-start">
-              <CommissionStructureCard {...providersMarketplaceCommissionProps} />
-            </div>
-          }
-        />
+        <SolutionTemplate {...providersMarketplaceSolutionProps} />
       </TemplateContainer>
       <TemplateContainer {...providersSecurityContainerProps}>
-        <ProvidersSecurityTemplate {...providersSecurityProps} />
+        <CardGridTemplate>
+          {providersSecurityProps.items.map((item, index) => (
+            <ProvidersSecurityCard
+              key={index}
+              icon={item.icon}
+              title={item.title}
+              subtitle={item.subtitle}
+              body={item.body}
+              points={item.points}
+              index={index}
+            />
+          ))}
+        </CardGridTemplate>
       </TemplateContainer>
       <TemplateContainer {...providersTestimonialsContainerProps}>
         <ProvidersTestimonialsTemplate {...providersTestimonialsProps} />

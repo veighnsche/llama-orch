@@ -7,7 +7,10 @@ import {
   HomelabEnthusiast,
   WorkstationOwner,
 } from "@rbee/ui/icons";
-import type { TemplateContainerProps } from "@rbee/ui/molecules";
+import {
+  CommissionStructureCard,
+  type TemplateContainerProps,
+} from "@rbee/ui/molecules";
 import { CodeBlock } from "@rbee/ui/molecules/CodeBlock";
 import type {
   FeaturesTabsProps,
@@ -15,10 +18,10 @@ import type {
   ProvidersCTAProps,
   ProvidersEarningsProps,
   ProvidersHeroProps,
-  ProvidersSecurityTemplateProps,
   ProvidersTestimonialsTemplateProps,
-  ProvidersUseCasesTemplateProps,
 } from "@rbee/ui/templates";
+import type { ProvidersCaseCardProps } from "@rbee/ui/molecules/ProvidersCaseCard";
+import type { ProvidersSecurityCardProps } from "@rbee/ui/molecules/ProvidersSecurityCard";
 import type { CommissionStructureCardProps } from "@rbee/ui/molecules/CommissionStructureCard";
 import type { Feature } from "@rbee/ui/templates/SolutionTemplate";
 import type { ProblemTemplateProps } from "@rbee/ui/templates/ProblemTemplate";
@@ -502,7 +505,7 @@ export const providersUseCasesContainerProps: Omit<
   },
 };
 
-export const providersUseCasesProps: ProvidersUseCasesTemplateProps = {
+export const providersUseCasesProps: { cases: ProvidersCaseCardProps[] } = {
   cases: [
     {
       icon: <Gamepad2 />,
@@ -659,6 +662,11 @@ export const providersMarketplaceCommissionProps: CommissionStructureCardProps =
   };
 
 export const providersMarketplaceSolutionProps: SolutionTemplateProps = {
+  aside: (
+    <div className="animate-in fade-in-50 slide-in-from-right-2 [animation-delay:200ms] lg:sticky lg:top-24 lg:self-start">
+      <CommissionStructureCard {...providersMarketplaceCommissionProps} />
+    </div>
+  ),
   features: [
     {
       icon: <TrendingUp className="size-6" />,
@@ -712,11 +720,14 @@ export const providersSecurityContainerProps: Omit<
     "Enterprise-grade protections for your hardware, data, and earnings.",
   bgVariant: "default",
   paddingY: "2xl",
-  maxWidth: "7xl",
+  maxWidth: "4xl",
   align: "center",
+  ribbon: {
+    text: "Plus: €1M insurance coverage is included for all providers—your hardware is protected.",
+  },
 };
 
-export const providersSecurityProps: ProvidersSecurityTemplateProps = {
+export const providersSecurityProps: { items: ProvidersSecurityCardProps[] } = {
   items: [
     {
       icon: <Shield className="size-6" />,
@@ -767,9 +778,6 @@ export const providersSecurityProps: ProvidersSecurityTemplateProps = {
       ],
     },
   ],
-  ribbon: {
-    text: "Plus: €1M insurance coverage is included for all providers—your hardware is protected.",
-  },
 };
 
 // === ProvidersTestimonials Template ===
