@@ -16,41 +16,28 @@ import {
   ProblemTemplate,
 } from '@rbee/ui/templates'
 import {
-  enterpriseEmailCaptureProps,
-  enterpriseHeroProps,
-  enterpriseProblemTemplateContainerProps,
-  enterpriseProblemTemplateProps,
-} from './EnterprisePageProps'
-import {
+  enterpriseCTAProps,
+  enterpriseComparisonContainerProps,
+  enterpriseComparisonProps,
   enterpriseComplianceContainerProps,
   enterpriseComplianceProps,
+  enterpriseEmailCaptureProps,
+  enterpriseFeaturesContainerProps,
+  enterpriseFeaturesProps,
+  enterpriseHeroProps,
+  enterpriseHowItWorksContainerProps,
+  enterpriseHowItWorksProps,
+  enterpriseProblemTemplateContainerProps,
+  enterpriseProblemTemplateProps,
   enterpriseSecurityContainerProps,
   enterpriseSecurityProps,
   enterpriseSolutionContainerProps,
   enterpriseSolutionProps,
-} from './EnterprisePagePropsExtended'
-import {
-  enterpriseComparisonContainerProps,
-  enterpriseComparisonProps,
-  enterpriseCTAProps,
-  enterpriseFeaturesContainerProps,
-  enterpriseFeaturesProps,
-  enterpriseHowItWorksContainerProps,
-  enterpriseHowItWorksProps,
   enterpriseTestimonialsContainerProps,
   enterpriseTestimonialsProps,
   enterpriseUseCasesContainerProps,
   enterpriseUseCasesProps,
-} from './EnterprisePagePropsExtended2'
-
-// ============================================================================
-// Props Objects
-// ============================================================================
-// All props imported from three files:
-// - EnterprisePageProps.tsx: Hero, Email Capture, Problem Template
-// - EnterprisePagePropsExtended.tsx: Solution, Compliance, Security
-// - EnterprisePagePropsExtended2.tsx: How It Works, Use Cases, Comparison, Features, Testimonials, CTA
-// ============================================================================
+} from './EnterprisePageProps'
 
 export default function EnterprisePage() {
   return (

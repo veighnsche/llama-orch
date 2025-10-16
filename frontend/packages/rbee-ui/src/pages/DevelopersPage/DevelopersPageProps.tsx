@@ -4,12 +4,12 @@ import type { TemplateContainerProps } from '@rbee/ui/molecules'
 import { CodeBlock } from '@rbee/ui/molecules/CodeBlock'
 import { GPUUtilizationBar } from '@rbee/ui/molecules/GPUUtilizationBar'
 import { TerminalWindow } from '@rbee/ui/molecules/TerminalWindow'
-import type { CoreFeaturesTabsProps } from '@rbee/ui/organisms'
 import type {
   CTATemplateProps,
   DevelopersCodeExamplesProps,
   DevelopersHeroProps,
   EmailCaptureProps,
+  FeaturesTabsProps,
   HowItWorksProps,
   PricingTemplateProps,
   ProblemTemplateProps,
@@ -362,7 +362,7 @@ const code = await invoke({
 /**
  * Core Features Tabs - Four core capabilities (API, GPU, Scheduler, SSE)
  */
-export const coreFeatureTabsProps: CoreFeaturesTabsProps = {
+export const coreFeatureTabsProps: FeaturesTabsProps = {
   title: 'Core capabilities',
   description: 'Swap in the API, scale across your hardware, route with code, and watch jobs stream in real time.',
   tabs: [

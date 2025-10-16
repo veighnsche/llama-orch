@@ -1,13 +1,14 @@
 "use client";
 
 import { TemplateContainer } from "@rbee/ui/molecules";
-import { CoreFeaturesTabs, PricingSection } from "@rbee/ui/organisms";
 import {
   CTATemplate,
   DevelopersCodeExamplesTemplate,
   DevelopersHeroTemplate,
   EmailCapture,
+  FeaturesTabs,
   HowItWorks,
+  PricingTemplate,
   ProblemTemplate,
   SolutionTemplate,
   TestimonialsTemplate,
@@ -21,7 +22,8 @@ import {
   developersHeroProps,
   howItWorksContainerProps,
   howItWorksProps,
-  developersPricingSectionProps,
+  developersPricingTemplateContainerProps,
+  developersPricingTemplateProps,
   problemTemplateContainerProps,
   problemTemplateProps,
   solutionTemplateContainerProps,
@@ -57,14 +59,17 @@ export default function DevelopersPage() {
         <HowItWorks {...howItWorksProps} />
       </TemplateContainer>
 
-      <CoreFeaturesTabs {...coreFeatureTabsProps} />
+      <FeaturesTabs {...coreFeatureTabsProps} />
 
       <TemplateContainer {...useCasesTemplateContainerProps}>
         <UseCasesTemplate {...useCasesTemplateProps} />
       </TemplateContainer>
 
       <DevelopersCodeExamplesTemplate {...developersCodeExamplesProps} />
-      <PricingSection {...developersPricingSectionProps} />
+
+      <TemplateContainer {...developersPricingTemplateContainerProps}>
+        <PricingTemplate {...developersPricingTemplateProps} />
+      </TemplateContainer>
 
       <TemplateContainer {...testimonialsTemplateContainerProps}>
         <TestimonialsTemplate {...testimonialsTemplateProps} />
