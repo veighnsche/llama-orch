@@ -1,5 +1,5 @@
-import { pricingTemplateProps as homePricingTemplateProps } from '@rbee/ui/pages/HomePage/HomePageProps'
-import { pricingTemplateProps } from '@rbee/ui/pages/PricingPage/PricingPageProps'
+import { pricingTemplateProps as homePricingTemplateProps } from '@rbee/ui/pages/HomePage'
+import { pricingTemplateProps } from '@rbee/ui/pages/PricingPage'
 import type { Meta, StoryObj } from '@storybook/react'
 import { PricingTemplate } from './PricingTemplate'
 

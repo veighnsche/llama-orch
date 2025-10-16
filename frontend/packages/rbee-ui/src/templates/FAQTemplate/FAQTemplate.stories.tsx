@@ -1,5 +1,5 @@
-import { faqTemplateProps } from '@rbee/ui/pages/HomePage/HomePageProps'
-import { pricingFaqProps } from '@rbee/ui/pages/PricingPage/PricingPageProps'
+import { faqTemplateProps } from '@rbee/ui/pages/HomePage'
+import { pricingFaqProps } from '@rbee/ui/pages/PricingPage'
 import type { Meta, StoryObj } from '@storybook/react'
 import { FAQTemplate } from './FAQTemplate'
 

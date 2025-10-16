@@ -1,4 +1,4 @@
-import { whatIsRbeeProps } from '@rbee/ui/pages/HomePage/HomePageProps'
+import { whatIsRbeeProps } from '@rbee/ui/pages/HomePage'
 import type { Meta, StoryObj } from '@storybook/react'
 import { WhatIsRbee } from './WhatIsRbee'
 

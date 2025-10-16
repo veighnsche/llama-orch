@@ -1,4 +1,4 @@
-import { homeHeroProps } from '@rbee/ui/pages/HomePage/HomePageProps'
+import { homeHeroProps } from '@rbee/ui/pages/HomePage'
 import type { Meta, StoryObj } from '@storybook/react'
 import { HomeHero } from './HomeHero'
 

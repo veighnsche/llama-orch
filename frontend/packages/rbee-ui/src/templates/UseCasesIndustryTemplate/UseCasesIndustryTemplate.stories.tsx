@@ -1,4 +1,4 @@
-import { useCasesIndustryProps } from '@rbee/ui/pages/UseCasesPage/UseCasesPageProps'
+import { useCasesIndustryProps } from '@rbee/ui/pages/UseCasesPage'
 import type { Meta, StoryObj } from '@storybook/react'
 import { UseCasesIndustryTemplate } from './UseCasesIndustryTemplate'
 

@@ -1,29 +1,27 @@
-'use client'
+"use client";
 
-import { TemplateContainer } from '@rbee/ui/molecules'
-import { CoreFeaturesTabs } from '@rbee/ui/organisms'
+import { TemplateContainer } from "@rbee/ui/molecules";
+import { CoreFeaturesTabs, PricingSection } from "@rbee/ui/organisms";
 import {
   CTATemplate,
   DevelopersCodeExamplesTemplate,
   DevelopersHeroTemplate,
   EmailCapture,
   HowItWorks,
-  PricingTemplate,
   ProblemTemplate,
   SolutionTemplate,
   TestimonialsTemplate,
   UseCasesTemplate,
-} from '@rbee/ui/templates'
+} from "@rbee/ui/templates";
 import {
   coreFeatureTabsProps,
   ctaTemplateProps,
   developersCodeExamplesProps,
   developersEmailCaptureProps,
   developersHeroProps,
-  developersPricingTemplateContainerProps,
-  developersPricingTemplateProps,
   howItWorksContainerProps,
   howItWorksProps,
+  developersPricingSectionProps,
   problemTemplateContainerProps,
   problemTemplateProps,
   solutionTemplateContainerProps,
@@ -32,7 +30,7 @@ import {
   testimonialsTemplateProps,
   useCasesTemplateContainerProps,
   useCasesTemplateProps,
-} from './DevelopersPageProps'
+} from "./DevelopersPageProps";
 
 // ============================================================================
 // Props Objects
@@ -66,10 +64,7 @@ export default function DevelopersPage() {
       </TemplateContainer>
 
       <DevelopersCodeExamplesTemplate {...developersCodeExamplesProps} />
-
-      <TemplateContainer {...developersPricingTemplateContainerProps}>
-        <PricingTemplate {...developersPricingTemplateProps} />
-      </TemplateContainer>
+      <PricingSection {...developersPricingSectionProps} />
 
       <TemplateContainer {...testimonialsTemplateContainerProps}>
         <TestimonialsTemplate {...testimonialsTemplateProps} />
@@ -77,5 +72,5 @@ export default function DevelopersPage() {
 
       <CTATemplate {...ctaTemplateProps} />
     </main>
-  )
+  );
 }

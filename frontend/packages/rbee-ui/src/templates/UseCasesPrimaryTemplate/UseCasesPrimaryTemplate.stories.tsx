@@ -1,4 +1,4 @@
-import { useCasesPrimaryProps } from '@rbee/ui/pages/UseCasesPage/UseCasesPageProps'
+import { useCasesPrimaryProps } from '@rbee/ui/pages/UseCasesPage'
 import type { Meta, StoryObj } from '@storybook/react'
 import { UseCasesPrimaryTemplate } from './UseCasesPrimaryTemplate'
 

@@ -1,4 +1,4 @@
-import { pricingComparisonProps } from '@rbee/ui/pages/PricingPage/PricingPageProps'
+import { pricingComparisonProps } from '@rbee/ui/pages/PricingPage'
 import type { Meta, StoryObj } from '@storybook/react'
 import { PricingComparisonTemplate } from './PricingComparisonTemplate'
 
