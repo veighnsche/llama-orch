@@ -1,39 +1,39 @@
-import { Button } from '@rbee/ui/atoms/Button'
-import { StatsGrid } from '@rbee/ui/molecules'
-import Image from 'next/image'
-import type * as React from 'react'
-import type { ReactNode } from 'react'
+import { Button } from "@rbee/ui/atoms/Button";
+import { StatsGrid } from "@rbee/ui/molecules";
+import Image from "next/image";
+import type * as React from "react";
+import type { ReactNode } from "react";
 
 // ────────────────────────────────────────────────────────────────────────────
 // Types
 // ────────────────────────────────────────────────────────────────────────────
 
 export type ProvidersCTAStat = {
-  icon: React.ReactNode
-  value: string
-  label: string
-}
+  icon: React.ReactNode;
+  value: string;
+  label: string;
+};
 
 export type ProvidersCTAProps = {
-  badgeIcon: React.ReactNode
-  badgeText: string
-  title: string
-  subtitle: string
+  badgeIcon: React.ReactNode;
+  badgeText: string;
+  title: string;
+  subtitle: string;
   primaryCTA: {
-    label: string
-    ariaLabel: string
-  }
+    label: string;
+    ariaLabel: string;
+  };
   secondaryCTA: {
-    label: string
-    ariaLabel: string
-  }
-  disclaimerText: string
-  stats: ProvidersCTAStat[]
+    label: string;
+    ariaLabel: string;
+  };
+  disclaimerText: string;
+  stats: ProvidersCTAStat[];
   backgroundImage: {
-    src: string
-    alt: string
-  }
-}
+    src: string;
+    alt: string;
+  };
+};
 
 // ────────────────────────────────────────────────────────────────────────────
 // Main Component
@@ -68,7 +68,7 @@ export function ProvidersCTA({
   return (
     <section
       aria-labelledby="providers-cta-h2"
-      className="relative overflow-hidden border-b border-border bg-gradient-to-b from-background via-amber-950/10 to-background px-6 py-24"
+      className="relative overflow-hidden bg-gradient-to-b from-background via-amber-950/10 to-background px-6 py-24"
     >
       {/* Decorative Background Image - Repositioned to right edge */}
       <Image
@@ -78,6 +78,12 @@ export function ProvidersCTA({
         className="pointer-events-none absolute -right-32 top-1/2 hidden -translate-y-1/2 opacity-[0.08] lg:block"
         alt={backgroundImage.alt}
         priority={false}
+        style={{
+          maskImage:
+            "radial-gradient(ellipse 70% 60% at 65% 50%, black 0%, black 30%, transparent 100%)",
+          WebkitMaskImage:
+            "radial-gradient(ellipse 70% 60% at 65% 50%, black 0%, black 30%, transparent 100%)",
+        }}
       />
 
       <div className="relative z-10 mx-auto max-w-4xl text-center">
@@ -92,11 +98,16 @@ export function ProvidersCTA({
             {badgeText}
           </div>
 
-          <h2 id="providers-cta-h2" className="mb-6 text-balance text-4xl font-bold text-foreground lg:text-5xl">
+          <h2
+            id="providers-cta-h2"
+            className="mb-6 text-balance text-4xl font-bold text-foreground lg:text-5xl"
+          >
             {title}
           </h2>
 
-          <p className="mx-auto mb-8 max-w-2xl text-balance text-lg text-muted-foreground">{subtitle}</p>
+          <p className="mx-auto mb-8 max-w-2xl text-balance text-lg text-muted-foreground">
+            {subtitle}
+          </p>
         </div>
 
         {/* CTA Actions */}
@@ -123,7 +134,9 @@ export function ProvidersCTA({
         </div>
 
         {/* Micro-credibility */}
-        <p className="mb-10 text-xs text-muted-foreground/70">{disclaimerText}</p>
+        <p className="mb-10 text-xs text-muted-foreground/70">
+          {disclaimerText}
+        </p>
 
         {/* Reassurance Bar */}
         <div
@@ -134,5 +147,5 @@ export function ProvidersCTA({
         </div>
       </div>
     </section>
-  )
+  );
 }

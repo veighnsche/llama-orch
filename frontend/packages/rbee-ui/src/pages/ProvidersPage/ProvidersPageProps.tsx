@@ -1,6 +1,7 @@
 'use client'
 
 import { gpuEarnings } from '@rbee/ui/assets'
+import { TESTIMONIALS } from '@rbee/ui/data/testimonials'
 import { FormerCryptoMiner, GamingPcOwner, HomelabEnthusiast, WorkstationOwner } from '@rbee/ui/icons'
 import { CommissionStructureCard, type TemplateContainerProps } from '@rbee/ui/molecules'
 import { CodeBlock } from '@rbee/ui/molecules/CodeBlock'
@@ -13,7 +14,7 @@ import type {
   ProvidersCTAProps,
   ProvidersEarningsProps,
   ProvidersHeroProps,
-  ProvidersTestimonialsTemplateProps,
+  TestimonialsTemplateProps,
 } from '@rbee/ui/templates'
 import type { ProblemTemplateProps } from '@rbee/ui/templates/ProblemTemplate'
 import type { Feature, SolutionTemplateProps } from '@rbee/ui/templates/SolutionTemplate'
@@ -703,8 +704,13 @@ export const providersTestimonialsContainerProps: Omit<TemplateContainerProps, '
   align: 'center',
 }
 
-export const providersTestimonialsProps: ProvidersTestimonialsTemplateProps = {
-  sectorFilter: 'provider',
+export const providersTestimonialsProps: TestimonialsTemplateProps = {
+  testimonials: TESTIMONIALS.filter((t) => t.sector === 'provider').map((t) => ({
+    quote: t.quote,
+    author: t.name,
+    role: t.role,
+    avatar: t.avatar,
+  })),
   stats: [
     {
       icon: <Users className="w-6 h-6" />,

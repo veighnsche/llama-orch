@@ -1,77 +1,77 @@
-import { Badge } from '@rbee/ui/atoms/Badge'
-import { Button } from '@rbee/ui/atoms/Button'
-import { ComplianceChip, StatsGrid } from '@rbee/ui/molecules'
-import Link from 'next/link'
-import type * as React from 'react'
-import type { ReactNode } from 'react'
+import { Badge } from "@rbee/ui/atoms/Badge";
+import { Button } from "@rbee/ui/atoms/Button";
+import { ComplianceChip, StatsGrid } from "@rbee/ui/molecules";
+import Link from "next/link";
+import type * as React from "react";
+import type { ReactNode } from "react";
 
 // ──────────────────────────────────────────────────────────────────────────────
 // Types
 // ──────────────────────────────────────────────────────────────────────────────
 
 export type AuditEvent = {
-  event: string
-  user: string
-  time: string
-  displayTime: string
-  status: string
-}
+  event: string;
+  user: string;
+  time: string;
+  displayTime: string;
+  status: string;
+};
 
 export type StatItem = {
-  value: string
-  label: string
-  helpText?: string
-}
+  value: string;
+  label: string;
+  helpText?: string;
+};
 
 export type ComplianceChipData = {
-  icon: React.ReactNode
-  label: string
-  ariaLabel: string
-}
+  icon: React.ReactNode;
+  label: string;
+  ariaLabel: string;
+};
 
 export type FilterButton = {
-  label: string
-  ariaLabel: string
-  active?: boolean
-}
+  label: string;
+  ariaLabel: string;
+  active?: boolean;
+};
 
 export type FloatingBadge = {
-  label: string
-  value: string
-  ariaLabel: string
-  position: 'top-right' | 'bottom-left'
-}
+  label: string;
+  value: string;
+  ariaLabel: string;
+  position: "top-right" | "bottom-left";
+};
 
 export type EnterpriseHeroTemplateProps = {
   badge: {
-    icon: ReactNode
-    text: string
-  }
-  heading: string
-  description: string
-  stats: StatItem[]
+    icon: ReactNode;
+    text: string;
+  };
+  heading: string;
+  description: string;
+  stats: StatItem[];
   primaryCta: {
-    text: string
-    ariaLabel?: string
-  }
+    text: string;
+    ariaLabel?: string;
+  };
   secondaryCta: {
-    text: string
-    href: string
-  }
-  helperText: string
-  complianceChips: ComplianceChipData[]
+    text: string;
+    href: string;
+  };
+  helperText: string;
+  complianceChips: ComplianceChipData[];
   auditConsole: {
-    title: string
-    badge: string
-    filterButtons: FilterButton[]
-    events: AuditEvent[]
+    title: string;
+    badge: string;
+    filterButtons: FilterButton[];
+    events: AuditEvent[];
     footer: {
-      retention: string
-      tamperProof: string
-    }
-  }
-  floatingBadges: FloatingBadge[]
-}
+      retention: string;
+      tamperProof: string;
+    };
+  };
+  floatingBadges: FloatingBadge[];
+};
 
 // ──────────────────────────────────────────────────────────────────────────────
 // Main Component
@@ -89,11 +89,11 @@ export function EnterpriseHeroTemplate({
   auditConsole,
   floatingBadges,
 }: EnterpriseHeroTemplateProps) {
-  const BadgeIcon = badge.icon
+  const BadgeIcon = badge.icon;
 
   return (
     <section
-      className="relative z-0 overflow-hidden border-b border-border bg-gradient-to-b from-background via-card to-background bg-[radial-gradient(60rem_40rem_at_20%_-10%,theme(colors.primary/8),transparent)] px-6 py-24 lg:py-32"
+      className="relative z-0 overflow-hidden bg-gradient-to-b from-background via-card to-background bg-[radial-gradient(60rem_40rem_at_20%_-10%,theme(colors.primary/8),transparent)] px-6 py-24 lg:py-32"
       aria-labelledby="enterprise-hero-h1"
     >
       <div className="relative z-10 mx-auto max-w-7xl">
@@ -105,7 +105,7 @@ export function EnterpriseHeroTemplate({
               variant="outline"
               className="mb-6 w-fit border-primary/20 bg-primary/10 px-4 py-2 text-sm text-primary"
             >
-              <div className="h-4 w-4">{BadgeIcon}</div>
+              <div className="flex h-4 w-4 items-center justify-center">{BadgeIcon}</div>
               <span>{badge.text}</span>
             </Badge>
 
@@ -118,7 +118,9 @@ export function EnterpriseHeroTemplate({
             </h1>
 
             {/* Support Copy */}
-            <p className="mb-8 text-pretty text-xl leading-relaxed text-foreground/85">{description}</p>
+            <p className="mb-8 text-pretty text-xl leading-relaxed text-foreground/85">
+              {description}
+            </p>
 
             {/* Proof Tiles */}
             <StatsGrid
@@ -153,9 +155,17 @@ export function EnterpriseHeroTemplate({
             <p className="mb-6 text-xs text-muted-foreground">{helperText}</p>
 
             {/* Compliance Proof Bar */}
-            <div id="compliance-proof-bar" className="flex flex-wrap items-center gap-3" aria-live="polite">
+            <div
+              id="compliance-proof-bar"
+              className="flex flex-wrap items-center gap-3"
+              aria-live="polite"
+            >
               {complianceChips.map((chip, idx) => (
-                <ComplianceChip key={idx} icon={chip.icon} ariaLabel={chip.ariaLabel}>
+                <ComplianceChip
+                  key={idx}
+                  icon={chip.icon}
+                  ariaLabel={chip.ariaLabel}
+                >
                   {chip.label}
                 </ComplianceChip>
               ))}
@@ -173,15 +183,23 @@ export function EnterpriseHeroTemplate({
                     <div className="h-5 w-5 text-primary" aria-hidden="true">
                       {BadgeIcon}
                     </div>
-                    <span className="font-semibold text-foreground">{auditConsole.title}</span>
+                    <span className="font-semibold text-foreground">
+                      {auditConsole.title}
+                    </span>
                   </div>
-                  <Badge variant="secondary" className="bg-chart-3/20 text-xs text-chart-3">
+                  <Badge
+                    variant="secondary"
+                    className="bg-chart-3/20 text-xs text-chart-3"
+                  >
                     {auditConsole.badge}
                   </Badge>
                 </div>
 
                 {/* Filter Strip */}
-                <div className="mb-4 flex items-center gap-2 text-xs text-muted-foreground" role="presentation">
+                <div
+                  className="mb-4 flex items-center gap-2 text-xs text-muted-foreground"
+                  role="presentation"
+                >
                   <div className="h-3 w-3" aria-hidden="true">
                     {BadgeIcon}
                   </div>
@@ -191,8 +209,8 @@ export function EnterpriseHeroTemplate({
                       type="button"
                       className={
                         filter.active
-                          ? 'rounded-md bg-primary/10 px-2 py-1 text-primary'
-                          : 'px-2 py-1 hover:text-foreground'
+                          ? "rounded-md bg-primary/10 px-2 py-1 text-primary"
+                          : "px-2 py-1 hover:text-foreground"
                       }
                       aria-label={filter.ariaLabel}
                     >
@@ -210,14 +228,22 @@ export function EnterpriseHeroTemplate({
                       aria-label={`${log.event} by ${log.user} at ${log.displayTime} – ${log.status}`}
                     >
                       <div className="mb-1 flex items-center justify-between">
-                        <span className="font-mono text-sm text-primary">{log.event}</span>
-                        <Badge variant="secondary" className="bg-chart-3/20 px-2 py-0.5 text-xs text-chart-3">
+                        <span className="font-mono text-sm text-primary">
+                          {log.event}
+                        </span>
+                        <Badge
+                          variant="secondary"
+                          className="bg-chart-3/20 px-2 py-0.5 text-xs text-chart-3"
+                        >
                           {log.status}
                         </Badge>
                       </div>
                       <div className="text-xs text-muted-foreground">
                         <div>{log.user}</div>
-                        <time dateTime={log.time} className="text-muted-foreground/70">
+                        <time
+                          dateTime={log.time}
+                          className="text-muted-foreground/70"
+                        >
                           {log.displayTime}
                         </time>
                       </div>
@@ -242,14 +268,20 @@ export function EnterpriseHeroTemplate({
                 <div
                   key={idx}
                   className={`absolute rounded-xl border border-primary/20 bg-card px-4 py-2 shadow-md drop-shadow-md ${
-                    floatingBadge.position === 'top-right' ? '-right-4 -top-4' : '-bottom-4 -left-4'
+                    floatingBadge.position === "top-right"
+                      ? "-right-4 -top-4"
+                      : "-bottom-4 -left-4"
                   }`}
                   role="status"
                   aria-live="polite"
                   aria-label={floatingBadge.ariaLabel}
                 >
-                  <div className="text-xs text-muted-foreground">{floatingBadge.label}</div>
-                  <div className="font-semibold text-primary">{floatingBadge.value}</div>
+                  <div className="text-xs text-muted-foreground">
+                    {floatingBadge.label}
+                  </div>
+                  <div className="font-semibold text-primary">
+                    {floatingBadge.value}
+                  </div>
                 </div>
               ))}
             </div>
@@ -257,5 +289,5 @@ export function EnterpriseHeroTemplate({
         </div>
       </div>
     </section>
-  )
+  );
 }

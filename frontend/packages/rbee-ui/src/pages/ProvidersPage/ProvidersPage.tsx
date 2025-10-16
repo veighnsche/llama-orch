@@ -9,8 +9,8 @@ import {
   ProvidersCTA,
   ProvidersEarnings,
   ProvidersHero,
-  ProvidersTestimonialsTemplate,
   SolutionTemplate,
+  TestimonialsTemplate,
 } from '@rbee/ui/templates'
 import {
   providersCTAProps,
@@ -86,7 +86,7 @@ export default function ProvidersPage() {
         </CardGridTemplate>
       </TemplateContainer>
       <TemplateContainer {...providersTestimonialsContainerProps}>
-        <ProvidersTestimonialsTemplate {...providersTestimonialsProps} />
+        <TestimonialsTemplate {...providersTestimonialsProps} />
       </TemplateContainer>
       <ProvidersCTA {...providersCTAProps} />
     </main>

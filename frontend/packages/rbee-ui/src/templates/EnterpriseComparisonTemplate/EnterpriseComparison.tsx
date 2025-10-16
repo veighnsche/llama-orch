@@ -1,8 +1,8 @@
 'use client'
 
 import { Legend } from '@rbee/ui/atoms/Legend'
+import { FEATURES, PROVIDERS } from '@rbee/ui/data/enterprise-comparison'
 import { MatrixCard, MatrixTable } from '@rbee/ui/molecules'
-import { FEATURES, PROVIDERS } from '@rbee/ui/organisms/Enterprise/ComparisonData'
 import { cn } from '@rbee/ui/utils'
 import { useState } from 'react'
 

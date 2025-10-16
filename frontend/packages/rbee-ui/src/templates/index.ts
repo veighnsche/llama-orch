@@ -39,7 +39,6 @@ export * from './ProblemTemplate'
 export * from './ProvidersCTA'
 export * from './ProvidersEarnings'
 export * from './ProvidersHero'
-export * from './ProvidersTestimonialsTemplate'
 export * from './RealTimeProgressTemplate'
 export * from './SecurityIsolationTemplate'
 // SolutionTemplate exports - avoid conflict with EnterpriseSolutionTemplate EarningRow
