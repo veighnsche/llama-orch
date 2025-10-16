@@ -3,8 +3,10 @@
 import { gpuEarnings } from '@rbee/ui/assets'
 import { FormerCryptoMiner, GamingPcOwner, HomelabEnthusiast, WorkstationOwner } from '@rbee/ui/icons'
 import type { TemplateContainerProps } from '@rbee/ui/molecules'
-import type { FeatureTabsSectionProps, StepsSectionProps } from '@rbee/ui/organisms'
+import { CodeBlock } from '@rbee/ui/molecules/CodeBlock'
 import type {
+  FeaturesTabsProps,
+  HowItWorksProps,
   ProvidersCTATemplateProps,
   ProvidersEarningsTemplateProps,
   ProvidersHeroTemplateProps,
@@ -232,64 +234,83 @@ export const providersSolutionProps: SolutionTemplateProps = {
 }
 
 // === ProvidersHowItWorks Template ===
-// Note: Using StepsSection organism
-export const providersHowItWorksProps: StepsSectionProps = {
-  id: 'how-it-works',
-  kicker: 'How rbee Works',
-  title: 'Start Earning in 4 Simple Steps',
-  subtitle: 'No technical expertise required. Most providers finish in ~15 minutes.',
+export const providersHowItWorksProps: HowItWorksProps = {
   steps: [
     {
-      icon: <Download className="h-8 w-8" aria-hidden="true" />,
-      step: 'Step 1',
-      title: 'Install rbee',
-      body: 'Download and install with one command. Works on Windows, macOS, and Linux.',
-      snippet: 'curl -sSL rbee.dev/install.sh | sh',
+      label: 'Install rbee',
+      block: {
+        kind: 'terminal',
+        title: 'Installation',
+        lines: <>curl -sSL rbee.dev/install.sh | sh</>,
+        copyText: 'curl -sSL rbee.dev/install.sh | sh',
+      },
     },
     {
-      icon: <Settings className="h-8 w-8" aria-hidden="true" />,
-      step: 'Step 2',
-      title: 'Configure Settings',
-      body: 'Set your pricing, availability windows, and usage limits through the intuitive web dashboard.',
-      checklist: ['Set hourly rate', 'Define availability', 'Set usage limits'],
+      label: 'Configure Settings',
+      block: {
+        kind: 'note',
+        content: (
+          <>
+            Set your pricing, availability windows, and usage limits through the intuitive web dashboard.
+            <ul className="mt-2 space-y-1 text-sm">
+              <li>• Set hourly rate</li>
+              <li>• Define availability</li>
+              <li>• Set usage limits</li>
+            </ul>
+          </>
+        ),
+      },
     },
     {
-      icon: <Globe className="h-8 w-8" aria-hidden="true" />,
-      step: 'Step 3',
-      title: 'Join Marketplace',
-      body: 'Your GPUs automatically appear in the rbee marketplace. Developers can discover and rent your compute power.',
-      successNote: 'Your GPUs are now live and earning.',
+      label: 'Join Marketplace',
+      block: {
+        kind: 'note',
+        content: (
+          <>
+            Your GPUs automatically appear in the rbee marketplace. Developers can discover and rent your compute power.
+            <div className="mt-2 text-sm font-medium text-green-600">✓ Your GPUs are now live and earning.</div>
+          </>
+        ),
+      },
     },
     {
-      icon: <Wallet className="h-8 w-8" aria-hidden="true" />,
-      step: 'Step 4',
-      title: 'Get Paid',
-      body: 'Track earnings in real time. Automatic payouts to your bank or crypto wallet.',
-      stats: [
-        { label: 'Payout frequency', value: 'Weekly' },
-        { label: 'Minimum payout', value: '€25' },
-      ],
+      label: 'Get Paid',
+      block: {
+        kind: 'note',
+        content: (
+          <>
+            Track earnings in real time. Automatic payouts to your bank or crypto wallet.
+            <div className="mt-2 space-y-1 text-sm">
+              <div>
+                <strong>Payout frequency:</strong> Weekly
+              </div>
+              <div>
+                <strong>Minimum payout:</strong> €25
+              </div>
+            </div>
+          </>
+        ),
+      },
     },
   ],
-  avgTime: '12 minutes',
 }
 
 // === ProvidersFeatures Template ===
-// Note: Using FeatureTabsSection organism
-export const providersFeaturesProps: FeatureTabsSectionProps = {
+export const providersFeaturesProps: FeaturesTabsProps = {
   title: 'Everything You Need to Maximize Earnings',
-  subtitle: 'Professional-grade tools to manage your GPU fleet and optimize your passive income.',
-  items: [
+  description: 'Professional-grade tools to manage your GPU fleet and optimize your passive income.',
+  tabs: [
     {
-      id: 'pricing',
-      title: 'Flexible Pricing Control',
+      value: 'pricing',
+      icon: DollarSign,
+      label: 'Flexible Pricing Control',
+      mobileLabel: 'Pricing',
+      subtitle: 'Set your rates',
+      badge: 'Control',
       description: 'Set your own hourly rates based on GPU model, demand, and your preferences.',
-      icon: <DollarSign className="h-4 w-4" />,
-      benefit: { text: 'Dynamic pricing based on demand with automatic adjustments', tone: 'primary' as const },
-      example: {
-        kind: 'code' as const,
-        title: 'Pricing Configuration',
-        content: `{
+      content: (
+        <CodeBlock
+          code={`{
   "gpu": "RTX 4090",
   "base_rate": 1.50,
   "min_rate": 1.00,
@@ -299,96 +320,109 @@ export const providersFeaturesProps: FeatureTabsSectionProps = {
     "weekday": 1.5,
     "weekend": 2.0
   }
-}`,
+}`}
+          language="json"
+          copyable={true}
+        />
+      ),
+      highlight: {
+        text: 'Dynamic pricing based on demand with automatic adjustments',
+        variant: 'primary',
       },
+      benefits: [
+        { text: 'Set custom rates' },
+        { text: 'Demand-based pricing' },
+        { text: 'Schedule multipliers' },
+      ],
     },
     {
-      id: 'availability',
-      title: 'Availability Management',
+      value: 'availability',
+      icon: Clock,
+      label: 'Availability Management',
+      mobileLabel: 'Schedule',
+      subtitle: 'Control when',
+      badge: 'Flexible',
       description: 'Control exactly when your GPUs are available for rent.',
-      icon: <Clock className="h-4 w-4" />,
-      benefit: { text: 'Set availability windows and priority modes', tone: 'primary' as const },
-      example: {
-        kind: 'code' as const,
-        title: 'Availability Schedule',
-        content: `{
+      content: (
+        <CodeBlock
+          code={`{
   "weekday": "09:00-17:00",
   "weekend": "all-day",
   "vacation_mode": false,
   "priority_mode": "my_usage_first",
   "auto_pause_gaming": true
-}`,
+}`}
+          language="json"
+          copyable={true}
+        />
+      ),
+      highlight: {
+        text: 'Set availability windows and priority modes',
+        variant: 'primary',
       },
+      benefits: [{ text: 'Custom schedules' }, { text: 'Priority modes' }, { text: 'Auto-pause gaming' }],
     },
     {
-      id: 'security',
-      title: 'Security & Privacy',
+      value: 'security',
+      icon: Shield,
+      label: 'Security & Privacy',
+      mobileLabel: 'Security',
+      subtitle: 'Protected',
+      badge: 'Safe',
       description: 'Your data and hardware are protected with enterprise-grade security.',
-      icon: <Shield className="h-4 w-4" />,
-      benefit: { text: 'Sandboxed execution with encrypted communication', tone: 'primary' as const },
-      example: {
-        kind: 'code' as const,
-        title: 'Security Features',
-        content: `✓ Sandboxed execution (no file access)
-✓ Encrypted communication (TLS 1.3)
-✓ No access to personal data
-✓ Malware scanning on all jobs
-✓ Automatic security updates
-✓ Insurance coverage included`,
+      content: (
+        <div className="space-y-2 text-sm">
+          <div>✓ Sandboxed execution (no file access)</div>
+          <div>✓ Encrypted communication (TLS 1.3)</div>
+          <div>✓ No access to personal data</div>
+          <div>✓ Malware scanning on all jobs</div>
+          <div>✓ Automatic security updates</div>
+          <div>✓ Insurance coverage included</div>
+        </div>
+      ),
+      highlight: {
+        text: 'Sandboxed execution with encrypted communication',
+        variant: 'success',
       },
+      benefits: [{ text: 'Sandboxed jobs' }, { text: 'TLS encryption' }, { text: 'Insurance included' }],
     },
     {
-      id: 'analytics',
-      title: 'Earnings Dashboard',
+      value: 'analytics',
+      icon: BarChart3,
+      label: 'Earnings Dashboard',
+      mobileLabel: 'Analytics',
+      subtitle: 'Track earnings',
+      badge: 'Insights',
       description: 'Track your earnings, utilization, and performance in real‑time.',
-      icon: <BarChart3 className="h-4 w-4" />,
-      benefit: { text: 'Real‑time earnings tracking with historical charts', tone: 'primary' as const },
-      example: {
-        kind: 'code' as const,
-        title: 'Earnings Summary',
-        content: `Today:        €42.50
-This Week:    €287.30
-This Month:   €1,124.80
-
-Utilization:  78%
-Avg Rate:     €1.85/hr
-Top GPU:      RTX 4090 (€524/mo)`,
+      content: (
+        <div className="space-y-2 font-mono text-sm">
+          <div>
+            <strong>Today:</strong> €42.50
+          </div>
+          <div>
+            <strong>This Week:</strong> €287.30
+          </div>
+          <div>
+            <strong>This Month:</strong> €1,124.80
+          </div>
+          <div className="mt-4 space-y-1 border-t border-border pt-2">
+            <div>
+              <strong>Utilization:</strong> 78%
+            </div>
+            <div>
+              <strong>Avg Rate:</strong> €1.85/hr
+            </div>
+            <div>
+              <strong>Top GPU:</strong> RTX 4090 (€524/mo)
+            </div>
+          </div>
+        </div>
+      ),
+      highlight: {
+        text: 'Real‑time earnings tracking with historical charts',
+        variant: 'primary',
       },
-    },
-    {
-      id: 'limits',
-      title: 'Usage Limits',
-      description: 'Set limits to protect your hardware and control costs.',
-      icon: <Sliders className="h-4 w-4" />,
-      benefit: { text: 'Temperature monitoring and automatic cooldown periods', tone: 'primary' as const },
-      example: {
-        kind: 'code' as const,
-        title: 'Hardware Protection',
-        content: `{
-  "max_hours_per_day": 18,
-  "temp_limit": 80,
-  "power_cap": 350,
-  "cooldown_minutes": 15,
-  "warranty_mode": true
-}`,
-      },
-    },
-    {
-      id: 'performance',
-      title: 'Performance Optimization',
-      description: 'Maximize your earnings with automatic optimization.',
-      icon: <Zap className="h-4 w-4" />,
-      benefit: { text: 'Automatic model selection and load balancing', tone: 'primary' as const },
-      example: {
-        kind: 'code' as const,
-        title: 'Optimization Stats',
-        content: `Idle Detection:     ✓ Active
-Auto-Start:         ✓ Enabled
-Load Balancing:     2 GPUs
-Priority Queue:     High-paying jobs first
-Benchmark Score:    9,847 (top 5%)
-Earnings Boost:     +23% vs. baseline`,
-      },
+      benefits: [{ text: 'Real-time tracking' }, { text: 'Historical charts' }, { text: 'Performance metrics' }],
     },
   ],
 }

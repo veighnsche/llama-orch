@@ -1,8 +1,9 @@
 'use client'
 
 import { TemplateContainer } from '@rbee/ui/molecules'
-import { FeatureTabsSection, StepsSection } from '@rbee/ui/organisms'
 import {
+  FeaturesTabs,
+  HowItWorks,
   ProblemTemplate,
   ProvidersCTATemplate,
   ProvidersEarningsTemplate,
@@ -44,8 +45,8 @@ export default function ProvidersPage() {
       <TemplateContainer {...providersSolutionContainerProps}>
         <SolutionTemplate {...providersSolutionProps} />
       </TemplateContainer>
-      <StepsSection {...providersHowItWorksProps} />
-      <FeatureTabsSection {...providersFeaturesProps} />
+      <HowItWorks {...providersHowItWorksProps} />
+      <FeaturesTabs {...providersFeaturesProps} />
       <TemplateContainer {...providersUseCasesContainerProps}>
         <ProvidersUseCasesTemplate {...providersUseCasesProps} />
       </TemplateContainer>

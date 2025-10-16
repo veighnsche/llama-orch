@@ -10,7 +10,6 @@
  */
 
 // Individual molecules (alphabetical)
-export * from './ArchitectureDiagram/ArchitectureDiagram'
 export * from './ArchitectureHighlights/ArchitectureHighlights'
 export * from './AudienceCard/AudienceCard'
 export * from './BeeArchitecture/BeeArchitecture'
