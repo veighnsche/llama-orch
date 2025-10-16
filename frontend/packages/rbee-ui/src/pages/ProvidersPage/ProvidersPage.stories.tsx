@@ -8,7 +8,7 @@ const meta = {
     layout: 'fullscreen',
   },
   tags: ['autodocs'],
-} satisfies Meta<typeof meta>
+} satisfies Meta<typeof ProvidersPage>
 
 export default meta
 type Story = StoryObj<typeof meta>

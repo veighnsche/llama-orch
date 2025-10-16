@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react'
-import { IntelligentModelManagementTemplate } from './IntelligentModelManagementTemplate'
 import { intelligentModelManagementProps } from '../../pages/FeaturesPage/FeaturesPageProps'
+import { IntelligentModelManagementTemplate } from './IntelligentModelManagementTemplate'
 
 const meta: Meta<typeof IntelligentModelManagementTemplate> = {
   title: 'Templates/IntelligentModelManagementTemplate',

@@ -18,9 +18,6 @@ export type OutcomeStat = {
 }
 
 export type EnterpriseFeaturesTemplateProps = {
-  eyebrow: string
-  heading: string
-  description: string
   features: EnterpriseFeature[]
   outcomes: {
     heading: string
@@ -34,33 +31,13 @@ export type EnterpriseFeaturesTemplateProps = {
 // Main Component
 // ──────────────────────────────────────────────────────────────────────────────
 
-export function EnterpriseFeaturesTemplate({
-  eyebrow,
-  heading,
-  description,
-  features,
-  outcomes,
-}: EnterpriseFeaturesTemplateProps) {
+export function EnterpriseFeaturesTemplate({ features, outcomes }: EnterpriseFeaturesTemplateProps) {
   return (
-    <section
-      aria-labelledby="enterprise-features-h2"
-      className="relative border-b border-border bg-background px-6 py-24 overflow-hidden"
-    >
+    <div className="relative overflow-hidden">
       {/* Decorative Gradient */}
       <div className="pointer-events-none absolute inset-0 bg-radial-glow" aria-hidden="true" />
 
-      <div className="relative mx-auto max-w-7xl">
-        {/* Header Block */}
-        <div className="mb-12 text-center animate-in fade-in-50 slide-in-from-bottom-2">
-          <p className="mb-2 text-sm font-semibold uppercase tracking-wide text-primary">{eyebrow}</p>
-          <h2 id="enterprise-features-h2" className="mb-4 text-4xl font-bold text-foreground">
-            {heading}
-          </h2>
-          <p className="mx-auto max-w-3xl text-balance text-xl text-muted-foreground">
-            {description}
-          </p>
-        </div>
-
+      <div className="relative">
         {/* Feature Grid */}
         <div className="grid gap-8 md:grid-cols-2 animate-in fade-in-50" style={{ animationDelay: '120ms' }}>
           {features.map((feature, index) => (
@@ -92,6 +69,6 @@ export function EnterpriseFeaturesTemplate({
           </div>
         </div>
       </div>
-    </section>
+    </div>
   )
 }

@@ -1,12 +1,10 @@
+import { developersEmailCaptureProps } from '@rbee/ui/pages/DevelopersPage/DevelopersPageProps'
+import { enterpriseEmailCaptureProps } from '@rbee/ui/pages/EnterprisePage/EnterprisePagePropsComplete'
+import { featuresEmailCaptureProps } from '@rbee/ui/pages/FeaturesPage/FeaturesPageProps'
+import { emailCaptureProps } from '@rbee/ui/pages/HomePage/HomePageProps'
+import { pricingEmailCaptureProps } from '@rbee/ui/pages/PricingPage/PricingPageProps'
+import { useCasesEmailCaptureProps } from '@rbee/ui/pages/UseCasesPage/UseCasesPageProps'
 import type { Meta, StoryObj } from '@storybook/react'
-import { 
-  emailCaptureProps,
-  featuresEmailCaptureProps,
-  useCasesEmailCaptureProps,
-  pricingEmailCaptureProps,
-  developersEmailCaptureProps,
-  enterpriseEmailCaptureProps,
-} from '@rbee/ui/pages'
 import { EmailCapture } from './EmailCapture'
 
 const meta = {

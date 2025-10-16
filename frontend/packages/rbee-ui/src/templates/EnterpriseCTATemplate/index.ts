@@ -1,1 +1,1 @@
-export * from './EnterpriseCTA'
+export * from './EnterpriseCTATemplate'

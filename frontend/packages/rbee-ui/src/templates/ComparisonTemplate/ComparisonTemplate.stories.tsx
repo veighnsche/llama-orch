@@ -1,5 +1,5 @@
-import type { Meta, StoryObj } from '@storybook/react'
 import { comparisonTemplateProps } from '@rbee/ui/pages/HomePage'
+import type { Meta, StoryObj } from '@storybook/react'
 import { ComparisonTemplate } from './ComparisonTemplate'
 
 const meta = {

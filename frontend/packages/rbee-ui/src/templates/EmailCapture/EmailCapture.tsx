@@ -67,14 +67,14 @@ export function EmailCapture({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    
+
     if (onSubmit) {
       await onSubmit(email)
     } else {
       // Default behavior: log to console
       console.log('Email submitted:', email)
     }
-    
+
     setSubmitted(true)
     setTimeout(() => {
       setSubmitted(false)

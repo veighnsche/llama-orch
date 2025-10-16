@@ -2,7 +2,7 @@
 
 import { PricingTier } from '@rbee/ui/molecules'
 import { cn } from '@rbee/ui/utils'
-import Image, { type StaticImageData } from 'next/image'
+import Image from 'next/image'
 import type * as React from 'react'
 import { useState } from 'react'
 
@@ -40,7 +40,7 @@ export type PricingFooter = {
 
 /**
  * PricingTemplate displays pricing tiers with monthly/yearly toggle.
- * 
+ *
  * @example
  * ```tsx
  * <PricingTemplate
@@ -60,7 +60,7 @@ export type PricingTemplateProps = {
   tiers: PricingTierData[]
   /** Editorial image to show below tiers */
   editorialImage?: {
-    src: StaticImageData
+    src: string
     alt: string
     width?: number
     height?: number
@@ -75,13 +75,7 @@ export type PricingTemplateProps = {
 // Main Component
 // ──────────────────────────────────────────────────────────────────────────────
 
-export function PricingTemplate({
-  kickerBadges,
-  tiers,
-  editorialImage,
-  footer,
-  className,
-}: PricingTemplateProps) {
+export function PricingTemplate({ kickerBadges, tiers, editorialImage, footer, className }: PricingTemplateProps) {
   const [isYearly, setIsYearly] = useState(false)
 
   return (

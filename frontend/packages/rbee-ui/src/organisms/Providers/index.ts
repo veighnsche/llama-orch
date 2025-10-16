@@ -1,11 +1,6 @@
-export * from './ProvidersCTA'
-export * from './ProvidersEarnings'
 export * from './ProvidersFeatures'
-export * from './ProvidersHero'
 export * from './ProvidersHowItWorks'
-export * from './ProvidersMarketplace'
 export * from './ProvidersProblem'
-export * from './ProvidersSecurity'
 export * from './ProvidersSolution'
-export * from './ProvidersTestimonials'
-export * from './ProvidersUseCases'
+// ProvidersHero, ProvidersUseCases, ProvidersEarnings, ProvidersMarketplace,
+// ProvidersSecurity, ProvidersTestimonials, ProvidersCTA migrated to templates

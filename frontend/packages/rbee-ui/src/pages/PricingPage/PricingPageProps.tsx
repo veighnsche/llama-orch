@@ -1,18 +1,17 @@
 'use client'
 
+import { pricingHero } from '@rbee/ui/assets'
 import { PricingScaleVisual } from '@rbee/ui/icons'
-import type { TemplateContainerProps } from '@rbee/ui/molecules'
+import type { Provider, Row, RowGroup, TemplateContainerProps } from '@rbee/ui/molecules'
 import type {
   EmailCaptureProps,
+  FAQItem,
   FAQTemplateProps,
   PricingComparisonTemplateProps,
   PricingHeroTemplateProps,
   PricingTemplateProps,
 } from '@rbee/ui/templates'
 import { Layers, Shield, Sparkles, Unlock, Zap } from 'lucide-react'
-import type { Provider, Row, RowGroup } from '@rbee/ui/molecules'
-import type { FAQItem } from '@rbee/ui/templates'
-import { pricingHero } from '@rbee/ui/assets'
 
 // ============================================================================
 // Props Objects
@@ -62,7 +61,8 @@ export const pricingHeroProps: PricingHeroTemplateProps = {
 /** Pricing template container - wraps the pricing tiers section */
 export const pricingTemplateContainerProps: Omit<TemplateContainerProps, 'children'> = {
   title: 'Simple, honest pricing.',
-  description: "Every plan includes the full rbee orchestrator—no feature gates, no artificial limits. Start free and grow when you're ready.",
+  description:
+    "Every plan includes the full rbee orchestrator—no feature gates, no artificial limits. Start free and grow when you're ready.",
   bgVariant: 'default',
   paddingY: '2xl',
   maxWidth: '7xl',

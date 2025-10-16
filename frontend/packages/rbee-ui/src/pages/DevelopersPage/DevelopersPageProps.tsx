@@ -1,12 +1,10 @@
-import { Alert, AlertDescription, Card, CardContent, CardHeader, CardTitle, GitHubIcon } from "@rbee/ui/atoms";
-import { homelabHardwareMontage } from "@rbee/ui/assets";
-import { CodeBlock } from "@rbee/ui/molecules/CodeBlock";
-import { GPUUtilizationBar } from "@rbee/ui/molecules/GPUUtilizationBar";
-import { type TemplateContainerProps } from "@rbee/ui/molecules";
-import { TerminalWindow } from "@rbee/ui/molecules/TerminalWindow";
-import type {
-  CoreFeaturesTabsProps,
-} from "@rbee/ui/organisms";
+import { homelabHardwareMontage } from '@rbee/ui/assets'
+import { Alert, AlertDescription, Card, CardContent, CardHeader, CardTitle, GitHubIcon } from '@rbee/ui/atoms'
+import type { TemplateContainerProps } from '@rbee/ui/molecules'
+import { CodeBlock } from '@rbee/ui/molecules/CodeBlock'
+import { GPUUtilizationBar } from '@rbee/ui/molecules/GPUUtilizationBar'
+import { TerminalWindow } from '@rbee/ui/molecules/TerminalWindow'
+import type { CoreFeaturesTabsProps } from '@rbee/ui/organisms'
 import type {
   CTATemplateProps,
   DevelopersCodeExamplesProps,
@@ -18,7 +16,7 @@ import type {
   SolutionTemplateProps,
   TestimonialsTemplateProps,
   UseCasesTemplateProps,
-} from "@rbee/ui/templates";
+} from '@rbee/ui/templates'
 import {
   AlertTriangle,
   ArrowRight,
@@ -32,7 +30,7 @@ import {
   Lock,
   Wrench,
   Zap,
-} from "lucide-react";
+} from 'lucide-react'
 
 // ============================================================================
 // Props Objects (in visual order matching page composition)
@@ -45,52 +43,44 @@ import {
  */
 export const developersHeroProps: DevelopersHeroProps = {
   badge: {
-    text: "For developers who build with AI",
+    text: 'For developers who build with AI',
     showPulse: true,
   },
-  headlineFirstLine: "Build with AI.",
-  headlineSecondLine: "Own your infrastructure.",
+  headlineFirstLine: 'Build with AI.',
+  headlineSecondLine: 'Own your infrastructure.',
   subheadline: (
     <>
-      Stop depending on external AI. <strong className="font-semibold text-foreground">rbee</strong> (pronounced &quot;are-bee&quot;) gives you an
-      OpenAI-compatible API that runs on{' '}
+      Stop depending on external AI. <strong className="font-semibold text-foreground">rbee</strong> (pronounced
+      &quot;are-bee&quot;) gives you an OpenAI-compatible API that runs on{' '}
       <strong className="font-semibold text-foreground">ALL your home network hardware</strong>
-      —GPUs, Macs, workstations—with{' '}
-      <strong className="font-semibold text-foreground">zero ongoing costs</strong>.
+      —GPUs, Macs, workstations—with <strong className="font-semibold text-foreground">zero ongoing costs</strong>.
     </>
   ),
   primaryCta: {
-    label: "Get started free",
-    href: "#get-started",
+    label: 'Get started free',
+    href: '#get-started',
   },
   secondaryCta: {
-    label: "View on GitHub",
-    href: "https://github.com/orchyra/rbee",
+    label: 'View on GitHub',
+    href: 'https://github.com/orchyra/rbee',
   },
   tertiaryLink: {
-    label: "How it works",
-    href: "#how-it-works",
+    label: 'How it works',
+    href: '#how-it-works',
   },
-  trustBadges: [
-    "Open source (GPL-3.0)",
-    "OpenAI-compatible API",
-    "Works with Zed & Cursor",
-    "No cloud required",
-  ],
+  trustBadges: ['Open source (GPL-3.0)', 'OpenAI-compatible API', 'Works with Zed & Cursor', 'No cloud required'],
   terminal: {
-    title: "terminal",
+    title: 'terminal',
     command: 'rbee-keeper infer --model llama-3.1-70b --prompt "Generate API"',
     output: (
       <div className="space-y-1 text-foreground pt-2">
         <div>
           <span className="text-chart-2">export</span> <span className="text-primary">async</span>{' '}
-          <span className="text-chart-4">function</span> <span className="text-chart-3">getUsers</span>(){' '}
-          {'{'}
+          <span className="text-chart-4">function</span> <span className="text-chart-3">getUsers</span>() {'{'}
         </div>
         <div className="pl-4">
           <span className="text-chart-2">const</span> response = <span className="text-chart-2">await</span>{' '}
-          <span className="text-chart-3">fetch</span>(
-          <span className="text-primary">&apos;/api/users&apos;</span>)
+          <span className="text-chart-3">fetch</span>(<span className="text-primary">&apos;/api/users&apos;</span>)
         </div>
         <div className="pl-4">
           <span className="text-chart-2">return</span> response.
@@ -100,20 +90,17 @@ export const developersHeroProps: DevelopersHeroProps = {
       </div>
     ),
     stats: {
-      gpu1: "87%",
-      gpu2: "92%",
-      cost: "$0.00",
+      gpu1: '87%',
+      gpu2: '92%',
+      cost: '$0.00',
     },
   },
   hardwareImage: {
     src: homelabHardwareMontage,
-    alt: "Professional product photography of a modern homelab setup on a dark wooden desk with warm ambient lighting: foreground shows a matte black GPU tower PC with subtle RGB accents and visible PCIe slots, mid-ground features a silver M-series MacBook Pro with glowing Apple logo, background includes a compact mini-ITX workstation with exposed heatsinks and a consumer-grade WiFi router with antenna array. Shallow depth of field creates bokeh effect on background elements. Organized cable management with braided black cables. Dark navy gradient backdrop (hex #0f172a to #1e293b). Matte finishes throughout, no glossy surfaces. Studio lighting creates soft highlights on metal chassis. Conveys distributed computing across ALL your home network hardware working in harmony.",
+    alt: 'Professional product photography of a modern homelab setup on a dark wooden desk with warm ambient lighting: foreground shows a matte black GPU tower PC with subtle RGB accents and visible PCIe slots, mid-ground features a silver M-series MacBook Pro with glowing Apple logo, background includes a compact mini-ITX workstation with exposed heatsinks and a consumer-grade WiFi router with antenna array. Shallow depth of field creates bokeh effect on background elements. Organized cable management with braided black cables. Dark navy gradient backdrop (hex #0f172a to #1e293b). Matte finishes throughout, no glossy surfaces. Studio lighting creates soft highlights on metal chassis. Conveys distributed computing across ALL your home network hardware working in harmony.',
   },
-  imageOverlayBadges: [
-    "Zed & Cursor: drop-in via OpenAI API",
-    "Zero ongoing costs",
-  ],
-};
+  imageOverlayBadges: ['Zed & Cursor: drop-in via OpenAI API', 'Zero ongoing costs'],
+}
 
 // === Email Capture ===
 
@@ -122,41 +109,42 @@ export const developersHeroProps: DevelopersHeroProps = {
  */
 export const developersEmailCaptureProps: EmailCaptureProps = {
   badge: {
-    text: "For Developers",
+    text: 'For Developers',
     showPulse: false,
   },
-  headline: "Build AI tools without vendor lock-in",
+  headline: 'Build AI tools without vendor lock-in',
   subheadline: "Join developers who've taken control of their AI infrastructure.",
   emailInput: {
-    placeholder: "your@email.com",
-    label: "Email address",
+    placeholder: 'your@email.com',
+    label: 'Email address',
   },
   submitButton: {
-    label: "Get Started",
+    label: 'Get Started',
   },
-  trustMessage: "100% open source. No credit card required.",
-  successMessage: "Thanks! Check your inbox for next steps.",
+  trustMessage: '100% open source. No credit card required.',
+  successMessage: 'Thanks! Check your inbox for next steps.',
   communityFooter: {
-    text: "Join the community",
-    linkText: "GitHub",
-    linkHref: "https://github.com/orchyra/rbee",
-    subtext: "Star us on GitHub or join our Discord",
+    text: 'Join the community',
+    linkText: 'GitHub',
+    linkHref: 'https://github.com/orchyra/rbee',
+    subtext: 'Star us on GitHub or join our Discord',
   },
-};
+}
 
 // === Problem Template ===
 
 /**
  * Problem Template container - Layout configuration
  */
-export const problemTemplateContainerProps: Omit<TemplateContainerProps, "children"> = {
-  title: "The Hidden Risk of AI-Assisted Development",
-  description: "You're building complex codebases with AI assistance. But what happens when your provider changes the rules?",
-  bgVariant: "background",
-  paddingY: "2xl",
-  maxWidth: "6xl",
-  align: "center",
-};
+export const problemTemplateContainerProps: Omit<TemplateContainerProps, 'children'> = {
+  title: 'The Hidden Risk of AI-Assisted Development',
+  description:
+    "You're building complex codebases with AI assistance. But what happens when your provider changes the rules?",
+  bgVariant: 'background',
+  paddingY: '2xl',
+  maxWidth: '6xl',
+  align: 'center',
+}
 
 /**
  * Problem Template - The Hidden Risk of AI-Assisted Development
@@ -164,45 +152,47 @@ export const problemTemplateContainerProps: Omit<TemplateContainerProps, "childr
 export const problemTemplateProps: ProblemTemplateProps = {
   items: [
     {
-      title: "The Model Changes",
-      body: "Your AI assistant updates overnight. Suddenly, code generation breaks. Your workflow is destroyed. Your team is blocked.",
+      title: 'The Model Changes',
+      body: 'Your AI assistant updates overnight. Suddenly, code generation breaks. Your workflow is destroyed. Your team is blocked.',
       icon: <AlertTriangle className="h-6 w-6" />,
-      tone: "destructive",
-      tag: "High risk",
+      tone: 'destructive',
+      tag: 'High risk',
     },
     {
-      title: "The Price Increases",
-      body: "$20/month becomes $200/month. Multiply by your team size. Your AI infrastructure costs spiral out of control.",
+      title: 'The Price Increases',
+      body: '$20/month becomes $200/month. Multiply by your team size. Your AI infrastructure costs spiral out of control.',
       icon: <DollarSign className="h-6 w-6" />,
-      tone: "primary",
-      tag: "Cost increase: 10x",
+      tone: 'primary',
+      tag: 'Cost increase: 10x',
     },
     {
-      title: "The Provider Shuts Down",
-      body: "API deprecated. Service discontinued. Your complex codebase—built with AI assistance—becomes unmaintainable overnight.",
+      title: 'The Provider Shuts Down',
+      body: 'API deprecated. Service discontinued. Your complex codebase—built with AI assistance—becomes unmaintainable overnight.',
       icon: <Lock className="h-6 w-6" />,
-      tone: "destructive",
-      tag: "Critical failure",
+      tone: 'destructive',
+      tag: 'Critical failure',
     },
   ],
-  ctaPrimary: { label: "Take Control", href: "/getting-started" },
-  ctaSecondary: { label: "View Documentation", href: "/docs" },
-  ctaCopy: "Heavy, complicated codebases built with AI assistance are a ticking time bomb if you depend on external providers.",
-};
+  ctaPrimary: { label: 'Take Control', href: '/getting-started' },
+  ctaSecondary: { label: 'View Documentation', href: '/docs' },
+  ctaCopy:
+    'Heavy, complicated codebases built with AI assistance are a ticking time bomb if you depend on external providers.',
+}
 
 // === Solution Template ===
 
 /**
  * Solution Template container - Layout configuration
  */
-export const solutionTemplateContainerProps: Omit<TemplateContainerProps, "children"> = {
-  title: "Your Hardware. Your Models. Your Control.",
-  description: "rbee orchestrates AI inference across every device in your home network, turning idle hardware into a private, OpenAI-compatible AI platform.",
-  bgVariant: "background",
-  paddingY: "2xl",
-  maxWidth: "7xl",
-  align: "center",
-};
+export const solutionTemplateContainerProps: Omit<TemplateContainerProps, 'children'> = {
+  title: 'Your Hardware. Your Models. Your Control.',
+  description:
+    'rbee orchestrates AI inference across every device in your home network, turning idle hardware into a private, OpenAI-compatible AI platform.',
+  bgVariant: 'background',
+  paddingY: '2xl',
+  maxWidth: '7xl',
+  align: 'center',
+}
 
 /**
  * Solution Template - Your Hardware. Your Models. Your Control.
@@ -211,41 +201,41 @@ export const solutionTemplateProps: SolutionTemplateProps = {
   features: [
     {
       icon: <DollarSign className="h-8 w-8" aria-hidden="true" />,
-      title: "Zero Ongoing Costs",
-      body: "Pay only for electricity. No subscriptions or per-token fees.",
+      title: 'Zero Ongoing Costs',
+      body: 'Pay only for electricity. No subscriptions or per-token fees.',
     },
     {
       icon: <Lock className="h-8 w-8" aria-hidden="true" />,
-      title: "Complete Privacy",
-      body: "Code never leaves your network. GDPR-friendly by default.",
+      title: 'Complete Privacy',
+      body: 'Code never leaves your network. GDPR-friendly by default.',
     },
     {
       icon: <Zap className="h-8 w-8" aria-hidden="true" />,
-      title: "You Decide When to Update",
-      body: "Models change only when you choose—no surprise breakages.",
+      title: 'You Decide When to Update',
+      body: 'Models change only when you choose—no surprise breakages.',
     },
     {
       icon: <Cpu className="h-8 w-8" aria-hidden="true" />,
-      title: "Use All Your Hardware",
-      body: "Orchestrate CUDA, Metal, and CPU. Every chip contributes.",
+      title: 'Use All Your Hardware',
+      body: 'Orchestrate CUDA, Metal, and CPU. Every chip contributes.',
     },
   ],
   steps: [
     {
-      title: "Install rbee",
-      body: "Run one command on Windows, macOS, or Linux.",
+      title: 'Install rbee',
+      body: 'Run one command on Windows, macOS, or Linux.',
     },
     {
-      title: "Add Your Hardware",
-      body: "rbee auto-detects GPUs and CPUs across your network.",
+      title: 'Add Your Hardware',
+      body: 'rbee auto-detects GPUs and CPUs across your network.',
     },
     {
-      title: "Download Models",
-      body: "Pull models from Hugging Face or load local GGUF files.",
+      title: 'Download Models',
+      body: 'Pull models from Hugging Face or load local GGUF files.',
     },
     {
-      title: "Start Building",
-      body: "OpenAI-compatible API. Drop-in replacement for your existing code.",
+      title: 'Start Building',
+      body: 'OpenAI-compatible API. Drop-in replacement for your existing code.',
     },
   ],
   aside: (
@@ -272,35 +262,33 @@ const response = await client.chat
           copyable={true}
         />
         <Alert variant="info">
-          <AlertDescription className="text-xs">
-            Works with Cursor, Zed, Continue, and any OpenAI SDK
-          </AlertDescription>
+          <AlertDescription className="text-xs">Works with Cursor, Zed, Continue, and any OpenAI SDK</AlertDescription>
         </Alert>
       </CardContent>
     </Card>
   ),
   ctaPrimary: {
-    label: "Get Started",
-    href: "/getting-started",
+    label: 'Get Started',
+    href: '/getting-started',
   },
   ctaSecondary: {
-    label: "View Documentation",
-    href: "/docs",
+    label: 'View Documentation',
+    href: '/docs',
   },
-};
+}
 
 // === How It Works Template ===
 
 /**
  * How It Works container - Layout configuration
  */
-export const howItWorksContainerProps: Omit<TemplateContainerProps, "children"> = {
-  title: "From zero to AI infrastructure in 15 minutes",
-  bgVariant: "secondary",
-  paddingY: "2xl",
-  maxWidth: "6xl",
-  align: "center",
-};
+export const howItWorksContainerProps: Omit<TemplateContainerProps, 'children'> = {
+  title: 'From zero to AI infrastructure in 15 minutes',
+  bgVariant: 'secondary',
+  paddingY: '2xl',
+  maxWidth: '6xl',
+  align: 'center',
+}
 
 /**
  * How It Works - From zero to AI infrastructure in 15 minutes
@@ -308,24 +296,24 @@ export const howItWorksContainerProps: Omit<TemplateContainerProps, "children"> 
 export const howItWorksProps: HowItWorksProps = {
   steps: [
     {
-      label: "Install rbee",
+      label: 'Install rbee',
       block: {
-        kind: "terminal",
-        title: "terminal",
+        kind: 'terminal',
+        title: 'terminal',
         lines: (
           <>
             <div>curl -sSL https://rbee.dev/install.sh | sh</div>
             <div className="text-slate-400">rbee-keeper daemon start</div>
           </>
         ),
-        copyText: "curl -sSL https://rbee.dev/install.sh | sh\nrbee-keeper daemon start",
+        copyText: 'curl -sSL https://rbee.dev/install.sh | sh\nrbee-keeper daemon start',
       },
     },
     {
-      label: "Add your machines",
+      label: 'Add your machines',
       block: {
-        kind: "terminal",
-        title: "terminal",
+        kind: 'terminal',
+        title: 'terminal',
         lines: (
           <>
             <div>rbee-keeper setup add-node --name workstation --ssh-host 192.168.1.10</div>
@@ -333,14 +321,14 @@ export const howItWorksProps: HowItWorksProps = {
           </>
         ),
         copyText:
-          "rbee-keeper setup add-node --name workstation --ssh-host 192.168.1.10\nrbee-keeper setup add-node --name mac --ssh-host 192.168.1.20",
+          'rbee-keeper setup add-node --name workstation --ssh-host 192.168.1.10\nrbee-keeper setup add-node --name mac --ssh-host 192.168.1.20',
       },
     },
     {
-      label: "Configure your IDE",
+      label: 'Configure your IDE',
       block: {
-        kind: "terminal",
-        title: "terminal",
+        kind: 'terminal',
+        title: 'terminal',
         lines: (
           <>
             <div>
@@ -349,15 +337,15 @@ export const howItWorksProps: HowItWorksProps = {
             <div className="text-slate-400"># Now Zed, Cursor, or any OpenAI-compatible tool works!</div>
           </>
         ),
-        copyText: "export OPENAI_API_BASE=http://localhost:8080/v1",
+        copyText: 'export OPENAI_API_BASE=http://localhost:8080/v1',
       },
     },
     {
-      label: "Build AI agents",
+      label: 'Build AI agents',
       block: {
-        kind: "code",
-        title: "TypeScript",
-        language: "ts",
+        kind: 'code',
+        title: 'TypeScript',
+        language: 'ts',
         code: `import { invoke } from '@rbee/utils';
 
 const code = await invoke({
@@ -367,7 +355,7 @@ const code = await invoke({
       },
     },
   ],
-};
+}
 
 // === Core Features Tabs ===
 
@@ -375,17 +363,17 @@ const code = await invoke({
  * Core Features Tabs - Four core capabilities (API, GPU, Scheduler, SSE)
  */
 export const coreFeatureTabsProps: CoreFeaturesTabsProps = {
-  title: "Core capabilities",
-  description: "Swap in the API, scale across your hardware, route with code, and watch jobs stream in real time.",
+  title: 'Core capabilities',
+  description: 'Swap in the API, scale across your hardware, route with code, and watch jobs stream in real time.',
   tabs: [
     {
-      value: "api",
+      value: 'api',
       icon: Code,
-      label: "OpenAI-Compatible",
-      mobileLabel: "API",
-      subtitle: "Drop-in API",
-      badge: "Drop-in",
-      description: "Swap endpoints, keep your code. Works with Zed, Cursor, Continue—any OpenAI client.",
+      label: 'OpenAI-Compatible',
+      mobileLabel: 'API',
+      subtitle: 'Drop-in API',
+      badge: 'Drop-in',
+      description: 'Swap endpoints, keep your code. Works with Zed, Cursor, Continue—any OpenAI client.',
       content: (
         <CodeBlock
           code={`# Before: OpenAI
@@ -398,23 +386,19 @@ export OPENAI_API_BASE=http://localhost:8080/v1`}
         />
       ),
       highlight: {
-        text: "Drop-in replacement. Point to localhost.",
-        variant: "success",
+        text: 'Drop-in replacement. Point to localhost.',
+        variant: 'success',
       },
-      benefits: [
-        { text: "No vendor lock-in" },
-        { text: "Use your models + GPUs" },
-        { text: "Keep existing tooling" },
-      ],
+      benefits: [{ text: 'No vendor lock-in' }, { text: 'Use your models + GPUs' }, { text: 'Keep existing tooling' }],
     },
     {
-      value: "gpu",
+      value: 'gpu',
       icon: Cpu,
-      label: "Multi-GPU",
-      mobileLabel: "GPU",
-      subtitle: "Use every GPU",
-      badge: "Scale",
-      description: "Run across CUDA, Metal, and CPU backends. Use every GPU across your network.",
+      label: 'Multi-GPU',
+      mobileLabel: 'GPU',
+      subtitle: 'Use every GPU',
+      badge: 'Scale',
+      description: 'Run across CUDA, Metal, and CPU backends. Use every GPU across your network.',
       content: (
         <div className="space-y-3">
           <GPUUtilizationBar label="RTX 4090 #1" percentage={92} />
@@ -424,23 +408,23 @@ export OPENAI_API_BASE=http://localhost:8080/v1`}
         </div>
       ),
       highlight: {
-        text: "Higher throughput by saturating all devices.",
-        variant: "success",
+        text: 'Higher throughput by saturating all devices.',
+        variant: 'success',
       },
       benefits: [
-        { text: "Bigger models fit" },
-        { text: "Lower latency under load" },
-        { text: "No single-machine bottleneck" },
+        { text: 'Bigger models fit' },
+        { text: 'Lower latency under load' },
+        { text: 'No single-machine bottleneck' },
       ],
     },
     {
-      value: "scheduler",
+      value: 'scheduler',
       icon: Gauge,
-      label: "Programmable scheduler (Rhai)",
-      mobileLabel: "Rhai",
-      subtitle: "Route with Rhai",
-      badge: "Control",
-      description: "Write routing rules. Send 70B to multi-GPU, images to CUDA, everything else to cheapest.",
+      label: 'Programmable scheduler (Rhai)',
+      mobileLabel: 'Rhai',
+      subtitle: 'Route with Rhai',
+      badge: 'Control',
+      description: 'Write routing rules. Send 70B to multi-GPU, images to CUDA, everything else to cheapest.',
       content: (
         <CodeBlock
           code={`// Custom routing logic
@@ -458,23 +442,19 @@ else {
         />
       ),
       highlight: {
-        text: "Optimize for cost, latency, or compliance—your rules.",
-        variant: "primary",
+        text: 'Optimize for cost, latency, or compliance—your rules.',
+        variant: 'primary',
       },
-      benefits: [
-        { text: "Deterministic routing" },
-        { text: "Policy & compliance ready" },
-        { text: "Easy to evolve" },
-      ],
+      benefits: [{ text: 'Deterministic routing' }, { text: 'Policy & compliance ready' }, { text: 'Easy to evolve' }],
     },
     {
-      value: "sse",
+      value: 'sse',
       icon: Zap,
-      label: "Task-based API with SSE",
-      mobileLabel: "SSE",
-      subtitle: "Live job stream",
-      badge: "Observe",
-      description: "See model loading, token generation, and costs stream in as they happen.",
+      label: 'Task-based API with SSE',
+      mobileLabel: 'SSE',
+      subtitle: 'Live job stream',
+      badge: 'Observe',
+      description: 'See model loading, token generation, and costs stream in as they happen.',
       content: (
         <TerminalWindow
           showChrome={false}
@@ -512,31 +492,27 @@ else {
         </TerminalWindow>
       ),
       highlight: {
-        text: "Full visibility for every inference job.",
-        variant: "default",
+        text: 'Full visibility for every inference job.',
+        variant: 'default',
       },
-      benefits: [
-        { text: "Faster debugging" },
-        { text: "UX you can trust" },
-        { text: "Accurate cost tracking" },
-      ],
+      benefits: [{ text: 'Faster debugging' }, { text: 'UX you can trust' }, { text: 'Accurate cost tracking' }],
     },
   ],
-  defaultTab: "api",
-};
+  defaultTab: 'api',
+}
 
 // === Use Cases Template ===
 
 /**
  * Use Cases container - Layout configuration
  */
-export const useCasesTemplateContainerProps: Omit<TemplateContainerProps, "children"> = {
-  title: "Built for developers who value independence",
-  bgVariant: "secondary",
-  paddingY: "2xl",
-  maxWidth: "6xl",
-  align: "center",
-};
+export const useCasesTemplateContainerProps: Omit<TemplateContainerProps, 'children'> = {
+  title: 'Built for developers who value independence',
+  bgVariant: 'secondary',
+  paddingY: '2xl',
+  maxWidth: '6xl',
+  align: 'center',
+}
 
 /**
  * Use Cases Template - Built for developers who value independence
@@ -545,46 +521,46 @@ export const useCasesTemplateProps: UseCasesTemplateProps = {
   items: [
     {
       icon: <Code className="h-6 w-6" />,
-      title: "Build your own AI coder",
-      scenario: "Shipping a SaaS with AI features; wants control without vendor lock-in.",
-      solution: "Run rbee on a gaming PC + old workstation. Llama-3.1-70B for code; Stable Diffusion for assets.",
-      outcome: "$0/month AI costs. Full control. No rate limits.",
-      tags: ["OpenAI-compatible", "Local models"],
+      title: 'Build your own AI coder',
+      scenario: 'Shipping a SaaS with AI features; wants control without vendor lock-in.',
+      solution: 'Run rbee on a gaming PC + old workstation. Llama-3.1-70B for code; Stable Diffusion for assets.',
+      outcome: '$0/month AI costs. Full control. No rate limits.',
+      tags: ['OpenAI-compatible', 'Local models'],
     },
     {
       icon: <FileText className="h-6 w-6" />,
-      title: "Documentation generators",
-      scenario: "Need comprehensive docs from codebase; API costs are prohibitive.",
-      solution: "Process entire repos locally with rbee. Generate markdown with examples.",
-      outcome: "Process entire repos. Zero API costs. Private by default.",
-      tags: ["Markdown", "Privacy"],
+      title: 'Documentation generators',
+      scenario: 'Need comprehensive docs from codebase; API costs are prohibitive.',
+      solution: 'Process entire repos locally with rbee. Generate markdown with examples.',
+      outcome: 'Process entire repos. Zero API costs. Private by default.',
+      tags: ['Markdown', 'Privacy'],
     },
     {
       icon: <FlaskConical className="h-6 w-6" />,
-      title: "Test generators",
-      scenario: "Writing tests is time-consuming; need AI to generate comprehensive suites.",
-      solution: "Use rbee + llama-orch-utils to generate Jest/Vitest tests from specs.",
-      outcome: "10× faster coverage. No external dependencies.",
-      tags: ["Jest", "Vitest"],
+      title: 'Test generators',
+      scenario: 'Writing tests is time-consuming; need AI to generate comprehensive suites.',
+      solution: 'Use rbee + llama-orch-utils to generate Jest/Vitest tests from specs.',
+      outcome: '10× faster coverage. No external dependencies.',
+      tags: ['Jest', 'Vitest'],
     },
     {
       icon: <GitPullRequest className="h-6 w-6" />,
-      title: "Code review agents",
-      scenario: "Small team needs automated code review but cannot afford enterprise tools.",
-      solution: "Build custom review agent with rbee. Analyze PRs for issues, security, performance.",
-      outcome: "Automated reviews. Zero ongoing costs. Custom rules.",
-      tags: ["GitHub", "GitLab"],
+      title: 'Code review agents',
+      scenario: 'Small team needs automated code review but cannot afford enterprise tools.',
+      solution: 'Build custom review agent with rbee. Analyze PRs for issues, security, performance.',
+      outcome: 'Automated reviews. Zero ongoing costs. Custom rules.',
+      tags: ['GitHub', 'GitLab'],
     },
     {
       icon: <Wrench className="h-6 w-6" />,
-      title: "Refactoring agents",
-      scenario: "Legacy codebase needs modernization; manual refactoring would take months.",
-      solution: "Use rbee to refactor code to modern patterns. TypeScript, async/await, etc.",
-      outcome: "Months of work → days. You approve every change.",
-      tags: ["TypeScript", "Modernization"],
+      title: 'Refactoring agents',
+      scenario: 'Legacy codebase needs modernization; manual refactoring would take months.',
+      solution: 'Use rbee to refactor code to modern patterns. TypeScript, async/await, etc.',
+      outcome: 'Months of work → days. You approve every change.',
+      tags: ['TypeScript', 'Modernization'],
     },
   ],
-};
+}
 
 // === Developers Code Examples ===
 
@@ -592,15 +568,15 @@ export const useCasesTemplateProps: UseCasesTemplateProps = {
  * Developers Code Examples - Build AI agents with llama-orch-utils
  */
 export const developersCodeExamplesProps: DevelopersCodeExamplesProps = {
-  title: "Build AI agents with llama-orch-utils",
-  subtitle: "TypeScript utilities for LLM pipelines and agentic workflows.",
-  footerNote: "Works with any OpenAI-compatible client.",
+  title: 'Build AI agents with llama-orch-utils',
+  subtitle: 'TypeScript utilities for LLM pipelines and agentic workflows.',
+  footerNote: 'Works with any OpenAI-compatible client.',
   items: [
     {
-      id: "simple",
-      title: "Simple code generation",
-      summary: "Invoke to generate a TypeScript validator.",
-      language: "TypeScript",
+      id: 'simple',
+      title: 'Simple code generation',
+      summary: 'Invoke to generate a TypeScript validator.',
+      language: 'TypeScript',
       code: `import { invoke } from '@llama-orch/utils';
 
 const response = await invoke({
@@ -612,10 +588,10 @@ const response = await invoke({
 console.log(response.text);`,
     },
     {
-      id: "files",
-      title: "File operations",
-      summary: "Read schema → generate API → write file.",
-      language: "TypeScript",
+      id: 'files',
+      title: 'File operations',
+      summary: 'Read schema → generate API → write file.',
+      language: 'TypeScript',
       code: `import { FileReader, FileWriter, invoke } from '@llama-orch/utils';
 
 // Read schema
@@ -631,10 +607,10 @@ const code = await invoke({
 await FileWriter.write('src/api.ts', code.text);`,
     },
     {
-      id: "agent",
-      title: "Multi-step agent",
-      summary: "Threaded review + suggestion extraction.",
-      language: "TypeScript",
+      id: 'agent',
+      title: 'Multi-step agent',
+      summary: 'Threaded review + suggestion extraction.',
+      language: 'TypeScript',
       code: `import { Thread, invoke, extractCode } from '@llama-orch/utils';
 
 // Build conversation thread
@@ -654,7 +630,7 @@ const suggestions = extractCode(review.text, 'typescript');
 await FileWriter.write('review.md', review.text);`,
     },
   ],
-};
+}
 
 // === PricingTemplate ===
 
@@ -743,13 +719,13 @@ export const developersPricingTemplateProps: PricingTemplateProps = {
 /**
  * Testimonials container - Layout configuration
  */
-export const testimonialsTemplateContainerProps: Omit<TemplateContainerProps, "children"> = {
-  title: "Trusted by Developers Who Value Independence",
-  bgVariant: "background",
-  paddingY: "2xl",
-  maxWidth: "7xl",
-  align: "center",
-};
+export const testimonialsTemplateContainerProps: Omit<TemplateContainerProps, 'children'> = {
+  title: 'Trusted by Developers Who Value Independence',
+  bgVariant: 'background',
+  paddingY: '2xl',
+  maxWidth: '7xl',
+  align: 'center',
+}
 
 /**
  * Testimonials Template - Trusted by Developers Who Value Independence
@@ -757,31 +733,32 @@ export const testimonialsTemplateContainerProps: Omit<TemplateContainerProps, "c
 export const testimonialsTemplateProps: TestimonialsTemplateProps = {
   testimonials: [
     {
-      avatar: "👨‍💻",
-      author: "Alex K.",
-      role: "Solo Developer",
-      quote: "Spent $80/mo on Claude. Now I run Llama-70B on my gaming PC + old workstation. Same quality, $0 cost.",
+      avatar: '👨‍💻',
+      author: 'Alex K.',
+      role: 'Solo Developer',
+      quote: 'Spent $80/mo on Claude. Now I run Llama-70B on my gaming PC + old workstation. Same quality, $0 cost.',
     },
     {
-      avatar: "👩‍💼",
-      author: "Sarah M.",
-      role: "CTO",
-      quote: "We pooled our team's hardware and cut AI spend from $500/mo to zero. OpenAI-compatible API—no code changes.",
+      avatar: '👩‍💼',
+      author: 'Sarah M.',
+      role: 'CTO',
+      quote:
+        "We pooled our team's hardware and cut AI spend from $500/mo to zero. OpenAI-compatible API—no code changes.",
     },
     {
-      avatar: "👨‍🔧",
-      author: "Marcus T.",
-      role: "DevOps Engineer",
-      quote: "Cascading shutdown ends orphaned processes and VRAM leaks. Ctrl+C and everything cleans up.",
+      avatar: '👨‍🔧',
+      author: 'Marcus T.',
+      role: 'DevOps Engineer',
+      quote: 'Cascading shutdown ends orphaned processes and VRAM leaks. Ctrl+C and everything cleans up.',
     },
   ],
   stats: [
-    { value: "1,200+", label: "GitHub stars" },
-    { value: "500+", label: "Active installations" },
-    { value: "8,000+", label: "GPUs orchestrated" },
-    { value: "€0", label: "Avg. monthly cost" },
+    { value: '1,200+', label: 'GitHub stars' },
+    { value: '500+', label: 'Active installations' },
+    { value: '8,000+', label: 'GPUs orchestrated' },
+    { value: '€0', label: 'Avg. monthly cost' },
   ],
-};
+}
 
 // === CTA Template ===
 
@@ -789,18 +766,18 @@ export const testimonialsTemplateProps: TestimonialsTemplateProps = {
  * CTA Template - Stop Depending on AI Providers
  */
 export const ctaTemplateProps: CTATemplateProps = {
-  title: "Stop Depending on AI Providers. Start Building Today.",
+  title: 'Stop Depending on AI Providers. Start Building Today.',
   subtitle: "Join 500+ developers who've taken control of their AI infrastructure.",
   primary: {
-    label: "Get Started Free",
-    href: "/getting-started",
+    label: 'Get Started Free',
+    href: '/getting-started',
     iconRight: ArrowRight,
   },
   secondary: {
-    label: "View Documentation",
-    href: "/docs",
+    label: 'View Documentation',
+    href: '/docs',
     iconLeft: GitHubIcon,
-    variant: "outline",
+    variant: 'outline',
   },
-  note: "100% open source. No credit card required. Install in 15 minutes.",
-};
+  note: '100% open source. No credit card required. Install in 15 minutes.',
+}

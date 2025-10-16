@@ -1,2 +1,2 @@
-export * from './PricingComparison'
-export * from './PricingHero'
+// All Pricing organisms have been migrated to templates
+export {}

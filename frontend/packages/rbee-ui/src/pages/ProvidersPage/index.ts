@@ -1,1 +1,21 @@
-export { default as ProvidersPage } from "./ProvidersPage";
+export { default as ProvidersPage } from './ProvidersPage'
+export {
+  providersCTAProps,
+  providersEarningsContainerProps,
+  providersEarningsProps,
+  providersFeaturesProps,
+  providersHeroProps,
+  providersHowItWorksProps,
+  providersMarketplaceContainerProps,
+  providersMarketplaceProps,
+  providersProblemContainerProps,
+  providersProblemProps,
+  providersSecurityContainerProps,
+  providersSecurityProps,
+  providersSolutionContainerProps,
+  providersSolutionProps,
+  providersTestimonialsContainerProps,
+  providersTestimonialsProps,
+  providersUseCasesContainerProps,
+  providersUseCasesProps,
+} from './ProvidersPageProps'

@@ -1,1 +1,1 @@
-export * from './EnterpriseComparison'
+export * from './EnterpriseComparisonTemplate'

@@ -1,5 +1,5 @@
-import type { Meta, StoryObj } from '@storybook/react'
 import { coreFeatureTabsProps } from '@rbee/ui/pages/DevelopersPage'
+import type { Meta, StoryObj } from '@storybook/react'
 import { CoreFeaturesTabs } from './CoreFeaturesTabs'
 import { defaultTabConfigs } from './tabConfigs'
 
@@ -249,7 +249,8 @@ export const OnDevelopersPage: Story = {
   parameters: {
     docs: {
       description: {
-        story: '**Developers page context** — Core capabilities tabs (API, GPU, Scheduler, SSE) with interactive examples.',
+        story:
+          '**Developers page context** — Core capabilities tabs (API, GPU, Scheduler, SSE) with interactive examples.',
       },
     },
   },

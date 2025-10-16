@@ -1,5 +1,5 @@
-import type { Meta, StoryObj } from '@storybook/react'
 import { audienceSelectorProps } from '@rbee/ui/pages/HomePage'
+import type { Meta, StoryObj } from '@storybook/react'
 import { AudienceSelector } from './AudienceSelector'
 
 const meta = {

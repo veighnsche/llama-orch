@@ -28,11 +28,7 @@ export OPENAI_API_BASE=http://localhost:8080/v1`}
       text: 'Drop-in replacement. Point to localhost.',
       variant: 'success',
     },
-    benefits: [
-      { text: 'No vendor lock-in' },
-      { text: 'Use your models + GPUs' },
-      { text: 'Keep existing tooling' },
-    ],
+    benefits: [{ text: 'No vendor lock-in' }, { text: 'Use your models + GPUs' }, { text: 'Keep existing tooling' }],
   },
   {
     value: 'gpu',
@@ -88,11 +84,7 @@ else {
       text: 'Optimize for cost, latency, or compliance—your rules.',
       variant: 'primary',
     },
-    benefits: [
-      { text: 'Deterministic routing' },
-      { text: 'Policy & compliance ready' },
-      { text: 'Easy to evolve' },
-    ],
+    benefits: [{ text: 'Deterministic routing' }, { text: 'Policy & compliance ready' }, { text: 'Easy to evolve' }],
   },
   {
     value: 'sse',

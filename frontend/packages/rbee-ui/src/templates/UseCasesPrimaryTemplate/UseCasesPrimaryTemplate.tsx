@@ -44,12 +44,12 @@ export interface UseCasesPrimaryTemplateProps {
 
 /**
  * Primary use cases section with filtering and grid layout
- * 
+ *
  * @example
  * ```tsx
  * import { UsecasesGridDark } from '@rbee/ui/icons'
  * import { Laptop, Users, Home } from 'lucide-react'
- * 
+ *
  * <UseCasesPrimaryTemplate
  *   eyebrow="OpenAI-compatible • Your GPUs • Zero API Fees"
  *   heroImage={<UsecasesGridDark size="100%" className="w-full h-auto" />}
@@ -93,9 +93,7 @@ export function UseCasesPrimaryTemplate({
         <p className="text-center text-sm text-muted-foreground mb-6">{eyebrow}</p>
 
         {/* Hero strip image */}
-        <div className="relative overflow-hidden rounded-lg border/60 mb-8">
-          {heroImage}
-        </div>
+        <div className="relative overflow-hidden rounded-lg border/60 mb-8">{heroImage}</div>
 
         {/* Filter pills */}
         <nav

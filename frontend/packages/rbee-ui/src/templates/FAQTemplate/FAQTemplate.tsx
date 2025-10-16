@@ -7,7 +7,7 @@ import { Input } from '@rbee/ui/atoms/Input'
 import { Separator } from '@rbee/ui/atoms/Separator'
 import { cn } from '@rbee/ui/utils'
 import { Search as SearchIcon } from 'lucide-react'
-import Image, { type StaticImageData } from 'next/image'
+import Image from 'next/image'
 import * as React from 'react'
 
 // ──────────────────────────────────────────────────────────────────────────────
@@ -22,7 +22,7 @@ export interface FAQItem {
 }
 
 export type SupportCard = {
-  image?: string | StaticImageData
+  image?: string
   imageAlt?: string
   title?: string
   links?: Array<{ label: string; href: string }>
@@ -31,7 +31,7 @@ export type SupportCard = {
 
 /**
  * FAQTemplate displays searchable, filterable FAQ accordion with optional support card.
- * 
+ *
  * @example
  * ```tsx
  * <FAQTemplate

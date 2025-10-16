@@ -1,5 +1,6 @@
+import { featuresFeaturesTabsProps } from '@rbee/ui/pages/FeaturesPage/FeaturesPageProps'
+import { featuresTabsProps } from '@rbee/ui/pages/HomePage/HomePageProps'
 import type { Meta, StoryObj } from '@storybook/react'
-import { featuresTabsProps, featuresFeaturesTabsProps } from '@rbee/ui/pages'
 import { FeaturesTabs } from './FeaturesTabs'
 
 const meta = {

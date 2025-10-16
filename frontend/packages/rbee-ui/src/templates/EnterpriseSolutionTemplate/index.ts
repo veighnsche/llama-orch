@@ -1,1 +1,1 @@
-export * from './EnterpriseSolution'
+export * from './EnterpriseSolutionTemplate'

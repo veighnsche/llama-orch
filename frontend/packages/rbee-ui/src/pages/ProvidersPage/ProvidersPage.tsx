@@ -1,39 +1,67 @@
 'use client'
 
+import { TemplateContainer } from '@rbee/ui/molecules'
+import { FeatureTabsSection, StepsSection } from '@rbee/ui/organisms'
 import {
-  ProvidersCTA,
-  ProvidersEarnings,
-  ProvidersFeatures,
-  ProvidersHero,
-  ProvidersHowItWorks,
-  ProvidersMarketplace,
-  ProvidersProblem,
-  ProvidersSecurity,
-  ProvidersSolution,
-  ProvidersTestimonials,
-  ProvidersUseCases,
-} from "@rbee/ui/organisms";
-
-// ============================================================================
-// Props Objects
-// ============================================================================
-// All organisms are self-contained with no props needed
-// ============================================================================
+  ProblemTemplate,
+  ProvidersCTATemplate,
+  ProvidersEarningsTemplate,
+  ProvidersHeroTemplate,
+  ProvidersMarketplaceTemplate,
+  ProvidersSecurityTemplate,
+  ProvidersTestimonialsTemplate,
+  ProvidersUseCasesTemplate,
+  SolutionTemplate,
+} from '@rbee/ui/templates'
+import {
+  providersCTAProps,
+  providersEarningsContainerProps,
+  providersEarningsProps,
+  providersFeaturesProps,
+  providersHeroProps,
+  providersHowItWorksProps,
+  providersMarketplaceContainerProps,
+  providersMarketplaceProps,
+  providersProblemContainerProps,
+  providersProblemProps,
+  providersSecurityContainerProps,
+  providersSecurityProps,
+  providersSolutionContainerProps,
+  providersSolutionProps,
+  providersTestimonialsContainerProps,
+  providersTestimonialsProps,
+  providersUseCasesContainerProps,
+  providersUseCasesProps,
+} from './ProvidersPageProps'
 
 export default function ProvidersPage() {
   return (
     <main>
-      <ProvidersHero />
-      <ProvidersProblem />
-      <ProvidersSolution />
-      <ProvidersHowItWorks />
-      <ProvidersFeatures />
-      <ProvidersUseCases />
-      <ProvidersEarnings />
-      <ProvidersMarketplace />
-      <ProvidersSecurity />
-      <ProvidersTestimonials />
-      <ProvidersCTA />
+      <ProvidersHeroTemplate {...providersHeroProps} />
+      <TemplateContainer {...providersProblemContainerProps}>
+        <ProblemTemplate {...providersProblemProps} />
+      </TemplateContainer>
+      <TemplateContainer {...providersSolutionContainerProps}>
+        <SolutionTemplate {...providersSolutionProps} />
+      </TemplateContainer>
+      <StepsSection {...providersHowItWorksProps} />
+      <FeatureTabsSection {...providersFeaturesProps} />
+      <TemplateContainer {...providersUseCasesContainerProps}>
+        <ProvidersUseCasesTemplate {...providersUseCasesProps} />
+      </TemplateContainer>
+      <TemplateContainer {...providersEarningsContainerProps}>
+        <ProvidersEarningsTemplate {...providersEarningsProps} />
+      </TemplateContainer>
+      <TemplateContainer {...providersMarketplaceContainerProps}>
+        <ProvidersMarketplaceTemplate {...providersMarketplaceProps} />
+      </TemplateContainer>
+      <TemplateContainer {...providersSecurityContainerProps}>
+        <ProvidersSecurityTemplate {...providersSecurityProps} />
+      </TemplateContainer>
+      <TemplateContainer {...providersTestimonialsContainerProps}>
+        <ProvidersTestimonialsTemplate {...providersTestimonialsProps} />
+      </TemplateContainer>
+      <ProvidersCTATemplate {...providersCTAProps} />
     </main>
-  );
+  )
 }

@@ -51,63 +51,63 @@ export function RealTimeProgressTemplate({
   return (
     <div className={cn('', className)}>
       <div className="mx-auto max-w-6xl space-y-10">
-          <div>
+        <div>
+          <IconCardHeader
+            icon={metricKPIs[0].icon}
+            iconTone="primary"
+            iconSize="md"
+            title={narrationTitle}
+            subtitle={narrationSubtitle}
+            useCardHeader={false}
+            className="mb-4"
+          />
+
+          <TerminalWindow
+            title={terminalTitle}
+            ariaLabel={terminalAriaLabel}
+            className="animate-in fade-in slide-in-from-bottom-2"
+            footer={terminalFooter}
+          >
+            {terminalContent}
+          </TerminalWindow>
+        </div>
+
+        <div className="grid sm:grid-cols-3 gap-3 animate-in fade-in slide-in-from-bottom-2 delay-100">
+          {metricKPIs.map((kpi, idx) => (
+            <div key={idx} className="hover:-translate-y-0.5 transition-transform">
+              <StatusKPI icon={kpi.icon} color={kpi.color} label={kpi.label} value={kpi.value} />
+              <div className="mt-2 h-2 rounded-full bg-muted overflow-hidden">
+                <div className={`h-full bg-${kpi.color}`} style={{ width: `${kpi.progressPercentage}%` }} />
+              </div>
+            </div>
+          ))}
+        </div>
+
+        <Card className="animate-in fade-in slide-in-from-bottom-2 delay-150">
+          <CardContent className="p-6">
             <IconCardHeader
               icon={metricKPIs[0].icon}
-              iconTone="primary"
+              iconTone="warning"
               iconSize="md"
-              title={narrationTitle}
-              subtitle={narrationSubtitle}
+              title={cancellationTitle}
+              subtitle={cancellationSubtitle}
               useCardHeader={false}
               className="mb-4"
             />
 
-            <TerminalWindow
-              title={terminalTitle}
-              ariaLabel={terminalAriaLabel}
-              className="animate-in fade-in slide-in-from-bottom-2"
-              footer={terminalFooter}
-            >
-              {terminalContent}
-            </TerminalWindow>
-          </div>
-
-          <div className="grid sm:grid-cols-3 gap-3 animate-in fade-in slide-in-from-bottom-2 delay-100">
-            {metricKPIs.map((kpi, idx) => (
-              <div key={idx} className="hover:-translate-y-0.5 transition-transform">
-                <StatusKPI icon={kpi.icon} color={kpi.color} label={kpi.label} value={kpi.value} />
-                <div className="mt-2 h-2 rounded-full bg-muted overflow-hidden">
-                  <div className={`h-full bg-${kpi.color}`} style={{ width: `${kpi.progressPercentage}%` }} />
-                </div>
-              </div>
-            ))}
-          </div>
-
-          <Card className="animate-in fade-in slide-in-from-bottom-2 delay-150">
-            <CardContent className="p-6">
-              <IconCardHeader
-                icon={metricKPIs[0].icon}
-                iconTone="warning"
-                iconSize="md"
-                title={cancellationTitle}
-                subtitle={cancellationSubtitle}
-                useCardHeader={false}
-                className="mb-4"
-              />
-
-              <ol className="grid gap-3 sm:grid-cols-4 text-sm" aria-label="Cancellation sequence">
-                {cancellationSteps.map((step, idx) => (
-                  <TimelineStep
-                    key={idx}
-                    timestamp={step.timestamp}
-                    title={step.title}
-                    description={step.description}
-                    variant={step.variant}
-                  />
-                ))}
-              </ol>
-            </CardContent>
-          </Card>
+            <ol className="grid gap-3 sm:grid-cols-4 text-sm" aria-label="Cancellation sequence">
+              {cancellationSteps.map((step, idx) => (
+                <TimelineStep
+                  key={idx}
+                  timestamp={step.timestamp}
+                  title={step.title}
+                  description={step.description}
+                  variant={step.variant}
+                />
+              ))}
+            </ol>
+          </CardContent>
+        </Card>
       </div>
     </div>
   )

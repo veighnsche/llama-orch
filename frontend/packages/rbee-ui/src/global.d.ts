@@ -2,30 +2,30 @@
  * Global type declarations for the rbee-ui package
  */
 
-import { StaticImageData } from 'next/image'
+/// <reference types="vite/client" />
 
-// Image module declarations
+// Image module declarations - Vite resolves these as URL strings
 declare module '*.png' {
-  const value: StaticImageData
+  const value: string
   export default value
 }
 
 declare module '*.jpg' {
-  const value: StaticImageData
+  const value: string
   export default value
 }
 
 declare module '*.jpeg' {
-  const value: StaticImageData
+  const value: string
   export default value
 }
 
 declare module '*.webp' {
-  const value: StaticImageData
+  const value: string
   export default value
 }
 
 declare module '*.svg' {
-  const value: StaticImageData
+  const value: string
   export default value
 }

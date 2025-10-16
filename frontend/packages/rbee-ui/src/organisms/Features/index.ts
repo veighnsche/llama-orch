@@ -1,9 +1,2 @@
 export * from '../CoreFeaturesTabs'
-export * from './AdditionalFeaturesGrid'
-export * from './CrossNodeOrchestration'
-export * from './ErrorHandling'
-export * from './FeaturesHero'
-export * from './IntelligentModelManagement'
-export * from './MultiBackendGpu'
-export * from './RealTimeProgress'
-export * from './SecurityIsolation'
+// All Features organisms have been migrated to templates

@@ -215,11 +215,7 @@ export function HomeHero({
                 asChild={!!secondaryCTA.href}
                 onClick={secondaryCTA.onClick}
               >
-                {secondaryCTA.href ? (
-                  <a href={secondaryCTA.href}>{secondaryCTA.label}</a>
-                ) : (
-                  <>{secondaryCTA.label}</>
-                )}
+                {secondaryCTA.href ? <a href={secondaryCTA.href}>{secondaryCTA.label}</a> : <>{secondaryCTA.label}</>}
               </Button>
             </div>
 

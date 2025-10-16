@@ -1,9 +1,6 @@
+import { pricingTemplateProps as homePricingTemplateProps } from '@rbee/ui/pages/HomePage/HomePageProps'
+import { pricingTemplateProps } from '@rbee/ui/pages/PricingPage/PricingPageProps'
 import type { Meta, StoryObj } from '@storybook/react'
-import {
-  pricingTemplateProps,
-  developersPricingTemplateProps,
-} from '@rbee/ui/pages'
-import { pricingTemplateProps as homePricingTemplateProps } from '@rbee/ui/pages/HomePage'
 import { PricingTemplate } from './PricingTemplate'
 
 const meta = {
@@ -38,12 +35,4 @@ export const OnPricingPage: Story = {
   args: pricingTemplateProps,
 }
 
-/**
- * PricingTemplate as used on the Developers page
- * - No kicker badges
- * - No editorial image
- * - Developer-focused footer text
- */
-export const OnDevelopersPage: Story = {
-  args: developersPricingTemplateProps,
-}
+// Note: DevelopersPage doesn't have its own pricing template props

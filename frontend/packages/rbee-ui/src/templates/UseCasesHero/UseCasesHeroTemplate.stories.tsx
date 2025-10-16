@@ -1,5 +1,5 @@
+import { useCasesHeroProps } from '@rbee/ui/pages/UseCasesPage/UseCasesPageProps'
 import type { Meta, StoryObj } from '@storybook/react'
-import { useCasesHeroProps } from '@rbee/ui/pages'
 import { UseCasesHeroTemplate } from './UseCasesHeroTemplate'
 
 const meta = {

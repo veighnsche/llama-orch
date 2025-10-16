@@ -1,3 +1,4 @@
+export { default as DevelopersPage } from './DevelopersPage'
 export {
   coreFeatureTabsProps,
   ctaTemplateProps,
@@ -16,5 +17,4 @@ export {
   testimonialsTemplateProps,
   useCasesTemplateContainerProps,
   useCasesTemplateProps,
-} from "./DevelopersPageProps";
-export { default as DevelopersPage } from "./DevelopersPage";
+} from './DevelopersPageProps'

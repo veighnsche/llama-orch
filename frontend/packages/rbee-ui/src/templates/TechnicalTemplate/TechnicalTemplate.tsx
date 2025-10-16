@@ -27,7 +27,7 @@ export type TechnologyStackLinks = {
 
 /**
  * TechnicalTemplate displays technical architecture details with highlights and tech stack.
- * 
+ *
  * @example
  * ```tsx
  * <TechnicalTemplate

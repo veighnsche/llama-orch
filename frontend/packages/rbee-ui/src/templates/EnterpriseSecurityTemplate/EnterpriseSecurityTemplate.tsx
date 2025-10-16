@@ -26,9 +26,6 @@ export type EnterpriseSecurityTemplateProps = {
     src: string
     alt: string
   }
-  eyebrow: string
-  heading: string
-  description: string
   securityCrates: SecurityCrateData[]
   guarantees: {
     heading: string
@@ -43,14 +40,11 @@ export type EnterpriseSecurityTemplateProps = {
 
 export function EnterpriseSecurityTemplate({
   backgroundImage,
-  eyebrow,
-  heading,
-  description,
   securityCrates,
   guarantees,
 }: EnterpriseSecurityTemplateProps) {
   return (
-    <section aria-labelledby="security-h2" className="relative border-b border-border bg-radial-glow px-6 py-24">
+    <div className="relative">
       {/* Decorative background illustration */}
       <Image
         src={backgroundImage.src}
@@ -61,18 +55,7 @@ export function EnterpriseSecurityTemplate({
         aria-hidden="true"
       />
 
-      <div className="relative z-10 mx-auto max-w-7xl">
-        {/* Header */}
-        <div className="animate-in fade-in-50 slide-in-from-bottom-2 mb-16 text-center duration-500">
-          <p className="mb-2 text-sm font-medium text-primary/70">{eyebrow}</p>
-          <h2 id="security-h2" className="mb-4 text-4xl font-bold text-foreground">
-            {heading}
-          </h2>
-          <p className="mx-auto max-w-3xl text-balance text-xl text-foreground/85">
-            {description}
-          </p>
-        </div>
-
+      <div className="relative z-10">
         {/* Security Crates Grid */}
         <div className="animate-in fade-in-50 mb-12 grid gap-8 [animation-delay:120ms] lg:grid-cols-2">
           {securityCrates.map((crate, idx) => (
@@ -101,11 +84,9 @@ export function EnterpriseSecurityTemplate({
               </div>
             ))}
           </div>
-          <p className="mt-6 text-center text-xs text-muted-foreground">
-            {guarantees.footnote}
-          </p>
+          <p className="mt-6 text-center text-xs text-muted-foreground">{guarantees.footnote}</p>
         </div>
       </div>
-    </section>
+    </div>
   )
 }

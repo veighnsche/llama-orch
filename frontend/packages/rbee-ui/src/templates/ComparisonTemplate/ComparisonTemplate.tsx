@@ -24,7 +24,7 @@ export type ComparisonCTA = {
 
 /**
  * ComparisonTemplate displays a feature comparison matrix table.
- * 
+ *
  * @example
  * ```tsx
  * <ComparisonTemplate
@@ -96,9 +96,7 @@ export function ComparisonTemplate({
         {(footerMessage || ctas) && (
           <div className="mt-6 flex flex-col sm:flex-row gap-3 justify-center items-center">
             {footerMessage && (
-              <p className="text-sm text-muted-foreground text-center sm:text-left font-sans">
-                {footerMessage}
-              </p>
+              <p className="text-sm text-muted-foreground text-center sm:text-left font-sans">{footerMessage}</p>
             )}
             {ctas && ctas.length > 0 && (
               <div className="flex gap-3">

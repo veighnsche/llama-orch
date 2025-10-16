@@ -8,7 +8,6 @@ import { TerminalWindow } from '@rbee/ui/molecules'
 import { ArrowRight, Check } from 'lucide-react'
 import Image from 'next/image'
 import Link from 'next/link'
-import type { StaticImageData } from 'next/image'
 import type * as React from 'react'
 
 // ────────────────────────────────────────────────────────────────────────────
@@ -57,7 +56,7 @@ export interface DevelopersHeroProps {
   }
   /** Hardware montage image */
   hardwareImage: {
-    src: StaticImageData
+    src: string
     alt: string
   }
   /** Stat chips overlay on image */
@@ -70,7 +69,7 @@ export interface DevelopersHeroProps {
 
 /**
  * DevelopersHero - Hero section for developers page
- * 
+ *
  * @example
  * ```tsx
  * <DevelopersHeroTemplate
@@ -218,7 +217,10 @@ export function DevelopersHeroTemplate({
                 {/* Stat Chips Overlay */}
                 <div className="absolute top-4 right-4 flex flex-col gap-2">
                   {imageOverlayBadges.map((text) => (
-                    <Badge key={text} className="bg-background/90 backdrop-blur-sm border-border text-foreground shadow-lg">
+                    <Badge
+                      key={text}
+                      className="bg-background/90 backdrop-blur-sm border-border text-foreground shadow-lg"
+                    >
                       {text}
                     </Badge>
                   ))}

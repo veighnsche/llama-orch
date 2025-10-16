@@ -1,6 +1,6 @@
 'use client'
 
-import { TemplateContainer } from "@rbee/ui/molecules";
+import { TemplateContainer } from '@rbee/ui/molecules'
 import {
   AdditionalFeaturesGridTemplate,
   CrossNodeOrchestrationTemplate,
@@ -12,25 +12,25 @@ import {
   MultiBackendGpuTemplate,
   RealTimeProgressTemplate,
   SecurityIsolationTemplate,
-} from "@rbee/ui/templates";
+} from '@rbee/ui/templates'
 import {
+  additionalFeaturesGridContainerProps,
   additionalFeaturesGridProps,
-  crossNodeOrchestrationProps,
   crossNodeOrchestrationContainerProps,
-  errorHandlingProps,
+  crossNodeOrchestrationProps,
   errorHandlingContainerProps,
+  errorHandlingProps,
   featuresEmailCaptureProps,
   featuresFeaturesTabsProps,
-  intelligentModelManagementProps,
   intelligentModelManagementContainerProps,
-  multiBackendGpuProps,
+  intelligentModelManagementProps,
   multiBackendGpuContainerProps,
-  realTimeProgressProps,
+  multiBackendGpuProps,
   realTimeProgressContainerProps,
-  securityIsolationProps,
+  realTimeProgressProps,
   securityIsolationContainerProps,
-  additionalFeaturesGridContainerProps,
-} from "./FeaturesPageProps";
+  securityIsolationProps,
+} from './FeaturesPageProps'
 
 // ============================================================================
 // Props Objects
@@ -44,36 +44,36 @@ export default function FeaturesPage() {
     <main>
       <FeaturesHero />
       <FeaturesTabs {...featuresFeaturesTabsProps} />
-      
+
       <TemplateContainer {...crossNodeOrchestrationContainerProps}>
         <CrossNodeOrchestrationTemplate {...crossNodeOrchestrationProps} />
       </TemplateContainer>
-      
+
       <TemplateContainer {...intelligentModelManagementContainerProps}>
         <IntelligentModelManagementTemplate {...intelligentModelManagementProps} />
       </TemplateContainer>
-      
+
       <TemplateContainer {...multiBackendGpuContainerProps}>
         <MultiBackendGpuTemplate {...multiBackendGpuProps} />
       </TemplateContainer>
-      
+
       <TemplateContainer {...errorHandlingContainerProps}>
         <ErrorHandlingTemplate {...errorHandlingProps} />
       </TemplateContainer>
-      
+
       <TemplateContainer {...realTimeProgressContainerProps}>
         <RealTimeProgressTemplate {...realTimeProgressProps} />
       </TemplateContainer>
-      
+
       <TemplateContainer {...securityIsolationContainerProps}>
         <SecurityIsolationTemplate {...securityIsolationProps} />
       </TemplateContainer>
-      
+
       <TemplateContainer {...additionalFeaturesGridContainerProps}>
         <AdditionalFeaturesGridTemplate {...additionalFeaturesGridProps} />
       </TemplateContainer>
-      
+
       <EmailCapture {...featuresEmailCaptureProps} />
     </main>
-  );
+  )
 }

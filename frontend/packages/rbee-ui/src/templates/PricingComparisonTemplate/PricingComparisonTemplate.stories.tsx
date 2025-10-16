@@ -1,5 +1,5 @@
+import { pricingComparisonProps } from '@rbee/ui/pages/PricingPage/PricingPageProps'
 import type { Meta, StoryObj } from '@storybook/react'
-import { pricingComparisonProps } from '@rbee/ui/pages'
 import { PricingComparisonTemplate } from './PricingComparisonTemplate'
 
 const meta = {

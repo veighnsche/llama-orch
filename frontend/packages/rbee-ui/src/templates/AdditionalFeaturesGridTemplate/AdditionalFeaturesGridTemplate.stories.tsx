@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react'
-import { AdditionalFeaturesGridTemplate } from './AdditionalFeaturesGridTemplate'
 import { additionalFeaturesGridProps } from '../../pages/FeaturesPage/FeaturesPageProps'
+import { AdditionalFeaturesGridTemplate } from './AdditionalFeaturesGridTemplate'
 
 const meta: Meta<typeof AdditionalFeaturesGridTemplate> = {
   title: 'Templates/AdditionalFeaturesGridTemplate',

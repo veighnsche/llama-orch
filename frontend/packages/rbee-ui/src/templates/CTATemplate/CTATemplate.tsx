@@ -17,7 +17,7 @@ export type CTAAction = {
 
 /**
  * CTATemplate displays a call-to-action section with title, subtitle, and action buttons.
- * 
+ *
  * @example
  * ```tsx
  * <CTATemplate

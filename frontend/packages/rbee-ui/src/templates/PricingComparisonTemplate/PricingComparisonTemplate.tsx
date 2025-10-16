@@ -52,7 +52,7 @@ export interface PricingComparisonTemplateProps {
 
 /**
  * Pricing comparison table with feature matrix
- * 
+ *
  * @example
  * ```tsx
  * <PricingComparisonTemplate
@@ -136,12 +136,7 @@ export function PricingComparisonTemplate({
       {/* Comparison Table */}
       <Card className="rounded-xl border border-border bg-card shadow-sm overflow-hidden p-0">
         <div className="overflow-x-auto">
-          <MatrixTable
-            columns={columns}
-            rows={rows}
-            groups={groups}
-            caption={tableCaption}
-          />
+          <MatrixTable columns={columns} rows={rows} groups={groups} caption={tableCaption} />
         </div>
       </Card>
 
@@ -150,12 +145,7 @@ export function PricingComparisonTemplate({
         <div className="text-sm font-medium">{cta.text}</div>
         <div className="flex gap-3">
           {cta.buttons.map((button, index) => (
-            <Button
-              key={index}
-              size="default"
-              variant={button.variant || 'default'}
-              asChild
-            >
+            <Button key={index} size="default" variant={button.variant || 'default'} asChild>
               <a href={button.href}>{button.text}</a>
             </Button>
           ))}

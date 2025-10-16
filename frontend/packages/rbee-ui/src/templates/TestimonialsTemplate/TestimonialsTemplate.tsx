@@ -16,7 +16,7 @@ export type Testimonial = {
 
 /**
  * TestimonialsTemplate displays customer testimonials with optional stats.
- * 
+ *
  * @example
  * ```tsx
  * <TestimonialsTemplate

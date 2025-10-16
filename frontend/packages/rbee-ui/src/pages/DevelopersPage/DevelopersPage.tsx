@@ -1,9 +1,7 @@
 'use client'
 
-import { TemplateContainer } from "@rbee/ui/molecules";
-import {
-  CoreFeaturesTabs,
-} from "@rbee/ui/organisms";
+import { TemplateContainer } from '@rbee/ui/molecules'
+import { CoreFeaturesTabs } from '@rbee/ui/organisms'
 import {
   CTATemplate,
   DevelopersCodeExamplesTemplate,
@@ -15,7 +13,7 @@ import {
   SolutionTemplate,
   TestimonialsTemplate,
   UseCasesTemplate,
-} from "@rbee/ui/templates";
+} from '@rbee/ui/templates'
 import {
   coreFeatureTabsProps,
   ctaTemplateProps,
@@ -34,7 +32,7 @@ import {
   testimonialsTemplateProps,
   useCasesTemplateContainerProps,
   useCasesTemplateProps,
-} from "./DevelopersPageProps";
+} from './DevelopersPageProps'
 
 // ============================================================================
 // Props Objects
@@ -48,36 +46,36 @@ export default function DevelopersPage() {
     <main>
       <DevelopersHeroTemplate {...developersHeroProps} />
       <EmailCapture {...developersEmailCaptureProps} />
-      
+
       <TemplateContainer {...problemTemplateContainerProps}>
         <ProblemTemplate {...problemTemplateProps} />
       </TemplateContainer>
-      
+
       <TemplateContainer {...solutionTemplateContainerProps}>
         <SolutionTemplate {...solutionTemplateProps} />
       </TemplateContainer>
-      
+
       <TemplateContainer {...howItWorksContainerProps}>
         <HowItWorks {...howItWorksProps} />
       </TemplateContainer>
-      
+
       <CoreFeaturesTabs {...coreFeatureTabsProps} />
-      
+
       <TemplateContainer {...useCasesTemplateContainerProps}>
         <UseCasesTemplate {...useCasesTemplateProps} />
       </TemplateContainer>
-      
+
       <DevelopersCodeExamplesTemplate {...developersCodeExamplesProps} />
-      
+
       <TemplateContainer {...developersPricingTemplateContainerProps}>
         <PricingTemplate {...developersPricingTemplateProps} />
       </TemplateContainer>
-      
+
       <TemplateContainer {...testimonialsTemplateContainerProps}>
         <TestimonialsTemplate {...testimonialsTemplateProps} />
       </TemplateContainer>
-      
+
       <CTATemplate {...ctaTemplateProps} />
     </main>
-  );
+  )
 }

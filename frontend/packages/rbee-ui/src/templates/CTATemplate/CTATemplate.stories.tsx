@@ -1,5 +1,5 @@
-import type { Meta, StoryObj } from '@storybook/react'
 import { ctaTemplateProps } from '@rbee/ui/pages/HomePage'
+import type { Meta, StoryObj } from '@storybook/react'
 import { CTATemplate } from './CTATemplate'
 
 const meta = {

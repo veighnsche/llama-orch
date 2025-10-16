@@ -1,5 +1,5 @@
+import { pricingHeroProps } from '@rbee/ui/pages/PricingPage/PricingPageProps'
 import type { Meta, StoryObj } from '@storybook/react'
-import { pricingHeroProps } from '@rbee/ui/pages'
 import { PricingHeroTemplate } from './PricingHeroTemplate'
 
 const meta = {

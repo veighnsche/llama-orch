@@ -1,1 +1,1 @@
-export * from './EnterpriseTestimonials'
+export * from './EnterpriseTestimonialsTemplate'

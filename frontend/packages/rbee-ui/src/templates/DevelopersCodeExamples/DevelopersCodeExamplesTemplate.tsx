@@ -29,7 +29,7 @@ export interface DevelopersCodeExamplesProps {
 
 /**
  * DevelopersCodeExamples - Code examples section for developers page
- * 
+ *
  * @example
  * ```tsx
  * <DevelopersCodeExamplesTemplate
@@ -48,18 +48,6 @@ export interface DevelopersCodeExamplesProps {
  * />
  * ```
  */
-export function DevelopersCodeExamplesTemplate({
-  title,
-  subtitle,
-  footerNote,
-  items,
-}: DevelopersCodeExamplesProps) {
-  return (
-    <CodeExamplesSection
-      title={title}
-      subtitle={subtitle}
-      footerNote={footerNote}
-      items={items}
-    />
-  )
+export function DevelopersCodeExamplesTemplate({ title, subtitle, footerNote, items }: DevelopersCodeExamplesProps) {
+  return <CodeExamplesSection title={title} subtitle={subtitle} footerNote={footerNote} items={items} />
 }

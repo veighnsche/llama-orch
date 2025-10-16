@@ -118,9 +118,7 @@ export function EnterpriseHeroTemplate({
             </h1>
 
             {/* Support Copy */}
-            <p className="mb-8 text-pretty text-xl leading-relaxed text-foreground/85">
-              {description}
-            </p>
+            <p className="mb-8 text-pretty text-xl leading-relaxed text-foreground/85">{description}</p>
 
             {/* Proof Tiles */}
             <StatsGrid
@@ -152,9 +150,7 @@ export function EnterpriseHeroTemplate({
             </div>
 
             {/* Helper text */}
-            <p className="mb-6 text-xs text-muted-foreground">
-              {helperText}
-            </p>
+            <p className="mb-6 text-xs text-muted-foreground">{helperText}</p>
 
             {/* Compliance Proof Bar */}
             <div id="compliance-proof-bar" className="flex flex-wrap items-center gap-3" aria-live="polite">
@@ -189,7 +185,11 @@ export function EnterpriseHeroTemplate({
                     <button
                       key={idx}
                       type="button"
-                      className={filter.active ? "rounded-md bg-primary/10 px-2 py-1 text-primary" : "px-2 py-1 hover:text-foreground"}
+                      className={
+                        filter.active
+                          ? 'rounded-md bg-primary/10 px-2 py-1 text-primary'
+                          : 'px-2 py-1 hover:text-foreground'
+                      }
                       aria-label={filter.ariaLabel}
                     >
                       {filter.label}

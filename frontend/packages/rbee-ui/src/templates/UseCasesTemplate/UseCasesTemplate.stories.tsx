@@ -1,5 +1,5 @@
-import type { Meta, StoryObj } from '@storybook/react'
 import { useCasesTemplateProps } from '@rbee/ui/pages/HomePage'
+import type { Meta, StoryObj } from '@storybook/react'
 import { UseCasesTemplate } from './UseCasesTemplate'
 
 const meta = {

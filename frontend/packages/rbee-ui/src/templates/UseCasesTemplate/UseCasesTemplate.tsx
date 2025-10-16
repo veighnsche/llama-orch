@@ -20,7 +20,7 @@ export type UseCase = {
 
 /**
  * UseCasesTemplate displays a grid of use case cards.
- * 
+ *
  * @example
  * ```tsx
  * <UseCasesTemplate
@@ -57,7 +57,7 @@ export function UseCasesTemplate({ items, columns = 3, className }: UseCasesTemp
           // This allows us to pass it to UseCaseCard which expects LucideIcon
           const iconElement = item.icon as React.ReactElement
           const IconComponent = iconElement?.type as any
-          
+
           return (
             <UseCaseCard
               key={i}

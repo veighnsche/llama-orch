@@ -21,8 +21,9 @@
     "paths": {
       "@rbee/ui/*": ["./src/*"],
       "@rbee/ui": ["./src/index.ts"]
-    }
+    },
+    "types": ["node", "vite/client"]
   },
-  "include": ["src/**/*", "src/assets/images.d.ts"],
+  "include": ["src/**/*", "src/assets/images.d.ts", "src/global.d.ts"],
   "exclude": ["node_modules", "dist"]
 }

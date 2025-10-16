@@ -1,7 +1,8 @@
 'use client'
 
+import { useCasesHero } from '@rbee/ui/assets'
 import { IndustriesHero, UsecasesGridDark } from '@rbee/ui/icons'
-import type { TemplateContainerProps } from '@rbee/ui/molecules'
+import type { IndustryCardProps, TemplateContainerProps } from '@rbee/ui/molecules'
 import type {
   EmailCaptureProps,
   UseCaseIndustryFilterItem,
@@ -11,9 +12,21 @@ import type {
   UseCasesIndustryTemplateProps,
   UseCasesPrimaryTemplateProps,
 } from '@rbee/ui/templates'
-import { useCasesHero } from '@rbee/ui/assets'
-import { Banknote, Briefcase, Building, Code, Factory, GraduationCap, Heart, Home, Landmark, Laptop, Scale, Server, Users } from 'lucide-react'
-import type { IndustryCardProps } from '@rbee/ui/molecules'
+import {
+  Banknote,
+  Briefcase,
+  Building,
+  Code,
+  Factory,
+  GraduationCap,
+  Heart,
+  Home,
+  Landmark,
+  Laptop,
+  Scale,
+  Server,
+  Users,
+} from 'lucide-react'
 
 // ============================================================================
 // Props Objects
@@ -45,7 +58,7 @@ export const useCasesHeroProps: UseCasesHeroTemplateProps = {
   ],
   image: useCasesHero,
   imageAlt:
-    'cinematic photoreal illustration of intimate homelab desk at night, shot from slightly elevated angle looking down at workspace, FOREGROUND LEFT: black mechanical keyboard with subtle white LED backlighting slightly out of focus creating soft glow, wireless mouse beside it, MIDDLE GROUND CENTER-LEFT: 15-inch MacBook Pro or ThinkPad laptop open showing full-screen terminal window with bright emerald green #10b981 monospace text streaming live AI token generation output \'Generating... token 847/2048\' visible, screen has soft blue-white glow illuminating surroundings, small yellow Post-it note stuck to top bezel of laptop screen with handwritten black ink text \'your models your rules\' in casual script, MIDDLE GROUND RIGHT: compact desktop mini tower or small rack unit approximately 12 inches tall containing 2-3 NVIDIA RTX 4090 or 3090 graphics cards visible through black mesh front panel with hexagonal perforations, each GPU has warm amber LED strips #f59e0b glowing along the edges creating horizontal light bars, soft orange rim light from GPUs casting warm glow on right side of desk surface and wall behind, faint heat shimmer effect above the GPU unit, DESK SURFACE: dark walnut or black wood finish desk with subtle wood grain texture, clean and minimal with only essential items, soft amber and teal reflections on glossy surface from various light sources, RIGHT EDGE: white ceramic coffee mug with thin wisps of steam rising, small potted succulent plant in concrete pot, BACKGROUND: deep midnight navy blue wall #0f172a with subtle texture, upper left corner has warm brass or copper desk lamp with conical shade creating focused pool of warm yellow light on desk, background fades to soft bokeh with circular light orbs in cool blue and warm amber tones suggesting depth, subtle teal accent light strip along wall edge, LIGHTING: key light from laptop screen (cool blue-white), fill light from desk lamp (warm yellow), accent light from GPUs (warm amber), rim light on hardware edges, subtle ambient glow from background, MOOD: cozy yet powerful, intimate workspace meets serious compute, warm inviting atmosphere with technical capability, sense of ownership and control, quiet confidence, STYLE: cinematic realism, shallow depth of field (f/2.8), soft focus on foreground keyboard, sharp focus on laptop screen and GPU unit, natural bokeh in background, color grading with warm shadows and cool highlights, subtle film grain, professional product photography aesthetic mixed with environmental portrait lighting',
+    "cinematic photoreal illustration of intimate homelab desk at night, shot from slightly elevated angle looking down at workspace, FOREGROUND LEFT: black mechanical keyboard with subtle white LED backlighting slightly out of focus creating soft glow, wireless mouse beside it, MIDDLE GROUND CENTER-LEFT: 15-inch MacBook Pro or ThinkPad laptop open showing full-screen terminal window with bright emerald green #10b981 monospace text streaming live AI token generation output 'Generating... token 847/2048' visible, screen has soft blue-white glow illuminating surroundings, small yellow Post-it note stuck to top bezel of laptop screen with handwritten black ink text 'your models your rules' in casual script, MIDDLE GROUND RIGHT: compact desktop mini tower or small rack unit approximately 12 inches tall containing 2-3 NVIDIA RTX 4090 or 3090 graphics cards visible through black mesh front panel with hexagonal perforations, each GPU has warm amber LED strips #f59e0b glowing along the edges creating horizontal light bars, soft orange rim light from GPUs casting warm glow on right side of desk surface and wall behind, faint heat shimmer effect above the GPU unit, DESK SURFACE: dark walnut or black wood finish desk with subtle wood grain texture, clean and minimal with only essential items, soft amber and teal reflections on glossy surface from various light sources, RIGHT EDGE: white ceramic coffee mug with thin wisps of steam rising, small potted succulent plant in concrete pot, BACKGROUND: deep midnight navy blue wall #0f172a with subtle texture, upper left corner has warm brass or copper desk lamp with conical shade creating focused pool of warm yellow light on desk, background fades to soft bokeh with circular light orbs in cool blue and warm amber tones suggesting depth, subtle teal accent light strip along wall edge, LIGHTING: key light from laptop screen (cool blue-white), fill light from desk lamp (warm yellow), accent light from GPUs (warm amber), rim light on hardware edges, subtle ambient glow from background, MOOD: cozy yet powerful, intimate workspace meets serious compute, warm inviting atmosphere with technical capability, sense of ownership and control, quiet confidence, STYLE: cinematic realism, shallow depth of field (f/2.8), soft focus on foreground keyboard, sharp focus on laptop screen and GPU unit, natural bokeh in background, color grading with warm shadows and cool highlights, subtle film grain, professional product photography aesthetic mixed with environmental portrait lighting",
   imageCaption: 'Your models, your hardware — no lock-in.',
 }
 
@@ -172,7 +185,9 @@ const useCasesPrimaryItems: UseCasePrimaryItem[] = [
 
 export const useCasesPrimaryProps: UseCasesPrimaryTemplateProps = {
   eyebrow: 'OpenAI-compatible • Your GPUs • Zero API Fees',
-  heroImage: <UsecasesGridDark size="100%" className="w-full h-auto" aria-label="Dark grid of LLM use cases: code, docs, chat" />,
+  heroImage: (
+    <UsecasesGridDark size="100%" className="w-full h-auto" aria-label="Dark grid of LLM use cases: code, docs, chat" />
+  ),
   heroImageAriaLabel: 'Dark grid of LLM use cases: code, docs, chat',
   filters: useCasesPrimaryFilters,
   useCases: useCasesPrimaryItems,

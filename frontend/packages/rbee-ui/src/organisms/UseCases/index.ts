@@ -1,3 +1,2 @@
-export * from './UseCasesHero'
-export * from './UseCasesIndustry'
-export * from './UseCasesPrimary'
+// All UseCases organisms have been migrated to templates
+export {}

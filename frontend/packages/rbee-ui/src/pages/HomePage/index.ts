@@ -1,3 +1,4 @@
+export { default as HomePage } from './HomePage'
 export {
   audienceSelectorContainerProps,
   audienceSelectorProps,
@@ -25,5 +26,4 @@ export {
   useCasesTemplateProps,
   whatIsRbeeContainerProps,
   whatIsRbeeProps,
-} from "./HomePage";
-export { default as HomePage } from './HomePage'
+} from './HomePageProps'

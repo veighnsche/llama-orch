@@ -1,12 +1,12 @@
 'use client'
 
-import { TemplateContainer } from "@rbee/ui/molecules";
+import { TemplateContainer } from '@rbee/ui/molecules'
 import {
   EmailCapture,
   UseCasesHeroTemplate,
   UseCasesIndustryTemplate,
   UseCasesPrimaryTemplate,
-} from "@rbee/ui/templates";
+} from '@rbee/ui/templates'
 import {
   useCasesEmailCaptureProps,
   useCasesHeroProps,
@@ -14,7 +14,7 @@ import {
   useCasesIndustryProps,
   useCasesPrimaryContainerProps,
   useCasesPrimaryProps,
-} from "./UseCasesPageProps";
+} from './UseCasesPageProps'
 
 // ============================================================================
 // Props Objects
@@ -27,16 +27,16 @@ export default function UseCasesPage() {
   return (
     <main>
       <UseCasesHeroTemplate {...useCasesHeroProps} />
-      
+
       <TemplateContainer {...useCasesPrimaryContainerProps}>
         <UseCasesPrimaryTemplate {...useCasesPrimaryProps} />
       </TemplateContainer>
-      
+
       <TemplateContainer {...useCasesIndustryContainerProps}>
         <UseCasesIndustryTemplate {...useCasesIndustryProps} />
       </TemplateContainer>
-      
+
       <EmailCapture {...useCasesEmailCaptureProps} />
     </main>
-  );
+  )
 }

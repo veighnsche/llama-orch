@@ -1,5 +1,5 @@
-import type { Meta, StoryObj } from '@storybook/react'
 import { solutionTemplateProps } from '@rbee/ui/pages/HomePage'
+import type { Meta, StoryObj } from '@storybook/react'
 import { SolutionTemplate } from './SolutionTemplate'
 
 const meta = {

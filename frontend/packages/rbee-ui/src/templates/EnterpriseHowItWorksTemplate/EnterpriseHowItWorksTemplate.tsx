@@ -25,9 +25,6 @@ export type EnterpriseHowItWorksTemplateProps = {
     src: string
     alt: string
   }
-  eyebrow: string
-  heading: string
-  description: string
   deploymentSteps: DeploymentStep[]
   timeline: {
     heading: string
@@ -43,18 +40,11 @@ export type EnterpriseHowItWorksTemplateProps = {
 export function EnterpriseHowItWorksTemplate({
   id,
   backgroundImage,
-  eyebrow,
-  heading,
-  description,
   deploymentSteps,
   timeline,
 }: EnterpriseHowItWorksTemplateProps) {
   return (
-    <section
-      id={id}
-      aria-labelledby="deploy-h2"
-      className="relative border-b border-border bg-background px-6 py-24"
-    >
+    <div id={id} className="relative">
       {/* Decorative background illustration */}
       <Image
         src={backgroundImage.src}
@@ -65,18 +55,7 @@ export function EnterpriseHowItWorksTemplate({
         aria-hidden="true"
       />
 
-      <div className="relative z-10 mx-auto max-w-7xl">
-        {/* Header */}
-        <div className="animate-in fade-in-50 slide-in-from-bottom-2 mb-16 text-center duration-500">
-          <p className="mb-2 text-sm font-medium text-primary/70">{eyebrow}</p>
-          <h2 id="deploy-h2" className="mb-4 text-4xl font-bold text-foreground">
-            {heading}
-          </h2>
-          <p className="mx-auto max-w-3xl text-balance text-xl text-foreground/85">
-            {description}
-          </p>
-        </div>
-
+      <div className="relative z-10">
         {/* Grid: Steps + Timeline */}
         <div className="grid gap-10 lg:grid-cols-[1fr_360px]">
           {/* Steps Rail */}
@@ -121,6 +100,6 @@ export function EnterpriseHowItWorksTemplate({
           </div>
         </div>
       </div>
-    </section>
+    </div>
   )
 }

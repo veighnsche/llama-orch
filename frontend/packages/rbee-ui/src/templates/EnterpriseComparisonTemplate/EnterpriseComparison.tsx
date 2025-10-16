@@ -1,10 +1,10 @@
 'use client'
 
+import { Legend } from '@rbee/ui/atoms/Legend'
 import { MatrixCard, MatrixTable } from '@rbee/ui/molecules'
+import { FEATURES, PROVIDERS } from '@rbee/ui/organisms/Enterprise/ComparisonData'
 import { cn } from '@rbee/ui/utils'
 import { useState } from 'react'
-import { Legend } from '../../../atoms/Legend'
-import { FEATURES, PROVIDERS } from '../ComparisonData/comparison-data'
 
 export function EnterpriseComparison() {
   const [selectedProvider, setSelectedProvider] = useState(0)

@@ -35,9 +35,6 @@ export type EnterpriseUseCasesTemplateProps = {
     src: string
     alt: string
   }
-  eyebrow: string
-  heading: string
-  description: string
   industryCases: IndustryCase[]
   cta: {
     text: string
@@ -50,16 +47,9 @@ export type EnterpriseUseCasesTemplateProps = {
 // Main Component
 // ──────────────────────────────────────────────────────────────────────────────
 
-export function EnterpriseUseCasesTemplate({
-  backgroundImage,
-  eyebrow,
-  heading,
-  description,
-  industryCases,
-  cta,
-}: EnterpriseUseCasesTemplateProps) {
+export function EnterpriseUseCasesTemplate({ backgroundImage, industryCases, cta }: EnterpriseUseCasesTemplateProps) {
   return (
-    <section aria-labelledby="industries-h2" className="relative border-b border-border bg-background px-6 py-24">
+    <div className="relative">
       {/* Decorative background illustration */}
       <Image
         src={backgroundImage.src}
@@ -70,18 +60,7 @@ export function EnterpriseUseCasesTemplate({
         aria-hidden="true"
       />
 
-      <div className="relative z-10 mx-auto max-w-7xl">
-        {/* Header */}
-        <div className="animate-in fade-in-50 slide-in-from-bottom-2 mb-16 text-center duration-500">
-          <p className="mb-2 text-sm font-medium text-primary/70">{eyebrow}</p>
-          <h2 id="industries-h2" className="mb-4 text-4xl font-bold text-foreground">
-            {heading}
-          </h2>
-          <p className="mx-auto max-w-3xl text-balance text-xl text-foreground/85">
-            {description}
-          </p>
-        </div>
-
+      <div className="relative z-10">
         {/* Industry Grid */}
         <div className="animate-in fade-in-50 mb-12 grid gap-8 [animation-delay:120ms] md:grid-cols-2">
           {industryCases.map((industryCase) => (
@@ -127,6 +106,6 @@ export function EnterpriseUseCasesTemplate({
           </div>
         </div>
       </div>
-    </section>
+    </div>
   )
 }

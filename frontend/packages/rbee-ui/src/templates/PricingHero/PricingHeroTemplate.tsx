@@ -1,8 +1,8 @@
 'use client'
 
 import { Badge, Button } from '@rbee/ui/atoms'
-import type { ReactNode } from 'react'
 import type { LucideIcon } from 'lucide-react'
+import type { ReactNode } from 'react'
 
 // ────────────────────────────────────────────────────────────────────────────
 // Types
@@ -44,12 +44,12 @@ export interface PricingHeroTemplateProps {
 
 /**
  * Hero section for the Pricing page
- * 
+ *
  * @example
  * ```tsx
  * import { PricingScaleVisual } from '@rbee/ui/icons'
  * import { Sparkles } from 'lucide-react'
- * 
+ *
  * <PricingHeroTemplate
  *   badgeText="Honest Pricing"
  *   heading={<>Start Free.<br /><span className="text-primary">Scale When Ready.</span></>}
@@ -97,9 +97,7 @@ export function PricingHeroTemplate({
               {heading}
             </h1>
 
-            <p className="mt-6 text-xl text-muted-foreground leading-relaxed">
-              {description}
-            </p>
+            <p className="mt-6 text-xl text-muted-foreground leading-relaxed">{description}</p>
 
             {/* Buttons */}
             <div className="mt-8 flex gap-3">

@@ -2,8 +2,8 @@
 
 import { Badge, BrandMark, BrandWordmark, Button, Tooltip, TooltipContent, TooltipTrigger } from '@rbee/ui/atoms'
 import { FeatureListItem, StatsGrid } from '@rbee/ui/molecules'
-import { ArrowRight, LucideIcon } from 'lucide-react'
-import Image, { StaticImageData } from 'next/image'
+import { ArrowRight, type LucideIcon } from 'lucide-react'
+import Image from 'next/image'
 
 export interface WhatIsRbeeFeature {
   icon: LucideIcon
@@ -50,7 +50,7 @@ export interface WhatIsRbeeProps {
   closingCopyLine2: string
 
   // Visual
-  visualImage: StaticImageData
+  visualImage: string
   visualImageAlt: string
   visualBadgeText: string
 }

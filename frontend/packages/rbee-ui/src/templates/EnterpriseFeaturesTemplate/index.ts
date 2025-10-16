@@ -1,1 +1,1 @@
-export * from './EnterpriseFeatures'
+export * from './EnterpriseFeaturesTemplate'

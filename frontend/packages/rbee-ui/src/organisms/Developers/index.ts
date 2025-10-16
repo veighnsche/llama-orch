@@ -1,4 +1,3 @@
-export * from './DevelopersCodeExamples'
 export * from './DevelopersFeatures'
-export * from './DevelopersHero'
 export * from './DevelopersHowItWorks'
+// DevelopersHero and DevelopersCodeExamples migrated to templates

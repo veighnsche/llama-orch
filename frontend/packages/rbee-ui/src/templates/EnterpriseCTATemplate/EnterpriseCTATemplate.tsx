@@ -12,7 +12,7 @@ export type CTAOption = {
   icon: React.ReactNode
   title: string
   body: string
-  tone?: 'primary' | 'default'
+  tone?: 'primary' | 'outline'
   eyebrow?: string
   note?: string
   buttonText: string
@@ -62,9 +62,7 @@ export function EnterpriseCTATemplate({
           <h2 id="cta-h2" className="mb-4 text-4xl font-bold text-foreground lg:text-5xl">
             {heading}
           </h2>
-          <p className="mx-auto max-w-3xl text-balance text-xl text-muted-foreground">
-            {description}
-          </p>
+          <p className="mx-auto max-w-3xl text-balance text-xl text-muted-foreground">{description}</p>
         </div>
 
         {/* Trust Strip */}
@@ -104,9 +102,7 @@ export function EnterpriseCTATemplate({
         </div>
 
         {/* Footer Caption */}
-        <p className="text-center text-sm text-muted-foreground">
-          {footerCaption}
-        </p>
+        <p className="text-center text-sm text-muted-foreground">{footerCaption}</p>
       </div>
     </section>
   )

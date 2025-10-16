@@ -31,12 +31,12 @@ export interface UseCasesIndustryTemplateProps {
 
 /**
  * Industry-specific use cases section with filtering and grid layout
- * 
+ *
  * @example
  * ```tsx
  * import { IndustriesHero } from '@rbee/ui/icons'
  * import { Banknote, Heart } from 'lucide-react'
- * 
+ *
  * <UseCasesIndustryTemplate
  *   eyebrow="Regulated sectors · Private-by-design"
  *   heroImage={<IndustriesHero size="100%" className="w-full h-auto" />}
@@ -79,9 +79,7 @@ export function UseCasesIndustryTemplate({
         <p className="text-center text-sm text-muted-foreground mb-6">{eyebrow}</p>
 
         {/* Hero banner */}
-        <div className="overflow-hidden rounded-lg border/60 mb-8">
-          {heroImage}
-        </div>
+        <div className="overflow-hidden rounded-lg border/60 mb-8">{heroImage}</div>
 
         {/* Filter pills */}
         <nav

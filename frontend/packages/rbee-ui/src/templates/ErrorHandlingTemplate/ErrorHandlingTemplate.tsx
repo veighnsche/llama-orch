@@ -4,8 +4,8 @@ import { Badge } from '@rbee/ui/atoms'
 import { PlaybookHeader, PlaybookItem, StatusKPI, TerminalWindow } from '@rbee/ui/molecules'
 import { cn } from '@rbee/ui/utils'
 import type { LucideIcon } from 'lucide-react'
-import { useCallback } from 'react'
 import type { ReactNode } from 'react'
+import { useCallback } from 'react'
 
 export interface PlaybookCheck {
   severity: 'destructive' | 'primary' | 'chart-2' | 'chart-3'
@@ -61,47 +61,47 @@ export function ErrorHandlingTemplate({
   return (
     <div className={cn('', className)}>
       <div className="mx-auto max-w-6xl space-y-8">
-          <div className="grid sm:grid-cols-3 gap-3 animate-in fade-in slide-in-from-bottom-2">
-            {statusKPIs.map((kpi, idx) => (
-              <StatusKPI key={idx} icon={kpi.icon} color={kpi.color} label={kpi.label} value={kpi.value} />
-            ))}
-          </div>
+        <div className="grid sm:grid-cols-3 gap-3 animate-in fade-in slide-in-from-bottom-2">
+          {statusKPIs.map((kpi, idx) => (
+            <StatusKPI key={idx} icon={kpi.icon} color={kpi.color} label={kpi.label} value={kpi.value} />
+          ))}
+        </div>
 
-          <div className="animate-in fade-in slide-in-from-bottom-2 delay-100">
-            <TerminalWindow
-              title="error timeline — retries & jitter"
-              ariaLabel="Error timeline with retry examples"
-              footer={terminalFooter}
-            >
-              {terminalContent}
-            </TerminalWindow>
-          </div>
+        <div className="animate-in fade-in slide-in-from-bottom-2 delay-100">
+          <TerminalWindow
+            title="error timeline — retries & jitter"
+            ariaLabel="Error timeline with retry examples"
+            footer={terminalFooter}
+          >
+            {terminalContent}
+          </TerminalWindow>
+        </div>
 
-          <div id="playbook" className="rounded-2xl border border-border bg-card overflow-hidden">
-            <PlaybookHeader
-              title="Playbook"
-              description="19+ scenarios · 4 categories"
-              filterCategories={['Network', 'Resource', 'Model', 'Process']}
-              selectedCategories={[]}
-              onFilterToggle={() => {}}
-              onExpandAll={handleExpandAll}
-              onCollapseAll={handleCollapseAll}
+        <div id="playbook" className="rounded-2xl border border-border bg-card overflow-hidden">
+          <PlaybookHeader
+            title="Playbook"
+            description="19+ scenarios · 4 categories"
+            filterCategories={['Network', 'Resource', 'Model', 'Process']}
+            selectedCategories={[]}
+            onFilterToggle={() => {}}
+            onExpandAll={handleExpandAll}
+            onCollapseAll={handleCollapseAll}
+          />
+
+          {playbookCategories.map((category, idx) => (
+            <PlaybookItem
+              key={idx}
+              icon={category.icon}
+              color={category.color}
+              title={category.title}
+              checkCount={category.checkCount}
+              severityDots={category.severityDots}
+              description={category.description}
+              checks={category.checks}
+              footer={category.footer}
             />
-
-            {playbookCategories.map((category, idx) => (
-              <PlaybookItem
-                key={idx}
-                icon={category.icon}
-                color={category.color}
-                title={category.title}
-                checkCount={category.checkCount}
-                severityDots={category.severityDots}
-                description={category.description}
-                checks={category.checks}
-                footer={category.footer}
-              />
-            ))}
-          </div>
+          ))}
+        </div>
       </div>
     </div>
   )

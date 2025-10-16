@@ -1,16 +1,13 @@
-import { ProblemSection } from '@rbee/ui/organisms/ProblemSection'
+import { ProblemTemplate } from '@rbee/ui/templates/ProblemTemplate'
 import { AlertCircle, TrendingDown, Zap } from 'lucide-react'
 
 /**
  * Backward-compatible wrapper for the GPU providers page.
- * Re-exports the shared ProblemSection with provider-specific defaults.
+ * Re-exports the shared ProblemTemplate with provider-specific defaults.
  */
 export function ProvidersProblem() {
   return (
-    <ProblemSection
-      kicker="The Cost of Idle GPUs"
-      title="Stop Letting Your Hardware Bleed Money"
-      subtitle="Most GPUs sit idle ~90% of the time. They still draw power—and earn nothing."
+    <ProblemTemplate
       items={[
         {
           icon: <TrendingDown className="h-6 w-6" />,

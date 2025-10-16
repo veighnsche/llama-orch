@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react'
-import { SecurityIsolationTemplate } from './SecurityIsolationTemplate'
 import { securityIsolationProps } from '../../pages/FeaturesPage/FeaturesPageProps'
+import { SecurityIsolationTemplate } from './SecurityIsolationTemplate'
 
 const meta: Meta<typeof SecurityIsolationTemplate> = {
   title: 'Templates/SecurityIsolationTemplate',

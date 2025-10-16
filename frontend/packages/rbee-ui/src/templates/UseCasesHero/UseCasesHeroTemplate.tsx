@@ -1,7 +1,7 @@
 'use client'
 
 import { Button } from '@rbee/ui/atoms/Button'
-import Image, { type StaticImageData } from 'next/image'
+import Image from 'next/image'
 
 // ────────────────────────────────────────────────────────────────────────────
 // Types
@@ -32,7 +32,7 @@ export interface UseCasesHeroTemplateProps {
     hasDot?: boolean
   }>
   /** Hero image */
-  image: StaticImageData
+  image: string
   /** Alt text for the hero image */
   imageAlt: string
   /** Caption text below the image */
@@ -45,11 +45,11 @@ export interface UseCasesHeroTemplateProps {
 
 /**
  * Hero section for the Use Cases page
- * 
+ *
  * @example
  * ```tsx
  * import { useCasesHero } from '@rbee/ui/assets'
- * 
+ *
  * <UseCasesHeroTemplate
  *   badgeText="OpenAI-compatible"
  *   heading="Built for Those Who Value"
@@ -102,9 +102,7 @@ export function UseCasesHeroTemplate({
               </span>
             </h1>
 
-            <p className="mt-6 text-lg lg:text-xl text-muted-foreground leading-relaxed max-w-xl">
-              {description}
-            </p>
+            <p className="mt-6 text-lg lg:text-xl text-muted-foreground leading-relaxed max-w-xl">{description}</p>
 
             {/* Two clear CTAs */}
             <div className="mt-8 flex flex-col sm:flex-row gap-3">
@@ -119,10 +117,8 @@ export function UseCasesHeroTemplate({
             {/* Proof indicators */}
             <div className="mt-8 flex flex-wrap items-center gap-x-6 gap-y-2 text-sm text-muted-foreground">
               {proofIndicators.map((indicator, index) => (
-                <span key={index} className={indicator.hasDot ? "inline-flex items-center gap-2" : undefined}>
-                  {indicator.hasDot && (
-                    <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" aria-hidden />
-                  )}
+                <span key={index} className={indicator.hasDot ? 'inline-flex items-center gap-2' : undefined}>
+                  {indicator.hasDot && <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" aria-hidden />}
                   {indicator.text}
                 </span>
               ))}
@@ -132,14 +128,7 @@ export function UseCasesHeroTemplate({
           {/* Right: visual */}
           <div className="relative max-lg:order-first animate-in fade-in-50 slide-in-from-right-4">
             <div className="rounded-2xl border bg-card/50 p-4 backdrop-blur-sm">
-              <Image
-                src={image}
-                width={1080}
-                height={760}
-                priority
-                className="rounded-xl"
-                alt={imageAlt}
-              />
+              <Image src={image} width={1080} height={760} priority className="rounded-xl" alt={imageAlt} />
             </div>
 
             <p className="mt-4 text-center text-sm text-muted-foreground">{imageCaption}</p>
