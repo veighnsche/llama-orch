@@ -14,7 +14,6 @@ import {
   HomeSolutionSection,
   HowItWorksSection,
   PricingSection,
-  ProblemSection,
   TechnicalSection,
   TestimonialsSection,
   UseCasesSection,
@@ -26,6 +25,8 @@ import {
   type EmailCaptureProps,
   HomeHero,
   type HomeHeroProps,
+  ProblemSection,
+  type ProblemSectionProps,
   type WhatIsRbeeProps,
   WhatIsRbee,
 } from "@rbee/ui/templates";
@@ -254,6 +255,44 @@ export const audienceSelectorProps: AudienceSelectorProps = {
   ],
 };
 
+// === Problem Section ===
+export const problemSectionContainerProps: Omit<
+  TemplateContainerProps,
+  "children"
+> = {
+  title: "The hidden risk of AI-assisted development",
+  description:
+    "You're building complex codebases with AI assistance. What happens when the provider changes the rules?",
+  kickerVariant: "destructive",
+  bgVariant: "destructive-gradient",
+  paddingY: "xl",
+  maxWidth: "7xl",
+  align: "center",
+};
+
+export const problemSectionProps: ProblemSectionProps = {
+  items: [
+    {
+      title: "The model changes",
+      body: "Your assistant updates overnight. Code generation breaks; workflows stall; your team is blocked.",
+      icon: <AlertTriangle className="h-6 w-6" />,
+      tone: "destructive",
+    },
+    {
+      title: "The price increases",
+      body: "$20/month becomes $200/month—multiplied by your team. Infrastructure costs spiral.",
+      icon: <DollarSign className="h-6 w-6" />,
+      tone: "primary",
+    },
+    {
+      title: "The provider shuts down",
+      body: "APIs get deprecated. Your AI-built code becomes unmaintainable overnight.",
+      icon: <Lock className="h-6 w-6" />,
+      tone: "destructive",
+    },
+  ],
+};
+
 // === Email Capture Section ===
 export const emailCaptureProps: EmailCaptureProps = {
   badge: {
@@ -293,6 +332,9 @@ export default function HomePage() {
         <AudienceSelector {...audienceSelectorProps} />
       </TemplateContainer>
       <EmailCapture {...emailCaptureProps} />
+      <TemplateContainer {...problemSectionContainerProps}>
+        <ProblemSection {...problemSectionProps} />
+      </TemplateContainer>
     </main>
   );
 }

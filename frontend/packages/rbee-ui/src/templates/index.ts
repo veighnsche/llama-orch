@@ -2,4 +2,5 @@
 export * from './AudienceSelector'
 export * from './EmailCapture'
 export * from './HomeHero'
+export * from './ProblemSection'
 export * from './WhatIsRbee'

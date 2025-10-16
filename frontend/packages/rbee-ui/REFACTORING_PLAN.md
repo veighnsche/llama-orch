@@ -80,6 +80,24 @@ These are self-contained and may not need `TemplateContainer`:
 - **Templates** = Full page sections that were previously in `/organisms/`
 - After migration, `/organisms/` should only contain true composite components, not sections
 
+### 5. **Icon Props Pattern**
+Icons should be passed based on the component that will render them:
+
+**For components using `FeatureInfoCard` (e.g., ProblemSection, SolutionSection):**
+- ✅ **Correct**: `icon: <AlertTriangle className="h-6 w-6" />`
+- ❌ **Incorrect**: `icon: AlertTriangle`
+- Pass as **rendered React elements** with className
+
+**For components using `IconPlate` or `FeatureListItem` (e.g., WhatIsRbee):**
+- ✅ **Correct**: `icon: Zap`
+- ❌ **Incorrect**: `icon: <Zap className="h-6 w-6" />`
+- Pass as **component references** (LucideIcon type)
+
+**Why the difference?**
+- `FeatureInfoCard` accepts `React.ReactNode` and handles both patterns
+- `IconPlate`/`FeatureListItem` expect `LucideIcon` component types and render them internally
+- Check the component's TypeScript interface to determine which pattern to use
+
 ## File Structure
 
 ```
@@ -599,7 +617,7 @@ export const OnDevelopersPage: Story = {
 These are used on the main landing page and should be migrated first:
 
 1. ✅ **AudienceSelector** - COMPLETED - HomePage specific
-2. **ProblemSection** - Used on HomePage, high content value
+2. ✅ **ProblemSection** - COMPLETED - Reusable across pages
 3. **HowItWorksSection** - Used on HomePage, reusable across pages
 4. **HomeSolutionSection** - Complex but important
 5. **UseCasesSection** - High content, reusable
