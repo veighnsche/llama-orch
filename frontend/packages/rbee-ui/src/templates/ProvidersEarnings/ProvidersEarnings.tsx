@@ -2,10 +2,10 @@
 
 import { Button } from "@rbee/ui/atoms/Button";
 import { Card, CardContent, CardHeader, CardTitle } from "@rbee/ui/atoms/Card";
-import { Slider } from "@rbee/ui/atoms/Slider";
 import { EarningsBreakdownCard } from "@rbee/ui/molecules/EarningsBreakdownCard";
 import { GPUSelector } from "@rbee/ui/molecules/GPUSelector";
 import { IconCardHeader } from "@rbee/ui/molecules/IconCardHeader";
+import { LabeledSlider } from "@rbee/ui/molecules/LabeledSlider";
 import { OptionSelector } from "@rbee/ui/molecules/OptionSelector";
 import { cn } from "@rbee/ui/utils";
 import { Cpu, TrendingUp } from "lucide-react";
@@ -121,9 +121,9 @@ export function ProvidersEarnings({
   return (
     <div id="earnings-calculator">
       <div className="mx-auto max-w-4xl">
-        <div className="grid gap-8 lg:grid-cols-2">
+        <div className="grid gap-8 lg:grid-cols-2 lg:items-start">
           {/* Calculator Inputs */}
-          <Card className="animate-in fade-in slide-in-from-bottom-2 bg-gradient-to-b from-card to-background motion-reduce:animate-none">
+          <Card className="animate-in fade-in slide-in-from-bottom-2 bg-gradient-to-b from-card to-background shadow-lg motion-reduce:animate-none">
             <IconCardHeader
               icon={<Cpu />}
               title={configTitle}
@@ -144,9 +144,12 @@ export function ProvidersEarnings({
               />
 
               {/* Quick Presets */}
-              <OptionSelector
-                label={presetsLabel}
-                options={presets.map((preset) => ({
+              <div>
+                <label className="mb-3 block text-sm font-medium text-muted-foreground">
+                  {presetsLabel}
+                </label>
+                <OptionSelector
+                  options={presets.map((preset) => ({
                   id: preset.label.toLowerCase().replace(/\s+/g, "-"),
                   label: preset.label,
                   subtitle: `${preset.hours}h • ${preset.utilization}%`,
@@ -157,65 +160,42 @@ export function ProvidersEarnings({
                 }))}
                 onSelect={(data) => applyPreset(data.hours, data.utilization)}
                 columns={3}
-              />
+                />
+              </div>
 
               {/* Hours Per Day */}
-              <div>
-                <div className="mb-3 flex items-center justify-between">
-                  <label className="text-sm font-medium text-muted-foreground">
-                    {hoursLabel}
-                  </label>
-                  <span className="tabular-nums text-lg font-bold text-primary">
-                    {hoursPerDay[0]}h
-                  </span>
-                </div>
-                <Slider
-                  value={hoursPerDay}
-                  onValueChange={setHoursPerDay}
-                  min={1}
-                  max={24}
-                  step={1}
-                  aria-label="Hours available per day"
-                  className="[&_[role=slider]]:bg-primary"
-                />
-                <div className="mt-2 flex justify-between text-xs text-muted-foreground">
-                  <span>1h</span>
-                  <span>24h</span>
-                </div>
-                <div className="mt-1 text-xs text-muted-foreground">
-                  ≈ {hoursPerDay[0] * 30}h / mo
-                </div>
-              </div>
+              <LabeledSlider
+                label={hoursLabel}
+                value={hoursPerDay}
+                onValueChange={setHoursPerDay}
+                min={1}
+                max={24}
+                step={1}
+                ariaLabel="Hours available per day"
+                formatValue={(v) => `${v}h`}
+                minLabel="1h"
+                maxLabel="24h"
+                helperText={(v) => `≈ ${v * 30}h / mo`}
+              />
 
               {/* Utilization */}
-              <div>
-                <div className="mb-3 flex items-center justify-between">
-                  <label className="text-sm font-medium text-muted-foreground">
-                    {utilizationLabel}
-                  </label>
-                  <span className="tabular-nums text-lg font-bold text-primary">
-                    {utilization[0]}%
-                  </span>
-                </div>
-                <Slider
-                  value={utilization}
-                  onValueChange={setUtilization}
-                  min={10}
-                  max={100}
-                  step={5}
-                  aria-label="Expected utilization"
-                  className="[&_[role=slider]]:bg-primary"
-                />
-                <div className="mt-2 flex justify-between text-xs text-muted-foreground">
-                  <span>10%</span>
-                  <span>100%</span>
-                </div>
-              </div>
+              <LabeledSlider
+                label={utilizationLabel}
+                value={utilization}
+                onValueChange={setUtilization}
+                min={10}
+                max={100}
+                step={5}
+                ariaLabel="Expected utilization"
+                formatValue={(v) => `${v}%`}
+                minLabel="10%"
+                maxLabel="100%"
+              />
             </CardContent>
           </Card>
 
           {/* Earnings Display */}
-          <Card className="animate-in fade-in slide-in-from-bottom-2 bg-gradient-to-b from-card to-background motion-reduce:animate-none">
+          <Card className="animate-in fade-in slide-in-from-bottom-2 [animation-delay:100ms] bg-gradient-to-b from-card to-background shadow-lg motion-reduce:animate-none lg:sticky lg:top-24">
             <IconCardHeader
               icon={<TrendingUp />}
               title={earningsTitle}
@@ -226,7 +206,7 @@ export function ProvidersEarnings({
 
             <CardContent className="space-y-6">
               {/* Top KPI Card */}
-              <Card className="border-primary/20 bg-primary/10">
+              <Card className="border-primary/20 bg-primary/10 shadow-sm">
                 <CardHeader className="pb-0">
                   <CardTitle className="text-sm text-primary">
                     {monthlyLabel}{" "}
@@ -250,7 +230,7 @@ export function ProvidersEarnings({
 
               {/* Secondary KPIs */}
               <div className="grid gap-4 sm:grid-cols-2">
-                <Card className="bg-background/50">
+                <Card className="bg-background/50 shadow-sm transition-shadow hover:shadow-md">
                   <CardHeader className="pb-0">
                     <CardTitle className="text-sm text-muted-foreground">
                       {dailyLabel}
@@ -264,7 +244,7 @@ export function ProvidersEarnings({
                     </div>
                   </CardContent>
                 </Card>
-                <Card className="bg-background/50">
+                <Card className="bg-background/50 shadow-sm transition-shadow hover:shadow-md">
                   <CardHeader className="pb-0">
                     <CardTitle className="text-sm text-muted-foreground">
                       {yearlyLabel}
@@ -305,7 +285,7 @@ export function ProvidersEarnings({
 
               {/* CTA */}
               <Button
-                className="w-full bg-primary text-primary-foreground transition-transform hover:bg-primary/90 active:scale-[0.98]"
+                className="w-full bg-primary text-primary-foreground shadow-md transition-all hover:bg-primary/90 hover:shadow-lg active:scale-[0.98] focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
                 aria-label={ctaAriaLabel}
               >
                 {ctaLabel}
@@ -321,7 +301,7 @@ export function ProvidersEarnings({
                     });
                   }
                 }}
-                className="w-full text-center text-sm text-primary underline-offset-4 hover:underline font-sans"
+                className="w-full text-center text-sm font-medium text-primary underline-offset-4 transition-colors hover:underline hover:text-primary/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 rounded-md py-2"
               >
                 {secondaryCTALabel}
               </button>

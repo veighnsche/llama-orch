@@ -41,12 +41,16 @@ export const Default: Story = {
     const [selected, setSelected] = useState<any>(null);
     return (
       <div className="max-w-md space-y-4">
-        <OptionSelector
-          label="Quick Presets"
-          options={earningsPresets}
-          onSelect={setSelected}
-          columns={3}
-        />
+        <div>
+          <label className="mb-3 block text-sm font-medium text-muted-foreground">
+            Quick Presets
+          </label>
+          <OptionSelector
+            options={earningsPresets}
+            onSelect={setSelected}
+            columns={3}
+          />
+        </div>
         {selected && (
           <div className="rounded-lg border bg-muted p-4 text-sm">
             <strong>Selected:</strong> {selected.hours}h/day at{" "}
@@ -62,9 +66,12 @@ export const TwoColumns: Story = {
   args: {} as any,
   render: () => (
     <div className="max-w-md">
-      <OptionSelector
-        label="Choose Plan"
-        options={[
+      <div>
+        <label className="mb-3 block text-sm font-medium text-muted-foreground">
+          Choose Plan
+        </label>
+        <OptionSelector
+          options={[
           {
             id: "basic",
             label: "Basic",
@@ -80,7 +87,8 @@ export const TwoColumns: Story = {
         ]}
         onSelect={(data) => console.log(data)}
         columns={2}
-      />
+        />
+      </div>
     </div>
   ),
 };
@@ -89,9 +97,12 @@ export const FourColumns: Story = {
   args: {} as any,
   render: () => (
     <div className="max-w-2xl">
-      <OptionSelector
-        label="Time Range"
-        options={[
+      <div>
+        <label className="mb-3 block text-sm font-medium text-muted-foreground">
+          Time Range
+        </label>
+        <OptionSelector
+          options={[
           { id: "1h", label: "1 Hour", data: { hours: 1 } },
           { id: "24h", label: "24 Hours", data: { hours: 24 } },
           { id: "7d", label: "7 Days", data: { days: 7 } },
@@ -99,7 +110,8 @@ export const FourColumns: Story = {
         ]}
         onSelect={(data) => console.log(data)}
         columns={4}
-      />
+        />
+      </div>
     </div>
   ),
 };
@@ -121,16 +133,20 @@ export const WithoutSubtitles: Story = {
   args: {} as any,
   render: () => (
     <div className="max-w-md">
-      <OptionSelector
-        label="Select Mode"
-        options={[
+      <div>
+        <label className="mb-3 block text-sm font-medium text-muted-foreground">
+          Select Mode
+        </label>
+        <OptionSelector
+          options={[
           { id: "light", label: "Light", data: { theme: "light" } },
           { id: "dark", label: "Dark", data: { theme: "dark" } },
           { id: "auto", label: "Auto", data: { theme: "auto" } },
         ]}
         onSelect={(data) => console.log(data)}
         columns={3}
-      />
+        />
+      </div>
     </div>
   ),
 };
