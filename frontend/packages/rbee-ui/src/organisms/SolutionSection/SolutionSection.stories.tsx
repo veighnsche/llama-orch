@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react'
-import { solutionSectionProps } from '@rbee/ui/pages/DevelopersPage'
+// import { solutionTemplateProps } from '../../pages/DevelopersPage/DevelopersPageProps'
 import { Anchor, DollarSign, Laptop, Shield } from 'lucide-react'
 import { SolutionSection } from './SolutionSection'
 
@@ -345,13 +345,14 @@ export const AlternativeBenefits: Story = {
   },
 }
 
-export const OnDevelopersPage: Story = {
-  args: solutionSectionProps,
-  parameters: {
-    docs: {
-      description: {
-        story: '**Developers page context** — Solution section emphasizing developer control and OpenAI compatibility.',
-      },
-    },
-  },
-}
+// Commented out until solutionTemplateProps is exported from DevelopersPageProps
+// export const OnDevelopersPage: Story = {
+//   args: solutionTemplateProps,
+//   parameters: {
+//     docs: {
+//       description: {
+//         story: '**Developers page context** — Solution section emphasizing developer control and OpenAI compatibility.',
+//       },
+//     },
+//   },
+// }

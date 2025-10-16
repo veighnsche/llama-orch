@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react'
 import { MultiBackendGpuTemplate } from './MultiBackendGpuTemplate'
-import { multiBackendGpuProps } from '@rbee/ui/pages/FeaturesPage'
+import { multiBackendGpuProps } from '../../pages/FeaturesPage/FeaturesPageProps'
 
 const meta: Meta<typeof MultiBackendGpuTemplate> = {
   title: 'Templates/MultiBackendGpuTemplate',

@@ -3,7 +3,6 @@
 import { TemplateContainer } from "@rbee/ui/molecules";
 import {
   CoreFeaturesTabs,
-  PricingSection,
 } from "@rbee/ui/organisms";
 import {
   CTATemplate,
@@ -11,6 +10,7 @@ import {
   DevelopersHeroTemplate,
   EmailCapture,
   HowItWorks,
+  PricingTemplate,
   ProblemTemplate,
   SolutionTemplate,
   TestimonialsTemplate,
@@ -22,9 +22,10 @@ import {
   developersCodeExamplesProps,
   developersEmailCaptureProps,
   developersHeroProps,
+  developersPricingTemplateContainerProps,
+  developersPricingTemplateProps,
   howItWorksContainerProps,
   howItWorksProps,
-  developersPricingSectionProps,
   problemTemplateContainerProps,
   problemTemplateProps,
   solutionTemplateContainerProps,
@@ -67,7 +68,10 @@ export default function DevelopersPage() {
       </TemplateContainer>
       
       <DevelopersCodeExamplesTemplate {...developersCodeExamplesProps} />
-      <PricingSection {...developersPricingSectionProps} />
+      
+      <TemplateContainer {...developersPricingTemplateContainerProps}>
+        <PricingTemplate {...developersPricingTemplateProps} />
+      </TemplateContainer>
       
       <TemplateContainer {...testimonialsTemplateContainerProps}>
         <TestimonialsTemplate {...testimonialsTemplateProps} />

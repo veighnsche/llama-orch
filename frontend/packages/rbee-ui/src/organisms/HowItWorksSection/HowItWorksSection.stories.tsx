@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react'
-import { developersHowItWorksProps } from '@rbee/ui/pages/DevelopersPage'
+// import { howItWorksProps } from '../../pages/DevelopersPage/DevelopersPageProps'
 import { HowItWorksSection } from './HowItWorksSection'
 
 const meta = {
@@ -384,13 +384,14 @@ export const WithoutVisuals: Story = {
   },
 }
 
-export const OnDevelopersPage: Story = {
-  args: developersHowItWorksProps,
-  parameters: {
-    docs: {
-      description: {
-        story: '**Developers page context** — 15-minute setup guide with terminal commands and code examples.',
-      },
-    },
-  },
-}
+// Commented out until howItWorksProps is exported from DevelopersPageProps
+// export const OnDevelopersPage: Story = {
+//   args: howItWorksProps,
+//   parameters: {
+//     docs: {
+//       description: {
+//         story: '**Developers page context** — 15-minute setup guide with terminal commands and code examples.',
+//       },
+//     },
+//   },
+// }

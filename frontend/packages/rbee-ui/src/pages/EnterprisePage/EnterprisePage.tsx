@@ -1,7 +1,7 @@
 'use client'
 
+import { TemplateContainer } from "@rbee/ui/molecules";
 import {
-  EmailCapture,
   EnterpriseComparison,
   EnterpriseCompliance,
   EnterpriseCTA,
@@ -12,11 +12,15 @@ import {
   EnterpriseSolution,
   EnterpriseTestimonials,
   EnterpriseUseCases,
-  ProblemSection,
 } from "@rbee/ui/organisms";
 import {
+  EmailCapture,
+  ProblemTemplate,
+} from "@rbee/ui/templates";
+import {
   enterpriseEmailCaptureProps,
-  enterpriseProblemSectionProps,
+  enterpriseProblemTemplateContainerProps,
+  enterpriseProblemTemplateProps,
 } from "./EnterprisePageProps";
 
 // ============================================================================
@@ -31,7 +35,11 @@ export default function EnterprisePage() {
     <main>
       <EnterpriseHero />
       <EmailCapture {...enterpriseEmailCaptureProps} />
-      <ProblemSection {...enterpriseProblemSectionProps} />
+      
+      <TemplateContainer {...enterpriseProblemTemplateContainerProps}>
+        <ProblemTemplate {...enterpriseProblemTemplateProps} />
+      </TemplateContainer>
+      
       <EnterpriseSolution />
       <EnterpriseCompliance />
       <EnterpriseSecurity />

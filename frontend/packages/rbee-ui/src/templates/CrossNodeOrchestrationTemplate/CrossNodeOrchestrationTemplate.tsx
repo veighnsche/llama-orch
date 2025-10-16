@@ -129,18 +129,58 @@ export function CrossNodeOrchestrationTemplate({
                 {/* Diagram */}
                 <div className="relative bg-background rounded-xl p-6 overflow-hidden">
                   <div className="space-y-4">
-                    {diagramNodes.map((node, idx) => (
-                      <div key={idx}>
-                        <div className="flex items-center gap-3">
-                          <div className="flex-1">
-                            <DiagramNodeComponent name={node.name} label={node.label} tone={node.tone} />
-                          </div>
-                        </div>
-                        {idx < diagramArrows.length && (
-                          <DiagramArrowComponent label={diagramArrows[idx].label} indent={diagramArrows[idx].indent} />
-                        )}
+                    {/* Row 1: First node */}
+                    <div className="flex items-center gap-3">
+                      <div className="flex-1">
+                        <DiagramNodeComponent 
+                          name={diagramNodes[0].name} 
+                          label={diagramNodes[0].label} 
+                          tone={diagramNodes[0].tone} 
+                        />
                       </div>
-                    ))}
+                    </div>
+
+                    {/* Arrow 1 */}
+                    {diagramArrows[0] && (
+                      <DiagramArrowComponent 
+                        label={diagramArrows[0].label} 
+                        indent={diagramArrows[0].indent} 
+                      />
+                    )}
+
+                    {/* Row 2: Second node */}
+                    {diagramNodes[1] && (
+                      <div className={cn("flex items-center gap-3", diagramArrows[0]?.indent)}>
+                        <div className="flex-1">
+                          <DiagramNodeComponent 
+                            name={diagramNodes[1].name} 
+                            label={diagramNodes[1].label} 
+                            tone={diagramNodes[1].tone} 
+                          />
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Arrow 2 */}
+                    {diagramArrows[1] && (
+                      <DiagramArrowComponent 
+                        label={diagramArrows[1].label} 
+                        indent={diagramArrows[1].indent} 
+                      />
+                    )}
+
+                    {/* Row 3: Third node */}
+                    {diagramNodes[2] && (
+                      <div className={cn("flex items-center gap-3", diagramArrows[1]?.indent)}>
+                        <div className="flex-1">
+                          <DiagramNodeComponent 
+                            name={diagramNodes[2].name} 
+                            label={diagramNodes[2].label} 
+                            tone={diagramNodes[2].tone} 
+                          />
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </div>
 

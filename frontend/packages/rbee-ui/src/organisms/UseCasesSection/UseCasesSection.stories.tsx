@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react'
-import { useCasesSectionProps } from '@rbee/ui/pages/DevelopersPage'
+// import { useCasesTemplateProps } from '../../pages/DevelopersPage/DevelopersPageProps'
 import { Building, Home as HomeIcon, Laptop, Users } from 'lucide-react'
 import { UseCasesSection } from './UseCasesSection'
 
@@ -324,13 +324,14 @@ export const AlternativePersonas: Story = {
   },
 }
 
-export const OnDevelopersPage: Story = {
-  args: useCasesSectionProps,
-  parameters: {
-    docs: {
-      description: {
-        story: '**Developers page context** — 5 developer use cases: AI coder, docs generators, test generators, code review agents, refactoring agents.',
-      },
-    },
-  },
-}
+// Commented out until useCasesTemplateProps is exported from DevelopersPageProps
+// export const OnDevelopersPage: Story = {
+//   args: useCasesTemplateProps,
+//   parameters: {
+//     docs: {
+//       description: {
+//         story: '**Developers page context** — 5 developer use cases: AI coder, docs generators, test generators, code review agents, refactoring agents.',
+//       },
+//     },
+//   },
+// }

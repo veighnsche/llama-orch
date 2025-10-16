@@ -1,7 +1,26 @@
 # Page & Template Refactoring Plan
 
 ## Goal
-Pages = props objects + composition. Templates = reusable UI sections from `/organisms/`.
+**ALL content must be props-driven for i18n and CMS integration.**
+
+Pages = props objects + composition. Templates = reusable UI sections with ZERO hardcoded content.
+
+## Critical Rule: NO HARDCODED CONTENT
+**Every single piece of text, image, icon, link, or data MUST be passed as props.**
+
+**Why:** 
+- i18n (internationalization) requires all text to be translatable
+- CMS integration requires all content to be editable
+- NO EXCEPTIONS - even single-use components must accept props
+
+**This means:**
+- ❌ NO `const data = [...]` inside components
+- ❌ NO hardcoded strings in JSX
+- ❌ NO hardcoded image paths
+- ❌ NO hardcoded links
+- ✅ ALL content passed as props
+- ✅ ALL data defined in page props files
+- ✅ Templates are pure presentation
 
 ## Components to Migrate
 
@@ -44,12 +63,12 @@ Pages = props objects + composition. Templates = reusable UI sections from `/org
 - ✅ All 2 new templates created and integrated:
   - ✅ PricingHeroTemplate
   - ✅ PricingComparisonTemplate
-- ✅ PricingSection reused from organisms
+- ✅ PricingTemplate migrated from PricingSection organism (removed hardcoded content)
 - ✅ FAQTemplate reused with pricing-specific data
 - ✅ EmailCapture props migrated
-- ✅ Props organized in single file: PricingPageProps.tsx (302 lines)
+- ✅ Props organized in single file: PricingPageProps.tsx
 - ✅ Commercial app replaced with clean `<PricingPage />` import (30 lines → 6 lines)
-- ✅ Storybook stories created for all templates
+- ✅ Storybook stories created for all templates (OnHomePage, OnPricingPage, OnDevelopersPage)
 - ✅ Templates exported from barrel file
 
 **✅ Developers Page (Phase E - COMPLETE):**
@@ -57,17 +76,33 @@ Pages = props objects + composition. Templates = reusable UI sections from `/org
 - ✅ All 2 new templates created and integrated:
   - ✅ DevelopersHeroTemplate
   - ✅ DevelopersCodeExamplesTemplate
-- ✅ All organism sections reused (ProblemSection, SolutionSection, HowItWorksSection, CoreFeaturesTabs, UseCasesSection, PricingSection, TestimonialsSection, CTASection)
+- ✅ PricingTemplate migrated from PricingSection organism (with TemplateContainer wrapper)
+- ✅ All other templates reused (ProblemTemplate, SolutionTemplate, HowItWorks, CoreFeaturesTabs, UseCasesTemplate, TestimonialsTemplate, CTATemplate)
 - ✅ EmailCapture props migrated
-- ✅ Props organized in single file: DevelopersPageProps.tsx (621 lines)
+- ✅ Props organized in single file: DevelopersPageProps.tsx
 - ✅ Storybook stories created for all templates
 - ✅ Templates exported from barrel file
 
-**Next Pages (Phase F - Ready to Start):**
-- Enterprise Page
-- Providers Page
+**🔄 Enterprise Page (Phase F - IN PROGRESS):**
+- ⚠️ ALL Enterprise organisms must be converted to templates with props
+- ⚠️ NO hardcoded content allowed (i18n + CMS requirement)
+- Templates to create:
+  - [ ] EnterpriseHeroTemplate
+  - [ ] EnterpriseSolutionTemplate
+  - [ ] EnterpriseComplianceTemplate
+  - [ ] EnterpriseSecurityTemplate
+  - [ ] EnterpriseHowItWorksTemplate
+  - [ ] EnterpriseUseCasesTemplate
+  - [ ] EnterpriseComparisonTemplate
+  - [ ] EnterpriseFeaturesTemplate
+  - [ ] EnterpriseTestimonialsTemplate
+  - [ ] EnterpriseCTATemplate
 
-**Shared Components (Phase D):**
+**🔄 Providers Page (Phase G - PENDING):**
+- Same rule: ALL organisms → templates with props
+- NO hardcoded content
+
+**Shared Components:**
 - CoreFeaturesTabs (used across multiple pages)
 
 ## Rules
@@ -78,11 +113,12 @@ Pages = props objects + composition. Templates = reusable UI sections from `/org
 
 **Templates:**
 - Remove `SectionContainer` wrapper
-- Accept ALL content as props
+- **Accept ALL content as props - ZERO hardcoded strings/data/images**
 - Export typed Props interface
 - Pure presentation, no business logic
 - Add JSDoc comment with `@example` showing usage
 - Use separator comments (`// ────────────────`) to organize Types, Main Component sections
+- **NO EXCEPTIONS:** Even single-use templates must accept all content as props (i18n + CMS requirement)
 
 **Pages:**
 - Props objects at top (in visual order)
@@ -96,11 +132,13 @@ Pages = props objects + composition. Templates = reusable UI sections from `/org
 - **Consistency rule**: All icons in props objects must be rendered React components (`<Icon />`) not component references (`Icon`)
 
 **Stories:**
-- Import props from page files when available
+- **CRITICAL: ALWAYS IMPORT PROPS FROM PAGE FILES - NEVER DUPLICATE**
+- Import props from `@rbee/ui/pages` or specific page exports
 - One story per page usage (e.g., `OnHomePage`, `OnDevelopersPage`)
 - NO variant stories
-- Story args should match the page props exactly (copy from commercial app if needed)
-- Import any required assets (images, icons) at top of story file
+- Story args = imported props object: `args: importedPropsName`
+- NO inline prop objects in stories
+- See `EmailCapture.stories.tsx` for the correct pattern
 
 ## Migration Steps (7 Steps)
 
@@ -151,8 +189,7 @@ import { Check, X as XIcon } from "lucide-react"
 ```typescript
 // Create [Name].stories.tsx in template folder
 import type { Meta, StoryObj } from '@storybook/react'
-import { Icon1, Icon2 } from 'lucide-react'  // Import icons if needed
-import { asset } from '@rbee/ui/assets'  // Import assets if needed
+import { xTemplateProps } from '@rbee/ui/pages'  // IMPORT PROPS - DO NOT DUPLICATE
 import { XTemplate } from './XTemplate'
 
 const meta = {
@@ -165,10 +202,12 @@ const meta = {
 export default meta
 type Story = StoryObj<typeof meta>
 
+/**
+ * XTemplate as used on the Home page
+ * - Brief description of what's unique about this usage
+ */
 export const OnHomePage: Story = {
-  args: {
-    // Copy exact props from HomePage or commercial app
-  },
+  args: xTemplateProps,  // IMPORTED - NOT INLINE
 }
 ```
 
@@ -242,9 +281,10 @@ export const OnHomePage: Story = {
 - Sub-types for complex structures (e.g., `ComparisonLegendItem`) improved maintainability
 
 **5. Template Reusability:**
-- Removing all hardcoded content made templates truly reusable
+- **Removing ALL hardcoded content made templates truly reusable (CRITICAL for i18n + CMS)**
 - Accepting images, icons, and complex React nodes as props provided maximum flexibility
 - Self-contained templates (FAQ, CTA) with internal `<section>` tags worked well for full-width layouts
+- **NO EXCEPTIONS:** Even single-use components must accept all content as props
 
 **6. Commercial App Integration:**
 - Final replacement was trivial: 642 lines → 5 lines
@@ -252,6 +292,28 @@ export const OnHomePage: Story = {
 - Changes to HomePage automatically propagate to commercial app
 
 ### ⚠️ Critical Requirements for Next Pages
+
+**0. NEVER DUPLICATE PROPS IN STORIES:**
+```typescript
+// ❌ WRONG - Duplicating props inline
+export const OnHomePage: Story = {
+  args: {
+    title: 'Some Title',
+    items: [...],  // Hundreds of lines duplicated
+  }
+}
+
+// ✅ CORRECT - Import from props file
+import { homeTemplateProps } from '@rbee/ui/pages'
+export const OnHomePage: Story = {
+  args: homeTemplateProps,  // Single source of truth
+}
+```
+**WHY:** Props files are the single source of truth. Duplicating in stories creates:
+- Maintenance nightmare (update in 2 places)
+- Drift between page and story
+- Wasted lines of code
+- See `EmailCapture.stories.tsx` for correct pattern
 
 **1. Client Component Directive:**
 ```typescript
@@ -335,7 +397,7 @@ For each new page, verify:
 - [ ] Template props match data from commercial app exactly
 - [ ] All props exported from page index (alphabetical)
 - [ ] Page composition uses `<TemplateContainer>` wrappers (except self-contained)
-- [ ] Storybook stories created for each template
+- [ ] **Storybook stories IMPORT props from page files (NO DUPLICATION)**
 - [ ] Commercial app file updated to import page component
 - [ ] Refactoring plan updated with ✅ completion markers
 

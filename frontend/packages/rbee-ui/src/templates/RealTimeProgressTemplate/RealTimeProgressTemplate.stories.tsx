@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react'
 import { RealTimeProgressTemplate } from './RealTimeProgressTemplate'
-import { realTimeProgressProps } from '@rbee/ui/pages/FeaturesPage'
+import { realTimeProgressProps } from '../../pages/FeaturesPage/FeaturesPageProps'
 
 const meta: Meta<typeof RealTimeProgressTemplate> = {
   title: 'Templates/RealTimeProgressTemplate',

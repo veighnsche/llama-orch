@@ -1,5 +1,6 @@
 export {
   enterpriseEmailCaptureProps,
-  enterpriseProblemSectionProps,
+  enterpriseProblemTemplateContainerProps,
+  enterpriseProblemTemplateProps,
 } from "./EnterprisePageProps";
 export { default as EnterprisePage } from "./EnterprisePage";

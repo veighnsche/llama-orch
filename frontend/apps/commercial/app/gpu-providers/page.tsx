@@ -1,31 +1,5 @@
-import {
-  ProvidersCTA,
-  ProvidersEarnings,
-  ProvidersFeatures,
-  ProvidersHero,
-  ProvidersHowItWorks,
-  ProvidersMarketplace,
-  ProvidersProblem,
-  ProvidersSecurity,
-  ProvidersSolution,
-  ProvidersTestimonials,
-  ProvidersUseCases,
-} from '@rbee/ui/organisms'
+import { ProvidersPage } from '@rbee/ui/pages'
 
-export default function GPUProvidersPage() {
-  return (
-    <main className="min-h-screen bg-background">
-      <ProvidersHero />
-      <ProvidersProblem />
-      <ProvidersSolution />
-      <ProvidersHowItWorks />
-      <ProvidersFeatures />
-      <ProvidersUseCases />
-      <ProvidersEarnings />
-      <ProvidersMarketplace />
-      <ProvidersSecurity />
-      <ProvidersTestimonials />
-      <ProvidersCTA />
-    </main>
-  )
+export default function GPUProviders() {
+  return <ProvidersPage />
 }

@@ -24,8 +24,6 @@ export * from './Home/TopologyDiagram'
 export * from './Home/WhatIsRbee'
 export * from './HowItWorksSection'
 export * from './Pricing'
-export * from './PricingSection'
-export * from './ProblemSection'
 export type {
   Case as ProvidersCase,
   UseCasesSectionProps as ProvidersUseCasesSectionProps,

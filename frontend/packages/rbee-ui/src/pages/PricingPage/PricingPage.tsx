@@ -1,12 +1,12 @@
 'use client'
 
 import { TemplateContainer } from "@rbee/ui/molecules";
-import { PricingSection } from "@rbee/ui/organisms";
 import {
   EmailCapture,
   FAQTemplate,
   PricingComparisonTemplate,
   PricingHeroTemplate,
+  PricingTemplate,
 } from "@rbee/ui/templates";
 import {
   pricingComparisonContainerProps,
@@ -15,7 +15,8 @@ import {
   pricingFaqContainerProps,
   pricingFaqProps,
   pricingHeroProps,
-  pricingSectionProps,
+  pricingTemplateContainerProps,
+  pricingTemplateProps,
 } from "./PricingPageProps";
 
 // ============================================================================
@@ -29,7 +30,10 @@ export default function PricingPage() {
   return (
     <main>
       <PricingHeroTemplate {...pricingHeroProps} />
-      <PricingSection {...pricingSectionProps} />
+      
+      <TemplateContainer {...pricingTemplateContainerProps}>
+        <PricingTemplate {...pricingTemplateProps} />
+      </TemplateContainer>
       
       <TemplateContainer {...pricingComparisonContainerProps}>
         <PricingComparisonTemplate {...pricingComparisonProps} />

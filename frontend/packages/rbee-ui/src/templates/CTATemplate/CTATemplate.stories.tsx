@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react'
-import { ArrowRight, BookOpen } from 'lucide-react'
+import { ctaTemplateProps } from '@rbee/ui/pages/HomePage'
 import { CTATemplate } from './CTATemplate'
 
 const meta = {
@@ -14,22 +14,12 @@ const meta = {
 export default meta
 type Story = StoryObj<typeof meta>
 
+/**
+ * CTATemplate as used on the Home page
+ * - "Stop depending on AI providers" headline
+ * - Two CTAs: Get started free + View documentation
+ * - Gradient emphasis variant
+ */
 export const OnHomePage: Story = {
-  args: {
-    title: 'Stop depending on AI providers. Start building today.',
-    subtitle: "Join 500+ developers who've taken control of their AI infrastructure.",
-    primary: {
-      label: 'Get started free',
-      href: '/getting-started',
-      iconRight: ArrowRight,
-    },
-    secondary: {
-      label: 'View documentation',
-      href: '/docs',
-      iconLeft: BookOpen,
-      variant: 'outline',
-    },
-    note: '100% open source. No credit card required. Install in 15 minutes.',
-    emphasis: 'gradient',
-  },
+  args: ctaTemplateProps,
 }

@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react'
 import { ErrorHandlingTemplate } from './ErrorHandlingTemplate'
-import { errorHandlingProps } from '@rbee/ui/pages/FeaturesPage'
+import { errorHandlingProps } from '../../pages/FeaturesPage/FeaturesPageProps'
 
 const meta: Meta<typeof ErrorHandlingTemplate> = {
   title: 'Templates/ErrorHandlingTemplate',

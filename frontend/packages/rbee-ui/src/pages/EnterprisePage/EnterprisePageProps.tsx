@@ -1,5 +1,5 @@
-import type { ProblemSectionProps } from "@rbee/ui/organisms";
-import type { EmailCaptureProps } from "@rbee/ui/templates";
+import type { EmailCaptureProps, ProblemTemplateProps } from "@rbee/ui/templates";
+import type { TemplateContainerProps } from "@rbee/ui/molecules";
 import { AlertTriangle, FileX, Globe, Scale } from "lucide-react";
 
 // ============================================================================
@@ -35,15 +35,26 @@ export const enterpriseEmailCaptureProps: EmailCaptureProps = {
   },
 };
 
-// === Problem Section ===
+// === Problem Template ===
 
 /**
- * Problem Section - The Compliance Challenge of Cloud AI
+ * Problem template container - wraps the problem cards section
  */
-export const enterpriseProblemSectionProps: ProblemSectionProps = {
-  kicker: "The Compliance Risk",
+export const enterpriseProblemTemplateContainerProps: Omit<TemplateContainerProps, 'children'> = {
   title: "The Compliance Challenge of Cloud AI",
-  subtitle: "Using external AI providers creates compliance risks that can cost millions in fines and damage your reputation.",
+  description: "Using external AI providers creates compliance risks that can cost millions in fines and damage your reputation.",
+  kicker: "The Compliance Risk",
+  kickerVariant: "destructive",
+  bgVariant: "destructive-gradient",
+  paddingY: "xl",
+  maxWidth: "7xl",
+  align: "center",
+}
+
+/**
+ * Problem template data - The Compliance Challenge of Cloud AI
+ */
+export const enterpriseProblemTemplateProps: ProblemTemplateProps = {
   items: [
     {
       icon: <Globe className="h-6 w-6" />,

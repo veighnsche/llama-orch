@@ -7,11 +7,12 @@ import type {
   FAQTemplateProps,
   PricingComparisonTemplateProps,
   PricingHeroTemplateProps,
+  PricingTemplateProps,
 } from '@rbee/ui/templates'
-import type { PricingSectionProps } from '@rbee/ui/organisms'
-import { Sparkles } from 'lucide-react'
+import { Layers, Shield, Sparkles, Unlock, Zap } from 'lucide-react'
 import type { Provider, Row, RowGroup } from '@rbee/ui/molecules'
 import type { FAQItem } from '@rbee/ui/templates'
+import { pricingHero } from '@rbee/ui/assets'
 
 // ============================================================================
 // Props Objects
@@ -56,13 +57,82 @@ export const pricingHeroProps: PricingHeroTemplateProps = {
     'Illustration showing rbee pricing scales from single-GPU homelab to multi-node server setups with progressive cost tiers',
 }
 
-// === PricingSection Template ===
+// === PricingTemplate ===
 
-/** Pricing tiers section - three pricing cards with toggle */
-export const pricingSectionProps: PricingSectionProps = {
-  variant: 'pricing',
-  showKicker: false,
-  showEditorialImage: false,
+/** Pricing template container - wraps the pricing tiers section */
+export const pricingTemplateContainerProps: Omit<TemplateContainerProps, 'children'> = {
+  title: 'Simple, honest pricing.',
+  description: "Every plan includes the full rbee orchestrator—no feature gates, no artificial limits. Start free and grow when you're ready.",
+  bgVariant: 'default',
+  paddingY: '2xl',
+  maxWidth: '7xl',
+  align: 'center',
+}
+
+/** Pricing template data - three pricing tiers with monthly/yearly toggle */
+export const pricingTemplateProps: PricingTemplateProps = {
+  tiers: [
+    {
+      title: 'Home/Lab',
+      price: '€0',
+      period: 'forever',
+      features: [
+        'Unlimited GPUs on your hardware',
+        'OpenAI-compatible API',
+        'Multi-modal models',
+        'Active community support',
+        'Open source core',
+      ],
+      ctaText: 'Download rbee',
+      ctaHref: '/download',
+      ctaVariant: 'outline',
+      footnote: 'Local use. No feature gates.',
+      className:
+        'col-span-12 md:col-span-4 motion-safe:animate-in motion-safe:slide-in-from-bottom-2 motion-safe:duration-500',
+    },
+    {
+      title: 'Team',
+      price: '€99',
+      priceYearly: '€990',
+      period: '/month',
+      features: [
+        'Everything in Home/Lab',
+        'Web UI for cluster & models',
+        'Shared workspaces & quotas',
+        'Priority support (business hours)',
+        'Rhai policy templates (rate/data)',
+      ],
+      ctaText: 'Start 30-Day Trial',
+      ctaHref: '/signup?plan=team',
+      highlighted: true,
+      badge: 'Most Popular',
+      footnote: 'Cancel anytime during trial.',
+      saveBadge: '2 months free',
+      className:
+        'col-span-12 md:col-span-4 order-first md:order-none motion-safe:animate-in motion-safe:slide-in-from-bottom-2 motion-safe:duration-500 motion-safe:delay-100',
+    },
+    {
+      title: 'Enterprise',
+      price: 'Custom',
+      features: [
+        'Everything in Team',
+        'Dedicated, isolated instances',
+        'Custom SLAs & onboarding',
+        'White-label & SSO options',
+        'Enterprise security & support',
+      ],
+      ctaText: 'Contact Sales',
+      ctaHref: '/contact?type=enterprise',
+      ctaVariant: 'outline',
+      footnote: "We'll reply within 1 business day.",
+      className:
+        'col-span-12 md:col-span-4 motion-safe:animate-in motion-safe:slide-in-from-bottom-2 motion-safe:duration-500 motion-safe:delay-200',
+    },
+  ],
+  footer: {
+    mainText: 'Cancel anytime • No feature gates • Full orchestrator on every tier.',
+    subText: 'Prices exclude taxes. OSS license applies to Home/Lab.',
+  },
 }
 
 // === PricingComparison Template ===

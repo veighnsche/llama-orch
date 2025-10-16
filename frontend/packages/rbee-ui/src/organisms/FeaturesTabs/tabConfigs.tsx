@@ -2,9 +2,9 @@ import { CodeBlock } from '@rbee/ui/molecules/CodeBlock'
 import { GPUUtilizationBar } from '@rbee/ui/molecules/GPUUtilizationBar'
 import { TerminalWindow } from '@rbee/ui/molecules/TerminalWindow'
 import { Code, Cpu, Gauge, Zap } from 'lucide-react'
-import type { CoreFeaturesTabsProps } from './CoreFeaturesTabs'
+import type { FeaturesTabsProps } from './FeaturesTabs'
 
-export const defaultTabConfigs: CoreFeaturesTabsProps['tabs'] = [
+export const defaultTabConfigs: FeaturesTabsProps['tabs'] = [
   {
     value: 'api',
     icon: Code,
