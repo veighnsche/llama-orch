@@ -1,20 +1,20 @@
 import type { Meta, StoryObj } from '@storybook/react'
-import { problemSectionProps } from '@rbee/ui/pages/HomePage'
-import { ProblemSection } from './ProblemSection'
+import { howItWorksProps } from '@rbee/ui/pages/HomePage'
+import { HowItWorks } from './HowItWorks'
 
 const meta = {
-  title: 'Templates/ProblemSection',
-  component: ProblemSection,
+  title: 'Templates/HowItWorks',
+  component: HowItWorks,
   parameters: {
     layout: 'padded',
   },
   tags: ['autodocs'],
-} satisfies Meta<typeof ProblemSection>
+} satisfies Meta<typeof HowItWorks>
 
 export default meta
 type Story = StoryObj<typeof meta>
 
 // Use props from HomePage - single source of truth
 export const OnHomePage: Story = {
-  args: problemSectionProps,
+  args: howItWorksProps,
 }

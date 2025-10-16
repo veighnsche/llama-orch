@@ -11,8 +11,6 @@ import {
   ComparisonSection,
   CTASection,
   FAQSection,
-  HomeSolutionSection,
-  HowItWorksSection,
   PricingSection,
   TechnicalSection,
   TestimonialsSection,
@@ -25,8 +23,12 @@ import {
   type EmailCaptureProps,
   HomeHero,
   type HomeHeroProps,
-  ProblemSection,
-  type ProblemSectionProps,
+  HowItWorks,
+  type HowItWorksProps,
+  ProblemTemplate,
+  type ProblemTemplateProps,
+  SolutionTemplate,
+  type SolutionTemplateProps,
   type WhatIsRbeeProps,
   WhatIsRbee,
 } from "@rbee/ui/templates";
@@ -255,8 +257,8 @@ export const audienceSelectorProps: AudienceSelectorProps = {
   ],
 };
 
-// === Problem Section ===
-export const problemSectionContainerProps: Omit<
+// === Problem Template ===
+export const problemTemplateContainerProps: Omit<
   TemplateContainerProps,
   "children"
 > = {
@@ -270,7 +272,7 @@ export const problemSectionContainerProps: Omit<
   align: "center",
 };
 
-export const problemSectionProps: ProblemSectionProps = {
+export const problemTemplateProps: ProblemTemplateProps = {
   items: [
     {
       title: "The model changes",
@@ -289,6 +291,155 @@ export const problemSectionProps: ProblemSectionProps = {
       body: "APIs get deprecated. Your AI-built code becomes unmaintainable overnight.",
       icon: <Lock className="h-6 w-6" />,
       tone: "destructive",
+    },
+  ],
+};
+
+// === Solution Template ===
+export const solutionTemplateContainerProps: Omit<
+  TemplateContainerProps,
+  "children"
+> = {
+  title: "Your hardware. Your models. Your control.",
+  description:
+    "rbee orchestrates inference across every GPU in your home network—workstations, gaming rigs, and Macs—turning idle hardware into a private, OpenAI-compatible AI platform.",
+  bgVariant: "default",
+  paddingY: "2xl",
+  maxWidth: "7xl",
+  align: "center",
+};
+
+export const solutionTemplateProps: SolutionTemplateProps = {
+  features: [
+    {
+      icon: <DollarSign className="h-6 w-6" />,
+      title: "Zero ongoing costs",
+      body: "Pay only for electricity. No API bills, no per-token surprises.",
+    },
+    {
+      icon: <Shield className="h-6 w-6" />,
+      title: "Complete privacy",
+      body: "Code and data never leave your network. Audit-ready by design.",
+    },
+    {
+      icon: <Anchor className="h-6 w-6" />,
+      title: "Locked to your rules",
+      body: "Models update only when you approve. No breaking changes.",
+    },
+    {
+      icon: <Laptop className="h-6 w-6" />,
+      title: "Use all your hardware",
+      body: "CUDA, Metal, and CPU orchestrated as one pool.",
+    },
+  ],
+  topology: {
+    mode: "multi-host",
+    hosts: [
+      {
+        hostLabel: "Gaming PC",
+        workers: [
+          { id: "w0", label: "GPU 0", kind: "cuda" },
+          { id: "w1", label: "GPU 1", kind: "cuda" },
+        ],
+      },
+      {
+        hostLabel: "MacBook Pro",
+        workers: [{ id: "w2", label: "GPU 0", kind: "metal" }],
+      },
+      {
+        hostLabel: "Workstation",
+        workers: [
+          { id: "w3", label: "GPU 0", kind: "cuda" },
+          { id: "w4", label: "CPU 0", kind: "cpu" },
+        ],
+      },
+    ],
+  },
+};
+
+// === How It Works ===
+export const howItWorksContainerProps: Omit<
+  TemplateContainerProps,
+  "children"
+> = {
+  title: "From zero to AI infrastructure in 15 minutes",
+  bgVariant: "secondary",
+  paddingY: "2xl",
+  maxWidth: "7xl",
+  align: "center",
+};
+
+export const howItWorksProps: HowItWorksProps = {
+  steps: [
+    {
+      label: "Install rbee",
+      block: {
+        kind: "terminal",
+        title: "terminal",
+        lines: (
+          <>
+            <div>curl -sSL https://rbee.dev/install.sh | sh</div>
+            <div className="text-[var(--syntax-comment)]">
+              rbee-keeper daemon start
+            </div>
+          </>
+        ),
+        copyText:
+          "curl -sSL https://rbee.dev/install.sh | sh\nrbee-keeper daemon start",
+      },
+    },
+    {
+      label: "Add your machines",
+      block: {
+        kind: "terminal",
+        title: "terminal",
+        lines: (
+          <>
+            <div>
+              rbee-keeper setup add-node --name workstation --ssh-host
+              192.168.1.10
+            </div>
+            <div className="text-[var(--syntax-comment)]">
+              rbee-keeper setup add-node --name mac --ssh-host 192.168.1.20
+            </div>
+          </>
+        ),
+        copyText:
+          "rbee-keeper setup add-node --name workstation --ssh-host 192.168.1.10\nrbee-keeper setup add-node --name mac --ssh-host 192.168.1.20",
+      },
+    },
+    {
+      label: "Configure your IDE",
+      block: {
+        kind: "terminal",
+        title: "terminal",
+        lines: (
+          <>
+            <div>
+              <span className="text-[var(--syntax-keyword)]">export</span>{" "}
+              OPENAI_API_BASE=http://localhost:8080/v1
+            </div>
+            <div className="text-[var(--syntax-comment)]">
+              # OpenAI-compatible endpoint — works with Zed & Cursor
+            </div>
+          </>
+        ),
+        copyText: "export OPENAI_API_BASE=http://localhost:8080/v1",
+      },
+    },
+    {
+      label: "Build AI agents",
+      block: {
+        kind: "code",
+        title: "TypeScript",
+        language: "ts",
+        code: `import { invoke } from '@rbee/utils';
+
+const code = await invoke({
+  prompt: 'Generate API from schema',
+  model: 'llama-3.1-70b'
+});`,
+      },
     },
   ],
 };
@@ -332,8 +483,14 @@ export default function HomePage() {
         <AudienceSelector {...audienceSelectorProps} />
       </TemplateContainer>
       <EmailCapture {...emailCaptureProps} />
-      <TemplateContainer {...problemSectionContainerProps}>
-        <ProblemSection {...problemSectionProps} />
+      <TemplateContainer {...problemTemplateContainerProps}>
+        <ProblemTemplate {...problemTemplateProps} />
+      </TemplateContainer>
+      <TemplateContainer {...solutionTemplateContainerProps}>
+        <SolutionTemplate {...solutionTemplateProps} />
+      </TemplateContainer>
+      <TemplateContainer {...howItWorksContainerProps}>
+        <HowItWorks {...howItWorksProps} />
       </TemplateContainer>
     </main>
   );

@@ -4,8 +4,12 @@ export {
   whatIsRbeeProps,
   audienceSelectorContainerProps,
   audienceSelectorProps,
-  problemSectionContainerProps,
-  problemSectionProps,
+  problemTemplateContainerProps,
+  problemTemplateProps,
+  solutionTemplateContainerProps,
+  solutionTemplateProps,
+  howItWorksContainerProps,
+  howItWorksProps,
   emailCaptureProps
 } from './HomePage'
 export { default as HomePage } from './HomePage'

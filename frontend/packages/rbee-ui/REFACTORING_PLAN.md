@@ -60,11 +60,13 @@ These are self-contained and may not need `TemplateContainer`:
 
 ### 2. **Templates are Reusable UI Sections**
 - Move sections from `/organisms/` to `/templates/`
+- **NAMING RULE**: If component name ends with "Section", rename to "Template" (e.g., `ProblemSection` → `ProblemTemplate`)
+- **DO NOT** add "Template" suffix to components without "Section" (e.g., `HomeHero`, `EmailCapture` stay as-is)
 - Templates should:
   - Accept props for ALL content (text, CTAs, images, etc.)
   - NOT include `SectionContainer` wrapper
   - Be pure presentation components
-  - Export typed Props interfaces
+  - Export typed Props interfaces (e.g., `ProblemTemplateProps`, `HomeHeroProps`)
   - Be reusable across multiple pages
 
 ### 3. **TemplateContainer Manages Layout**
@@ -100,19 +102,25 @@ Icons should be passed based on the component that will render them:
 
 ## File Structure
 
+**NAMING CONVENTION**: Only rename "Section" to "Template" (e.g., `ProblemSection` → `ProblemTemplate`). Don't add suffixes to other components.
+
 ```
 /templates/
-  /HomeHero/
-    HomeHero.tsx           # Pure template component
-    HomeHero.stories.tsx   # Storybook stories
-    index.ts               # Barrel export
-  /WhatIsRbee/
-    WhatIsRbee.tsx
-    WhatIsRbee.stories.tsx
+  /HomeHero/               # No suffix - stays as-is
+    HomeHero.tsx
+    HomeHero.stories.tsx
     index.ts
-  /[TemplateName]/
-    [TemplateName].tsx
-    [TemplateName].stories.tsx
+  /EmailCapture/           # No suffix - stays as-is
+    EmailCapture.tsx
+    EmailCapture.stories.tsx
+    index.ts
+  /ProblemTemplate/        # "Section" → "Template"
+    ProblemTemplate.tsx
+    ProblemTemplate.stories.tsx
+    index.ts
+  /SolutionTemplate/       # "Section" → "Template"
+    SolutionTemplate.tsx
+    SolutionTemplate.stories.tsx
     index.ts
 
 /pages/
@@ -152,11 +160,24 @@ Icons should be passed based on the component that will render them:
 For each section being converted to a template:
 
 #### Step 1: Create Template Structure
+**NAMING RULE**: If migrating a component ending with "Section", rename to "Template". Otherwise, keep the original name.
+
 ```bash
 mkdir -p src/templates/[TemplateName]
 touch src/templates/[TemplateName]/[TemplateName].tsx
 touch src/templates/[TemplateName]/[TemplateName].stories.tsx
 touch src/templates/[TemplateName]/index.ts
+```
+
+Examples:
+```bash
+# Component ending with "Section" → rename to "Template"
+mkdir -p src/templates/ProblemTemplate
+touch src/templates/ProblemTemplate/ProblemTemplate.tsx
+
+# Component without "Section" → keep original name
+mkdir -p src/templates/EmailCapture
+touch src/templates/EmailCapture/EmailCapture.tsx
 ```
 
 #### Step 2: Extract & Clean Component
@@ -166,10 +187,17 @@ touch src/templates/[TemplateName]/index.ts
    - Remove the wrapper, keep only the inner content
 3. **Define Props Interface**
    ```typescript
-   export interface [TemplateName]Props {
+   // If renamed from Section → Template
+   export interface ProblemTemplateProps {
      // All content-related props
-     // NO layout props (those go to TemplateContainer)
    }
+   export function ProblemTemplate({ ... }: ProblemTemplateProps) { }
+   
+   // If keeping original name
+   export interface EmailCaptureProps {
+     // All content-related props
+   }
+   export function EmailCapture({ ... }: EmailCaptureProps) { }
    ```
 4. **Update imports**
    - Remove `SectionContainer` import
@@ -617,9 +645,9 @@ export const OnDevelopersPage: Story = {
 These are used on the main landing page and should be migrated first:
 
 1. ✅ **AudienceSelector** - COMPLETED - HomePage specific
-2. ✅ **ProblemSection** - COMPLETED - Reusable across pages
-3. **HowItWorksSection** - Used on HomePage, reusable across pages
-4. **HomeSolutionSection** - Complex but important
+2. ✅ **ProblemTemplate** - COMPLETED - Reusable across pages (renamed from ProblemSection)
+3. ✅ **HowItWorks** - COMPLETED - Reusable across pages (renamed from HowItWorksSection)
+4. ✅ **SolutionTemplate** - COMPLETED - Replaces HomeSolutionSection, BeeArchitecture optional (renamed from SolutionSection)
 5. **UseCasesSection** - High content, reusable
 6. **TestimonialsSection** - Content-heavy
 7. **TechnicalSection** - HomePage specific
@@ -687,10 +715,17 @@ The commercial app will use the composed HomePage from the UI library, not indiv
 
 ## Key Decisions & Answers
 
+### ✅ Decided: Template Naming Convention
+- **ONLY rename "Section" to "Template"** (e.g., `ProblemSection` → `ProblemTemplate`, `HowItWorksSection` → `HowItWorksTemplate`)
+- **DO NOT add "Template" suffix** to components without "Section" (e.g., `HomeHero`, `EmailCapture`, `AudienceSelector` stay as-is)
+- **Rationale**: Avoid polluting the namespace with obligatory affixes. Only replace the "Section" suffix since templates are not sections.
+- Props interfaces follow the component name (e.g., `ProblemTemplateProps`, `EmailCaptureProps`)
+
 ### ✅ Decided: Container props are separate objects
 - Use `Omit<TemplateContainerProps, "children">` for typing
 - Keep container props and template props as separate exports
 - Group them together per section in the page file
+- Props naming: `[name]TemplateContainerProps` and `[name]TemplateProps` (or `[name]ContainerProps` and `[name]Props` for non-Section components)
 
 ### ✅ Decided: Templates don't include SectionContainer
 - All layout/section concerns handled by TemplateContainer at page level

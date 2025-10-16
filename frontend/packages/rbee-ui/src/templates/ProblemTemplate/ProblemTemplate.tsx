@@ -40,7 +40,7 @@ export type ProblemItem = {
  * />
  * ```
  */
-export type ProblemSectionProps = {
+export type ProblemTemplateProps = {
   /** Array of problem items to display */
   items: ProblemItem[]
   /** Primary CTA button configuration */
@@ -59,14 +59,14 @@ export type ProblemSectionProps = {
 // Main Component
 // ──────────────────────────────────────────────────────────────────────────────
 
-export function ProblemSection({
+export function ProblemTemplate({
   items,
   ctaPrimary,
   ctaSecondary,
   ctaCopy,
   className,
   gridClassName,
-}: ProblemSectionProps) {
+}: ProblemTemplateProps) {
   return (
     <div className={className}>
       {/* Grid of Problem Cards */}
@@ -117,4 +117,4 @@ export function ProblemSection({
 // Export Types for Reuse
 // ──────────────────────────────────────────────────────────────────────────────
 
-export type { ProblemSectionProps as ProvidersProblemProps }
+export type { ProblemTemplateProps as ProvidersProblemProps }
