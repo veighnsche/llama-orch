@@ -1,9 +1,9 @@
 import { cn } from '@rbee/ui/utils'
-import type { LucideIcon } from 'lucide-react'
+import type * as React from 'react'
 
 export interface IconPlateProps {
-  /** Lucide icon component to display */
-  icon: LucideIcon
+  /** Rendered icon component (e.g., <Database className="w-6 h-6" />) */
+  icon: React.ReactNode
   /** Size variant */
   size?: 'sm' | 'md' | 'lg' | 'xl'
   /** Color tone - supports both tone names and chart colors */
@@ -19,9 +19,9 @@ export interface IconPlateProps {
  * Consolidates IconBox and 15+ instances of icon wrapper patterns
  * Used across features, stats, cards, and list items
  *
- * Only accepts LucideIcon components for consistency and type safety.
+ * Accepts rendered icon components for flexibility.
  */
-export function IconPlate({ icon: Icon, size = 'md', tone = 'primary', shape = 'square', className }: IconPlateProps) {
+export function IconPlate({ icon, size = 'md', tone = 'primary', shape = 'square', className }: IconPlateProps) {
   const sizeClasses = {
     sm: 'h-8 w-8',
     md: 'h-10 w-10',
@@ -65,7 +65,7 @@ export function IconPlate({ icon: Icon, size = 'md', tone = 'primary', shape = '
         className,
       )}
     >
-      <Icon aria-hidden="true" />
+      {icon}
     </div>
   )
 }

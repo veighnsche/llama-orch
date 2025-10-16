@@ -1,11 +1,11 @@
 import { CardDescription, CardHeader, CardTitle } from '@rbee/ui/atoms'
 import { IconPlate } from '@rbee/ui/molecules'
 import { cn } from '@rbee/ui/utils'
-import type { LucideIcon } from 'lucide-react'
+import type * as React from 'react'
 
 export interface IconCardHeaderProps {
-  /** Lucide icon component */
-  icon: LucideIcon
+  /** Rendered icon component */
+  icon: React.ReactNode
   /** Card title */
   title: string
   /** Optional subtitle/description */
@@ -34,11 +34,11 @@ export interface IconCardHeaderProps {
  *
  * @example
  * // Standard card header
- * <IconCardHeader icon={Database} title="My Title" subtitle="Description" />
+ * <IconCardHeader icon={<Database />} title="My Title" subtitle="Description" />
  *
  * // Large hero-style header
  * <IconCardHeader
- *   icon={AlertTriangle}
+ *   icon={<AlertTriangle />}
  *   title="GPU FAIL FAST policy"
  *   subtitle="No silent fallbacks..."
  *   titleClassName="text-3xl md:text-4xl font-extrabold"

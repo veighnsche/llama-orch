@@ -1,5 +1,7 @@
 // Barrel exports for all organisms
 
+export * from './MonthlyEarningsPanel'
+
 // Page-specific organisms
 export * from './CoreFeaturesTabs'
 export * from './Enterprise'

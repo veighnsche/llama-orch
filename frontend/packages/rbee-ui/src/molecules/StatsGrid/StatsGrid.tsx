@@ -49,7 +49,7 @@ export function StatsGrid({ stats, variant = 'cards', columns = 3, className }: 
             <div className="flex items-center gap-2.5">
               {stat.icon && (
                 <IconPlate
-                  icon={stat.icon}
+                  icon={<stat.icon className="w-6 h-6" />}
                   size="md"
                   tone="primary"
                   className="transition-colors group-hover:bg-primary/20"
@@ -112,7 +112,7 @@ export function StatsGrid({ stats, variant = 'cards', columns = 3, className }: 
           <div key={idx} className="rounded-xl border/60 bg-card/40 p-4">
             {stat.icon && (
               <div className="mb-2 flex justify-center">
-                <IconPlate icon={stat.icon} size="sm" tone="primary" />
+                <IconPlate icon={<stat.icon className="w-6 h-6" />} size="sm" tone="primary" />
               </div>
             )}
             <div className={cn('font-medium', stat.valueTone === 'primary' ? 'text-primary' : 'text-foreground')}>
