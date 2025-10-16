@@ -5,6 +5,7 @@ export {
   providersEarningsProps,
   providersFeaturesProps,
   providersHeroProps,
+  providersHowItWorksContainerProps,
   providersHowItWorksProps,
   providersMarketplaceContainerProps,
   providersMarketplaceProps,

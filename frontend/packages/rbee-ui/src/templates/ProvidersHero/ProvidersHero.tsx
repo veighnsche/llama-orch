@@ -3,7 +3,7 @@
 import { Badge } from '@rbee/ui/atoms/Badge'
 import { Button } from '@rbee/ui/atoms/Button'
 import { Card, CardAction, CardContent } from '@rbee/ui/atoms/Card'
-import { IconCardHeader, StatsGrid } from '@rbee/ui/molecules'
+import { GPUListItem, IconCardHeader, MetricCard, StatsGrid } from '@rbee/ui/molecules'
 import { MonthlyEarningsPanel } from '@rbee/ui/organisms'
 import Link from 'next/link'
 import type * as React from 'react'
@@ -173,14 +173,8 @@ export function ProvidersHero({
 
                   {/* KPIs row */}
                   <div className="mb-6 grid grid-cols-2 gap-3">
-                    <div className="rounded-lg border bg-background/70 p-3">
-                      <div className="mb-0.5 text-xs uppercase tracking-wide text-muted-foreground">Total Hours</div>
-                      <div className="tabular-nums text-3xl font-bold text-foreground">{dashboard.totalHours}</div>
-                    </div>
-                    <div className="rounded-lg border bg-background/70 p-3">
-                      <div className="mb-0.5 text-xs uppercase tracking-wide text-muted-foreground">Avg Rate</div>
-                      <div className="tabular-nums text-3xl font-bold text-foreground">{dashboard.avgRate}</div>
-                    </div>
+                    <MetricCard label="Total Hours" value={dashboard.totalHours} />
+                    <MetricCard label="Avg Rate" value={dashboard.avgRate} />
                   </div>
 
                   {/* GPU list */}
@@ -190,26 +184,16 @@ export function ProvidersHero({
                     </div>
 
                     {dashboard.gpus.map((gpu, idx) => (
-                      <div
+                      <GPUListItem
                         key={idx}
-                        className="group flex cursor-pointer items-center justify-between rounded-lg border bg-background/50 p-3 transition-all hover:translate-x-0.5 hover:bg-background/70"
-                      >
-                        <div className="flex items-center gap-2.5">
-                          <div
-                            className={`h-2 w-2 rounded-full ${
-                              gpu.status === 'active' ? 'bg-emerald-400' : 'bg-muted-foreground'
-                            }`}
-                          />
-                          <div>
-                            <div className="text-sm font-medium text-foreground">{gpu.name}</div>
-                            <div className="text-xs text-muted-foreground">{gpu.location}</div>
-                          </div>
-                        </div>
-                        <div className="text-right">
-                          <div className="tabular-nums text-sm font-medium text-foreground">{gpu.earnings}</div>
-                          <div className="text-xs text-muted-foreground">this month</div>
-                        </div>
-                      </div>
+                        name={gpu.name}
+                        subtitle={gpu.location}
+                        value={gpu.earnings}
+                        label="this month"
+                        status={gpu.status}
+                        statusColor="bg-emerald-400"
+                        className="group cursor-pointer transition-all hover:translate-x-0.5 hover:bg-background/70"
+                      />
                     ))}
                   </div>
                 </CardContent>

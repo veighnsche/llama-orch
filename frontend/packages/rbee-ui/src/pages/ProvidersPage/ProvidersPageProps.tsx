@@ -249,6 +249,21 @@ export const providersSolutionProps: SolutionTemplateProps = {
 };
 
 // === ProvidersHowItWorks Template ===
+
+/**
+ * Providers How It Works container - Layout configuration
+ */
+export const providersHowItWorksContainerProps: Omit<TemplateContainerProps, 'children'> = {
+  title: 'Start Earning in 4 Simple Steps',
+  bgVariant: 'secondary',
+  paddingY: '2xl',
+  maxWidth: '6xl',
+  align: 'center',
+}
+
+/**
+ * Providers How It Works - Step-by-step guide to start earning
+ */
 export const providersHowItWorksProps: HowItWorksProps = {
   steps: [
     {

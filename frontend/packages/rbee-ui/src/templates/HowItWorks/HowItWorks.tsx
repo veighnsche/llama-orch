@@ -63,8 +63,13 @@ export function HowItWorks({ steps, className }: HowItWorksProps) {
                     )}
 
                     {step.block.kind === 'note' && (
-                      <div className="rounded-lg border bg-card p-4 text-sm text-muted-foreground">
-                        {step.block.content}
+                      <div className="overflow-hidden rounded-lg border border-border bg-card">
+                        <div className="bg-muted/50 px-4 py-2">
+                          <span className="font-mono text-xs text-muted-foreground">Note</span>
+                        </div>
+                        <div className="px-6 py-4 text-sm leading-relaxed text-muted-foreground">
+                          {step.block.content}
+                        </div>
                       </div>
                     )}
                   </>

@@ -1,5 +1,7 @@
+import { coreFeatureTabsProps } from '@rbee/ui/pages/DevelopersPage'
 import { featuresFeaturesTabsProps } from '@rbee/ui/pages/FeaturesPage'
 import { featuresTabsProps } from '@rbee/ui/pages/HomePage'
+import { providersFeaturesProps } from '@rbee/ui/pages/ProvidersPage'
 import type { Meta, StoryObj } from '@storybook/react'
 import { FeaturesTabs } from './FeaturesTabs'
 
@@ -152,4 +154,25 @@ export const OnHomePage: Story = {
  */
 export const OnFeaturesPage: Story = {
   args: featuresFeaturesTabsProps,
+}
+
+/**
+ * FeaturesTabs as used on the Developers page
+ * - Title: "Core capabilities"
+ * - Description: "Swap in the API, scale across your hardware, route with code, and watch jobs stream in real time."
+ * - 4 tabs: API, GPU, Scheduler, SSE
+ * - Developer-focused content and examples
+ */
+export const OnDevelopersPage: Story = {
+  args: coreFeatureTabsProps,
+}
+
+/**
+ * FeaturesTabs as used on the Providers page
+ * - Title: "Everything You Need to Maximize Earnings"
+ * - Description: "Professional-grade tools to manage your GPU fleet and optimize your passive income."
+ * - Provider-focused tabs with earnings and marketplace features
+ */
+export const OnProvidersPage: Story = {
+  args: providersFeaturesProps,
 }

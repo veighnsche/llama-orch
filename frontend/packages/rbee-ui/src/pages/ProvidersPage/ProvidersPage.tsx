@@ -1,6 +1,6 @@
-'use client'
+"use client";
 
-import { TemplateContainer } from '@rbee/ui/molecules'
+import { TemplateContainer } from "@rbee/ui/molecules";
 import {
   FeaturesTabs,
   HowItWorks,
@@ -13,13 +13,14 @@ import {
   ProvidersTestimonialsTemplate,
   ProvidersUseCasesTemplate,
   SolutionTemplate,
-} from '@rbee/ui/templates'
+} from "@rbee/ui/templates";
 import {
   providersCTAProps,
   providersEarningsContainerProps,
   providersEarningsProps,
   providersFeaturesProps,
   providersHeroProps,
+  providersHowItWorksContainerProps,
   providersHowItWorksProps,
   providersMarketplaceContainerProps,
   providersMarketplaceProps,
@@ -33,7 +34,7 @@ import {
   providersTestimonialsProps,
   providersUseCasesContainerProps,
   providersUseCasesProps,
-} from './ProvidersPageProps'
+} from "./ProvidersPageProps";
 
 export default function ProvidersPage() {
   return (
@@ -45,7 +46,9 @@ export default function ProvidersPage() {
       <TemplateContainer {...providersSolutionContainerProps}>
         <SolutionTemplate {...providersSolutionProps} />
       </TemplateContainer>
-      <HowItWorks {...providersHowItWorksProps} />
+      <TemplateContainer {...providersHowItWorksContainerProps}>
+        <HowItWorks {...providersHowItWorksProps} />
+      </TemplateContainer>
       <FeaturesTabs {...providersFeaturesProps} />
       <TemplateContainer {...providersUseCasesContainerProps}>
         <ProvidersUseCasesTemplate {...providersUseCasesProps} />
@@ -64,5 +67,5 @@ export default function ProvidersPage() {
       </TemplateContainer>
       <ProvidersCTA {...providersCTAProps} />
     </main>
-  )
+  );
 }
