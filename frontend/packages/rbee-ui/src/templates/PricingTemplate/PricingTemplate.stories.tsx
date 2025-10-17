@@ -1,9 +1,7 @@
 import { TemplateContainer } from '@rbee/ui/molecules'
-import {
-  pricingTemplateContainerProps as homePricingTemplateContainerProps,
-  pricingTemplateProps as homePricingTemplateProps,
-} from '@rbee/ui/pages/HomePage'
+import { pricingTemplateContainerProps as homePricingTemplateContainerProps, pricingTemplateProps as homePricingTemplateProps,  } from '@rbee/ui/pages/HomePage'
 import { pricingTemplateContainerProps, pricingTemplateProps } from '@rbee/ui/pages/PricingPage'
+import { educationCourseLevelsContainerProps, educationCourseLevelsProps } from '@rbee/ui/pages/EducationPage'
 import type { Meta, StoryObj } from '@storybook/react'
 import { PricingTemplate } from './PricingTemplate'
 
@@ -56,3 +54,18 @@ export const OnPricingPage: Story = {
 }
 
 // Note: DevelopersPage doesn't have its own pricing template props
+
+/**
+ * PricingTemplate as used on the Education page
+ * - Structured curriculum levels
+ * - Beginner, Intermediate, Advanced modules
+ * - Progressive learning path
+ */
+export const OnEducationPricing: Story = {
+  render: (args) => (
+    <TemplateContainer {...educationCourseLevelsContainerProps}>
+      <PricingTemplate {...args} />
+    </TemplateContainer>
+  ),
+  args: educationCourseLevelsProps,
+}

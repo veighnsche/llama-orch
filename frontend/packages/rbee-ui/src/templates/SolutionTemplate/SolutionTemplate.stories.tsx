@@ -4,7 +4,12 @@ import {
   solutionTemplateProps as developersSolutionProps,
 } from '@rbee/ui/pages/DevelopersPage'
 import { enterpriseSolutionContainerProps, enterpriseSolutionProps } from '@rbee/ui/pages/EnterprisePage'
-import { solutionTemplateContainerProps as homeContainerProps, solutionTemplateProps } from '@rbee/ui/pages/HomePage'
+import { solutionTemplateContainerProps as homeContainerProps, solutionTemplateProps as homeSolutionTemplateProps } from '@rbee/ui/pages/HomePage'
+import { educationSolutionContainerProps, educationSolutionProps } from '@rbee/ui/pages/EducationPage'
+import { complianceSolutionContainerProps, complianceSolutionProps } from '@rbee/ui/pages/CompliancePage'
+import { devopsSolutionContainerProps, devopsSolutionProps } from '@rbee/ui/pages/DevOpsPage'
+import { solutionContainerProps, solutionProps } from '@rbee/ui/pages/ResearchPage'
+import { securityDefenseLayersContainerProps, securityDefenseLayersProps } from '@rbee/ui/pages/SecurityPage'
 import {
   providersMarketplaceContainerProps,
   providersMarketplaceSolutionProps,
@@ -39,7 +44,7 @@ export const OnHomeSolution: Story = {
   args: {} as any,
   render: () => (
     <TemplateContainer {...homeContainerProps}>
-      <SolutionTemplate {...solutionTemplateProps} />
+      <SolutionTemplate {...homeSolutionTemplateProps} />
     </TemplateContainer>
   ),
 }
@@ -119,4 +124,71 @@ export const OnProvidersMarketplace: Story = {
       <SolutionTemplate {...providersMarketplaceSolutionProps} />
     </TemplateContainer>
   ),
+}
+
+/**
+ * SolutionTemplate as used on the Education page
+ * - Real production infrastructure for learning
+ * - Hands-on with production code
+ * - BDD testing and real patterns
+ */
+export const OnEducationSolution: Story = {
+  render: (args) => (
+    <TemplateContainer {...educationSolutionContainerProps}>
+      <SolutionTemplate {...args} />
+    </TemplateContainer>
+  ),
+  args: educationSolutionProps,
+}
+
+/**
+ * SolutionTemplate as used on the Compliance page
+ * - Compliance page usage
+ */
+export const OnComplianceSolution: Story = {
+  render: (args) => (
+    <TemplateContainer {...complianceSolutionContainerProps}>
+      <SolutionTemplate {...args} />
+    </TemplateContainer>
+  ),
+  args: complianceSolutionProps,
+}
+
+/**
+ * SolutionTemplate as used on the DevOps page
+ * - DevOps page usage
+ */
+export const OnDevOpsSolution: Story = {
+  render: (args) => (
+    <TemplateContainer {...devopsSolutionContainerProps}>
+      <SolutionTemplate {...args} />
+    </TemplateContainer>
+  ),
+  args: devopsSolutionProps,
+}
+
+/**
+ * SolutionTemplate as used on the Research page
+ * - Research page usage
+ */
+export const OnResearchSolution: Story = {
+  render: (args) => (
+    <TemplateContainer {...solutionContainerProps}>
+      <SolutionTemplate {...args} />
+    </TemplateContainer>
+  ),
+  args: solutionProps,
+}
+
+/**
+ * SolutionTemplate as used on the Security page
+ * - Security page usage
+ */
+export const OnSecuritySolution: Story = {
+  render: (args) => (
+    <TemplateContainer {...securityDefenseLayersContainerProps}>
+      <SolutionTemplate {...args} />
+    </TemplateContainer>
+  ),
+  args: securityDefenseLayersProps,
 }

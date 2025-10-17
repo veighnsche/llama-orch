@@ -122,25 +122,25 @@ export const educationEmailCaptureContainerProps: Omit<TemplateContainerProps, '
 export const educationProblemTemplateProps: ProblemTemplateProps = {
   items: [
     {
-      icon: BookOpen,
+      icon: <BookOpen className="h-6 w-6" />,
       title: 'Theoretical Only',
       body: 'Students learn concepts but never implement real distributed systems.',
       tone: 'destructive',
     },
     {
-      icon: Server,
+      icon: <Server className="h-6 w-6" />,
       title: 'No Real Infrastructure',
       body: 'Cloud labs are expensive, time-limited, and don\'t teach production patterns.',
       tone: 'destructive',
     },
     {
-      icon: Code,
+      icon: <Code className="h-6 w-6" />,
       title: 'Toy Examples',
       body: 'Course projects use simplified code that doesn\'t reflect real-world complexity.',
       tone: 'destructive',
     },
     {
-      icon: Users,
+      icon: <Users className="h-6 w-6" />,
       title: 'Limited Access',
       body: 'Only a few students can access expensive GPU resources for ML courses.',
       tone: 'destructive',
@@ -565,10 +565,10 @@ export const educationResourcesGridProps: CardGridTemplateProps = {
   cards: [
     <Card key="docs">
       <IconCardHeader icon={<BookOpen className="size-6" />} title="Documentation" />
-      <CardContent className="p-0">
+      <CardContent className="px-6 py-0">
         <p className="text-sm text-muted-foreground">Comprehensive guides covering architecture, APIs, and deployment.</p>
       </CardContent>
-      <CardFooter>
+      <CardFooter className="mt-4">
         <Button asChild variant="ghost" size="sm">
           <Link href="/docs">Read Docs</Link>
         </Button>
@@ -576,10 +576,10 @@ export const educationResourcesGridProps: CardGridTemplateProps = {
     </Card>,
     <Card key="examples">
       <IconCardHeader icon={<Code className="size-6" />} title="Code Examples" />
-      <CardContent className="p-0">
+      <CardContent className="px-6 py-0">
         <p className="text-sm text-muted-foreground">Sample projects and reference implementations for every module.</p>
       </CardContent>
-      <CardFooter>
+      <CardFooter className="mt-4">
         <Button asChild variant="ghost" size="sm">
           <Link href="/examples">Browse Examples</Link>
         </Button>
@@ -587,10 +587,10 @@ export const educationResourcesGridProps: CardGridTemplateProps = {
     </Card>,
     <Card key="tutorials">
       <IconCardHeader icon={<Terminal className="size-6" />} title="Video Tutorials" />
-      <CardContent className="p-0">
+      <CardContent className="px-6 py-0">
         <p className="text-sm text-muted-foreground">Step-by-step video walkthroughs of labs and exercises.</p>
       </CardContent>
-      <CardFooter>
+      <CardFooter className="mt-4">
         <Button asChild variant="ghost" size="sm">
           <Link href="/tutorials">Watch Tutorials</Link>
         </Button>
@@ -598,10 +598,10 @@ export const educationResourcesGridProps: CardGridTemplateProps = {
     </Card>,
     <Card key="community">
       <IconCardHeader icon={<Users className="size-6" />} title="Community" />
-      <CardContent className="p-0">
+      <CardContent className="px-6 py-0">
         <p className="text-sm text-muted-foreground">Join Discord for help, discussions, and peer learning.</p>
       </CardContent>
-      <CardFooter>
+      <CardFooter className="mt-4">
         <Button asChild variant="ghost" size="sm">
           <Link href="/community">Join Community</Link>
         </Button>

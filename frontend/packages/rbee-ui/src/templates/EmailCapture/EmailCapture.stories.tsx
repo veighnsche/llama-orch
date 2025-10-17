@@ -1,10 +1,16 @@
 import { TemplateContainer } from '@rbee/ui/molecules'
 import { developersEmailCaptureContainerProps, developersEmailCaptureProps } from '@rbee/ui/pages/DevelopersPage'
+import { educationEmailCaptureContainerProps, educationEmailCaptureProps } from '@rbee/ui/pages/EducationPage'
 import { enterpriseEmailCaptureContainerProps, enterpriseEmailCaptureProps } from '@rbee/ui/pages/EnterprisePage'
 import { featuresEmailCaptureContainerProps, featuresEmailCaptureProps } from '@rbee/ui/pages/FeaturesPage'
 import { emailCaptureContainerProps, emailCaptureProps } from '@rbee/ui/pages/HomePage'
 import { pricingEmailCaptureContainerProps, pricingEmailCaptureProps } from '@rbee/ui/pages/PricingPage'
+import { emailCaptureContainerProps as researchEmailCaptureContainerProps, emailCaptureProps as researchEmailCaptureProps,  } from '@rbee/ui/pages/ResearchPage'
+import { securityEmailCaptureContainerProps, securityEmailCaptureProps } from '@rbee/ui/pages/SecurityPage'
 import { useCasesEmailCaptureContainerProps, useCasesEmailCaptureProps } from '@rbee/ui/pages/UseCasesPage'
+import { communityEmailCaptureContainerProps, communityEmailCaptureProps } from '@rbee/ui/pages/CommunityPage'
+import { complianceEmailCaptureContainerProps, complianceEmailCaptureProps } from '@rbee/ui/pages/CompliancePage'
+import { devopsEmailCaptureContainerProps, devopsEmailCaptureProps } from '@rbee/ui/pages/DevOpsPage'
 import type { Meta, StoryObj } from '@storybook/react'
 import { EmailCapture } from './EmailCapture'
 
@@ -108,4 +114,84 @@ export const OnEnterprisePage: Story = {
     </TemplateContainer>
   ),
   args: enterpriseEmailCaptureProps,
+}
+
+/**
+ * EmailCapture as used on the Education page
+ * - Educator resources focus
+ * - Curriculum guides and teaching materials
+ * - Free for educators messaging
+ */
+export const OnEducationPage: Story = {
+  render: (args) => (
+    <TemplateContainer {...educationEmailCaptureContainerProps}>
+      <EmailCapture {...args} />
+    </TemplateContainer>
+  ),
+  args: educationEmailCaptureProps,
+}
+
+/**
+ * EmailCapture as used on the Community page
+ * - Community page usage
+ */
+export const OnCommunityPage: Story = {
+  render: (args) => (
+    <TemplateContainer {...communityEmailCaptureContainerProps}>
+      <EmailCapture {...args} />
+    </TemplateContainer>
+  ),
+  args: communityEmailCaptureProps,
+}
+
+/**
+ * EmailCapture as used on the Compliance page
+ * - Compliance page usage
+ */
+export const OnCompliancePage: Story = {
+  render: (args) => (
+    <TemplateContainer {...complianceEmailCaptureContainerProps}>
+      <EmailCapture {...args} />
+    </TemplateContainer>
+  ),
+  args: complianceEmailCaptureProps,
+}
+
+/**
+ * EmailCapture as used on the DevOps page
+ * - DevOps page usage
+ */
+export const OnDevOpsPage: Story = {
+  render: (args) => (
+    <TemplateContainer {...devopsEmailCaptureContainerProps}>
+      <EmailCapture {...args} />
+    </TemplateContainer>
+  ),
+  args: devopsEmailCaptureProps,
+}
+
+/**
+ * EmailCapture as used on the Research page
+ * - Research page usage
+ */
+export const OnResearchPage: Story = {
+  render: (args) => (
+    <TemplateContainer {...researchEmailCaptureContainerProps}>
+      <EmailCapture {...args} />
+    </TemplateContainer>
+  ),
+  args: researchEmailCaptureProps,
+}
+
+/**
+ * EmailCapture as used on the Security page
+ * - Security page usage
+ */
+export const OnSecurityPage: Story = {
+  render: (args) => (
+    <TemplateContainer {...securityEmailCaptureContainerProps}>
+      <EmailCapture {...args} />
+    </TemplateContainer>
+  ),
+  args: securityEmailCaptureProps,
 }

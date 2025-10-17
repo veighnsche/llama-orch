@@ -1,5 +1,8 @@
 import { TemplateContainer } from '@rbee/ui/molecules'
 import { useCasesTemplateContainerProps, useCasesTemplateProps } from '@rbee/ui/pages/HomePage'
+import { educationStudentTypesContainerProps, educationStudentTypesProps } from '@rbee/ui/pages/EducationPage'
+import { contributionTypesContainerProps, contributionTypesProps } from '@rbee/ui/pages/CommunityPage'
+import { useCasesContainerProps, useCasesProps } from '@rbee/ui/pages/ResearchPage'
 import type { Meta, StoryObj } from '@storybook/react'
 import { UseCasesTemplate } from './UseCasesTemplate'
 
@@ -42,4 +45,45 @@ export const OnHomeUseCases: Story = {
     </TemplateContainer>
   ),
   args: useCasesTemplateProps,
+}
+
+/**
+ * UseCasesTemplate as used on the Education page
+ * - Student types and learning paths
+ * - CS Student, Career Switcher, Researcher
+ * - Different goals and outcomes
+ */
+export const OnEducationStudentTypes: Story = {
+  render: (args) => (
+    <TemplateContainer {...educationStudentTypesContainerProps}>
+      <UseCasesTemplate {...args} />
+    </TemplateContainer>
+  ),
+  args: educationStudentTypesProps,
+}
+
+/**
+ * UseCasesTemplate as used on the Community page
+ * - Community page usage
+ */
+export const OnCommunityUseCases: Story = {
+  render: (args) => (
+    <TemplateContainer {...contributionTypesContainerProps}>
+      <UseCasesTemplate {...args} />
+    </TemplateContainer>
+  ),
+  args: contributionTypesProps,
+}
+
+/**
+ * UseCasesTemplate as used on the Research page
+ * - Research page usage
+ */
+export const OnResearchUseCases: Story = {
+  render: (args) => (
+    <TemplateContainer {...useCasesContainerProps}>
+      <UseCasesTemplate {...args} />
+    </TemplateContainer>
+  ),
+  args: useCasesProps,
 }

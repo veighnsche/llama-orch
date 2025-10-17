@@ -8,6 +8,7 @@ import {
   EnterpriseHero,
   EnterpriseHowItWorks,
   EnterpriseSecurity,
+  ErrorHandlingTemplate,
   FAQTemplate,
   HowItWorks,
   ProblemTemplate,
@@ -26,6 +27,8 @@ import {
   securityDefenseLayersProps,
   securityEmailCaptureContainerProps,
   securityEmailCaptureProps,
+  securityErrorHandlingContainerProps,
+  securityErrorHandlingProps,
   securityFAQsContainerProps,
   securityFAQsProps,
   securityGuaranteesContainerProps,
@@ -80,6 +83,10 @@ export default function SecurityPage() {
 
       <TemplateContainer {...securityArchitectureContainerProps}>
         <TechnicalTemplate {...securityArchitectureProps} />
+      </TemplateContainer>
+
+      <TemplateContainer {...securityErrorHandlingContainerProps}>
+        <ErrorHandlingTemplate {...securityErrorHandlingProps} />
       </TemplateContainer>
 
       <TemplateContainer {...securityFAQsContainerProps}>

@@ -7,6 +7,7 @@ import type {
   EnterpriseHeroProps,
   EnterpriseHowItWorksProps,
   EnterpriseSecurityProps,
+  ErrorHandlingTemplateProps,
   FAQTemplateProps,
   HowItWorksProps,
   ProblemTemplateProps,
@@ -30,6 +31,7 @@ import {
   ShieldAlert,
   ShieldCheck,
   Users,
+  XCircle,
   Zap,
 } from 'lucide-react'
 
@@ -303,7 +305,9 @@ export const securityDefenseLayersProps: SolutionTemplateProps = {
  * Defense layers container
  */
 export const securityDefenseLayersContainerProps: Omit<TemplateContainerProps, 'children'> = {
-  title: null,
+  title: 'Defense-in-Depth Security Architecture',
+  description: 'Multiple layers of security controls protect your AI infrastructure from threats at every level.',
+  kicker: 'Security Layers',
   background: {
     variant: 'background',
     decoration: (
@@ -797,6 +801,185 @@ export const securityFAQsContainerProps: Omit<TemplateContainerProps, 'children'
   },
   paddingY: 'xl',
   maxWidth: '5xl',
+}
+
+// === Security Error Handling ===
+
+/**
+ * Security Error Handling - Threat detection and incident response
+ */
+export const securityErrorHandlingProps: ErrorHandlingTemplateProps = {
+  statusKPIs: [
+    {
+      icon: <ShieldCheck className="size-6" />,
+      color: 'chart-3',
+      label: 'Threats Blocked',
+      value: '100%',
+    },
+    {
+      icon: <Clock className="size-6" />,
+      color: 'primary',
+      label: 'Detection Time',
+      value: '<100ms',
+    },
+    {
+      icon: <FileCheck className="size-6" />,
+      color: 'chart-2',
+      label: 'Audit Events',
+      value: '32 Types',
+    },
+  ],
+  terminalContent: (
+    <>
+      <div className="text-muted-foreground">
+        <span className="text-destructive">14:23:41</span> [SECURITY] Invalid JWT signature detected
+      </div>
+      <div className="text-muted-foreground">
+        <span className="text-destructive">14:23:41</span> [AUDIT] Request rejected: authentication_failed
+      </div>
+      <div className="text-muted-foreground">
+        <span className="text-chart-2">14:23:41</span> [AUDIT] Event logged: auth_rejection
+      </div>
+      <div className="text-muted-foreground">
+        <span className="text-chart-3">14:23:41</span> [SECURITY] Connection terminated
+      </div>
+      <div className="text-muted-foreground">
+        <span className="text-primary">14:23:42</span> [AUDIT] Immutable log written to audit trail
+      </div>
+    </>
+  ),
+  terminalFooter: (
+    <span className="text-xs text-muted-foreground">
+      Zero-trust validation. Fail-secure by default. All security events logged to immutable audit trail.
+    </span>
+  ),
+  playbookCategories: [
+    {
+      icon: <ShieldAlert className="size-5" />,
+      color: 'warning',
+      title: 'Authentication Failures',
+      checkCount: 6,
+      severityDots: ['destructive', 'destructive', 'primary', 'primary', 'chart-2', 'chart-3'],
+      description: 'Invalid tokens, expired credentials, signature mismatches',
+      checks: [
+        {
+          severity: 'destructive',
+          title: 'Invalid JWT Signature',
+          meaning: 'Token signature verification failed',
+          actionLabel: 'Reject & Log',
+          href: '/docs/security/jwt-validation',
+          guideLabel: 'Security Guide',
+          guideHref: '/docs/security/authentication',
+        },
+        {
+          severity: 'destructive',
+          title: 'Expired Token',
+          meaning: 'Token past expiration deadline',
+          actionLabel: 'Reject & Audit',
+          href: '/docs/security/token-expiry',
+          guideLabel: 'Token Management',
+          guideHref: '/docs/security/tokens',
+        },
+        {
+          severity: 'primary',
+          title: 'Missing Authorization',
+          meaning: 'No auth header provided',
+          actionLabel: 'Return 401',
+          href: '/docs/security/missing-auth',
+          guideLabel: 'Auth Setup',
+          guideHref: '/docs/security/setup',
+        },
+      ],
+    },
+    {
+      icon: <XCircle className="size-5" />,
+      color: 'primary',
+      title: 'Input Validation',
+      checkCount: 5,
+      severityDots: ['destructive', 'primary', 'primary', 'chart-2', 'chart-3'],
+      description: 'Malformed requests, injection attempts, invalid schemas',
+      checks: [
+        {
+          severity: 'destructive',
+          title: 'Schema Validation Failed',
+          meaning: 'Request body does not match schema',
+          actionLabel: 'Reject & Log',
+          href: '/docs/security/schema-validation',
+          guideLabel: 'Validation Guide',
+          guideHref: '/docs/security/input-validation',
+        },
+        {
+          severity: 'primary',
+          title: 'Path Traversal Attempt',
+          meaning: 'Suspicious path characters detected',
+          actionLabel: 'Block & Audit',
+          href: '/docs/security/path-traversal',
+          guideLabel: 'Security Hardening',
+          guideHref: '/docs/security/hardening',
+        },
+      ],
+    },
+    {
+      icon: <Lock className="size-5" />,
+      color: 'chart-2',
+      title: 'Access Control',
+      checkCount: 4,
+      severityDots: ['destructive', 'primary', 'chart-2', 'chart-3'],
+      description: 'Unauthorized access, privilege escalation, resource limits',
+      checks: [
+        {
+          severity: 'destructive',
+          title: 'Unauthorized Resource Access',
+          meaning: 'User lacks permission for resource',
+          actionLabel: 'Deny & Log',
+          href: '/docs/security/authorization',
+          guideLabel: 'Access Control',
+          guideHref: '/docs/security/rbac',
+        },
+        {
+          severity: 'primary',
+          title: 'Rate Limit Exceeded',
+          meaning: 'Request quota exhausted',
+          actionLabel: 'Throttle',
+          href: '/docs/security/rate-limiting',
+          guideLabel: 'Rate Limits',
+          guideHref: '/docs/security/quotas',
+        },
+      ],
+    },
+    {
+      icon: <FileCheck className="size-5" />,
+      color: 'chart-3',
+      title: 'Audit Trail',
+      checkCount: 3,
+      severityDots: ['primary', 'chart-2', 'chart-3'],
+      description: 'Log integrity, retention, compliance events',
+      checks: [
+        {
+          severity: 'primary',
+          title: 'Audit Log Write Failed',
+          meaning: 'Cannot write to immutable log',
+          actionLabel: 'Fail Request',
+          href: '/docs/security/audit-logging',
+          guideLabel: 'Audit Setup',
+          guideHref: '/docs/security/audit-trail',
+        },
+      ],
+    },
+  ],
+}
+
+/**
+ * Security Error Handling container
+ */
+export const securityErrorHandlingContainerProps: Omit<TemplateContainerProps, 'children'> = {
+  title: 'Threat Detection & Incident Response',
+  description: 'Fail-secure error handling with comprehensive audit trails',
+  background: {
+    variant: 'muted',
+  },
+  paddingY: 'xl',
+  maxWidth: '6xl',
 }
 
 // === Final CTA ===

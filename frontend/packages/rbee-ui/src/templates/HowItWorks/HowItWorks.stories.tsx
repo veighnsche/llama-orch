@@ -3,8 +3,12 @@ import {
   howItWorksContainerProps as developersHowItWorksContainerProps,
   howItWorksProps as developersHowItWorksProps,
 } from '@rbee/ui/pages/DevelopersPage'
-import { howItWorksContainerProps, howItWorksProps } from '@rbee/ui/pages/HomePage'
+import { howItWorksContainerProps as homeHowItWorksContainerProps, howItWorksProps as homeHowItWorksProps } from '@rbee/ui/pages/HomePage'
 import { providersHowItWorksContainerProps, providersHowItWorksProps } from '@rbee/ui/pages/ProvidersPage'
+import { educationLabExercisesContainerProps, educationLabExercisesProps } from '@rbee/ui/pages/EducationPage'
+import { howToContributeContainerProps, howToContributeProps } from '@rbee/ui/pages/CommunityPage'
+import { workflowContainerProps, workflowProps } from '@rbee/ui/pages/ResearchPage'
+import { securityVulnerabilityDisclosureContainerProps, securityVulnerabilityDisclosureProps } from '@rbee/ui/pages/SecurityPage'
 import type { Meta, StoryObj } from '@storybook/react'
 import { HowItWorks } from './HowItWorks'
 
@@ -37,11 +41,11 @@ type Story = StoryObj<typeof meta>
  */
 export const OnHomeHowItWorks: Story = {
   render: (args) => (
-    <TemplateContainer {...howItWorksContainerProps}>
+    <TemplateContainer {...homeHowItWorksContainerProps}>
       <HowItWorks {...args} />
     </TemplateContainer>
   ),
-  args: howItWorksProps,
+  args: homeHowItWorksProps,
 }
 
 /**
@@ -91,4 +95,58 @@ export const OnProvidersHowItWorks: Story = {
     </TemplateContainer>
   ),
   args: providersHowItWorksProps,
+}
+
+/**
+ * HowItWorks as used on the Education page
+ * - Step-by-step hands-on labs
+ * - Deploy workers, orchestrate, monitor
+ * - Write BDD tests
+ */
+export const OnEducationLabExercises: Story = {
+  render: (args) => (
+    <TemplateContainer {...educationLabExercisesContainerProps}>
+      <HowItWorks {...args} />
+    </TemplateContainer>
+  ),
+  args: educationLabExercisesProps,
+}
+
+/**
+ * HowItWorks as used on the Community page
+ * - Community page usage
+ */
+export const OnCommunityHowItWorks: Story = {
+  render: (args) => (
+    <TemplateContainer {...howToContributeContainerProps}>
+      <HowItWorks {...args} />
+    </TemplateContainer>
+  ),
+  args: howToContributeProps,
+}
+
+/**
+ * HowItWorks as used on the Research page
+ * - Research page usage
+ */
+export const OnResearchHowItWorks: Story = {
+  render: (args) => (
+    <TemplateContainer {...workflowContainerProps}>
+      <HowItWorks {...args} />
+    </TemplateContainer>
+  ),
+  args: workflowProps,
+}
+
+/**
+ * HowItWorks as used on the Security page
+ * - Security page usage
+ */
+export const OnSecurityHowItWorks: Story = {
+  render: (args) => (
+    <TemplateContainer {...securityVulnerabilityDisclosureContainerProps}>
+      <HowItWorks {...args} />
+    </TemplateContainer>
+  ),
+  args: securityVulnerabilityDisclosureProps,
 }

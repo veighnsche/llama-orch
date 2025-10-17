@@ -1,5 +1,6 @@
 import { TemplateContainer } from '@rbee/ui/molecules'
 import { enterpriseFeaturesContainerProps, enterpriseFeaturesGridProps } from '@rbee/ui/pages/EnterprisePage'
+import { educationResourcesGridContainerProps, educationResourcesGridProps } from '@rbee/ui/pages/EducationPage'
 import {
   providersSecurityContainerProps,
   providersSecurityGridProps,
@@ -64,4 +65,19 @@ export const OnEnterpriseFeatures: Story = {
       <CardGridTemplate {...enterpriseFeaturesGridProps} />
     </TemplateContainer>
   ),
+}
+
+/**
+ * CardGridTemplate as used on the Education page
+ * - Learning resources
+ * - Documentation, examples, tutorials
+ * - Community support
+ */
+export const OnEducationResourcesGrid: Story = {
+  render: (args) => (
+    <TemplateContainer {...educationResourcesGridContainerProps}>
+      <CardGridTemplate {...args} />
+    </TemplateContainer>
+  ),
+  args: educationResourcesGridProps,
 }
