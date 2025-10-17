@@ -1,6 +1,9 @@
-import type { Meta, StoryObj } from '@storybook/react'
-import { intelligentModelManagementContainerProps, intelligentModelManagementProps } from '../../pages/FeaturesPage/FeaturesPageProps'
 import { TemplateContainer } from '@rbee/ui/molecules'
+import type { Meta, StoryObj } from '@storybook/react'
+import {
+  intelligentModelManagementContainerProps,
+  intelligentModelManagementProps,
+} from '../../pages/FeaturesPage/FeaturesPageProps'
 import { IntelligentModelManagement } from './IntelligentModelManagement'
 
 const meta: Meta<typeof IntelligentModelManagement> = {

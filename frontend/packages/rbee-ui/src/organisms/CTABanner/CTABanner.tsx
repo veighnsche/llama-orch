@@ -23,12 +23,12 @@ export interface CTABannerProps {
 
 /**
  * CTABanner organism - Card-based call-to-action with optional copy and button(s)
- * 
+ *
  * Follows standard card pattern:
  * - Card has padding (p-6 sm:p-8)
  * - CardContent has p-0
  * - Center-aligned content
- * 
+ *
  * @example
  * <CTABanner
  *   copy="Ready to get started?"
@@ -36,12 +36,7 @@ export interface CTABannerProps {
  *   secondary={{ label: "Learn More", href: "/docs" }}
  * />
  */
-export function CTABanner({
-  copy,
-  primary,
-  secondary,
-  className,
-}: CTABannerProps) {
+export function CTABanner({ copy, primary, secondary, className }: CTABannerProps) {
   // Don't render if no content
   if (!copy && !primary && !secondary) {
     return null
@@ -52,33 +47,22 @@ export function CTABanner({
       className={cn(
         'rounded-2xl bg-card/60 p-6 text-center sm:p-8',
         'animate-in fade-in slide-in-from-bottom-2 motion-reduce:animate-none delay-300',
-        className
+        className,
       )}
     >
       <CardContent className="p-0 space-y-4 sm:space-y-5">
-        {copy && (
-          <p className="text-balance text-lg font-medium text-foreground">
-            {copy}
-          </p>
-        )}
+        {copy && <p className="text-balance text-lg font-medium text-foreground">{copy}</p>}
 
         {(primary || secondary) && (
           <div className="flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
             {primary && (
-              <Button
-                asChild
-                size="lg"
-                className="animate-in fade-in motion-reduce:animate-none delay-150"
-              >
-                <a
-                  href={primary.href}
-                  aria-label={primary.ariaLabel || primary.label}
-                >
+              <Button asChild size="lg" className="animate-in fade-in motion-reduce:animate-none delay-150">
+                <a href={primary.href} aria-label={primary.ariaLabel || primary.label}>
                   {primary.label}
                 </a>
               </Button>
             )}
-            
+
             {secondary && (
               <Button
                 asChild
@@ -86,10 +70,7 @@ export function CTABanner({
                 size="lg"
                 className="animate-in fade-in motion-reduce:animate-none delay-150"
               >
-                <a
-                  href={secondary.href}
-                  aria-label={secondary.ariaLabel || secondary.label}
-                >
+                <a href={secondary.href} aria-label={secondary.ariaLabel || secondary.label}>
                   {secondary.label}
                 </a>
               </Button>

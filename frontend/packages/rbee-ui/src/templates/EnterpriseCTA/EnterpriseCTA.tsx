@@ -1,45 +1,42 @@
-import { Button } from "@rbee/ui/atoms/Button";
-import { StatsGrid } from "@rbee/ui/molecules";
-import { CTAOptionCard } from "@rbee/ui/organisms";
-import Link from "next/link";
-import type * as React from "react";
-import type { ReactNode } from "react";
+import { Button } from '@rbee/ui/atoms/Button'
+import { StatsGrid } from '@rbee/ui/molecules'
+import { CTAOptionCard } from '@rbee/ui/organisms'
+import Link from 'next/link'
+import type * as React from 'react'
+import type { ReactNode } from 'react'
 
 // ──────────────────────────────────────────────────────────────────────────────
 // Types
 // ──────────────────────────────────────────────────────────────────────────────
 
 export type CTAOption = {
-  icon: React.ReactNode;
-  title: string;
-  body: string;
-  tone?: "primary" | "outline";
-  eyebrow?: string;
-  note?: string;
-  buttonText: string;
-  buttonHref: string;
-  buttonVariant?: "default" | "outline";
-  buttonAriaLabel?: string;
-};
+  icon: React.ReactNode
+  title: string
+  body: string
+  tone?: 'primary' | 'outline'
+  eyebrow?: string
+  note?: string
+  buttonText: string
+  buttonHref: string
+  buttonVariant?: 'default' | 'outline'
+  buttonAriaLabel?: string
+}
 
 export type TrustStat = {
-  value: string;
-  label: string;
-};
+  value: string
+  label: string
+}
 
 export type EnterpriseCTAProps = {
-  trustStats: TrustStat[];
-  ctaOptions: CTAOption[];
-};
+  trustStats: TrustStat[]
+  ctaOptions: CTAOption[]
+}
 
 // ──────────────────────────────────────────────────────────────────────────────
 // Main Component
 // ──────────────────────────────────────────────────────────────────────────────
 
-export function EnterpriseCTA({
-  trustStats,
-  ctaOptions,
-}: EnterpriseCTAProps) {
+export function EnterpriseCTA({ trustStats, ctaOptions }: EnterpriseCTAProps) {
   return (
     <>
       {/* Trust Strip */}
@@ -48,10 +45,7 @@ export function EnterpriseCTA({
       </div>
 
       {/* CTA Options Grid */}
-      <div
-        className="mb-12 grid gap-6 md:grid-cols-3 animate-in fade-in-50"
-        style={{ animationDelay: "120ms" }}
-      >
+      <div className="mb-12 grid gap-6 md:grid-cols-3 animate-in fade-in-50" style={{ animationDelay: '120ms' }}>
         {ctaOptions.map((option, idx) => (
           <CTAOptionCard
             key={idx}
@@ -76,5 +70,5 @@ export function EnterpriseCTA({
         ))}
       </div>
     </>
-  );
+  )
 }

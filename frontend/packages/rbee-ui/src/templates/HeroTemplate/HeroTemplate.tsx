@@ -115,10 +115,7 @@ export function HeroTemplate({
 
     if (badge.variant === 'icon') {
       return (
-        <Badge
-          variant="outline"
-          className="mb-6 w-fit border-primary/20 bg-primary/10 px-4 py-2 text-sm text-primary"
-        >
+        <Badge variant="outline" className="mb-6 w-fit border-primary/20 bg-primary/10 px-4 py-2 text-sm text-primary">
           <div className="flex h-4 w-4 items-center justify-center">{badge.icon}</div>
           <span>{badge.text}</span>
         </Badge>
@@ -214,11 +211,7 @@ export function HeroTemplate({
 
     if (proofElements.variant === 'stats-pills') {
       return (
-        <StatsGrid
-          variant="pills"
-          columns={proofElements.columns || 3}
-          stats={proofElements.items as StatItem[]}
-        />
+        <StatsGrid variant="pills" columns={proofElements.columns || 3} stats={proofElements.items as StatItem[]} />
       )
     }
 

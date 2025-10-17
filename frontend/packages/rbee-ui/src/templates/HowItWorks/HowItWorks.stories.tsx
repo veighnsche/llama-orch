@@ -1,7 +1,10 @@
-import { howItWorksContainerProps as developersHowItWorksContainerProps, howItWorksProps as developersHowItWorksProps } from '@rbee/ui/pages/DevelopersPage'
+import { TemplateContainer } from '@rbee/ui/molecules'
+import {
+  howItWorksContainerProps as developersHowItWorksContainerProps,
+  howItWorksProps as developersHowItWorksProps,
+} from '@rbee/ui/pages/DevelopersPage'
 import { howItWorksContainerProps, howItWorksProps } from '@rbee/ui/pages/HomePage'
 import { providersHowItWorksContainerProps, providersHowItWorksProps } from '@rbee/ui/pages/ProvidersPage'
-import { TemplateContainer } from '@rbee/ui/molecules'
 import type { Meta, StoryObj } from '@storybook/react'
 import { HowItWorks } from './HowItWorks'
 
@@ -20,13 +23,13 @@ type Story = StoryObj<typeof meta>
 /**
  * OnProvidersHowItWorks - providersHowItWorksProps
  * @tags providers, how-it-works, earnings
- * 
+ *
  * OnDevelopersHowItWorks - howItWorksProps
  * @tags developers, how-it-works, deployment
- * 
+ *
  * OnHomeHowItWorks - howItWorksProps
  * @tags home, how-it-works, steps
- * 
+ *
  * HowItWorks as used on the Home page
  * - Four-step installation guide
  * - Terminal and code blocks
@@ -44,13 +47,13 @@ export const OnHomeHowItWorks: Story = {
 /**
  * OnProvidersHowItWorks - providersHowItWorksProps
  * @tags providers, how-it-works, earnings
- * 
+ *
  * OnDevelopersHowItWorks - howItWorksProps
  * @tags developers, how-it-works, deployment
- * 
+ *
  * OnHomeHowItWorks - howItWorksProps
  * @tags home, how-it-works, steps
- * 
+ *
  * HowItWorks as used on the Developers page
  * - Four-step installation guide
  * - Developer-focused messaging
@@ -68,13 +71,13 @@ export const OnDevelopersHowItWorks: Story = {
 /**
  * OnProvidersHowItWorks - providersHowItWorksProps
  * @tags providers, how-it-works, earnings
- * 
+ *
  * OnDevelopersHowItWorks - howItWorksProps
  * @tags developers, how-it-works, deployment
- * 
+ *
  * OnHomeHowItWorks - howItWorksProps
  * @tags home, how-it-works, steps
- * 
+ *
  * HowItWorks as used on the Providers page
  * - Four-step guide to start earning
  * - Terminal installation

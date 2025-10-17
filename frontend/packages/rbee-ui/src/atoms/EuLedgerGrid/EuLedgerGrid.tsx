@@ -28,24 +28,12 @@ export function EuLedgerGrid({ className }: EuLedgerGridProps) {
       <defs>
         {/* Grid pattern - light theme */}
         <pattern id="grid-light" x="0" y="0" width="80" height="80" patternUnits="userSpaceOnUse">
-          <path
-            d="M 80 0 L 0 0 0 80"
-            fill="none"
-            stroke="rgb(59 130 246)"
-            strokeWidth="0.5"
-            className="opacity-20"
-          />
+          <path d="M 80 0 L 0 0 0 80" fill="none" stroke="rgb(59 130 246)" strokeWidth="0.5" className="opacity-20" />
         </pattern>
 
         {/* Grid pattern - dark theme */}
         <pattern id="grid-dark" x="0" y="0" width="80" height="80" patternUnits="userSpaceOnUse">
-          <path
-            d="M 80 0 L 0 0 0 80"
-            fill="none"
-            stroke="rgb(96 165 250)"
-            strokeWidth="0.75"
-            className="opacity-30"
-          />
+          <path d="M 80 0 L 0 0 0 80" fill="none" stroke="rgb(96 165 250)" strokeWidth="0.75" className="opacity-30" />
         </pattern>
 
         {/* Glow filter for checkpoints */}

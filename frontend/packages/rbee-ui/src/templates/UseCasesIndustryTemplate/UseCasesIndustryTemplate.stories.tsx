@@ -1,5 +1,5 @@
-import { useCasesIndustryContainerProps, useCasesIndustryProps } from '@rbee/ui/pages/UseCasesPage'
 import { TemplateContainer } from '@rbee/ui/molecules'
+import { useCasesIndustryContainerProps, useCasesIndustryProps } from '@rbee/ui/pages/UseCasesPage'
 import type { Meta, StoryObj } from '@storybook/react'
 import { UseCasesIndustryTemplate } from './UseCasesIndustryTemplate'
 
@@ -16,7 +16,7 @@ type Story = StoryObj<typeof meta>
 /**
  * OnUseCasesIndustry - useCasesIndustryProps
  * @tags use-cases, industry, compliance
- * 
+ *
  * UseCasesIndustryTemplate as used on the Use Cases page
  * - Six industry cards (Financial Services, Healthcare, Legal, Government, Education, Manufacturing)
  * - Filter tabs for each industry

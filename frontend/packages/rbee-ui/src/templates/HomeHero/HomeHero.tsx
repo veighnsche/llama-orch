@@ -1,9 +1,8 @@
 'use client'
 
-import { HeroTemplate } from '@rbee/ui/templates/HeroTemplate'
 import { FloatingKPICard, ProgressBar, TerminalWindow } from '@rbee/ui/molecules'
-import { DollarSign, Star } from 'lucide-react'
-import { ArrowRight } from 'lucide-react'
+import { HeroTemplate } from '@rbee/ui/templates/HeroTemplate'
+import { ArrowRight, DollarSign, Star } from 'lucide-react'
 
 export interface BulletItem {
   title: string

@@ -1,5 +1,5 @@
-import { pricingComparisonContainerProps, pricingComparisonProps } from '@rbee/ui/pages/PricingPage'
 import { TemplateContainer } from '@rbee/ui/molecules'
+import { pricingComparisonContainerProps, pricingComparisonProps } from '@rbee/ui/pages/PricingPage'
 import type { Meta, StoryObj } from '@storybook/react'
 import { PricingComparisonTemplate } from './PricingComparisonTemplate'
 
@@ -16,7 +16,7 @@ type Story = StoryObj<typeof meta>
 /**
  * OnPricingComparison - pricingComparisonProps
  * @tags pricing, comparison, tiers
- * 
+ *
  * PricingComparisonTemplate as used on the Pricing page
  * - Detailed feature comparison table
  * - Three columns: Home/Lab, Team, Enterprise

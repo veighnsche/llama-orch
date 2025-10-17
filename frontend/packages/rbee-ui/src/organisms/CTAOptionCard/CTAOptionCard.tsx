@@ -53,38 +53,26 @@ export function CTAOptionCard({
         titleId={titleId}
         iconSize="lg"
         iconTone="primary"
-        titleClassName={cn(
-          'text-2xl',
-          tone === 'primary' ? 'text-primary' : 'text-foreground',
-        )}
+        titleClassName={cn('text-2xl', tone === 'primary' ? 'text-primary' : 'text-foreground')}
         align="center"
       />
 
       {/* Eyebrow label */}
       {eyebrow && (
         <div className="-mt-2 mb-4 flex justify-center">
-          <Badge
-            variant="outline"
-            className="bg-primary/10 border-primary/30 text-primary text-[11px] font-medium"
-          >
+          <Badge variant="outline" className="bg-primary/10 border-primary/30 text-primary text-[11px] font-medium">
             {eyebrow}
           </Badge>
         </div>
       )}
 
       <CardContent className="p-0 text-center">
-        <p className="font-sans text-sm leading-6 text-muted-foreground max-w-[80ch] mx-auto">
-          {body}
-        </p>
+        <p className="font-sans text-sm leading-6 text-muted-foreground max-w-[80ch] mx-auto">{body}</p>
       </CardContent>
 
       <CardFooter className="flex-col p-0 pt-5">
         {action}
-        {note && (
-          <p className="mt-2 text-center font-sans text-[11px] text-muted-foreground">
-            {note}
-          </p>
-        )}
+        {note && <p className="mt-2 text-center font-sans text-[11px] text-muted-foreground">{note}</p>}
       </CardFooter>
     </Card>
   )

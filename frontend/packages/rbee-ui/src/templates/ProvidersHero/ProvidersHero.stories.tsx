@@ -17,7 +17,7 @@ type Story = StoryObj<typeof meta>
 /**
  * OnProvidersHero - providersHeroProps
  * @tags providers, hero, gpu, earnings
- * 
+ *
  * ProvidersHero as used on the Providers page
  * - GPU provider-focused hero messaging
  * - Emphasizes earning potential and marketplace benefits

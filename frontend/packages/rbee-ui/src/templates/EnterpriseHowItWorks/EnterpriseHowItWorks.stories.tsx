@@ -1,5 +1,5 @@
-import { enterpriseHowItWorksContainerProps, enterpriseHowItWorksProps } from '@rbee/ui/pages/EnterprisePage'
 import { TemplateContainer } from '@rbee/ui/molecules'
+import { enterpriseHowItWorksContainerProps, enterpriseHowItWorksProps } from '@rbee/ui/pages/EnterprisePage'
 import type { Meta, StoryObj } from '@storybook/react'
 import { EnterpriseHowItWorks } from './EnterpriseHowItWorks'
 
@@ -18,7 +18,7 @@ type Story = StoryObj<typeof meta>
 /**
  * OnEnterpriseHowItWorks - enterpriseHowItWorksProps
  * @tags enterprise, deployment, process
- * 
+ *
  * EnterpriseHowItWorks as used on the Enterprise page
  * - Deployment process timeline
  * - Step-by-step implementation guide

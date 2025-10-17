@@ -1,6 +1,6 @@
+import { TemplateContainer } from '@rbee/ui/molecules'
 import type { Meta, StoryObj } from '@storybook/react'
 import { realTimeProgressContainerProps, realTimeProgressProps } from '../../pages/FeaturesPage/FeaturesPageProps'
-import { TemplateContainer } from '@rbee/ui/molecules'
 import { RealTimeProgress } from './RealTimeProgress'
 
 const meta: Meta<typeof RealTimeProgress> = {

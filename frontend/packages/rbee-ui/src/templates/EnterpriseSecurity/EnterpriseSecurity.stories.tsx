@@ -1,5 +1,5 @@
-import { enterpriseSecurityContainerProps, enterpriseSecurityProps } from '@rbee/ui/pages/EnterprisePage'
 import { TemplateContainer } from '@rbee/ui/molecules'
+import { enterpriseSecurityContainerProps, enterpriseSecurityProps } from '@rbee/ui/pages/EnterprisePage'
 import type { Meta, StoryObj } from '@storybook/react'
 import { EnterpriseSecurity } from './EnterpriseSecurity'
 
@@ -18,7 +18,7 @@ type Story = StoryObj<typeof meta>
 /**
  * OnEnterpriseSecurity - enterpriseSecurityProps
  * @tags enterprise, security, defense
- * 
+ *
  * EnterpriseSecurity as used on the Enterprise page
  * - Six security crates grid
  * - Security-first architecture

@@ -1,8 +1,8 @@
+import { TemplateContainer } from '@rbee/ui/molecules'
 import { coreFeatureTabsContainerProps, coreFeatureTabsProps } from '@rbee/ui/pages/DevelopersPage'
 import { featuresFeaturesTabsContainerProps, featuresFeaturesTabsProps } from '@rbee/ui/pages/FeaturesPage'
 import { featuresTabsContainerProps, featuresTabsProps } from '@rbee/ui/pages/HomePage'
 import { providersFeaturesContainerProps, providersFeaturesProps } from '@rbee/ui/pages/ProvidersPage'
-import { TemplateContainer } from '@rbee/ui/molecules'
 import type { Meta, StoryObj } from '@storybook/react'
 import { FeaturesTabs } from './FeaturesTabs'
 

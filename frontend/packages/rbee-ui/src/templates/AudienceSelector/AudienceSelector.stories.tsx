@@ -1,5 +1,5 @@
-import { audienceSelectorContainerProps, audienceSelectorProps } from '@rbee/ui/pages/HomePage'
 import { TemplateContainer } from '@rbee/ui/molecules'
+import { audienceSelectorContainerProps, audienceSelectorProps } from '@rbee/ui/pages/HomePage'
 import type { Meta, StoryObj } from '@storybook/react'
 import { AudienceSelector } from './AudienceSelector'
 

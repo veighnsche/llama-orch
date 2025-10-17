@@ -1,6 +1,6 @@
+import { TemplateContainer } from '@rbee/ui/molecules'
 import type { Meta, StoryObj } from '@storybook/react'
 import { securityIsolationContainerProps, securityIsolationProps } from '../../pages/FeaturesPage/FeaturesPageProps'
-import { TemplateContainer } from '@rbee/ui/molecules'
 import { SecurityIsolation } from './SecurityIsolation'
 
 const meta: Meta<typeof SecurityIsolation> = {

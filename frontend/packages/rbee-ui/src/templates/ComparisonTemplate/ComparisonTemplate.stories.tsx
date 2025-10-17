@@ -1,10 +1,10 @@
-import { comparisonTemplateContainerProps, comparisonTemplateProps } from '../../pages/HomePage/HomePageProps'
+import { TemplateContainer } from '@rbee/ui/molecules'
+import type { Meta, StoryObj } from '@storybook/react'
 import {
   enterpriseComparisonContainerProps,
   enterpriseComparisonProps,
 } from '../../pages/EnterprisePage/EnterprisePageProps'
-import { TemplateContainer } from '@rbee/ui/molecules'
-import type { Meta, StoryObj } from '@storybook/react'
+import { comparisonTemplateContainerProps, comparisonTemplateProps } from '../../pages/HomePage/HomePageProps'
 import { ComparisonTemplate } from './ComparisonTemplate'
 
 const meta = {
@@ -22,10 +22,10 @@ type Story = StoryObj<typeof meta>
 /**
  * OnEnterpriseComparison - enterpriseComparisonProps
  * @tags enterprise, comparison, compliance
- * 
+ *
  * OnHomeComparison - comparisonTemplateProps
  * @tags home, comparison, features
- * 
+ *
  * ComparisonTemplate as used on the Home page
  */
 export const OnHomeComparison: Story = {
@@ -40,10 +40,10 @@ export const OnHomeComparison: Story = {
 /**
  * OnEnterpriseComparison - enterpriseComparisonProps
  * @tags enterprise, comparison, compliance
- * 
+ *
  * OnHomeComparison - comparisonTemplateProps
  * @tags home, comparison, features
- * 
+ *
  * ComparisonTemplate as used on the Enterprise page
  */
 export const OnEnterpriseComparison: Story = {

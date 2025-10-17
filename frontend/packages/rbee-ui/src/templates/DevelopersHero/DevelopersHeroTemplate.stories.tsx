@@ -17,7 +17,7 @@ type Story = StoryObj<typeof meta>
 /**
  * OnDevelopersHero - developersHeroProps
  * @tags developers, hero, api
- * 
+ *
  * DevelopersHeroTemplate as used on the Developers page
  * - Developer-focused hero with code-first messaging
  * - Emphasizes API simplicity and flexibility

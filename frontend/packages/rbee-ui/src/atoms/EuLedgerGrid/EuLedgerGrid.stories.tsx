@@ -89,9 +89,7 @@ export const InEnterpriseSolution: Story = {
       <div className="relative z-10 mx-auto max-w-7xl px-6 py-24">
         <div className="text-center">
           <h2 className="mb-4 text-3xl font-bold text-foreground">How rbee Works</h2>
-          <p className="mb-8 text-lg text-muted-foreground">
-            GDPR-compliant by design. SOC2 ready. ISO 27001 aligned.
-          </p>
+          <p className="mb-8 text-lg text-muted-foreground">GDPR-compliant by design. SOC2 ready. ISO 27001 aligned.</p>
           <div className="grid gap-6 md:grid-cols-3">
             {['Deploy On-Premises', 'Enable Audit Logging', 'Run Compliant AI'].map((title, i) => (
               <div key={i} className="rounded-lg border bg-card p-6">

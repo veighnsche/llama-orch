@@ -1,51 +1,46 @@
-"use client";
+'use client'
 
-import { Badge, Card, CardContent, Separator } from "@rbee/ui/atoms";
-import {
-  FeatureInfoCard,
-  IconCardHeader,
-  IconPlate,
-  TerminalWindow,
-} from "@rbee/ui/molecules";
-import { cn } from "@rbee/ui/utils";
-import { ArrowDown, CheckCircle2, GitBranch, Network } from "lucide-react";
-import type { ReactNode } from "react";
+import { Badge, Card, CardContent, Separator } from '@rbee/ui/atoms'
+import { FeatureInfoCard, IconCardHeader, IconPlate, TerminalWindow } from '@rbee/ui/molecules'
+import { cn } from '@rbee/ui/utils'
+import { ArrowDown, CheckCircle2, GitBranch, Network } from 'lucide-react'
+import type { ReactNode } from 'react'
 
 export interface DiagramNode {
-  name: string;
-  label: string;
-  tone: "primary" | "chart-2" | "chart-3";
+  name: string
+  label: string
+  tone: 'primary' | 'chart-2' | 'chart-3'
 }
 
 export interface LegendItem {
-  label: string;
+  label: string
 }
 
 export interface BenefitCard {
-  icon: ReactNode;
-  title: string;
-  description: string;
+  icon: ReactNode
+  title: string
+  description: string
 }
 
 export interface CrossNodeOrchestrationProps {
   /** Terminal content for pool registry */
-  terminalContent: ReactNode;
+  terminalContent: ReactNode
   /** Terminal copyable text */
-  terminalCopyText?: string;
+  terminalCopyText?: string
   /** Benefit cards (3 items) */
-  benefits: BenefitCard[];
+  benefits: BenefitCard[]
   /** Diagram nodes for provisioning flow */
-  diagramNodes: DiagramNode[];
+  diagramNodes: DiagramNode[]
   /** Diagram arrows with labels */
-  diagramArrows: Array<{ label: string; indent?: string }>;
+  diagramArrows: Array<{ label: string; indent?: string }>
   /** Legend items */
-  legendItems: LegendItem[];
+  legendItems: LegendItem[]
   /** Provisioning title */
-  provisioningTitle: string;
+  provisioningTitle: string
   /** Provisioning subtitle */
-  provisioningSubtitle: string;
+  provisioningSubtitle: string
   /** Custom class name */
-  className?: string;
+  className?: string
 }
 
 /**
@@ -73,7 +68,7 @@ export function CrossNodeOrchestration({
   className,
 }: CrossNodeOrchestrationProps) {
   return (
-    <div className={cn("", className)}>
+    <div className={cn('', className)}>
       <div className="mx-auto max-w-6xl">
         <div className="grid gap-8 lg:grid-cols-2 items-start">
           {/* Pool Registry Management Card */}
@@ -141,20 +136,12 @@ export function CrossNodeOrchestration({
 
                   {/* Arrow 1 */}
                   {diagramArrows[0] && (
-                    <DiagramArrowComponent
-                      label={diagramArrows[0].label}
-                      indent={diagramArrows[0].indent}
-                    />
+                    <DiagramArrowComponent label={diagramArrows[0].label} indent={diagramArrows[0].indent} />
                   )}
 
                   {/* Row 2: Second node */}
                   {diagramNodes[1] && (
-                    <div
-                      className={cn(
-                        "flex items-center gap-3",
-                        diagramArrows[0]?.indent
-                      )}
-                    >
+                    <div className={cn('flex items-center gap-3', diagramArrows[0]?.indent)}>
                       <div className="flex-1">
                         <DiagramNodeComponent
                           name={diagramNodes[1].name}
@@ -167,20 +154,12 @@ export function CrossNodeOrchestration({
 
                   {/* Arrow 2 */}
                   {diagramArrows[1] && (
-                    <DiagramArrowComponent
-                      label={diagramArrows[1].label}
-                      indent={diagramArrows[1].indent}
-                    />
+                    <DiagramArrowComponent label={diagramArrows[1].label} indent={diagramArrows[1].indent} />
                   )}
 
                   {/* Row 3: Third node */}
                   {diagramNodes[2] && (
-                    <div
-                      className={cn(
-                        "flex items-center gap-3",
-                        diagramArrows[1]?.indent
-                      )}
-                    >
+                    <div className={cn('flex items-center gap-3', diagramArrows[1]?.indent)}>
                       <div className="flex-1">
                         <DiagramNodeComponent
                           name={diagramNodes[2].name}
@@ -204,68 +183,54 @@ export function CrossNodeOrchestration({
         </div>
       </div>
     </div>
-  );
+  )
 }
 
 // Helper Components
 interface DiagramNodeComponentProps {
-  name: string;
-  label: string;
-  tone: "primary" | "chart-2" | "chart-3";
+  name: string
+  label: string
+  tone: 'primary' | 'chart-2' | 'chart-3'
 }
 
-function DiagramNodeComponent({
-  name,
-  label,
-  tone,
-}: DiagramNodeComponentProps) {
+function DiagramNodeComponent({ name, label, tone }: DiagramNodeComponentProps) {
   const toneClasses = {
-    primary: "bg-primary/10 border-primary/20",
-    "chart-2": "bg-chart-2/10 border-chart-2/20",
-    "chart-3": "bg-chart-3/10 border-chart-3/20",
-  };
+    primary: 'bg-primary/10 border-primary/20',
+    'chart-2': 'bg-chart-2/10 border-chart-2/20',
+    'chart-3': 'bg-chart-3/10 border-chart-3/20',
+  }
 
   return (
-    <div
-      className={cn(
-        "rounded-lg border-2 p-3 transition-all hover:scale-105",
-        toneClasses[tone]
-      )}
-    >
-      <div className="font-mono text-sm font-semibold text-foreground">
-        {name}
-      </div>
+    <div className={cn('rounded-lg border-2 p-3 transition-all hover:scale-105', toneClasses[tone])}>
+      <div className="font-mono text-sm font-semibold text-foreground">{name}</div>
       <div className="text-xs text-muted-foreground mt-1">{label}</div>
     </div>
-  );
+  )
 }
 
 interface DiagramArrowComponentProps {
-  label: string;
-  indent?: string;
+  label: string
+  indent?: string
 }
 
 function DiagramArrowComponent({ label, indent }: DiagramArrowComponentProps) {
   return (
-    <div className={cn("flex items-center gap-2", indent)}>
+    <div className={cn('flex items-center gap-2', indent)}>
       <ArrowDown className="size-4 text-muted-foreground" aria-hidden="true" />
       <span className="text-xs text-muted-foreground font-mono">{label}</span>
     </div>
-  );
+  )
 }
 
 interface LegendItemComponentProps {
-  label: string;
+  label: string
 }
 
 function LegendItemComponent({ label }: LegendItemComponentProps) {
   return (
     <div className="flex items-center gap-2">
-      <div
-        className="size-2 rounded-full bg-chart-3 shrink-0"
-        aria-hidden="true"
-      />
+      <div className="size-2 rounded-full bg-chart-3 shrink-0" aria-hidden="true" />
       <span>{label}</span>
     </div>
-  );
+  )
 }

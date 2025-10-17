@@ -72,7 +72,7 @@ export function HighlightCard({
 }: HighlightCardProps) {
   // Determine the effective checkmark color
   // If disabled, use 'muted', otherwise use checkmarkColor or default color
-  const effectiveCheckmarkColor = disabledCheckmarks ? 'muted' : (checkmarkColor || color)
+  const effectiveCheckmarkColor = disabledCheckmarks ? 'muted' : checkmarkColor || color
 
   return (
     <Card className={cn(highlightCardVariants({ color }), 'shadow-none', className)}>
@@ -88,10 +88,7 @@ export function HighlightCard({
               variant="check"
               showPlate={false}
               color={effectiveCheckmarkColor as any}
-              className={cn(
-                'text-xs',
-                disabledCheckmarks ? 'text-muted-foreground/50' : 'text-foreground/85',
-              )}
+              className={cn('text-xs', disabledCheckmarks ? 'text-muted-foreground/50' : 'text-foreground/85')}
             />
           ))}
         </ul>

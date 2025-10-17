@@ -1,28 +1,21 @@
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-  Progress,
-} from "@rbee/ui/atoms";
-import { TimelineStep } from "@rbee/ui/molecules";
-import { cn } from "@rbee/ui/utils";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle, Progress } from '@rbee/ui/atoms'
+import { TimelineStep } from '@rbee/ui/molecules'
+import { cn } from '@rbee/ui/utils'
 
 export interface TimelineCardProps {
   /** Card heading */
-  heading: string;
+  heading: string
   /** Card description */
-  description: string;
+  description: string
   /** Progress value (0-100) */
-  progress?: number;
+  progress?: number
   /** Timeline items */
   weeks: Array<{
-    week: string;
-    phase: string;
-  }>;
+    week: string
+    phase: string
+  }>
   /** Additional CSS classes */
-  className?: string;
+  className?: string
 }
 
 /**
@@ -40,15 +33,9 @@ export interface TimelineCardProps {
  *   ]}
  * />
  */
-export function TimelineCard({
-  heading,
-  description,
-  progress = 25,
-  weeks,
-  className,
-}: TimelineCardProps) {
+export function TimelineCard({ heading, description, progress = 25, weeks, className }: TimelineCardProps) {
   return (
-    <Card className={cn("border-primary/20 bg-primary/10", className)}>
+    <Card className={cn('border-primary/20 bg-primary/10', className)}>
       <CardHeader>
         <CardTitle className="text-xl">{heading}</CardTitle>
         <CardDescription>{description}</CardDescription>
@@ -56,11 +43,7 @@ export function TimelineCard({
 
       <CardContent className="space-y-6">
         {/* Progress bar */}
-        <Progress
-          value={progress}
-          className="h-1"
-          aria-label={`${progress}% complete`}
-        />
+        <Progress value={progress} className="h-1" aria-label={`${progress}% complete`} />
 
         {/* Week chips */}
         <ol className="space-y-3">
@@ -76,5 +59,5 @@ export function TimelineCard({
         </ol>
       </CardContent>
     </Card>
-  );
+  )
 }

@@ -34,87 +34,82 @@ export interface FeaturesTabsProps {
   bgClassName?: string
 }
 
-export function FeaturesTabs({
-  title,
-  description,
-  tabs,
-  defaultTab,
-}: FeaturesTabsProps) {
+export function FeaturesTabs({ title, description, tabs, defaultTab }: FeaturesTabsProps) {
   return (
     <div className="container mx-auto px-4">
       <Tabs defaultValue={defaultTab || tabs[0]?.value} className="w-full" orientation="horizontal">
         <div className="grid gap-8 lg:grid-cols-[320px_minmax(0,1fr)]">
-            {/* Left rail: sticky intro + TabsList */}
-            <div className="lg:sticky lg:top-24 self-start space-y-6">
-              <div>
-                <h2 className="text-3xl font-bold tracking-tight text-foreground">{title}</h2>
-                <p className="mt-2 text-muted-foreground">{description}</p>
-              </div>
-
-              <TabsList aria-label="Core features">
-                {tabs.map((tab) => (
-                  <TabsTrigger
-                    key={tab.value}
-                    value={tab.value}
-                    className="flex-col lg:flex-row items-start lg:items-center"
-                  >
-                    <span className="flex items-center gap-3 w-full">
-                      {tab.icon}
-                      <span className="font-semibold">
-                        <span className="hidden sm:inline">{tab.label}</span>
-                        <span className="sm:hidden">{tab.mobileLabel}</span>
-                      </span>
-                    </span>
-                    <span className="mt-0.5 block text-xs text-muted-foreground text-right font-sans hidden lg:block w-full">
-                      {tab.subtitle}
-                    </span>
-                  </TabsTrigger>
-                ))}
-              </TabsList>
+          {/* Left rail: sticky intro + TabsList */}
+          <div className="lg:sticky lg:top-24 self-start space-y-6">
+            <div>
+              <h2 className="text-3xl font-bold tracking-tight text-foreground">{title}</h2>
+              <p className="mt-2 text-muted-foreground">{description}</p>
             </div>
 
-            {/* Right column: content panels */}
-            <div className="relative min-h-[600px]">
+            <TabsList aria-label="Core features">
               {tabs.map((tab) => (
-                <TabsContent
+                <TabsTrigger
                   key={tab.value}
                   value={tab.value}
-                  className="animate-in fade-in slide-in-from-right-4 duration-300 data-[state=inactive]:absolute data-[state=inactive]:invisible"
+                  className="flex-col lg:flex-row items-start lg:items-center"
                 >
-                  <div className="bg-card border border-border rounded-2xl p-8 space-y-6">
-                    <div>
-                      <div className="flex items-center gap-2 mb-3">
-                        <h3 className="text-2xl font-bold text-foreground">{tab.label}</h3>
-                        <Badge variant="secondary">{tab.badge}</Badge>
-                      </div>
-                      <p className="text-muted-foreground leading-relaxed">{tab.description}</p>
-                    </div>
-
-                    {tab.content}
-
-                    <Alert variant={tab.highlight.variant}>
-                      <Check />
-                      <AlertDescription className="font-medium">{tab.highlight.text}</AlertDescription>
-                    </Alert>
-
-                    <div className="pt-2">
-                      <h4 className="text-sm font-semibold text-foreground mb-3">Why it matters</h4>
-                      <ul className="grid sm:grid-cols-3 gap-3 text-sm">
-                        {tab.benefits.map((benefit, idx) => (
-                          <BulletListItem
-                            key={idx}
-                            title={benefit.text}
-                            variant="check"
-                            color="primary"
-                            showPlate={false}
-                          />
-                        ))}
-                      </ul>
-                    </div>
-                  </div>
-                </TabsContent>
+                  <span className="flex items-center gap-3 w-full">
+                    {tab.icon}
+                    <span className="font-semibold">
+                      <span className="hidden sm:inline">{tab.label}</span>
+                      <span className="sm:hidden">{tab.mobileLabel}</span>
+                    </span>
+                  </span>
+                  <span className="mt-0.5 block text-xs text-muted-foreground text-right font-sans hidden lg:block w-full">
+                    {tab.subtitle}
+                  </span>
+                </TabsTrigger>
               ))}
-            </div>
+            </TabsList>
+          </div>
+
+          {/* Right column: content panels */}
+          <div className="relative min-h-[600px]">
+            {tabs.map((tab) => (
+              <TabsContent
+                key={tab.value}
+                value={tab.value}
+                className="animate-in fade-in slide-in-from-right-4 duration-300 data-[state=inactive]:absolute data-[state=inactive]:invisible"
+              >
+                <div className="bg-card border border-border rounded-2xl p-8 space-y-6">
+                  <div>
+                    <div className="flex items-center gap-2 mb-3">
+                      <h3 className="text-2xl font-bold text-foreground">{tab.label}</h3>
+                      <Badge variant="secondary">{tab.badge}</Badge>
+                    </div>
+                    <p className="text-muted-foreground leading-relaxed">{tab.description}</p>
+                  </div>
+
+                  {tab.content}
+
+                  <Alert variant={tab.highlight.variant}>
+                    <Check />
+                    <AlertDescription className="font-medium">{tab.highlight.text}</AlertDescription>
+                  </Alert>
+
+                  <div className="pt-2">
+                    <h4 className="text-sm font-semibold text-foreground mb-3">Why it matters</h4>
+                    <ul className="grid sm:grid-cols-3 gap-3 text-sm">
+                      {tab.benefits.map((benefit, idx) => (
+                        <BulletListItem
+                          key={idx}
+                          title={benefit.text}
+                          variant="check"
+                          color="primary"
+                          showPlate={false}
+                        />
+                      ))}
+                    </ul>
+                  </div>
+                </div>
+              </TabsContent>
+            ))}
+          </div>
         </div>
       </Tabs>
     </div>

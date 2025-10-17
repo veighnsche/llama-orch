@@ -1,64 +1,44 @@
-import { Card, CardContent, CardFooter } from "@rbee/ui/atoms";
-import { CheckItem } from "@rbee/ui/atoms/CheckItem";
-import { IconCardHeader } from "@rbee/ui/molecules";
-import { cn } from "@rbee/ui/utils";
-import Link from "next/link";
-import type * as React from "react";
+import { Card, CardContent, CardFooter } from '@rbee/ui/atoms'
+import { CheckItem } from '@rbee/ui/atoms/CheckItem'
+import { IconCardHeader } from '@rbee/ui/molecules'
+import { cn } from '@rbee/ui/utils'
+import Link from 'next/link'
+import type * as React from 'react'
 
 export interface SecurityCardProps {
   /** Rendered icon component (e.g., <Lock className="w-6 h-6" />) */
-  icon: React.ReactNode;
+  icon: React.ReactNode
   /** Card title (e.g., "auth-min: Zero-Trust Authentication") */
-  title: string;
+  title: string
   /** Optional subtitle (e.g., "The Trickster Guardians") */
-  subtitle?: string;
+  subtitle?: string
   /** Introduction paragraph */
-  intro?: string;
+  intro?: string
   /** List of security features/capabilities */
-  bullets: string[];
+  bullets: string[]
   /** Optional documentation link */
-  docsHref?: string;
+  docsHref?: string
   /** Additional CSS classes */
-  className?: string;
+  className?: string
 }
 
 /**
  * SecurityCard organism for displaying security capabilities
  * with consistent structure, accessibility, and optional docs link
  */
-export function SecurityCard({
-  icon,
-  title,
-  subtitle,
-  intro,
-  bullets,
-  docsHref,
-  className,
-}: SecurityCardProps) {
-  const titleId = `security-${title.toLowerCase().replace(/[^a-z0-9]+/g, "-")}`;
+export function SecurityCard({ icon, title, subtitle, intro, bullets, docsHref, className }: SecurityCardProps) {
+  const titleId = `security-${title.toLowerCase().replace(/[^a-z0-9]+/g, '-')}`
 
   return (
     <Card
-      className={cn(
-        "w-full rounded-2xl bg-card/60 p-6 transition-shadow hover:shadow-lg sm:p-8",
-        className
-      )}
+      className={cn('w-full rounded-2xl bg-card/60 p-6 transition-shadow hover:shadow-lg sm:p-8', className)}
       aria-labelledby={titleId}
     >
-      <IconCardHeader
-        icon={icon}
-        title={title}
-        subtitle={subtitle}
-        titleId={titleId}
-      />
+      <IconCardHeader icon={icon} title={title} subtitle={subtitle} titleId={titleId} />
 
       <CardContent className="p-0">
         {/* Intro */}
-        {intro && (
-          <p className="mb-4 text-sm leading-relaxed text-foreground/85">
-            {intro}
-          </p>
-        )}
+        {intro && <p className="mb-4 text-sm leading-relaxed text-foreground/85">{intro}</p>}
 
         {/* Bullets */}
         <ul className="mt-2 space-y-2">
@@ -81,5 +61,5 @@ export function SecurityCard({
         </CardFooter>
       )}
     </Card>
-  );
+  )
 }

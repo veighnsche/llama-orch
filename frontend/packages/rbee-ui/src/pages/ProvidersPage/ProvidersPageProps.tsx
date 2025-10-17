@@ -3,12 +3,12 @@
 import { gpuEarnings } from '@rbee/ui/assets'
 import { TESTIMONIALS } from '@rbee/ui/data/testimonials'
 import { FormerCryptoMiner, GamingPcOwner, HomelabEnthusiast, WorkstationOwner } from '@rbee/ui/icons'
+import type { TemplateContainerProps } from '@rbee/ui/molecules'
 import { CommissionStructureCard, ProvidersSecurityCard } from '@rbee/ui/molecules'
 import { CodeBlock } from '@rbee/ui/molecules/CodeBlock'
-import { ProvidersCaseCard } from '@rbee/ui/organisms'
 import type { CommissionStructureCardProps } from '@rbee/ui/molecules/CommissionStructureCard'
 import type { ProvidersSecurityCardProps } from '@rbee/ui/molecules/ProvidersSecurityCard'
-import type { TemplateContainerProps } from '@rbee/ui/molecules'
+import { ProvidersCaseCard } from '@rbee/ui/organisms'
 import type { ProvidersCaseCardProps } from '@rbee/ui/organisms/ProvidersCaseCard'
 import type {
   CardGridTemplateProps,
@@ -157,8 +157,7 @@ export const providersProblemProps: ProblemTemplateProps = {
 export const providersSolutionContainerProps: Omit<TemplateContainerProps, 'children'> = {
   kicker: 'How rbee Works',
   title: 'Turn Idle GPUs Into Reliable Monthly Income',
-  description:
-    'rbee connects your spare GPU power to developers who need it. You set the price, we handle the rest.',
+  description: 'rbee connects your spare GPU power to developers who need it. You set the price, we handle the rest.',
   bgVariant: 'default',
   paddingY: '2xl',
   maxWidth: '7xl',
@@ -451,17 +450,14 @@ export const providersFeaturesProps: FeaturesTabsProps = {
 /**
  * Features tabs container - Background wrapper
  */
-export const providersFeaturesContainerProps: Omit<
-  TemplateContainerProps,
-  "children"
-> = {
+export const providersFeaturesContainerProps: Omit<TemplateContainerProps, 'children'> = {
   title: null,
   background: {
     variant: 'background',
   },
-  paddingY: "2xl",
-  maxWidth: "7xl",
-};
+  paddingY: '2xl',
+  maxWidth: '7xl',
+}
 
 // === ProvidersUseCases Template ===
 export const providersUseCasesContainerProps: Omit<TemplateContainerProps, 'children'> = {

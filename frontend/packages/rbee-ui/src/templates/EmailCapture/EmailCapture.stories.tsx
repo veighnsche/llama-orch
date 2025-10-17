@@ -1,10 +1,10 @@
+import { TemplateContainer } from '@rbee/ui/molecules'
 import { developersEmailCaptureContainerProps, developersEmailCaptureProps } from '@rbee/ui/pages/DevelopersPage'
 import { enterpriseEmailCaptureContainerProps, enterpriseEmailCaptureProps } from '@rbee/ui/pages/EnterprisePage'
 import { featuresEmailCaptureContainerProps, featuresEmailCaptureProps } from '@rbee/ui/pages/FeaturesPage'
 import { emailCaptureContainerProps, emailCaptureProps } from '@rbee/ui/pages/HomePage'
 import { pricingEmailCaptureContainerProps, pricingEmailCaptureProps } from '@rbee/ui/pages/PricingPage'
 import { useCasesEmailCaptureContainerProps, useCasesEmailCaptureProps } from '@rbee/ui/pages/UseCasesPage'
-import { TemplateContainer } from '@rbee/ui/molecules'
 import type { Meta, StoryObj } from '@storybook/react'
 import { EmailCapture } from './EmailCapture'
 

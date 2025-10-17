@@ -1,5 +1,5 @@
-import { technicalTemplateContainerProps, technicalTemplateProps } from '@rbee/ui/pages/HomePage'
 import { TemplateContainer } from '@rbee/ui/molecules'
+import { technicalTemplateContainerProps, technicalTemplateProps } from '@rbee/ui/pages/HomePage'
 import type { Meta, StoryObj } from '@storybook/react'
 import { TechnicalTemplate } from './TechnicalTemplate'
 
@@ -18,7 +18,7 @@ type Story = StoryObj<typeof meta>
 /**
  * OnHomeTechnical - technicalTemplateProps
  * @tags home, technical, architecture
- * 
+ *
  * TechnicalTemplate as used on the Home page
  * - Five architecture highlights (BDD, Cascading Shutdown, Process Isolation, etc.)
  * - BDD coverage progress (42/62)

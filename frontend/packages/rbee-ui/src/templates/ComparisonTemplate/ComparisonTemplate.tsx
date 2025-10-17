@@ -1,10 +1,10 @@
 'use client'
 
 import { Legend } from '@rbee/ui/molecules/Legend'
+import { SegmentedControl } from '@rbee/ui/molecules/SegmentedControl'
 import { MatrixCard } from '@rbee/ui/molecules/Tables/MatrixCard'
 import type { Provider, Row } from '@rbee/ui/molecules/Tables/MatrixTable'
 import { MatrixTable } from '@rbee/ui/molecules/Tables/MatrixTable'
-import { SegmentedControl } from '@rbee/ui/molecules/SegmentedControl'
 import { cn } from '@rbee/ui/utils'
 import { useState } from 'react'
 
@@ -87,10 +87,7 @@ export function ComparisonTemplate({
             />
 
             {/* Single Card for Selected Provider */}
-            <MatrixCard
-              provider={columns.find((col) => col.key === selectedProviderKey) || columns[0]}
-              rows={rows}
-            />
+            <MatrixCard provider={columns.find((col) => col.key === selectedProviderKey) || columns[0]} rows={rows} />
 
             {/* Jump to Desktop Link (for screen readers) */}
             <a
@@ -101,7 +98,6 @@ export function ComparisonTemplate({
             </a>
           </div>
         )}
-
       </div>
     </div>
   )

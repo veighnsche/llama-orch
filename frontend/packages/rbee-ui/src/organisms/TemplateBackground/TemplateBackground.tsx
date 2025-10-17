@@ -44,7 +44,6 @@ export interface TemplateBackgroundProps {
   children: ReactNode
 }
 
-
 const variantClasses = {
   none: '',
   background: 'bg-background',
@@ -56,20 +55,14 @@ const variantClasses = {
   destructive: 'bg-destructive text-destructive-foreground',
   'subtle-border':
     'bg-background relative before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-border/60',
-  'gradient-primary':
-    'bg-gradient-to-b from-background via-primary/8 to-background',
-  'gradient-secondary':
-    'bg-gradient-to-b from-background via-secondary/10 to-background',
-  'gradient-destructive':
-    'bg-gradient-to-b from-background via-destructive/8 to-background',
+  'gradient-primary': 'bg-gradient-to-b from-background via-primary/8 to-background',
+  'gradient-secondary': 'bg-gradient-to-b from-background via-secondary/10 to-background',
+  'gradient-destructive': 'bg-gradient-to-b from-background via-destructive/8 to-background',
   'gradient-radial':
     'bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-primary/20 via-background to-background',
-  'gradient-mesh':
-    'bg-gradient-to-br from-primary/10 via-background to-secondary/10',
-  'gradient-warm':
-    'bg-gradient-to-br from-amber-500/5 via-background to-orange-500/5',
-  'gradient-cool':
-    'bg-gradient-to-br from-blue-500/5 via-background to-cyan-500/5',
+  'gradient-mesh': 'bg-gradient-to-br from-primary/10 via-background to-secondary/10',
+  'gradient-warm': 'bg-gradient-to-br from-amber-500/5 via-background to-orange-500/5',
+  'gradient-cool': 'bg-gradient-to-br from-blue-500/5 via-background to-cyan-500/5',
   'pattern-dots': 'bg-background',
   'pattern-grid': 'bg-background',
   'pattern-honeycomb': 'bg-background',
@@ -87,7 +80,7 @@ const overlayColorClasses = {
 
 /**
  * TemplateBackground organism - Comprehensive background control for templates
- * 
+ *
  * Provides full control over template backgrounds including:
  * - Solid colors (background, secondary, card, muted, accent)
  * - Brand colors (primary, destructive)
@@ -96,12 +89,12 @@ const overlayColorClasses = {
  * - Decorations (custom SVG patterns, shapes)
  * - Overlays (with opacity and color control)
  * - Blur effects
- * 
+ *
  * @example
  * <TemplateBackground variant="pattern-honeycomb" patternOpacity={10}>
  *   <YourContent />
  * </TemplateBackground>
- * 
+ *
  * @example
  * <TemplateBackground variant="gradient-primary" decoration={<CustomPattern />}>
  *   <YourContent />
@@ -134,8 +127,21 @@ export function TemplateBackground({
         return (
           <svg className="absolute inset-0 w-full h-full" aria-hidden="true">
             <defs>
-              <pattern id={patternId} x="0" y="0" width={patternSize === 'small' ? '20' : patternSize === 'large' ? '40' : '30'} height={patternSize === 'small' ? '20' : patternSize === 'large' ? '40' : '30'} patternUnits="userSpaceOnUse">
-                <circle cx={patternSize === 'small' ? '10' : patternSize === 'large' ? '20' : '15'} cy={patternSize === 'small' ? '10' : patternSize === 'large' ? '20' : '15'} r="1" fill="currentColor" opacity={opacity} />
+              <pattern
+                id={patternId}
+                x="0"
+                y="0"
+                width={patternSize === 'small' ? '20' : patternSize === 'large' ? '40' : '30'}
+                height={patternSize === 'small' ? '20' : patternSize === 'large' ? '40' : '30'}
+                patternUnits="userSpaceOnUse"
+              >
+                <circle
+                  cx={patternSize === 'small' ? '10' : patternSize === 'large' ? '20' : '15'}
+                  cy={patternSize === 'small' ? '10' : patternSize === 'large' ? '20' : '15'}
+                  r="1"
+                  fill="currentColor"
+                  opacity={opacity}
+                />
               </pattern>
             </defs>
             <rect width="100%" height="100%" fill={`url(#${patternId})`} className="text-muted-foreground" />
@@ -146,34 +152,67 @@ export function TemplateBackground({
         return (
           <svg className="absolute inset-0 w-full h-full" aria-hidden="true">
             <defs>
-              <pattern id={patternId} x="0" y="0" width={patternSize === 'small' ? '20' : patternSize === 'large' ? '60' : '40'} height={patternSize === 'small' ? '20' : patternSize === 'large' ? '60' : '40'} patternUnits="userSpaceOnUse">
-                <path d={`M ${patternSize === 'small' ? '20' : patternSize === 'large' ? '60' : '40'} 0 L 0 0 0 ${patternSize === 'small' ? '20' : patternSize === 'large' ? '60' : '40'}`} fill="none" stroke="currentColor" strokeWidth="0.5" opacity={opacity} />
+              <pattern
+                id={patternId}
+                x="0"
+                y="0"
+                width={patternSize === 'small' ? '20' : patternSize === 'large' ? '60' : '40'}
+                height={patternSize === 'small' ? '20' : patternSize === 'large' ? '60' : '40'}
+                patternUnits="userSpaceOnUse"
+              >
+                <path
+                  d={`M ${patternSize === 'small' ? '20' : patternSize === 'large' ? '60' : '40'} 0 L 0 0 0 ${patternSize === 'small' ? '20' : patternSize === 'large' ? '60' : '40'}`}
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="0.5"
+                  opacity={opacity}
+                />
               </pattern>
             </defs>
             <rect width="100%" height="100%" fill={`url(#${patternId})`} className="text-muted-foreground" />
           </svg>
         )
 
-      case 'honeycomb':
+      case 'honeycomb': {
         const cellSize = patternSize === 'small' ? 40 : patternSize === 'large' ? 112 : 70
         const cellHeight = patternSize === 'small' ? 69.28 : patternSize === 'large' ? 200 : 121.24
         return (
           <svg className="absolute inset-0 w-full h-full" aria-hidden="true">
             <defs>
               <pattern id={patternId} x="0" y="0" width={cellSize} height={cellHeight} patternUnits="userSpaceOnUse">
-                <path d={`M${cellSize / 2} ${cellHeight * 0.68}L0 ${cellHeight * 0.515}L0 ${cellHeight * 0.165}L${cellSize / 2} 0L${cellSize} ${cellHeight * 0.165}L${cellSize} ${cellHeight * 0.515}L${cellSize / 2} ${cellHeight * 0.68}L${cellSize / 2} ${cellHeight}`} fill="none" stroke="currentColor" strokeWidth="0.5" opacity={opacity} />
+                <path
+                  d={`M${cellSize / 2} ${cellHeight * 0.68}L0 ${cellHeight * 0.515}L0 ${cellHeight * 0.165}L${cellSize / 2} 0L${cellSize} ${cellHeight * 0.165}L${cellSize} ${cellHeight * 0.515}L${cellSize / 2} ${cellHeight * 0.68}L${cellSize / 2} ${cellHeight}`}
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="0.5"
+                  opacity={opacity}
+                />
               </pattern>
             </defs>
             <rect width="100%" height="100%" fill={`url(#${patternId})`} className="text-muted-foreground" />
           </svg>
         )
+      }
 
       case 'waves':
         return (
           <svg className="absolute inset-0 w-full h-full" aria-hidden="true">
             <defs>
-              <pattern id={patternId} x="0" y="0" width={patternSize === 'small' ? '60' : patternSize === 'large' ? '120' : '90'} height={patternSize === 'small' ? '30' : patternSize === 'large' ? '60' : '45'} patternUnits="userSpaceOnUse">
-                <path d={`M0 ${patternSize === 'small' ? '15' : patternSize === 'large' ? '30' : '22.5'} Q ${patternSize === 'small' ? '15' : patternSize === 'large' ? '30' : '22.5'} ${patternSize === 'small' ? '7.5' : patternSize === 'large' ? '15' : '11.25'} ${patternSize === 'small' ? '30' : patternSize === 'large' ? '60' : '45'} ${patternSize === 'small' ? '15' : patternSize === 'large' ? '30' : '22.5'} T ${patternSize === 'small' ? '60' : patternSize === 'large' ? '120' : '90'} ${patternSize === 'small' ? '15' : patternSize === 'large' ? '30' : '22.5'}`} fill="none" stroke="currentColor" strokeWidth="0.5" opacity={opacity} />
+              <pattern
+                id={patternId}
+                x="0"
+                y="0"
+                width={patternSize === 'small' ? '60' : patternSize === 'large' ? '120' : '90'}
+                height={patternSize === 'small' ? '30' : patternSize === 'large' ? '60' : '45'}
+                patternUnits="userSpaceOnUse"
+              >
+                <path
+                  d={`M0 ${patternSize === 'small' ? '15' : patternSize === 'large' ? '30' : '22.5'} Q ${patternSize === 'small' ? '15' : patternSize === 'large' ? '30' : '22.5'} ${patternSize === 'small' ? '7.5' : patternSize === 'large' ? '15' : '11.25'} ${patternSize === 'small' ? '30' : patternSize === 'large' ? '60' : '45'} ${patternSize === 'small' ? '15' : patternSize === 'large' ? '30' : '22.5'} T ${patternSize === 'small' ? '60' : patternSize === 'large' ? '120' : '90'} ${patternSize === 'small' ? '15' : patternSize === 'large' ? '30' : '22.5'}`}
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="0.5"
+                  opacity={opacity}
+                />
               </pattern>
             </defs>
             <rect width="100%" height="100%" fill={`url(#${patternId})`} className="text-muted-foreground" />
@@ -184,10 +223,35 @@ export function TemplateBackground({
         return (
           <svg className="absolute inset-0 w-full h-full" aria-hidden="true">
             <defs>
-              <pattern id={patternId} x="0" y="0" width={patternSize === 'small' ? '40' : patternSize === 'large' ? '80' : '60'} height={patternSize === 'small' ? '40' : patternSize === 'large' ? '80' : '60'} patternUnits="userSpaceOnUse">
-                <circle cx={patternSize === 'small' ? '10' : patternSize === 'large' ? '20' : '15'} cy={patternSize === 'small' ? '10' : patternSize === 'large' ? '20' : '15'} r="1.5" fill="currentColor" opacity={opacity} />
-                <circle cx={patternSize === 'small' ? '30' : patternSize === 'large' ? '60' : '45'} cy={patternSize === 'small' ? '30' : patternSize === 'large' ? '60' : '45'} r="1.5" fill="currentColor" opacity={opacity} />
-                <path d={`M${patternSize === 'small' ? '10' : patternSize === 'large' ? '20' : '15'} ${patternSize === 'small' ? '10' : patternSize === 'large' ? '20' : '15'} L${patternSize === 'small' ? '30' : patternSize === 'large' ? '60' : '45'} ${patternSize === 'small' ? '10' : patternSize === 'large' ? '20' : '15'} L${patternSize === 'small' ? '30' : patternSize === 'large' ? '60' : '45'} ${patternSize === 'small' ? '30' : patternSize === 'large' ? '60' : '45'}`} fill="none" stroke="currentColor" strokeWidth="0.5" opacity={opacity * 0.5} />
+              <pattern
+                id={patternId}
+                x="0"
+                y="0"
+                width={patternSize === 'small' ? '40' : patternSize === 'large' ? '80' : '60'}
+                height={patternSize === 'small' ? '40' : patternSize === 'large' ? '80' : '60'}
+                patternUnits="userSpaceOnUse"
+              >
+                <circle
+                  cx={patternSize === 'small' ? '10' : patternSize === 'large' ? '20' : '15'}
+                  cy={patternSize === 'small' ? '10' : patternSize === 'large' ? '20' : '15'}
+                  r="1.5"
+                  fill="currentColor"
+                  opacity={opacity}
+                />
+                <circle
+                  cx={patternSize === 'small' ? '30' : patternSize === 'large' ? '60' : '45'}
+                  cy={patternSize === 'small' ? '30' : patternSize === 'large' ? '60' : '45'}
+                  r="1.5"
+                  fill="currentColor"
+                  opacity={opacity}
+                />
+                <path
+                  d={`M${patternSize === 'small' ? '10' : patternSize === 'large' ? '20' : '15'} ${patternSize === 'small' ? '10' : patternSize === 'large' ? '20' : '15'} L${patternSize === 'small' ? '30' : patternSize === 'large' ? '60' : '45'} ${patternSize === 'small' ? '10' : patternSize === 'large' ? '20' : '15'} L${patternSize === 'small' ? '30' : patternSize === 'large' ? '60' : '45'} ${patternSize === 'small' ? '30' : patternSize === 'large' ? '60' : '45'}`}
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="0.5"
+                  opacity={opacity * 0.5}
+                />
               </pattern>
             </defs>
             <rect width="100%" height="100%" fill={`url(#${patternId})`} className="text-muted-foreground" />
@@ -198,8 +262,24 @@ export function TemplateBackground({
         return (
           <svg className="absolute inset-0 w-full h-full" aria-hidden="true">
             <defs>
-              <pattern id={patternId} x="0" y="0" width={patternSize === 'small' ? '20' : patternSize === 'large' ? '40' : '30'} height={patternSize === 'small' ? '20' : patternSize === 'large' ? '40' : '30'} patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
-                <line x1="0" y1="0" x2="0" y2={patternSize === 'small' ? '20' : patternSize === 'large' ? '40' : '30'} stroke="currentColor" strokeWidth="0.5" opacity={opacity} />
+              <pattern
+                id={patternId}
+                x="0"
+                y="0"
+                width={patternSize === 'small' ? '20' : patternSize === 'large' ? '40' : '30'}
+                height={patternSize === 'small' ? '20' : patternSize === 'large' ? '40' : '30'}
+                patternUnits="userSpaceOnUse"
+                patternTransform="rotate(45)"
+              >
+                <line
+                  x1="0"
+                  y1="0"
+                  x2="0"
+                  y2={patternSize === 'small' ? '20' : patternSize === 'large' ? '40' : '30'}
+                  stroke="currentColor"
+                  strokeWidth="0.5"
+                  opacity={opacity}
+                />
               </pattern>
             </defs>
             <rect width="100%" height="100%" fill={`url(#${patternId})`} className="text-muted-foreground" />
@@ -215,26 +295,14 @@ export function TemplateBackground({
     <div className={cn('relative', variantClasses[variant], className)}>
       {/* Built-in pattern layer */}
       {isPatternVariant && (
-        <div
-          className={cn(
-            'absolute inset-0 overflow-hidden',
-            blur && 'blur-sm'
-          )}
-          aria-hidden="true"
-        >
+        <div className={cn('absolute inset-0 overflow-hidden', blur && 'blur-sm')} aria-hidden="true">
           {renderPattern()}
         </div>
       )}
 
       {/* Custom decoration layer */}
       {decoration && (
-        <div
-          className={cn(
-            'absolute inset-0 overflow-hidden',
-            blur && 'blur-sm'
-          )}
-          aria-hidden="true"
-        >
+        <div className={cn('absolute inset-0 overflow-hidden', blur && 'blur-sm')} aria-hidden="true">
           {decoration}
         </div>
       )}
@@ -242,10 +310,7 @@ export function TemplateBackground({
       {/* Overlay layer */}
       {hasOverlay && (
         <div
-          className={cn(
-            'absolute inset-0',
-            overlayColorClasses[overlayColor]
-          )}
+          className={cn('absolute inset-0', overlayColorClasses[overlayColor])}
           style={{ opacity: overlayOpacity / 100 }}
           aria-hidden="true"
         />
@@ -256,4 +321,3 @@ export function TemplateBackground({
     </div>
   )
 }
-

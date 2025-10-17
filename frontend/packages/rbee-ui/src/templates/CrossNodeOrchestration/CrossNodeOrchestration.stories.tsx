@@ -1,6 +1,9 @@
-import type { Meta, StoryObj } from '@storybook/react'
-import { crossNodeOrchestrationContainerProps, crossNodeOrchestrationProps } from '../../pages/FeaturesPage/FeaturesPageProps'
 import { TemplateContainer } from '@rbee/ui/molecules'
+import type { Meta, StoryObj } from '@storybook/react'
+import {
+  crossNodeOrchestrationContainerProps,
+  crossNodeOrchestrationProps,
+} from '../../pages/FeaturesPage/FeaturesPageProps'
 import { CrossNodeOrchestration } from './CrossNodeOrchestration'
 
 const meta: Meta<typeof CrossNodeOrchestration> = {

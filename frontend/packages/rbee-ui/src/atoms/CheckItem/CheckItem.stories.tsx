@@ -1,6 +1,7 @@
 // Created by: TEAM-011
-import type { Meta, StoryObj } from '@storybook/react'
+
 import { BulletListItem } from '@rbee/ui/molecules'
+import type { Meta, StoryObj } from '@storybook/react'
 import { CheckItem } from './CheckItem'
 
 const meta: Meta<typeof CheckItem> = {

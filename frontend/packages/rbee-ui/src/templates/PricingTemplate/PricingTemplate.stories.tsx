@@ -1,6 +1,9 @@
-import { pricingTemplateContainerProps as homePricingTemplateContainerProps, pricingTemplateProps as homePricingTemplateProps } from '@rbee/ui/pages/HomePage'
-import { pricingTemplateContainerProps, pricingTemplateProps } from '@rbee/ui/pages/PricingPage'
 import { TemplateContainer } from '@rbee/ui/molecules'
+import {
+  pricingTemplateContainerProps as homePricingTemplateContainerProps,
+  pricingTemplateProps as homePricingTemplateProps,
+} from '@rbee/ui/pages/HomePage'
+import { pricingTemplateContainerProps, pricingTemplateProps } from '@rbee/ui/pages/PricingPage'
 import type { Meta, StoryObj } from '@storybook/react'
 import { PricingTemplate } from './PricingTemplate'
 
@@ -19,7 +22,7 @@ type Story = StoryObj<typeof meta>
 /**
  * OnHomePricing - pricingTemplateProps
  * @tags home, pricing, tiers
- * 
+ *
  * PricingTemplate as used on the Home page
  * - Kicker badges (Open source, OpenAI-compatible, Multi-GPU, No feature gates)
  * - Editorial image below tiers
@@ -37,7 +40,7 @@ export const OnHomePricing: Story = {
 /**
  * OnHomePricing - pricingTemplateProps
  * @tags home, pricing, tiers
- * 
+ *
  * PricingTemplate as used on the Pricing page
  * - No kicker badges
  * - No editorial image

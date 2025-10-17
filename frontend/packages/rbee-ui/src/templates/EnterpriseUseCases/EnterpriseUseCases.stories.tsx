@@ -1,5 +1,5 @@
-import { enterpriseUseCasesContainerProps, enterpriseUseCasesProps } from '@rbee/ui/pages/EnterprisePage'
 import { TemplateContainer } from '@rbee/ui/molecules'
+import { enterpriseUseCasesContainerProps, enterpriseUseCasesProps } from '@rbee/ui/pages/EnterprisePage'
 import type { Meta, StoryObj } from '@storybook/react'
 import { EnterpriseUseCases } from './EnterpriseUseCases'
 
@@ -18,7 +18,7 @@ type Story = StoryObj<typeof meta>
 /**
  * OnEnterpriseUseCases - enterpriseUseCasesProps
  * @tags enterprise, use-cases, industries
- * 
+ *
  * EnterpriseUseCases as used on the Enterprise page
  * - Industry playbooks grid
  * - Finance, Healthcare, Legal, Government use cases

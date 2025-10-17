@@ -1,5 +1,5 @@
-import { whatIsRbeeContainerProps, whatIsRbeeProps } from '@rbee/ui/pages/HomePage'
 import { TemplateContainer } from '@rbee/ui/molecules'
+import { whatIsRbeeContainerProps, whatIsRbeeProps } from '@rbee/ui/pages/HomePage'
 import type { Meta, StoryObj } from '@storybook/react'
 import { WhatIsRbee } from './WhatIsRbee'
 

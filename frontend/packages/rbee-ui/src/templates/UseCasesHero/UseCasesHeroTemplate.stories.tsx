@@ -15,7 +15,7 @@ type Story = StoryObj<typeof meta>
 /**
  * OnUseCasesHero - useCasesHeroProps
  * @tags use-cases, hero, independence
- * 
+ *
  * UseCasesHeroTemplate as used on the Use Cases page
  * - "Built for Those Who Value Independence" headline
  * - OpenAI-compatible badge

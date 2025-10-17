@@ -1,20 +1,20 @@
-import { cn } from "@rbee/ui/utils";
-import type { ReactNode } from "react";
+import { cn } from '@rbee/ui/utils'
+import type { ReactNode } from 'react'
 
 export interface LegendItem {
   /** Icon component */
-  icon: ReactNode;
+  icon: ReactNode
   /** Label text */
-  label: string;
+  label: string
 }
 
 export interface LegendProps {
   /** Legend items with icons */
-  items?: LegendItem[];
+  items?: LegendItem[]
   /** Additional note text */
-  note?: string;
+  note?: string
   /** Additional CSS classes */
-  className?: string;
+  className?: string
 }
 
 /**
@@ -33,16 +33,11 @@ export interface LegendProps {
  */
 export function Legend({ items, note, className }: LegendProps) {
   if (!items && !note) {
-    return null;
+    return null
   }
 
   return (
-    <div
-      className={cn(
-        "text-xs text-muted-foreground flex flex-wrap gap-4 justify-center",
-        className
-      )}
-    >
+    <div className={cn('text-xs text-muted-foreground flex flex-wrap gap-4 justify-center', className)}>
       {items?.map((item, i) => (
         <span key={i} className="flex items-center gap-1.5">
           {item.icon}
@@ -51,5 +46,5 @@ export function Legend({ items, note, className }: LegendProps) {
       ))}
       {note && <span>{note}</span>}
     </div>
-  );
+  )
 }

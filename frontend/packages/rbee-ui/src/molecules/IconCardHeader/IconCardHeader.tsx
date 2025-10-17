@@ -1,38 +1,29 @@
-import { CardDescription, CardHeader, CardTitle } from "@rbee/ui/atoms";
-import { IconPlate } from "@rbee/ui/molecules";
-import { cn } from "@rbee/ui/utils";
-import type * as React from "react";
+import { CardDescription, CardHeader, CardTitle } from '@rbee/ui/atoms'
+import { IconPlate } from '@rbee/ui/molecules'
+import { cn } from '@rbee/ui/utils'
+import type * as React from 'react'
 
 export interface IconCardHeaderProps {
   /** Rendered icon component */
-  icon: React.ReactNode;
+  icon: React.ReactNode
   /** Card title */
-  title: string;
+  title: string
   /** Optional subtitle/description */
-  subtitle?: string;
+  subtitle?: string
   /** ID for the title (for aria-labelledby) */
-  titleId?: string;
+  titleId?: string
   /** Icon size */
-  iconSize?: "sm" | "md" | "lg";
+  iconSize?: 'sm' | 'md' | 'lg'
   /** Icon tone */
-  iconTone?:
-    | "primary"
-    | "muted"
-    | "success"
-    | "warning"
-    | "chart-1"
-    | "chart-2"
-    | "chart-3"
-    | "chart-4"
-    | "chart-5";
+  iconTone?: 'primary' | 'muted' | 'success' | 'warning' | 'chart-1' | 'chart-2' | 'chart-3' | 'chart-4' | 'chart-5'
   /** Title size class */
-  titleClassName?: string;
+  titleClassName?: string
   /** Subtitle size class */
-  subtitleClassName?: string;
+  subtitleClassName?: string
   /** Additional CSS classes for the header wrapper */
-  className?: string;
+  className?: string
   /** Alignment of items */
-  align?: "start" | "center";
+  align?: 'start' | 'center'
 }
 
 /**
@@ -54,41 +45,32 @@ export function IconCardHeader({
   title,
   subtitle,
   titleId,
-  iconSize = "lg",
-  iconTone = "primary",
-  titleClassName = "text-2xl",
+  iconSize = 'lg',
+  iconTone = 'primary',
+  titleClassName = 'text-2xl',
   subtitleClassName,
   className,
-  align = "start",
+  align = 'start',
 }: IconCardHeaderProps) {
   return (
     <CardHeader className={className}>
-      <div
-        className={cn(
-          "flex gap-4",
-          align === "center" ? "items-center" : "items-start"
-        )}
-      >
+      <div className={cn('flex gap-4', align === 'center' ? 'items-center' : 'items-start')}>
         <IconPlate
           icon={icon}
           size={iconSize}
           tone={iconTone}
-          className={cn("shrink-0", iconSize === "sm" ? "" : "ranslate-y-1")}
+          className={cn('shrink-0', iconSize === 'sm' ? '' : 'ranslate-y-1')}
           shape="rounded"
         />
         <div className="flex-1">
           <CardTitle id={titleId} className={titleClassName}>
             {title}
           </CardTitle>
-          {subtitle && (
-            <CardDescription className={subtitleClassName}>
-              {subtitle}
-            </CardDescription>
-          )}
+          {subtitle && <CardDescription className={subtitleClassName}>{subtitle}</CardDescription>}
         </div>
       </div>
     </CardHeader>
-  );
+  )
 }
 
-export { IconCardHeader as default };
+export { IconCardHeader as default }

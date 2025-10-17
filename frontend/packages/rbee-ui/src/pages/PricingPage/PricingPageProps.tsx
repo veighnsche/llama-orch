@@ -373,15 +373,12 @@ export const pricingEmailCaptureProps: EmailCaptureProps = {
 /**
  * Email capture container - Background wrapper
  */
-export const pricingEmailCaptureContainerProps: Omit<
-  TemplateContainerProps,
-  "children"
-> = {
+export const pricingEmailCaptureContainerProps: Omit<TemplateContainerProps, 'children'> = {
   title: null,
   background: {
     variant: 'background',
   },
-  paddingY: "2xl",
-  maxWidth: "3xl",
-  align: "center",
+  paddingY: '2xl',
+  maxWidth: '3xl',
+  align: 'center',
 }

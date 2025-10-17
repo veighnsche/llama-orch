@@ -2,9 +2,9 @@
 
 import { Badge } from '@rbee/ui/atoms/Badge'
 import { Card, CardAction, CardContent } from '@rbee/ui/atoms/Card'
-import { HeroTemplate } from '@rbee/ui/templates/HeroTemplate'
 import { GPUListItem, IconCardHeader, MetricCard } from '@rbee/ui/molecules'
 import { MonthlyEarningsPanel } from '@rbee/ui/organisms'
+import { HeroTemplate } from '@rbee/ui/templates/HeroTemplate'
 import type * as React from 'react'
 
 // ────────────────────────────────────────────────────────────────────────────

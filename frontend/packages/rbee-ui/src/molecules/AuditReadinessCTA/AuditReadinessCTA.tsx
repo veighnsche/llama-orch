@@ -36,11 +36,7 @@ export function AuditReadinessCTA({
       <CardContent className="p-8 text-center">
         <h3 className="mb-2 text-2xl font-semibold text-foreground">{heading}</h3>
         <p className="mb-2 text-foreground/85">{description}</p>
-        <p
-          id="compliance-pack-note"
-          className="mb-6 text-sm text-muted-foreground"
-          aria-label={noteAriaLabel}
-        >
+        <p id="compliance-pack-note" className="mb-6 text-sm text-muted-foreground" aria-label={noteAriaLabel}>
           {note}
         </p>
         <div className="flex flex-col items-center justify-center gap-3 sm:flex-row">

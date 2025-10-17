@@ -1,27 +1,27 @@
-import { Badge, Card, CardContent } from "@rbee/ui/atoms";
-import { IconCardHeader, ListCard } from "@rbee/ui/molecules";
-import Link from "next/link";
-import type { ReactNode } from "react";
+import { Badge, Card, CardContent } from '@rbee/ui/atoms'
+import { IconCardHeader, ListCard } from '@rbee/ui/molecules'
+import Link from 'next/link'
+import type { ReactNode } from 'react'
 
 export interface IndustryCaseCardProps {
   /** Lucide icon component (e.g., Building2, Heart, Scale, Shield) */
-  icon: ReactNode;
+  icon: ReactNode
   /** Industry name (e.g., "Financial Services") */
-  industry: string;
+  industry: string
   /** Segment description (e.g., "Banks, Insurance, FinTech") */
-  segments: string;
+  segments: string
   /** Brief summary of the use case */
-  summary: string;
+  summary: string
   /** List of challenges */
-  challenges: string[];
+  challenges: string[]
   /** List of solutions */
-  solutions: string[];
+  solutions: string[]
   /** Optional compliance badges */
-  badges?: string[];
+  badges?: string[]
   /** Optional link to industry page */
-  href?: string;
+  href?: string
   /** Additional CSS classes */
-  className?: string;
+  className?: string
 }
 
 /**
@@ -41,7 +41,7 @@ export function IndustryCaseCard({
   href,
   className,
 }: IndustryCaseCardProps) {
-  const industryId = `industry-${industry.toLowerCase().replace(/\s+/g, "-")}`;
+  const industryId = `industry-${industry.toLowerCase().replace(/\s+/g, '-')}`
 
   return (
     <Card className="p-8">
@@ -71,13 +71,7 @@ export function IndustryCaseCard({
         <p className="text-sm text-muted-foreground">{summary}</p>
 
         {/* Challenge panel */}
-        <ListCard
-          title="Challenge"
-          items={challenges}
-          variant="dot"
-          color="muted"
-          cardClassName="border-border"
-        />
+        <ListCard title="Challenge" items={challenges} variant="dot" color="muted" cardClassName="border-border" />
 
         {/* Solution panel */}
         <ListCard
@@ -103,5 +97,5 @@ export function IndustryCaseCard({
         )}
       </CardContent>
     </Card>
-  );
+  )
 }

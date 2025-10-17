@@ -1,6 +1,6 @@
+import { TemplateContainer } from '@rbee/ui/molecules'
 import type { Meta, StoryObj } from '@storybook/react'
 import { multiBackendGpuContainerProps, multiBackendGpuProps } from '../../pages/FeaturesPage/FeaturesPageProps'
-import { TemplateContainer } from '@rbee/ui/molecules'
 import { MultiBackendGpuTemplate } from './MultiBackendGpuTemplate'
 
 const meta: Meta<typeof MultiBackendGpuTemplate> = {

@@ -1,6 +1,6 @@
 import { IndustryCaseCard } from '@rbee/ui/organisms'
 import Image from 'next/image'
-import { type ReactNode } from 'react'
+import type { ReactNode } from 'react'
 
 // ──────────────────────────────────────────────────────────────────────────────
 // Types

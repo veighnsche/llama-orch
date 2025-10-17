@@ -1,5 +1,5 @@
-import { useCasesTemplateContainerProps, useCasesTemplateProps } from '@rbee/ui/pages/HomePage'
 import { TemplateContainer } from '@rbee/ui/molecules'
+import { useCasesTemplateContainerProps, useCasesTemplateProps } from '@rbee/ui/pages/HomePage'
 import type { Meta, StoryObj } from '@storybook/react'
 import { UseCasesTemplate } from './UseCasesTemplate'
 
@@ -29,7 +29,7 @@ type Story = StoryObj<typeof meta>
 /**
  * OnHomeUseCases - useCasesTemplateProps
  * @tags home, use-cases, personas
- * 
+ *
  * UseCasesTemplate as used on the Home page
  * - Six use case cards in 3-column grid
  * - Icons: Laptop, Users, HomeIcon, Building, Code, Workflow

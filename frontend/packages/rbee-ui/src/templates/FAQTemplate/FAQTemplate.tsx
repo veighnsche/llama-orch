@@ -206,7 +206,8 @@ export function FAQTemplate({
                       {idx > 0 && (idx === emptySearchKeywords.length - 1 ? ', or ' : ', ')}
                       <span className="font-medium">{keyword}</span>
                     </span>
-                  ))}.
+                  ))}
+                  .
                 </p>
               </div>
             ) : (

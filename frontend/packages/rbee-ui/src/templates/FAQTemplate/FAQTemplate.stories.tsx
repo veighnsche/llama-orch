@@ -1,6 +1,6 @@
+import { TemplateContainer } from '@rbee/ui/molecules'
 import { faqTemplateContainerProps, faqTemplateProps } from '@rbee/ui/pages/HomePage'
 import { pricingFaqContainerProps, pricingFaqProps } from '@rbee/ui/pages/PricingPage'
-import { TemplateContainer } from '@rbee/ui/molecules'
 import type { Meta, StoryObj } from '@storybook/react'
 import { FAQTemplate } from './FAQTemplate'
 
@@ -19,10 +19,10 @@ type Story = StoryObj<typeof meta>
 /**
  * OnPricingFAQ - pricingFaqProps
  * @tags pricing, faq, billing
- * 
+ *
  * OnHomeFAQ - faqTemplateProps
  * @tags home, faq, support
- * 
+ *
  * FAQTemplate as used on the Home page
  * - Badge: "Support • Self-hosted AI"
  * - 8 general questions across 6 categories
@@ -42,10 +42,10 @@ export const OnHomeFAQ: Story = {
 /**
  * OnPricingFAQ - pricingFaqProps
  * @tags pricing, faq, billing
- * 
+ *
  * OnHomeFAQ - faqTemplateProps
  * @tags home, faq, support
- * 
+ *
  * FAQTemplate as used on the Pricing page
  * - Badge: "Pricing • Plans & Billing"
  * - 6 pricing-specific questions across 4 categories

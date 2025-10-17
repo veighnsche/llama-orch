@@ -1,34 +1,29 @@
-import { Card } from "@rbee/ui/atoms";
-import { Disclaimer, GPUListItem, IconCardHeader } from "@rbee/ui/molecules";
-import { cn } from "@rbee/ui/utils";
-import { TrendingUp } from "lucide-react";
+import { Card } from '@rbee/ui/atoms'
+import { Disclaimer, GPUListItem, IconCardHeader } from '@rbee/ui/molecules'
+import { cn } from '@rbee/ui/utils'
+import { TrendingUp } from 'lucide-react'
 
 export type EarningRow = {
-  model: string;
-  meta: string;
-  value: string;
-  note?: string;
-};
+  model: string
+  meta: string
+  value: string
+  note?: string
+}
 
 export interface EarningsCardProps {
   /** Card title */
-  title?: string;
+  title?: string
   /** Earnings rows */
-  rows: EarningRow[];
+  rows: EarningRow[]
   /** Optional disclaimer text */
-  disclaimer?: string;
+  disclaimer?: string
   /** Custom class name */
-  className?: string;
+  className?: string
 }
 
-export function EarningsCard({
-  title = "Compliance Metrics",
-  rows,
-  disclaimer,
-  className,
-}: EarningsCardProps) {
+export function EarningsCard({ title = 'Compliance Metrics', rows, disclaimer, className }: EarningsCardProps) {
   return (
-    <Card className={cn("p-6 sm:p-8", className)}>
+    <Card className={cn('p-6 sm:p-8', className)}>
       <IconCardHeader
         icon={<TrendingUp />}
         title={title}
@@ -56,5 +51,5 @@ export function EarningsCard({
         </div>
       )}
     </Card>
-  );
+  )
 }

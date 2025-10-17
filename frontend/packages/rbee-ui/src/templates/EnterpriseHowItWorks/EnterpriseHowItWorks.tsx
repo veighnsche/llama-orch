@@ -38,12 +38,7 @@ export type EnterpriseHowItWorksProps = {
 // Main Component
 // ──────────────────────────────────────────────────────────────────────────────
 
-export function EnterpriseHowItWorks({
-  id,
-  backgroundImage,
-  deploymentSteps,
-  timeline,
-}: EnterpriseHowItWorksProps) {
+export function EnterpriseHowItWorks({ id, backgroundImage, deploymentSteps, timeline }: EnterpriseHowItWorksProps) {
   return (
     <div id={id} className="relative">
       {/* Decorative background illustration */}

@@ -121,8 +121,8 @@ export const InFAQContext: Story = {
         <AccordionItem value="what-is">
           <AccordionTrigger>What is rbee?</AccordionTrigger>
           <AccordionContent>
-            rbee is a private LLM hosting platform that allows you to deploy and manage open-source language models
-            with enterprise-grade security.
+            rbee is a private LLM hosting platform that allows you to deploy and manage open-source language models with
+            enterprise-grade security.
           </AccordionContent>
         </AccordionItem>
         <AccordionItem value="pricing">

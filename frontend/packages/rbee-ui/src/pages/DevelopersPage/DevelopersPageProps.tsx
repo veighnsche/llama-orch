@@ -515,22 +515,19 @@ else {
     },
   ],
   defaultTab: 'api',
-};
+}
 
 /**
  * Core features tabs container
  */
-export const coreFeatureTabsContainerProps: Omit<
-  TemplateContainerProps,
-  "children"
-> = {
+export const coreFeatureTabsContainerProps: Omit<TemplateContainerProps, 'children'> = {
   title: null,
   background: {
     variant: 'background',
   },
-  paddingY: "2xl",
-  maxWidth: "7xl",
-};
+  paddingY: '2xl',
+  maxWidth: '7xl',
+}
 
 // === Use Cases Template ===
 

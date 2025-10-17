@@ -53,12 +53,7 @@ export type EnterpriseComplianceProps = {
 // Main Component
 // ──────────────────────────────────────────────────────────────────────────────
 
-export function EnterpriseCompliance({
-  id,
-  backgroundImage,
-  pillars,
-  auditReadiness,
-}: EnterpriseComplianceProps) {
+export function EnterpriseCompliance({ id, backgroundImage, pillars, auditReadiness }: EnterpriseComplianceProps) {
   return (
     <div id={id} className="relative">
       {/* Decorative background illustration */}

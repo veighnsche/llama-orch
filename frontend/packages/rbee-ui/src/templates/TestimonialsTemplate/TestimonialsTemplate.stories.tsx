@@ -1,5 +1,5 @@
-import { testimonialsTemplateContainerProps, testimonialsTemplateProps } from '@rbee/ui/pages/HomePage'
 import { TemplateContainer } from '@rbee/ui/molecules'
+import { testimonialsTemplateContainerProps, testimonialsTemplateProps } from '@rbee/ui/pages/HomePage'
 import type { Meta, StoryObj } from '@storybook/react'
 import { TestimonialsTemplate } from './TestimonialsTemplate'
 
@@ -18,7 +18,7 @@ type Story = StoryObj<typeof meta>
 /**
  * OnHomeTestimonials - testimonialsTemplateProps
  * @tags home, testimonials, social-proof
- * 
+ *
  * TestimonialsTemplate as used on the Home page
  * - Three testimonials (Alex K., Sarah M., Marcus T.)
  * - Four stats (GitHub stars, installations, GPUs, cost)

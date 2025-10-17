@@ -17,7 +17,7 @@ type Story = StoryObj<typeof meta>
 /**
  * OnEnterpriseHero - enterpriseHeroProps
  * @tags enterprise, hero, gdpr, compliance, eu
- * 
+ *
  * EnterpriseHero as used on the Enterprise page
  * - GDPR-compliant messaging
  * - Immutable audit trail console visual

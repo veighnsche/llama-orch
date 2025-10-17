@@ -1,6 +1,6 @@
-"use client";
+'use client'
 
-import { TemplateContainer } from "@rbee/ui/molecules";
+import { TemplateContainer } from '@rbee/ui/molecules'
 import {
   CardGridTemplate,
   ComparisonTemplate,
@@ -14,7 +14,7 @@ import {
   ProblemTemplate,
   SolutionTemplate,
   TestimonialsTemplate,
-} from "@rbee/ui/templates";
+} from '@rbee/ui/templates'
 import {
   enterpriseComparisonContainerProps,
   enterpriseComparisonProps,
@@ -39,7 +39,7 @@ import {
   enterpriseTestimonialsData,
   enterpriseUseCasesContainerProps,
   enterpriseUseCasesProps,
-} from "./EnterprisePageProps";
+} from './EnterprisePageProps'
 
 export default function EnterprisePage() {
   return (
@@ -89,5 +89,5 @@ export default function EnterprisePage() {
         <EnterpriseCTA {...enterpriseCTAProps} />
       </TemplateContainer>
     </main>
-  );
+  )
 }

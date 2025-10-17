@@ -3,14 +3,8 @@ import {
   solutionTemplateContainerProps as developersContainerProps,
   solutionTemplateProps as developersSolutionProps,
 } from '@rbee/ui/pages/DevelopersPage'
-import {
-  enterpriseSolutionContainerProps,
-  enterpriseSolutionProps,
-} from '@rbee/ui/pages/EnterprisePage'
-import {
-  solutionTemplateContainerProps as homeContainerProps,
-  solutionTemplateProps,
-} from '@rbee/ui/pages/HomePage'
+import { enterpriseSolutionContainerProps, enterpriseSolutionProps } from '@rbee/ui/pages/EnterprisePage'
+import { solutionTemplateContainerProps as homeContainerProps, solutionTemplateProps } from '@rbee/ui/pages/HomePage'
 import {
   providersMarketplaceContainerProps,
   providersMarketplaceSolutionProps,
@@ -35,7 +29,7 @@ type Story = StoryObj<typeof meta>
 /**
  * OnHomeSolution - solutionTemplateProps
  * @tags home, solution, benefits, orchestration
- * 
+ *
  * SolutionTemplate as used on the Home page
  * - Four benefits with topology visualization
  * - Multi-host BeeArchitecture diagram
@@ -53,7 +47,7 @@ export const OnHomeSolution: Story = {
 /**
  * OnEnterpriseSolution - enterpriseSolutionProps
  * @tags enterprise, solution, compliance, gdpr
- * 
+ *
  * SolutionTemplate as used on the Enterprise page
  * - Four compliance-focused features
  * - How It Works steps for enterprise deployment
@@ -73,7 +67,7 @@ export const OnEnterpriseSolution: Story = {
 /**
  * OnDevelopersSolution - solutionTemplateProps
  * @tags developers, solution, api, openai
- * 
+ *
  * SolutionTemplate as used on the Developers page
  * - Four benefits focused on developer needs
  * - How It Works steps
@@ -92,7 +86,7 @@ export const OnDevelopersSolution: Story = {
 /**
  * OnProvidersSolution - providersSolutionProps
  * @tags providers, solution, gpu, earnings
- * 
+ *
  * SolutionTemplate as used on the Providers page
  * - Four benefits focused on GPU providers
  * - How It Works steps for marketplace
@@ -111,7 +105,7 @@ export const OnProvidersSolution: Story = {
 /**
  * OnProvidersMarketplace - providersMarketplaceSolutionProps
  * @tags providers, marketplace, commission
- * 
+ *
  * SolutionTemplate for Providers Marketplace
  * - Four marketplace feature tiles
  * - How It Works steps

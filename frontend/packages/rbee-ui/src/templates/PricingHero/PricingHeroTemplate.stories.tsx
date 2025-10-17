@@ -15,7 +15,7 @@ type Story = StoryObj<typeof meta>
 /**
  * OnPricingHero - pricingHeroProps
  * @tags pricing, hero, plans
- * 
+ *
  * PricingHeroTemplate as used on the Pricing page
  * - "Start Free. Scale When Ready." headline
  * - Honest Pricing badge

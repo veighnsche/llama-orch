@@ -17,7 +17,7 @@ type Story = StoryObj<typeof meta>
 /**
  * OnProvidersCTA - providersCTAProps
  * @tags providers, cta, signup
- * 
+ *
  * ProvidersCTA as used on the Providers page
  * - Final call-to-action for GPU providers
  * - Encourages signup and onboarding

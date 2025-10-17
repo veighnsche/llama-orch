@@ -1,11 +1,11 @@
-import type { Meta, StoryObj } from "@storybook/react";
-import { GlassCard } from "./GlassCard";
+import type { Meta, StoryObj } from '@storybook/react'
+import { GlassCard } from './GlassCard'
 
 const meta = {
-  title: "Atoms/GlassCard",
+  title: 'Atoms/GlassCard',
   component: GlassCard,
   parameters: {
-    layout: "centered",
+    layout: 'centered',
     docs: {
       description: {
         component: `
@@ -58,11 +58,11 @@ import { GlassCard } from '@rbee/ui/atoms'
       },
     },
   },
-  tags: ["autodocs"],
-} satisfies Meta<typeof GlassCard>;
+  tags: ['autodocs'],
+} satisfies Meta<typeof GlassCard>
 
-export default meta;
-type Story = StoryObj<typeof meta>;
+export default meta
+type Story = StoryObj<typeof meta>
 
 export const Default: Story = {
   args: {
@@ -77,11 +77,11 @@ export const Default: Story = {
     docs: {
       description: {
         story:
-          "Default GlassCard with simple content. Shows the frosted glass effect with backdrop blur and semi-transparent background.",
+          'Default GlassCard with simple content. Shows the frosted glass effect with backdrop blur and semi-transparent background.',
       },
     },
   },
-};
+}
 
 export const FloatingBadge: Story = {
   args: {
@@ -95,30 +95,19 @@ export const FloatingBadge: Story = {
   parameters: {
     docs: {
       description: {
-        story:
-          "GlassCard styled as a floating badge. Compact padding and typography for status indicators.",
+        story: 'GlassCard styled as a floating badge. Compact padding and typography for status indicators.',
       },
     },
   },
-};
+}
 
 export const WithIcon: Story = {
   args: {
     children: (
       <div className="flex items-center gap-3 p-4">
         <div className="h-10 w-10 rounded-full bg-primary/20 flex items-center justify-center">
-          <svg
-            className="h-5 w-5 text-primary"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M5 13l4 4L19 7"
-            />
+          <svg className="h-5 w-5 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
           </svg>
         </div>
         <div>
@@ -131,11 +120,11 @@ export const WithIcon: Story = {
   parameters: {
     docs: {
       description: {
-        story: "GlassCard with icon and text content. Useful for status cards with visual indicators.",
+        story: 'GlassCard with icon and text content. Useful for status cards with visual indicators.',
       },
     },
   },
-};
+}
 
 export const KPICard: Story = {
   args: {
@@ -160,11 +149,11 @@ export const KPICard: Story = {
     docs: {
       description: {
         story:
-          "GlassCard as a KPI card showing multiple metrics. Demonstrates use case for floating performance indicators.",
+          'GlassCard as a KPI card showing multiple metrics. Demonstrates use case for floating performance indicators.',
       },
     },
   },
-};
+}
 
 export const WithBackground: Story = {
   args: {
@@ -187,11 +176,11 @@ export const WithBackground: Story = {
     docs: {
       description: {
         story:
-          "GlassCard over a colorful background. Demonstrates how the frosted glass effect allows background content to show through while maintaining readability.",
+          'GlassCard over a colorful background. Demonstrates how the frosted glass effect allows background content to show through while maintaining readability.',
       },
     },
   },
-};
+}
 
 export const Compact: Story = {
   args: {
@@ -204,8 +193,8 @@ export const Compact: Story = {
   parameters: {
     docs: {
       description: {
-        story: "Compact GlassCard for small badges or labels. Minimal padding for tight spaces.",
+        story: 'Compact GlassCard for small badges or labels. Minimal padding for tight spaces.',
       },
     },
   },
-};
+}

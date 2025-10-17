@@ -138,61 +138,61 @@ export function AudienceCard({
           aria-hidden="true"
         />
       )}
-    <div className="flex h-full flex-col">
-      {/* Optional decision label above card */}
-      {decisionLabel && (
-        <div className={cn('mb-3 text-sm font-medium font-sans', textVariants({ color }))}>{decisionLabel}</div>
-      )}
+      <div className="flex h-full flex-col">
+        {/* Optional decision label above card */}
+        {decisionLabel && (
+          <div className={cn('mb-3 text-sm font-medium font-sans', textVariants({ color }))}>{decisionLabel}</div>
+        )}
 
-      <Card className={cn(cardContainerVariants({ color }), 'flex flex-1 flex-col p-6')}>
-        <div className={gradientVariants({ color })} />
+        <Card className={cn(cardContainerVariants({ color }), 'flex flex-1 flex-col p-6')}>
+          <div className={gradientVariants({ color })} />
 
-        <CardContent className="flex flex-1 flex-col gap-0 p-0">
-          {/* Icons side-by-side at top */}
-          <div className="mb-6 flex items-top gap-3 min-h-[64px]">
-            <div className={iconBgVariants({ color })}>
-              <div className="size-6 text-primary-foreground" aria-hidden="true">
-                {icon}
+          <CardContent className="flex flex-1 flex-col gap-0 p-0">
+            {/* Icons side-by-side at top */}
+            <div className="mb-6 flex items-top gap-3 min-h-[64px]">
+              <div className={iconBgVariants({ color })}>
+                <div className="size-6 text-primary-foreground" aria-hidden="true">
+                  {icon}
+                </div>
               </div>
+              {imageSlot && (
+                <div className="h-14 w-14 shrink-0 overflow-hidden rounded-lg bg-card ring-1 ring-border">
+                  {imageSlot}
+                </div>
+              )}
             </div>
-            {imageSlot && (
-              <div className="h-14 w-14 shrink-0 overflow-hidden rounded-lg bg-card ring-1 ring-border">
-                {imageSlot}
-              </div>
-            )}
-          </div>
 
-          <div className={cn('mb-2 text-sm font-medium uppercase tracking-wider font-sans', textVariants({ color }))}>
-            {category}
-          </div>
-          <h3 className="mb-3 min-h-[64px] text-2xl font-semibold text-card-foreground">{title}</h3>
-          <p
-            id={descriptionId}
-            className="mb-6 min-h-[72px] text-sm leading-relaxed text-muted-foreground sm:text-base"
-          >
-            {description}
-          </p>
+            <div className={cn('mb-2 text-sm font-medium uppercase tracking-wider font-sans', textVariants({ color }))}>
+              {category}
+            </div>
+            <h3 className="mb-3 min-h-[64px] text-2xl font-semibold text-card-foreground">{title}</h3>
+            <p
+              id={descriptionId}
+              className="mb-6 min-h-[72px] text-sm leading-relaxed text-muted-foreground sm:text-base"
+            >
+              {description}
+            </p>
 
-          <ul className="mb-8 h-[120px] space-y-3">
-            {features.map((feature, index) => (
-              <BulletListItem key={index} title={feature} variant="arrow" color={color || 'primary'} />
-            ))}
-          </ul>
+            <ul className="mb-8 h-[120px] space-y-3">
+              {features.map((feature, index) => (
+                <BulletListItem key={index} title={feature} variant="arrow" color={color || 'primary'} />
+              ))}
+            </ul>
 
-          {/* Spacer to push button to bottom */}
-          <div className="flex-1" />
-        </CardContent>
+            {/* Spacer to push button to bottom */}
+            <div className="flex-1" />
+          </CardContent>
 
-        <ButtonCardFooter
-          variant="elevated"
-          badgeSlot={badgeSlot}
-          buttonText={ctaText}
-          href={href}
-          buttonColor={color}
-          ariaDescribedBy={descriptionId}
-          className="pt-0"
-        />
-      </Card>
+          <ButtonCardFooter
+            variant="elevated"
+            badgeSlot={badgeSlot}
+            buttonText={ctaText}
+            href={href}
+            buttonColor={color}
+            ariaDescribedBy={descriptionId}
+            className="pt-0"
+          />
+        </Card>
       </div>
     </>
   )

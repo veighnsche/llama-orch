@@ -1,6 +1,6 @@
+import { TemplateContainer } from '@rbee/ui/molecules'
 import type { Meta, StoryObj } from '@storybook/react'
 import { errorHandlingContainerProps, errorHandlingProps } from '../../pages/FeaturesPage/FeaturesPageProps'
-import { TemplateContainer } from '@rbee/ui/molecules'
 import { ErrorHandlingTemplate } from './ErrorHandlingTemplate'
 
 const meta: Meta<typeof ErrorHandlingTemplate> = {

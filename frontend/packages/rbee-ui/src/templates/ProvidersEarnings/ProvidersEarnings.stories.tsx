@@ -18,7 +18,7 @@ type Story = StoryObj<typeof meta>
 /**
  * OnProvidersEarnings - providersEarningsProps
  * @tags providers, earnings, calculator
- * 
+ *
  * ProvidersEarnings as used on the Providers page
  * - Displays earnings calculator and potential revenue
  * - Shows pricing tiers and payout structures

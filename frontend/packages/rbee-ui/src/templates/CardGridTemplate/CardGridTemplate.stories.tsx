@@ -1,16 +1,13 @@
-import type { Meta, StoryObj } from '@storybook/react'
-import { CardGridTemplate } from './CardGridTemplate'
 import { TemplateContainer } from '@rbee/ui/molecules'
+import { enterpriseFeaturesContainerProps, enterpriseFeaturesGridProps } from '@rbee/ui/pages/EnterprisePage'
 import {
-  providersUseCasesContainerProps,
-  providersUseCasesGridProps,
   providersSecurityContainerProps,
   providersSecurityGridProps,
+  providersUseCasesContainerProps,
+  providersUseCasesGridProps,
 } from '@rbee/ui/pages/ProvidersPage'
-import {
-  enterpriseFeaturesContainerProps,
-  enterpriseFeaturesGridProps,
-} from '@rbee/ui/pages/EnterprisePage'
+import type { Meta, StoryObj } from '@storybook/react'
+import { CardGridTemplate } from './CardGridTemplate'
 
 const meta = {
   title: 'Templates/CardGridTemplate',
@@ -27,7 +24,7 @@ type Story = StoryObj<typeof meta>
 /**
  * OnProvidersUseCases - providersUseCasesProps
  * @tags providers, use-cases, personas, grid
- * 
+ *
  * Provider use case cards in 2-column grid
  */
 export const OnProvidersUseCases: Story = {
@@ -42,7 +39,7 @@ export const OnProvidersUseCases: Story = {
 /**
  * OnProvidersSecurity - providersSecurityProps
  * @tags providers, security, trust, grid
- * 
+ *
  * Provider security cards in 2-column grid
  */
 export const OnProvidersSecurity: Story = {
@@ -57,7 +54,7 @@ export const OnProvidersSecurity: Story = {
 /**
  * OnEnterpriseFeatures - enterpriseFeaturesData
  * @tags enterprise, features, capabilities, grid
- * 
+ *
  * Enterprise feature cards in 2-column grid
  */
 export const OnEnterpriseFeatures: Story = {
