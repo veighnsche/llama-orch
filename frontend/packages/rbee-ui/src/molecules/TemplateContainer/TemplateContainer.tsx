@@ -1,3 +1,4 @@
+import { AuditReadinessCTA, type AuditReadinessCTAProps } from '@rbee/ui/molecules/AuditReadinessCTA'
 import { CTARail } from '@rbee/ui/molecules/CTARail'
 import { Disclaimer } from '@rbee/ui/molecules/Disclaimer'
 import { FooterCTA } from '@rbee/ui/molecules/FooterCTA'
@@ -137,6 +138,8 @@ export interface TemplateContainerProps {
   }
   /** Optional helper links (appears after children, uses HelperLinks molecule) */
   helperLinks?: HelperLink[]
+  /** Optional audit readiness CTA (appears after children, uses AuditReadinessCTA molecule) */
+  auditReadinessCTA?: AuditReadinessCTAProps
 }
 
 // Legacy bgVariant mapping to TemplateBackground variants
@@ -217,6 +220,7 @@ export function TemplateContainer({
   securityGuarantees,
   footerCTA,
   helperLinks,
+  auditReadinessCTA,
 }: TemplateContainerProps) {
   // Resolve alignment: prefer align prop, fallback to centered
   const resolvedAlign = align ?? (centered ? 'center' : 'start')
@@ -377,6 +381,19 @@ export function TemplateContainer({
                 links={ctaRail.links}
                 footnote={ctaRail.footnote}
               />
+            </div>
+          )}
+
+          {/* Audit Readiness CTA */}
+          {auditReadinessCTA && (
+            <div
+              className={cn(
+                'mt-10 animate-in fade-in slide-in-from-bottom-2 motion-reduce:animate-none delay-300',
+                maxWidthClasses[maxWidth],
+                'mx-auto',
+              )}
+            >
+              <AuditReadinessCTA {...auditReadinessCTA} />
             </div>
           )}
 

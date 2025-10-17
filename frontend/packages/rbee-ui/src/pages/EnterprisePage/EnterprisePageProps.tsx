@@ -1,4 +1,4 @@
-import { EuLedgerGrid } from '@rbee/ui/atoms'
+import { DeploymentFlow, EuLedgerGrid, SectorGrid, SecurityMesh } from '@rbee/ui/atoms'
 import { FEATURES, PROVIDERS } from '@rbee/ui/data/enterprise-comparison'
 import { TESTIMONIAL_STATS, TESTIMONIALS } from '@rbee/ui/data/testimonials'
 import type { TemplateContainerProps } from '@rbee/ui/molecules'
@@ -277,7 +277,9 @@ export const enterpriseSolutionContainerProps: Omit<TemplateContainerProps, 'chi
   maxWidth: '7xl',
   align: 'center',
   backgroundDecoration: (
-    <EuLedgerGrid className="pointer-events-none absolute left-1/2 top-8 -z-10 hidden w-[52rem] -translate-x-1/2 opacity-15 md:block" />
+    <div className="pointer-events-none absolute left-1/2 top-8 hidden w-[52rem] -translate-x-1/2 opacity-15 md:block">
+      <EuLedgerGrid />
+    </div>
   ),
   ctas: {
     primary: {
@@ -381,17 +383,41 @@ export const enterpriseComplianceContainerProps: Omit<TemplateContainerProps, 'c
   paddingY: '2xl',
   maxWidth: '7xl',
   align: 'center',
+  headingId: 'compliance',
+  background: {
+    decoration: (
+      <div className="pointer-events-none absolute left-1/2 top-6 w-[50rem] -translate-x-1/2 opacity-15">
+        <EuLedgerGrid />
+      </div>
+    ),
+  },
+  auditReadinessCTA: {
+    heading: 'Ready for Your Compliance Audit',
+    description: 'Download our compliance documentation package or schedule a call with our compliance team.',
+    note: 'Pack includes endpoints, retention policy, and audit-logging design.',
+    noteAriaLabel: 'Compliance pack includes endpoints, retention policy, and audit-logging design',
+    buttons: [
+      {
+        text: 'Download Compliance Pack',
+        href: '/compliance/download',
+        variant: 'default',
+        ariaDescribedby: 'compliance-pack-note',
+      },
+      {
+        text: 'Talk to Compliance Team',
+        href: '/contact/compliance',
+        variant: 'outline',
+        ariaDescribedby: 'compliance-pack-note',
+      },
+    ],
+    footnote: 'rbee (pronounced "are-bee")',
+  },
 }
 
 /**
  * Enterprise Compliance - Compliance by Design section
  */
 export const enterpriseComplianceProps: EnterpriseComplianceProps = {
-  id: 'compliance',
-  backgroundImage: {
-    src: '/decor/compliance-ledger.webp',
-    alt: 'Abstract EU-blue ledger lines with checkpoint nodes; evokes immutable audit trails, GDPR alignment, SOC2 controls, ISO 27001 ISMS',
-  },
   pillars: [
     {
       icon: <Globe className="size-6" />,
@@ -456,27 +482,6 @@ export const enterpriseComplianceProps: EnterpriseComplianceProps = {
       },
     },
   ],
-  auditReadiness: {
-    heading: 'Ready for Your Compliance Audit',
-    description: 'Download our compliance documentation package or schedule a call with our compliance team.',
-    note: 'Pack includes endpoints, retention policy, and audit-logging design.',
-    noteAriaLabel: 'Compliance pack includes endpoints, retention policy, and audit-logging design',
-    buttons: [
-      {
-        text: 'Download Compliance Pack',
-        href: '/compliance/download',
-        variant: 'default',
-        ariaDescribedby: 'compliance-pack-note',
-      },
-      {
-        text: 'Talk to Compliance Team',
-        href: '/contact/compliance',
-        variant: 'outline',
-        ariaDescribedby: 'compliance-pack-note',
-      },
-    ],
-    footnote: 'rbee (pronounced "are-bee")',
-  },
 }
 
 // === Enterprise Security ===
@@ -493,6 +498,13 @@ export const enterpriseSecurityContainerProps: Omit<TemplateContainerProps, 'chi
   paddingY: '2xl',
   maxWidth: '7xl',
   align: 'center',
+  background: {
+    decoration: (
+      <div className="pointer-events-none absolute left-1/2 top-8 hidden w-[52rem] -translate-x-1/2 opacity-15 md:block">
+        <SecurityMesh className="blur-[0.5px]" />
+      </div>
+    ),
+  },
   securityGuarantees: {
     heading: 'Security Guarantees',
     stats: [
@@ -520,10 +532,6 @@ export const enterpriseSecurityContainerProps: Omit<TemplateContainerProps, 'chi
  * Enterprise Security - Defense-in-Depth section
  */
 export const enterpriseSecurityProps: EnterpriseSecurityProps = {
-  backgroundImage: {
-    src: '/decor/security-mesh.webp',
-    alt: 'Abstract dark security mesh with linked nodes and amber highlights, suggesting hash-chains, zero-trust, and time-bounded execution',
-  },
   securityCards: [
     {
       icon: <Lock className="size-6" />,
@@ -620,6 +628,13 @@ export const enterpriseHowItWorksContainerProps: Omit<TemplateContainerProps, 'c
   paddingY: '2xl',
   maxWidth: '7xl',
   align: 'center',
+  background: {
+    decoration: (
+      <div className="pointer-events-none absolute left-1/2 top-8 hidden w-[48rem] -translate-x-1/2 opacity-15 md:block">
+        <DeploymentFlow className="blur-[0.5px]" />
+      </div>
+    ),
+  },
 }
 
 /**
@@ -627,10 +642,6 @@ export const enterpriseHowItWorksContainerProps: Omit<TemplateContainerProps, 'c
  */
 export const enterpriseHowItWorksProps: EnterpriseHowItWorksProps = {
   id: 'deployment',
-  backgroundImage: {
-    src: '/decor/deployment-flow.webp',
-    alt: 'Abstract EU-blue flow diagram with four checkpoints and connecting lines, suggesting enterprise deployment stages and compliance handoffs',
-  },
   deploymentSteps: [
     {
       index: 1,
@@ -708,6 +719,13 @@ export const enterpriseUseCasesContainerProps: Omit<TemplateContainerProps, 'chi
     'Organizations in high-compliance sectors run rbee on EU-resident infrastructure—no foreign clouds, audit-ready by design.',
   bgVariant: 'default',
   paddingY: '2xl',
+  background: {
+    decoration: (
+      <div className="pointer-events-none absolute left-1/2 top-6 hidden w-[50rem] -translate-x-1/2 opacity-15 md:block">
+        <SectorGrid className="blur-[0.5px]" />
+      </div>
+    ),
+  },
   maxWidth: '7xl',
   align: 'center',
   ctaRail: {
@@ -737,10 +755,6 @@ export const enterpriseUseCasesContainerProps: Omit<TemplateContainerProps, 'chi
  * Enterprise Use Cases - Industry Playbooks section
  */
 export const enterpriseUseCasesProps: EnterpriseUseCasesProps = {
-  backgroundImage: {
-    src: '/decor/sector-grid.webp',
-    alt: 'Abstract EU-blue grid of industry tiles—finance, healthcare, legal, government—with soft amber accents; premium dark UI, compliance theme',
-  },
   industryCases: [
     {
       icon: <Building2 className="size-6" />,

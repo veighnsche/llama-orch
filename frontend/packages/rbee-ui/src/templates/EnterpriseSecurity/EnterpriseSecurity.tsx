@@ -1,5 +1,4 @@
 import { SecurityCard } from '@rbee/ui/organisms'
-import Image from 'next/image'
 import type { ReactNode } from 'react'
 
 // ──────────────────────────────────────────────────────────────────────────────
@@ -16,10 +15,6 @@ export type SecurityCardData = {
 }
 
 export type EnterpriseSecurityProps = {
-  backgroundImage: {
-    src: string
-    alt: string
-  }
   securityCards: SecurityCardData[]
 }
 
@@ -27,22 +22,11 @@ export type EnterpriseSecurityProps = {
 // Main Component
 // ──────────────────────────────────────────────────────────────────────────────
 
-export function EnterpriseSecurity({ backgroundImage, securityCards }: EnterpriseSecurityProps) {
+export function EnterpriseSecurity({ securityCards }: EnterpriseSecurityProps) {
   return (
-    <div className="relative">
-      {/* Decorative background illustration */}
-      <Image
-        src={backgroundImage.src}
-        width={1200}
-        height={640}
-        className="pointer-events-none absolute left-1/2 top-8 -z-10 hidden w-[52rem] -translate-x-1/2 opacity-15 blur-[0.5px] md:block"
-        alt={backgroundImage.alt}
-        aria-hidden="true"
-      />
-
-      <div className="relative z-10">
-        {/* Security Cards Grid */}
-        <div className="animate-in fade-in-50 mb-12 mx-auto grid max-w-4xl gap-8 [animation-delay:120ms] md:grid-cols-2">
+    <>
+      {/* Security Cards Grid */}
+      <div className="animate-in fade-in-50 mb-12 mx-auto grid max-w-4xl gap-8 [animation-delay:120ms] md:grid-cols-2">
           {securityCards.map((card, idx) => (
             <SecurityCard
               key={idx}
@@ -54,8 +38,7 @@ export function EnterpriseSecurity({ backgroundImage, securityCards }: Enterpris
               docsHref={card.docsHref}
             />
           ))}
-        </div>
       </div>
-    </div>
+    </>
   )
 }

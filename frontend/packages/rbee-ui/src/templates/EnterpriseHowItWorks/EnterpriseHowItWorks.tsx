@@ -1,6 +1,5 @@
 import { StepCard } from '@rbee/ui/molecules'
 import { TimelineCard } from '@rbee/ui/organisms'
-import Image from 'next/image'
 import type * as React from 'react'
 
 // ──────────────────────────────────────────────────────────────────────────────
@@ -22,10 +21,6 @@ export type TimelineWeek = {
 
 export type EnterpriseHowItWorksProps = {
   id?: string
-  backgroundImage: {
-    src: string
-    alt: string
-  }
   deploymentSteps: DeploymentStep[]
   timeline: {
     heading: string
@@ -38,22 +33,11 @@ export type EnterpriseHowItWorksProps = {
 // Main Component
 // ──────────────────────────────────────────────────────────────────────────────
 
-export function EnterpriseHowItWorks({ id, backgroundImage, deploymentSteps, timeline }: EnterpriseHowItWorksProps) {
+export function EnterpriseHowItWorks({ id, deploymentSteps, timeline }: EnterpriseHowItWorksProps) {
   return (
-    <div id={id} className="relative">
-      {/* Decorative background illustration */}
-      <Image
-        src={backgroundImage.src}
-        width={1200}
-        height={640}
-        className="pointer-events-none absolute left-1/2 top-8 -z-10 hidden w-[48rem] -translate-x-1/2 opacity-15 blur-[0.5px] md:block"
-        alt={backgroundImage.alt}
-        aria-hidden="true"
-      />
-
-      <div className="relative z-10">
-        {/* Grid: Steps + Timeline */}
-        <div className="grid gap-10 lg:grid-cols-[1fr_360px]">
+    <div id={id}>
+      {/* Grid: Steps + Timeline */}
+      <div className="grid gap-10 lg:grid-cols-[1fr_360px]">
           {/* Steps Rail */}
           <ol className="animate-in fade-in-50 space-y-8 [animation-delay:calc(var(--i)*80ms)]">
             {deploymentSteps.map((step, idx) => (
@@ -78,7 +62,6 @@ export function EnterpriseHowItWorks({ id, backgroundImage, deploymentSteps, tim
               weeks={timeline.weeks}
             />
           </div>
-        </div>
       </div>
     </div>
   )

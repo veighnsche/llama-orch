@@ -15,7 +15,7 @@ export function HomelabBee({ size = 960, className, ...props }: HomelabBeeProps)
       {...props}
     >
       {/* Homelab hardware with bee orchestration theme */}
-      <rect width="960" height="140" className="fill-slate-50 dark:fill-slate-900" />
+      <rect width="960" height="140" fill="transparent" />
 
       {/* Grid pattern background */}
       <g opacity="0.08">

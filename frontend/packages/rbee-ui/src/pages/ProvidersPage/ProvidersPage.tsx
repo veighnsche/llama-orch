@@ -13,6 +13,7 @@ import {
   TestimonialsTemplate,
 } from '@rbee/ui/templates'
 import {
+  providersCTAContainerProps,
   providersCTAProps,
   providersEarningsContainerProps,
   providersEarningsProps,
@@ -66,7 +67,9 @@ export default function ProvidersPage() {
       <TemplateContainer {...providersTestimonialsContainerProps}>
         <TestimonialsTemplate {...providersTestimonialsProps} />
       </TemplateContainer>
-      <ProvidersCTA {...providersCTAProps} />
+      <TemplateContainer {...providersCTAContainerProps}>
+        <ProvidersCTA {...providersCTAProps} />
+      </TemplateContainer>
     </main>
   )
 }

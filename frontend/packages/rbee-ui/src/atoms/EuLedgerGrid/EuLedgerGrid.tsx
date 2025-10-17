@@ -12,7 +12,9 @@ export interface EuLedgerGridProps {
  *
  * @example
  * ```tsx
- * <EuLedgerGrid className="absolute inset-0 -z-10 opacity-15" />
+ * <div className="absolute inset-0 opacity-15">
+ *   <EuLedgerGrid />
+ * </div>
  * ```
  */
 export function EuLedgerGrid({ className }: EuLedgerGridProps) {
@@ -28,12 +30,12 @@ export function EuLedgerGrid({ className }: EuLedgerGridProps) {
       <defs>
         {/* Grid pattern - light theme */}
         <pattern id="grid-light" x="0" y="0" width="80" height="80" patternUnits="userSpaceOnUse">
-          <path d="M 80 0 L 0 0 0 80" fill="none" stroke="rgb(59 130 246)" strokeWidth="0.5" className="opacity-20" />
+          <path d="M 80 0 L 0 0 0 80" fill="none" stroke="rgb(59 130 246)" strokeWidth="0.5" className="opacity-40" />
         </pattern>
 
         {/* Grid pattern - dark theme */}
         <pattern id="grid-dark" x="0" y="0" width="80" height="80" patternUnits="userSpaceOnUse">
-          <path d="M 80 0 L 0 0 0 80" fill="none" stroke="rgb(96 165 250)" strokeWidth="0.75" className="opacity-30" />
+          <path d="M 80 0 L 0 0 0 80" fill="none" stroke="rgb(96 165 250)" strokeWidth="0.75" className="opacity-50" />
         </pattern>
 
         {/* Glow filter for checkpoints */}
@@ -92,7 +94,7 @@ export function EuLedgerGrid({ className }: EuLedgerGridProps) {
       </g>
 
       {/* Connection lines between checkpoints - light theme */}
-      <g className="dark:hidden" opacity="0.15">
+      <g className="dark:hidden" opacity="0.4">
         <line x1="240" y1="160" x2="480" y2="160" stroke="rgb(59 130 246)" strokeWidth="1" />
         <line x1="480" y1="160" x2="720" y2="160" stroke="rgb(59 130 246)" strokeWidth="1" />
         <line x1="720" y1="160" x2="960" y2="160" stroke="rgb(59 130 246)" strokeWidth="1" />
@@ -110,7 +112,7 @@ export function EuLedgerGrid({ className }: EuLedgerGridProps) {
       </g>
 
       {/* Connection lines between checkpoints - dark theme */}
-      <g className="hidden dark:block" opacity="0.25">
+      <g className="hidden dark:block" opacity="0.5">
         <line x1="240" y1="160" x2="480" y2="160" stroke="rgb(96 165 250)" strokeWidth="1.5" />
         <line x1="480" y1="160" x2="720" y2="160" stroke="rgb(96 165 250)" strokeWidth="1.5" />
         <line x1="720" y1="160" x2="960" y2="160" stroke="rgb(96 165 250)" strokeWidth="1.5" />
@@ -128,13 +130,13 @@ export function EuLedgerGrid({ className }: EuLedgerGridProps) {
       </g>
 
       {/* Subtle amber accent lines - light theme */}
-      <g className="dark:hidden" opacity="0.1">
+      <g className="dark:hidden" opacity="0.3">
         <line x1="160" y1="320" x2="400" y2="320" stroke="rgb(245 158 11)" strokeWidth="0.5" strokeDasharray="4 4" />
         <line x1="840" y1="320" x2="1040" y2="320" stroke="rgb(245 158 11)" strokeWidth="0.5" strokeDasharray="4 4" />
       </g>
 
       {/* Subtle amber accent lines - dark theme */}
-      <g className="hidden dark:block" opacity="0.15">
+      <g className="hidden dark:block" opacity="0.35">
         <line x1="160" y1="320" x2="400" y2="320" stroke="rgb(251 191 36)" strokeWidth="0.75" strokeDasharray="4 4" />
         <line x1="840" y1="320" x2="1040" y2="320" stroke="rgb(251 191 36)" strokeWidth="0.75" strokeDasharray="4 4" />
       </g>

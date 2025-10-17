@@ -85,7 +85,9 @@ export const DarkTheme: Story = {
 export const InEnterpriseSolution: Story = {
   render: () => (
     <div className="relative min-h-screen w-full bg-background">
-      <EuLedgerGrid className="pointer-events-none absolute left-1/2 top-8 -z-10 hidden w-[52rem] -translate-x-1/2 opacity-15 md:block" />
+      <div className="pointer-events-none absolute left-1/2 top-8 hidden w-[52rem] -translate-x-1/2 opacity-15 md:block">
+        <EuLedgerGrid />
+      </div>
       <div className="relative z-10 mx-auto max-w-7xl px-6 py-24">
         <div className="text-center">
           <h2 className="mb-4 text-3xl font-bold text-foreground">How rbee Works</h2>

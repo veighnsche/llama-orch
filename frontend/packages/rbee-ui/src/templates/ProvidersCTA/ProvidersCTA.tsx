@@ -1,6 +1,5 @@
 import { Button } from '@rbee/ui/atoms/Button'
 import { StatsGrid } from '@rbee/ui/molecules'
-import Image from 'next/image'
 import type * as React from 'react'
 
 // ────────────────────────────────────────────────────────────────────────────
@@ -28,10 +27,6 @@ export type ProvidersCTAProps = {
   }
   disclaimerText: string
   stats: ProvidersCTAStat[]
-  backgroundImage: {
-    src: string
-    alt: string
-  }
 }
 
 // ────────────────────────────────────────────────────────────────────────────
@@ -62,28 +57,9 @@ export function ProvidersCTA({
   secondaryCTA,
   disclaimerText,
   stats,
-  backgroundImage,
 }: ProvidersCTAProps) {
   return (
-    <section
-      aria-labelledby="providers-cta-h2"
-      className="relative overflow-hidden bg-gradient-to-b from-background via-amber-950/10 to-background px-6 py-24"
-    >
-      {/* Decorative Background Image - Repositioned to right edge */}
-      <Image
-        src={backgroundImage.src}
-        width={960}
-        height={540}
-        className="pointer-events-none absolute -right-32 top-1/2 hidden -translate-y-1/2 opacity-[0.08] lg:block"
-        alt={backgroundImage.alt}
-        priority={false}
-        style={{
-          maskImage: 'radial-gradient(ellipse 70% 60% at 65% 50%, black 0%, black 30%, transparent 100%)',
-          WebkitMaskImage: 'radial-gradient(ellipse 70% 60% at 65% 50%, black 0%, black 30%, transparent 100%)',
-        }}
-      />
-
-      <div className="relative z-10 mx-auto max-w-4xl text-center">
+    <div className="mx-auto max-w-4xl text-center">
         {/* Header Block */}
         <div className="animate-in fade-in-50 slide-in-from-bottom-2 motion-reduce:animate-none">
           <div
@@ -134,8 +110,7 @@ export function ProvidersCTA({
           className="animate-in fade-in-50 [animation-delay:200ms] mt-10 text-sm text-muted-foreground motion-reduce:animate-none"
         >
           <StatsGrid variant="inline" columns={3} stats={stats} />
-        </div>
       </div>
-    </section>
+    </div>
   )
 }

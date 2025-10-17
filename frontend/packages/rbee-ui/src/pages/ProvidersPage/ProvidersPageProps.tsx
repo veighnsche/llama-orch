@@ -3,6 +3,7 @@
 import { gpuEarnings } from '@rbee/ui/assets'
 import { TESTIMONIALS } from '@rbee/ui/data/testimonials'
 import type { TemplateContainerProps } from '@rbee/ui/molecules'
+import Image from 'next/image'
 import { CommissionStructureCard, ProvidersSecurityCard } from '@rbee/ui/molecules'
 import { CodeBlock } from '@rbee/ui/molecules/CodeBlock'
 import type { CommissionStructureCardProps } from '@rbee/ui/molecules/CommissionStructureCard'
@@ -773,6 +774,36 @@ export const providersTestimonialsProps: TestimonialsTemplateProps = {
 }
 
 // === ProvidersCTA Template ===
+
+/**
+ * Providers CTA container - wraps the final CTA section
+ */
+export const providersCTAContainerProps: Omit<TemplateContainerProps, 'children'> = {
+  title: null,
+  bgVariant: 'default',
+  paddingY: '2xl',
+  maxWidth: '4xl',
+  align: 'center',
+  background: {
+    variant: 'gradient-warm',
+    decoration: (
+      <div className="pointer-events-none absolute -right-32 top-1/2 hidden -translate-y-1/2 opacity-[0.08] lg:block">
+        <Image
+          src={gpuEarnings}
+          width={960}
+          height={540}
+          alt="Ultra-detailed cinematic macro photograph of three premium NVIDIA RTX 4090 GPUs stacked vertically in a professional server rack configuration, each card featuring triple-fan cooling systems with visible aluminum heatsink fins and metallic backplates; warm amber and orange volumetric god rays emanating from the GPU edges creating dramatic rim lighting; translucent holographic euro currency symbols (€) in various sizes floating upward in a graceful arc alongside glowing AI neural network node patterns and data stream particles representing passive income flow; dark navy blue (#0a1628) to pure black (#000000) gradient backdrop with subtle hexagonal mesh pattern suggesting technical infrastructure; shallow depth of field (f/1.4) with creamy bokeh effect blurring the background; dramatic side lighting (45-degree angle) creating sharp rim light on GPU edges and fan blades; photorealistic 3D render style with ray-traced reflections on metallic surfaces; high contrast with deep shadows (80% black levels); premium tech aesthetic with clean composition; 8K resolution quality with sharp details on GPU text and logos; fine particles of light dust suspended in air catching the amber glow creating atmosphere; emphasis on AI workload monetization and compute power, NOT cryptocurrency mining; color palette: deep blues, warm ambers (#f59e0b), metallic silvers, with accent highlights in electric blue (#3b82f6); composition: right-weighted with GPUs occupying 60% of frame, currency symbols flowing from left to upper-right creating dynamic movement"
+          priority={false}
+          style={{
+            maskImage: 'radial-gradient(ellipse 70% 60% at 65% 50%, black 0%, black 30%, transparent 100%)',
+            WebkitMaskImage: 'radial-gradient(ellipse 70% 60% at 65% 50%, black 0%, black 30%, transparent 100%)',
+          }}
+        />
+      </div>
+    ),
+  },
+}
+
 export const providersCTAProps: ProvidersCTAProps = {
   badgeIcon: <Zap className="h-4 w-4" aria-hidden="true" />,
   badgeText: 'Start earning today',
@@ -804,8 +835,4 @@ export const providersCTAProps: ProvidersCTAProps = {
       label: 'Weekly payouts',
     },
   ],
-  backgroundImage: {
-    src: gpuEarnings,
-    alt: 'Cinematic macro shot of three modern NVIDIA RTX GPUs stacked vertically with visible cooling fans and RGB accents, emitting warm amber and orange volumetric light rays from their edges; translucent holographic euro currency symbols (€) and AI task tokens with neural network patterns float upward in a gentle arc representing passive income; dark navy blue to black gradient backdrop with subtle hexagonal mesh pattern; shallow depth of field with bokeh effect; dramatic side lighting creating rim light on GPU edges; photorealistic 3D render style; high contrast with deep shadows; premium tech aesthetic; 8K quality; particles of light dust in the air catching the amber glow; emphasis on AI workload monetization not cryptocurrency mining',
-  },
 }

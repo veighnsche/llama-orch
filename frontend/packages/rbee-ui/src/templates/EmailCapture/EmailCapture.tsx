@@ -86,11 +86,13 @@ export function EmailCapture({
     <>
       {/* Supportive visual - homelab illustration */}
       {showIllustration && (
-        <HomelabBee
-          size={960}
-          className="pointer-events-none absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-[52%] opacity-20"
-          aria-hidden="true"
-        />
+        <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
+          <HomelabBee
+            size={960}
+            className="opacity-20"
+            aria-hidden="true"
+          />
+        </div>
       )}
 
       {/* Decorative bee glyphs */}
