@@ -1,24 +1,106 @@
 'use client'
 
+import { TemplateContainer } from '@rbee/ui/molecules'
+import {
+  ComparisonTemplate,
+  EmailCapture,
+  EnterpriseCompliance,
+  EnterpriseCTA,
+  EnterpriseHero,
+  EnterpriseHowItWorks,
+  EnterpriseSecurity,
+  ErrorHandlingTemplate,
+  FAQTemplate,
+  ProblemTemplate,
+  RealTimeProgress,
+  SolutionTemplate,
+} from '@rbee/ui/templates'
+import {
+  devopsComparisonContainerProps,
+  devopsComparisonProps,
+  devopsComplianceContainerProps,
+  devopsComplianceProps,
+  devopsCTAContainerProps,
+  devopsCTAProps,
+  devopsEmailCaptureContainerProps,
+  devopsEmailCaptureProps,
+  devopsErrorHandlingContainerProps,
+  devopsErrorHandlingProps,
+  devopsFAQContainerProps,
+  devopsFAQProps,
+  devopsHeroProps,
+  devopsHowItWorksContainerProps,
+  devopsHowItWorksProps,
+  devopsProblemContainerProps,
+  devopsProblemProps,
+  devopsRealTimeProgressContainerProps,
+  devopsRealTimeProgressProps,
+  devopsSecurityContainerProps,
+  devopsSecurityProps,
+  devopsSolutionContainerProps,
+  devopsSolutionProps,
+} from './DevOpsPageProps'
+
 export default function DevOpsPage() {
   return (
-    <div className="container mx-auto px-4 py-16">
-      <h1 className="text-4xl font-bold mb-6">rbee for DevOps</h1>
-      <p className="text-xl text-muted-foreground mb-8">
-        Production-ready AI orchestration for DevOps engineers and SREs.
-      </p>
-      <div className="prose prose-lg dark:prose-invert max-w-none">
-        <h2>Coming Soon</h2>
-        <p>This page is under construction. We're building comprehensive content for DevOps engineers.</p>
-        <h3>What to Expect</h3>
-        <ul>
-          <li>Cascading shutdown (prevents orphaned processes)</li>
-          <li>Health monitoring (30-second heartbeats)</li>
-          <li>Multi-node SSH control</li>
-          <li>Lifecycle management (daemon, hive, worker control)</li>
-          <li>Proof bundles for debugging</li>
-        </ul>
-      </div>
-    </div>
+    <>
+      {/* Hero Section */}
+      <EnterpriseHero {...devopsHeroProps} />
+
+      {/* Email Capture */}
+      <TemplateContainer {...devopsEmailCaptureContainerProps}>
+        <EmailCapture {...devopsEmailCaptureProps} />
+      </TemplateContainer>
+
+      {/* Problem Section */}
+      <TemplateContainer {...devopsProblemContainerProps}>
+        <ProblemTemplate {...devopsProblemProps} />
+      </TemplateContainer>
+
+      {/* Solution Section */}
+      <TemplateContainer {...devopsSolutionContainerProps}>
+        <SolutionTemplate {...devopsSolutionProps} />
+      </TemplateContainer>
+
+      {/* How It Works */}
+      <TemplateContainer {...devopsHowItWorksContainerProps}>
+        <EnterpriseHowItWorks {...devopsHowItWorksProps} />
+      </TemplateContainer>
+
+      {/* Operational Features */}
+      <TemplateContainer {...devopsSecurityContainerProps}>
+        <EnterpriseSecurity {...devopsSecurityProps} />
+      </TemplateContainer>
+
+      {/* Error Handling */}
+      <TemplateContainer {...devopsErrorHandlingContainerProps}>
+        <ErrorHandlingTemplate {...devopsErrorHandlingProps} />
+      </TemplateContainer>
+
+      {/* Real-Time Monitoring */}
+      <TemplateContainer {...devopsRealTimeProgressContainerProps}>
+        <RealTimeProgress {...devopsRealTimeProgressProps} />
+      </TemplateContainer>
+
+      {/* Deployment Options Comparison */}
+      <TemplateContainer {...devopsComparisonContainerProps}>
+        <ComparisonTemplate {...devopsComparisonProps} />
+      </TemplateContainer>
+
+      {/* SLAs & Guarantees */}
+      <TemplateContainer {...devopsComplianceContainerProps}>
+        <EnterpriseCompliance {...devopsComplianceProps} />
+      </TemplateContainer>
+
+      {/* FAQ */}
+      <TemplateContainer {...devopsFAQContainerProps}>
+        <FAQTemplate {...devopsFAQProps} />
+      </TemplateContainer>
+
+      {/* CTA */}
+      <TemplateContainer {...devopsCTAContainerProps}>
+        <EnterpriseCTA {...devopsCTAProps} />
+      </TemplateContainer>
+    </>
   )
 }

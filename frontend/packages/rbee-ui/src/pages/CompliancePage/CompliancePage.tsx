@@ -1,22 +1,93 @@
 'use client'
 
+import { TemplateContainer } from '@rbee/ui/molecules'
+import {
+  ComparisonTemplate,
+  EmailCapture,
+  EnterpriseCompliance,
+  EnterpriseCTA,
+  EnterpriseHero,
+  EnterpriseHowItWorks,
+  EnterpriseSecurity,
+  EnterpriseUseCases,
+  FAQTemplate,
+  ProblemTemplate,
+  ProvidersEarnings,
+  SolutionTemplate,
+} from '@rbee/ui/templates'
+import {
+  complianceAuditCostCalculatorContainerProps,
+  complianceAuditCostCalculatorProps,
+  complianceAuditProcessContainerProps,
+  complianceAuditProcessProps,
+  complianceComparisonContainerProps,
+  complianceComparisonProps,
+  complianceCTAContainerProps,
+  complianceCTAProps,
+  complianceEmailCaptureContainerProps,
+  complianceEmailCaptureProps,
+  complianceFAQContainerProps,
+  complianceFAQProps,
+  complianceHeroProps,
+  complianceProblemTemplateContainerProps,
+  complianceProblemTemplateProps,
+  complianceSecurityContainerProps,
+  complianceSecurityProps,
+  complianceSolutionContainerProps,
+  complianceSolutionProps,
+  complianceStandardsContainerProps,
+  complianceStandardsProps,
+  complianceUseCasesContainerProps,
+  complianceUseCasesProps,
+} from './CompliancePageProps'
+
 export default function CompliancePage() {
   return (
-    <div className="container mx-auto px-4 py-16">
-      <h1 className="text-4xl font-bold mb-6">rbee for Compliance</h1>
-      <p className="text-xl text-muted-foreground mb-8">EU-native AI platform. GDPR-compliant by design.</p>
-      <div className="prose prose-lg dark:prose-invert max-w-none">
-        <h2>Coming Soon</h2>
-        <p>This page is under construction. We're building comprehensive content for compliance officers.</p>
-        <h3>What to Expect</h3>
-        <ul>
-          <li>GDPR-compliant by design</li>
-          <li>Immutable audit logging (7-year retention)</li>
-          <li>EU data residency controls</li>
-          <li>SOC2 and ISO 27001 aligned</li>
-          <li>Tamper-evident logs with blockchain-style hash chains</li>
-        </ul>
-      </div>
-    </div>
+    <main>
+      <EnterpriseHero {...complianceHeroProps} />
+      <TemplateContainer {...complianceEmailCaptureContainerProps}>
+        <EmailCapture {...complianceEmailCaptureProps} />
+      </TemplateContainer>
+
+      <TemplateContainer {...complianceProblemTemplateContainerProps}>
+        <ProblemTemplate {...complianceProblemTemplateProps} />
+      </TemplateContainer>
+
+      <TemplateContainer {...complianceSolutionContainerProps}>
+        <SolutionTemplate {...complianceSolutionProps} />
+      </TemplateContainer>
+
+      <TemplateContainer {...complianceStandardsContainerProps}>
+        <EnterpriseCompliance {...complianceStandardsProps} />
+      </TemplateContainer>
+
+      <TemplateContainer {...complianceSecurityContainerProps}>
+        <EnterpriseSecurity {...complianceSecurityProps} />
+      </TemplateContainer>
+
+      <TemplateContainer {...complianceAuditProcessContainerProps}>
+        <EnterpriseHowItWorks {...complianceAuditProcessProps} />
+      </TemplateContainer>
+
+      <TemplateContainer {...complianceUseCasesContainerProps}>
+        <EnterpriseUseCases {...complianceUseCasesProps} />
+      </TemplateContainer>
+
+      <TemplateContainer {...complianceComparisonContainerProps}>
+        <ComparisonTemplate {...complianceComparisonProps} />
+      </TemplateContainer>
+
+      <TemplateContainer {...complianceAuditCostCalculatorContainerProps}>
+        <ProvidersEarnings {...complianceAuditCostCalculatorProps} />
+      </TemplateContainer>
+
+      <TemplateContainer {...complianceFAQContainerProps}>
+        <FAQTemplate {...complianceFAQProps} />
+      </TemplateContainer>
+
+      <TemplateContainer {...complianceCTAContainerProps}>
+        <EnterpriseCTA {...complianceCTAProps} />
+      </TemplateContainer>
+    </main>
   )
 }

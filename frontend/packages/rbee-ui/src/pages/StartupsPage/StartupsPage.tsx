@@ -1,25 +1,115 @@
-'use client'
+import { TemplateContainer } from '@rbee/ui/molecules'
+import {
+  ComparisonTemplate,
+  CTATemplate,
+  EmailCapture,
+  EnterpriseHowItWorks,
+  FAQTemplate,
+  HeroTemplate,
+  ProblemTemplate,
+  ProvidersEarnings,
+  SolutionTemplate,
+  TechnicalTemplate,
+  TestimonialsTemplate,
+  UseCasesTemplate,
+} from '@rbee/ui/templates'
+import {
+  startupsComparisonContainerProps,
+  startupsComparisonProps,
+  startupsCTAContainerProps,
+  startupsCTAProps,
+  startupsEmailCaptureContainerProps,
+  startupsEmailCaptureProps,
+  startupsFAQContainerProps,
+  startupsFAQProps,
+  startupsGrowthRoadmapContainerProps,
+  startupsGrowthRoadmapProps,
+  startupsHeroProps,
+  startupsProblemContainerProps,
+  startupsProblemProps,
+  startupsROICalculatorContainerProps,
+  startupsROICalculatorProps,
+  startupsSolutionContainerProps,
+  startupsSolutionProps,
+  startupsTechnicalContainerProps,
+  startupsTechnicalProps,
+  startupsTestimonialsContainerProps,
+  startupsTestimonialsProps,
+  startupsUseCasesContainerProps,
+  startupsUseCasesProps,
+} from './StartupsPageProps'
 
+/**
+ * StartupsPage - Landing page for startups and small teams
+ *
+ * Target audience: Startup founders, small dev teams, bootstrapped companies
+ * Key message: Build AI products without burning cash on API fees
+ *
+ * @example
+ * ```tsx
+ * <StartupsPage />
+ * ```
+ */
 export default function StartupsPage() {
   return (
-    <div className="container mx-auto px-4 py-16">
-      <h1 className="text-4xl font-bold mb-6">rbee for Startups</h1>
-      <p className="text-xl text-muted-foreground mb-8">
-        Build your AI infrastructure to escape dependency on big AI providers.
-      </p>
-      <div className="prose prose-lg dark:prose-invert max-w-none">
-        <h2>Coming Soon</h2>
-        <p>
-          This page is under construction. We're building comprehensive content for startup founders and entrepreneurs.
-        </p>
-        <h3>What to Expect</h3>
-        <ul>
-          <li>Business opportunity and marketplace model</li>
-          <li>Revenue projections and growth path</li>
-          <li>Platform mode for scaling</li>
-          <li>Independence from external AI providers</li>
-        </ul>
-      </div>
-    </div>
+    <main>
+      {/* Hero */}
+      <HeroTemplate {...startupsHeroProps} />
+
+      {/* Email Capture */}
+      <TemplateContainer {...startupsEmailCaptureContainerProps}>
+        <EmailCapture {...startupsEmailCaptureProps} />
+      </TemplateContainer>
+
+      {/* Problem: API Cost Spiral */}
+      <TemplateContainer {...startupsProblemContainerProps}>
+        <ProblemTemplate {...startupsProblemProps} />
+      </TemplateContainer>
+
+      {/* Solution: Own Your Stack */}
+      <TemplateContainer {...startupsSolutionContainerProps}>
+        <SolutionTemplate {...startupsSolutionProps} />
+      </TemplateContainer>
+
+      {/* ROI Calculator */}
+      <TemplateContainer {...startupsROICalculatorContainerProps}>
+        <ProvidersEarnings {...startupsROICalculatorProps} />
+      </TemplateContainer>
+
+      {/* Growth Roadmap */}
+      <TemplateContainer {...startupsGrowthRoadmapContainerProps}>
+        <EnterpriseHowItWorks {...startupsGrowthRoadmapProps} />
+      </TemplateContainer>
+
+      {/* Startup Scenarios */}
+      <TemplateContainer {...startupsUseCasesContainerProps}>
+        <UseCasesTemplate {...startupsUseCasesProps} />
+      </TemplateContainer>
+
+      {/* Comparison: rbee vs API Providers */}
+      <TemplateContainer {...startupsComparisonContainerProps}>
+        <ComparisonTemplate {...startupsComparisonProps} />
+      </TemplateContainer>
+
+      {/* Technical Stack */}
+      <TemplateContainer {...startupsTechnicalContainerProps}>
+        <TechnicalTemplate {...startupsTechnicalProps} />
+      </TemplateContainer>
+
+      {/* Testimonials */}
+      <TemplateContainer {...startupsTestimonialsContainerProps}>
+        <TestimonialsTemplate {...startupsTestimonialsProps} />
+      </TemplateContainer>
+
+      {/* FAQ */}
+      <TemplateContainer {...startupsFAQContainerProps}>
+        <FAQTemplate {...startupsFAQProps} />
+      </TemplateContainer>
+
+      {/* Final CTA */}
+      <TemplateContainer {...startupsCTAContainerProps}>
+        <CTATemplate {...startupsCTAProps} />
+      </TemplateContainer>
+    </main>
   )
 }

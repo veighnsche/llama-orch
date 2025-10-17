@@ -19,6 +19,7 @@ export * from './ErrorHandlingTemplate'
 export * from './FAQTemplate'
 export * from './FeaturesHero'
 export * from './FeaturesTabs'
+export * from './HeroTemplate'
 // HomeHero exports - avoid conflict with EnterpriseUseCases CTAButton
 export type { CTAButton as HomeHeroCTAButton, HomeHeroProps } from './HomeHero'
 export { HomeHero } from './HomeHero'

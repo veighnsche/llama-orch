@@ -1,36 +1,100 @@
 'use client'
 
+import { TemplateContainer } from '@rbee/ui/molecules'
+import {
+  AdditionalFeaturesGrid,
+  CTATemplate,
+  EmailCapture,
+  EnterpriseCompliance,
+  EnterpriseHowItWorks,
+  FAQTemplate,
+  HeroTemplate,
+  HowItWorks,
+  TestimonialsTemplate,
+  UseCasesTemplate,
+} from '@rbee/ui/templates'
+import {
+  communityCTAContainerProps,
+  communityCTAProps,
+  communityEmailCaptureContainerProps,
+  communityEmailCaptureProps,
+  communityFAQContainerProps,
+  communityFAQProps,
+  communityGuidelinesContainerProps,
+  communityGuidelinesProps,
+  communityHeroContainerProps,
+  communityHeroProps,
+  communityStatsContainerProps,
+  communityStatsProps,
+  contributionTypesContainerProps,
+  contributionTypesProps,
+  featuredContributorsContainerProps,
+  featuredContributorsProps,
+  howToContributeContainerProps,
+  howToContributeProps,
+  roadmapContainerProps,
+  roadmapProps,
+  supportChannelsContainerProps,
+  supportChannelsProps,
+} from './CommunityPageProps'
+
 export default function CommunityPage() {
   return (
-    <div className="container mx-auto px-4 py-16">
-      <h1 className="text-4xl font-bold mb-6">rbee Community</h1>
-      <p className="text-xl text-muted-foreground mb-8">
-        Connect with developers, share knowledge, and contribute to the project.
-      </p>
-      <div className="prose prose-lg dark:prose-invert max-w-none">
-        <h2>Coming Soon</h2>
-        <p>This page is under construction. We're setting up community channels.</p>
-        <h3>Community Channels</h3>
-        <ul>
-          <li>
-            <strong>GitHub Discussions:</strong> Ask questions, share ideas, and discuss features
-          </li>
-          <li>
-            <strong>Discord:</strong> Real-time chat with the community (coming soon)
-          </li>
-          <li>
-            <strong>GitHub Issues:</strong> Report bugs and request features
-          </li>
-          <li>
-            <strong>Contributing:</strong> Contribute code, documentation, and examples
-          </li>
-        </ul>
-        <h3>Get Involved</h3>
-        <p>
-          rbee is an open-source project (GPL-3.0). We welcome contributions from developers, designers, and
-          documentation writers.
-        </p>
-      </div>
-    </div>
+    <>
+      {/* Hero Section */}
+      <TemplateContainer {...communityHeroContainerProps}>
+        <HeroTemplate {...communityHeroProps} />
+      </TemplateContainer>
+
+      {/* Email Capture */}
+      <TemplateContainer {...communityEmailCaptureContainerProps}>
+        <EmailCapture {...communityEmailCaptureProps} />
+      </TemplateContainer>
+
+      {/* Community Stats */}
+      <TemplateContainer {...communityStatsContainerProps}>
+        <TestimonialsTemplate {...communityStatsProps} />
+      </TemplateContainer>
+
+      {/* Contribution Types */}
+      <TemplateContainer {...contributionTypesContainerProps}>
+        <UseCasesTemplate {...contributionTypesProps} />
+      </TemplateContainer>
+
+      {/* How to Contribute */}
+      <TemplateContainer {...howToContributeContainerProps}>
+        <HowItWorks {...howToContributeProps} />
+      </TemplateContainer>
+
+      {/* Support Channels */}
+      <TemplateContainer {...supportChannelsContainerProps}>
+        <AdditionalFeaturesGrid {...supportChannelsProps} />
+      </TemplateContainer>
+
+      {/* Community Guidelines */}
+      <TemplateContainer {...communityGuidelinesContainerProps}>
+        <EnterpriseCompliance {...communityGuidelinesProps} />
+      </TemplateContainer>
+
+      {/* Featured Contributors */}
+      <TemplateContainer {...featuredContributorsContainerProps}>
+        <TestimonialsTemplate {...featuredContributorsProps} />
+      </TemplateContainer>
+
+      {/* Roadmap */}
+      <TemplateContainer {...roadmapContainerProps}>
+        <EnterpriseHowItWorks {...roadmapProps} />
+      </TemplateContainer>
+
+      {/* FAQ */}
+      <TemplateContainer {...communityFAQContainerProps}>
+        <FAQTemplate {...communityFAQProps} />
+      </TemplateContainer>
+
+      {/* Final CTA */}
+      <TemplateContainer {...communityCTAContainerProps}>
+        <CTATemplate {...communityCTAProps} />
+      </TemplateContainer>
+    </>
   )
 }
