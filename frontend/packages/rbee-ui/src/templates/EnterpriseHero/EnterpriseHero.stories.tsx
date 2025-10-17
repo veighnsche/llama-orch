@@ -15,12 +15,15 @@ export default meta
 type Story = StoryObj<typeof meta>
 
 /**
+ * OnEnterpriseHero - enterpriseHeroProps
+ * @tags enterprise, hero, gdpr, compliance, eu
+ * 
  * EnterpriseHero as used on the Enterprise page
  * - GDPR-compliant messaging
  * - Immutable audit trail console visual
  * - Compliance chips (GDPR, SOC2, ISO 27001)
  * - EU data residency badges
  */
-export const OnEnterprisePage: Story = {
+export const OnEnterpriseHero: Story = {
   args: enterpriseHeroProps,
 }

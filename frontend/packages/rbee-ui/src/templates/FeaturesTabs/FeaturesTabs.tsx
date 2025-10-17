@@ -28,7 +28,9 @@ export interface FeaturesTabsProps {
   description: string
   tabs: TabConfig[]
   defaultTab?: string
+  /** @deprecated No longer used - background handled by TemplateContainer */
   sectionId?: string
+  /** @deprecated No longer used - background handled by TemplateContainer */
   bgClassName?: string
 }
 
@@ -37,14 +39,11 @@ export function FeaturesTabs({
   description,
   tabs,
   defaultTab,
-  sectionId = 'feature-list',
-  bgClassName = 'bg-gradient-to-b from-secondary to-background',
 }: FeaturesTabsProps) {
   return (
-    <section id={sectionId} className={`py-24 ${bgClassName}`}>
-      <div className="container mx-auto px-4">
-        <Tabs defaultValue={defaultTab || tabs[0]?.value} className="w-full" orientation="horizontal">
-          <div className="grid gap-8 lg:grid-cols-[320px_minmax(0,1fr)]">
+    <div className="container mx-auto px-4">
+      <Tabs defaultValue={defaultTab || tabs[0]?.value} className="w-full" orientation="horizontal">
+        <div className="grid gap-8 lg:grid-cols-[320px_minmax(0,1fr)]">
             {/* Left rail: sticky intro + TabsList */}
             <div className="lg:sticky lg:top-24 self-start space-y-6">
               <div>
@@ -116,9 +115,8 @@ export function FeaturesTabs({
                 </TabsContent>
               ))}
             </div>
-          </div>
-        </Tabs>
-      </div>
-    </section>
+        </div>
+      </Tabs>
+    </div>
   )
 }

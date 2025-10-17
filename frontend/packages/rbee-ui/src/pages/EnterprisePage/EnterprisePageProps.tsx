@@ -192,6 +192,22 @@ export const enterpriseEmailCaptureProps: EmailCaptureProps = {
   },
 };
 
+/**
+ * Email capture container - Background wrapper
+ */
+export const enterpriseEmailCaptureContainerProps: Omit<
+  TemplateContainerProps,
+  "children"
+> = {
+  title: null,
+  background: {
+    variant: 'background',
+  },
+  paddingY: "2xl",
+  maxWidth: "3xl",
+  align: "center",
+};
+
 // === Problem Template ===
 
 /**

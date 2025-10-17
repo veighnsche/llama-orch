@@ -1,23 +1,2 @@
 export { default as ProvidersPage } from './ProvidersPage'
-export {
-  providersCTAProps,
-  providersEarningsContainerProps,
-  providersEarningsProps,
-  providersFeaturesProps,
-  providersHeroProps,
-  providersHowItWorksContainerProps,
-  providersHowItWorksProps,
-  providersMarketplaceCommissionProps,
-  providersMarketplaceContainerProps,
-  providersMarketplaceSolutionProps,
-  providersProblemContainerProps,
-  providersProblemProps,
-  providersSecurityContainerProps,
-  providersSecurityProps,
-  providersSolutionContainerProps,
-  providersSolutionProps,
-  providersTestimonialsContainerProps,
-  providersTestimonialsProps,
-  providersUseCasesContainerProps,
-  providersUseCasesProps,
-} from './ProvidersPageProps'
+export * from './ProvidersPageProps'

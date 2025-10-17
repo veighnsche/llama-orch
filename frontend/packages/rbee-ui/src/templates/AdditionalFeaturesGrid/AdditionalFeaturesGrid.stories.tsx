@@ -14,7 +14,7 @@ const meta: Meta<typeof AdditionalFeaturesGrid> = {
 export default meta
 type Story = StoryObj<typeof AdditionalFeaturesGrid>
 
-export const OnFeaturesPage: Story = {
+export const OnFeaturesAdditional: Story = {
   render: (args) => (
     <TemplateContainer {...additionalFeaturesGridContainerProps}>
       <AdditionalFeaturesGrid {...args} />

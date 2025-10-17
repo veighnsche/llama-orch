@@ -17,12 +17,15 @@ export default meta
 type Story = StoryObj<typeof meta>
 
 /**
+ * OnHomePricing - pricingTemplateProps
+ * @tags home, pricing, tiers
+ * 
  * PricingTemplate as used on the Home page
  * - Kicker badges (Open source, OpenAI-compatible, Multi-GPU, No feature gates)
  * - Editorial image below tiers
  * - Full featured variant
  */
-export const OnHomePage: Story = {
+export const OnHomePricing: Story = {
   render: (args) => (
     <TemplateContainer {...homePricingTemplateContainerProps}>
       <PricingTemplate {...args} />
@@ -32,6 +35,9 @@ export const OnHomePage: Story = {
 }
 
 /**
+ * OnHomePricing - pricingTemplateProps
+ * @tags home, pricing, tiers
+ * 
  * PricingTemplate as used on the Pricing page
  * - No kicker badges
  * - No editorial image

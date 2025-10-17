@@ -293,3 +293,19 @@ export const useCasesEmailCaptureProps: EmailCaptureProps = {
   trustMessage: 'We respect your privacy. Unsubscribe at any time.',
   successMessage: 'Thanks for subscribing! Check your inbox.',
 }
+
+/**
+ * Email capture container - Background wrapper
+ */
+export const useCasesEmailCaptureContainerProps: Omit<
+  TemplateContainerProps,
+  "children"
+> = {
+  title: null,
+  background: {
+    variant: 'background',
+  },
+  paddingY: "2xl",
+  maxWidth: "3xl",
+  align: "center",
+}

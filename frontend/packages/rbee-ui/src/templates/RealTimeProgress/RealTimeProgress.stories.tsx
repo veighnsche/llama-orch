@@ -14,7 +14,7 @@ const meta: Meta<typeof RealTimeProgress> = {
 export default meta
 type Story = StoryObj<typeof RealTimeProgress>
 
-export const OnFeaturesPage: Story = {
+export const OnFeaturesRealTimeProgress: Story = {
   render: (args) => (
     <TemplateContainer {...realTimeProgressContainerProps}>
       <RealTimeProgress {...args} />

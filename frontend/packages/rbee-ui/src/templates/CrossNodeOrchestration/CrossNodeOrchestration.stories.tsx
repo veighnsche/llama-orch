@@ -14,7 +14,7 @@ const meta: Meta<typeof CrossNodeOrchestration> = {
 export default meta
 type Story = StoryObj<typeof CrossNodeOrchestration>
 
-export const OnFeaturesPage: Story = {
+export const OnFeaturesCrossNode: Story = {
   render: (args) => (
     <TemplateContainer {...crossNodeOrchestrationContainerProps}>
       <CrossNodeOrchestration {...args} />

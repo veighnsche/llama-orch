@@ -1,9 +1,10 @@
-import { developersEmailCaptureProps } from '@rbee/ui/pages/DevelopersPage'
-import { enterpriseEmailCaptureProps } from '@rbee/ui/pages/EnterprisePage'
-import { featuresEmailCaptureProps } from '@rbee/ui/pages/FeaturesPage'
-import { emailCaptureProps } from '@rbee/ui/pages/HomePage'
-import { pricingEmailCaptureProps } from '@rbee/ui/pages/PricingPage'
-import { useCasesEmailCaptureProps } from '@rbee/ui/pages/UseCasesPage'
+import { developersEmailCaptureContainerProps, developersEmailCaptureProps } from '@rbee/ui/pages/DevelopersPage'
+import { enterpriseEmailCaptureContainerProps, enterpriseEmailCaptureProps } from '@rbee/ui/pages/EnterprisePage'
+import { featuresEmailCaptureContainerProps, featuresEmailCaptureProps } from '@rbee/ui/pages/FeaturesPage'
+import { emailCaptureContainerProps, emailCaptureProps } from '@rbee/ui/pages/HomePage'
+import { pricingEmailCaptureContainerProps, pricingEmailCaptureProps } from '@rbee/ui/pages/PricingPage'
+import { useCasesEmailCaptureContainerProps, useCasesEmailCaptureProps } from '@rbee/ui/pages/UseCasesPage'
+import { TemplateContainer } from '@rbee/ui/molecules'
 import type { Meta, StoryObj } from '@storybook/react'
 import { EmailCapture } from './EmailCapture'
 
@@ -27,6 +28,11 @@ type Story = StoryObj<typeof meta>
  * - Homelab bee illustration
  */
 export const OnHomePage: Story = {
+  render: (args) => (
+    <TemplateContainer {...emailCaptureContainerProps}>
+      <EmailCapture {...args} />
+    </TemplateContainer>
+  ),
   args: emailCaptureProps,
 }
 
@@ -37,6 +43,11 @@ export const OnHomePage: Story = {
  * - Community highlights
  */
 export const OnFeaturesPage: Story = {
+  render: (args) => (
+    <TemplateContainer {...featuresEmailCaptureContainerProps}>
+      <EmailCapture {...args} />
+    </TemplateContainer>
+  ),
   args: featuresEmailCaptureProps,
 }
 
@@ -46,6 +57,11 @@ export const OnFeaturesPage: Story = {
  * - Simpler messaging without badge
  */
 export const OnUseCasesPage: Story = {
+  render: (args) => (
+    <TemplateContainer {...useCasesEmailCaptureContainerProps}>
+      <EmailCapture {...args} />
+    </TemplateContainer>
+  ),
   args: useCasesEmailCaptureProps,
 }
 
@@ -56,6 +72,11 @@ export const OnUseCasesPage: Story = {
  * - Discount notifications
  */
 export const OnPricingPage: Story = {
+  render: (args) => (
+    <TemplateContainer {...pricingEmailCaptureContainerProps}>
+      <EmailCapture {...args} />
+    </TemplateContainer>
+  ),
   args: pricingEmailCaptureProps,
 }
 
@@ -66,6 +87,11 @@ export const OnPricingPage: Story = {
  * - GitHub and Discord community links
  */
 export const OnDevelopersPage: Story = {
+  render: (args) => (
+    <TemplateContainer {...developersEmailCaptureContainerProps}>
+      <EmailCapture {...args} />
+    </TemplateContainer>
+  ),
   args: developersEmailCaptureProps,
 }
 
@@ -76,5 +102,10 @@ export const OnDevelopersPage: Story = {
  * - Compliance and security focus
  */
 export const OnEnterprisePage: Story = {
+  render: (args) => (
+    <TemplateContainer {...enterpriseEmailCaptureContainerProps}>
+      <EmailCapture {...args} />
+    </TemplateContainer>
+  ),
   args: enterpriseEmailCaptureProps,
 }

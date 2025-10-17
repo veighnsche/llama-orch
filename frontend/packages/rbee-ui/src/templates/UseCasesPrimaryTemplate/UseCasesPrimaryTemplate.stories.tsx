@@ -14,13 +14,16 @@ export default meta
 type Story = StoryObj<typeof meta>
 
 /**
+ * OnUseCasesPrimary - useCasesPrimaryProps
+ * @tags use-cases, primary, filters
+ * 
  * UseCasesPrimaryTemplate as used on the Use Cases page
  * - Eight use case cards (Solo Developer, Small Team, Homelab, Enterprise, etc.)
  * - Filter tabs (All, Solo, Team, Enterprise, Research)
  * - UsecasesGridDark hero image
  * - Each card has icon, scenario, solution, outcome, and highlights
  */
-export const OnUseCasesPage: Story = {
+export const OnUseCasesPrimary: Story = {
   render: (args) => (
     <TemplateContainer {...useCasesPrimaryContainerProps}>
       <UseCasesPrimaryTemplate {...args} />

@@ -16,12 +16,15 @@ export default meta
 type Story = StoryObj<typeof meta>
 
 /**
+ * OnDevelopersCodeExamples - codeExamplesProps
+ * @tags developers, code, examples
+ * 
  * CodeExamplesTemplate as used on the Developers page
  * - Interactive code examples with tabbed navigation
  * - Syntax highlighting and copy-to-clipboard
  * - Keyboard navigation support
  */
-export const OnDevelopersPage: Story = {
+export const OnDevelopersCodeExamples: Story = {
   render: (args) => (
     <TemplateContainer {...codeExamplesContainerProps}>
       <CodeExamplesTemplate {...args} />

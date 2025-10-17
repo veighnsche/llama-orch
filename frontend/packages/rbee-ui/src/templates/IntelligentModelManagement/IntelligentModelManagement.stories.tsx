@@ -14,7 +14,7 @@ const meta: Meta<typeof IntelligentModelManagement> = {
 export default meta
 type Story = StoryObj<typeof IntelligentModelManagement>
 
-export const OnFeaturesPage: Story = {
+export const OnFeaturesModelManagement: Story = {
   render: (args) => (
     <TemplateContainer {...intelligentModelManagementContainerProps}>
       <IntelligentModelManagement {...args} />

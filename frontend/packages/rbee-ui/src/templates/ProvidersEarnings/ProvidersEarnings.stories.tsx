@@ -16,12 +16,15 @@ export default meta
 type Story = StoryObj<typeof meta>
 
 /**
+ * OnProvidersEarnings - providersEarningsProps
+ * @tags providers, earnings, calculator
+ * 
  * ProvidersEarnings as used on the Providers page
  * - Displays earnings calculator and potential revenue
  * - Shows pricing tiers and payout structures
  * - Features transparent commission breakdown
  */
-export const OnProvidersPage: Story = {
+export const OnProvidersEarnings: Story = {
   render: (args) => (
     <TemplateContainer {...providersEarningsContainerProps}>
       <ProvidersEarnings {...args} />

@@ -16,12 +16,15 @@ export default meta
 type Story = StoryObj<typeof meta>
 
 /**
+ * OnEnterpriseCompliance - enterpriseComplianceProps
+ * @tags enterprise, compliance, gdpr
+ * 
  * EnterpriseCompliance as used on the Enterprise page
  * - GDPR, SOC2, ISO 27001 compliance pillars
  * - Detailed compliance features
  * - Audit retention and data residency
  */
-export const OnEnterprisePage: Story = {
+export const OnEnterpriseCompliance: Story = {
   render: (args) => (
     <TemplateContainer {...enterpriseComplianceContainerProps}>
       <EnterpriseCompliance {...args} />

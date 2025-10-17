@@ -1,7 +1,8 @@
-import { coreFeatureTabsProps } from '@rbee/ui/pages/DevelopersPage'
-import { featuresFeaturesTabsProps } from '@rbee/ui/pages/FeaturesPage'
-import { featuresTabsProps } from '@rbee/ui/pages/HomePage'
-import { providersFeaturesProps } from '@rbee/ui/pages/ProvidersPage'
+import { coreFeatureTabsContainerProps, coreFeatureTabsProps } from '@rbee/ui/pages/DevelopersPage'
+import { featuresFeaturesTabsContainerProps, featuresFeaturesTabsProps } from '@rbee/ui/pages/FeaturesPage'
+import { featuresTabsContainerProps, featuresTabsProps } from '@rbee/ui/pages/HomePage'
+import { providersFeaturesContainerProps, providersFeaturesProps } from '@rbee/ui/pages/ProvidersPage'
+import { TemplateContainer } from '@rbee/ui/molecules'
 import type { Meta, StoryObj } from '@storybook/react'
 import { FeaturesTabs } from './FeaturesTabs'
 
@@ -142,6 +143,11 @@ type Story = StoryObj<typeof meta>
  * - Same content as Features page but positioned differently in page flow
  */
 export const OnHomePage: Story = {
+  render: (args) => (
+    <TemplateContainer {...featuresTabsContainerProps}>
+      <FeaturesTabs {...args} />
+    </TemplateContainer>
+  ),
   args: featuresTabsProps,
 }
 
@@ -153,6 +159,11 @@ export const OnHomePage: Story = {
  * - Appears after hero section for deep technical dive
  */
 export const OnFeaturesPage: Story = {
+  render: (args) => (
+    <TemplateContainer {...featuresFeaturesTabsContainerProps}>
+      <FeaturesTabs {...args} />
+    </TemplateContainer>
+  ),
   args: featuresFeaturesTabsProps,
 }
 
@@ -164,6 +175,11 @@ export const OnFeaturesPage: Story = {
  * - Developer-focused content and examples
  */
 export const OnDevelopersPage: Story = {
+  render: (args) => (
+    <TemplateContainer {...coreFeatureTabsContainerProps}>
+      <FeaturesTabs {...args} />
+    </TemplateContainer>
+  ),
   args: coreFeatureTabsProps,
 }
 
@@ -174,5 +190,10 @@ export const OnDevelopersPage: Story = {
  * - Provider-focused tabs with earnings and marketplace features
  */
 export const OnProvidersPage: Story = {
+  render: (args) => (
+    <TemplateContainer {...providersFeaturesContainerProps}>
+      <FeaturesTabs {...args} />
+    </TemplateContainer>
+  ),
   args: providersFeaturesProps,
 }

@@ -17,6 +17,12 @@ export default meta
 type Story = StoryObj<typeof meta>
 
 /**
+ * OnPricingFAQ - pricingFaqProps
+ * @tags pricing, faq, billing
+ * 
+ * OnHomeFAQ - faqTemplateProps
+ * @tags home, faq, support
+ * 
  * FAQTemplate as used on the Home page
  * - Badge: "Support • Self-hosted AI"
  * - 8 general questions across 6 categories
@@ -24,7 +30,7 @@ type Story = StoryObj<typeof meta>
  * - Includes support card with beehive illustration
  * - Links to GitHub discussions, setup guide, email support
  */
-export const OnHomePage: Story = {
+export const OnHomeFAQ: Story = {
   render: (args) => (
     <TemplateContainer {...faqTemplateContainerProps}>
       <FAQTemplate {...args} />
@@ -34,6 +40,12 @@ export const OnHomePage: Story = {
 }
 
 /**
+ * OnPricingFAQ - pricingFaqProps
+ * @tags pricing, faq, billing
+ * 
+ * OnHomeFAQ - faqTemplateProps
+ * @tags home, faq, support
+ * 
  * FAQTemplate as used on the Pricing page
  * - Badge: "Pricing • Plans & Billing"
  * - 6 pricing-specific questions across 4 categories
@@ -41,7 +53,7 @@ export const OnHomePage: Story = {
  * - No support card (pricing-focused)
  * - Questions about free tier, upgrades, payment methods, discounts, trials
  */
-export const OnPricingPage: Story = {
+export const OnPricingFAQ: Story = {
   render: (args) => (
     <TemplateContainer {...pricingFaqContainerProps}>
       <FAQTemplate {...args} />

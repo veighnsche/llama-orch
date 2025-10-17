@@ -16,12 +16,15 @@ export default meta
 type Story = StoryObj<typeof meta>
 
 /**
+ * OnEnterpriseHowItWorks - enterpriseHowItWorksProps
+ * @tags enterprise, deployment, process
+ * 
  * EnterpriseHowItWorks as used on the Enterprise page
  * - Deployment process timeline
  * - Step-by-step implementation guide
  * - Enterprise onboarding flow
  */
-export const OnEnterprisePage: Story = {
+export const OnEnterpriseHowItWorks: Story = {
   render: (args) => (
     <TemplateContainer {...enterpriseHowItWorksContainerProps}>
       <EnterpriseHowItWorks {...args} />

@@ -15,7 +15,7 @@ const meta = {
 export default meta
 type Story = StoryObj<typeof meta>
 
-export const OnHomePage: Story = {
+export const OnHomeWhatIsRbee: Story = {
   render: (args) => (
     <TemplateContainer {...whatIsRbeeContainerProps}>
       <WhatIsRbee {...args} />

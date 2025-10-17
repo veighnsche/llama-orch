@@ -14,6 +14,6 @@ const meta = {
 export default meta
 type Story = StoryObj<typeof meta>
 
-export const OnHomePage: Story = {
+export const OnHomeHero: Story = {
   args: homeHeroProps,
 }

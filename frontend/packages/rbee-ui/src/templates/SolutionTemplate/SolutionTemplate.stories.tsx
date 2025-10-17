@@ -33,12 +33,15 @@ export default meta
 type Story = StoryObj<typeof meta>
 
 /**
+ * OnHomeSolution - solutionTemplateProps
+ * @tags home, solution, benefits, orchestration
+ * 
  * SolutionTemplate as used on the Home page
  * - Four benefits with topology visualization
  * - Multi-host BeeArchitecture diagram
  * - Shows CUDA, Metal, and CPU orchestration
  */
-export const OnHomePage: Story = {
+export const OnHomeSolution: Story = {
   args: {} as any,
   render: () => (
     <TemplateContainer {...homeContainerProps}>
@@ -48,6 +51,9 @@ export const OnHomePage: Story = {
 }
 
 /**
+ * OnEnterpriseSolution - enterpriseSolutionProps
+ * @tags enterprise, solution, compliance, gdpr
+ * 
  * SolutionTemplate as used on the Enterprise page
  * - Four compliance-focused features
  * - How It Works steps for enterprise deployment
@@ -55,7 +61,7 @@ export const OnHomePage: Story = {
  * - EU data sovereignty illustration
  * - Primary and secondary CTAs
  */
-export const OnEnterprisePage: Story = {
+export const OnEnterpriseSolution: Story = {
   args: {} as any,
   render: () => (
     <TemplateContainer {...enterpriseSolutionContainerProps}>
@@ -65,13 +71,16 @@ export const OnEnterprisePage: Story = {
 }
 
 /**
+ * OnDevelopersSolution - solutionTemplateProps
+ * @tags developers, solution, api, openai
+ * 
  * SolutionTemplate as used on the Developers page
  * - Four benefits focused on developer needs
  * - How It Works steps
  * - OpenAI-compatible API code example in aside
  * - Primary and secondary CTAs
  */
-export const OnDevelopersPage: Story = {
+export const OnDevelopersSolution: Story = {
   args: {} as any,
   render: () => (
     <TemplateContainer {...developersContainerProps}>
@@ -81,13 +90,16 @@ export const OnDevelopersPage: Story = {
 }
 
 /**
+ * OnProvidersSolution - providersSolutionProps
+ * @tags providers, solution, gpu, earnings
+ * 
  * SolutionTemplate as used on the Providers page
  * - Four benefits focused on GPU providers
  * - How It Works steps for marketplace
  * - Earnings card with GPU pricing estimates
  * - Primary and secondary CTAs
  */
-export const OnProvidersPage: Story = {
+export const OnProvidersSolution: Story = {
   args: {} as any,
   render: () => (
     <TemplateContainer {...providersSolutionContainerProps}>
@@ -97,13 +109,16 @@ export const OnProvidersPage: Story = {
 }
 
 /**
+ * OnProvidersMarketplace - providersMarketplaceSolutionProps
+ * @tags providers, marketplace, commission
+ * 
  * SolutionTemplate for Providers Marketplace
  * - Four marketplace feature tiles
  * - How It Works steps
  * - Commission structure card as aside
  * - Used on ProvidersPage marketplace section
  */
-export const ProvidersMarketplace: Story = {
+export const OnProvidersMarketplace: Story = {
   args: {} as any,
   render: () => (
     <TemplateContainer {...providersMarketplaceContainerProps}>

@@ -4,7 +4,6 @@ import { Badge } from '@rbee/ui/atoms/Badge'
 import { Button } from '@rbee/ui/atoms/Button'
 import { Input } from '@rbee/ui/atoms/Input'
 import { BeeGlyph, HomelabBee } from '@rbee/ui/icons'
-import { TemplateContainer } from '@rbee/ui/molecules'
 import { CheckCircle2, GitBranch, Lock, Mail } from 'lucide-react'
 import type React from 'react'
 import { useState } from 'react'
@@ -83,25 +82,25 @@ export function EmailCapture({
     }, autoResetDelay)
   }
 
-  // Prepare decoration with bee glyphs
-  const decoration = showBeeGlyphs ? (
-    <>
-      <BeeGlyph className="absolute top-16 left-[8%] opacity-5 pointer-events-none" />
-      <BeeGlyph className="absolute bottom-20 right-[10%] opacity-5 pointer-events-none" />
-    </>
-  ) : undefined
-
   return (
-    <TemplateContainer
-      title={null}
-      background={{
-        variant: 'background',
-        decoration,
-      }}
-      paddingY="2xl"
-      maxWidth="3xl"
-      align="center"
-    >
+    <>
+      {/* Supportive visual - homelab illustration */}
+      {showIllustration && (
+        <HomelabBee
+          size={960}
+          className="pointer-events-none absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-[52%] opacity-20"
+          aria-hidden="true"
+        />
+      )}
+
+      {/* Decorative bee glyphs */}
+      {showBeeGlyphs && (
+        <>
+          <BeeGlyph className="absolute top-16 left-[8%] opacity-5 pointer-events-none" />
+          <BeeGlyph className="absolute bottom-20 right-[10%] opacity-5 pointer-events-none" />
+        </>
+      )}
+
       <div className="relative text-center">
         {/* Status badge */}
         {badge && (
@@ -135,15 +134,6 @@ export function EmailCapture({
         >
           {subheadline}
         </p>
-
-        {/* Supportive visual - homelab illustration */}
-        {showIllustration && (
-          <HomelabBee
-            size={960}
-            className="pointer-events-none absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-[52%] opacity-20"
-            aria-hidden="true"
-          />
-        )}
 
         {/* Form or success state */}
         {!submitted ? (
@@ -215,6 +205,6 @@ export function EmailCapture({
           </div>
         )}
       </div>
-    </TemplateContainer>
+    </>
   )
 }

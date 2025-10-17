@@ -20,9 +20,15 @@ export default meta
 type Story = StoryObj<typeof meta>
 
 /**
+ * OnEnterpriseComparison - enterpriseComparisonProps
+ * @tags enterprise, comparison, compliance
+ * 
+ * OnHomeComparison - comparisonTemplateProps
+ * @tags home, comparison, features
+ * 
  * ComparisonTemplate as used on the Home page
  */
-export const OnHomePage: Story = {
+export const OnHomeComparison: Story = {
   render: (args) => (
     <TemplateContainer {...comparisonTemplateContainerProps}>
       <ComparisonTemplate {...args} />
@@ -32,9 +38,15 @@ export const OnHomePage: Story = {
 }
 
 /**
+ * OnEnterpriseComparison - enterpriseComparisonProps
+ * @tags enterprise, comparison, compliance
+ * 
+ * OnHomeComparison - comparisonTemplateProps
+ * @tags home, comparison, features
+ * 
  * ComparisonTemplate as used on the Enterprise page
  */
-export const OnEnterprisePage: Story = {
+export const OnEnterpriseComparison: Story = {
   render: (args) => (
     <TemplateContainer {...enterpriseComparisonContainerProps}>
       <ComparisonTemplate {...args} />

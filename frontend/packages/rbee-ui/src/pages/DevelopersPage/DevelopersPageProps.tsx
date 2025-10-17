@@ -131,6 +131,19 @@ export const developersEmailCaptureProps: EmailCaptureProps = {
   },
 }
 
+/**
+ * Email capture container - Background with bee glyph decorations
+ */
+export const developersEmailCaptureContainerProps: Omit<TemplateContainerProps, 'children'> = {
+  title: null,
+  background: {
+    variant: 'background',
+  },
+  paddingY: '2xl',
+  maxWidth: '3xl',
+  align: 'center',
+}
+
 // === Problem Template ===
 
 /**
@@ -502,7 +515,22 @@ else {
     },
   ],
   defaultTab: 'api',
-}
+};
+
+/**
+ * Core features tabs container
+ */
+export const coreFeatureTabsContainerProps: Omit<
+  TemplateContainerProps,
+  "children"
+> = {
+  title: null,
+  background: {
+    variant: 'background',
+  },
+  paddingY: "2xl",
+  maxWidth: "7xl",
+};
 
 // === Use Cases Template ===
 

@@ -14,13 +14,16 @@ export default meta
 type Story = StoryObj<typeof meta>
 
 /**
+ * OnPricingComparison - pricingComparisonProps
+ * @tags pricing, comparison, tiers
+ * 
  * PricingComparisonTemplate as used on the Pricing page
  * - Detailed feature comparison table
  * - Three columns: Home/Lab, Team, Enterprise
  * - Three groups: Core Platform, Productivity, Support & Services
  * - CTA buttons at bottom
  */
-export const OnPricingPage: Story = {
+export const OnPricingComparison: Story = {
   render: (args) => (
     <TemplateContainer {...pricingComparisonContainerProps}>
       <PricingComparisonTemplate {...args} />

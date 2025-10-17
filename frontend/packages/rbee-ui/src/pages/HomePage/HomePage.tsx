@@ -24,9 +24,11 @@ import {
   comparisonTemplateContainerProps,
   comparisonTemplateProps,
   ctaTemplateProps,
+  emailCaptureContainerProps,
   emailCaptureProps,
   faqTemplateContainerProps,
   faqTemplateProps,
+  featuresTabsContainerProps,
   featuresTabsProps,
   homeHeroProps,
   howItWorksContainerProps,
@@ -56,7 +58,9 @@ export default function HomePage() {
       <TemplateContainer {...audienceSelectorContainerProps}>
         <AudienceSelector {...audienceSelectorProps} />
       </TemplateContainer>
-      <EmailCapture {...emailCaptureProps} />
+      <TemplateContainer {...emailCaptureContainerProps}>
+        <EmailCapture {...emailCaptureProps} />
+      </TemplateContainer>
       <TemplateContainer {...problemTemplateContainerProps}>
         <ProblemTemplate {...problemTemplateProps} />
       </TemplateContainer>
@@ -66,7 +70,9 @@ export default function HomePage() {
       <TemplateContainer {...howItWorksContainerProps}>
         <HowItWorks {...howItWorksProps} />
       </TemplateContainer>
-      <FeaturesTabs {...featuresTabsProps} />
+      <TemplateContainer {...featuresTabsContainerProps}>
+        <FeaturesTabs {...featuresTabsProps} />
+      </TemplateContainer>
       <TemplateContainer {...useCasesTemplateContainerProps}>
         <UseCasesTemplate {...useCasesTemplateProps} />
       </TemplateContainer>

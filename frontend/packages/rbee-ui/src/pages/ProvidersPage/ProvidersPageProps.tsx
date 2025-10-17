@@ -443,7 +443,23 @@ export const providersFeaturesProps: FeaturesTabsProps = {
       benefits: [{ text: 'Real-time tracking' }, { text: 'Historical charts' }, { text: 'Performance metrics' }],
     },
   ],
+  defaultTab: 'pricing',
 }
+
+/**
+ * Features tabs container - Background wrapper
+ */
+export const providersFeaturesContainerProps: Omit<
+  TemplateContainerProps,
+  "children"
+> = {
+  title: null,
+  background: {
+    variant: 'background',
+  },
+  paddingY: "2xl",
+  maxWidth: "7xl",
+};
 
 // === ProvidersUseCases Template ===
 export const providersUseCasesContainerProps: Omit<TemplateContainerProps, 'children'> = {

@@ -1,23 +1,24 @@
-'use client'
+"use client";
 
-import { TemplateContainer } from '@rbee/ui/molecules'
+import { TemplateContainer } from "@rbee/ui/molecules";
 import {
   EmailCapture,
   FAQTemplate,
   PricingComparisonTemplate,
   PricingHeroTemplate,
   PricingTemplate,
-} from '@rbee/ui/templates'
+} from "@rbee/ui/templates";
 import {
   pricingComparisonContainerProps,
   pricingComparisonProps,
+  pricingEmailCaptureContainerProps,
   pricingEmailCaptureProps,
   pricingFaqContainerProps,
   pricingFaqProps,
   pricingHeroProps,
   pricingTemplateContainerProps,
   pricingTemplateProps,
-} from './PricingPageProps'
+} from "./PricingPageProps";
 
 // ============================================================================
 // Props Objects
@@ -43,7 +44,9 @@ export default function PricingPage() {
         <FAQTemplate {...pricingFaqProps} />
       </TemplateContainer>
 
-      <EmailCapture {...pricingEmailCaptureProps} />
+      <TemplateContainer {...pricingEmailCaptureContainerProps}>
+        <EmailCapture {...pricingEmailCaptureProps} />
+      </TemplateContainer>
     </main>
-  )
+  );
 }

@@ -1,21 +1,2 @@
 export { default as DevelopersPage } from './DevelopersPage'
-export {
-  codeExamplesContainerProps,
-  codeExamplesProps,
-  coreFeatureTabsProps,
-  ctaTemplateProps,
-  developersEmailCaptureProps,
-  developersHeroProps,
-  developersPricingTemplateContainerProps,
-  developersPricingTemplateProps,
-  howItWorksContainerProps,
-  howItWorksProps,
-  problemTemplateContainerProps,
-  problemTemplateProps,
-  solutionTemplateContainerProps,
-  solutionTemplateProps,
-  testimonialsTemplateContainerProps,
-  testimonialsTemplateProps,
-  useCasesTemplateContainerProps,
-  useCasesTemplateProps,
-} from './DevelopersPageProps'
+export * from './DevelopersPageProps'

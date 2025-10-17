@@ -13,12 +13,15 @@ export default meta
 type Story = StoryObj<typeof meta>
 
 /**
+ * OnUseCasesHero - useCasesHeroProps
+ * @tags use-cases, hero, independence
+ * 
  * UseCasesHeroTemplate as used on the Use Cases page
  * - "Built for Those Who Value Independence" headline
  * - OpenAI-compatible badge
  * - Three proof indicators (Self-hosted, OpenAI-compatible, CUDA · Metal · CPU)
  * - Homelab hero image
  */
-export const OnUseCasesPage: Story = {
+export const OnUseCasesHero: Story = {
   args: useCasesHeroProps,
 }

@@ -16,12 +16,15 @@ export default meta
 type Story = StoryObj<typeof meta>
 
 /**
+ * OnHomeTestimonials - testimonialsTemplateProps
+ * @tags home, testimonials, social-proof
+ * 
  * TestimonialsTemplate as used on the Home page
  * - Three testimonials (Alex K., Sarah M., Marcus T.)
  * - Four stats (GitHub stars, installations, GPUs, cost)
  * - Emoji avatars
  */
-export const OnHomePage: Story = {
+export const OnHomeTestimonials: Story = {
   render: (args) => (
     <TemplateContainer {...testimonialsTemplateContainerProps}>
       <TestimonialsTemplate {...args} />

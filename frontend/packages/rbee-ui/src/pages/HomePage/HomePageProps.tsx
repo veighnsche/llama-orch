@@ -337,6 +337,22 @@ export const emailCaptureProps: EmailCaptureProps = {
 };
 
 /**
+ * Email capture container - Background with bee glyph decorations
+ */
+export const emailCaptureContainerProps: Omit<
+  TemplateContainerProps,
+  "children"
+> = {
+  title: null,
+  background: {
+    variant: 'background',
+  },
+  paddingY: "2xl",
+  maxWidth: "3xl",
+  align: "center",
+};
+
+/**
  * Problem template container - Layout for "hidden risk" messaging
  * 
  * TemplateContainer optional props available but not defined:
@@ -750,6 +766,22 @@ else {
     },
   ],
   defaultTab: "api",
+  sectionId: "feature-list",
+};
+
+/**
+ * Features tabs container
+ */
+export const featuresTabsContainerProps: Omit<
+  TemplateContainerProps,
+  "children"
+> = {
+  title: null,
+  background: {
+    variant: 'background',
+  },
+  paddingY: "2xl",
+  maxWidth: "7xl",
 };
 
 /**

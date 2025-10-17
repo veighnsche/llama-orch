@@ -28,12 +28,15 @@ export default meta
 type Story = StoryObj<typeof ProblemTemplate>
 
 /**
+ * OnHomeProblem - problemTemplateProps
+ * @tags home, problem, risks, ai-dependency
+ * 
  * ProblemTemplate as used on the Home page
  * - AI provider dependency risks
  * - Model changes, pricing changes, shutdown risks
  * - Codebase maintainability concerns
  */
-export const OnHomePage: Story = {
+export const OnHomeProblem: Story = {
   render: () => (
     <TemplateContainer
       title="The Hidden Risk of AI Dependency"
@@ -49,12 +52,15 @@ export const OnHomePage: Story = {
 }
 
 /**
+ * OnDevelopersProblem - problemTemplateProps
+ * @tags developers, problem, vendor-lock-in
+ * 
  * ProblemTemplate as used on the Developers page
  * - Hidden risks of AI-assisted development
  * - Model changes, pricing unpredictability
  * - Vendor lock-in and shutdown risks
  */
-export const OnDevelopersPage: Story = {
+export const OnDevelopersProblem: Story = {
   render: () => (
     <TemplateContainer {...developersContainerProps}>
       <ProblemTemplate {...developersProblems} />
@@ -63,12 +69,15 @@ export const OnDevelopersPage: Story = {
 }
 
 /**
+ * OnEnterpriseProblem - enterpriseProblemTemplateProps
+ * @tags enterprise, problem, compliance, gdpr
+ * 
  * ProblemTemplate as used on the Enterprise page
  * - Compliance challenges of cloud AI
  * - Data sovereignty, audit trail, GDPR risks
  * - Regulatory compliance concerns
  */
-export const OnEnterprisePage: Story = {
+export const OnEnterpriseProblem: Story = {
   render: () => (
     <TemplateContainer {...enterpriseProblemTemplateContainerProps}>
       <ProblemTemplate {...enterpriseProblemTemplateProps} />
@@ -77,12 +86,15 @@ export const OnEnterprisePage: Story = {
 }
 
 /**
+ * OnProvidersProblem - providersProblemProps
+ * @tags providers, problem, gpu, idle-hardware
+ * 
  * ProblemTemplate as used on the Providers page
  * - GPU provider challenges
  * - Idle hardware, revenue loss, complexity
  * - Monetization and trust concerns
  */
-export const OnProvidersPage: Story = {
+export const OnProvidersProblem: Story = {
   render: () => (
     <TemplateContainer {...providersProblemContainerProps}>
       <ProblemTemplate {...providersProblemProps} />

@@ -22,6 +22,7 @@ import {
   enterpriseComplianceProps,
   enterpriseCTAContainerProps,
   enterpriseCTAProps,
+  enterpriseEmailCaptureContainerProps,
   enterpriseEmailCaptureProps,
   enterpriseFeaturesContainerProps,
   enterpriseFeaturesData,
@@ -44,7 +45,9 @@ export default function EnterprisePage() {
   return (
     <main>
       <EnterpriseHero {...enterpriseHeroProps} />
-      <EmailCapture {...enterpriseEmailCaptureProps} />
+      <TemplateContainer {...enterpriseEmailCaptureContainerProps}>
+        <EmailCapture {...enterpriseEmailCaptureProps} />
+      </TemplateContainer>
 
       <TemplateContainer {...enterpriseProblemTemplateContainerProps}>
         <ProblemTemplate {...enterpriseProblemTemplateProps} />
@@ -75,7 +78,7 @@ export default function EnterprisePage() {
       </TemplateContainer>
 
       <TemplateContainer {...enterpriseFeaturesContainerProps}>
-        <div className="mx-auto max-w-[60%] grid gap-6 grid-cols-2">
+        <div className="mx-auto grid gap-6 grid-cols-2">
           {enterpriseFeaturesData.map((feature, index) => (
             <SecurityCard key={index} {...feature} />
           ))}

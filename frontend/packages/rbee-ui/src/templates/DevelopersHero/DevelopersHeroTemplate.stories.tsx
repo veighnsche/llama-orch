@@ -15,11 +15,14 @@ export default meta
 type Story = StoryObj<typeof meta>
 
 /**
+ * OnDevelopersHero - developersHeroProps
+ * @tags developers, hero, api
+ * 
  * DevelopersHeroTemplate as used on the Developers page
  * - Developer-focused hero with code-first messaging
  * - Emphasizes API simplicity and flexibility
  * - Features terminal-style code examples
  */
-export const OnDevelopersPage: Story = {
+export const OnDevelopersHero: Story = {
   args: developersHeroProps,
 }

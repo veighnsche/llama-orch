@@ -1,6 +1,6 @@
-'use client'
+"use client";
 
-import { TemplateContainer } from '@rbee/ui/molecules'
+import { TemplateContainer } from "@rbee/ui/molecules";
 import {
   AdditionalFeaturesGrid,
   CrossNodeOrchestration,
@@ -12,7 +12,7 @@ import {
   MultiBackendGpuTemplate,
   RealTimeProgress,
   SecurityIsolation,
-} from '@rbee/ui/templates'
+} from "@rbee/ui/templates";
 import {
   additionalFeaturesGridContainerProps,
   additionalFeaturesGridProps,
@@ -20,7 +20,9 @@ import {
   crossNodeOrchestrationProps,
   errorHandlingContainerProps,
   errorHandlingProps,
+  featuresEmailCaptureContainerProps,
   featuresEmailCaptureProps,
+  featuresFeaturesTabsContainerProps,
   featuresFeaturesTabsProps,
   intelligentModelManagementContainerProps,
   intelligentModelManagementProps,
@@ -30,7 +32,7 @@ import {
   realTimeProgressProps,
   securityIsolationContainerProps,
   securityIsolationProps,
-} from './FeaturesPageProps'
+} from "./FeaturesPageProps";
 
 // ============================================================================
 // Props Objects
@@ -43,7 +45,9 @@ export default function FeaturesPage() {
   return (
     <main>
       <FeaturesHero />
-      <FeaturesTabs {...featuresFeaturesTabsProps} />
+      <TemplateContainer {...featuresFeaturesTabsContainerProps}>
+        <FeaturesTabs {...featuresFeaturesTabsProps} />
+      </TemplateContainer>
 
       <TemplateContainer {...crossNodeOrchestrationContainerProps}>
         <CrossNodeOrchestration {...crossNodeOrchestrationProps} />
@@ -73,7 +77,9 @@ export default function FeaturesPage() {
         <AdditionalFeaturesGrid {...additionalFeaturesGridProps} />
       </TemplateContainer>
 
-      <EmailCapture {...featuresEmailCaptureProps} />
+      <TemplateContainer {...featuresEmailCaptureContainerProps}>
+        <EmailCapture {...featuresEmailCaptureProps} />
+      </TemplateContainer>
     </main>
-  )
+  );
 }

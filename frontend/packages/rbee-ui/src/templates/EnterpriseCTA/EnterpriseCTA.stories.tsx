@@ -19,13 +19,16 @@ export default meta
 type Story = StoryObj<typeof meta>
 
 /**
+ * OnEnterpriseCTA - enterpriseCTAProps
+ * @tags enterprise, cta, demo
+ * 
  * EnterpriseCTA as used on the Enterprise page
  * - Three CTA options (Schedule Demo, Compliance Pack, Talk to Sales)
  * - Eyebrow labels for context
  * - Trust signals and response time commitments
  * - Wrapped in TemplateContainer with title and description
  */
-export const OnEnterprisePage: Story = {
+export const OnEnterpriseCTA: Story = {
   args: enterpriseCTAProps,
   render: (args) => (
     <TemplateContainer {...enterpriseCTAContainerProps}>

@@ -16,12 +16,15 @@ export default meta
 type Story = StoryObj<typeof meta>
 
 /**
+ * OnEnterpriseSecurity - enterpriseSecurityProps
+ * @tags enterprise, security, defense
+ * 
  * EnterpriseSecurity as used on the Enterprise page
  * - Six security crates grid
  * - Security-first architecture
  * - Compliance and audit features
  */
-export const OnEnterprisePage: Story = {
+export const OnEnterpriseSecurity: Story = {
   args: enterpriseSecurityProps,
   render: (args) => (
     <TemplateContainer {...enterpriseSecurityContainerProps}>

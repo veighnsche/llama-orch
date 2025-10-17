@@ -16,12 +16,15 @@ export default meta
 type Story = StoryObj<typeof meta>
 
 /**
+ * OnEnterpriseUseCases - enterpriseUseCasesProps
+ * @tags enterprise, use-cases, industries
+ * 
  * EnterpriseUseCases as used on the Enterprise page
  * - Industry playbooks grid
  * - Finance, Healthcare, Legal, Government use cases
  * - Sector-specific compliance requirements
  */
-export const OnEnterprisePage: Story = {
+export const OnEnterpriseUseCases: Story = {
   render: (args) => (
     <TemplateContainer {...enterpriseUseCasesContainerProps}>
       <EnterpriseUseCases {...args} />

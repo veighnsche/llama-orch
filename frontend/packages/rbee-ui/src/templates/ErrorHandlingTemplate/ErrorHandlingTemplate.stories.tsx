@@ -14,7 +14,7 @@ const meta: Meta<typeof ErrorHandlingTemplate> = {
 export default meta
 type Story = StoryObj<typeof ErrorHandlingTemplate>
 
-export const OnFeaturesPage: Story = {
+export const OnFeaturesErrorHandling: Story = {
   render: (args) => (
     <TemplateContainer {...errorHandlingContainerProps}>
       <ErrorHandlingTemplate {...args} />

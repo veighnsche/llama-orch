@@ -16,6 +16,9 @@ export default meta
 type Story = StoryObj<typeof meta>
 
 /**
+ * OnHomeTechnical - technicalTemplateProps
+ * @tags home, technical, architecture
+ * 
  * TechnicalTemplate as used on the Home page
  * - Five architecture highlights (BDD, Cascading Shutdown, Process Isolation, etc.)
  * - BDD coverage progress (42/62)
@@ -23,7 +26,7 @@ type Story = StoryObj<typeof meta>
  * - Five tech stack items (Rust, Candle ML, Rhai, SQLite, Axum + Vue.js)
  * - GitHub and architecture links
  */
-export const OnHomePage: Story = {
+export const OnHomeTechnical: Story = {
   render: (args) => (
     <TemplateContainer {...technicalTemplateContainerProps}>
       <TechnicalTemplate {...args} />

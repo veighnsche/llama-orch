@@ -1124,3 +1124,34 @@ export const featuresEmailCaptureProps: EmailCaptureProps = {
   showBeeGlyphs: true,
   showIllustration: true,
 };
+
+/**
+ * Email capture container - Background wrapper
+ */
+export const featuresEmailCaptureContainerProps: Omit<
+  TemplateContainerProps,
+  "children"
+> = {
+  title: null,
+  background: {
+    variant: 'background',
+  },
+  paddingY: "2xl",
+  maxWidth: "3xl",
+  align: "center",
+};
+
+/**
+ * Features tabs container - Background wrapper
+ */
+export const featuresFeaturesTabsContainerProps: Omit<
+  TemplateContainerProps,
+  "children"
+> = {
+  title: null,
+  background: {
+    variant: 'background',
+  },
+  paddingY: "2xl",
+  maxWidth: "7xl",
+};

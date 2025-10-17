@@ -17,8 +17,10 @@ import {
 import {
   codeExamplesContainerProps,
   codeExamplesProps,
+  coreFeatureTabsContainerProps,
   coreFeatureTabsProps,
   ctaTemplateProps,
+  developersEmailCaptureContainerProps,
   developersEmailCaptureProps,
   developersHeroProps,
   developersPricingTemplateContainerProps,
@@ -46,7 +48,9 @@ export default function DevelopersPage() {
   return (
     <main>
       <DevelopersHeroTemplate {...developersHeroProps} />
-      <EmailCapture {...developersEmailCaptureProps} />
+      <TemplateContainer {...developersEmailCaptureContainerProps}>
+        <EmailCapture {...developersEmailCaptureProps} />
+      </TemplateContainer>
 
       <TemplateContainer {...problemTemplateContainerProps}>
         <ProblemTemplate {...problemTemplateProps} />
@@ -60,7 +64,9 @@ export default function DevelopersPage() {
         <HowItWorks {...howItWorksProps} />
       </TemplateContainer>
 
-      <FeaturesTabs {...coreFeatureTabsProps} />
+      <TemplateContainer {...coreFeatureTabsContainerProps}>
+        <FeaturesTabs {...coreFeatureTabsProps} />
+      </TemplateContainer>
 
       <TemplateContainer {...useCasesTemplateContainerProps}>
         <UseCasesTemplate {...useCasesTemplateProps} />

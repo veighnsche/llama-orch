@@ -27,12 +27,15 @@ export default meta
 type Story = StoryObj<typeof meta>
 
 /**
+ * OnHomeUseCases - useCasesTemplateProps
+ * @tags home, use-cases, personas
+ * 
  * UseCasesTemplate as used on the Home page
  * - Six use case cards in 3-column grid
  * - Icons: Laptop, Users, HomeIcon, Building, Code, Workflow
  * - Each card has scenario, solution, outcome
  */
-export const OnHomePage: Story = {
+export const OnHomeUseCases: Story = {
   render: (args) => (
     <TemplateContainer {...useCasesTemplateContainerProps}>
       <UseCasesTemplate {...args} />

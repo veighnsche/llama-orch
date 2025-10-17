@@ -14,7 +14,7 @@ const meta: Meta<typeof SecurityIsolation> = {
 export default meta
 type Story = StoryObj<typeof SecurityIsolation>
 
-export const OnFeaturesPage: Story = {
+export const OnFeaturesSecurity: Story = {
   render: (args) => (
     <TemplateContainer {...securityIsolationContainerProps}>
       <SecurityIsolation {...args} />

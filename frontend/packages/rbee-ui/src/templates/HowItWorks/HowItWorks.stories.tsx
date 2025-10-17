@@ -18,12 +18,21 @@ export default meta
 type Story = StoryObj<typeof meta>
 
 /**
+ * OnProvidersHowItWorks - providersHowItWorksProps
+ * @tags providers, how-it-works, earnings
+ * 
+ * OnDevelopersHowItWorks - howItWorksProps
+ * @tags developers, how-it-works, deployment
+ * 
+ * OnHomeHowItWorks - howItWorksProps
+ * @tags home, how-it-works, steps
+ * 
  * HowItWorks as used on the Home page
  * - Four-step installation guide
  * - Terminal and code blocks
  * - Focus on quick setup across all hardware
  */
-export const OnHomePage: Story = {
+export const OnHomeHowItWorks: Story = {
   render: (args) => (
     <TemplateContainer {...howItWorksContainerProps}>
       <HowItWorks {...args} />
@@ -33,12 +42,21 @@ export const OnHomePage: Story = {
 }
 
 /**
+ * OnProvidersHowItWorks - providersHowItWorksProps
+ * @tags providers, how-it-works, earnings
+ * 
+ * OnDevelopersHowItWorks - howItWorksProps
+ * @tags developers, how-it-works, deployment
+ * 
+ * OnHomeHowItWorks - howItWorksProps
+ * @tags home, how-it-works, steps
+ * 
  * HowItWorks as used on the Developers page
  * - Four-step installation guide
  * - Developer-focused messaging
  * - Terminal blocks and code examples
  */
-export const OnDevelopersPage: Story = {
+export const OnDevelopersHowItWorks: Story = {
   render: (args) => (
     <TemplateContainer {...developersHowItWorksContainerProps}>
       <HowItWorks {...args} />
@@ -48,13 +66,22 @@ export const OnDevelopersPage: Story = {
 }
 
 /**
+ * OnProvidersHowItWorks - providersHowItWorksProps
+ * @tags providers, how-it-works, earnings
+ * 
+ * OnDevelopersHowItWorks - howItWorksProps
+ * @tags developers, how-it-works, deployment
+ * 
+ * OnHomeHowItWorks - howItWorksProps
+ * @tags home, how-it-works, steps
+ * 
  * HowItWorks as used on the Providers page
  * - Four-step guide to start earning
  * - Terminal installation
  * - Configuration and marketplace setup
  * - Payout tracking
  */
-export const OnProvidersPage: Story = {
+export const OnProvidersHowItWorks: Story = {
   render: (args) => (
     <TemplateContainer {...providersHowItWorksContainerProps}>
       <HowItWorks {...args} />

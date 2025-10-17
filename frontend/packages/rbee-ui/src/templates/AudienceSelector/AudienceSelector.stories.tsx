@@ -91,7 +91,7 @@ export const audienceSelectorProps = {
 export default meta
 type Story = StoryObj<typeof meta>
 
-export const OnHomePage: Story = {
+export const OnHomeAudienceSelector: Story = {
   render: (args) => (
     <TemplateContainer {...audienceSelectorContainerProps}>
       <AudienceSelector {...args} />

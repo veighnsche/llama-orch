@@ -15,11 +15,14 @@ export default meta
 type Story = StoryObj<typeof meta>
 
 /**
+ * OnProvidersCTA - providersCTAProps
+ * @tags providers, cta, signup
+ * 
  * ProvidersCTA as used on the Providers page
  * - Final call-to-action for GPU providers
  * - Encourages signup and onboarding
  * - Features clear next steps and benefits
  */
-export const OnProvidersPage: Story = {
+export const OnProvidersCTA: Story = {
   args: providersCTAProps,
 }

@@ -15,11 +15,14 @@ export default meta
 type Story = StoryObj<typeof meta>
 
 /**
+ * OnHomeCTA - ctaTemplateProps
+ * @tags home, cta, conversion
+ * 
  * CTATemplate as used on the Home page
  * - "Stop depending on AI providers" headline
  * - Two CTAs: Get started free + View documentation
  * - Gradient emphasis variant
  */
-export const OnHomePage: Story = {
+export const OnHomeCTA: Story = {
   args: ctaTemplateProps,
 }

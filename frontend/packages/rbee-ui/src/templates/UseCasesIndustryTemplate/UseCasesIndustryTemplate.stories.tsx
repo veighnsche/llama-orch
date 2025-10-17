@@ -14,13 +14,16 @@ export default meta
 type Story = StoryObj<typeof meta>
 
 /**
+ * OnUseCasesIndustry - useCasesIndustryProps
+ * @tags use-cases, industry, compliance
+ * 
  * UseCasesIndustryTemplate as used on the Use Cases page
  * - Six industry cards (Financial Services, Healthcare, Legal, Government, Education, Manufacturing)
  * - Filter tabs for each industry
  * - IndustriesHero image
  * - Compliance badges (GDPR, HIPAA, ITAR, FERPA)
  */
-export const OnUseCasesPage: Story = {
+export const OnUseCasesIndustry: Story = {
   render: (args) => (
     <TemplateContainer {...useCasesIndustryContainerProps}>
       <UseCasesIndustryTemplate {...args} />

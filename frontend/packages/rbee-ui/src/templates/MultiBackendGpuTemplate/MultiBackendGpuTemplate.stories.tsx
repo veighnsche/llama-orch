@@ -14,7 +14,7 @@ const meta: Meta<typeof MultiBackendGpuTemplate> = {
 export default meta
 type Story = StoryObj<typeof MultiBackendGpuTemplate>
 
-export const OnFeaturesPage: Story = {
+export const OnFeaturesMultiBackend: Story = {
   render: (args) => (
     <TemplateContainer {...multiBackendGpuContainerProps}>
       <MultiBackendGpuTemplate {...args} />

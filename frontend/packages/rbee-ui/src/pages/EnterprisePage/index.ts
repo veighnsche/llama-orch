@@ -1,25 +1,2 @@
 export { default as EnterprisePage } from './EnterprisePage'
-export {
-  enterpriseComparisonContainerProps,
-  enterpriseComparisonProps,
-  enterpriseComplianceContainerProps,
-  enterpriseComplianceProps,
-  enterpriseCTAContainerProps,
-  enterpriseCTAProps,
-  enterpriseEmailCaptureProps,
-  enterpriseFeaturesContainerProps,
-  enterpriseFeaturesData,
-  enterpriseHeroProps,
-  enterpriseHowItWorksContainerProps,
-  enterpriseHowItWorksProps,
-  enterpriseProblemTemplateContainerProps,
-  enterpriseProblemTemplateProps,
-  enterpriseSecurityContainerProps,
-  enterpriseSecurityProps,
-  enterpriseSolutionContainerProps,
-  enterpriseSolutionProps,
-  enterpriseTestimonialsContainerProps,
-  enterpriseTestimonialsData,
-  enterpriseUseCasesContainerProps,
-  enterpriseUseCasesProps,
-} from './EnterprisePageProps'
+export * from './EnterprisePageProps'

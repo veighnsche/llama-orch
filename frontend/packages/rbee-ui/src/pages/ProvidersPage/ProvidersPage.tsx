@@ -1,7 +1,7 @@
-'use client'
+"use client";
 
-import { ProvidersSecurityCard, TemplateContainer } from '@rbee/ui/molecules'
-import { ProvidersCaseCard } from '@rbee/ui/organisms'
+import { ProvidersSecurityCard, TemplateContainer } from "@rbee/ui/molecules";
+import { ProvidersCaseCard } from "@rbee/ui/organisms";
 import {
   FeaturesTabs,
   HowItWorks,
@@ -11,11 +11,12 @@ import {
   ProvidersHero,
   SolutionTemplate,
   TestimonialsTemplate,
-} from '@rbee/ui/templates'
+} from "@rbee/ui/templates";
 import {
   providersCTAProps,
   providersEarningsContainerProps,
   providersEarningsProps,
+  providersFeaturesContainerProps,
   providersFeaturesProps,
   providersHeroProps,
   providersHowItWorksContainerProps,
@@ -32,7 +33,7 @@ import {
   providersTestimonialsProps,
   providersUseCasesContainerProps,
   providersUseCasesProps,
-} from './ProvidersPageProps'
+} from "./ProvidersPageProps";
 
 export default function ProvidersPage() {
   return (
@@ -47,9 +48,11 @@ export default function ProvidersPage() {
       <TemplateContainer {...providersHowItWorksContainerProps}>
         <HowItWorks {...providersHowItWorksProps} />
       </TemplateContainer>
-      <FeaturesTabs {...providersFeaturesProps} />
+      <TemplateContainer {...providersFeaturesContainerProps}>
+        <FeaturesTabs {...providersFeaturesProps} />
+      </TemplateContainer>
       <TemplateContainer {...providersUseCasesContainerProps}>
-        <div className="mx-auto max-w-[60%] grid gap-6 grid-cols-2">
+        <div className="mx-auto grid gap-6 grid-cols-2">
           {providersUseCasesProps.cases.map((caseData, index) => (
             <ProvidersCaseCard
               key={index}
@@ -71,7 +74,7 @@ export default function ProvidersPage() {
         <SolutionTemplate {...providersMarketplaceSolutionProps} />
       </TemplateContainer>
       <TemplateContainer {...providersSecurityContainerProps}>
-        <div className="mx-auto max-w-[60%] grid gap-6 grid-cols-2">
+        <div className="grid gap-6 grid-cols-2">
           {providersSecurityProps.items.map((item, index) => (
             <ProvidersSecurityCard
               key={index}
@@ -90,5 +93,5 @@ export default function ProvidersPage() {
       </TemplateContainer>
       <ProvidersCTA {...providersCTAProps} />
     </main>
-  )
+  );
 }
