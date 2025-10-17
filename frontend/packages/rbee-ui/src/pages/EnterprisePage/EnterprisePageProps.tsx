@@ -214,7 +214,11 @@ export const enterpriseProblemTemplateContainerProps: Omit<TemplateContainerProp
     'Using external AI providers creates compliance risks that can cost millions in fines and damage your reputation.',
   kicker: 'The Compliance Risk',
   kickerVariant: 'destructive',
-  bgVariant: 'destructive-gradient',
+  background: {
+
+    variant: 'gradient-destructive',
+
+  },
   paddingY: 'xl',
   maxWidth: '7xl',
   align: 'center',
@@ -272,12 +276,16 @@ export const enterpriseSolutionContainerProps: Omit<TemplateContainerProps, 'chi
   description:
     'Enterprise-grade, self-hosted AI that keeps data sovereign, auditable, and under your control—EU resident, zero US cloud dependencies.',
   kicker: 'How rbee Works',
-  bgVariant: 'default',
+  background: {
+
+    variant: 'background',
+
+  },
   paddingY: '2xl',
   maxWidth: '7xl',
   align: 'center',
   backgroundDecoration: (
-    <div className="pointer-events-none absolute left-1/2 top-8 hidden w-[52rem] -translate-x-1/2 opacity-15 md:block">
+    <div className="pointer-events-none absolute left-1/2 top-8 hidden w-[52rem] -translate-x-1/2 opacity-25 md:block">
       <EuLedgerGrid />
     </div>
   ),
@@ -379,14 +387,18 @@ export const enterpriseComplianceContainerProps: Omit<TemplateContainerProps, 'c
   title: 'Compliance by Design',
   description:
     'Built from the ground up to meet GDPR, SOC2, and ISO 27001 requirements—security is engineered in, not bolted on.',
-  bgVariant: 'default',
+  background: {
+
+    variant: 'background',
+
+  },
   paddingY: '2xl',
   maxWidth: '7xl',
   align: 'center',
   headingId: 'compliance',
   background: {
     decoration: (
-      <div className="pointer-events-none absolute left-1/2 top-6 w-[50rem] -translate-x-1/2 opacity-15">
+      <div className="pointer-events-none absolute left-1/2 top-6 w-[50rem] -translate-x-1/2 opacity-25">
         <EuLedgerGrid />
       </div>
     ),
@@ -422,7 +434,7 @@ export const enterpriseComplianceProps: EnterpriseComplianceProps = {
     {
       icon: <Globe className="size-6" />,
       title: 'GDPR',
-      subtitle: 'EU Regulation',
+      description: 'EU Regulation',
       titleId: 'compliance-gdpr',
       bullets: [
         { title: '7-year audit retention (Art. 30)' },
@@ -446,7 +458,7 @@ export const enterpriseComplianceProps: EnterpriseComplianceProps = {
     {
       icon: <Shield className="size-6" />,
       title: 'SOC2',
-      subtitle: 'US Standard',
+      description: 'US Standard',
       titleId: 'compliance-soc2',
       bullets: [
         { title: 'Auditor query API' },
@@ -465,7 +477,7 @@ export const enterpriseComplianceProps: EnterpriseComplianceProps = {
     {
       icon: <Lock className="size-6" />,
       title: 'ISO 27001',
-      subtitle: 'International Standard',
+      description: 'International Standard',
       titleId: 'compliance-iso27001',
       bullets: [
         { title: 'Incident records (A.16)' },
@@ -494,13 +506,17 @@ export const enterpriseSecurityContainerProps: Omit<TemplateContainerProps, 'chi
   title: 'Enterprise-Grade Security',
   description:
     'Six specialized security crates harden every layer—from auth and inputs to secrets, auditing, JWT lifecycle, and time-bounded execution.',
-  bgVariant: 'default',
+  background: {
+
+    variant: 'background',
+
+  },
   paddingY: '2xl',
   maxWidth: '7xl',
   align: 'center',
   background: {
     decoration: (
-      <div className="pointer-events-none absolute left-1/2 top-8 hidden w-[52rem] -translate-x-1/2 opacity-15 md:block">
+      <div className="pointer-events-none absolute left-1/2 top-8 hidden w-[52rem] -translate-x-1/2 opacity-25 md:block">
         <SecurityMesh className="blur-[0.5px]" />
       </div>
     ),
@@ -536,7 +552,7 @@ export const enterpriseSecurityProps: EnterpriseSecurityProps = {
     {
       icon: <Lock className="size-6" />,
       title: 'auth-min: Zero-Trust Authentication',
-      subtitle: 'The Trickster Guardians',
+      description: 'The Trickster Guardians',
       intro:
         'Constant-time token checks stop CWE-208 leaks. Fingerprints let you log safely. Bind policies block accidental exposure.',
       bullets: [
@@ -550,7 +566,7 @@ export const enterpriseSecurityProps: EnterpriseSecurityProps = {
     {
       icon: <Eye className="size-6" />,
       title: 'audit-logging: Compliance Engine',
-      subtitle: 'Legally Defensible Proof',
+      description: 'Legally Defensible Proof',
       intro: 'Append-only audit trail with 32 event types. Hash-chain tamper detection. 7-year retention for GDPR.',
       bullets: [
         'Immutable audit trail (append-only)',
@@ -563,7 +579,7 @@ export const enterpriseSecurityProps: EnterpriseSecurityProps = {
     {
       icon: <Shield className="size-6" />,
       title: 'input-validation: First Line of Defense',
-      subtitle: 'Trust No Input',
+      description: 'Trust No Input',
       intro: 'Prevents injection and exhaustion. Validates identifiers, prompts, paths—before execution.',
       bullets: [
         'SQL injection prevention',
@@ -576,7 +592,7 @@ export const enterpriseSecurityProps: EnterpriseSecurityProps = {
     {
       icon: <Server className="size-6" />,
       title: 'secrets-management: Credential Guardian',
-      subtitle: 'Never in Environment',
+      description: 'Never in Environment',
       intro: 'File-scoped secrets with zeroization and systemd credentials. Timing-safe verification.',
       bullets: [
         'File-based loading (not env vars)',
@@ -589,7 +605,7 @@ export const enterpriseSecurityProps: EnterpriseSecurityProps = {
     {
       icon: <KeyRound className="size-6" />,
       title: 'jwt-guardian: Token Lifecycle Manager',
-      subtitle: 'Stateless Yet Secure',
+      description: 'Stateless Yet Secure',
       intro: 'RS256 signature validation with clock-skew tolerance. Revocation lists and short-lived refresh tokens.',
       bullets: [
         'RS256/ES256 signature validation',
@@ -602,7 +618,7 @@ export const enterpriseSecurityProps: EnterpriseSecurityProps = {
     {
       icon: <Clock className="size-6" />,
       title: 'deadline-propagation: Performance Enforcer',
-      subtitle: 'Every Millisecond Counts',
+      description: 'Every Millisecond Counts',
       intro: 'Propagates time budgets end-to-end. Aborts doomed work to protect SLOs.',
       bullets: [
         'Deadline propagation (client → worker)',
@@ -624,13 +640,17 @@ export const enterpriseHowItWorksContainerProps: Omit<TemplateContainerProps, 'c
   kicker: 'Deployment & Compliance',
   title: 'Enterprise Deployment Process',
   description: 'From consultation to production, we guide every step of your compliance journey.',
-  bgVariant: 'default',
+  background: {
+
+    variant: 'background',
+
+  },
   paddingY: '2xl',
   maxWidth: '7xl',
   align: 'center',
   background: {
     decoration: (
-      <div className="pointer-events-none absolute left-1/2 top-8 hidden w-[48rem] -translate-x-1/2 opacity-15 md:block">
+      <div className="pointer-events-none absolute left-1/2 top-8 hidden w-[48rem] -translate-x-1/2 opacity-25 md:block">
         <DeploymentFlow className="blur-[0.5px]" />
       </div>
     ),
@@ -717,11 +737,15 @@ export const enterpriseUseCasesContainerProps: Omit<TemplateContainerProps, 'chi
   title: 'Built for Regulated Industries',
   description:
     'Organizations in high-compliance sectors run rbee on EU-resident infrastructure—no foreign clouds, audit-ready by design.',
-  bgVariant: 'default',
+  background: {
+
+    variant: 'background',
+
+  },
   paddingY: '2xl',
   background: {
     decoration: (
-      <div className="pointer-events-none absolute left-1/2 top-6 hidden w-[50rem] -translate-x-1/2 opacity-15 md:block">
+      <div className="pointer-events-none absolute left-1/2 top-6 hidden w-[50rem] -translate-x-1/2 opacity-25 md:block">
         <SectorGrid className="blur-[0.5px]" />
       </div>
     ),
@@ -823,7 +847,11 @@ export const enterpriseComparisonContainerProps: Omit<TemplateContainerProps, 'c
   kicker: 'Feature Matrix',
   title: 'Why Enterprises Choose rbee',
   description: "See how rbee's compliance and security compare to external AI providers.",
-  bgVariant: 'background',
+  background: {
+
+    variant: 'background',
+
+  },
   paddingY: '2xl',
   maxWidth: '7xl',
   align: 'center',
@@ -850,7 +878,11 @@ export const enterpriseFeaturesContainerProps: Omit<TemplateContainerProps, 'chi
   kicker: 'Enterprise Capabilities',
   title: 'Enterprise Features',
   description: 'Everything you need for compliant, resilient, EU-resident AI infrastructure.',
-  bgVariant: 'default',
+  background: {
+
+    variant: 'background',
+
+  },
   paddingY: '2xl',
   maxWidth: '7xl',
   align: 'center',
@@ -908,7 +940,11 @@ export const enterpriseFeaturesData: SecurityCardProps[] = [
 export const enterpriseTestimonialsContainerProps: Omit<TemplateContainerProps, 'children'> = {
   title: 'Trusted by Regulated Industries',
   description: 'Organizations in highly regulated industries trust rbee for compliance-first AI infrastructure.',
-  bgVariant: 'default',
+  background: {
+
+    variant: 'background',
+
+  },
   paddingY: '2xl',
   maxWidth: '6xl',
   align: 'center',
@@ -945,7 +981,11 @@ export const enterpriseCTAContainerProps: Omit<TemplateContainerProps, 'children
   eyebrow: <span className="font-sans text-orange-500">Get Audit-Ready</span>,
   title: 'Ready to Meet Your Compliance Requirements?',
   description: 'Book a demo with our compliance team, or download the documentation pack.',
-  bgVariant: 'default',
+  background: {
+
+    variant: 'background',
+
+  },
   paddingY: '2xl',
   maxWidth: '5xl',
   align: 'center',

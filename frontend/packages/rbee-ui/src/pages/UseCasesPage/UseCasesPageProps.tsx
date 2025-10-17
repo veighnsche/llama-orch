@@ -67,7 +67,11 @@ export const useCasesHeroProps: UseCasesHeroTemplateProps = {
 /** Primary use cases container - wraps the use cases grid */
 export const useCasesPrimaryContainerProps: Omit<TemplateContainerProps, 'children'> = {
   title: 'Use Cases That Pay Off',
-  bgVariant: 'background',
+  background: {
+
+    variant: 'background',
+
+  },
 }
 
 /** Primary use cases data - filters and use case cards */
@@ -198,8 +202,12 @@ export const useCasesPrimaryProps: UseCasesPrimaryTemplateProps = {
 /** Industry use cases container - wraps the industry grid */
 export const useCasesIndustryContainerProps: Omit<TemplateContainerProps, 'children'> = {
   title: 'Industry-Specific Solutions',
-  subtitle: 'rbee adapts to the unique compliance and security requirements of regulated industries.',
-  bgVariant: 'secondary',
+  description: 'rbee adapts to the unique compliance and security requirements of regulated industries.',
+  background: {
+
+    variant: 'secondary',
+
+  },
 }
 
 /** Industry use cases data - filters and industry cards */

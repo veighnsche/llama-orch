@@ -19,9 +19,7 @@ import type { ReactNode } from 'react'
 export interface TemplateContainerProps {
   /** Section title (null to skip rendering) */
   title: string | ReactNode | null
-  /** Optional subtitle (deprecated, use description) */
-  subtitle?: string | ReactNode
-  /** Optional description (alias of subtitle, preferred) */
+  /** Optional description */
   description?: string | ReactNode
   /** Small badge/label above title */
   eyebrow?: string | ReactNode
@@ -48,10 +46,6 @@ export interface TemplateContainerProps {
     /** Pattern opacity (0-100) */
     patternOpacity?: number
   }
-  /** @deprecated Use background.variant instead */
-  bgVariant?: 'background' | 'secondary' | 'card' | 'default' | 'muted' | 'subtle' | 'destructive-gradient'
-  /** Center the content (deprecated, use align) */
-  centered?: boolean
   /** Content alignment */
   align?: 'start' | 'center'
   /** Header layout: stack or split (two-column on md+) */
@@ -87,8 +81,6 @@ export interface TemplateContainerProps {
   ribbon?: {
     text: string
   }
-  /** @deprecated Use background.decoration instead */
-  backgroundDecoration?: ReactNode
   /** Optional CTA banner (appears after children, before bottom CTAs) */
   ctaBanner?: CTABannerProps
   /** Optional CTA rail (appears after children, uses CTARail molecule) */
@@ -192,16 +184,13 @@ function slugify(value?: string): string | undefined {
 
 export function TemplateContainer({
   title,
-  subtitle,
   description,
   eyebrow,
   kicker,
   kickerVariant = 'default',
   actions,
   background,
-  bgVariant = 'background',
-  centered = true,
-  align,
+  align = 'center',
   layout = 'stack',
   bleed = false,
   paddingY = '2xl',
@@ -214,7 +203,6 @@ export function TemplateContainer({
   ctas,
   disclaimer,
   ribbon,
-  backgroundDecoration,
   ctaBanner,
   ctaRail,
   securityGuarantees,
@@ -222,21 +210,16 @@ export function TemplateContainer({
   helperLinks,
   auditReadinessCTA,
 }: TemplateContainerProps) {
-  // Resolve alignment: prefer align prop, fallback to centered
-  const resolvedAlign = align ?? (centered ? 'center' : 'start')
-
-  // Prefer description over subtitle
-  const resolvedDescription = description ?? subtitle
+  // Resolve alignment
+  const resolvedAlign = align
 
   // Generate heading ID if not provided
   const generatedId = headingId ?? (typeof title === 'string' ? slugify(title) : undefined)
 
-  // Resolve background configuration (new prop takes precedence over legacy)
+  // Resolve background configuration
   const resolvedBackground = {
-    variant:
-      background?.variant ??
-      (bgVariant ? (legacyBgVariantMap[bgVariant] as TemplateBackgroundProps['variant']) : 'background'),
-    decoration: background?.decoration ?? backgroundDecoration,
+    variant: background?.variant ?? 'background',
+    decoration: background?.decoration,
     overlayOpacity: background?.overlayOpacity,
     overlayColor: background?.overlayColor,
     blur: background?.blur,
@@ -295,15 +278,8 @@ export function TemplateContainer({
                   {title}
                 </HTag>
 
-                {resolvedDescription && (
-                  <div
-                    className={cn(
-                      'text-lg md:text-xl text-muted-foreground max-w-3xl leading-relaxed animate-fade-in',
-                      resolvedAlign === 'center' ? 'mx-auto' : 'mx-auto md:mx-0',
-                    )}
-                  >
-                    {resolvedDescription}
-                  </div>
+                {description && (
+                  <p className="text-lg text-muted-foreground leading-relaxed">{description}</p>
                 )}
 
                 {divider && <div className="h-px bg-border/60 mt-6" />}

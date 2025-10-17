@@ -114,7 +114,11 @@ export const providersProblemContainerProps: Omit<TemplateContainerProps, 'child
   kicker: 'The Cost of Idle GPUs',
   title: 'Stop Letting Your Hardware Bleed Money',
   description: 'Most GPUs sit idle ~90% of the time. They still draw power—and earn nothing.',
-  bgVariant: 'destructive-gradient',
+  background: {
+
+    variant: 'gradient-destructive',
+
+  },
   paddingY: '2xl',
   maxWidth: '7xl',
   align: 'center',
@@ -156,7 +160,11 @@ export const providersSolutionContainerProps: Omit<TemplateContainerProps, 'chil
   kicker: 'How rbee Works',
   title: 'Turn Idle GPUs Into Reliable Monthly Income',
   description: 'rbee connects your spare GPU power to developers who need it. You set the price, we handle the rest.',
-  bgVariant: 'default',
+  background: {
+
+    variant: 'background',
+
+  },
   paddingY: '2xl',
   maxWidth: '7xl',
   align: 'center',
@@ -246,7 +254,11 @@ export const providersSolutionProps: SolutionTemplateProps = {
  */
 export const providersHowItWorksContainerProps: Omit<TemplateContainerProps, 'children'> = {
   title: 'Start Earning in 4 Simple Steps',
-  bgVariant: 'secondary',
+  background: {
+
+    variant: 'secondary',
+
+  },
   paddingY: '2xl',
   maxWidth: '6xl',
   align: 'center',
@@ -326,7 +338,7 @@ export const providersFeaturesProps: FeaturesTabsProps = {
       icon: <DollarSign className="size-4" />,
       label: 'Flexible Pricing Control',
       mobileLabel: 'Pricing',
-      subtitle: 'Set your rates',
+      description: 'Set your rates',
       badge: 'Control',
       description: 'Set your own hourly rates based on GPU model, demand, and your preferences.',
       content: (
@@ -357,7 +369,7 @@ export const providersFeaturesProps: FeaturesTabsProps = {
       icon: <Clock className="size-4" />,
       label: 'Availability Management',
       mobileLabel: 'Schedule',
-      subtitle: 'Control when',
+      description: 'Control when',
       badge: 'Flexible',
       description: 'Control exactly when your GPUs are available for rent.',
       content: (
@@ -384,7 +396,7 @@ export const providersFeaturesProps: FeaturesTabsProps = {
       icon: <Shield className="size-4" />,
       label: 'Security & Privacy',
       mobileLabel: 'Security',
-      subtitle: 'Protected',
+      description: 'Protected',
       badge: 'Safe',
       description: 'Your data and hardware are protected with enterprise-grade security.',
       content: (
@@ -408,7 +420,7 @@ export const providersFeaturesProps: FeaturesTabsProps = {
       icon: <BarChart3 className="size-4" />,
       label: 'Earnings Dashboard',
       mobileLabel: 'Analytics',
-      subtitle: 'Track earnings',
+      description: 'Track earnings',
       badge: 'Insights',
       description: 'Track your earnings, utilization, and performance in real‑time.',
       content: (
@@ -462,7 +474,11 @@ export const providersUseCasesContainerProps: Omit<TemplateContainerProps, 'chil
   kicker: 'Real Providers, Real Earnings',
   title: "Who's Earning with rbee?",
   description: 'From gamers to homelab builders, anyone with a spare GPU can turn idle time into income.',
-  bgVariant: 'default',
+  background: {
+
+    variant: 'background',
+
+  },
   paddingY: '2xl',
   maxWidth: '7xl',
   align: 'center',
@@ -473,7 +489,7 @@ export const providersUseCasesProps: { cases: ProvidersCaseCardProps[] } = {
     {
       icon: <Gamepad2 />,
       title: 'Gaming PC Owners',
-      subtitle: 'Most common provider type',
+      description: 'Most common provider type',
       quote: "I game ~3-4 hours/day. The rest, my 4090 was idle. Now it earns ~€150/mo while I'm at work or asleep.",
       facts: [
         { label: 'Typical GPU:', value: 'RTX 4080–4090' },
@@ -484,7 +500,7 @@ export const providersUseCasesProps: { cases: ProvidersCaseCardProps[] } = {
     {
       icon: <Server />,
       title: 'Homelab Enthusiasts',
-      subtitle: 'Multiple GPUs, high earnings',
+      description: 'Multiple GPUs, high earnings',
       quote: 'Four GPUs across my homelab bring ~€400/mo. It covers power and leaves profit.',
       facts: [
         { label: 'Setup:', value: '3–6 GPUs' },
@@ -495,7 +511,7 @@ export const providersUseCasesProps: { cases: ProvidersCaseCardProps[] } = {
     {
       icon: <Cpu />,
       title: 'Former Crypto Miners',
-      subtitle: 'Repurpose mining rigs',
+      description: 'Repurpose mining rigs',
       quote: 'After PoS, my rig idled. rbee now earns more than mining—with better margins.',
       facts: [
         { label: 'Setup:', value: '6–12 GPUs' },
@@ -506,7 +522,7 @@ export const providersUseCasesProps: { cases: ProvidersCaseCardProps[] } = {
     {
       icon: <Monitor />,
       title: 'Workstation Owners',
-      subtitle: 'Professional GPUs earning',
+      description: 'Professional GPUs earning',
       quote: 'My RTX 4080 is busy on renders only. The rest of the time it makes ~€100/mo on rbee.',
       facts: [
         { label: 'Typical GPU:', value: 'RTX 4070–4080' },
@@ -549,7 +565,11 @@ export const providersEarningsContainerProps: Omit<TemplateContainerProps, 'chil
   kicker: 'Estimate Your Earnings',
   title: 'Calculate Your Potential Earnings',
   description: 'See what you could earn based on GPU model, availability, and utilization.',
-  bgVariant: 'default',
+  background: {
+
+    variant: 'background',
+
+  },
   paddingY: '2xl',
   maxWidth: '4xl',
   align: 'center',
@@ -599,7 +619,11 @@ export const providersMarketplaceContainerProps: Omit<TemplateContainerProps, 'c
   kicker: 'Why rbee',
   title: 'How the rbee Marketplace Works',
   description: 'A fair, transparent marketplace connecting GPU providers with developers.',
-  bgVariant: 'secondary',
+  background: {
+
+    variant: 'secondary',
+
+  },
   paddingY: '2xl',
   maxWidth: '7xl',
   align: 'center',
@@ -675,7 +699,11 @@ export const providersSecurityContainerProps: Omit<TemplateContainerProps, 'chil
   kicker: 'Security & Trust',
   title: 'Your Security Is Our Priority',
   description: 'Enterprise-grade protections for your hardware, data, and earnings.',
-  bgVariant: 'default',
+  background: {
+
+    variant: 'background',
+
+  },
   paddingY: '2xl',
   maxWidth: '4xl',
   align: 'center',
@@ -686,28 +714,28 @@ export const providersSecurityProps: { items: ProvidersSecurityCardProps[] } = {
     {
       icon: <Shield className="size-6" />,
       title: 'Sandboxed Execution',
-      subtitle: 'Complete isolation',
+      description: 'Complete isolation',
       body: 'All jobs run in isolated sandboxes with no access to your files, network, or personal data.',
       points: ['No file system access', 'No network access', 'No personal data access', 'Automatic cleanup'],
     },
     {
       icon: <Lock className="size-6" />,
       title: 'Encrypted Communication',
-      subtitle: 'End-to-end encryption',
+      description: 'End-to-end encryption',
       body: 'All communication between your GPU and the marketplace is encrypted using industry-standard protocols.',
       points: ['TLS 1.3', 'Secure payment processing', 'Protected earnings data', 'Private job details'],
     },
     {
       icon: <Eye className="size-6" />,
       title: 'Malware Scanning',
-      subtitle: 'Automatic protection',
+      description: 'Automatic protection',
       body: 'Every job is automatically scanned for malware before execution. Suspicious jobs are blocked.',
       points: ['Real-time detection', 'Automatic blocking', 'Threat intel updates', 'Customer vetting'],
     },
     {
       icon: <FileCheck className="size-6" />,
       title: 'Hardware Protection',
-      subtitle: 'Warranty-safe operation',
+      description: 'Warranty-safe operation',
       body: 'Temperature monitoring, cooldown periods, and power limits protect your hardware and warranty.',
       points: ['Warranty-safe operation', 'Temperature monitoring', 'Cooldown periods', 'Power limit controls'],
     },
@@ -736,7 +764,11 @@ export const providersTestimonialsContainerProps: Omit<TemplateContainerProps, '
   title: 'What Real Providers Are Earning',
   description:
     'GPU owners on the rbee marketplace turn idle time into steady payouts—fully self-managed, OpenAI-compatible infrastructure.',
-  bgVariant: 'default',
+  background: {
+
+    variant: 'background',
+
+  },
   paddingY: '2xl',
   maxWidth: '7xl',
   align: 'center',
@@ -780,7 +812,11 @@ export const providersTestimonialsProps: TestimonialsTemplateProps = {
  */
 export const providersCTAContainerProps: Omit<TemplateContainerProps, 'children'> = {
   title: null,
-  bgVariant: 'default',
+  background: {
+
+    variant: 'background',
+
+  },
   paddingY: '2xl',
   maxWidth: '4xl',
   align: 'center',
@@ -808,7 +844,7 @@ export const providersCTAProps: ProvidersCTAProps = {
   badgeIcon: <Zap className="h-4 w-4" aria-hidden="true" />,
   badgeText: 'Start earning today',
   title: 'Turn Idle GPUs Into Weekly Payouts',
-  subtitle: 'Join 500+ providers monetizing spare GPU time on the rbee marketplace.',
+  description: 'Join 500+ providers monetizing spare GPU time on the rbee marketplace.',
   primaryCTA: {
     label: 'Start Earning Now',
     ariaLabel: 'Start earning now — setup under 15 minutes',

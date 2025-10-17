@@ -62,7 +62,11 @@ export const pricingTemplateContainerProps: Omit<TemplateContainerProps, 'childr
   title: 'Simple, honest pricing.',
   description:
     "Every plan includes the full rbee orchestrator—no feature gates, no artificial limits. Start free and grow when you're ready.",
-  bgVariant: 'default',
+  background: {
+
+    variant: 'background',
+
+  },
   paddingY: '2xl',
   maxWidth: '7xl',
   align: 'center',
@@ -139,7 +143,11 @@ export const pricingTemplateProps: PricingTemplateProps = {
 /** Pricing comparison container - wraps the comparison table */
 export const pricingComparisonContainerProps: Omit<TemplateContainerProps, 'children'> = {
   title: '',
-  bgVariant: 'secondary',
+  background: {
+
+    variant: 'secondary',
+
+  },
   paddingY: '2xl',
 }
 
@@ -148,19 +156,19 @@ const pricingComparisonColumns: Provider[] = [
   {
     key: 'h',
     label: 'Home/Lab',
-    subtitle: 'Solo / Homelab',
+    description: 'Solo / Homelab',
   },
   {
     key: 't',
     label: 'Team',
-    subtitle: 'Small teams',
+    description: 'Small teams',
     badge: 'Best for most teams',
     accent: true,
   },
   {
     key: 'e',
     label: 'Enterprise',
-    subtitle: 'Security & SLA',
+    description: 'Security & SLA',
   },
 ]
 
@@ -238,7 +246,7 @@ const pricingComparisonRows: Row[] = [
 
 export const pricingComparisonProps: PricingComparisonTemplateProps = {
   title: 'Detailed Feature Comparison',
-  subtitle: 'What changes across Home/Lab, Team, and Enterprise.',
+  description: 'What changes across Home/Lab, Team, and Enterprise.',
   lastUpdated: 'This month',
   legend: {
     includedText: 'Included',
@@ -267,8 +275,12 @@ export const pricingComparisonProps: PricingComparisonTemplateProps = {
 /** FAQ container - wraps the pricing FAQ section */
 export const pricingFaqContainerProps: Omit<TemplateContainerProps, 'children'> = {
   title: 'Pricing FAQs',
-  subtitle: 'Answers on licensing, upgrades, trials, and payments.',
-  bgVariant: 'background',
+  description: 'Answers on licensing, upgrades, trials, and payments.',
+  background: {
+
+    variant: 'background',
+
+  },
 }
 
 /** Pricing FAQ data */
