@@ -1,4 +1,8 @@
-import { comparisonTemplateContainerProps, comparisonTemplateProps } from '@rbee/ui/pages/HomePage'
+import { comparisonTemplateContainerProps, comparisonTemplateProps } from '../../pages/HomePage/HomePageProps'
+import {
+  enterpriseComparisonContainerProps,
+  enterpriseComparisonProps,
+} from '../../pages/EnterprisePage/EnterprisePageProps'
 import { TemplateContainer } from '@rbee/ui/molecules'
 import type { Meta, StoryObj } from '@storybook/react'
 import { ComparisonTemplate } from './ComparisonTemplate'
@@ -17,10 +21,6 @@ type Story = StoryObj<typeof meta>
 
 /**
  * ComparisonTemplate as used on the Home page
- * - Four columns: rbee, OpenAI & Anthropic, Ollama, Runpod & Vast.ai
- * - Six comparison rows (Cost, Privacy, Multi-GPU, API, Routing, Rate Limits)
- * - Legend with Check/X icons
- * - Two CTAs at bottom
  */
 export const OnHomePage: Story = {
   render: (args) => (
@@ -29,4 +29,16 @@ export const OnHomePage: Story = {
     </TemplateContainer>
   ),
   args: comparisonTemplateProps,
+}
+
+/**
+ * ComparisonTemplate as used on the Enterprise page
+ */
+export const OnEnterprisePage: Story = {
+  render: (args) => (
+    <TemplateContainer {...enterpriseComparisonContainerProps}>
+      <ComparisonTemplate {...args} />
+    </TemplateContainer>
+  ),
+  args: enterpriseComparisonProps,
 }

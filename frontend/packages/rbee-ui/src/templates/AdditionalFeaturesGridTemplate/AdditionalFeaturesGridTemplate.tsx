@@ -65,7 +65,6 @@ export function AdditionalFeaturesGridTemplate({ rows, className }: AdditionalFe
                         subtitle={card.subtitle}
                         titleClassName="text-lg"
                         subtitleClassName="text-sm mt-2"
-                        useCardHeader={false}
                       />
                       <div className="mt-4 text-sm text-primary inline-flex items-center gap-1 group-hover:gap-2 transition-all">
                         <span>Learn more</span>

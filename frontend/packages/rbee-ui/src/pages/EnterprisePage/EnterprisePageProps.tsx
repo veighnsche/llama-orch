@@ -2,12 +2,12 @@ import { EuLedgerGrid } from '@rbee/ui/atoms'
 import { FEATURES, PROVIDERS } from '@rbee/ui/data/enterprise-comparison'
 import { TESTIMONIAL_STATS } from '@rbee/ui/data/testimonials'
 import type { TemplateContainerProps } from '@rbee/ui/molecules'
+import type { SecurityCardProps } from '@rbee/ui/organisms'
 import type {
+  ComparisonTemplateProps,
   EmailCaptureProps,
-  EnterpriseComparisonProps,
   EnterpriseComplianceProps,
   EnterpriseCTAProps,
-  EnterpriseFeaturesProps,
   EnterpriseHeroProps,
   EnterpriseHowItWorksProps,
   EnterpriseSecurityProps,
@@ -686,7 +686,7 @@ export const enterpriseHowItWorksProps: EnterpriseHowItWorksProps = {
 /**
  * Enterprise Use Cases container - wraps the industry playbooks section
  */
-export const enterpriseUseCasesContainerProps: TemplateContainerProps = {
+export const enterpriseUseCasesContainerProps: Omit<TemplateContainerProps, 'children'> = {
   kicker: 'Industry Playbooks',
   title: 'Built for Regulated Industries',
   description:
@@ -798,15 +798,18 @@ export const enterpriseComparisonContainerProps: Omit<TemplateContainerProps, 'c
   paddingY: '2xl',
   maxWidth: '7xl',
   align: 'center',
+  footerCTA: {
+    message: '* Comparison based on publicly available information as of October 2025.',
+  },
 }
 
 /**
  * Enterprise Comparison - Feature Matrix section
  */
-export const enterpriseComparisonProps: EnterpriseComparisonProps = {
-  providers: PROVIDERS,
-  features: FEATURES,
-  footnote: '* Comparison based on publicly available information as of October 2025.',
+export const enterpriseComparisonProps: ComparisonTemplateProps = {
+  columns: PROVIDERS,
+  rows: FEATURES,
+  showMobileCards: true,
 }
 
 // === Enterprise Features ===
@@ -822,54 +825,51 @@ export const enterpriseFeaturesContainerProps: Omit<TemplateContainerProps, 'chi
   paddingY: '2xl',
   maxWidth: '7xl',
   align: 'center',
-}
-
-/**
- * Enterprise Features - Enterprise Capabilities section
- */
-export const enterpriseFeaturesProps: EnterpriseFeaturesProps = {
-  features: [
-    {
-      icon: <Shield />,
-      title: 'Enterprise SLAs',
-      intro: '99.9% uptime with 24/7 support and 1-hour response. Dedicated manager and quarterly reviews.',
-      bullets: ['99.9% SLA', '24/7 support (1-hour)', 'Dedicated account manager', 'Quarterly reviews'],
-    },
-    {
-      icon: <Users />,
-      title: 'White-Label Option',
-      intro: 'Run rbee as your brand—custom domain, UI, and endpoints.',
-      bullets: [
-        'Custom branding/logo',
-        'Custom domain (ai.yourcompany.com)',
-        'UI customization',
-        'API endpoint customization',
-      ],
-    },
-    {
-      icon: <Wrench />,
-      title: 'Professional Services',
-      intro: 'Deployment, integration, optimization, and training from our team.',
-      bullets: ['Deployment consulting', 'Integration support', 'Custom development', 'Team training'],
-    },
-    {
-      icon: <Globe />,
-      title: 'Multi-Region Support',
-      intro: 'EU multi-region for redundancy and compliance: failover + load balancing.',
-      bullets: ['EU multi-region', 'Automatic failover', 'Load balancing', 'Geo-redundancy'],
-    },
-  ],
-  outcomes: {
+  securityGuarantees: {
     heading: 'What you get',
     stats: [
       { value: '99.9%', label: 'Uptime SLA' },
       { value: '< 1 hr', label: 'Support response' },
       { value: 'EU-only', label: 'Data residency' },
     ],
-    linkText: 'See compliance details',
-    linkHref: '#compliance',
+    footnote: 'See compliance details',
   },
 }
+
+/**
+ * Enterprise Features - Enterprise Capabilities section
+ */
+export const enterpriseFeaturesData: SecurityCardProps[] = [
+  {
+    icon: <Shield />,
+    title: 'Enterprise SLAs',
+    intro: '99.9% uptime with 24/7 support and 1-hour response. Dedicated manager and quarterly reviews.',
+    bullets: ['99.9% SLA', '24/7 support (1-hour)', 'Dedicated account manager', 'Quarterly reviews'],
+  },
+  {
+    icon: <Users />,
+    title: 'White-Label Option',
+    intro: 'Run rbee as your brand—custom domain, UI, and endpoints.',
+    bullets: [
+      'Custom branding/logo',
+      'Custom domain (ai.yourcompany.com)',
+      'UI customization',
+      'API endpoint customization',
+    ],
+  },
+  {
+    icon: <Wrench />,
+    title: 'Professional Services',
+    intro: 'Deployment, integration, optimization, and training from our team.',
+    bullets: ['Deployment consulting', 'Integration support', 'Custom development', 'Team training'],
+  },
+  {
+    icon: <Globe />,
+    title: 'Multi-Region Support',
+    intro: 'EU multi-region for redundancy and compliance: failover + load balancing.',
+    bullets: ['EU multi-region', 'Automatic failover', 'Load balancing', 'Geo-redundancy'],
+  },
+]
 
 // === Enterprise Testimonials ===
 

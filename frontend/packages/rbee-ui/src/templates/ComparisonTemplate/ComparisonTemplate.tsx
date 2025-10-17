@@ -1,26 +1,15 @@
-import { Button } from '@rbee/ui/atoms/Button'
+'use client'
+
+import { Legend } from '@rbee/ui/molecules/Legend'
+import { MatrixCard } from '@rbee/ui/molecules/Tables/MatrixCard'
 import type { Provider, Row } from '@rbee/ui/molecules/Tables/MatrixTable'
 import { MatrixTable } from '@rbee/ui/molecules/Tables/MatrixTable'
-import { Check, X } from 'lucide-react'
-import Link from 'next/link'
-import type * as React from 'react'
+import { SegmentedControl } from '@rbee/ui/molecules/SegmentedControl'
+import { cn } from '@rbee/ui/utils'
+import { useState } from 'react'
 
-// ──────────────────────────────────────────────────────────────────────────────
-// Types
-// ──────────────────────────────────────────────────────────────────────────────
-
-export type ComparisonLegendItem = {
-  /** Rendered icon component */
-  icon: React.ReactNode
-  /** Label text */
-  label: string
-}
-
-export type ComparisonCTA = {
-  label: string
-  href: string
-  variant?: 'default' | 'ghost' | 'outline'
-}
+// Re-export LegendItem from Legend molecule for convenience
+export type { LegendItem as ComparisonLegendItem } from '@rbee/ui/molecules/Legend'
 
 /**
  * ComparisonTemplate displays a feature comparison matrix table.
@@ -47,13 +36,11 @@ export type ComparisonTemplateProps = {
   /** Table row data */
   rows: Row[]
   /** Legend items explaining symbols */
-  legend?: ComparisonLegendItem[]
+  legend?: import('@rbee/ui/molecules/Legend').LegendItem[]
   /** Additional legend text */
   legendNote?: string
-  /** Footer message */
-  footerMessage?: string
-  /** Call-to-action buttons */
-  ctas?: ComparisonCTA[]
+  /** Enable mobile card switcher view (default: false, desktop-only table) */
+  showMobileCards?: boolean
   /** Custom class name for the root element */
   className?: string
 }
@@ -67,48 +54,54 @@ export function ComparisonTemplate({
   rows,
   legend,
   legendNote,
-  footerMessage,
-  ctas,
+  showMobileCards = false,
   className,
 }: ComparisonTemplateProps) {
+  const [selectedProviderKey, setSelectedProviderKey] = useState(columns[0]?.key || '')
+
   return (
     <div className={className}>
       <div className="max-w-6xl mx-auto space-y-6 animate-in fade-in-50 duration-500">
         {/* Legend */}
-        {(legend || legendNote) && (
-          <div className="text-xs text-muted-foreground flex flex-wrap gap-4 justify-center">
-            {legend?.map((item, i) => (
-              <span key={i} className="flex items-center gap-1.5">
-                {item.icon}
-                {item.label}
-              </span>
-            ))}
-            {legendNote && <span>{legendNote}</span>}
-          </div>
-        )}
+        <Legend items={legend} note={legendNote} />
 
-        {/* Comparison table */}
-        <div className="rounded-xl ring-1 ring-border/60 bg-card overflow-hidden">
+        {/* Desktop Table */}
+        <div
+          className={cn(
+            'rounded-xl ring-1 ring-border/60 bg-card overflow-hidden',
+            showMobileCards ? 'hidden md:block' : 'block',
+          )}
+        >
           <MatrixTable columns={columns} rows={rows} />
         </div>
 
-        {/* Footer CTA */}
-        {(footerMessage || ctas) && (
-          <div className="mt-6 flex flex-col sm:flex-row gap-3 justify-center items-center">
-            {footerMessage && (
-              <p className="text-sm text-muted-foreground text-center sm:text-left font-sans">{footerMessage}</p>
-            )}
-            {ctas && ctas.length > 0 && (
-              <div className="flex gap-3">
-                {ctas.map((cta, i) => (
-                  <Button key={i} asChild variant={cta.variant || 'default'} size="default">
-                    <Link href={cta.href}>{cta.label}</Link>
-                  </Button>
-                ))}
-              </div>
-            )}
+        {/* Mobile Cards */}
+        {showMobileCards && (
+          <div className="md:hidden">
+            {/* Provider Switcher */}
+            <SegmentedControl
+              options={columns.map((col) => ({ key: col.key, label: col.label }))}
+              value={selectedProviderKey}
+              onChange={setSelectedProviderKey}
+              className="mb-6"
+            />
+
+            {/* Single Card for Selected Provider */}
+            <MatrixCard
+              provider={columns.find((col) => col.key === selectedProviderKey) || columns[0]}
+              rows={rows}
+            />
+
+            {/* Jump to Desktop Link (for screen readers) */}
+            <a
+              href="#comparison-table"
+              className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-50 focus:rounded focus:bg-primary focus:px-4 focus:py-2 focus:text-primary-foreground"
+            >
+              Jump to desktop table
+            </a>
           </div>
         )}
+
       </div>
     </div>
   )

@@ -57,7 +57,6 @@ export function RealTimeProgressTemplate({
             iconSize="md"
             title={narrationTitle}
             subtitle={narrationSubtitle}
-            useCardHeader={false}
             className="mb-4"
           />
 
@@ -90,7 +89,6 @@ export function RealTimeProgressTemplate({
               iconSize="md"
               title={cancellationTitle}
               subtitle={cancellationSubtitle}
-              useCardHeader={false}
               className="mb-4"
             />
 

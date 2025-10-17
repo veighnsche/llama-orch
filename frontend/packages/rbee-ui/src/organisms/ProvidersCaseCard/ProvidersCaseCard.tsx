@@ -44,7 +44,6 @@ export function ProvidersCaseCard({
         iconTone="primary"
         titleClassName="text-lg font-semibold"
         subtitleClassName="text-xs"
-        useCardHeader={false}
         align="start"
         className="mb-4"
       />

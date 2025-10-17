@@ -42,7 +42,6 @@ export function ProvidersSecurityCard({
         iconTone="success"
         titleClassName="text-lg font-semibold"
         subtitleClassName="text-xs"
-        useCardHeader={false}
         align="start"
         className="mb-5"
       />

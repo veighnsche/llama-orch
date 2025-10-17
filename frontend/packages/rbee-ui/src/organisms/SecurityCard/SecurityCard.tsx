@@ -40,7 +40,7 @@ export function SecurityCard({
   return (
     <Card
       className={cn(
-        "aspect-square w-full rounded-2xl bg-card/60 transition-shadow hover:shadow-lg",
+        "w-full rounded-2xl bg-card/60 transition-shadow hover:shadow-lg",
         className
       )}
       aria-labelledby={titleId}

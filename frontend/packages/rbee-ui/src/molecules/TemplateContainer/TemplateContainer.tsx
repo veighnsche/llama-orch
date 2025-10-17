@@ -1,6 +1,7 @@
 import { Button } from "@rbee/ui/atoms";
 import { CTARail } from "@rbee/ui/molecules/CTARail";
 import { Disclaimer } from "@rbee/ui/molecules/Disclaimer";
+import { FooterCTA } from "@rbee/ui/molecules/FooterCTA";
 import { SecurityGuarantees } from "@rbee/ui/molecules/SecurityGuarantees";
 import { cn } from "@rbee/ui/utils";
 import { Shield } from "lucide-react";
@@ -122,6 +123,17 @@ export interface TemplateContainerProps {
     /** Footnote text */
     footnote: string;
   };
+  /** Optional footer CTA (appears after children, uses FooterCTA molecule) */
+  footerCTA?: {
+    /** Optional message text */
+    message?: string;
+    /** CTA buttons */
+    ctas?: Array<{
+      label: string;
+      href: string;
+      variant?: "default" | "outline" | "ghost" | "secondary" | "destructive" | "link";
+    }>;
+  };
 }
 
 const bgClasses = {
@@ -200,6 +212,7 @@ export function TemplateContainer({
   ctaBanner,
   ctaRail,
   securityGuarantees,
+  footerCTA,
 }: TemplateContainerProps) {
   // Resolve alignment: prefer align prop, fallback to centered
   const resolvedAlign = align ?? (centered ? "center" : "start");
@@ -318,6 +331,22 @@ export function TemplateContainer({
               heading={securityGuarantees.heading}
               stats={securityGuarantees.stats}
               footnote={securityGuarantees.footnote}
+            />
+          </div>
+        )}
+
+        {/* Footer CTA */}
+        {footerCTA && (
+          <div
+            className={cn(
+              "mt-10 animate-in fade-in slide-in-from-bottom-2 motion-reduce:animate-none delay-300",
+              maxWidthClasses[maxWidth],
+              "mx-auto"
+            )}
+          >
+            <FooterCTA
+              message={footerCTA.message}
+              ctas={footerCTA.ctas}
             />
           </div>
         )}

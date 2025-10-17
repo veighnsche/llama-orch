@@ -857,6 +857,13 @@ export const comparisonTemplateContainerProps: Omit<
   paddingY: "2xl",
   maxWidth: "7xl",
   align: "center",
+  footerCTA: {
+    message: "Bring your own GPUs, keep your data in-house.",
+    ctas: [
+      { label: "See Quickstart", href: "/docs/quickstart" },
+      { label: "Architecture", href: "/docs/architecture", variant: "ghost" },
+    ],
+  },
 };
 
 /**
@@ -941,11 +948,6 @@ export const comparisonTemplateProps: ComparisonTemplateProps = {
     },
   ],
   legendNote: '"Partial" = limited coverage',
-  footerMessage: "Bring your own GPUs, keep your data in-house.",
-  ctas: [
-    { label: "See Quickstart", href: "/docs/quickstart" },
-    { label: "Architecture", href: "/docs/architecture", variant: "ghost" },
-  ],
 };
 
 /**

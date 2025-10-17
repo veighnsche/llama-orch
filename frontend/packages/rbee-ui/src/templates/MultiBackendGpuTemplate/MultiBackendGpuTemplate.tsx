@@ -93,7 +93,6 @@ export function MultiBackendGpuTemplate({
               iconSize="md"
               titleClassName="text-3xl md:text-4xl font-extrabold"
               subtitleClassName="text-lg"
-              useCardHeader={false}
             />
 
             {/* Prohibited pills (red) */}

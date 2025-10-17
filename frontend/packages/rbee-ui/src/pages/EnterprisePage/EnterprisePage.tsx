@@ -1,12 +1,13 @@
 "use client";
 
 import { TemplateContainer } from "@rbee/ui/molecules";
+import { SecurityCard } from "@rbee/ui/organisms";
 import {
+  CardGridTemplate,
+  ComparisonTemplate,
   EmailCapture,
-  EnterpriseComparison,
   EnterpriseCompliance,
   EnterpriseCTA,
-  EnterpriseFeatures,
   EnterpriseHero,
   EnterpriseHowItWorks,
   EnterpriseSecurity,
@@ -23,7 +24,7 @@ import {
   enterpriseCTAProps,
   enterpriseEmailCaptureProps,
   enterpriseFeaturesContainerProps,
-  enterpriseFeaturesProps,
+  enterpriseFeaturesData,
   enterpriseHeroProps,
   enterpriseHowItWorksContainerProps,
   enterpriseHowItWorksProps,
@@ -70,11 +71,15 @@ export default function EnterprisePage() {
       </TemplateContainer>
 
       <TemplateContainer {...enterpriseComparisonContainerProps}>
-        <EnterpriseComparison {...enterpriseComparisonProps} />
+        <ComparisonTemplate {...enterpriseComparisonProps} />
       </TemplateContainer>
 
       <TemplateContainer {...enterpriseFeaturesContainerProps}>
-        <EnterpriseFeatures {...enterpriseFeaturesProps} />
+        <CardGridTemplate>
+          {enterpriseFeaturesData.map((feature, index) => (
+            <SecurityCard key={index} {...feature} />
+          ))}
+        </CardGridTemplate>
       </TemplateContainer>
 
       <TemplateContainer {...enterpriseTestimonialsContainerProps}>
