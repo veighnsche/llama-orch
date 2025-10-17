@@ -1,6 +1,7 @@
 // Barrel exports for all templates
 export * from './AdditionalFeaturesGrid'
 export * from './AudienceSelector'
+export * from './CardGridTemplate'
 export * from './CodeExamples'
 export * from './ComparisonTemplate'
 export * from './CrossNodeOrchestration'

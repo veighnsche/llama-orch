@@ -2,6 +2,7 @@ import { Button } from "@rbee/ui/atoms";
 import { CTARail } from "@rbee/ui/molecules/CTARail";
 import { Disclaimer } from "@rbee/ui/molecules/Disclaimer";
 import { FooterCTA } from "@rbee/ui/molecules/FooterCTA";
+import { HelperLinks, type HelperLink } from "@rbee/ui/molecules/HelperLinks";
 import { SecurityGuarantees } from "@rbee/ui/molecules/SecurityGuarantees";
 import { CTABanner, type CTABannerProps, RibbonBanner, TemplateBackground, type TemplateBackgroundProps, SectionCTAs, type SectionCTAsProps } from "@rbee/ui/organisms";
 import { cn } from "@rbee/ui/utils";
@@ -134,6 +135,8 @@ export interface TemplateContainerProps {
       variant?: "default" | "outline" | "ghost" | "secondary" | "destructive" | "link";
     }>;
   };
+  /** Optional helper links (appears after children, uses HelperLinks molecule) */
+  helperLinks?: HelperLink[];
 }
 
 // Legacy bgVariant mapping to TemplateBackground variants
@@ -213,6 +216,7 @@ export function TemplateContainer({
   ctaRail,
   securityGuarantees,
   footerCTA,
+  helperLinks,
 }: TemplateContainerProps) {
   // Resolve alignment: prefer align prop, fallback to centered
   const resolvedAlign = align ?? (centered ? "center" : "start");
@@ -336,6 +340,13 @@ export function TemplateContainer({
         <div className={cn(maxWidthClasses[maxWidth], "mx-auto")}>
           {children}
         </div>
+
+        {/* Helper Links */}
+        {helperLinks && helperLinks.length > 0 && (
+          <div className="mt-12">
+            <HelperLinks links={helperLinks} />
+          </div>
+        )}
 
         {/* Security Guarantees */}
         {securityGuarantees && (

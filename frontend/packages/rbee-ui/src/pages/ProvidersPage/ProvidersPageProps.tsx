@@ -3,13 +3,15 @@
 import { gpuEarnings } from '@rbee/ui/assets'
 import { TESTIMONIALS } from '@rbee/ui/data/testimonials'
 import { FormerCryptoMiner, GamingPcOwner, HomelabEnthusiast, WorkstationOwner } from '@rbee/ui/icons'
-import { CommissionStructureCard } from '@rbee/ui/molecules'
+import { CommissionStructureCard, ProvidersSecurityCard } from '@rbee/ui/molecules'
 import { CodeBlock } from '@rbee/ui/molecules/CodeBlock'
+import { ProvidersCaseCard } from '@rbee/ui/organisms'
 import type { CommissionStructureCardProps } from '@rbee/ui/molecules/CommissionStructureCard'
 import type { ProvidersSecurityCardProps } from '@rbee/ui/molecules/ProvidersSecurityCard'
 import type { TemplateContainerProps } from '@rbee/ui/molecules'
 import type { ProvidersCaseCardProps } from '@rbee/ui/organisms/ProvidersCaseCard'
 import type {
+  CardGridTemplateProps,
   FeaturesTabsProps,
   HowItWorksProps,
   ProvidersCTAProps,
@@ -521,6 +523,23 @@ export const providersUseCasesProps: { cases: ProvidersCaseCardProps[] } = {
   ],
 }
 
+export const providersUseCasesGridProps: CardGridTemplateProps = {
+  columns: 2,
+  gap: 'md',
+  cards: providersUseCasesProps.cases.map((caseData, index) => (
+    <ProvidersCaseCard
+      key={index}
+      icon={caseData.icon}
+      title={caseData.title}
+      subtitle={caseData.subtitle}
+      quote={caseData.quote}
+      facts={caseData.facts}
+      highlight={caseData.highlight}
+      index={index}
+    />
+  )),
+}
+
 // === ProvidersEarnings Template ===
 const fmt = (n: number, opts: Intl.NumberFormatOptions = {}) =>
   new Intl.NumberFormat('en-IE', {
@@ -696,9 +715,25 @@ export const providersSecurityProps: { items: ProvidersSecurityCardProps[] } = {
       title: 'Hardware Protection',
       subtitle: 'Warranty-safe operation',
       body: 'Temperature monitoring, cooldown periods, and power limits protect your hardware and warranty.',
-      points: ['Temperature monitoring', 'Cooldown periods', 'Power limits', 'Health monitoring'],
+      points: ['Warranty-safe operation', 'Temperature monitoring', 'Cooldown periods', 'Power limit controls'],
     },
   ],
+}
+
+export const providersSecurityGridProps: CardGridTemplateProps = {
+  columns: 2,
+  gap: 'md',
+  cards: providersSecurityProps.items.map((item, index) => (
+    <ProvidersSecurityCard
+      key={index}
+      icon={item.icon}
+      title={item.title}
+      subtitle={item.subtitle}
+      body={item.body}
+      points={item.points}
+      index={index}
+    />
+  )),
 }
 
 // === ProvidersTestimonials Template ===

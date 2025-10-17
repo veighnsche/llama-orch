@@ -225,6 +225,11 @@ export const audienceSelectorContainerProps: Omit<
   paddingY: "2xl",
   maxWidth: "7xl",
   align: "center",
+  helperLinks: [
+    { label: 'Compare Plans', href: '/pricing' },
+    { label: 'View Documentation', href: '/docs' },
+    { label: 'See Use Cases', href: '/use-cases' },
+  ],
 };
 
 /**
@@ -272,33 +277,29 @@ export const audienceSelectorProps: AudienceSelectorProps = {
         "Audit trails and payouts",
         "Passive income from idle GPUs",
       ],
-      href: "/gpu-providers",
-      ctaText: "Become a Provider",
-      color: "chart-3",
+      href: "/providers",
+      ctaText: "Earn with Your GPU",
+      color: "chart-2" as const,
       imageSlot: <GpuMarket size={56} aria-hidden />,
-      decisionLabel: "Earn from idle GPUs",
+      decisionLabel: "Monetize idle hardware",
     },
     {
       icon: <Shield className="size-6" />,
       category: "For Enterprise",
-      title: "Compliance & Security",
+      title: "Deploy Compliant AI",
       description:
-        "EU-native compliance, audit trails, and zero-trust architecture—from day one.",
+        "SOC2-ready infrastructure. Deploy AI that meets regulatory requirements.",
       features: [
-        "GDPR with 7-year retention",
+        "Audit trails & compliance",
         "SOC2 & ISO 27001 aligned",
         "Private cloud or on-prem",
       ],
       href: "/enterprise",
       ctaText: "Enterprise Solutions",
-      color: "primary",
+      color: "chart-3" as const,
       imageSlot: <ComplianceShield size={56} aria-hidden />,
       decisionLabel: "Deploy with compliance",
     },
-  ],
-  helperLinks: [
-    { label: "Not sure? Compare paths", href: "#compare" },
-    { label: "Talk to us", href: "#contact" },
   ],
 };
 

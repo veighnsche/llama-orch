@@ -2,8 +2,10 @@ import { EuLedgerGrid } from "@rbee/ui/atoms";
 import { FEATURES, PROVIDERS } from "@rbee/ui/data/enterprise-comparison";
 import { TESTIMONIAL_STATS, TESTIMONIALS } from "@rbee/ui/data/testimonials";
 import type { TemplateContainerProps } from "@rbee/ui/molecules";
+import { SecurityCard } from "@rbee/ui/organisms";
 import type { SecurityCardProps } from "@rbee/ui/organisms";
 import type {
+  CardGridTemplateProps,
   ComparisonTemplateProps,
   EmailCaptureProps,
   EnterpriseComplianceProps,
@@ -997,6 +999,14 @@ export const enterpriseTestimonialsContainerProps: Omit<
   paddingY: "2xl",
   maxWidth: "6xl",
   align: "center",
+};
+
+export const enterpriseFeaturesGridProps: CardGridTemplateProps = {
+  columns: 2,
+  gap: 'md',
+  cards: enterpriseFeaturesData.map((feature, index) => (
+    <SecurityCard key={index} {...feature} />
+  )),
 };
 
 /**

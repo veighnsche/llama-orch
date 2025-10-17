@@ -1,8 +1,8 @@
 "use client";
 
-import { ProvidersSecurityCard, TemplateContainer } from "@rbee/ui/molecules";
-import { ProvidersCaseCard } from "@rbee/ui/organisms";
+import { TemplateContainer } from "@rbee/ui/molecules";
 import {
+  CardGridTemplate,
   FeaturesTabs,
   HowItWorks,
   ProblemTemplate,
@@ -26,13 +26,13 @@ import {
   providersProblemContainerProps,
   providersProblemProps,
   providersSecurityContainerProps,
-  providersSecurityProps,
+  providersSecurityGridProps,
   providersSolutionContainerProps,
   providersSolutionProps,
   providersTestimonialsContainerProps,
   providersTestimonialsProps,
   providersUseCasesContainerProps,
-  providersUseCasesProps,
+  providersUseCasesGridProps,
 } from "./ProvidersPageProps";
 
 export default function ProvidersPage() {
@@ -52,20 +52,7 @@ export default function ProvidersPage() {
         <FeaturesTabs {...providersFeaturesProps} />
       </TemplateContainer>
       <TemplateContainer {...providersUseCasesContainerProps}>
-        <div className="mx-auto grid gap-6 grid-cols-2">
-          {providersUseCasesProps.cases.map((caseData, index) => (
-            <ProvidersCaseCard
-              key={index}
-              icon={caseData.icon}
-              title={caseData.title}
-              subtitle={caseData.subtitle}
-              quote={caseData.quote}
-              facts={caseData.facts}
-              highlight={caseData.highlight}
-              index={index}
-            />
-          ))}
-        </div>
+        <CardGridTemplate {...providersUseCasesGridProps} />
       </TemplateContainer>
       <TemplateContainer {...providersEarningsContainerProps}>
         <ProvidersEarnings {...providersEarningsProps} />
@@ -74,19 +61,7 @@ export default function ProvidersPage() {
         <SolutionTemplate {...providersMarketplaceSolutionProps} />
       </TemplateContainer>
       <TemplateContainer {...providersSecurityContainerProps}>
-        <div className="grid gap-6 grid-cols-2">
-          {providersSecurityProps.items.map((item, index) => (
-            <ProvidersSecurityCard
-              key={index}
-              icon={item.icon}
-              title={item.title}
-              subtitle={item.subtitle}
-              body={item.body}
-              points={item.points}
-              index={index}
-            />
-          ))}
-        </div>
+        <CardGridTemplate {...providersSecurityGridProps} />
       </TemplateContainer>
       <TemplateContainer {...providersTestimonialsContainerProps}>
         <TestimonialsTemplate {...providersTestimonialsProps} />

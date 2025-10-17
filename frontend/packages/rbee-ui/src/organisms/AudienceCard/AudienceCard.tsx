@@ -21,6 +21,8 @@ const audienceCardVariants = cva('', {
   },
 })
 
+export type AudienceCardColor = 'primary' | 'chart-1' | 'chart-2' | 'chart-3' | 'chart-4' | 'chart-5'
+
 const cardContainerVariants = cva(
   'border border-border group relative overflow-hidden transition-all duration-300 hover:scale-[1.02]',
   {
@@ -94,7 +96,7 @@ const textVariants = cva('', {
   },
 })
 
-export interface AudienceCardProps extends VariantProps<typeof audienceCardVariants> {
+export interface AudienceCardProps {
   icon: ReactNode
   category: string
   title: string
@@ -102,44 +104,55 @@ export interface AudienceCardProps extends VariantProps<typeof audienceCardVaria
   features: string[]
   href: string
   ctaText: string
-  className?: string
-  imageSlot?: React.ReactNode
-  badgeSlot?: React.ReactNode
+  color?: AudienceCardColor
+  imageSlot?: ReactNode
+  badgeSlot?: ReactNode
   decisionLabel?: string
+  showGradient?: boolean
 }
 
 export function AudienceCard({
-  icon: Icon,
+  icon,
   category,
   title,
   description,
   features,
   href,
   ctaText,
-  color,
-  className,
+  color = 'primary',
   imageSlot,
   badgeSlot,
   decisionLabel,
+  showGradient = false,
 }: AudienceCardProps) {
   const descriptionId = `${title.toLowerCase().replace(/\s+/g, '-')}-description`
 
   return (
+    <>
+      {showGradient && (
+        <div
+          className="pointer-events-none absolute inset-x-0 top-0 h-[600px] opacity-40 -z-10"
+          style={{
+            background: 'radial-gradient(ellipse 80% 50% at 50% 0%, hsl(var(--primary) / 0.05), transparent)',
+          }}
+          aria-hidden="true"
+        />
+      )}
     <div className="flex h-full flex-col">
       {/* Optional decision label above card */}
       {decisionLabel && (
         <div className={cn('mb-3 text-sm font-medium font-sans', textVariants({ color }))}>{decisionLabel}</div>
       )}
 
-      <Card className={cn(cardContainerVariants({ color }), 'flex flex-1 flex-col p-6', className)}>
+      <Card className={cn(cardContainerVariants({ color }), 'flex flex-1 flex-col p-6')}>
         <div className={gradientVariants({ color })} />
 
         <CardContent className="flex flex-1 flex-col gap-0 p-0">
           {/* Icons side-by-side at top */}
           <div className="mb-6 flex items-top gap-3 min-h-[64px]">
             <div className={iconBgVariants({ color })}>
-              <div className="h-7 w-7 text-primary-foreground" aria-hidden="true">
-                {Icon}
+              <div className="size-6 text-primary-foreground" aria-hidden="true">
+                {icon}
               </div>
             </div>
             {imageSlot && (
@@ -180,6 +193,7 @@ export function AudienceCard({
           className="pt-0"
         />
       </Card>
-    </div>
+      </div>
+    </>
   )
 }

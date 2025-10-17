@@ -4,11 +4,11 @@ import { GlassCard } from "@rbee/ui/atoms";
 import { HeroTemplate } from "@rbee/ui/templates/HeroTemplate";
 import {
   AuditEventItem,
-  FilterButton,
   IconCardHeader,
 } from "@rbee/ui/molecules";
 import type * as React from "react";
 import type { ReactNode } from "react";
+import { FilterButton } from "@rbee/ui/molecules/FilterButton";
 
 // ──────────────────────────────────────────────────────────────────────────────
 // Types
