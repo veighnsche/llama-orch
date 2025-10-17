@@ -12,6 +12,7 @@
 // Individual molecules (alphabetical)
 export * from './ArchitectureHighlights/ArchitectureHighlights'
 export * from './AuditEventItem/AuditEventItem'
+export * from './AuditReadinessCTA/AuditReadinessCTA'
 export * from './BrandLogo/BrandLogo'
 export * from './BulletListItem/BulletListItem'
 export * from './ButtonCardFooter/ButtonCardFooter'

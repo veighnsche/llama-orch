@@ -1,7 +1,6 @@
-import { Button, Card, CardContent, HighlightCard } from '@rbee/ui/atoms'
-import { BulletListItem, IconCardHeader } from '@rbee/ui/molecules'
+import { Card, CardContent, HighlightCard } from '@rbee/ui/atoms'
+import { AuditReadinessCTA, BulletListItem, IconCardHeader } from '@rbee/ui/molecules'
 import Image from 'next/image'
-import Link from 'next/link'
 import type { ReactNode } from 'react'
 
 // ──────────────────────────────────────────────────────────────────────────────
@@ -108,32 +107,14 @@ export function EnterpriseCompliance({
         </div>
 
         {/* Audit Readiness Band */}
-        <div className="animate-in fade-in-50 rounded-2xl border border-primary/20 bg-primary/5 p-8 text-center [animation-delay:200ms]">
-          <h3 className="mb-2 text-2xl font-semibold text-foreground">{auditReadiness.heading}</h3>
-          <p className="mb-2 text-foreground/85">{auditReadiness.description}</p>
-          <p
-            id="compliance-pack-note"
-            className="mb-6 text-sm text-muted-foreground"
-            aria-label={auditReadiness.noteAriaLabel}
-          >
-            {auditReadiness.note}
-          </p>
-          <div className="flex flex-col items-center justify-center gap-3 sm:flex-row">
-            {auditReadiness.buttons.map((button, idx) => (
-              <Button
-                key={idx}
-                size="lg"
-                variant={button.variant}
-                asChild
-                aria-describedby={button.ariaDescribedby}
-                className="transition-transform active:scale-[0.98]"
-              >
-                <Link href={button.href}>{button.text}</Link>
-              </Button>
-            ))}
-          </div>
-          <p className="mt-6 text-xs text-muted-foreground">{auditReadiness.footnote}</p>
-        </div>
+        <AuditReadinessCTA
+          heading={auditReadiness.heading}
+          description={auditReadiness.description}
+          note={auditReadiness.note}
+          noteAriaLabel={auditReadiness.noteAriaLabel}
+          buttons={auditReadiness.buttons}
+          footnote={auditReadiness.footnote}
+        />
       </div>
     </div>
   )
