@@ -879,6 +879,369 @@ Create `<StructuredData>` component that injects JSON-LD
 
 ---
 
+---
+
+## XIII. SEO Implementation Checklist
+
+### Phase 0: Critical Metadata (1 day) ✅ COMPLETE
+
+#### Meta Tags - All 7 Pages
+- [x] **Homepage** - Add meta description, OG tags, Twitter cards, canonical URL
+- [x] **Features** - Add meta description, OG tags, Twitter cards, canonical URL
+- [x] **Pricing** - Add meta description, OG tags, Twitter cards, canonical URL
+- [x] **Developers** - Add meta description, OG tags, Twitter cards, canonical URL
+- [x] **Enterprise** - Add meta description, OG tags, Twitter cards, canonical URL
+- [x] **Providers** - Add meta description, OG tags, Twitter cards, canonical URL
+- [x] **Use Cases** - Add meta description, OG tags, Twitter cards, canonical URL
+
+#### Files to Update
+- [x] `/frontend/apps/commercial/app/layout.tsx` - Global metadata
+- [x] `/frontend/apps/commercial/app/page.tsx` - Homepage metadata (inherits from layout)
+- [x] `/frontend/apps/commercial/app/features/page.tsx` - Features metadata
+- [x] `/frontend/apps/commercial/app/pricing/page.tsx` - Pricing metadata
+- [x] `/frontend/apps/commercial/app/developers/page.tsx` - Developers metadata
+- [x] `/frontend/apps/commercial/app/enterprise/page.tsx` - Enterprise metadata
+- [x] `/frontend/apps/commercial/app/gpu-providers/page.tsx` - Providers metadata
+- [x] `/frontend/apps/commercial/app/use-cases/page.tsx` - Use Cases metadata
+
+---
+
+### Phase 1: Structured Data (2 days) ⚠️ HIGH PRIORITY
+
+#### Create StructuredData Component
+- [ ] Create `/frontend/packages/rbee-ui/src/atoms/StructuredData/StructuredData.tsx`
+- [ ] Add TypeScript interfaces for schema types
+- [ ] Create Storybook story for StructuredData
+- [ ] Export from atoms index
+
+#### Implement Schemas by Page
+- [ ] **Homepage** - Organization/SoftwareApplication schema
+- [ ] **Homepage** - FAQ schema (for FAQ section)
+- [ ] **Pricing** - Product schema (for Team plan)
+- [ ] **Pricing** - FAQ schema (for pricing FAQ)
+- [ ] **Developers** - HowTo schema (for installation steps)
+- [ ] **Enterprise** - LocalBusiness schema (EU-based service)
+- [ ] **Providers** - FAQ schema (for provider FAQ)
+
+#### Schema Validation
+- [ ] Test all schemas with Google Rich Results Test
+- [ ] Validate JSON-LD syntax
+- [ ] Check schema.org compliance
+
+---
+
+### Phase 2: Model Showcase (3 days) ⚠️ HIGH PRIORITY
+
+#### Design & Build Template
+- [ ] Create `/frontend/packages/rbee-ui/src/templates/ModelShowcase/ModelShowcase.tsx`
+- [ ] Define `ModelShowcaseProps` interface
+- [ ] Implement responsive grid layout
+- [ ] Add model card component with logo, sizes, badge
+- [ ] Add category grouping (Language Models, Image Gen, Embeddings)
+- [ ] Create Storybook story with full example
+- [ ] Export from templates index
+
+#### Gather Assets
+- [ ] Download/create Meta Llama logo (SVG)
+- [ ] Download/create Mistral logo (SVG)
+- [ ] Download/create Qwen logo (SVG)
+- [ ] Download/create DeepSeek logo (SVG)
+- [ ] Download/create Stable Diffusion logo (SVG)
+- [ ] Download/create FLUX logo (SVG)
+- [ ] Download/create BGE logo (SVG)
+- [ ] Optimize all SVGs for web
+
+#### Integration
+- [ ] Create `modelShowcaseProps` in HomePageProps
+- [ ] Add ModelShowcase to HomePage after WhatIsRbee section
+- [ ] Add TemplateContainer wrapper with proper background
+- [ ] Test responsive behavior
+- [ ] Verify accessibility (keyboard navigation, screen readers)
+
+---
+
+### Phase 3: Industry Pages (5-7 days) 🔴 HIGH PRIORITY
+
+**Note:** `/getting-started` deferred to user-docs. `/contact` replaced with GitHub issues. `/blog` and `/about` rejected.
+
+#### Industry-Specific Landing Pages (Based on VIDEO_SCRIPTS.md Audiences)
+
+- [ ] **`/industries/startups`** - Startup Founders / Entrepreneurs
+  - [ ] Focus: Business opportunity, marketplace model, platform mode
+  - [ ] Highlight: Year 1 projections (35 customers, €70K revenue)
+  - [ ] CTA: Independence from external providers
+  - [ ] Add meta tags + Industry schema
+
+- [ ] **`/industries/enterprise`** - Enterprise CTOs / Technical Leaders (REDIRECT TO /enterprise)
+  - [ ] Already exists at `/enterprise`
+  - [ ] Add redirect from `/industries/enterprise` → `/enterprise`
+
+- [ ] **`/industries/developers`** - Software Developers (REDIRECT TO /developers)
+  - [ ] Already exists at `/developers`
+  - [ ] Add redirect from `/industries/developers` → `/developers`
+
+- [ ] **`/industries/homelab`** - Homelab Enthusiasts / Self-Hosters
+  - [ ] Focus: Control, privacy, ease of use
+  - [ ] Highlight: SSH-based control, multi-backend support
+  - [ ] Features: Web UI + CLI, model catalog, idle timeout
+  - [ ] Add meta tags + Industry schema
+
+- [ ] **`/industries/research`** - AI Researchers / ML Engineers
+  - [ ] Focus: Multi-modal support, reproducibility, testing
+  - [ ] Highlight: Proof bundles, BDD-tested, determinism suite
+  - [ ] Features: Candle-powered, property tests, CI/CD integration
+  - [ ] Add meta tags + Industry schema
+
+- [ ] **`/industries/compliance`** - EU Businesses / Compliance Officers
+  - [ ] Focus: GDPR, data residency, compliance
+  - [ ] Highlight: 7-year audit retention, EU-only workers, no US cloud
+  - [ ] Features: SOC2/ISO 27001 aligned, tamper-evident logs
+  - [ ] Add meta tags + Industry schema
+
+- [ ] **`/industries/education`** - Computer Science Students / Educators
+  - [ ] Focus: Architecture, learning opportunity, open source
+  - [ ] Highlight: Nature-inspired architecture, BDD-tested, GPL-3.0
+  - [ ] Features: Study distributed systems, contribute, learn
+  - [ ] Add meta tags + Industry schema
+
+- [ ] **`/industries/devops`** - DevOps Engineers / SREs
+  - [ ] Focus: Deployment, monitoring, lifecycle management
+  - [ ] Highlight: Cascading shutdown, health monitoring, proof bundles
+  - [ ] Features: Multi-node SSH, auto-detection, observable
+  - [ ] Add meta tags + Industry schema
+
+#### Legal Pages (Required for GDPR Compliance)
+- [ ] **`/legal/privacy`** - Privacy policy page
+  - [ ] Write GDPR-compliant privacy policy
+  - [ ] Add data collection disclosure
+  - [ ] Add cookie policy
+  - [ ] Add user rights section
+  - [ ] Add meta tags
+
+- [ ] **`/legal/terms`** - Terms of service page
+  - [ ] Write terms of service
+  - [ ] Add acceptable use policy
+  - [ ] Add liability disclaimers
+  - [ ] Add meta tags
+
+#### Security Page
+- [ ] **`/security`** - Security overview page
+  - [ ] Detail security architecture (6 crates)
+  - [ ] Add compliance badges (GDPR, SOC2, ISO 27001)
+  - [ ] Add audit information (7-year retention)
+  - [ ] Add tamper-evident logs explanation
+  - [ ] Add meta tags
+
+---
+
+### Phase 4: Trust Signals & Social Proof (2-3 days) 📊 MEDIUM PRIORITY
+
+#### Trust Badges Component
+- [ ] Create `/frontend/packages/rbee-ui/src/molecules/TrustBadges/TrustBadges.tsx`
+- [ ] Add badge types: GitHub, OpenSource, Downloads, Compatible, Models, Compliance
+- [ ] Create Storybook story
+- [ ] Export from molecules index
+
+#### Compliance Badges Component
+- [ ] Create `/frontend/packages/rbee-ui/src/atoms/ComplianceBadge/ComplianceBadge.tsx`
+- [ ] Add badge variants: GDPR, SOC2, ISO27001
+- [ ] Create SVG icons for each badge
+- [ ] Create Storybook story
+- [ ] Export from atoms index
+
+#### Integration
+- [ ] Add TrustBadges to Homepage hero section
+- [ ] Add ComplianceBadges to Enterprise page
+- [ ] Add GitHub stats integration (stars, downloads)
+- [ ] Add "500+ active installations" counter
+
+---
+
+### Phase 5: Content Enhancements (Ongoing) 📈 LONG-TERM
+
+#### Blog Content (1 post per week)
+- [ ] Week 1: "Why We Built rbee: The Case for Self-Hosted AI"
+- [ ] Week 2: "Self-Hosting LLMs: Complete Guide for Developers"
+- [ ] Week 3: "rbee vs Cloud Providers: Real Cost Analysis"
+- [ ] Week 4: "GDPR-Compliant AI Infrastructure: A Complete Guide"
+- [ ] Week 5: "Multi-GPU Inference: Technical Deep Dive"
+- [ ] Week 6: "Character-Driven Development: How AI Built rbee"
+- [ ] Week 7: "Running Llama 3.1 Locally: Performance Benchmarks"
+- [ ] Week 8: "OpenAI API Compatibility: Migration Guide"
+
+#### Additional Sections
+- [ ] **Model Catalog** (`/models`)
+  - [ ] Create model listing page
+  - [ ] Add model cards with specs
+  - [ ] Add download statistics
+  - [ ] Add performance benchmarks
+
+- [ ] **GPU Compatibility Matrix**
+  - [ ] Create compatibility table
+  - [ ] Add NVIDIA GPU support
+  - [ ] Add AMD GPU support
+  - [ ] Add Apple Silicon support
+  - [ ] Add CPU fallback info
+
+- [ ] **Performance Benchmarks**
+  - [ ] Create benchmarks page
+  - [ ] Add tokens/sec comparisons
+  - [ ] Add GPU utilization charts
+  - [ ] Add cost per token analysis
+
+- [ ] **Customer Case Studies**
+  - [ ] Collect customer testimonials
+  - [ ] Write 3-5 case studies
+  - [ ] Add industry-specific examples
+  - [ ] Add ROI calculations
+
+---
+
+### Phase 6: Technical SEO (1-2 days) 🔧 MEDIUM PRIORITY
+
+#### Performance Optimization
+- [ ] Optimize images (WebP format, lazy loading)
+- [ ] Implement code splitting
+- [ ] Add service worker for caching
+- [ ] Optimize font loading
+- [ ] Run Lighthouse audit
+- [ ] Achieve 90+ performance score
+
+#### Accessibility
+- [ ] Run WCAG 2.1 AA audit
+- [ ] Fix any accessibility issues
+- [ ] Add ARIA labels where needed
+- [ ] Test with screen readers
+- [ ] Test keyboard navigation
+
+#### Analytics & Tracking
+- [ ] Set up Google Analytics 4
+- [ ] Set up Google Search Console
+- [ ] Add event tracking for CTAs
+- [ ] Add conversion tracking
+- [ ] Set up custom dashboards
+
+#### Sitemap & Robots
+- [ ] Generate sitemap.xml
+- [ ] Create robots.txt
+- [ ] Submit sitemap to Google Search Console
+- [ ] Submit sitemap to Bing Webmaster Tools
+
+---
+
+### Phase 7: Link Building & Promotion (Ongoing) 📣 LONG-TERM
+
+#### Community Engagement
+- [ ] Post on Hacker News
+- [ ] Post on Reddit (r/selfhosted, r/LocalLLaMA)
+- [ ] Post on Product Hunt
+- [ ] Share on Twitter/X
+- [ ] Share on LinkedIn
+
+#### Developer Outreach
+- [ ] Submit to Awesome Lists (awesome-selfhosted, awesome-llm)
+- [ ] Write guest posts for AI/ML blogs
+- [ ] Speak at conferences/meetups
+- [ ] Create YouTube tutorials
+- [ ] Create demo videos
+
+#### Backlink Strategy
+- [ ] Reach out to AI tool directories
+- [ ] Get listed on AlternativeTo
+- [ ] Get listed on Slant
+- [ ] Get listed on G2
+- [ ] Partner with complementary tools
+
+---
+
+## XIV. Missing Components Checklist
+
+### From MISSING_STORIES_PLAN.md
+
+#### Rename Existing Stories (Quick Wins)
+- [ ] EnterpriseHero: Rename `OnEnterprisePage` → `Enterprise`
+- [ ] EnterpriseCompliance: Rename `OnEnterprisePage` → `Enterprise`
+- [ ] EnterpriseSecurity: Rename `OnEnterprisePage` → `Enterprise`
+- [ ] EnterpriseHowItWorks: Rename `OnEnterprisePage` → `Enterprise`
+- [ ] EnterpriseUseCases: Rename `OnEnterprisePage` → `Enterprise`
+- [ ] EnterpriseCTA: Rename `OnEnterprisePage` → `Enterprise`
+
+#### Add Missing Stories
+- [ ] **ProblemTemplate** - Add `Enterprise` story using `enterpriseProblemTemplateProps`
+  - [ ] Create story file if missing
+  - [ ] Import props from EnterprisePageProps
+  - [ ] Add to Storybook
+
+- [ ] **SolutionTemplate** - Add `Enterprise` story using `enterpriseSolutionProps`
+  - [ ] Create story file if missing
+  - [ ] Import props from EnterprisePageProps
+  - [ ] Add to Storybook
+
+- [ ] **ComparisonTemplate** - Add `Enterprise` story using `enterpriseComparisonProps`
+  - [ ] Create story file if missing
+  - [ ] Import props from EnterprisePageProps
+  - [ ] Add to Storybook
+
+- [ ] **TestimonialsTemplate** - Add `Enterprise` story using `enterpriseTestimonialsData`
+  - [ ] Create story file if missing
+  - [ ] Import props from EnterprisePageProps
+  - [ ] Add to Storybook
+
+---
+
+## XV. New Components Needed
+
+### SEO-Specific Components
+- [ ] **StructuredData** (atom) - JSON-LD schema injection
+- [ ] **TrustBadges** (molecule) - Social proof badges
+- [ ] **ComplianceBadge** (atom) - GDPR/SOC2/ISO badges
+- [ ] **ModelShowcase** (template) - Model branding section
+- [ ] **CostComparison** (template) - Cost calculator widget
+- [ ] **ModelCard** (molecule) - Individual model display card
+- [ ] **BenchmarkChart** (molecule) - Performance visualization
+
+### Page-Specific Components
+- [ ] **IndustryTemplate** (template) - Industry-specific landing page layout
+  - [ ] Reusable for all 6 industry pages (startups, homelab, research, compliance, education, devops)
+  - [ ] Props: hero, features, highlights, CTA sections
+  - [ ] Based on VIDEO_SCRIPTS.md audience scripts
+- [ ] **SecurityTemplate** (template) - Security overview page
+- [ ] **LegalTemplate** (template) - Privacy/Terms pages (simple, text-heavy layout)
+- [ ] **ModelCatalogTemplate** (template) - Model listing page (future)
+
+---
+
+## XVI. Verification Checklist
+
+### Before Launch
+- [ ] All 7 existing pages have complete metadata
+- [ ] All structured data validates in Google Rich Results Test
+- [ ] All images have alt text
+- [ ] All links work (no 404s)
+- [ ] All forms work (if applicable)
+- [ ] Mobile responsive on all pages
+- [ ] Lighthouse score 90+ on all pages
+- [ ] WCAG 2.1 AA compliant
+- [ ] Sitemap.xml generated and submitted
+- [ ] robots.txt configured correctly
+- [ ] Google Analytics tracking verified
+- [ ] Google Search Console verified
+
+### Post-Launch Monitoring (Weekly)
+- [ ] Check Google Search Console for errors
+- [ ] Monitor keyword rankings
+- [ ] Track organic traffic growth
+- [ ] Monitor bounce rate and session duration
+- [ ] Check for broken links
+- [ ] Review page speed metrics
+- [ ] Monitor conversion rates
+
+---
+
 **END OF AUDIT**
 
-**Next Steps:** Implement Phase 0 (metadata) immediately, then Phase 1 (schemas), then Phase 2 (model showcase).
+**Next Steps:** 
+1. Start with Phase 0 (metadata) - 1 day effort, massive SEO impact
+2. Move to Phase 1 (structured data) - 2 days effort, rich results in SERPs
+3. Implement Phase 2 (model showcase) - 3 days effort, captures model-specific traffic
+4. Create Phase 3 critical pages - 10-15 days effort, completes core site structure

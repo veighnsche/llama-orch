@@ -11,10 +11,50 @@ import { Suspense } from 'react'
 import { ThemeProvider } from '@/components/providers/ThemeProvider/ThemeProvider'
 
 export const metadata: Metadata = {
-  title: 'rbee - Build with AI. Own Your Infrastructure.',
+  title: 'rbee - OpenAI-Compatible AI Infrastructure | Self-Hosted LLMs',
   description:
-    'Open-source AI orchestration platform. Orchestrate inference across your home network hardware with zero ongoing costs. OpenAI-compatible API.',
-  generator: 'v0.app',
+    'Run LLMs on YOUR hardware with rbee. OpenAI-compatible API, zero ongoing costs, complete privacy. CUDA, Metal, CPU support. Build AI on your terms.',
+  keywords: [
+    'self-hosted AI',
+    'OpenAI alternative',
+    'GPU orchestration',
+    'private LLM',
+    'GDPR-compliant AI',
+    'multi-GPU inference',
+    'local AI',
+    'rbee',
+  ],
+  authors: [{ name: 'rbee' }],
+  creator: 'rbee',
+  publisher: 'rbee',
+  metadataBase: new URL('https://rbee.dev'),
+  alternates: {
+    canonical: '/',
+  },
+  openGraph: {
+    title: 'rbee - Own Your AI Infrastructure',
+    description: 'OpenAI-compatible AI platform running on your hardware. Zero API fees, complete privacy.',
+    type: 'website',
+    url: 'https://rbee.dev',
+    siteName: 'rbee',
+    locale: 'en_US',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'rbee - OpenAI-Compatible AI Infrastructure',
+    description: 'Run LLMs on YOUR hardware. Zero fees, complete privacy.',
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      'max-video-preview': -1,
+      'max-image-preview': 'large',
+      'max-snippet': -1,
+    },
+  },
 }
 
 export default function RootLayout({
