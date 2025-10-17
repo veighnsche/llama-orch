@@ -53,8 +53,6 @@ export function SecurityIsolationTemplate({
               iconSize="md"
               title={cratesTitle}
               subtitle={cratesSubtitle}
-              useCardHeader={false}
-              className="mb-6"
             />
 
             <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
@@ -81,8 +79,6 @@ export function SecurityIsolationTemplate({
                 subtitle={processIsolationSubtitle}
                 titleClassName="text-lg"
                 subtitleClassName="text-sm mt-1"
-                useCardHeader={false}
-                className="mb-4"
               />
               <ul className="space-y-2">
                 {processFeatures.map((feature, idx) => (
@@ -108,8 +104,6 @@ export function SecurityIsolationTemplate({
                 subtitle={zeroTrustSubtitle}
                 titleClassName="text-lg"
                 subtitleClassName="text-sm mt-1"
-                useCardHeader={false}
-                className="mb-4"
               />
               <ul className="space-y-2">
                 {zeroTrustFeatures.map((feature, idx) => (

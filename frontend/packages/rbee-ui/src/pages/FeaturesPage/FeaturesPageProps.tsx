@@ -5,7 +5,7 @@ import { GPUUtilizationBar } from '@rbee/ui/molecules/GPUUtilizationBar'
 import { TerminalWindow } from '@rbee/ui/molecules/TerminalWindow'
 import type {
   AdditionalFeaturesGridTemplateProps,
-  CrossNodeOrchestrationTemplateProps,
+  CrossNodeOrchestrationProps,
   EmailCaptureProps,
   ErrorHandlingTemplateProps,
   FeaturesTabsProps,
@@ -208,7 +208,7 @@ export const crossNodeOrchestrationContainerProps: Omit<TemplateContainerProps, 
 /**
  * Cross-Node Orchestration - Distributed execution across network
  */
-export const crossNodeOrchestrationProps: CrossNodeOrchestrationTemplateProps = {
+export const crossNodeOrchestrationProps: CrossNodeOrchestrationProps = {
   terminalContent: (
     <>
       <div className="text-muted-foreground"># Add a remote machine to your pool</div>

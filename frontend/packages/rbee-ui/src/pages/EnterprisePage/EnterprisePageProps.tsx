@@ -488,7 +488,7 @@ export const enterpriseSecurityProps: EnterpriseSecurityProps = {
     src: '/decor/security-mesh.webp',
     alt: 'Abstract dark security mesh with linked nodes and amber highlights, suggesting hash-chains, zero-trust, and time-bounded execution',
   },
-  securityCrates: [
+  securityCards: [
     {
       icon: <Lock className="size-6" />,
       title: 'auth-min: Zero-Trust Authentication',

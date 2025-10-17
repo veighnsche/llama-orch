@@ -77,7 +77,7 @@ export function EnterpriseCompliance({
           {pillars.map((pillar, idx) => (
             <Card
               key={idx}
-              className="h-full rounded-2xl border-border bg-card/60 p-8 transition-shadow hover:shadow-lg"
+              className="h-full rounded-2xl border-border bg-card/60 transition-shadow hover:shadow-lg"
               aria-labelledby={pillar.titleId}
             >
               <IconCardHeader
@@ -86,7 +86,7 @@ export function EnterpriseCompliance({
                 subtitle={pillar.subtitle}
                 titleId={pillar.titleId}
               />
-              <CardContent className="p-0">
+              <CardContent className="p-0 px-6 pb-6">
                 <ul className="space-y-3">
                   {pillar.bullets.map((bullet, bulletIdx) => (
                     <BulletListItem key={bulletIdx} variant="check" showPlate={false} title={bullet.title} />

@@ -13,6 +13,6 @@ export * from './IndustryCaseCard/IndustryCaseCard'
 export * from './MontlyEarningsPanel/MonthlyEarningsPanel'
 export * from './Navigation'
 export * from './ProvidersCaseCard/ProvidersCaseCard'
-export * from './SecurityCrate/SecurityCrate'
+export * from './SecurityCard/SecurityCard'
 // Home organisms
 export * from './TopologyDiagram'

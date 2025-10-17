@@ -2,7 +2,11 @@ import { Badge } from "@rbee/ui/atoms/Badge";
 import { Card, CardAction, CardContent } from "@rbee/ui/atoms/Card";
 import { GlassCard } from "@rbee/ui/atoms";
 import { HeroTemplate } from "@rbee/ui/templates/HeroTemplate";
-import { AuditEventItem, FilterButton, IconCardHeader } from "@rbee/ui/molecules";
+import {
+  AuditEventItem,
+  FilterButton,
+  IconCardHeader,
+} from "@rbee/ui/molecules";
 import type * as React from "react";
 import type { ReactNode } from "react";
 
@@ -90,20 +94,19 @@ export function EnterpriseHero({
   auditConsole,
   floatingBadges,
 }: EnterpriseHeroProps) {
-  const BadgeIcon = badge.icon;
-
   const asideContent = (
     <div className="animate-in fade-in-50 slide-in-from-right-2 flex items-center justify-center pb-12 [animation-delay:150ms]">
       <div className="relative w-full max-w-lg lg:sticky lg:top-24">
         {/* Immutable Audit Trail Console */}
         <Card className="shadow-2xl">
           <IconCardHeader
-            icon={BadgeIcon}
+            icon={badge.icon}
             title={auditConsole.title}
             iconSize="md"
             iconTone="primary"
             titleClassName="font-semibold text-foreground"
             className="pb-4"
+            align="center"
           />
           <CardAction className="absolute right-6 top-6">
             <Badge
@@ -116,10 +119,7 @@ export function EnterpriseHero({
 
           <CardContent>
             {/* Filter Strip */}
-            <div
-              className="mb-4 flex items-center gap-2"
-              role="presentation"
-            >
+            <div className="mb-4 flex items-center gap-2" role="presentation">
               {auditConsole.filterButtons.map((filter, idx) => (
                 <FilterButton
                   key={idx}
@@ -147,10 +147,13 @@ export function EnterpriseHero({
             {/* Footer */}
             <div className="mt-4 flex items-center justify-between border-t border-border pt-4 text-xs text-foreground/85">
               <span>{auditConsole.footer.retention}</span>
-              <span className="flex items-center gap-1">
-                <div className="h-3 w-3" aria-hidden="true">
-                  {BadgeIcon}
-                </div>
+              <span className="flex items-center gap-1.5">
+                <span
+                  className="h-3 w-3 shrink-0 flex items-center justify-center"
+                  aria-hidden="true"
+                >
+                  {badge.icon}
+                </span>
                 {auditConsole.footer.tamperProof}
               </span>
             </div>
@@ -184,7 +187,7 @@ export function EnterpriseHero({
 
   return (
     <HeroTemplate
-      badge={{ variant: "icon", text: badge.text, icon: BadgeIcon }}
+      badge={{ variant: "icon", text: badge.text, icon: badge.icon }}
       headline={{ variant: "simple", content: heading }}
       subcopy={description}
       subcopyMaxWidth="medium"

@@ -1,4 +1,5 @@
-import { SecurityCrate } from '@rbee/ui/organisms'
+import { SecurityGuarantees } from '@rbee/ui/molecules'
+import { SecurityCard } from '@rbee/ui/organisms'
 import Image from 'next/image'
 import type { ReactNode } from 'react'
 
@@ -6,7 +7,7 @@ import type { ReactNode } from 'react'
 // Types
 // ──────────────────────────────────────────────────────────────────────────────
 
-export type SecurityCrateData = {
+export type SecurityCardData = {
   icon: ReactNode
   title: string
   subtitle: string
@@ -26,7 +27,7 @@ export type EnterpriseSecurityProps = {
     src: string
     alt: string
   }
-  securityCrates: SecurityCrateData[]
+  securityCards: SecurityCardData[]
   guarantees: {
     heading: string
     stats: SecurityGuarantee[]
@@ -40,7 +41,7 @@ export type EnterpriseSecurityProps = {
 
 export function EnterpriseSecurity({
   backgroundImage,
-  securityCrates,
+  securityCards,
   guarantees,
 }: EnterpriseSecurityProps) {
   return (
@@ -56,36 +57,28 @@ export function EnterpriseSecurity({
       />
 
       <div className="relative z-10">
-        {/* Security Crates Grid */}
-        <div className="animate-in fade-in-50 mb-12 grid gap-8 [animation-delay:120ms] lg:grid-cols-2">
-          {securityCrates.map((crate, idx) => (
-            <SecurityCrate
+        {/* Security Cards Grid */}
+        <div className="animate-in fade-in-50 mb-12 mx-auto grid max-w-4xl gap-8 [animation-delay:120ms] md:grid-cols-2">
+          {securityCards.map((card, idx) => (
+            <SecurityCard
               key={idx}
-              icon={crate.icon}
-              title={crate.title}
-              subtitle={crate.subtitle}
-              intro={crate.intro}
-              bullets={crate.bullets}
-              docsHref={crate.docsHref}
+              icon={card.icon}
+              title={card.title}
+              subtitle={card.subtitle}
+              intro={card.intro}
+              bullets={card.bullets}
+              docsHref={card.docsHref}
             />
           ))}
         </div>
 
         {/* Security Guarantees */}
-        <div className="animate-in fade-in-50 rounded-2xl border border-primary/20 bg-primary/5 p-8 [animation-delay:200ms]">
-          <h3 className="mb-6 text-center text-2xl font-semibold text-foreground">{guarantees.heading}</h3>
-          <div className="grid gap-6 md:grid-cols-3">
-            {guarantees.stats.map((stat, idx) => (
-              <div key={idx} className="text-center">
-                <div className="mb-2 text-3xl font-bold text-primary" aria-label={stat.ariaLabel}>
-                  {stat.value}
-                </div>
-                <div className="text-sm text-foreground/85">{stat.label}</div>
-              </div>
-            ))}
-          </div>
-          <p className="mt-6 text-center text-xs text-muted-foreground">{guarantees.footnote}</p>
-        </div>
+        <SecurityGuarantees
+          heading={guarantees.heading}
+          stats={guarantees.stats}
+          footnote={guarantees.footnote}
+          className="animate-in fade-in-50 [animation-delay:200ms]"
+        />
       </div>
     </div>
   )

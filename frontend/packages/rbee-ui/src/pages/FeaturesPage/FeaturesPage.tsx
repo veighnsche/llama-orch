@@ -3,7 +3,7 @@
 import { TemplateContainer } from '@rbee/ui/molecules'
 import {
   AdditionalFeaturesGridTemplate,
-  CrossNodeOrchestrationTemplate,
+  CrossNodeOrchestration,
   EmailCapture,
   ErrorHandlingTemplate,
   FeaturesHero,
@@ -46,7 +46,7 @@ export default function FeaturesPage() {
       <FeaturesTabs {...featuresFeaturesTabsProps} />
 
       <TemplateContainer {...crossNodeOrchestrationContainerProps}>
-        <CrossNodeOrchestrationTemplate {...crossNodeOrchestrationProps} />
+        <CrossNodeOrchestration {...crossNodeOrchestrationProps} />
       </TemplateContainer>
 
       <TemplateContainer {...intelligentModelManagementContainerProps}>

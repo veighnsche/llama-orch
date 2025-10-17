@@ -36,7 +36,7 @@ const featureInfoCardVariants = cva(
 );
 
 const iconContainerVariants = cva(
-  "mb-4 flex h-11 w-11 items-center justify-center rounded-xl",
+  "flex items-center justify-center rounded-xl",
   {
     variants: {
       tone: {
@@ -48,14 +48,19 @@ const iconContainerVariants = cva(
         chart2: "bg-chart-2/10",
         chart3: "bg-chart-3/10",
       },
+      variant: {
+        default: "mb-4 h-11 w-11",
+        compact: "mb-3 h-8 w-8",
+      },
     },
     defaultVariants: {
       tone: "default",
+      variant: "default",
     },
   }
 );
 
-const iconVariants = cva("h-6 w-6", {
+const iconVariants = cva("", {
   variants: {
     tone: {
       default: "text-primary",
@@ -66,9 +71,14 @@ const iconVariants = cva("h-6 w-6", {
       chart2: "text-chart-2",
       chart3: "text-chart-3",
     },
+    variant: {
+      default: "h-6 w-6",
+      compact: "h-4 w-4",
+    },
   },
   defaultVariants: {
     tone: "default",
+    variant: "default",
   },
 });
 
@@ -92,15 +102,44 @@ const tagVariants = cva(
   }
 );
 
+const contentPaddingVariants = cva("", {
+  variants: {
+    variant: {
+      default: "p-6 sm:p-7",
+      compact: "p-4",
+    },
+  },
+  defaultVariants: {
+    variant: "default",
+  },
+});
+
+const titleVariants = cva("font-semibold text-card-foreground", {
+  variants: {
+    variant: {
+      default: "mb-2 text-lg",
+      compact: "mb-1 text-sm",
+    },
+  },
+  defaultVariants: {
+    variant: "default",
+  },
+});
+
 const bodyVariants = cva("text-balance leading-relaxed text-muted-foreground", {
   variants: {
     size: {
       sm: "text-sm",
       base: "text-base",
     },
+    variant: {
+      default: "",
+      compact: "text-xs",
+    },
   },
   defaultVariants: {
     size: "sm",
+    variant: "default",
   },
 });
 
@@ -140,6 +179,8 @@ export interface FeatureInfoCardProps
   delay?: string;
   /** Show border (default: true) */
   showBorder?: boolean;
+  /** Variant: default (full size) or compact (smaller, inline icon) */
+  variant?: "default" | "compact";
 }
 
 // ──────────────────────────────────────────────────────────────────────────────
@@ -156,6 +197,7 @@ export function FeatureInfoCard({
   className,
   delay,
   showBorder,
+  variant = "default",
 }: FeatureInfoCardProps) {
   // Handle both icon types (Component or ReactNode)
   let IconComponent: React.ComponentType<{ className?: string }> | null = null;
@@ -172,26 +214,26 @@ export function FeatureInfoCard({
         className
       )}
     >
-      <CardContent className="p-6 sm:p-7">
+      <CardContent className={contentPaddingVariants({ variant })}>
         {/* Icon */}
-        <div className={iconContainerVariants({ tone })} aria-hidden="true">
+        <div className={iconContainerVariants({ tone, variant })} aria-hidden="true">
           {IconComponent ? (
-            <IconComponent className={iconVariants({ tone })} />
+            <IconComponent className={iconVariants({ tone, variant })} />
           ) : React.isValidElement(icon) ? (
             React.cloneElement(icon, {
               // @ts-expect-error - icon className merging
-              className: cn(icon.props.className, iconVariants({ tone })),
+              className: cn(icon.props.className, iconVariants({ tone, variant })),
             })
           ) : null}
         </div>
 
         {/* Title */}
-        <h3 className="mb-2 text-lg font-semibold text-card-foreground">
+        <h3 className={titleVariants({ variant })}>
           {title}
         </h3>
 
         {/* Body */}
-        <p className={bodyVariants({ size })}>{body}</p>
+        <p className={bodyVariants({ size, variant })}>{body}</p>
 
         {/* Optional Tag */}
         {tag && <span className={tagVariants({ tone })}>{tag}</span>}
@@ -205,5 +247,7 @@ export {
   iconContainerVariants,
   iconVariants,
   tagVariants,
+  contentPaddingVariants,
+  titleVariants,
   bodyVariants,
 };

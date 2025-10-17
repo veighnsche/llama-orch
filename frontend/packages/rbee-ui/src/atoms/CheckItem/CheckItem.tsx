@@ -1,4 +1,4 @@
-import { cn } from '@rbee/ui/utils'
+import { BulletListItem } from '@rbee/ui/molecules'
 import type { ReactNode } from 'react'
 
 export interface CheckItemProps {
@@ -9,16 +9,26 @@ export interface CheckItemProps {
 }
 
 /**
- * CheckItem atom for consistent checklist items
- * Used in security crates, compliance pillars, and feature lists
+ * @deprecated CheckItem is deprecated. Use BulletListItem with variant="check" and showPlate={false} instead.
+ * This component is now a shim that wraps BulletListItem.
+ * 
+ * @example
+ * // Instead of:
+ * <CheckItem>Feature text</CheckItem>
+ * 
+ * // Use:
+ * <BulletListItem variant="check" showPlate={false} title="Feature text" />
  */
 export function CheckItem({ children, className }: CheckItemProps) {
+  // Convert children to string for BulletListItem title prop
+  const title = typeof children === 'string' ? children : String(children)
+  
   return (
-    <li className={cn('flex gap-2 text-sm text-muted-foreground', className)}>
-      <span className="mt-0.5 h-4 w-4 shrink-0 text-chart-3" aria-hidden="true">
-        ✓
-      </span>
-      <span>{children}</span>
-    </li>
+    <BulletListItem
+      variant="check"
+      showPlate={false}
+      title={title}
+      className={className}
+    />
   )
 }

@@ -1,49 +1,53 @@
-import { Card, CardContent, CardHeader, CardTitle } from '@rbee/ui/atoms'
-import { FeatureInfoCard } from '@rbee/ui/molecules'
-import { StepListItem } from '@rbee/ui/molecules/StepListItem'
-import { BeeArchitecture, type BeeTopology, EarningsCard } from '@rbee/ui/organisms'
-import { cn } from '@rbee/ui/utils'
-import type { ReactNode } from 'react'
+import { Card, CardContent, CardHeader, CardTitle } from "@rbee/ui/atoms";
+import { FeatureInfoCard } from "@rbee/ui/molecules";
+import { StepListItem } from "@rbee/ui/molecules/StepListItem";
+import {
+  BeeArchitecture,
+  type BeeTopology,
+  EarningsCard,
+} from "@rbee/ui/organisms";
+import { cn } from "@rbee/ui/utils";
+import type { ReactNode } from "react";
 
 export type Feature = {
-  icon: ReactNode
-  title: string
-  body: string
-  badge?: string | ReactNode
-}
+  icon: ReactNode;
+  title: string;
+  body: string;
+  badge?: string | ReactNode;
+};
 
 export type Step = {
-  title: string
-  body: string
-}
+  title: string;
+  body: string;
+};
 
 export type EarningRow = {
-  model: string
-  meta: string
-  value: string
-  note?: string
-}
+  model: string;
+  meta: string;
+  value: string;
+  note?: string;
+};
 
 export type Earnings = {
-  title?: string
-  rows: EarningRow[]
-  disclaimer?: string
-  imageSrc?: string
-}
+  title?: string;
+  rows: EarningRow[];
+  disclaimer?: string;
+  imageSrc?: string;
+};
 
 export interface SolutionTemplateProps {
   /** Feature cards to display */
-  features: Feature[]
+  features: Feature[];
   /** Optional steps for "How It Works" section */
-  steps?: Step[]
+  steps?: Step[];
   /** Optional earnings/metrics sidebar */
-  earnings?: Earnings
+  earnings?: Earnings;
   /** Optional custom aside content (overrides earnings) */
-  aside?: ReactNode
+  aside?: ReactNode;
   /** Optional BeeArchitecture topology diagram */
-  topology?: BeeTopology
+  topology?: BeeTopology;
   /** Custom class name */
-  className?: string
+  className?: string;
 }
 
 export function SolutionTemplate({
@@ -65,11 +69,13 @@ export function SolutionTemplate({
               icon={feature.icon}
               title={feature.title}
               body={feature.body}
-              tag={typeof feature.badge === 'string' ? feature.badge : undefined}
+              tag={
+                typeof feature.badge === "string" ? feature.badge : undefined
+              }
               tone="neutral"
               size="sm"
               delay="[animation-delay:100ms]"
-              className='bg-muted/50'
+              className="bg-card/50"
             />
           ))}
         </div>
@@ -89,7 +95,12 @@ export function SolutionTemplate({
                 <CardContent>
                   <ol className="space-y-6">
                     {steps.map((step, idx) => (
-                      <StepListItem key={idx} number={idx + 1} title={step.title} body={step.body} />
+                      <StepListItem
+                        key={idx}
+                        number={idx + 1}
+                        title={step.title}
+                        body={step.body}
+                      />
                     ))}
                   </ol>
                 </CardContent>
@@ -101,12 +112,16 @@ export function SolutionTemplate({
               aside
             ) : earnings ? (
               <div className="animate-in fade-in-50 slide-in-from-right-2 [animation-delay:200ms] lg:sticky lg:top-24 lg:self-start">
-                <EarningsCard title={earnings.title} rows={earnings.rows} disclaimer={earnings.disclaimer} />
+                <EarningsCard
+                  title={earnings.title}
+                  rows={earnings.rows}
+                  disclaimer={earnings.disclaimer}
+                />
               </div>
             ) : null}
           </div>
         )}
       </div>
     </div>
-  )
+  );
 }

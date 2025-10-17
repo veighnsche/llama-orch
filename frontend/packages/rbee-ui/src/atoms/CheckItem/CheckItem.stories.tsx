@@ -1,55 +1,66 @@
 // Created by: TEAM-011
 import type { Meta, StoryObj } from '@storybook/react'
-import { Check } from 'lucide-react'
+import { BulletListItem } from '@rbee/ui/molecules'
+import { CheckItem } from './CheckItem'
 
-const meta: Meta = {
-  title: 'Atoms/CheckItem',
-  parameters: { layout: 'centered' },
+const meta: Meta<typeof CheckItem> = {
+  title: 'Atoms/CheckItem (Deprecated)',
+  component: CheckItem,
+  parameters: {
+    layout: 'centered',
+    docs: {
+      description: {
+        component: `
+## ⚠️ DEPRECATED
+
+**CheckItem is deprecated.** Use \`BulletListItem\` with \`variant="check"\` and \`showPlate={false}\` instead.
+
+### Migration Guide
+
+\`\`\`tsx
+// Before:
+<CheckItem>Feature text</CheckItem>
+
+// After:
+<BulletListItem variant="check" showPlate={false} title="Feature text" />
+\`\`\`
+
+This component is now a shim that wraps BulletListItem for backwards compatibility.
+        `,
+      },
+    },
+  },
   tags: ['autodocs'],
 }
 
 export default meta
-type Story = StoryObj
+type Story = StoryObj<typeof CheckItem>
 
-export const Default: Story = {
-  render: () => (
-    <div className="flex items-center gap-2 p-3 border rounded-lg">
-      <div className="w-4 h-4 border rounded flex items-center justify-center" />
-      <span className="text-sm">Check item</span>
-    </div>
-  ),
+export const DeprecatedUsage: Story = {
+  args: {
+    children: 'JWT with 15-minute expiry',
+  },
 }
 
-export const Checked: Story = {
+export const MigrationExample: Story = {
   render: () => (
-    <div className="flex items-center gap-2 p-3 border rounded-lg">
-      <div className="w-4 h-4 border rounded flex items-center justify-center bg-primary text-primary-foreground">
-        <Check className="w-3 h-3" />
-      </div>
-      <span className="text-sm">Checked item</span>
-    </div>
-  ),
-}
-
-export const WithDescription: Story = {
-  render: () => (
-    <div className="flex items-start gap-3 p-3 border rounded-lg max-w-md">
-      <div className="w-4 h-4 border rounded flex items-center justify-center mt-0.5 bg-primary text-primary-foreground">
-        <Check className="w-3 h-3" />
+    <div className="space-y-6 max-w-md">
+      <div>
+        <h3 className="text-sm font-semibold mb-2">❌ Old (Deprecated):</h3>
+        <ul className="space-y-2">
+          <CheckItem>JWT with 15-minute expiry</CheckItem>
+          <CheckItem>Refresh token rotation</CheckItem>
+          <CheckItem>Device fingerprinting</CheckItem>
+        </ul>
       </div>
       <div>
-        <div className="text-sm font-medium">Check item with description</div>
-        <div className="text-xs text-muted-foreground">This is a longer description explaining the check item</div>
+        <h3 className="text-sm font-semibold mb-2">✅ New (Recommended):</h3>
+        <ul className="space-y-2">
+          <BulletListItem variant="check" showPlate={false} title="JWT with 15-minute expiry" />
+          <BulletListItem variant="check" showPlate={false} title="Refresh token rotation" />
+          <BulletListItem variant="check" showPlate={false} title="Device fingerprinting" />
+        </ul>
       </div>
-    </div>
-  ),
-}
-
-export const Disabled: Story = {
-  render: () => (
-    <div className="flex items-center gap-2 p-3 border rounded-lg opacity-50">
-      <div className="w-4 h-4 border rounded flex items-center justify-center" />
-      <span className="text-sm">Disabled item</span>
     </div>
   ),
 }

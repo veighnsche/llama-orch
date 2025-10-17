@@ -1,35 +1,34 @@
 import type { Meta, StoryObj } from '@storybook/react'
 import { Eye, Lock, Shield } from 'lucide-react'
-import { SecurityCrate } from './SecurityCrate'
+import { SecurityCard } from './SecurityCard'
 
-const meta: Meta<typeof SecurityCrate> = {
-  title: 'Organisms/SecurityCrate',
-  component: SecurityCrate,
+const meta: Meta<typeof SecurityCard> = {
+  title: 'Organisms/SecurityCard',
+  component: SecurityCard,
   parameters: {
     layout: 'centered',
     docs: {
       description: {
         component: `
 ## Overview
-The SecurityCrate molecule displays a security crate's capabilities with icon, title, subtitle, intro, bullet points, and optional documentation link.
+The SecurityCard organism displays security capabilities with icon, title, subtitle, intro, bullet points, and optional documentation link.
 
 ## Composition
-This molecule is composed of:
-- **IconPlate**: Large icon representing the crate
-- **Title**: Crate name (e.g., "auth-min: Zero-Trust Authentication")
-- **Subtitle**: Optional tagline (e.g., "The Trickster Guardians")
-- **Intro**: Description paragraph
-- **Bullets**: List of features/capabilities with CheckItem
-- **Docs Link**: Optional link to documentation
+This organism is composed of:
+- **Card**: Base card atom structure
+- **IconCardHeader**: Icon and title section
+- **CardContent**: Main content area with intro and bullets
+- **CheckItem**: Individual bullet points
+- **CardFooter**: Optional docs link
 
 ## When to Use
 - Showcasing security features
-- Explaining security crates
+- Explaining security capabilities
 - Technical security documentation
 - Enterprise security pages
 
 ## Used In
-- **EnterpriseSecurity**: Displays security crates (auth-min, audit-core, secrets-vault)
+- **EnterpriseSecurity**: Displays security capabilities (auth-min, audit-core, secrets-vault)
         `,
       },
     },
@@ -46,7 +45,7 @@ This molecule is composed of:
     },
     title: {
       control: 'text',
-      description: 'Crate title',
+      description: 'Card title',
       table: {
         type: { summary: 'string' },
         category: 'Content',
@@ -84,21 +83,11 @@ This molecule is composed of:
         category: 'Behavior',
       },
     },
-    tone: {
-      control: 'select',
-      options: ['primary', 'neutral'],
-      description: 'Visual tone',
-      table: {
-        type: { summary: "'primary' | 'neutral'" },
-        defaultValue: { summary: 'primary' },
-        category: 'Appearance',
-      },
-    },
   },
 }
 
 export default meta
-type Story = StoryObj<typeof SecurityCrate>
+type Story = StoryObj<typeof SecurityCard>
 
 export const Default: Story = {
   args: {
@@ -142,16 +131,15 @@ export const WithDetails: Story = {
       'Zero-knowledge architecture',
     ],
     docsHref: '/docs/security/secrets-vault',
-    tone: 'neutral',
   },
 }
 
 export const InSecurityContext: Story = {
   render: () => (
     <div className="w-full max-w-6xl">
-      <div className="mb-4 text-sm text-muted-foreground">Example: SecurityCrate in EnterpriseSecurity organism</div>
+      <div className="mb-4 text-sm text-muted-foreground">Example: SecurityCard in EnterpriseSecurity organism</div>
       <div className="grid gap-6 md:grid-cols-3">
-        <SecurityCrate
+        <SecurityCard
           icon={<Lock className="size-6" />}
           title="auth-min"
           subtitle="Zero-Trust Authentication"
@@ -159,7 +147,7 @@ export const InSecurityContext: Story = {
           bullets={['JWT with 15-minute expiry', 'Refresh token rotation', 'Device fingerprinting', 'Rate limiting']}
           docsHref="/docs/security/auth-min"
         />
-        <SecurityCrate
+        <SecurityCard
           icon={<Shield className="size-6" />}
           title="audit-core"
           subtitle="Compliance Logging"
@@ -167,7 +155,7 @@ export const InSecurityContext: Story = {
           bullets={['Structured JSON logs', 'Tamper-proof storage', 'Real-time alerting', 'Compliance exports']}
           docsHref="/docs/security/audit-core"
         />
-        <SecurityCrate
+        <SecurityCard
           icon={<Eye className="size-6" />}
           title="secrets-vault"
           subtitle="Encrypted Secrets"
@@ -181,7 +169,7 @@ export const InSecurityContext: Story = {
   parameters: {
     docs: {
       description: {
-        story: 'SecurityCrate as used in the EnterpriseSecurity organism, showcasing three security crates.',
+        story: 'SecurityCard as used in the EnterpriseSecurity organism, showcasing three security capabilities.',
       },
     },
   },

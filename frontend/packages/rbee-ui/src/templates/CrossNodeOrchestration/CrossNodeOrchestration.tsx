@@ -1,7 +1,7 @@
 'use client'
 
 import { Badge, Card, CardContent, Separator } from '@rbee/ui/atoms'
-import { IconCardHeader, IconPlate, TerminalWindow } from '@rbee/ui/molecules'
+import { FeatureInfoCard, IconCardHeader, IconPlate, TerminalWindow } from '@rbee/ui/molecules'
 import { cn } from '@rbee/ui/utils'
 import { ArrowDown, CheckCircle2, GitBranch, Network } from 'lucide-react'
 import type { ReactNode } from 'react'
@@ -22,7 +22,7 @@ export interface BenefitCard {
   description: string
 }
 
-export interface CrossNodeOrchestrationTemplateProps {
+export interface CrossNodeOrchestrationProps {
   /** Terminal content for pool registry */
   terminalContent: ReactNode
   /** Terminal copyable text */
@@ -44,11 +44,11 @@ export interface CrossNodeOrchestrationTemplateProps {
 }
 
 /**
- * CrossNodeOrchestrationTemplate - Template for cross-node orchestration features
+ * CrossNodeOrchestration - Template for cross-node orchestration features
  *
  * @example
  * ```tsx
- * <CrossNodeOrchestrationTemplate
+ * <CrossNodeOrchestration
  *   title="Cross-Pool Orchestration"
  *   subtitle="Seamlessly orchestrate AI workloads across your entire network."
  *   benefits={[...]}
@@ -56,7 +56,7 @@ export interface CrossNodeOrchestrationTemplateProps {
  * />
  * ```
  */
-export function CrossNodeOrchestrationTemplate({
+export function CrossNodeOrchestration({
   terminalContent,
   terminalCopyText,
   benefits,
@@ -66,7 +66,7 @@ export function CrossNodeOrchestrationTemplate({
   provisioningTitle,
   provisioningSubtitle,
   className,
-}: CrossNodeOrchestrationTemplateProps) {
+}: CrossNodeOrchestrationProps) {
   return (
     <div className={cn('', className)}>
       <div className="mx-auto max-w-6xl">
@@ -80,7 +80,7 @@ export function CrossNodeOrchestrationTemplate({
               iconTone="primary"
               iconSize="md"
             />
-            <CardContent className="space-y-6">
+            <CardContent className="p-6">
               <TerminalWindow
                 showChrome={false}
                 variant="terminal"
@@ -91,20 +91,18 @@ export function CrossNodeOrchestrationTemplate({
                 {terminalContent}
               </TerminalWindow>
 
-              <div className="grid sm:grid-cols-3 gap-3">
+              <div className="grid sm:grid-cols-3 gap-3 pt-6">
                 {benefits.map((benefit, idx) => (
-                  <div
+                  <FeatureInfoCard
                     key={idx}
-                    className="bg-background rounded-xl border border-border p-4 flex items-start gap-3 hover:-translate-y-0.5 transition-transform"
-                  >
-                    <div className="size-5 shrink-0 mt-0.5 text-chart-3" aria-hidden="true">
-                      {benefit.icon}
-                    </div>
-                    <div>
-                      <div className="font-semibold text-foreground text-sm">{benefit.title}</div>
-                      <div className="text-xs text-muted-foreground mt-1">{benefit.description}</div>
-                    </div>
-                  </div>
+                    icon={benefit.icon}
+                    title={benefit.title}
+                    body={benefit.description}
+                    tone="chart3"
+                    size="sm"
+                    variant="compact"
+                    showBorder
+                  />
                 ))}
               </div>
             </CardContent>
@@ -114,20 +112,14 @@ export function CrossNodeOrchestrationTemplate({
 
           {/* Automatic Worker Provisioning Card */}
           <Card className="animate-in fade-in slide-in-from-right-4 duration-500 delay-100">
-            <CardContent className="space-y-6 pt-6">
-              <div className="flex items-start gap-4">
-                <IconPlate
-                  icon={<GitBranch className="w-6 h-6" />}
-                  tone="chart-2"
-                  size="md"
-                  shape="rounded"
-                  className="flex-shrink-0"
-                />
-                <div>
-                  <h3 className="text-2xl font-bold tracking-tight text-foreground mb-2">{provisioningTitle}</h3>
-                  <p className="text-muted-foreground leading-relaxed">{provisioningSubtitle}</p>
-                </div>
-              </div>
+            <IconCardHeader
+              icon={<GitBranch className="w-6 h-6" />}
+              title={provisioningTitle}
+              subtitle={provisioningSubtitle}
+              iconTone="chart-2"
+              iconSize="md"
+            />
+            <CardContent className="space-y-6">
 
               {/* Diagram */}
               <div className="relative bg-background rounded-xl p-6 overflow-hidden">
