@@ -8,7 +8,6 @@ import {
   EmailCapture,
   FAQTemplate,
   FeaturesTabs,
-  HomeHero,
   HowItWorks,
   PricingTemplate,
   ProblemTemplate,
@@ -18,6 +17,7 @@ import {
   UseCasesTemplate,
   WhatIsRbee,
 } from '@rbee/ui/templates'
+import { HeroTemplate } from '@rbee/ui/templates/HeroTemplate'
 import {
   audienceSelectorContainerProps,
   audienceSelectorProps,
@@ -51,7 +51,7 @@ import {
 export default function HomePage() {
   return (
     <main>
-      <HomeHero {...homeHeroProps} />
+      <HeroTemplate {...homeHeroProps} />
       <TemplateContainer {...whatIsRbeeContainerProps}>
         <WhatIsRbee {...whatIsRbeeProps} />
       </TemplateContainer>

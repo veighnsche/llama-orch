@@ -7,3 +7,6 @@ import { twMerge } from 'tailwind-merge'
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
 }
+
+// Re-export focus ring utilities
+export { focusRing, focusRingTight, focusRingDestructive, brandLink } from './focus-ring'

@@ -12,7 +12,7 @@ const meta: Meta<typeof Badge> = {
   argTypes: {
     variant: {
       control: 'select',
-      options: ['default', 'secondary', 'destructive', 'outline'],
+      options: ['default', 'accent', 'secondary', 'destructive', 'outline'],
       description: 'Visual style variant of the badge',
     },
     asChild: {
@@ -54,6 +54,7 @@ export const AllVariants: Story = {
   render: () => (
     <div className="flex flex-wrap gap-3">
       <Badge variant="default">Default</Badge>
+      <Badge variant="accent">Accent</Badge>
       <Badge variant="secondary">Secondary</Badge>
       <Badge variant="destructive">Destructive</Badge>
       <Badge variant="outline">Outline</Badge>
@@ -78,7 +79,7 @@ export const InOrganisms: Story = {
       <div className="border rounded-lg p-4">
         <div className="flex items-center justify-between mb-3">
           <h3 className="font-semibold">Professional Plan</h3>
-          <Badge variant="default">Popular</Badge>
+          <Badge variant="accent">Popular</Badge>
         </div>
         <p className="text-sm text-muted-foreground">Perfect for growing teams</p>
       </div>
@@ -106,6 +107,7 @@ export const InOrganisms: Story = {
       <div className="border rounded-lg p-4">
         <h3 className="font-semibold mb-3">Model Tags</h3>
         <div className="flex flex-wrap gap-2">
+          <Badge variant="accent">Featured</Badge>
           <Badge variant="outline">LLaMA 3</Badge>
           <Badge variant="outline">8B</Badge>
           <Badge variant="outline">Instruct</Badge>

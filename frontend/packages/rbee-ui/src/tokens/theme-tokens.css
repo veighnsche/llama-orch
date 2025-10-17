@@ -25,36 +25,45 @@
    * ======================================== */
 
     /* Base colors */
-    --background: #ffffff;
-    --foreground: #0f172a;
-    --card: #ffffff;
+    --background: #f3f4f6; /* gray-100 - dimmed canvas for calmer feel */
+    --foreground: #0f172a; /* slate-900 */
+    
+    /* Readability aliases (no color change, just clarity) */
+    --bg-canvas: var(--background, #f3f4f6);
+    --fg-body: var(--foreground, #0f172a);
+    --card: #ffffff; /* true white cards for contrast */
     --card-foreground: #0f172a;
     --popover: #ffffff;
     --popover-foreground: #0f172a;
-    --primary: #b45309;
+    --primary: #d97706; /* amber-600 - quieter brand authority */
     --primary-foreground: #ffffff;
-    --secondary: #f1f5f9;
+    --secondary: #eef2f6; /* softened slate/gray blend */
     --secondary-foreground: #0f172a;
-    --muted: #f1f5f9;
-    --muted-foreground: #5a6b7f; /* Darkened from #64748b for WCAG AA compliance (4.5:1 on secondary) */
-    --accent: #b45309;
-    --accent-foreground: #ffffff;
+    --muted: #eef2f7; /* table rows, subtle chips */
+    --muted-foreground: #5b677a; /* WCAG AA on secondary */
+    --accent: #f59e0b; /* amber-500 for accents/hover */
+    --accent-foreground: #0f172a; /* text on pale ambers */
     --destructive: #dc2626;
     --destructive-foreground: #ffffff;
-    --border: #e2e8f0;
-    --input: #e2e8f0;
-    --ring: #b45309;
+    --border: #cbd5e1; /* slate-300 for stronger definition */
+    --input: #cbd5e1;
+    --ring: #f59e0b; /* brand ring for focus-visible */
+    
+    /* Focus ring system (global consistency) */
+    --focus-ring-color: var(--ring, #f59e0b);
+    --focus-ring-width: 2px;
+    --focus-ring-offset: 2px;
 
     /* Chart colors */
-    --chart-1: #b45309;
-    --chart-2: #3b82f6;
-    --chart-3: #10b981;
-    --chart-4: #8b5cf6;
-    --chart-5: #ef4444;
+    --chart-1: #d97706; /* amber-600 */
+    --chart-2: #3b82f6; /* blue-500 */
+    --chart-3: #10b981; /* emerald-500 */
+    --chart-4: #8b5cf6; /* violet-500 */
+    --chart-5: #ef4444; /* red-500 */
 
     /* Terminal colors (for TerminalWindow component) */
     --terminal-red: #ef4444;
-    --terminal-amber: #b45309;
+    --terminal-amber: #d97706; /* align to new primary */
     --terminal-green: #10b981;
 
     /* Code/Console backgrounds */
@@ -62,25 +71,25 @@
     --console-fg: #f1f5f9;
 
     /* Syntax highlighting colors */
-    --syntax-keyword: #3b82f6; /* blue - for keywords like const, await, export */
-    --syntax-import: #8b5cf6; /* purple - for import/from statements */
-    --syntax-string: #b45309; /* amber - for string literals */
-    --syntax-function: #10b981; /* green - for function names */
-    --syntax-comment: #64748b; /* muted - for comments and secondary text */
+    --syntax-keyword: #2563eb; /* blue-600 */
+    --syntax-import: #7c3aed; /* violet-600 */
+    --syntax-string: #b45309; /* amber-700 for calmer strings */
+    --syntax-function: #059669; /* emerald-600 */
+    --syntax-comment: #64748b; /* slate-500 */
 
     /* Error state colors */
     --error-light: #ef4444;
     --error-dark: #b91c1c;
 
     /* Sidebar colors */
-    --sidebar: #f1f5f9;
+    --sidebar: #eef2f6;
     --sidebar-foreground: #0f172a;
-    --sidebar-primary: #b45309;
+    --sidebar-primary: #d97706;
     --sidebar-primary-foreground: #ffffff;
-    --sidebar-accent: #b45309;
+    --sidebar-accent: #f59e0b;
     --sidebar-accent-foreground: #0f172a;
-    --sidebar-border: #e2e8f0;
-    --sidebar-ring: #b45309;
+    --sidebar-border: #cbd5e1;
+    --sidebar-ring: #f59e0b;
 
     /* ========================================
    * SPACING SCALE
@@ -138,14 +147,14 @@
 
     /* ========================================
    * ELEVATION SHADOWS
-   * Box shadows for depth and elevation
+   * Box shadows for depth and elevation (slate-tinted for cohesion)
    * ======================================== */
-    --shadow-xs: 0 1px 2px 0 rgb(0 0 0 / 0.05);
-    --shadow-sm: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
-    --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
-    --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
-    --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
-    --shadow-2xl: 0 25px 50px -12px rgb(0 0 0 / 0.25);
+    --shadow-xs: 0 1px 2px rgba(15, 23, 42, 0.04);
+    --shadow-sm: 0 1px 3px rgba(15, 23, 42, 0.06), 0 1px 2px rgba(15, 23, 42, 0.04);
+    --shadow-md: 0 3px 8px rgba(15, 23, 42, 0.07), 0 1px 3px rgba(15, 23, 42, 0.06); /* reduced spread for cleaner edges */
+    --shadow-lg: 0 10px 15px rgba(15, 23, 42, 0.08), 0 4px 6px rgba(15, 23, 42, 0.07);
+    --shadow-xl: 0 20px 25px rgba(15, 23, 42, 0.10), 0 8px 10px rgba(15, 23, 42, 0.08);
+    --shadow-2xl: 0 25px 50px rgba(15, 23, 42, 0.18);
 }
 
 .dark {
@@ -229,8 +238,8 @@
     background: linear-gradient(
         to bottom,
         var(--background),
-        color-mix(in srgb, var(--primary) 5%, transparent),
-        var(--card)
+        rgba(245, 158, 11, 0.06),
+        var(--background)
     );
 }
 

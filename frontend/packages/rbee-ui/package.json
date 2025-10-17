@@ -20,6 +20,7 @@
     "./pages/*": "./src/pages/*/index.ts",
     "./patterns/*": "./src/patterns/*/index.ts",
     "./utils": "./src/utils/index.ts",
+    "./utils/*": "./src/utils/*.ts",
     "./data/*": "./src/data/*",
     "./hooks/*": "./src/hooks/*",
     "./assets": "./src/assets/index.ts",

@@ -1,0 +1,11 @@
+{
+  "rules": {
+    "no-restricted-syntax": [
+      "error",
+      {
+        "selector": "Literal[value=/#[0-9a-fA-F]{3,6}\\b/]",
+        "message": "❌ Hard-coded HEX colors are not allowed. Use design tokens from theme-tokens.css instead.\n\n✅ Allowed patterns:\n  - CSS variables: var(--primary), var(--accent), etc.\n  - Tailwind utilities: bg-primary, text-accent, border-border\n  - Token references: text-[color:var(--primary)]\n\n⚠️ Exceptions (must be approved):\n  - Edge-case feedback in Alert: rgba(59,130,246,0.06), rgba(217,119,6,0.08), rgba(16,185,129,0.08)\n  - Badge accent variant: #fff7ed, #b45309, #fed7aa\n  - Table neutral states: rgba(2,6,23,0.02-0.04)\n  - Inset shadows: rgba(15,23,42,0.04)\n\n📖 See: BRAND_SCALE.md for approved color usage\n📖 See: LIGHT_MODE_REFINEMENT.md for edge-case rationale"
+      }
+    ]
+  }
+}

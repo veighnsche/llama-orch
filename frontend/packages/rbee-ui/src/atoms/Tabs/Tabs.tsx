@@ -2,6 +2,7 @@
 
 import * as TabsPrimitive from '@radix-ui/react-tabs'
 import { cn } from '@rbee/ui/utils'
+import { focusRing } from '@rbee/ui/utils/focus-ring'
 import type * as React from 'react'
 
 function Tabs({ className, ...props }: React.ComponentProps<typeof TabsPrimitive.Root>) {
@@ -26,7 +27,8 @@ function TabsTrigger({ className, ...props }: React.ComponentProps<typeof TabsPr
     <TabsPrimitive.Trigger
       data-slot="tabs-trigger"
       className={cn(
-        'group inline-flex lg:flex w-max lg:w-full items-start justify-start gap-2 rounded-xl border border-transparent px-3 py-3 text-left text-sm font-medium snap-start text-foreground dark:text-muted-foreground transition-all hover:bg-muted/60 hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 data-[state=active]:bg-background data-[state=active]:border-border data-[state=active]:shadow-sm data-[state=active]:text-foreground [&_svg]:pointer-events-none [&_svg]:shrink-0',
+        'group inline-flex lg:flex w-max lg:w-full items-start justify-start gap-2 rounded-xl border border-transparent px-3 py-3 text-left text-sm font-medium snap-start text-foreground dark:text-muted-foreground transition-all hover:bg-muted/60 hover:-translate-y-0.5 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:bg-background data-[state=active]:border-border data-[state=active]:shadow-sm data-[state=active]:text-foreground [&_svg]:pointer-events-none [&_svg]:shrink-0',
+        focusRing,
         className,
       )}
       {...props}

@@ -1,9 +1,29 @@
+// ============================================================================
+// HOME PAGE PROPS - Refactored for improved reuse & clarity
+// ============================================================================
+//
+// COMPONENT REUSE AUDIT (completed):
+// ✅ Hero: Migrated from HomeHero wrapper → direct HeroTemplate usage
+// ✅ Stats: Replaced FloatingKPICard → StatsGrid molecule (variant: 'pills')
+// ✅ Templates: All existing templates verified optimal (ComparisonTemplate,
+//    UseCasesTemplate, TestimonialsTemplate, FAQTemplate, etc.)
+// ✅ Molecules: CodeBlock, TerminalWindow, GPUUtilizationBar already reused
+// ❌ NetworkTopology: Not found - keeping existing topology in SolutionTemplate
+//
+// SCHEMA EVOLUTION:
+// - homeHeroProps: Now uses HeroTemplateProps directly (v2 schema)
+// - Added TemplateContainer enhancements: divider, kicker, headingId, layout
+// - floatingKPI → stats array for StatsGrid
+//
+// ============================================================================
+
 import { faqBeehive, homelabNetwork, pricingHero } from '@rbee/ui/assets'
 import { Badge, ComparisonGrid, NetworkMesh, OrchestrationFlow, PricingTiers, QuestionBubbles, StepFlow } from '@rbee/ui/atoms'
 import { ComplianceShield, DevGrid, GpuMarket, RbeeArch } from '@rbee/ui/icons'
 import type { TemplateContainerProps } from '@rbee/ui/molecules'
 import { CodeBlock } from '@rbee/ui/molecules/CodeBlock'
 import { GPUUtilizationBar } from '@rbee/ui/molecules/GPUUtilizationBar'
+import { StatsGrid } from '@rbee/ui/molecules/StatsGrid'
 import { TerminalWindow } from '@rbee/ui/molecules/TerminalWindow'
 import type {
   AudienceSelectorProps,
@@ -12,7 +32,6 @@ import type {
   EmailCaptureProps,
   FAQTemplateProps,
   FeaturesTabsProps,
-  HomeHeroProps,
   HowItWorksProps,
   PricingTemplateProps,
   ProblemTemplateProps,
@@ -22,6 +41,7 @@ import type {
   UseCasesTemplateProps,
   WhatIsRbeeProps,
 } from '@rbee/ui/templates'
+import type { HeroTemplateProps } from '@rbee/ui/templates/HeroTemplate/HeroTemplateProps'
 import {
   AlertTriangle,
   Anchor,
@@ -52,69 +72,113 @@ import {
 
 /**
  * Hero section props - Above-the-fold content with headline, terminal demo,
- * and GPU utilization visualization
+ * GPU utilization, and KPI stats
  *
- * Optional props not defined below:
- * - floatingKPI.className (string) - Custom CSS classes for the floating KPI card
+ * MIGRATED TO: HeroTemplateProps (direct usage, no wrapper)
+ * REPLACED: floatingKPI → StatsGrid molecule (variant: 'pills')
  */
-export const homeHeroProps: HomeHeroProps = {
-  badgeText: '100% Open Source • GPL-3.0-or-later',
-  headlinePrefix: 'AI Infrastructure.',
-  headlineHighlight: 'On Your Terms.',
+export const homeHeroProps: HeroTemplateProps = {
+  badge: {
+    variant: 'simple',
+    text: '100% Open Source • GPL-3.0-or-later',
+  },
+  headline: {
+    variant: 'two-line-highlight',
+    prefix: 'AI Infrastructure.',
+    highlight: 'On Your Terms.',
+  },
   subcopy:
-    'rbee (pronounced "are-bee") is your OpenAI-compatible AI infrastructure. Run LLMs on YOUR hardware across all GPUs and machines. Build with AI, keep control, and escape provider lock-in.',
-  bullets: [
-    { title: 'Your GPUs, your network', variant: 'check', color: 'chart-3' },
-    { title: 'Zero API fees', variant: 'check', color: 'chart-3' },
-    { title: 'Drop-in OpenAI API', variant: 'check', color: 'chart-3' },
-  ],
-  primaryCTA: {
-    label: 'Get Started Free',
-    href: '/getting-started',
-    showIcon: true,
-    dataUmamiEvent: 'cta:get-started',
+    'rbee (pronounced "are-bee") is your OpenAI-compatible AI stack. Run LLMs on **your** hardware across every GPU and machine. Build with AI, keep control, and escape provider lock-in.',
+  subcopyMaxWidth: 'wide',
+  proofElements: {
+    variant: 'bullets',
+    items: [
+      { title: 'Your GPUs, your network', variant: 'check', color: 'chart-3' },
+      { title: 'Zero API fees', variant: 'check', color: 'chart-3' },
+      { title: 'Drop-in OpenAI API', variant: 'check', color: 'chart-3' },
+    ],
   },
-  secondaryCTA: {
-    label: 'View Docs',
-    href: '/docs',
-    variant: 'outline',
+  ctas: {
+    primary: {
+      label: 'Get Started Free',
+      href: '/getting-started',
+      showIcon: true,
+      dataUmamiEvent: 'cta:get-started',
+    },
+    secondary: {
+      label: 'View Docs',
+      href: '/docs',
+      variant: 'outline',
+    },
   },
-  trustBadges: [
-    {
-      type: 'github',
-      label: 'Star on GitHub',
-      href: 'https://github.com/veighnsche/llama-orch',
-    },
-    {
-      type: 'api',
-      label: 'OpenAI-Compatible',
-    },
-    {
-      type: 'cost',
-      label: '$0 • No Cloud Required',
-    },
-  ],
-  terminalTitle: 'rbee-keeper',
-  terminalCommand: 'rbee-keeper infer --model llama-3.1-70b',
-  terminalOutput: {
-    loading: 'Loading model across 3 GPUs...',
-    ready: 'Model ready (2.3s)',
-    prompt: 'Generate REST API',
-    generating: 'Generating code...',
+  trustElements: {
+    variant: 'badges',
+    items: [
+      {
+        type: 'github',
+        label: 'Star on GitHub',
+        href: 'https://github.com/veighnsche/llama-orch',
+      },
+      {
+        type: 'api',
+        label: 'OpenAI-Compatible',
+      },
+      {
+        type: 'cost',
+        label: '$0 • No Cloud Required',
+      },
+    ],
   },
-  gpuPoolLabel: 'GPU Pool (5 hosts):',
-  gpuProgress: [
-    { label: 'Gaming PC 1', percentage: 91 },
-    { label: 'Gaming PC 2', percentage: 88 },
-    { label: 'Gaming PC 3', percentage: 76 },
-    { label: 'Workstation', percentage: 85 },
-  ],
-  costLabel: 'Local Inference',
-  costValue: '$0.00',
-  floatingKPI: {
-    gpuPool: { label: 'GPU Pool', value: '5 hosts / 8 GPUs' },
-    cost: { label: 'Cost', value: '$0.00 / hr' },
-    latency: { label: 'Latency', value: '~34 ms' },
+  aside: (
+    <div className="space-y-8">
+      {/* Terminal Demo */}
+      <div className="relative">
+        <TerminalWindow title="rbee-keeper" copyable={false}>
+          <div className="space-y-2 font-mono text-sm">
+            <div className="text-primary">$ rbee-keeper infer --model llama-3.1-70b</div>
+            <div className="text-muted-foreground">Loading model across 3 GPUs...</div>
+            <div className="text-chart-3">Model ready (2.3s)</div>
+            <div className="mt-3 text-muted-foreground">Generate REST API</div>
+            <div className="text-muted-foreground">Generating code...</div>
+          </div>
+        </TerminalWindow>
+      </div>
+
+      {/* GPU Utilization Bars */}
+      <div className="space-y-3">
+        <div className="text-sm font-medium text-muted-foreground">GPU Pool (5 hosts):</div>
+        <div className="space-y-2">
+          <GPUUtilizationBar label="Gaming PC 1" percentage={91} />
+          <GPUUtilizationBar label="Gaming PC 2" percentage={88} />
+          <GPUUtilizationBar label="Gaming PC 3" percentage={76} />
+          <GPUUtilizationBar label="Workstation" percentage={85} />
+        </div>
+      </div>
+
+      {/* KPI Stats using StatsGrid */}
+      <div className="pt-4">
+        <StatsGrid
+          stats={[
+            { label: 'GPU Pool', value: '5 hosts / 8 GPUs' },
+            { label: 'Cost', value: '$0.00 / hr', valueTone: 'primary' },
+            { label: 'Latency', value: '~34 ms' },
+          ]}
+          variant="pills"
+          columns={3}
+        />
+      </div>
+    </div>
+  ),
+  asideAriaLabel: 'rbee terminal demonstration showing GPU pool utilization and performance metrics',
+  headingId: 'home-hero',
+  background: {
+    variant: 'radial',
+  },
+  padding: 'spacious',
+  animations: {
+    enabled: true,
+    stagger: true,
+    direction: 'bottom',
   },
 }
 
@@ -144,14 +208,17 @@ export const whatIsRbeeContainerProps: Omit<TemplateContainerProps, 'children'> 
     </Badge>
   ),
   title: 'What is rbee?',
+  kicker: 'Open source • Self-hosted',
+  description: 'Your private AI infrastructure',
   background: {
-
     variant: 'secondary',
-
   },
   maxWidth: '5xl',
   paddingY: 'xl',
   align: 'center',
+  divider: true,
+  headingId: 'what-is-rbee',
+  headlineLevel: 2,
 }
 
 /**
@@ -166,22 +233,22 @@ export const whatIsRbeeProps: WhatIsRbeeProps = {
   pronunciationText: 'pronounced "are-bee"',
   pronunciationTooltip: 'Pronounced like "R.B."',
   description:
-    'is an open-source AI orchestration platform that unifies every computer in your home or office into a single, OpenAI-compatible AI cluster—private, controllable, and yours forever. Build agentic AI coders with @rbee/utils on your hardware.',
+    'is an open-source AI orchestrator that unifies every computer in your home or office into one OpenAI-compatible cluster - private, controllable, and yours. Build agentic AI coders with @rbee/utils on your hardware.',
   features: [
     {
       icon: <Zap className="size-6" />,
       title: 'Independence',
-      description: 'Build on your hardware. No surprise model or pricing changes.',
+      description: 'Build on your hardware. No surprise changes.',
     },
     {
       icon: <Shield className="size-6" />,
       title: 'Privacy',
-      description: 'Code and data never leave your network.',
+      description: 'Code and data stay on your network.',
     },
     {
       icon: <Cpu className="size-6" />,
       title: 'All GPUs together',
-      description: 'CUDA, Metal, and CPU—scheduled as one.',
+      description: 'CUDA, Metal, CPU - one pool.',
     },
   ],
   stats: [
@@ -217,15 +284,15 @@ export const audienceSelectorContainerProps: Omit<TemplateContainerProps, 'child
   eyebrow: 'Choose your path',
   title: 'Where should you start?',
   description:
-    'rbee adapts to how you work—build on your own GPUs, monetize idle capacity, or deploy compliant AI at scale.',
+    'rbee adapts to how you work - build on your GPUs, monetize idle capacity, or deploy compliant AI at scale.',
   background: {
-
     variant: 'subtle-border',
-
   },
   paddingY: '2xl',
   maxWidth: '7xl',
   align: 'center',
+  headingId: 'audience-selector',
+  headlineLevel: 2,
   helperLinks: [
     { label: 'Compare Plans', href: '/pricing' },
     { label: 'View Documentation', href: '/docs' },
@@ -246,11 +313,11 @@ export const audienceSelectorProps: AudienceSelectorProps = {
       icon: <Code2 className="size-6" />,
       category: 'For Developers',
       title: 'Build on Your Hardware',
-      description: 'Power Zed, Cursor, and your own agents on YOUR GPUs. OpenAI-compatible—drop-in, zero API fees.',
+      description: 'Power Zed, Cursor, and your own agents on **your** GPUs. OpenAI-compatible - drop-in, zero API fees.',
       features: [
-        'Zero API costs, unlimited usage',
-        'Your code stays on your network',
-        'Agentic API + TypeScript utils',
+        'Zero API costs',
+        'Code stays local',
+        'Agentic TS utils',
       ],
       href: '/developers',
       ctaText: 'Explore Developer Path',
@@ -267,8 +334,8 @@ export const audienceSelectorProps: AudienceSelectorProps = {
       icon: <Server className="size-6" />,
       category: 'For GPU Owners',
       title: 'Monetize Your Hardware',
-      description: 'Join the rbee marketplace and earn from gaming rigs to server farms—set price, stay in control.',
-      features: ['Set pricing & availability', 'Audit trails and payouts', 'Passive income from idle GPUs'],
+      description: 'Join the rbee marketplace. Earn from gaming rigs to server farms - set price, stay in control.',
+      features: ['Set pricing', 'Audit & payouts', 'Passive income'],
       href: '/providers',
       ctaText: 'Earn with Your GPU',
       color: 'chart-3' as const,
@@ -280,7 +347,7 @@ export const audienceSelectorProps: AudienceSelectorProps = {
       category: 'For Enterprise',
       title: 'Deploy Compliant AI',
       description: 'SOC2-ready infrastructure. Deploy AI that meets regulatory requirements.',
-      features: ['Audit trails & compliance', 'SOC2 & ISO 27001 aligned', 'Private cloud or on-prem'],
+      features: ['Audit & compliance', 'SOC2/ISO aligned', 'Private cloud/on-prem'],
       href: '/enterprise',
       ctaText: 'Enterprise Solutions',
       color: 'chart-1' as const,
@@ -304,7 +371,7 @@ export const emailCaptureProps: EmailCaptureProps = {
   },
   headline: 'Get Updates. Own Your AI.',
   subheadline:
-    'Join the rbee waitlist to get early access, build notes, and launch perks for running AI on your own hardware.',
+    'Join the rbee waitlist for early access, build notes, and launch perks for running AI on your hardware.',
   emailInput: {
     placeholder: 'you@company.com',
     label: 'Email address',
@@ -381,19 +448,19 @@ export const problemTemplateProps: ProblemTemplateProps = {
   items: [
     {
       title: 'The model changes',
-      body: 'Your assistant updates overnight. Code generation breaks; workflows stall; your team is blocked.',
+      body: 'Assistants update overnight. Code generation breaks and workflows stall.',
       icon: <AlertTriangle className="h-6 w-6" />,
       tone: 'destructive',
     },
     {
       title: 'The price increases',
-      body: '$20/month becomes $200/month—multiplied by your team. Infrastructure costs spiral.',
+      body: '$20 becomes $200 per dev. Costs spiral across the team.',
       icon: <DollarSign className="h-6 w-6" />,
       tone: 'primary',
     },
     {
       title: 'The provider shuts down',
-      body: 'APIs get deprecated. Your AI-built code becomes unmaintainable overnight.',
+      body: 'APIs deprecate. Your AI-built code becomes unmaintainable overnight.',
       icon: <Lock className="h-6 w-6" />,
       tone: 'destructive',
     },
@@ -409,7 +476,7 @@ export const problemTemplateProps: ProblemTemplateProps = {
 export const solutionTemplateContainerProps: Omit<TemplateContainerProps, 'children'> = {
   title: 'Your hardware. Your models. Your control.',
   description:
-    'rbee orchestrates inference across every GPU in your home network—workstations, gaming rigs, and Macs—turning idle hardware into a private, OpenAI-compatible AI platform.',
+    'rbee orchestrates inference across your entire network - workstations, gaming rigs, and Macs - turning idle hardware into a private, OpenAI-compatible AI platform.',
   background: {
     variant: 'background',
     decoration: (
@@ -441,22 +508,22 @@ export const solutionTemplateProps: SolutionTemplateProps = {
     {
       icon: <DollarSign className="h-6 w-6" />,
       title: 'Zero ongoing costs',
-      body: 'Pay only for electricity. No API bills, no per-token surprises.',
+      body: 'Pay only for electricity. No API bills, no surprises.',
     },
     {
       icon: <Shield className="h-6 w-6" />,
       title: 'Complete privacy',
-      body: 'Code and data never leave your network. Audit-ready by design.',
+      body: 'Code and data stay on your network. Audit-ready.',
     },
     {
       icon: <Anchor className="h-6 w-6" />,
       title: 'Locked to your rules',
-      body: 'Models update only when you approve. No breaking changes.',
+      body: 'Models update only when you approve.',
     },
     {
       icon: <Laptop className="h-6 w-6" />,
       title: 'Use all your hardware',
-      body: 'CUDA, Metal, and CPU orchestrated as one pool.',
+      body: 'CUDA, Metal, CPU - one pool.',
     },
   ],
   topology: {
@@ -825,7 +892,7 @@ export const useCasesTemplateProps: UseCasesTemplateProps = {
  */
 export const comparisonTemplateContainerProps: Omit<TemplateContainerProps, 'children'> = {
   title: 'Why Developers Choose rbee',
-  description: "Local-first AI that's faster, private, and costs $0 on your hardware.",
+  description: 'Local-first AI that\'s faster, private, and costs $0 on your hardware.',
   background: {
     variant: 'secondary',
     decoration: (
@@ -1055,7 +1122,7 @@ export const pricingTemplateProps: PricingTemplateProps = {
  * (See whatIsRbeeContainerProps comment above for full list)
  */
 export const testimonialsTemplateContainerProps: Omit<TemplateContainerProps, 'children'> = {
-  title: 'Trusted by developers who value independence',
+  title: 'Built for developers who value independence',
   background: {
 
     variant: 'background',
@@ -1087,7 +1154,7 @@ export const testimonialsTemplateProps: TestimonialsTemplateProps = {
       author: 'Sarah M.',
       role: 'CTO',
       quote:
-        "We pooled our team's hardware and cut AI spend from $500/mo to zero. OpenAI-compatible API—no code changes.",
+        'We pooled our team\'s hardware and cut AI spend from $500/mo to zero. OpenAI-compatible API - no code changes.',
     },
     {
       avatar: '👨‍🔧',
@@ -1224,6 +1291,8 @@ export const faqTemplateContainerProps: Omit<TemplateContainerProps, 'children'>
   paddingY: '2xl',
   maxWidth: '7xl',
   align: 'center',
+  headingId: 'faq',
+  headlineLevel: 2,
 }
 
 /**
@@ -1393,7 +1462,7 @@ export const faqTemplateProps: FAQTemplateProps = {
  */
 export const ctaTemplateProps: CTATemplateProps = {
   title: 'Stop depending on AI providers. Start building today.',
-  subtitle: "Join 500+ developers who've taken control of their AI infrastructure.",
+  subtitle: 'Join 500+ developers who\'ve taken control of their AI infrastructure.',
   primary: {
     label: 'Get started free',
     href: '/getting-started',

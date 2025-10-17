@@ -2,6 +2,7 @@
 
 import { FloatingKPICard, ProgressBar, TerminalWindow } from '@rbee/ui/molecules'
 import { HeroTemplate } from '@rbee/ui/templates/HeroTemplate'
+import type { ReactNode } from 'react'
 
 export interface BulletItem {
   title: string
@@ -38,7 +39,7 @@ export interface HomeHeroProps {
   headlineHighlight: string
 
   // Subcopy
-  subcopy: string
+  subcopy: string | ReactNode
 
   // Bullets
   bullets: BulletItem[]
