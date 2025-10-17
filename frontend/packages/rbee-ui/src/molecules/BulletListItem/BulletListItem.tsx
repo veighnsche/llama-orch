@@ -11,6 +11,8 @@ const bulletListItemVariants = cva('flex items-start gap-3', {
       'chart-3': '',
       'chart-4': '',
       'chart-5': '',
+      white: '',
+      muted: '',
     },
   },
   defaultVariants: {
@@ -27,6 +29,8 @@ const bulletContainerVariants = cva('h-6 w-6 flex items-center justify-center fl
       'chart-3': '',
       'chart-4': '',
       'chart-5': '',
+      white: '',
+      muted: '',
     },
     variant: {
       dot: 'rounded-full -translate-y-[3px]',
@@ -82,6 +86,8 @@ const bulletContainerVariants = cva('h-6 w-6 flex items-center justify-center fl
     { variant: 'check-plain', color: 'chart-3', class: 'text-chart-3' },
     { variant: 'check-plain', color: 'chart-4', class: 'text-chart-4' },
     { variant: 'check-plain', color: 'chart-5', class: 'text-chart-5' },
+    { variant: 'check-plain', color: 'white', class: 'text-white' },
+    { variant: 'check-plain', color: 'muted', class: 'text-muted-foreground/30' },
     // Text color variants for arrow
     { variant: 'arrow', color: 'primary', class: 'text-primary' },
     { variant: 'arrow', color: 'chart-1', class: 'text-chart-1' },
@@ -112,6 +118,8 @@ const bulletDotVariants = cva('h-2 w-2 rounded-full', {
       'chart-3': 'bg-chart-3',
       'chart-4': 'bg-chart-4',
       'chart-5': 'bg-chart-5',
+      white: 'bg-white',
+      muted: 'bg-muted-foreground/30',
     },
   },
   defaultVariants: {

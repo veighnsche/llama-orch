@@ -15,9 +15,6 @@ export * from './EnterpriseFeatures'
 export * from './EnterpriseHero'
 export * from './EnterpriseHowItWorks'
 export * from './EnterpriseSecurity'
-// EnterpriseSolution exports - avoid conflict with SolutionTemplate EarningRow
-export type { EarningRow as EnterpriseEarningRow, EnterpriseSolutionProps } from './EnterpriseSolution'
-export { EnterpriseSolution } from './EnterpriseSolution'
 export * from './EnterpriseTestimonials'
 // EnterpriseUseCases exports - avoid conflict with HomeHero CTAButton
 export type { CTAButton as EnterpriseCTAButton, EnterpriseUseCasesProps } from './EnterpriseUseCases'
@@ -41,7 +38,6 @@ export * from './ProvidersEarnings'
 export * from './ProvidersHero'
 export * from './RealTimeProgressTemplate'
 export * from './SecurityIsolationTemplate'
-// SolutionTemplate exports - avoid conflict with EnterpriseSolution EarningRow
 export type { Feature as SolutionFeature, SolutionTemplateProps } from './SolutionTemplate'
 export { SolutionTemplate } from './SolutionTemplate'
 export * from './TechnicalTemplate'

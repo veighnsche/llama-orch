@@ -185,3 +185,44 @@ export const AllColors: Story = {
     },
   },
 }
+
+export const WhiteCheckmarks: Story = {
+  render: () => (
+    <div className="flex flex-col gap-4 p-8 max-w-2xl bg-chart-3 rounded-lg">
+      <h3 className="text-lg font-semibold text-white">White Checkmarks (for dark backgrounds)</h3>
+      <ul className="space-y-3">
+        <BulletListItem title="Security (CC1-CC9)" variant="check" showPlate={false} color="white" className="text-white" />
+        <BulletListItem title="Availability (A1.1-A1.3)" variant="check" showPlate={false} color="white" className="text-white" />
+        <BulletListItem title="Confidentiality (C1.1-C1.2)" variant="check" showPlate={false} color="white" className="text-white" />
+      </ul>
+    </div>
+  ),
+  parameters: {
+    docs: {
+      description: {
+        story: 'White checkmarks for use on dark or colored backgrounds.',
+      },
+    },
+  },
+}
+
+export const MutedCheckmarks: Story = {
+  render: () => (
+    <div className="flex flex-col gap-4 p-8 max-w-2xl">
+      <h3 className="text-lg font-semibold text-foreground">Muted/Disabled Checkmarks</h3>
+      <ul className="space-y-3">
+        <BulletListItem title="GET /v2/compliance/data-access" variant="check" showPlate={false} color="muted" className="text-muted-foreground/50" />
+        <BulletListItem title="POST /v2/compliance/data-export" variant="check" showPlate={false} color="muted" className="text-muted-foreground/50" />
+        <BulletListItem title="POST /v2/compliance/data-deletion" variant="check" showPlate={false} color="muted" className="text-muted-foreground/50" />
+        <BulletListItem title="GET /v2/compliance/audit-trail" variant="check" showPlate={false} color="muted" className="text-muted-foreground/50" />
+      </ul>
+    </div>
+  ),
+  parameters: {
+    docs: {
+      description: {
+        story: 'Muted checkmarks for disabled or informational items.',
+      },
+    },
+  },
+}

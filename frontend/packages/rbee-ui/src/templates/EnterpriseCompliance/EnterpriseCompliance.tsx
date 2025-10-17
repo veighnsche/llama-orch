@@ -1,4 +1,4 @@
-import { Button, Card, CardContent } from '@rbee/ui/atoms'
+import { Button, Card, CardContent, HighlightCard } from '@rbee/ui/atoms'
 import { BulletListItem, IconCardHeader } from '@rbee/ui/molecules'
 import Image from 'next/image'
 import Link from 'next/link'
@@ -15,6 +15,8 @@ export type ComplianceBullet = {
 export type ComplianceBox = {
   heading: string
   items: string[]
+  checkmarkColor?: 'primary' | 'chart-1' | 'chart-2' | 'chart-3' | 'chart-4' | 'chart-5' | 'white'
+  disabledCheckmarks?: boolean
 }
 
 export type CompliancePillar = {
@@ -88,18 +90,17 @@ export function EnterpriseCompliance({
               <CardContent className="p-0">
                 <ul className="space-y-3">
                   {pillar.bullets.map((bullet, bulletIdx) => (
-                    <BulletListItem key={bulletIdx} variant="check" title={bullet.title} />
+                    <BulletListItem key={bulletIdx} variant="check" showPlate={false} title={bullet.title} />
                   ))}
                 </ul>
                 <div className="mt-6">
-                  <div className="rounded-lg border border-chart-3/50 bg-chart-3/10 p-4">
-                    <div className="mb-2 font-semibold text-chart-3">{pillar.box.heading}</div>
-                    <div className="space-y-1 text-xs text-foreground/85">
-                      {pillar.box.items.map((item, itemIdx) => (
-                        <div key={itemIdx}>{item}</div>
-                      ))}
-                    </div>
-                  </div>
+                  <HighlightCard
+                    heading={pillar.box.heading}
+                    items={pillar.box.items}
+                    color="chart-3"
+                    checkmarkColor={pillar.box.checkmarkColor}
+                    disabledCheckmarks={pillar.box.disabledCheckmarks}
+                  />
                 </div>
               </CardContent>
             </Card>

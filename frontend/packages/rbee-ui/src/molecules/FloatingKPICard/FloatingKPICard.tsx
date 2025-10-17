@@ -1,5 +1,6 @@
 'use client'
 
+import { GlassCard } from '@rbee/ui/atoms'
 import { cn } from '@rbee/ui/utils'
 import { useEffect, useState } from 'react'
 import { KeyValuePair } from '../../atoms/KeyValuePair'
@@ -36,10 +37,9 @@ export function FloatingKPICard({
   }, [])
 
   return (
-    <div
+    <GlassCard
       className={cn(
-        'absolute -bottom-16 left-[50%] rounded-2xl shadow-lg/40 backdrop-blur-md',
-        'bg-secondary/60 dark:bg-secondary/30 p-4 space-y-2',
+        'absolute -bottom-16 left-[50%] p-4 space-y-2',
         'transition-all duration-300 z-10',
         isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2',
         className,
@@ -48,6 +48,6 @@ export function FloatingKPICard({
       <KeyValuePair label={gpuPool.label} value={gpuPool.value} valueVariant="semibold" />
       <KeyValuePair label={cost.label} value={cost.value} valueVariant="success" />
       <KeyValuePair label={latency.label} value={latency.value} valueVariant="semibold" />
-    </div>
+    </GlassCard>
   )
 }

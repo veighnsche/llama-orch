@@ -1,3 +1,4 @@
+import { EuLedgerGrid } from '@rbee/ui/atoms'
 import { FEATURES, PROVIDERS } from '@rbee/ui/data/enterprise-comparison'
 import { TESTIMONIAL_STATS } from '@rbee/ui/data/testimonials'
 import type { TemplateContainerProps } from '@rbee/ui/molecules'
@@ -10,10 +11,10 @@ import type {
   EnterpriseHeroProps,
   EnterpriseHowItWorksProps,
   EnterpriseSecurityProps,
-  EnterpriseSolutionProps,
   EnterpriseTestimonialsProps,
   EnterpriseUseCasesProps,
   ProblemTemplateProps,
+  SolutionTemplateProps,
 } from '@rbee/ui/templates'
 import {
   AlertTriangle,
@@ -37,7 +38,6 @@ import {
   Users,
   Wrench,
 } from 'lucide-react'
-import Image from 'next/image'
 
 // ============================================================================
 // Props Objects (in visual order matching page composition)
@@ -203,6 +203,11 @@ export const enterpriseProblemTemplateContainerProps: Omit<TemplateContainerProp
   paddingY: 'xl',
   maxWidth: '7xl',
   align: 'center',
+  ctaBanner: {
+    copy: 'Meet GDPR, SOC2, and ISO 27001 requirements with EU-native AI infrastructure. Your data never leaves your control.',
+    primary: { label: 'Request Demo', href: '/enterprise/demo' },
+    secondary: { label: 'Compliance Overview', href: '/enterprise/compliance' },
+  },
 }
 
 /**
@@ -239,13 +244,6 @@ export const enterpriseProblemTemplateProps: ProblemTemplateProps = {
       tag: 'No guarantees',
     },
   ],
-  ctaPrimary: { label: 'Request Demo', href: '/enterprise/demo' },
-  ctaSecondary: {
-    label: 'Compliance Overview',
-    href: '/enterprise/compliance',
-  },
-  ctaCopy:
-    '"We cannot use external AI providers due to GDPR compliance requirements." — Every EU CTO and Data Protection Officer',
   gridClassName: 'md:grid-cols-2 lg:grid-cols-4',
 }
 
@@ -263,18 +261,28 @@ export const enterpriseSolutionContainerProps: Omit<TemplateContainerProps, 'chi
   paddingY: '2xl',
   maxWidth: '7xl',
   align: 'center',
+  backgroundDecoration: (
+    <EuLedgerGrid className="pointer-events-none absolute left-1/2 top-8 -z-10 hidden w-[52rem] -translate-x-1/2 opacity-15 md:block" />
+  ),
+  ctas: {
+    primary: {
+      label: 'Request Demo',
+      href: '/enterprise/demo',
+      ariaLabel: 'Request a demo of rbee enterprise solution',
+    },
+    secondary: {
+      label: 'View Compliance Docs',
+      href: '/docs/compliance',
+      ariaLabel: 'View compliance documentation',
+    },
+    caption: 'EU data residency guaranteed; earnings/metrics depend on configuration.',
+  },
 }
 
 /**
  * Enterprise Solution - How rbee Works section
  */
-export const enterpriseSolutionProps: EnterpriseSolutionProps = {
-  id: 'how-it-works',
-  kicker: 'How rbee Works',
-  eyebrowIcon: <Shield className="h-4 w-4" aria-hidden="true" />,
-  title: 'EU-Native AI Infrastructure That Meets Compliance by Design',
-  subtitle:
-    'Enterprise-grade, self-hosted AI that keeps data sovereign, auditable, and under your control—EU resident, zero US cloud dependencies.',
+export const enterpriseSolutionProps: SolutionTemplateProps = {
   features: [
     {
       icon: <Shield className="h-6 w-6" aria-hidden="true" />,
@@ -342,25 +350,6 @@ export const enterpriseSolutionProps: EnterpriseSolutionProps = {
     disclaimer:
       'rbee is designed to meet GDPR, NIS2, and EU AI Act requirements. Consult your legal team for certification.',
   },
-  illustration: (
-    <Image
-      src="/decor/eu-ledger-grid.webp"
-      width={1200}
-      height={640}
-      className="pointer-events-none absolute left-1/2 top-8 -z-10 hidden w-[52rem] -translate-x-1/2 opacity-15 blur-[0.5px] md:block"
-      alt="Abstract EU-blue ledger grid with softly glowing checkpoints, implying immutable audit trails and data sovereignty; premium dark UI, subtle amber accents"
-      aria-hidden="true"
-    />
-  ),
-  ctaPrimary: {
-    label: 'Request Demo',
-    href: '/enterprise/demo',
-  },
-  ctaSecondary: {
-    label: 'View Compliance Docs',
-    href: '/docs/compliance',
-  },
-  ctaCaption: 'EU data residency guaranteed; earnings/metrics depend on configuration.',
 }
 
 // === Enterprise Compliance ===
@@ -410,6 +399,7 @@ export const enterpriseComplianceProps: EnterpriseComplianceProps = {
           'POST /v2/compliance/data-deletion',
           'GET /v2/compliance/audit-trail',
         ],
+        disabledCheckmarks: true,
       },
     },
     {
@@ -427,7 +417,8 @@ export const enterpriseComplianceProps: EnterpriseComplianceProps = {
       ],
       box: {
         heading: 'Trust Service Criteria',
-        items: ['✓ Security (CC1-CC9)', '✓ Availability (A1.1-A1.3)', '✓ Confidentiality (C1.1-C1.2)'],
+        items: ['Security (CC1-CC9)', 'Availability (A1.1-A1.3)', 'Confidentiality (C1.1-C1.2)'],
+        checkmarkColor: 'white',
       },
     },
     {
@@ -445,7 +436,8 @@ export const enterpriseComplianceProps: EnterpriseComplianceProps = {
       ],
       box: {
         heading: 'ISMS Controls',
-        items: ['✓ 114 controls implemented', '✓ Risk assessment framework', '✓ Continuous monitoring'],
+        items: ['114 controls implemented', 'Risk assessment framework', 'Continuous monitoring'],
+        checkmarkColor: 'white',
       },
     },
   ],
@@ -796,13 +788,13 @@ export const enterpriseUseCasesProps: EnterpriseUseCasesProps = {
 // === Enterprise Comparison ===
 
 /**
- * Enterprise Comparison container - wraps the feature matrix section
+ * Enterprise Comparison container - wraps the comparison section
  */
 export const enterpriseComparisonContainerProps: Omit<TemplateContainerProps, 'children'> = {
   kicker: 'Feature Matrix',
   title: 'Why Enterprises Choose rbee',
   description: "See how rbee's compliance and security compare to external AI providers.",
-  bgVariant: 'default',
+  bgVariant: 'background',
   paddingY: '2xl',
   maxWidth: '7xl',
   align: 'center',

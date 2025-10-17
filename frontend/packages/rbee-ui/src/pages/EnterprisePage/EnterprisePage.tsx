@@ -10,10 +10,10 @@ import {
   EnterpriseHero,
   EnterpriseHowItWorks,
   EnterpriseSecurity,
-  EnterpriseSolution,
   EnterpriseTestimonials,
   EnterpriseUseCases,
   ProblemTemplate,
+  SolutionTemplate,
 } from "@rbee/ui/templates";
 import {
   enterpriseComparisonContainerProps,
@@ -50,7 +50,7 @@ export default function EnterprisePage() {
       </TemplateContainer>
 
       <TemplateContainer {...enterpriseSolutionContainerProps}>
-        <EnterpriseSolution {...enterpriseSolutionProps} />
+        <SolutionTemplate {...enterpriseSolutionProps} />
       </TemplateContainer>
 
       <TemplateContainer {...enterpriseComplianceContainerProps}>

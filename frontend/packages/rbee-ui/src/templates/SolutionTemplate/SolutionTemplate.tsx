@@ -1,9 +1,8 @@
-import { Button, Card, CardContent, CardHeader, CardTitle } from '@rbee/ui/atoms'
+import { Card, CardContent, CardHeader, CardTitle } from '@rbee/ui/atoms'
 import { FeatureInfoCard } from '@rbee/ui/molecules'
 import { StepListItem } from '@rbee/ui/molecules/StepListItem'
 import { BeeArchitecture, type BeeTopology, EarningsCard } from '@rbee/ui/organisms'
 import { cn } from '@rbee/ui/utils'
-import Link from 'next/link'
 import type { ReactNode } from 'react'
 
 export type Feature = {
@@ -43,14 +42,6 @@ export interface SolutionTemplateProps {
   aside?: ReactNode
   /** Optional BeeArchitecture topology diagram */
   topology?: BeeTopology
-  /** Optional decorative illustration */
-  illustration?: ReactNode
-  /** Primary CTA button */
-  ctaPrimary?: { label: string; href: string; ariaLabel?: string }
-  /** Secondary CTA button */
-  ctaSecondary?: { label: string; href: string; ariaLabel?: string }
-  /** Caption text below CTAs */
-  ctaCaption?: string
   /** Custom class name */
   className?: string
 }
@@ -61,18 +52,11 @@ export function SolutionTemplate({
   earnings,
   aside,
   topology,
-  illustration,
-  ctaPrimary,
-  ctaSecondary,
-  ctaCaption,
   className,
 }: SolutionTemplateProps) {
   return (
-    <div className={cn('relative', className)}>
-      {/* Decorative illustration */}
-      {illustration}
-
-      <div className="relative z-10">
+    <div className={cn(className)}>
+      <div>
         {/* Feature Tiles */}
         <div className="mb-12 grid gap-6 md:grid-cols-2 lg:grid-cols-4">
           {features.map((feature, idx) => (
@@ -85,6 +69,7 @@ export function SolutionTemplate({
               tone="neutral"
               size="sm"
               delay="[animation-delay:100ms]"
+              className='bg-muted/50'
             />
           ))}
         </div>
@@ -119,36 +104,6 @@ export function SolutionTemplate({
                 <EarningsCard title={earnings.title} rows={earnings.rows} disclaimer={earnings.disclaimer} />
               </div>
             ) : null}
-          </div>
-        )}
-
-        {/* CTA Bar */}
-        {(ctaPrimary || ctaSecondary) && (
-          <div className="mt-12 text-center">
-            <div className="flex flex-col items-center justify-center gap-3 sm:flex-row">
-              {ctaPrimary && (
-                <Button
-                  asChild
-                  size="lg"
-                  className="transition-transform active:scale-[0.98]"
-                  aria-label={ctaPrimary.ariaLabel || ctaPrimary.label}
-                >
-                  <Link href={ctaPrimary.href}>{ctaPrimary.label}</Link>
-                </Button>
-              )}
-              {ctaSecondary && (
-                <Button
-                  asChild
-                  size="lg"
-                  variant="outline"
-                  className="transition-transform active:scale-[0.98]"
-                  aria-label={ctaSecondary.ariaLabel || ctaSecondary.label}
-                >
-                  <Link href={ctaSecondary.href}>{ctaSecondary.label}</Link>
-                </Button>
-              )}
-            </div>
-            {ctaCaption && <p className="mt-4 text-xs text-muted-foreground">{ctaCaption}</p>}
           </div>
         )}
       </div>

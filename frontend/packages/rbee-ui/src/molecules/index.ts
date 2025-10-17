@@ -11,6 +11,7 @@
 
 // Individual molecules (alphabetical)
 export * from './ArchitectureHighlights/ArchitectureHighlights'
+export * from './AuditEventItem/AuditEventItem'
 export * from './BrandLogo/BrandLogo'
 export * from './BulletListItem/BulletListItem'
 export * from './ButtonCardFooter/ButtonCardFooter'
@@ -25,6 +26,7 @@ export * from './FeatureCard/FeatureCard'
 export * from './FeatureHeader/FeatureHeader'
 export * from './FeatureInfoCard'
 export * from './FeatureListItem/FeatureListItem'
+export * from './FilterButton/FilterButton'
 export * from './FeatureTab/FeatureTab'
 export * from './FeatureTabContent/FeatureTabContent'
 export * from './FloatingKPICard/FloatingKPICard'

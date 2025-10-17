@@ -114,10 +114,15 @@ export const providersProblemContainerProps: Omit<TemplateContainerProps, 'child
   kicker: 'The Cost of Idle GPUs',
   title: 'Stop Letting Your Hardware Bleed Money',
   description: 'Most GPUs sit idle ~90% of the time. They still draw power—and earn nothing.',
-  bgVariant: 'default',
+  bgVariant: 'destructive-gradient',
   paddingY: '2xl',
   maxWidth: '7xl',
   align: 'center',
+  ctaBanner: {
+    copy: 'Every idle hour is money left on the table. Turn that waste into passive income with rbee.',
+    primary: { label: 'Start Earning', href: '/signup' },
+    secondary: { label: 'Estimate My Payout', href: '#earnings-calculator' },
+  },
 }
 
 export const providersProblemProps: ProblemTemplateProps = {
@@ -144,9 +149,6 @@ export const providersProblemProps: ProblemTemplateProps = {
       tone: 'destructive',
     },
   ],
-  ctaPrimary: { label: 'Start Earning', href: '/signup' },
-  ctaSecondary: { label: 'Estimate My Payout', href: '#earnings-calculator' },
-  ctaCopy: 'Every idle hour is money left on the table. Turn that waste into passive income with rbee.',
 }
 
 // === ProvidersSolution Template ===
@@ -154,11 +156,22 @@ export const providersSolutionContainerProps: Omit<TemplateContainerProps, 'chil
   kicker: 'How rbee Works',
   title: 'Turn Idle GPUs Into Reliable Monthly Income',
   description:
-    'rbee connects your GPUs with developers who need compute. You set the price, control availability, and get paid automatically.',
-  bgVariant: 'secondary',
+    'rbee connects your spare GPU power to developers who need it. You set the price, we handle the rest.',
+  bgVariant: 'default',
   paddingY: '2xl',
   maxWidth: '7xl',
   align: 'center',
+  ctas: {
+    primary: {
+      label: 'Start Earning',
+      href: '/signup',
+      ariaLabel: 'Start earning with rbee',
+    },
+    secondary: {
+      label: 'Estimate My Payout',
+      href: '#earnings-calculator',
+    },
+  },
 }
 
 export const providersSolutionProps: SolutionTemplateProps = {
@@ -224,15 +237,6 @@ export const providersSolutionProps: SolutionTemplateProps = {
       },
     ],
     disclaimer: 'Actuals vary with demand, pricing, and availability. These are conservative estimates.',
-  },
-  ctaPrimary: {
-    label: 'Start Earning',
-    href: '/signup',
-    ariaLabel: 'Start earning with rbee',
-  },
-  ctaSecondary: {
-    label: 'Estimate My Payout',
-    href: '#earnings-calculator',
   },
 }
 

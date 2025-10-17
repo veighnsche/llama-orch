@@ -140,10 +140,15 @@ export const problemTemplateContainerProps: Omit<TemplateContainerProps, 'childr
   title: 'The Hidden Risk of AI-Assisted Development',
   description:
     "You're building complex codebases with AI assistance. But what happens when your provider changes the rules?",
-  bgVariant: 'background',
+  bgVariant: 'destructive-gradient',
   paddingY: '2xl',
   maxWidth: '6xl',
   align: 'center',
+  ctaBanner: {
+    copy: 'Stop depending on external AI providers. Build your own AI infrastructure with rbee—your hardware, your models, your control.',
+    primary: { label: 'Get Started Free', href: '/getting-started' },
+    secondary: { label: 'View Documentation', href: '/docs' },
+  },
 }
 
 /**
@@ -173,10 +178,6 @@ export const problemTemplateProps: ProblemTemplateProps = {
       tag: 'Critical failure',
     },
   ],
-  ctaPrimary: { label: 'Take Control', href: '/getting-started' },
-  ctaSecondary: { label: 'View Documentation', href: '/docs' },
-  ctaCopy:
-    'Heavy, complicated codebases built with AI assistance are a ticking time bomb if you depend on external providers.',
 }
 
 // === Solution Template ===
@@ -192,6 +193,16 @@ export const solutionTemplateContainerProps: Omit<TemplateContainerProps, 'child
   paddingY: '2xl',
   maxWidth: '7xl',
   align: 'center',
+  ctas: {
+    primary: {
+      label: 'Get Started',
+      href: '/getting-started',
+    },
+    secondary: {
+      label: 'View Documentation',
+      href: '/docs',
+    },
+  },
 }
 
 /**
@@ -267,14 +278,6 @@ const response = await client.chat
       </CardContent>
     </Card>
   ),
-  ctaPrimary: {
-    label: 'Get Started',
-    href: '/getting-started',
-  },
-  ctaSecondary: {
-    label: 'View Documentation',
-    href: '/docs',
-  },
 }
 
 // === How It Works Template ===

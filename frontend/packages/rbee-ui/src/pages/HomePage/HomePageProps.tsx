@@ -354,6 +354,11 @@ export const problemTemplateContainerProps: Omit<
   paddingY: "xl",
   maxWidth: "7xl",
   align: "center",
+  ctaBanner: {
+    copy: 'Take back control. Run AI on your own hardware with rbee—no subscriptions, no vendor lock-in, just your infrastructure.',
+    primary: { label: 'Get Started Free', href: '/getting-started' },
+    secondary: { label: 'View Documentation', href: '/docs' },
+  },
 };
 
 /**

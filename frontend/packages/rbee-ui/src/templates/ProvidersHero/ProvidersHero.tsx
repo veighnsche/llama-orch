@@ -1,11 +1,10 @@
 'use client'
 
 import { Badge } from '@rbee/ui/atoms/Badge'
-import { Button } from '@rbee/ui/atoms/Button'
 import { Card, CardAction, CardContent } from '@rbee/ui/atoms/Card'
-import { GPUListItem, IconCardHeader, MetricCard, StatsGrid } from '@rbee/ui/molecules'
+import { HeroTemplate } from '@rbee/ui/templates/HeroTemplate'
+import { GPUListItem, IconCardHeader, MetricCard } from '@rbee/ui/molecules'
 import { MonthlyEarningsPanel } from '@rbee/ui/organisms'
-import Link from 'next/link'
 import type * as React from 'react'
 
 // ────────────────────────────────────────────────────────────────────────────
@@ -81,127 +80,113 @@ export function ProvidersHero({
   trustLine,
   dashboard,
 }: ProvidersHeroProps) {
-  return (
-    <section className="relative overflow-hidden bg-gradient-to-b from-background via-card to-background px-6 py-20 lg:py-28">
-      {/* Background layer: subtle grid + beam */}
-      <div className="absolute inset-0 bg-[radial-gradient(60rem_40rem_at_-10%_-20%,theme(colors.primary/15),transparent)]" />
-      <div
-        className="absolute inset-0 opacity-[0.15]"
-        style={{
-          backgroundImage: `radial-gradient(circle at 1px 1px, rgb(148 163 184 / 0.15) 1px, transparent 0)`,
-          backgroundSize: '40px 40px',
-        }}
-      />
+  const asideContent = (
+    <div className="flex items-center justify-center animate-in fade-in slide-in-from-bottom-2 delay-200 duration-700">
+      <div className="relative w-full max-w-md lg:max-w-lg">
+        {/* Glow effect */}
+        <div className="absolute -inset-4 rounded-2xl bg-primary/20 blur-3xl" />
 
-      <div className="relative mx-auto max-w-7xl">
-        <div className="grid gap-12 lg:grid-cols-[1.1fr_0.9fr] lg:gap-16">
-          {/* Left: Messaging */}
-          <div className="flex flex-col justify-center animate-in fade-in slide-in-from-bottom-2 duration-700">
-            {/* Kicker badge */}
-            <Badge className="mb-5 w-fit animate-in fade-in zoom-in-95 duration-500" variant="outline">
-              {kickerIcon}
-              {kickerText}
+        {/* Card shell */}
+        <Card className="relative bg-card/70 shadow-[0_10px_40px_-12px_rgb(0_0_0_/_0.35)] backdrop-blur">
+          {/* Card header */}
+          <IconCardHeader
+            icon={dashboard.icon}
+            title={dashboard.title}
+            iconSize="md"
+            iconTone="primary"
+            titleClassName="text-sm font-medium text-muted-foreground"
+            className="pb-5"
+          />
+          <CardAction className="absolute right-6 top-6">
+            <Badge className="bg-emerald-500/15 text-emerald-400 border-emerald-400/30" variant="outline">
+              {dashboard.statusBadge}
             </Badge>
+          </CardAction>
 
-            {/* Headline */}
-            <h1 className="mb-4 text-balance text-5xl font-extrabold leading-[1.05] tracking-tight text-foreground lg:text-6xl">
-              {headline}
-            </h1>
+          <CardContent>
+            {/* This Month panel */}
+            <MonthlyEarningsPanel
+              monthLabel={dashboard.monthLabel}
+              monthEarnings={dashboard.monthEarnings}
+              monthGrowth={dashboard.monthGrowth}
+              progressPercentage={dashboard.progressPercentage}
+              className="mb-5"
+            />
 
-            {/* Supporting line */}
-            <p className="mb-6 text-pretty text-lg leading-snug text-muted-foreground">{supportingText}</p>
-
-            {/* Value bullets (stat pills) */}
-            <StatsGrid variant="pills" columns={3} className="mb-6" stats={stats} />
-
-            {/* Primary CTAs */}
-            <div className="mb-5 flex flex-col gap-3 sm:flex-row">
-              <Button
-                size="lg"
-                className="bg-primary text-primary-foreground transition-transform hover:bg-primary/90 active:scale-[0.98] animate-in fade-in slide-in-from-bottom-2 delay-150 duration-700"
-                aria-label={primaryCTA.ariaLabel}
-              >
-                {primaryCTA.label}
-                <span className="ml-2">→</span>
-              </Button>
-              <Button
-                size="lg"
-                variant="outline"
-                className="border-border transition-transform hover:bg-secondary active:scale-[0.98]"
-                asChild
-              >
-                <Link href={secondaryCTA.href}>{secondaryCTA.label}</Link>
-              </Button>
+            {/* KPIs row */}
+            <div className="mb-6 grid grid-cols-2 gap-3">
+              <MetricCard label="Total Hours" value={dashboard.totalHours} />
+              <MetricCard label="Avg Rate" value={dashboard.avgRate} />
             </div>
 
-            {/* Micro-trust row */}
-            <p className="text-sm text-muted-foreground">{trustLine}</p>
-          </div>
+            {/* GPU list */}
+            <div className="space-y-2">
+              <div className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                {dashboard.gpuListTitle}
+              </div>
 
-          {/* Right: Earnings Dashboard Visual */}
-          <div className="flex items-center justify-center animate-in fade-in slide-in-from-bottom-2 delay-200 duration-700">
-            <div className="relative w-full max-w-md lg:max-w-lg">
-              {/* Glow effect */}
-              <div className="absolute -inset-4 rounded-2xl bg-primary/20 blur-3xl" />
-
-              {/* Card shell */}
-              <Card className="relative bg-card/70 shadow-[0_10px_40px_-12px_rgb(0_0_0_/_0.35)] backdrop-blur">
-                {/* Card header */}
-                <IconCardHeader
-                  icon={dashboard.icon}
-                  title={dashboard.title}
-                  iconSize="md"
-                  iconTone="primary"
-                  titleClassName="text-sm font-medium text-muted-foreground"
-                  className="pb-5"
+              {dashboard.gpus.map((gpu, idx) => (
+                <GPUListItem
+                  key={idx}
+                  name={gpu.name}
+                  subtitle={gpu.location}
+                  value={gpu.earnings}
+                  label="this month"
+                  status={gpu.status}
+                  statusColor="bg-emerald-400"
+                  className="group cursor-pointer transition-all hover:translate-x-0.5 hover:bg-background/70"
                 />
-                <CardAction className="absolute right-6 top-6">
-                  <Badge className="bg-emerald-500/15 text-emerald-400 border-emerald-400/30" variant="outline">
-                    {dashboard.statusBadge}
-                  </Badge>
-                </CardAction>
-
-                <CardContent>
-                  {/* This Month panel */}
-                  <MonthlyEarningsPanel
-                    monthLabel={dashboard.monthLabel}
-                    monthEarnings={dashboard.monthEarnings}
-                    monthGrowth={dashboard.monthGrowth}
-                    progressPercentage={dashboard.progressPercentage}
-                    className="mb-5"
-                  />
-
-                  {/* KPIs row */}
-                  <div className="mb-6 grid grid-cols-2 gap-3">
-                    <MetricCard label="Total Hours" value={dashboard.totalHours} />
-                    <MetricCard label="Avg Rate" value={dashboard.avgRate} />
-                  </div>
-
-                  {/* GPU list */}
-                  <div className="space-y-2">
-                    <div className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-                      {dashboard.gpuListTitle}
-                    </div>
-
-                    {dashboard.gpus.map((gpu, idx) => (
-                      <GPUListItem
-                        key={idx}
-                        name={gpu.name}
-                        subtitle={gpu.location}
-                        value={gpu.earnings}
-                        label="this month"
-                        status={gpu.status}
-                        statusColor="bg-emerald-400"
-                        className="group cursor-pointer transition-all hover:translate-x-0.5 hover:bg-background/70"
-                      />
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
+              ))}
             </div>
-          </div>
-        </div>
+          </CardContent>
+        </Card>
       </div>
-    </section>
+    </div>
+  )
+
+  return (
+    <HeroTemplate
+      badge={{ variant: 'icon', text: kickerText, icon: kickerIcon }}
+      headline={{ variant: 'simple', content: headline }}
+      subcopy={supportingText}
+      subcopyMaxWidth="medium"
+      proofElements={{
+        variant: 'stats-pills',
+        items: stats,
+        columns: 3,
+      }}
+      ctas={{
+        primary: {
+          label: (
+            <>
+              {primaryCTA.label}
+              <span className="ml-2">→</span>
+            </>
+          ) as any,
+          ariaLabel: primaryCTA.ariaLabel,
+        },
+        secondary: {
+          label: secondaryCTA.label,
+          href: secondaryCTA.href,
+          variant: 'outline',
+        },
+      }}
+      trustElements={{
+        variant: 'text',
+        text: trustLine,
+      }}
+      aside={asideContent}
+      asideAriaLabel="Earnings dashboard showing monthly income from GPU rentals"
+      background={{
+        variant: 'custom',
+        className:
+          'absolute inset-0 bg-[radial-gradient(60rem_40rem_at_-10%_-20%,theme(colors.primary/15),transparent)]',
+      }}
+      padding="spacious"
+      layout={{
+        leftCols: 7,
+        rightCols: 5,
+      }}
+    />
   )
 }

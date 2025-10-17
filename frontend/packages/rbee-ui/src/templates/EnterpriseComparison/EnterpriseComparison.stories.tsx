@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react'
+import { FEATURES, PROVIDERS } from '@rbee/ui/data/enterprise-comparison'
 import { EnterpriseComparison } from './EnterpriseComparison'
 
 // Created by: TEAM-004
@@ -138,6 +139,11 @@ export default meta
 type Story = StoryObj<typeof meta>
 
 export const EnterprisePageDefault: Story = {
+  args: {
+    providers: PROVIDERS,
+    features: FEATURES,
+    footnote: '* Comparison based on publicly available information as of October 2025.',
+  },
   parameters: {
     docs: {
       description: {
@@ -149,6 +155,11 @@ export const EnterprisePageDefault: Story = {
 }
 
 export const VsAzureOpenAI: Story = {
+  args: {
+    providers: PROVIDERS,
+    features: FEATURES,
+    footnote: '* Comparison based on publicly available information as of October 2025.',
+  },
   parameters: {
     docs: {
       description: {
@@ -160,6 +171,11 @@ export const VsAzureOpenAI: Story = {
 }
 
 export const VsAWSBedrock: Story = {
+  args: {
+    providers: PROVIDERS,
+    features: FEATURES,
+    footnote: '* Comparison based on publicly available information as of October 2025.',
+  },
   parameters: {
     docs: {
       description: {

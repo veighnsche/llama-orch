@@ -1,9 +1,7 @@
 'use client'
 
-import { Button } from '@rbee/ui/atoms/Button'
 import { FeatureInfoCard } from '@rbee/ui/molecules'
 import { cn } from '@rbee/ui/utils'
-import Link from 'next/link'
 import type * as React from 'react'
 
 // ──────────────────────────────────────────────────────────────────────────────
@@ -43,12 +41,6 @@ export type ProblemItem = {
 export type ProblemTemplateProps = {
   /** Array of problem items to display */
   items: ProblemItem[]
-  /** Primary CTA button configuration */
-  ctaPrimary?: { label: string; href: string }
-  /** Secondary CTA button configuration */
-  ctaSecondary?: { label: string; href: string }
-  /** Copy text above the CTA buttons */
-  ctaCopy?: string
   /** Custom class name for the root element */
   className?: string
   /** Custom class name for the grid */
@@ -59,14 +51,7 @@ export type ProblemTemplateProps = {
 // Main Component
 // ──────────────────────────────────────────────────────────────────────────────
 
-export function ProblemTemplate({
-  items,
-  ctaPrimary,
-  ctaSecondary,
-  ctaCopy,
-  className,
-  gridClassName,
-}: ProblemTemplateProps) {
+export function ProblemTemplate({ items, className, gridClassName }: ProblemTemplateProps) {
   return (
     <div className={className}>
       {/* Grid of Problem Cards */}
@@ -85,30 +70,6 @@ export function ProblemTemplate({
           />
         ))}
       </div>
-
-      {/* CTA Banner */}
-      {(ctaCopy || ctaPrimary || ctaSecondary) && (
-        <div className="mt-10 rounded-2xl border border-border bg-card/60 p-6 text-center sm:mt-12 sm:p-7 animate-in fade-in slide-in-from-bottom-2 motion-reduce:animate-none delay-300">
-          {ctaCopy && <p className="text-balance text-lg font-medium text-foreground">{ctaCopy}</p>}
-          <div className="mt-4 flex flex-col items-center gap-3 sm:mt-5 sm:flex-row sm:justify-center">
-            {ctaPrimary && (
-              <Button asChild size="lg" className="animate-in fade-in motion-reduce:animate-none delay-150">
-                <Link href={ctaPrimary.href}>{ctaPrimary.label}</Link>
-              </Button>
-            )}
-            {ctaSecondary && (
-              <Button
-                asChild
-                variant="outline"
-                size="lg"
-                className="animate-in fade-in motion-reduce:animate-none delay-150"
-              >
-                <Link href={ctaSecondary.href}>{ctaSecondary.label}</Link>
-              </Button>
-            )}
-          </div>
-        </div>
-      )}
     </div>
   )
 }
