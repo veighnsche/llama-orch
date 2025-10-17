@@ -4,6 +4,7 @@ import { Badge } from '@rbee/ui/atoms/Badge'
 import { Button } from '@rbee/ui/atoms/Button'
 import { Input } from '@rbee/ui/atoms/Input'
 import { BeeGlyph, HomelabBee } from '@rbee/ui/icons'
+import { TemplateContainer } from '@rbee/ui/molecules'
 import { CheckCircle2, GitBranch, Lock, Mail } from 'lucide-react'
 import type React from 'react'
 import { useState } from 'react'
@@ -82,17 +83,26 @@ export function EmailCapture({
     }, autoResetDelay)
   }
 
-  return (
-    <section className="relative isolate py-28 bg-background">
-      {/* Decorative bee glyphs */}
-      {showBeeGlyphs && (
-        <>
-          <BeeGlyph className="absolute top-16 left-[8%] opacity-5 pointer-events-none" />
-          <BeeGlyph className="absolute bottom-20 right-[10%] opacity-5 pointer-events-none" />
-        </>
-      )}
+  // Prepare decoration with bee glyphs
+  const decoration = showBeeGlyphs ? (
+    <>
+      <BeeGlyph className="absolute top-16 left-[8%] opacity-5 pointer-events-none" />
+      <BeeGlyph className="absolute bottom-20 right-[10%] opacity-5 pointer-events-none" />
+    </>
+  ) : undefined
 
-      <div className="relative max-w-3xl mx-auto px-6 text-center">
+  return (
+    <TemplateContainer
+      title={null}
+      background={{
+        variant: 'background',
+        decoration,
+      }}
+      paddingY="2xl"
+      maxWidth="3xl"
+      align="center"
+    >
+      <div className="relative text-center">
         {/* Status badge */}
         {badge && (
           <Badge
@@ -205,6 +215,6 @@ export function EmailCapture({
           </div>
         )}
       </div>
-    </section>
+    </TemplateContainer>
   )
 }
