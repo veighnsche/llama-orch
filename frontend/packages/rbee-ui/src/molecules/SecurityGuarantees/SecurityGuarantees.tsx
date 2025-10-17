@@ -1,4 +1,5 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@rbee/ui/atoms'
+import { StatsGrid } from '@rbee/ui/molecules'
 
 // ──────────────────────────────────────────────────────────────────────────────
 // Types
@@ -28,16 +29,16 @@ export function SecurityGuarantees({ heading, stats, footnote, className }: Secu
         <CardTitle className="text-2xl">{heading}</CardTitle>
       </CardHeader>
       <CardContent>
-        <div className="grid gap-6 md:grid-cols-3">
-          {stats.map((stat, idx) => (
-            <div key={idx} className="text-center">
-              <div className="mb-2 text-3xl font-bold text-primary" aria-label={stat.ariaLabel}>
-                {stat.value}
-              </div>
-              <div className="text-sm text-foreground/85">{stat.label}</div>
-            </div>
-          ))}
-        </div>
+        <StatsGrid
+          stats={stats.map((stat) => ({
+            value: stat.value,
+            label: stat.label,
+            helpText: stat.ariaLabel,
+            valueTone: 'primary' as const,
+          }))}
+          variant="cards"
+          columns={3}
+        />
         <p className="mt-6 text-center text-xs text-muted-foreground">{footnote}</p>
       </CardContent>
     </Card>

@@ -1,4 +1,5 @@
-import { enterpriseFeaturesProps } from '@rbee/ui/pages/EnterprisePage'
+import { enterpriseFeaturesContainerProps, enterpriseFeaturesProps } from '@rbee/ui/pages/EnterprisePage'
+import { TemplateContainer } from '@rbee/ui/molecules'
 import type { Meta, StoryObj } from '@storybook/react'
 import { EnterpriseFeatures } from './EnterpriseFeatures'
 
@@ -21,5 +22,10 @@ type Story = StoryObj<typeof meta>
  * - Security and compliance focus
  */
 export const OnEnterprisePage: Story = {
+  render: (args) => (
+    <TemplateContainer {...enterpriseFeaturesContainerProps}>
+      <EnterpriseFeatures {...args} />
+    </TemplateContainer>
+  ),
   args: enterpriseFeaturesProps,
 }

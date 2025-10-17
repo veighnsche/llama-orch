@@ -14,5 +14,6 @@ export * from './MontlyEarningsPanel/MonthlyEarningsPanel'
 export * from './Navigation'
 export * from './ProvidersCaseCard/ProvidersCaseCard'
 export * from './SecurityCard/SecurityCard'
+export * from './TimelineCard/TimelineCard'
 // Home organisms
 export * from './TopologyDiagram'

@@ -1,5 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react'
-import { multiBackendGpuProps } from '../../pages/FeaturesPage/FeaturesPageProps'
+import { multiBackendGpuContainerProps, multiBackendGpuProps } from '../../pages/FeaturesPage/FeaturesPageProps'
+import { TemplateContainer } from '@rbee/ui/molecules'
 import { MultiBackendGpuTemplate } from './MultiBackendGpuTemplate'
 
 const meta: Meta<typeof MultiBackendGpuTemplate> = {
@@ -14,5 +15,10 @@ export default meta
 type Story = StoryObj<typeof MultiBackendGpuTemplate>
 
 export const OnFeaturesPage: Story = {
+  render: (args) => (
+    <TemplateContainer {...multiBackendGpuContainerProps}>
+      <MultiBackendGpuTemplate {...args} />
+    </TemplateContainer>
+  ),
   args: multiBackendGpuProps,
 }

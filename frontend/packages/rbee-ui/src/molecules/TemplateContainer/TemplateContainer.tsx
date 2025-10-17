@@ -1,5 +1,7 @@
 import { Button } from "@rbee/ui/atoms";
+import { CTARail } from "@rbee/ui/molecules/CTARail";
 import { Disclaimer } from "@rbee/ui/molecules/Disclaimer";
+import { SecurityGuarantees } from "@rbee/ui/molecules/SecurityGuarantees";
 import { cn } from "@rbee/ui/utils";
 import { Shield } from "lucide-react";
 import type { ReactNode } from "react";
@@ -86,6 +88,40 @@ export interface TemplateContainerProps {
     /** Secondary CTA button */
     secondary?: { label: string; href: string; ariaLabel?: string };
   };
+  /** Optional CTA rail (appears after children, uses CTARail molecule) */
+  ctaRail?: {
+    /** Main heading text */
+    heading: string;
+    /** Optional description text */
+    description?: string;
+    /** CTA buttons */
+    buttons: Array<{
+      text: string;
+      href: string;
+      variant?: "default" | "outline";
+      ariaLabel?: string;
+    }>;
+    /** Optional footer links with bullet separators */
+    links?: Array<{
+      text: string;
+      href: string;
+    }>;
+    /** Optional footnote text */
+    footnote?: string;
+  };
+  /** Optional security guarantees (appears after children, uses SecurityGuarantees molecule) */
+  securityGuarantees?: {
+    /** Main heading text */
+    heading: string;
+    /** Stats to display */
+    stats: Array<{
+      value: string;
+      label: string;
+      ariaLabel?: string;
+    }>;
+    /** Footnote text */
+    footnote: string;
+  };
 }
 
 const bgClasses = {
@@ -162,6 +198,8 @@ export function TemplateContainer({
   ribbon,
   backgroundDecoration,
   ctaBanner,
+  ctaRail,
+  securityGuarantees,
 }: TemplateContainerProps) {
   // Resolve alignment: prefer align prop, fallback to centered
   const resolvedAlign = align ?? (centered ? "center" : "start");
@@ -266,6 +304,42 @@ export function TemplateContainer({
         )}
 
         {children}
+
+        {/* Security Guarantees */}
+        {securityGuarantees && (
+          <div
+            className={cn(
+              "mt-10 animate-in fade-in slide-in-from-bottom-2 motion-reduce:animate-none delay-300",
+              maxWidthClasses[maxWidth],
+              "mx-auto"
+            )}
+          >
+            <SecurityGuarantees
+              heading={securityGuarantees.heading}
+              stats={securityGuarantees.stats}
+              footnote={securityGuarantees.footnote}
+            />
+          </div>
+        )}
+
+        {/* CTA Rail */}
+        {ctaRail && (
+          <div
+            className={cn(
+              "mt-10 animate-in fade-in slide-in-from-bottom-2 motion-reduce:animate-none delay-300",
+              maxWidthClasses[maxWidth],
+              "mx-auto"
+            )}
+          >
+            <CTARail
+              heading={ctaRail.heading}
+              description={ctaRail.description}
+              buttons={ctaRail.buttons}
+              links={ctaRail.links}
+              footnote={ctaRail.footnote}
+            />
+          </div>
+        )}
 
         {/* CTA Banner */}
         {ctaBanner && (ctaBanner.copy || ctaBanner.primary || ctaBanner.secondary) && (

@@ -1,4 +1,5 @@
-import { enterpriseComplianceProps } from '@rbee/ui/pages/EnterprisePage'
+import { enterpriseComplianceContainerProps, enterpriseComplianceProps } from '@rbee/ui/pages/EnterprisePage'
+import { TemplateContainer } from '@rbee/ui/molecules'
 import type { Meta, StoryObj } from '@storybook/react'
 import { EnterpriseCompliance } from './EnterpriseCompliance'
 
@@ -21,5 +22,10 @@ type Story = StoryObj<typeof meta>
  * - Audit retention and data residency
  */
 export const OnEnterprisePage: Story = {
+  render: (args) => (
+    <TemplateContainer {...enterpriseComplianceContainerProps}>
+      <EnterpriseCompliance {...args} />
+    </TemplateContainer>
+  ),
   args: enterpriseComplianceProps,
 }

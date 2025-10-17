@@ -38,12 +38,12 @@ export interface IconCardHeaderProps {
 /**
  * IconCardHeader molecule - reusable card header with icon, title, and optional subtitle
  * Always wraps content in CardHeader with CardTitle and CardDescription
- * 
+ *
  * @example
  * <Card className="p-8">
- *   <IconCardHeader 
- *     icon={<Database />} 
- *     title="My Title" 
+ *   <IconCardHeader
+ *     icon={<Database />}
+ *     title="My Title"
  *     subtitle="Description"
  *   />
  *   <CardContent className="p-0">...</CardContent>
@@ -73,7 +73,7 @@ export function IconCardHeader({
           icon={icon}
           size={iconSize}
           tone={iconTone}
-          className="shrink-0 translate-y-1"
+          className={cn("shrink-0", iconSize === "sm" ? "" : "ranslate-y-1")}
           shape="rounded"
         />
         <div className="flex-1">

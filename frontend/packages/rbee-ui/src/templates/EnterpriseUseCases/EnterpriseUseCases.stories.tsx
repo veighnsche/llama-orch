@@ -1,4 +1,5 @@
-import { enterpriseUseCasesProps } from '@rbee/ui/pages/EnterprisePage'
+import { enterpriseUseCasesContainerProps, enterpriseUseCasesProps } from '@rbee/ui/pages/EnterprisePage'
+import { TemplateContainer } from '@rbee/ui/molecules'
 import type { Meta, StoryObj } from '@storybook/react'
 import { EnterpriseUseCases } from './EnterpriseUseCases'
 
@@ -21,5 +22,10 @@ type Story = StoryObj<typeof meta>
  * - Sector-specific compliance requirements
  */
 export const OnEnterprisePage: Story = {
+  render: (args) => (
+    <TemplateContainer {...enterpriseUseCasesContainerProps}>
+      <EnterpriseUseCases {...args} />
+    </TemplateContainer>
+  ),
   args: enterpriseUseCasesProps,
 }

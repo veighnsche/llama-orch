@@ -1,4 +1,5 @@
-import { comparisonTemplateProps } from '@rbee/ui/pages/HomePage'
+import { comparisonTemplateContainerProps, comparisonTemplateProps } from '@rbee/ui/pages/HomePage'
+import { TemplateContainer } from '@rbee/ui/molecules'
 import type { Meta, StoryObj } from '@storybook/react'
 import { ComparisonTemplate } from './ComparisonTemplate'
 
@@ -22,5 +23,10 @@ type Story = StoryObj<typeof meta>
  * - Two CTAs at bottom
  */
 export const OnHomePage: Story = {
+  render: (args) => (
+    <TemplateContainer {...comparisonTemplateContainerProps}>
+      <ComparisonTemplate {...args} />
+    </TemplateContainer>
+  ),
   args: comparisonTemplateProps,
 }

@@ -1,4 +1,5 @@
 import { StepCard } from '@rbee/ui/molecules'
+import { TimelineCard } from '@rbee/ui/organisms'
 import Image from 'next/image'
 import type * as React from 'react'
 
@@ -75,28 +76,12 @@ export function EnterpriseHowItWorks({
 
           {/* Sticky Timeline Panel */}
           <div className="animate-in fade-in-50 slide-in-from-right-2 [animation-delay:200ms] lg:sticky lg:top-24 lg:self-start">
-            <div className="rounded-2xl border border-primary/20 bg-primary/5 p-6">
-              <h3 className="mb-2 text-xl font-semibold text-foreground">{timeline.heading}</h3>
-              <p className="mb-6 text-sm text-muted-foreground">{timeline.description}</p>
-
-              {/* Progress bar */}
-              <div className="mb-6 h-1 rounded bg-border">
-                <div className="h-full w-1/4 rounded bg-primary" aria-hidden="true" />
-              </div>
-
-              {/* Week chips */}
-              <ol className="space-y-3">
-                {timeline.weeks.map((week, idx) => (
-                  <li
-                    key={idx}
-                    className="rounded-xl border bg-background px-3 py-2 transition-colors hover:bg-secondary"
-                  >
-                    <div className="text-sm font-semibold text-primary">{week.week}</div>
-                    <div className="text-xs text-muted-foreground">{week.phase}</div>
-                  </li>
-                ))}
-              </ol>
-            </div>
+            <TimelineCard
+              heading={timeline.heading}
+              description={timeline.description}
+              progress={25}
+              weeks={timeline.weeks}
+            />
           </div>
         </div>
       </div>

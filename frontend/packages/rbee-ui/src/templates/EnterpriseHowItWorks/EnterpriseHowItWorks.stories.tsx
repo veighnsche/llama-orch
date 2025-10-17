@@ -1,4 +1,5 @@
-import { enterpriseHowItWorksProps } from '@rbee/ui/pages/EnterprisePage'
+import { enterpriseHowItWorksContainerProps, enterpriseHowItWorksProps } from '@rbee/ui/pages/EnterprisePage'
+import { TemplateContainer } from '@rbee/ui/molecules'
 import type { Meta, StoryObj } from '@storybook/react'
 import { EnterpriseHowItWorks } from './EnterpriseHowItWorks'
 
@@ -21,5 +22,10 @@ type Story = StoryObj<typeof meta>
  * - Enterprise onboarding flow
  */
 export const OnEnterprisePage: Story = {
+  render: (args) => (
+    <TemplateContainer {...enterpriseHowItWorksContainerProps}>
+      <EnterpriseHowItWorks {...args} />
+    </TemplateContainer>
+  ),
   args: enterpriseHowItWorksProps,
 }

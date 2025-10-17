@@ -1,4 +1,5 @@
-import { useCasesTemplateProps } from '@rbee/ui/pages/HomePage'
+import { useCasesTemplateContainerProps, useCasesTemplateProps } from '@rbee/ui/pages/HomePage'
+import { TemplateContainer } from '@rbee/ui/molecules'
 import type { Meta, StoryObj } from '@storybook/react'
 import { UseCasesTemplate } from './UseCasesTemplate'
 
@@ -32,5 +33,10 @@ type Story = StoryObj<typeof meta>
  * - Each card has scenario, solution, outcome
  */
 export const OnHomePage: Story = {
+  render: (args) => (
+    <TemplateContainer {...useCasesTemplateContainerProps}>
+      <UseCasesTemplate {...args} />
+    </TemplateContainer>
+  ),
   args: useCasesTemplateProps,
 }

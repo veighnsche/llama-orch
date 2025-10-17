@@ -478,6 +478,27 @@ export const enterpriseSecurityContainerProps: Omit<TemplateContainerProps, 'chi
   paddingY: '2xl',
   maxWidth: '7xl',
   align: 'center',
+  securityGuarantees: {
+    heading: 'Security Guarantees',
+    stats: [
+      {
+        value: '< 10%',
+        label: 'Timing variance (constant-time)',
+        ariaLabel: 'Less than 10 percent timing variance',
+      },
+      {
+        value: '100%',
+        label: 'Token fingerprinting (no raw tokens)',
+        ariaLabel: '100 percent token fingerprinting',
+      },
+      {
+        value: 'Zero',
+        label: 'Memory leaks (zeroization on drop)',
+        ariaLabel: 'Zero memory leaks',
+      },
+    ],
+    footnote: 'Figures represent default crate configurations; tune in policy for your environment.',
+  },
 }
 
 /**
@@ -569,27 +590,6 @@ export const enterpriseSecurityProps: EnterpriseSecurityProps = {
       docsHref: '/docs/security/deadline-propagation',
     },
   ],
-  guarantees: {
-    heading: 'Security Guarantees',
-    stats: [
-      {
-        value: '< 10%',
-        label: 'Timing variance (constant-time)',
-        ariaLabel: 'Less than 10 percent timing variance',
-      },
-      {
-        value: '100%',
-        label: 'Token fingerprinting (no raw tokens)',
-        ariaLabel: '100 percent token fingerprinting',
-      },
-      {
-        value: 'Zero',
-        label: 'Memory leaks (zeroization on drop)',
-        ariaLabel: 'Zero memory leaks',
-      },
-    ],
-    footnote: 'Figures represent default crate configurations; tune in policy for your environment.',
-  },
 }
 
 // === Enterprise How It Works ===
@@ -686,7 +686,7 @@ export const enterpriseHowItWorksProps: EnterpriseHowItWorksProps = {
 /**
  * Enterprise Use Cases container - wraps the industry playbooks section
  */
-export const enterpriseUseCasesContainerProps: Omit<TemplateContainerProps, 'children'> = {
+export const enterpriseUseCasesContainerProps: TemplateContainerProps = {
   kicker: 'Industry Playbooks',
   title: 'Built for Regulated Industries',
   description:
@@ -695,6 +695,27 @@ export const enterpriseUseCasesContainerProps: Omit<TemplateContainerProps, 'chi
   paddingY: '2xl',
   maxWidth: '7xl',
   align: 'center',
+  ctaRail: {
+    heading: 'See how rbee fits your sector.',
+    buttons: [
+      {
+        text: 'Request Industry Brief',
+        href: '/contact/industry-brief',
+        variant: 'default',
+      },
+      {
+        text: 'Talk to a Solutions Architect',
+        href: '/contact/solutions',
+        variant: 'outline',
+      },
+    ],
+    links: [
+      { text: 'Finance', href: '/industries/finance' },
+      { text: 'Healthcare', href: '/industries/healthcare' },
+      { text: 'Legal', href: '/industries/legal' },
+      { text: 'Government', href: '/industries/government' },
+    ],
+  },
 }
 
 /**
@@ -762,27 +783,6 @@ export const enterpriseUseCasesProps: EnterpriseUseCasesProps = {
       href: '/industries/government',
     },
   ],
-  cta: {
-    text: 'See how rbee fits your sector.',
-    buttons: [
-      {
-        text: 'Request Industry Brief',
-        href: '/contact/industry-brief',
-        variant: 'default',
-      },
-      {
-        text: 'Talk to a Solutions Architect',
-        href: '/contact/solutions',
-        variant: 'outline',
-      },
-    ],
-    links: [
-      { text: 'Finance', href: '/industries/finance' },
-      { text: 'Healthcare', href: '/industries/healthcare' },
-      { text: 'Legal', href: '/industries/legal' },
-      { text: 'Government', href: '/industries/government' },
-    ],
-  },
 }
 
 // === Enterprise Comparison ===

@@ -1,4 +1,5 @@
-import { audienceSelectorProps } from '@rbee/ui/pages/HomePage'
+import { audienceSelectorContainerProps, audienceSelectorProps } from '@rbee/ui/pages/HomePage'
+import { TemplateContainer } from '@rbee/ui/molecules'
 import type { Meta, StoryObj } from '@storybook/react'
 import { AudienceSelector } from './AudienceSelector'
 
@@ -91,6 +92,11 @@ export default meta
 type Story = StoryObj<typeof meta>
 
 export const OnHomePage: Story = {
+  render: (args) => (
+    <TemplateContainer {...audienceSelectorContainerProps}>
+      <AudienceSelector {...args} />
+    </TemplateContainer>
+  ),
   args: audienceSelectorProps,
   parameters: {
     docs: {

@@ -1,4 +1,5 @@
-import { testimonialsTemplateProps } from '@rbee/ui/pages/HomePage'
+import { testimonialsTemplateContainerProps, testimonialsTemplateProps } from '@rbee/ui/pages/HomePage'
+import { TemplateContainer } from '@rbee/ui/molecules'
 import type { Meta, StoryObj } from '@storybook/react'
 import { TestimonialsTemplate } from './TestimonialsTemplate'
 
@@ -21,5 +22,10 @@ type Story = StoryObj<typeof meta>
  * - Emoji avatars
  */
 export const OnHomePage: Story = {
+  render: (args) => (
+    <TemplateContainer {...testimonialsTemplateContainerProps}>
+      <TestimonialsTemplate {...args} />
+    </TemplateContainer>
+  ),
   args: testimonialsTemplateProps,
 }

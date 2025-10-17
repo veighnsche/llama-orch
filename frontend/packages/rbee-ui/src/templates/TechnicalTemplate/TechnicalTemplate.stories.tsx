@@ -1,4 +1,5 @@
-import { technicalTemplateProps } from '@rbee/ui/pages/HomePage'
+import { technicalTemplateContainerProps, technicalTemplateProps } from '@rbee/ui/pages/HomePage'
+import { TemplateContainer } from '@rbee/ui/molecules'
 import type { Meta, StoryObj } from '@storybook/react'
 import { TechnicalTemplate } from './TechnicalTemplate'
 
@@ -23,5 +24,10 @@ type Story = StoryObj<typeof meta>
  * - GitHub and architecture links
  */
 export const OnHomePage: Story = {
+  render: (args) => (
+    <TemplateContainer {...technicalTemplateContainerProps}>
+      <TechnicalTemplate {...args} />
+    </TemplateContainer>
+  ),
   args: technicalTemplateProps,
 }

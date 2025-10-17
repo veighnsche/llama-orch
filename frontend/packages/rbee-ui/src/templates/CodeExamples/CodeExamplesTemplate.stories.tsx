@@ -1,4 +1,5 @@
-import { codeExamplesProps } from '@rbee/ui/pages/DevelopersPage'
+import { codeExamplesContainerProps, codeExamplesProps } from '@rbee/ui/pages/DevelopersPage'
+import { TemplateContainer } from '@rbee/ui/molecules'
 import type { Meta, StoryObj } from '@storybook/react'
 import { CodeExamplesTemplate } from './CodeExamplesTemplate'
 
@@ -21,5 +22,10 @@ type Story = StoryObj<typeof meta>
  * - Keyboard navigation support
  */
 export const OnDevelopersPage: Story = {
+  render: (args) => (
+    <TemplateContainer {...codeExamplesContainerProps}>
+      <CodeExamplesTemplate {...args} />
+    </TemplateContainer>
+  ),
   args: codeExamplesProps,
 }

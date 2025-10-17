@@ -1,4 +1,5 @@
-import { enterpriseTestimonialsProps } from '@rbee/ui/pages/EnterprisePage'
+import { enterpriseTestimonialsContainerProps, enterpriseTestimonialsProps } from '@rbee/ui/pages/EnterprisePage'
+import { TemplateContainer } from '@rbee/ui/molecules'
 import type { Meta, StoryObj } from '@storybook/react'
 import { EnterpriseTestimonials } from './EnterpriseTestimonials'
 
@@ -21,5 +22,10 @@ type Story = StoryObj<typeof meta>
  * - Compliance-focused social proof
  */
 export const OnEnterprisePage: Story = {
+  render: (args) => (
+    <TemplateContainer {...enterpriseTestimonialsContainerProps}>
+      <EnterpriseTestimonials {...args} />
+    </TemplateContainer>
+  ),
   args: enterpriseTestimonialsProps,
 }

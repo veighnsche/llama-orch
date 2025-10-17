@@ -1,4 +1,5 @@
-import { useCasesIndustryProps } from '@rbee/ui/pages/UseCasesPage'
+import { useCasesIndustryContainerProps, useCasesIndustryProps } from '@rbee/ui/pages/UseCasesPage'
+import { TemplateContainer } from '@rbee/ui/molecules'
 import type { Meta, StoryObj } from '@storybook/react'
 import { UseCasesIndustryTemplate } from './UseCasesIndustryTemplate'
 
@@ -20,5 +21,10 @@ type Story = StoryObj<typeof meta>
  * - Compliance badges (GDPR, HIPAA, ITAR, FERPA)
  */
 export const OnUseCasesPage: Story = {
+  render: (args) => (
+    <TemplateContainer {...useCasesIndustryContainerProps}>
+      <UseCasesIndustryTemplate {...args} />
+    </TemplateContainer>
+  ),
   args: useCasesIndustryProps,
 }

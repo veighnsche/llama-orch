@@ -1,8 +1,6 @@
-import { Button } from '@rbee/ui/atoms/Button'
 import { IndustryCaseCard } from '@rbee/ui/organisms'
 import Image from 'next/image'
-import Link from 'next/link'
-import React, { type ReactNode } from 'react'
+import { type ReactNode } from 'react'
 
 // ──────────────────────────────────────────────────────────────────────────────
 // Types
@@ -19,35 +17,19 @@ export type IndustryCase = {
   href: string
 }
 
-export type CTAButton = {
-  text: string
-  href: string
-  variant?: 'default' | 'outline'
-}
-
-export type IndustryLink = {
-  text: string
-  href: string
-}
-
 export type EnterpriseUseCasesProps = {
   backgroundImage: {
     src: string
     alt: string
   }
   industryCases: IndustryCase[]
-  cta: {
-    text: string
-    buttons: CTAButton[]
-    links: IndustryLink[]
-  }
 }
 
 // ──────────────────────────────────────────────────────────────────────────────
 // Main Component
 // ──────────────────────────────────────────────────────────────────────────────
 
-export function EnterpriseUseCases({ backgroundImage, industryCases, cta }: EnterpriseUseCasesProps) {
+export function EnterpriseUseCases({ backgroundImage, industryCases }: EnterpriseUseCasesProps) {
   return (
     <div className="relative">
       {/* Decorative background illustration */}
@@ -76,34 +58,6 @@ export function EnterpriseUseCases({ backgroundImage, industryCases, cta }: Ente
               href={industryCase.href}
             />
           ))}
-        </div>
-
-        {/* CTA Rail */}
-        <div className="animate-in fade-in-50 rounded-2xl border border-primary/20 bg-primary/5 p-6 text-center [animation-delay:200ms]">
-          <p className="mb-6 text-lg font-semibold text-foreground">{cta.text}</p>
-          <div className="flex flex-col items-center justify-center gap-3 sm:flex-row">
-            {cta.buttons.map((button, idx) => (
-              <Button
-                key={idx}
-                size="lg"
-                variant={button.variant}
-                asChild
-                className="transition-transform active:scale-[0.98]"
-              >
-                <Link href={button.href}>{button.text}</Link>
-              </Button>
-            ))}
-          </div>
-          <div className="mt-4 flex flex-wrap justify-center gap-3 text-sm text-muted-foreground">
-            {cta.links.map((link, idx) => (
-              <React.Fragment key={idx}>
-                {idx > 0 && <span>•</span>}
-                <Link href={link.href} className="hover:text-primary hover:underline">
-                  {link.text}
-                </Link>
-              </React.Fragment>
-            ))}
-          </div>
         </div>
       </div>
     </div>

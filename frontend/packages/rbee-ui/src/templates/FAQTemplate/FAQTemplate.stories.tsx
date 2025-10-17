@@ -1,5 +1,6 @@
-import { faqTemplateProps } from '@rbee/ui/pages/HomePage'
-import { pricingFaqProps } from '@rbee/ui/pages/PricingPage'
+import { faqTemplateContainerProps, faqTemplateProps } from '@rbee/ui/pages/HomePage'
+import { pricingFaqContainerProps, pricingFaqProps } from '@rbee/ui/pages/PricingPage'
+import { TemplateContainer } from '@rbee/ui/molecules'
 import type { Meta, StoryObj } from '@storybook/react'
 import { FAQTemplate } from './FAQTemplate'
 
@@ -24,6 +25,11 @@ type Story = StoryObj<typeof meta>
  * - Links to GitHub discussions, setup guide, email support
  */
 export const OnHomePage: Story = {
+  render: (args) => (
+    <TemplateContainer {...faqTemplateContainerProps}>
+      <FAQTemplate {...args} />
+    </TemplateContainer>
+  ),
   args: faqTemplateProps,
 }
 
@@ -36,5 +42,10 @@ export const OnHomePage: Story = {
  * - Questions about free tier, upgrades, payment methods, discounts, trials
  */
 export const OnPricingPage: Story = {
+  render: (args) => (
+    <TemplateContainer {...pricingFaqContainerProps}>
+      <FAQTemplate {...args} />
+    </TemplateContainer>
+  ),
   args: pricingFaqProps,
 }

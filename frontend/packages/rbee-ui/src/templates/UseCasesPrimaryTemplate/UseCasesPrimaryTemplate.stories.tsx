@@ -1,4 +1,5 @@
-import { useCasesPrimaryProps } from '@rbee/ui/pages/UseCasesPage'
+import { useCasesPrimaryContainerProps, useCasesPrimaryProps } from '@rbee/ui/pages/UseCasesPage'
+import { TemplateContainer } from '@rbee/ui/molecules'
 import type { Meta, StoryObj } from '@storybook/react'
 import { UseCasesPrimaryTemplate } from './UseCasesPrimaryTemplate'
 
@@ -20,5 +21,10 @@ type Story = StoryObj<typeof meta>
  * - Each card has icon, scenario, solution, outcome, and highlights
  */
 export const OnUseCasesPage: Story = {
+  render: (args) => (
+    <TemplateContainer {...useCasesPrimaryContainerProps}>
+      <UseCasesPrimaryTemplate {...args} />
+    </TemplateContainer>
+  ),
   args: useCasesPrimaryProps,
 }

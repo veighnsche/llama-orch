@@ -1,4 +1,5 @@
-import { pricingComparisonProps } from '@rbee/ui/pages/PricingPage'
+import { pricingComparisonContainerProps, pricingComparisonProps } from '@rbee/ui/pages/PricingPage'
+import { TemplateContainer } from '@rbee/ui/molecules'
 import type { Meta, StoryObj } from '@storybook/react'
 import { PricingComparisonTemplate } from './PricingComparisonTemplate'
 
@@ -20,5 +21,10 @@ type Story = StoryObj<typeof meta>
  * - CTA buttons at bottom
  */
 export const OnPricingPage: Story = {
+  render: (args) => (
+    <TemplateContainer {...pricingComparisonContainerProps}>
+      <PricingComparisonTemplate {...args} />
+    </TemplateContainer>
+  ),
   args: pricingComparisonProps,
 }

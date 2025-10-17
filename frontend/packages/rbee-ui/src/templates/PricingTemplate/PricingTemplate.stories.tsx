@@ -1,5 +1,6 @@
-import { pricingTemplateProps as homePricingTemplateProps } from '@rbee/ui/pages/HomePage'
-import { pricingTemplateProps } from '@rbee/ui/pages/PricingPage'
+import { pricingTemplateContainerProps as homePricingTemplateContainerProps, pricingTemplateProps as homePricingTemplateProps } from '@rbee/ui/pages/HomePage'
+import { pricingTemplateContainerProps, pricingTemplateProps } from '@rbee/ui/pages/PricingPage'
+import { TemplateContainer } from '@rbee/ui/molecules'
 import type { Meta, StoryObj } from '@storybook/react'
 import { PricingTemplate } from './PricingTemplate'
 
@@ -22,6 +23,11 @@ type Story = StoryObj<typeof meta>
  * - Full featured variant
  */
 export const OnHomePage: Story = {
+  render: (args) => (
+    <TemplateContainer {...homePricingTemplateContainerProps}>
+      <PricingTemplate {...args} />
+    </TemplateContainer>
+  ),
   args: homePricingTemplateProps,
 }
 
@@ -32,6 +38,11 @@ export const OnHomePage: Story = {
  * - Pricing-focused footer text
  */
 export const OnPricingPage: Story = {
+  render: (args) => (
+    <TemplateContainer {...pricingTemplateContainerProps}>
+      <PricingTemplate {...args} />
+    </TemplateContainer>
+  ),
   args: pricingTemplateProps,
 }
 

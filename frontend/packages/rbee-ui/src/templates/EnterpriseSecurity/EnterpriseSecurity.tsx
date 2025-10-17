@@ -1,4 +1,3 @@
-import { SecurityGuarantees } from '@rbee/ui/molecules'
 import { SecurityCard } from '@rbee/ui/organisms'
 import Image from 'next/image'
 import type { ReactNode } from 'react'
@@ -16,34 +15,19 @@ export type SecurityCardData = {
   docsHref: string
 }
 
-export type SecurityGuarantee = {
-  value: string
-  label: string
-  ariaLabel?: string
-}
-
 export type EnterpriseSecurityProps = {
   backgroundImage: {
     src: string
     alt: string
   }
   securityCards: SecurityCardData[]
-  guarantees: {
-    heading: string
-    stats: SecurityGuarantee[]
-    footnote: string
-  }
 }
 
 // ──────────────────────────────────────────────────────────────────────────────
 // Main Component
 // ──────────────────────────────────────────────────────────────────────────────
 
-export function EnterpriseSecurity({
-  backgroundImage,
-  securityCards,
-  guarantees,
-}: EnterpriseSecurityProps) {
+export function EnterpriseSecurity({ backgroundImage, securityCards }: EnterpriseSecurityProps) {
   return (
     <div className="relative">
       {/* Decorative background illustration */}
@@ -71,14 +55,6 @@ export function EnterpriseSecurity({
             />
           ))}
         </div>
-
-        {/* Security Guarantees */}
-        <SecurityGuarantees
-          heading={guarantees.heading}
-          stats={guarantees.stats}
-          footnote={guarantees.footnote}
-          className="animate-in fade-in-50 [animation-delay:200ms]"
-        />
       </div>
     </div>
   )

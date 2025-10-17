@@ -1,6 +1,7 @@
-import { howItWorksProps as developersHowItWorksProps } from '@rbee/ui/pages/DevelopersPage'
-import { howItWorksProps } from '@rbee/ui/pages/HomePage'
-import { providersHowItWorksProps } from '@rbee/ui/pages/ProvidersPage'
+import { howItWorksContainerProps as developersHowItWorksContainerProps, howItWorksProps as developersHowItWorksProps } from '@rbee/ui/pages/DevelopersPage'
+import { howItWorksContainerProps, howItWorksProps } from '@rbee/ui/pages/HomePage'
+import { providersHowItWorksContainerProps, providersHowItWorksProps } from '@rbee/ui/pages/ProvidersPage'
+import { TemplateContainer } from '@rbee/ui/molecules'
 import type { Meta, StoryObj } from '@storybook/react'
 import { HowItWorks } from './HowItWorks'
 
@@ -23,6 +24,11 @@ type Story = StoryObj<typeof meta>
  * - Focus on quick setup across all hardware
  */
 export const OnHomePage: Story = {
+  render: (args) => (
+    <TemplateContainer {...howItWorksContainerProps}>
+      <HowItWorks {...args} />
+    </TemplateContainer>
+  ),
   args: howItWorksProps,
 }
 
@@ -33,6 +39,11 @@ export const OnHomePage: Story = {
  * - Terminal blocks and code examples
  */
 export const OnDevelopersPage: Story = {
+  render: (args) => (
+    <TemplateContainer {...developersHowItWorksContainerProps}>
+      <HowItWorks {...args} />
+    </TemplateContainer>
+  ),
   args: developersHowItWorksProps,
 }
 
@@ -44,5 +55,10 @@ export const OnDevelopersPage: Story = {
  * - Payout tracking
  */
 export const OnProvidersPage: Story = {
+  render: (args) => (
+    <TemplateContainer {...providersHowItWorksContainerProps}>
+      <HowItWorks {...args} />
+    </TemplateContainer>
+  ),
   args: providersHowItWorksProps,
 }

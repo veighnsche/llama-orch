@@ -1,4 +1,5 @@
-import { whatIsRbeeProps } from '@rbee/ui/pages/HomePage'
+import { whatIsRbeeContainerProps, whatIsRbeeProps } from '@rbee/ui/pages/HomePage'
+import { TemplateContainer } from '@rbee/ui/molecules'
 import type { Meta, StoryObj } from '@storybook/react'
 import { WhatIsRbee } from './WhatIsRbee'
 
@@ -15,5 +16,10 @@ export default meta
 type Story = StoryObj<typeof meta>
 
 export const OnHomePage: Story = {
+  render: (args) => (
+    <TemplateContainer {...whatIsRbeeContainerProps}>
+      <WhatIsRbee {...args} />
+    </TemplateContainer>
+  ),
   args: whatIsRbeeProps,
 }

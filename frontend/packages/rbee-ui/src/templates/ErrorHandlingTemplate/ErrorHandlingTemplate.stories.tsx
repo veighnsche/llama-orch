@@ -1,5 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react'
-import { errorHandlingProps } from '../../pages/FeaturesPage/FeaturesPageProps'
+import { errorHandlingContainerProps, errorHandlingProps } from '../../pages/FeaturesPage/FeaturesPageProps'
+import { TemplateContainer } from '@rbee/ui/molecules'
 import { ErrorHandlingTemplate } from './ErrorHandlingTemplate'
 
 const meta: Meta<typeof ErrorHandlingTemplate> = {
@@ -14,5 +15,10 @@ export default meta
 type Story = StoryObj<typeof ErrorHandlingTemplate>
 
 export const OnFeaturesPage: Story = {
+  render: (args) => (
+    <TemplateContainer {...errorHandlingContainerProps}>
+      <ErrorHandlingTemplate {...args} />
+    </TemplateContainer>
+  ),
   args: errorHandlingProps,
 }
