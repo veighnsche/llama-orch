@@ -1,6 +1,6 @@
 'use client'
 
-import { Badge, Button } from '@rbee/ui/atoms'
+import { HeroTemplate } from '@rbee/ui/templates/HeroTemplate'
 import type { ReactNode } from 'react'
 
 // ────────────────────────────────────────────────────────────────────────────
@@ -75,58 +75,35 @@ export function PricingHeroTemplate({
   visualAriaLabel,
 }: PricingHeroTemplateProps) {
   return (
-    <section
-      aria-labelledby="pricing-hero-title"
-      className="relative overflow-hidden py-24 lg:py-28 bg-gradient-to-b from-background to-card"
-    >
-      {/* Simple radial glow */}
-      <div aria-hidden className="pointer-events-none absolute inset-0 opacity-50">
-        <div className="absolute -top-1/3 right-[-20%] h-[60rem] w-[60rem] rounded-full bg-primary/5 blur-3xl" />
-      </div>
-
-      <div className="container mx-auto px-4">
-        <div className="grid gap-10 lg:grid-cols-2 lg:items-center">
-          {/* Left: Text content */}
-          <div className="max-w-2xl">
-            <Badge variant="secondary" className="mb-4">
-              {badgeText}
-            </Badge>
-
-            <h1 id="pricing-hero-title" className="text-5xl lg:text-6xl font-bold text-foreground tracking-tight">
-              {heading}
-            </h1>
-
-            <p className="mt-6 text-xl text-muted-foreground leading-relaxed">{description}</p>
-
-            {/* Buttons */}
-            <div className="mt-8 flex gap-3">
-              <Button size="lg" asChild={!!primaryCta.href}>
-                {primaryCta.href ? <a href={primaryCta.href}>{primaryCta.text}</a> : primaryCta.text}
-              </Button>
-              <Button variant="secondary" size="lg" asChild={!!secondaryCta.href}>
-                {secondaryCta.href ? <a href={secondaryCta.href}>{secondaryCta.text}</a> : secondaryCta.text}
-              </Button>
-            </div>
-
-            {/* Assurance checkmarks */}
-            <ul className="mt-6 grid grid-cols-2 gap-3 text-sm text-muted-foreground">
-              {assuranceItems.map((item, index) => (
-                <li key={index} className="flex items-center gap-2">
-                  <div className="h-4 w-4 text-primary shrink-0" aria-hidden="true">
-                    {item.icon}
-                  </div>
-                  <span>{item.text}</span>
-                </li>
-              ))}
-            </ul>
-          </div>
-
-          {/* Right: Visual illustration */}
-          <div className="relative" aria-label={visualAriaLabel}>
-            {visual}
-          </div>
-        </div>
-      </div>
-    </section>
+    <HeroTemplate
+      badge={{ variant: 'simple', text: badgeText }}
+      headline={{ variant: 'custom', content: heading }}
+      subcopy={description}
+      subcopyMaxWidth="medium"
+      proofElements={{
+        variant: 'assurance',
+        items: assuranceItems,
+        columns: 2,
+      }}
+      ctas={{
+        primary: {
+          label: primaryCta.text,
+          href: primaryCta.href,
+        },
+        secondary: {
+          label: secondaryCta.text,
+          href: secondaryCta.href,
+          variant: 'secondary',
+        },
+      }}
+      aside={visual}
+      asideAriaLabel={visualAriaLabel}
+      background={{
+        variant: 'custom',
+        className: 'pointer-events-none absolute inset-0 opacity-50',
+      }}
+      padding="spacious"
+      headingId="pricing-hero-title"
+    />
   )
 }

@@ -426,7 +426,8 @@ frontend/packages/rbee-ui/src/templates/
 
 ---
 
-**Status**: 🟡 DRAFT - Awaiting approval  
-**Owner**: TBD  
+**Status**: ✅ COMPLETE - All 6 heroes migrated  
+**Owner**: Cascade AI  
 **Created**: 2025-10-17  
-**Last Updated**: 2025-10-17
+**Last Updated**: 2025-10-17  
+**Completion Date**: 2025-10-17
