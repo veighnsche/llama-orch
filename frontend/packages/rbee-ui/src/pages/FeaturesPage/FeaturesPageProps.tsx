@@ -4,15 +4,15 @@ import { CodeBlock } from "@rbee/ui/molecules/CodeBlock";
 import { GPUUtilizationBar } from "@rbee/ui/molecules/GPUUtilizationBar";
 import { TerminalWindow } from "@rbee/ui/molecules/TerminalWindow";
 import type {
-  AdditionalFeaturesGridTemplateProps,
+  AdditionalFeaturesGridProps,
   CrossNodeOrchestrationProps,
   EmailCaptureProps,
   ErrorHandlingTemplateProps,
   FeaturesTabsProps,
-  IntelligentModelManagementTemplateProps,
+  IntelligentModelManagementProps,
   MultiBackendGpuTemplateProps,
-  RealTimeProgressTemplateProps,
-  SecurityIsolationTemplateProps,
+  RealTimeProgressProps,
+  SecurityIsolationProps,
 } from "@rbee/ui/templates";
 import {
   Activity,
@@ -332,7 +332,7 @@ export const intelligentModelManagementContainerProps: Omit<
 /**
  * Intelligent Model Management - Auto-provisioning and caching
  */
-export const intelligentModelManagementProps: IntelligentModelManagementTemplateProps =
+export const intelligentModelManagementProps: IntelligentModelManagementProps =
   {
     catalogTitle: "Automatic Model Catalog",
     catalogDescription:
@@ -804,7 +804,7 @@ export const realTimeProgressContainerProps: Omit<
 /**
  * Real-Time Progress - SSE narration and metrics
  */
-export const realTimeProgressProps: RealTimeProgressTemplateProps = {
+export const realTimeProgressProps: RealTimeProgressProps = {
   narrationTitle: "SSE Narration Architecture",
   narrationSubtitle:
     "Workers stream every step as Server-Sent Events—from model load to token generation.",
@@ -946,7 +946,7 @@ export const securityIsolationContainerProps: Omit<
 /**
  * Security & Isolation - Defense-in-depth architecture
  */
-export const securityIsolationProps: SecurityIsolationTemplateProps = {
+export const securityIsolationProps: SecurityIsolationProps = {
   cratesTitle: "Six Specialized Security Crates",
   cratesSubtitle:
     "Each concern ships as its own Rust crate—focused responsibility, no monolith.",
@@ -1019,7 +1019,7 @@ export const additionalFeaturesGridContainerProps: Omit<
 /**
  * Additional Features Grid - Capabilities overview
  */
-export const additionalFeaturesGridProps: AdditionalFeaturesGridTemplateProps =
+export const additionalFeaturesGridProps: AdditionalFeaturesGridProps =
   {
     rows: [
       {

@@ -40,7 +40,7 @@ export function SecurityCard({
   return (
     <Card
       className={cn(
-        "w-full rounded-2xl bg-card/60 transition-shadow hover:shadow-lg",
+        "w-full rounded-2xl bg-card/60 p-6 transition-shadow hover:shadow-lg sm:p-8",
         className
       )}
       aria-labelledby={titleId}
@@ -52,7 +52,7 @@ export function SecurityCard({
         titleId={titleId}
       />
 
-      <CardContent>
+      <CardContent className="p-0">
         {/* Intro */}
         {intro && (
           <p className="mb-4 text-sm leading-relaxed text-foreground/85">
@@ -70,7 +70,7 @@ export function SecurityCard({
 
       {/* Footer with optional docs link */}
       {docsHref && (
-        <CardFooter className="mt-auto p-0 px-6 pb-6 pt-4">
+        <CardFooter className="mt-auto p-0 pt-4">
           <Link
             href={docsHref}
             className="inline-flex items-center gap-1 text-xs text-primary hover:underline"

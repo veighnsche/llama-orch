@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from '@storybook/react'
 import { Disclaimer } from './Disclaimer'
 
 const meta = {
-  title: 'Molecules/Disclaimer',
+  title: 'Molecules/Footers/Disclaimer',
   component: Disclaimer,
   parameters: {
     layout: 'padded',

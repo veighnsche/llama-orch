@@ -1,23 +1,23 @@
 import type { Meta, StoryObj } from '@storybook/react'
 import { realTimeProgressContainerProps, realTimeProgressProps } from '../../pages/FeaturesPage/FeaturesPageProps'
 import { TemplateContainer } from '@rbee/ui/molecules'
-import { RealTimeProgressTemplate } from './RealTimeProgressTemplate'
+import { RealTimeProgress } from './RealTimeProgress'
 
-const meta: Meta<typeof RealTimeProgressTemplate> = {
-  title: 'Templates/RealTimeProgressTemplate',
-  component: RealTimeProgressTemplate,
+const meta: Meta<typeof RealTimeProgress> = {
+  title: 'Templates/RealTimeProgress',
+  component: RealTimeProgress,
   parameters: {
     layout: 'fullscreen',
   },
 }
 
 export default meta
-type Story = StoryObj<typeof RealTimeProgressTemplate>
+type Story = StoryObj<typeof RealTimeProgress>
 
 export const OnFeaturesPage: Story = {
   render: (args) => (
     <TemplateContainer {...realTimeProgressContainerProps}>
-      <RealTimeProgressTemplate {...args} />
+      <RealTimeProgress {...args} />
     </TemplateContainer>
   ),
   args: realTimeProgressProps,

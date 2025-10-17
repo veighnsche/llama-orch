@@ -1,5 +1,6 @@
 import { Card } from "@rbee/ui/atoms";
 import { Disclaimer, GPUListItem, IconCardHeader } from "@rbee/ui/molecules";
+import { cn } from "@rbee/ui/utils";
 import { TrendingUp } from "lucide-react";
 
 export type EarningRow = {
@@ -27,7 +28,7 @@ export function EarningsCard({
   className,
 }: EarningsCardProps) {
   return (
-    <Card className={className}>
+    <Card className={cn("p-6 sm:p-8", className)}>
       <IconCardHeader
         icon={<TrendingUp />}
         title={title}
@@ -36,7 +37,7 @@ export function EarningsCard({
         titleClassName="font-semibold"
         align="center"
       />
-      <div className="px-6 pb-6 space-y-2">
+      <div className="space-y-2">
         {rows.map((row, idx) => (
           <GPUListItem
             key={idx}
@@ -50,7 +51,7 @@ export function EarningsCard({
       </div>
 
       {disclaimer && (
-        <div className="px-6 pb-6">
+        <div className="mt-4">
           <Disclaimer variant="card">{disclaimer}</Disclaimer>
         </div>
       )}

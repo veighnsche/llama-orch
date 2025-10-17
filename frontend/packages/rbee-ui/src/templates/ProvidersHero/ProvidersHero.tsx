@@ -95,7 +95,6 @@ export function ProvidersHero({
             iconSize="md"
             iconTone="primary"
             titleClassName="text-sm font-medium text-muted-foreground"
-            className="pb-5"
           />
           <CardAction className="absolute right-6 top-6">
             <Badge className="bg-emerald-500/15 text-emerald-400 border-emerald-400/30" variant="outline">

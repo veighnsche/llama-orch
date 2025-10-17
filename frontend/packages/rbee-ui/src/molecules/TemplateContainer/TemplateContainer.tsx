@@ -3,8 +3,8 @@ import { CTARail } from "@rbee/ui/molecules/CTARail";
 import { Disclaimer } from "@rbee/ui/molecules/Disclaimer";
 import { FooterCTA } from "@rbee/ui/molecules/FooterCTA";
 import { SecurityGuarantees } from "@rbee/ui/molecules/SecurityGuarantees";
+import { CTABanner, type CTABannerProps, RibbonBanner, TemplateBackground, type TemplateBackgroundProps, SectionCTAs, type SectionCTAsProps } from "@rbee/ui/organisms";
 import { cn } from "@rbee/ui/utils";
-import { Shield } from "lucide-react";
 import type { ReactNode } from "react";
 
 export interface TemplateContainerProps {
@@ -22,7 +22,24 @@ export interface TemplateContainerProps {
   kickerVariant?: "default" | "destructive";
   /** Right-aligned controls near the title (e.g., buttons) */
   actions?: ReactNode;
-  /** Background variant */
+  /** Background configuration */
+  background?: {
+    /** Background variant */
+    variant?: TemplateBackgroundProps['variant'];
+    /** Optional decoration element */
+    decoration?: ReactNode;
+    /** Overlay opacity (0-100) */
+    overlayOpacity?: number;
+    /** Overlay color */
+    overlayColor?: 'black' | 'white' | 'primary' | 'secondary';
+    /** Enable blur effect */
+    blur?: boolean;
+    /** Pattern size for pattern variants */
+    patternSize?: 'small' | 'medium' | 'large';
+    /** Pattern opacity (0-100) */
+    patternOpacity?: number;
+  };
+  /** @deprecated Use background.variant instead */
   bgVariant?:
     | "background"
     | "secondary"
@@ -54,16 +71,7 @@ export interface TemplateContainerProps {
   /** Show a subtle separator under the header block */
   divider?: boolean;
   /** Optional bottom CTAs */
-  ctas?: {
-    /** Label text above buttons */
-    label?: string;
-    /** Primary CTA button */
-    primary?: { label: string; href: string; ariaLabel?: string };
-    /** Secondary CTA button */
-    secondary?: { label: string; href: string; ariaLabel?: string };
-    /** Optional caption below buttons */
-    caption?: string;
-  };
+  ctas?: SectionCTAsProps;
   /** Optional disclaimer text */
   disclaimer?: {
     /** Disclaimer content */
@@ -75,20 +83,12 @@ export interface TemplateContainerProps {
   };
   /** Optional ribbon banner (e.g., insurance coverage) */
   ribbon?: {
-    /** Ribbon text content */
     text: string;
   };
-  /** Optional background decoration (e.g., SVG patterns) */
+  /** @deprecated Use background.decoration instead */
   backgroundDecoration?: ReactNode;
   /** Optional CTA banner (appears after children, before bottom CTAs) */
-  ctaBanner?: {
-    /** Copy text above buttons */
-    copy?: string;
-    /** Primary CTA button */
-    primary?: { label: string; href: string; ariaLabel?: string };
-    /** Secondary CTA button */
-    secondary?: { label: string; href: string; ariaLabel?: string };
-  };
+  ctaBanner?: CTABannerProps;
   /** Optional CTA rail (appears after children, uses CTARail molecule) */
   ctaRail?: {
     /** Main heading text */
@@ -136,16 +136,15 @@ export interface TemplateContainerProps {
   };
 }
 
-const bgClasses = {
-  background: "bg-background",
-  secondary: "bg-secondary",
-  card: "bg-card",
-  default: "bg-background",
-  muted: "bg-muted",
-  subtle:
-    "bg-background relative before:absolute before:inset-x-0 before:top-0 before:h-px before:bg-border/60",
-  "destructive-gradient":
-    "bg-gradient-to-b from-background via-destructive/8 to-background",
+// Legacy bgVariant mapping to TemplateBackground variants
+const legacyBgVariantMap = {
+  background: 'background',
+  secondary: 'secondary',
+  card: 'card',
+  default: 'background',
+  muted: 'muted',
+  subtle: 'subtle-border',
+  'destructive-gradient': 'gradient-destructive',
 } as const;
 
 const padY = {
@@ -193,6 +192,7 @@ export function TemplateContainer({
   kicker,
   kickerVariant = "default",
   actions,
+  background,
   bgVariant = "background",
   centered = true,
   align,
@@ -224,20 +224,37 @@ export function TemplateContainer({
   const generatedId =
     headingId ?? (typeof title === "string" ? slugify(title) : undefined);
 
+  // Resolve background configuration (new prop takes precedence over legacy)
+  const resolvedBackground = {
+    variant: background?.variant ?? (bgVariant ? legacyBgVariantMap[bgVariant] as TemplateBackgroundProps['variant'] : 'background'),
+    decoration: background?.decoration ?? backgroundDecoration,
+    overlayOpacity: background?.overlayOpacity,
+    overlayColor: background?.overlayColor,
+    blur: background?.blur,
+    patternSize: background?.patternSize,
+    patternOpacity: background?.patternOpacity,
+  };
+
   return (
-    <section
-      className={cn(
-        "relative",
-        padY[paddingY],
-        bgClasses[bgVariant],
-        bleed && "px-0",
-        className
-      )}
-      aria-labelledby={title ? generatedId : undefined}
+    <TemplateBackground
+      variant={resolvedBackground.variant}
+      decoration={resolvedBackground.decoration}
+      overlayOpacity={resolvedBackground.overlayOpacity}
+      overlayColor={resolvedBackground.overlayColor}
+      blur={resolvedBackground.blur}
+      patternSize={resolvedBackground.patternSize}
+      patternOpacity={resolvedBackground.patternOpacity}
+      className={className}
     >
-      {/* Background decoration */}
-      {backgroundDecoration}
-      <div className={cn("container mx-auto", bleed ? "px-4" : "px-4")}>
+      <section
+        className={cn(
+          "relative",
+          padY[paddingY],
+          bleed && "px-0"
+        )}
+        aria-labelledby={title ? generatedId : undefined}
+      >
+        <div className={cn("container mx-auto", bleed ? "px-4" : "px-4")}>
         {title && (
           <div
             className={cn(
@@ -373,117 +390,23 @@ export function TemplateContainer({
         )}
 
         {/* CTA Banner */}
-        {ctaBanner && (ctaBanner.copy || ctaBanner.primary || ctaBanner.secondary) && (
-          <div
-            className={cn(
-              "mt-10 rounded-2xl border border-border bg-card/60 p-6 text-center sm:mt-12 sm:p-7 animate-in fade-in slide-in-from-bottom-2 motion-reduce:animate-none delay-300",
-              maxWidthClasses[maxWidth],
-              "mx-auto"
-            )}
-          >
-            {ctaBanner.copy && (
-              <p className="text-balance text-lg font-medium text-foreground">{ctaBanner.copy}</p>
-            )}
-            <div className="mt-4 flex flex-col items-center gap-3 sm:mt-5 sm:flex-row sm:justify-center">
-              {ctaBanner.primary && (
-                <Button
-                  asChild
-                  size="lg"
-                  className="animate-in fade-in motion-reduce:animate-none delay-150"
-                >
-                  <a
-                    href={ctaBanner.primary.href}
-                    aria-label={ctaBanner.primary.ariaLabel || ctaBanner.primary.label}
-                  >
-                    {ctaBanner.primary.label}
-                  </a>
-                </Button>
-              )}
-              {ctaBanner.secondary && (
-                <Button
-                  asChild
-                  variant="outline"
-                  size="lg"
-                  className="animate-in fade-in motion-reduce:animate-none delay-150"
-                >
-                  <a
-                    href={ctaBanner.secondary.href}
-                    aria-label={ctaBanner.secondary.ariaLabel || ctaBanner.secondary.label}
-                  >
-                    {ctaBanner.secondary.label}
-                  </a>
-                </Button>
-              )}
-            </div>
+        {ctaBanner && (
+          <div className={cn("mt-10 sm:mt-12", maxWidthClasses[maxWidth], "mx-auto")}>
+            <CTABanner {...ctaBanner} />
           </div>
         )}
 
         {/* Ribbon Banner */}
         {ribbon && (
           <div className={cn("mt-10", maxWidthClasses[maxWidth], "mx-auto")}>
-            <div className="rounded-2xl border border-emerald-400/30 bg-emerald-400/10 p-5 text-center">
-              <p className="flex items-center justify-center gap-2 text-balance text-base font-medium text-emerald-400 lg:text-lg">
-                <Shield className="h-4 w-4" aria-hidden="true" />
-                <span className="tabular-nums">{ribbon.text}</span>
-              </p>
-            </div>
+            <RibbonBanner text={ribbon.text} />
           </div>
         )}
 
         {/* Bottom CTAs */}
-        {ctas && (ctas.primary || ctas.secondary || ctas.caption) && (
-          <div
-            className={cn(
-              "mt-12 text-center",
-              maxWidthClasses[maxWidth],
-              "mx-auto"
-            )}
-          >
-            {ctas.label && (
-              <p className="mb-4 text-sm font-medium text-muted-foreground">
-                {ctas.label}
-              </p>
-            )}
-            {(ctas.primary || ctas.secondary) && (
-              <div className="flex flex-col items-center justify-center gap-3 sm:flex-row">
-                {ctas.primary && (
-                  <Button
-                    asChild
-                    size="lg"
-                    className="transition-transform active:scale-[0.98]"
-                  >
-                    <a
-                      href={ctas.primary.href}
-                      aria-label={ctas.primary.ariaLabel || ctas.primary.label}
-                    >
-                      {ctas.primary.label}
-                    </a>
-                  </Button>
-                )}
-                {ctas.secondary && (
-                  <Button
-                    asChild
-                    size="lg"
-                    variant="outline"
-                    className="transition-transform active:scale-[0.98]"
-                  >
-                    <a
-                      href={ctas.secondary.href}
-                      aria-label={
-                        ctas.secondary.ariaLabel || ctas.secondary.label
-                      }
-                    >
-                      {ctas.secondary.label}
-                    </a>
-                  </Button>
-                )}
-              </div>
-            )}
-            {ctas.caption && (
-              <p className={cn("text-sm text-muted-foreground font-sans text-center", (ctas.primary || ctas.secondary) && "mt-4")}>
-                {ctas.caption}
-              </p>
-            )}
+        {ctas && (
+          <div className={cn("mt-12", maxWidthClasses[maxWidth], "mx-auto")}>
+            <SectionCTAs {...ctas} />
           </div>
         )}
 
@@ -500,5 +423,6 @@ export function TemplateContainer({
         )}
       </div>
     </section>
+    </TemplateBackground>
   );
 }

@@ -58,7 +58,6 @@ export function CTAOptionCard({
           tone === 'primary' ? 'text-primary' : 'text-foreground',
         )}
         align="center"
-        className="flex-col items-center"
       />
 
       {/* Eyebrow label */}

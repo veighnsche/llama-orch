@@ -2,16 +2,16 @@
 
 import { TemplateContainer } from '@rbee/ui/molecules'
 import {
-  AdditionalFeaturesGridTemplate,
+  AdditionalFeaturesGrid,
   CrossNodeOrchestration,
   EmailCapture,
   ErrorHandlingTemplate,
   FeaturesHero,
   FeaturesTabs,
-  IntelligentModelManagementTemplate,
+  IntelligentModelManagement,
   MultiBackendGpuTemplate,
-  RealTimeProgressTemplate,
-  SecurityIsolationTemplate,
+  RealTimeProgress,
+  SecurityIsolation,
 } from '@rbee/ui/templates'
 import {
   additionalFeaturesGridContainerProps,
@@ -50,7 +50,7 @@ export default function FeaturesPage() {
       </TemplateContainer>
 
       <TemplateContainer {...intelligentModelManagementContainerProps}>
-        <IntelligentModelManagementTemplate {...intelligentModelManagementProps} />
+        <IntelligentModelManagement {...intelligentModelManagementProps} />
       </TemplateContainer>
 
       <TemplateContainer {...multiBackendGpuContainerProps}>
@@ -62,15 +62,15 @@ export default function FeaturesPage() {
       </TemplateContainer>
 
       <TemplateContainer {...realTimeProgressContainerProps}>
-        <RealTimeProgressTemplate {...realTimeProgressProps} />
+        <RealTimeProgress {...realTimeProgressProps} />
       </TemplateContainer>
 
       <TemplateContainer {...securityIsolationContainerProps}>
-        <SecurityIsolationTemplate {...securityIsolationProps} />
+        <SecurityIsolation {...securityIsolationProps} />
       </TemplateContainer>
 
       <TemplateContainer {...additionalFeaturesGridContainerProps}>
-        <AdditionalFeaturesGridTemplate {...additionalFeaturesGridProps} />
+        <AdditionalFeaturesGrid {...additionalFeaturesGridProps} />
       </TemplateContainer>
 
       <EmailCapture {...featuresEmailCaptureProps} />

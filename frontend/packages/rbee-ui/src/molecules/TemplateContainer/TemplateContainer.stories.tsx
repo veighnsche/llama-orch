@@ -49,7 +49,17 @@ export const AllPropsShowcase: Story = {
     // Layout & styling
     align: "center",
     layout: "stack",
-    bgVariant: "subtle",
+    background: {
+      variant: "gradient-mesh",
+      decoration: (
+        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+          <div className="absolute top-0 left-1/4 w-96 h-96 bg-primary/20 rounded-full blur-3xl" />
+          <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-secondary/20 rounded-full blur-3xl" />
+        </div>
+      ),
+      overlayOpacity: 10,
+      overlayColor: "black",
+    },
     bleed: false,
     paddingY: "2xl",
     maxWidth: "6xl",
@@ -58,14 +68,6 @@ export const AllPropsShowcase: Story = {
     // Semantic HTML
     headlineLevel: 2,
     headingId: "showcase-section",
-
-    // Background decoration
-    backgroundDecoration: (
-      <div className="absolute inset-0 overflow-hidden pointer-events-none opacity-30">
-        <div className="absolute top-0 left-1/4 w-96 h-96 bg-primary/10 rounded-full blur-3xl" />
-        <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-accent/10 rounded-full blur-3xl" />
-      </div>
-    ),
 
     // Main content
     children: (

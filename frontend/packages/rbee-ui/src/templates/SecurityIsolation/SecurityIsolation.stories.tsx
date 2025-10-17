@@ -1,23 +1,23 @@
 import type { Meta, StoryObj } from '@storybook/react'
 import { securityIsolationContainerProps, securityIsolationProps } from '../../pages/FeaturesPage/FeaturesPageProps'
 import { TemplateContainer } from '@rbee/ui/molecules'
-import { SecurityIsolationTemplate } from './SecurityIsolationTemplate'
+import { SecurityIsolation } from './SecurityIsolation'
 
-const meta: Meta<typeof SecurityIsolationTemplate> = {
-  title: 'Templates/SecurityIsolationTemplate',
-  component: SecurityIsolationTemplate,
+const meta: Meta<typeof SecurityIsolation> = {
+  title: 'Templates/SecurityIsolation',
+  component: SecurityIsolation,
   parameters: {
     layout: 'fullscreen',
   },
 }
 
 export default meta
-type Story = StoryObj<typeof SecurityIsolationTemplate>
+type Story = StoryObj<typeof SecurityIsolation>
 
 export const OnFeaturesPage: Story = {
   render: (args) => (
     <TemplateContainer {...securityIsolationContainerProps}>
-      <SecurityIsolationTemplate {...args} />
+      <SecurityIsolation {...args} />
     </TemplateContainer>
   ),
   args: securityIsolationProps,

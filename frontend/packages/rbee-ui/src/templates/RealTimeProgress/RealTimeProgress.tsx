@@ -20,7 +20,7 @@ export interface CancellationStep {
   variant?: 'success'
 }
 
-export interface RealTimeProgressTemplateProps {
+export interface RealTimeProgressProps {
   narrationTitle: string
   narrationSubtitle: string
   terminalTitle: string
@@ -34,7 +34,7 @@ export interface RealTimeProgressTemplateProps {
   className?: string
 }
 
-export function RealTimeProgressTemplate({
+export function RealTimeProgress({
   narrationTitle,
   narrationSubtitle,
   terminalTitle,
@@ -46,7 +46,7 @@ export function RealTimeProgressTemplate({
   cancellationSubtitle,
   cancellationSteps,
   className,
-}: RealTimeProgressTemplateProps) {
+}: RealTimeProgressProps) {
   return (
     <div className={cn('', className)}>
       <div className="mx-auto max-w-6xl space-y-10">
@@ -57,7 +57,6 @@ export function RealTimeProgressTemplate({
             iconSize="md"
             title={narrationTitle}
             subtitle={narrationSubtitle}
-            className="mb-4"
           />
 
           <TerminalWindow
@@ -89,7 +88,6 @@ export function RealTimeProgressTemplate({
               iconSize="md"
               title={cancellationTitle}
               subtitle={cancellationSubtitle}
-              className="mb-4"
             />
 
             <ol className="grid gap-3 sm:grid-cols-4 text-sm" aria-label="Cancellation sequence">

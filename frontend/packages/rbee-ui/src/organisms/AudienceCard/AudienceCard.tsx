@@ -131,10 +131,10 @@ export function AudienceCard({
         <div className={cn('mb-3 text-sm font-medium font-sans', textVariants({ color }))}>{decisionLabel}</div>
       )}
 
-      <Card className={cn(cardContainerVariants({ color }), 'flex flex-1 flex-col', className)}>
+      <Card className={cn(cardContainerVariants({ color }), 'flex flex-1 flex-col p-6', className)}>
         <div className={gradientVariants({ color })} />
 
-        <CardContent className="flex flex-1 flex-col gap-0 p-6 pb-0">
+        <CardContent className="flex flex-1 flex-col gap-0 p-0">
           {/* Icons side-by-side at top */}
           <div className="mb-6 flex items-top gap-3 min-h-[64px]">
             <div className={iconBgVariants({ color })}>
@@ -177,7 +177,7 @@ export function AudienceCard({
           href={href}
           buttonColor={color}
           ariaDescribedBy={descriptionId}
-          className="px-6 pb-6"
+          className="pt-0"
         />
       </Card>
     </div>

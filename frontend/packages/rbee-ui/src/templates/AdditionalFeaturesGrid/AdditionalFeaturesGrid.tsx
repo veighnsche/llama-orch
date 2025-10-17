@@ -22,12 +22,12 @@ export interface FeatureRow {
   cards: FeatureGridCard[]
 }
 
-export interface AdditionalFeaturesGridTemplateProps {
+export interface AdditionalFeaturesGridProps {
   rows: FeatureRow[]
   className?: string
 }
 
-export function AdditionalFeaturesGridTemplate({ rows, className }: AdditionalFeaturesGridTemplateProps) {
+export function AdditionalFeaturesGrid({ rows, className }: AdditionalFeaturesGridProps) {
   return (
     <div className={cn('', className)}>
       <div className="mx-auto max-w-6xl space-y-8">

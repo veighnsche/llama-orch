@@ -16,7 +16,7 @@ export interface ResourceCheck {
   description: string
 }
 
-export interface IntelligentModelManagementTemplateProps {
+export interface IntelligentModelManagementProps {
   /** Model catalog title */
   catalogTitle: string
   /** Model catalog description */
@@ -38,11 +38,11 @@ export interface IntelligentModelManagementTemplateProps {
 }
 
 /**
- * IntelligentModelManagementTemplate - Template for model management features
+ * IntelligentModelManagement - Template for model management features
  *
  * @example
  * ```tsx
- * <IntelligentModelManagementTemplate
+ * <IntelligentModelManagement
  *   title="Intelligent Model Management"
  *   subtitle="Automatic model provisioning, caching, and validation."
  *   catalogTitle="Automatic Model Catalog"
@@ -50,7 +50,7 @@ export interface IntelligentModelManagementTemplateProps {
  * />
  * ```
  */
-export function IntelligentModelManagementTemplate({
+export function IntelligentModelManagement({
   catalogTitle,
   catalogDescription,
   timelineContent,
@@ -60,7 +60,7 @@ export function IntelligentModelManagementTemplate({
   resourceChecks,
   alertMessage,
   className,
-}: IntelligentModelManagementTemplateProps) {
+}: IntelligentModelManagementProps) {
   return (
     <div className={cn('', className)}>
       <div className="mx-auto max-w-5xl space-y-8">

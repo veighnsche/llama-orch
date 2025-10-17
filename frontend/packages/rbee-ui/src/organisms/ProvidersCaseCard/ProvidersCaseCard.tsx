@@ -1,4 +1,4 @@
-import { Card, QuoteBlock } from '@rbee/ui/atoms'
+import { Card, CardContent, QuoteBlock } from '@rbee/ui/atoms'
 import { IconCardHeader } from '@rbee/ui/molecules'
 import { cn } from '@rbee/ui/utils'
 import type * as React from 'react'
@@ -45,33 +45,34 @@ export function ProvidersCaseCard({
         titleClassName="text-lg font-semibold"
         subtitleClassName="text-xs"
         align="start"
-        className="mb-4"
       />
 
-      {/* Optional highlight badge */}
-      {highlight && (
-        <div className="mb-3 inline-flex items-center rounded-full bg-primary/10 px-2.5 py-1 text-[11px] text-primary">
-          {highlight}
+      <CardContent className="p-0 space-y-4">
+        {/* Optional highlight badge */}
+        {highlight && (
+          <div className="inline-flex items-center rounded-full bg-primary/10 px-2.5 py-1 text-[11px] text-primary">
+            {highlight}
+          </div>
+        )}
+
+        {/* Quote block */}
+        <QuoteBlock>{quote}</QuoteBlock>
+
+        {/* Facts list */}
+        <div className="space-y-2 text-sm">
+          {facts.map((fact, idx) => {
+            const isEarnings = fact.label.toLowerCase().includes('monthly')
+            return (
+              <div key={idx} className="flex justify-between">
+                <span className="text-muted-foreground">{fact.label}</span>
+                <span className={cn('tabular-nums text-foreground', isEarnings && 'font-semibold text-primary')}>
+                  {fact.value}
+                </span>
+              </div>
+            )
+          })}
         </div>
-      )}
-
-      {/* Quote block */}
-      <QuoteBlock className="mb-4">{quote}</QuoteBlock>
-
-      {/* Facts list */}
-      <div className="space-y-2 text-sm">
-        {facts.map((fact, idx) => {
-          const isEarnings = fact.label.toLowerCase().includes('monthly')
-          return (
-            <div key={idx} className="flex justify-between">
-              <span className="text-muted-foreground">{fact.label}</span>
-              <span className={cn('tabular-nums text-foreground', isEarnings && 'font-semibold text-primary')}>
-                {fact.value}
-              </span>
-            </div>
-          )
-        })}
-      </div>
+      </CardContent>
     </Card>
   )
 }

@@ -17,7 +17,7 @@ export interface IsolationFeature {
   color: 'chart-3' | 'chart-2'
 }
 
-export interface SecurityIsolationTemplateProps {
+export interface SecurityIsolationProps {
   cratesTitle: string
   cratesSubtitle: string
   securityCrates: SecurityCrate[]
@@ -30,7 +30,7 @@ export interface SecurityIsolationTemplateProps {
   className?: string
 }
 
-export function SecurityIsolationTemplate({
+export function SecurityIsolation({
   cratesTitle,
   cratesSubtitle,
   securityCrates,
@@ -41,7 +41,7 @@ export function SecurityIsolationTemplate({
   zeroTrustSubtitle,
   zeroTrustFeatures,
   className,
-}: SecurityIsolationTemplateProps) {
+}: SecurityIsolationProps) {
   return (
     <div className={cn('', className)}>
       <div className="mx-auto max-w-6xl space-y-8">

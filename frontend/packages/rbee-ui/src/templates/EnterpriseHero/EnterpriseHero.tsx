@@ -105,7 +105,6 @@ export function EnterpriseHero({
             iconSize="md"
             iconTone="primary"
             titleClassName="font-semibold text-foreground"
-            className="pb-4"
             align="center"
           />
           <CardAction className="absolute right-6 top-6">

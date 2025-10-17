@@ -3,7 +3,6 @@
 import { TemplateContainer } from "@rbee/ui/molecules";
 import { SecurityCard } from "@rbee/ui/organisms";
 import {
-  CardGridTemplate,
   ComparisonTemplate,
   EmailCapture,
   EnterpriseCompliance,
@@ -76,11 +75,11 @@ export default function EnterprisePage() {
       </TemplateContainer>
 
       <TemplateContainer {...enterpriseFeaturesContainerProps}>
-        <CardGridTemplate>
+        <div className="mx-auto max-w-[60%] grid gap-6 grid-cols-2">
           {enterpriseFeaturesData.map((feature, index) => (
             <SecurityCard key={index} {...feature} />
           ))}
-        </CardGridTemplate>
+        </div>
       </TemplateContainer>
 
       <TemplateContainer {...enterpriseTestimonialsContainerProps}>

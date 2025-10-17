@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from '@storybook/react'
 import { SecurityGuarantees } from './SecurityGuarantees'
 
 const meta = {
-  title: 'Molecules/SecurityGuarantees',
+  title: 'Molecules/Footers/SecurityGuarantees',
   component: SecurityGuarantees,
   parameters: {
     layout: 'padded',

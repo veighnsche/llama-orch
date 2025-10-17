@@ -43,7 +43,6 @@ export function ProvidersSecurityCard({
         titleClassName="text-lg font-semibold"
         subtitleClassName="text-xs"
         align="start"
-        className="mb-5"
       />
 
       {/* Body text */}
