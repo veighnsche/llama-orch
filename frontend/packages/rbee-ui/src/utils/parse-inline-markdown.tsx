@@ -2,15 +2,15 @@ import type { ReactNode } from 'react'
 
 /**
  * Lightweight inline markdown parser for UI strings
- * 
+ *
  * Supports:
  * - **bold** → <strong>
  * - *italic* → <em>
  * - [link text](url) → <a>
- * 
+ *
  * Use for: Card descriptions, tooltips, short UI copy
  * Don't use for: Long-form content, complex markdown
- * 
+ *
  * @example
  * parseInlineMarkdown('Power **your** GPUs')
  * // Returns: ['Power ', <strong key="0">your</strong>, ' GPUs']
@@ -23,7 +23,7 @@ export function parseInlineMarkdown(text: string): ReactNode[] {
   // Combined regex that matches bold, italic, or links
   // IMPORTANT: Bold (**) must come before italic (*) in the alternation
   const combinedRegex = /(\*\*([^*]+?)\*\*)|(\*([^*]+?)\*)|(\[([^\]]+?)\]\(([^)]+?)\))/g
-  
+
   let match: RegExpExecArray | null
 
   while ((match = combinedRegex.exec(text)) !== null) {
@@ -52,7 +52,7 @@ export function parseInlineMarkdown(text: string): ReactNode[] {
           rel={url?.startsWith('http') ? 'noopener noreferrer' : undefined}
         >
           {linkText}
-        </a>
+        </a>,
       )
     }
 
@@ -69,7 +69,7 @@ export function parseInlineMarkdown(text: string): ReactNode[] {
 
 /**
  * React component wrapper for inline markdown
- * 
+ *
  * @example
  * <InlineMarkdown>Power **your** GPUs with *zero* API fees</InlineMarkdown>
  */

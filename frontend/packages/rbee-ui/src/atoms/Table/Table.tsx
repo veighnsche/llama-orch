@@ -25,7 +25,7 @@ function TableFooter({ className, ...props }: React.ComponentProps<'tfoot'>) {
       data-slot="table-footer"
       className={cn(
         'bg-[rgba(2,6,23,0.02)] dark:bg-[rgba(255,255,255,0.03)] border-t font-medium [&>tr]:last:border-b-0',
-        className
+        className,
       )}
       {...props}
     />

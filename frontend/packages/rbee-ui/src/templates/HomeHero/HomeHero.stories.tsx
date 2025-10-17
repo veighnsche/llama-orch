@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react'
-import { HomeHero } from './HomeHero'
 import type { HomeHeroProps } from './HomeHero'
+import { HomeHero } from './HomeHero'
 
 const meta = {
   title: 'Templates/HomeHero',

@@ -13,7 +13,6 @@ import {
   TemplateBackground,
   type TemplateBackgroundProps,
 } from '@rbee/ui/organisms'
-import { Badge } from '@rbee/ui/atoms/Badge'
 import { cn, parseInlineMarkdown } from '@rbee/ui/utils'
 import type { ReactNode } from 'react'
 
@@ -136,7 +135,7 @@ export interface TemplateContainerProps {
 }
 
 // Legacy bgVariant mapping to TemplateBackground variants
-const legacyBgVariantMap = {
+const _legacyBgVariantMap = {
   background: 'background',
   secondary: 'secondary',
   card: 'card',

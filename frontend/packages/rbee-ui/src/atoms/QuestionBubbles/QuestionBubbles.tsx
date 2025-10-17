@@ -65,11 +65,21 @@ export function QuestionBubbles({ className }: QuestionBubblesProps) {
 
       {/* Question marks */}
       <g className="fill-blue-500 dark:fill-blue-400" opacity="0.7" filter="url(#bubble-glow)">
-        <text x="300" y="215" textAnchor="middle" fontSize="32" fontWeight="700">?</text>
-        <text x="600" y="338" textAnchor="middle" fontSize="40" fontWeight="700">?</text>
-        <text x="900" y="253" textAnchor="middle" fontSize="28" fontWeight="700">?</text>
-        <text x="450" y="468" textAnchor="middle" fontSize="36" fontWeight="700">?</text>
-        <text x="750" y="496" textAnchor="middle" fontSize="30" fontWeight="700">?</text>
+        <text x="300" y="215" textAnchor="middle" fontSize="32" fontWeight="700">
+          ?
+        </text>
+        <text x="600" y="338" textAnchor="middle" fontSize="40" fontWeight="700">
+          ?
+        </text>
+        <text x="900" y="253" textAnchor="middle" fontSize="28" fontWeight="700">
+          ?
+        </text>
+        <text x="450" y="468" textAnchor="middle" fontSize="36" fontWeight="700">
+          ?
+        </text>
+        <text x="750" y="496" textAnchor="middle" fontSize="30" fontWeight="700">
+          ?
+        </text>
       </g>
 
       {/* Lightbulb accents (answers/insights) */}
@@ -77,7 +87,7 @@ export function QuestionBubbles({ className }: QuestionBubblesProps) {
         {/* Lightbulb 1 */}
         <circle cx="500" cy="180" r="8" />
         <rect x="496" y="188" width="8" height="6" rx="1" />
-        
+
         {/* Lightbulb 2 */}
         <circle cx="820" cy="380" r="8" />
         <rect x="816" y="388" width="8" height="6" rx="1" />

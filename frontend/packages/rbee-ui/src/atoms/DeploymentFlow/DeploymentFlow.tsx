@@ -82,8 +82,21 @@ export function DeploymentFlow({ className }: DeploymentFlowProps) {
       {/* Stage 1: Compliance Assessment */}
       <g filter="url(#checkpoint-glow)">
         <circle cx="200" cy="200" r="8" className="fill-blue-500 dark:fill-blue-400" />
-        <circle cx="200" cy="200" r="16" className="fill-none stroke-blue-500 dark:stroke-blue-400" strokeWidth="1.5" opacity="0.4" />
-        <text x="200" y="250" textAnchor="middle" className="fill-blue-600 dark:fill-blue-300 text-xs font-medium" opacity="0.6">
+        <circle
+          cx="200"
+          cy="200"
+          r="16"
+          className="fill-none stroke-blue-500 dark:stroke-blue-400"
+          strokeWidth="1.5"
+          opacity="0.4"
+        />
+        <text
+          x="200"
+          y="250"
+          textAnchor="middle"
+          className="fill-blue-600 dark:fill-blue-300 text-xs font-medium"
+          opacity="0.6"
+        >
           1
         </text>
       </g>
@@ -91,8 +104,21 @@ export function DeploymentFlow({ className }: DeploymentFlowProps) {
       {/* Stage 2: Deployment & Configuration */}
       <g filter="url(#checkpoint-glow)">
         <circle cx="500" cy="280" r="8" className="fill-blue-500 dark:fill-blue-400" />
-        <circle cx="500" cy="280" r="16" className="fill-none stroke-blue-500 dark:stroke-blue-400" strokeWidth="1.5" opacity="0.4" />
-        <text x="500" y="330" textAnchor="middle" className="fill-blue-600 dark:fill-blue-300 text-xs font-medium" opacity="0.6">
+        <circle
+          cx="500"
+          cy="280"
+          r="16"
+          className="fill-none stroke-blue-500 dark:stroke-blue-400"
+          strokeWidth="1.5"
+          opacity="0.4"
+        />
+        <text
+          x="500"
+          y="330"
+          textAnchor="middle"
+          className="fill-blue-600 dark:fill-blue-300 text-xs font-medium"
+          opacity="0.6"
+        >
           2
         </text>
       </g>
@@ -100,8 +126,21 @@ export function DeploymentFlow({ className }: DeploymentFlowProps) {
       {/* Stage 3: Compliance Validation */}
       <g filter="url(#checkpoint-glow)">
         <circle cx="700" cy="360" r="8" className="fill-blue-500 dark:fill-blue-400" />
-        <circle cx="700" cy="360" r="16" className="fill-none stroke-blue-500 dark:stroke-blue-400" strokeWidth="1.5" opacity="0.4" />
-        <text x="700" y="410" textAnchor="middle" className="fill-blue-600 dark:fill-blue-300 text-xs font-medium" opacity="0.6">
+        <circle
+          cx="700"
+          cy="360"
+          r="16"
+          className="fill-none stroke-blue-500 dark:stroke-blue-400"
+          strokeWidth="1.5"
+          opacity="0.4"
+        />
+        <text
+          x="700"
+          y="410"
+          textAnchor="middle"
+          className="fill-blue-600 dark:fill-blue-300 text-xs font-medium"
+          opacity="0.6"
+        >
           3
         </text>
       </g>
@@ -109,9 +148,29 @@ export function DeploymentFlow({ className }: DeploymentFlowProps) {
       {/* Stage 4: Production Launch */}
       <g filter="url(#checkpoint-glow)">
         <circle cx="1000" cy="280" r="8" className="fill-blue-500 dark:fill-blue-400" />
-        <circle cx="1000" cy="280" r="16" className="fill-none stroke-blue-500 dark:stroke-blue-400" strokeWidth="1.5" opacity="0.4" />
-        <circle cx="1000" cy="280" r="24" className="fill-none stroke-amber-500 dark:stroke-amber-400" strokeWidth="1" opacity="0.5" />
-        <text x="1000" y="330" textAnchor="middle" className="fill-blue-600 dark:fill-blue-300 text-xs font-medium" opacity="0.6">
+        <circle
+          cx="1000"
+          cy="280"
+          r="16"
+          className="fill-none stroke-blue-500 dark:stroke-blue-400"
+          strokeWidth="1.5"
+          opacity="0.4"
+        />
+        <circle
+          cx="1000"
+          cy="280"
+          r="24"
+          className="fill-none stroke-amber-500 dark:stroke-amber-400"
+          strokeWidth="1"
+          opacity="0.5"
+        />
+        <text
+          x="1000"
+          y="330"
+          textAnchor="middle"
+          className="fill-blue-600 dark:fill-blue-300 text-xs font-medium"
+          opacity="0.6"
+        >
           4
         </text>
       </g>

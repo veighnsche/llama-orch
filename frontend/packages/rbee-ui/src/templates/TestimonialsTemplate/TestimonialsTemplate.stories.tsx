@@ -1,7 +1,7 @@
 import { TemplateContainer } from '@rbee/ui/molecules'
-import { testimonialsTemplateContainerProps, testimonialsTemplateProps } from '@rbee/ui/pages/HomePage'
-import { educationTestimonialsContainerProps, educationTestimonialsData } from '@rbee/ui/pages/EducationPage'
 import { communityStatsContainerProps, communityStatsProps } from '@rbee/ui/pages/CommunityPage'
+import { educationTestimonialsContainerProps, educationTestimonialsData } from '@rbee/ui/pages/EducationPage'
+import { testimonialsTemplateContainerProps, testimonialsTemplateProps } from '@rbee/ui/pages/HomePage'
 import type { Meta, StoryObj } from '@storybook/react'
 import { TestimonialsTemplate } from './TestimonialsTemplate'
 

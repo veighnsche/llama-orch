@@ -20,8 +20,7 @@ export const privacyHeroProps: HeroTemplateProps = {
     variant: 'simple',
     content: 'Your Privacy, Your Control',
   },
-  subcopy:
-    'Transparent privacy practices. GDPR-compliant. Your data stays yours. Last updated: October 17, 2025.',
+  subcopy: 'Transparent privacy practices. GDPR-compliant. Your data stays yours. Last updated: October 17, 2025.',
   proofElements: {
     variant: 'assurance',
     items: [
@@ -66,8 +65,8 @@ export const privacyFAQProps: FAQTemplateProps = {
       answer: (
         <div className="space-y-4">
           <p>
-            This Privacy Policy applies to all users of rbee software and services, including developers, GPU
-            providers, and enterprise customers.
+            This Privacy Policy applies to all users of rbee software and services, including developers, GPU providers,
+            and enterprise customers.
           </p>
           <p>
             <strong>Scope:</strong>
@@ -91,9 +90,7 @@ export const privacyFAQProps: FAQTemplateProps = {
             <strong>Self-hosted rbee instances are under YOUR control.</strong> When you self-host rbee, you are the
             data controller. This policy covers only data we collect through rbee.ai and related services.
           </p>
-          <p>
-            For self-hosted deployments:
-          </p>
+          <p>For self-hosted deployments:</p>
           <ul className="list-disc space-y-2 pl-6">
             <li>You control all data processing</li>
             <li>You set your own privacy policies</li>
@@ -188,8 +185,8 @@ export const privacyFAQProps: FAQTemplateProps = {
       answer: (
         <div className="space-y-4">
           <p>
-            <strong>1. Direct Collection:</strong> Information you provide when creating an account, contacting
-            support, or subscribing to updates.
+            <strong>1. Direct Collection:</strong> Information you provide when creating an account, contacting support,
+            or subscribing to updates.
           </p>
           <p>
             <strong>2. Automatic Collection:</strong> Technical data collected via server logs and analytics (Plausible
@@ -372,7 +369,7 @@ export const privacyFAQProps: FAQTemplateProps = {
     },
     {
       value: 'data-breach',
-      question: 'What happens if there\'s a data breach?',
+      question: "What happens if there's a data breach?",
       answer: (
         <div className="space-y-4">
           <p>
@@ -578,8 +575,8 @@ export const privacyFAQProps: FAQTemplateProps = {
             <strong>Right to Lodge Complaint (GDPR Article 77):</strong>
           </p>
           <p>
-            If you believe we have violated your privacy rights, you have the right to lodge a complaint with your
-            local Data Protection Authority.
+            If you believe we have violated your privacy rights, you have the right to lodge a complaint with your local
+            Data Protection Authority.
           </p>
           <p>
             <strong>EU Data Protection Authorities:</strong>
@@ -600,8 +597,8 @@ export const privacyFAQProps: FAQTemplateProps = {
             </li>
           </ul>
           <p>
-            <strong>Contact Us First:</strong> We encourage you to contact us first at privacy@rbee.ai so we can
-            address your concerns.
+            <strong>Contact Us First:</strong> We encourage you to contact us first at privacy@rbee.ai so we can address
+            your concerns.
           </p>
         </div>
       ),

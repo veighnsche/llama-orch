@@ -1,4 +1,4 @@
-import { Badge, NetworkMesh, OrchestrationFlow, StepFlow } from '@rbee/ui/atoms'
+import { NetworkMesh } from '@rbee/ui/atoms'
 import type { TemplateContainerProps } from '@rbee/ui/molecules'
 import { CodeBlock } from '@rbee/ui/molecules/CodeBlock'
 import { TerminalWindow } from '@rbee/ui/molecules/TerminalWindow'
@@ -29,12 +29,10 @@ import {
   Mic,
   RefreshCw,
   Rocket,
-  Shield,
   Sparkles,
   Target,
   TestTube,
   Users,
-  Zap,
 } from 'lucide-react'
 
 // ============================================================================
@@ -170,8 +168,7 @@ export const emailCaptureProps: EmailCaptureProps = {
  */
 export const problemContainerProps: Omit<TemplateContainerProps, 'children'> = {
   title: 'The Reproducibility Crisis in AI Research',
-  description:
-    "Research depends on reproducible results. But today's AI tools make reproducibility nearly impossible.",
+  description: "Research depends on reproducible results. But today's AI tools make reproducibility nearly impossible.",
   kickerVariant: 'destructive',
   background: {
     variant: 'gradient-destructive',
@@ -546,9 +543,9 @@ export const workflowProps: HowItWorksProps = {
         lines: (
           <>
             <div>ls exp_001/</div>
-            <div className="text-muted-foreground">  output.txt</div>
-            <div className="text-muted-foreground">  proof.json</div>
-            <div className="text-muted-foreground">  metadata.json</div>
+            <div className="text-muted-foreground"> output.txt</div>
+            <div className="text-muted-foreground"> proof.json</div>
+            <div className="text-muted-foreground"> metadata.json</div>
           </>
         ),
         copyText: `ls exp_001/

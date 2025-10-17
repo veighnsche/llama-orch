@@ -16,10 +16,10 @@ import {
   UseCasesTemplate,
 } from '@rbee/ui/templates'
 import {
-  educationCTAContainerProps,
-  educationCTAProps,
   educationCourseLevelsContainerProps,
   educationCourseLevelsProps,
+  educationCTAContainerProps,
+  educationCTAProps,
   educationCurriculumContainerProps,
   educationCurriculumProps,
   educationEmailCaptureContainerProps,

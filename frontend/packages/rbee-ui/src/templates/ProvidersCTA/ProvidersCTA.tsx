@@ -60,56 +60,56 @@ export function ProvidersCTA({
 }: ProvidersCTAProps) {
   return (
     <div className="mx-auto max-w-4xl text-center">
-        {/* Header Block */}
-        <div className="animate-in fade-in-50 slide-in-from-bottom-2 motion-reduce:animate-none">
-          <div
-            className="mb-6 inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/10 px-4 py-2 text-sm text-primary"
-            role="note"
-            title="rbee (pronounced are-bee)"
-          >
-            {badgeIcon}
-            {badgeText}
-          </div>
-
-          <h2 id="providers-cta-h2" className="mb-6 text-balance text-4xl font-bold text-foreground lg:text-5xl">
-            {title}
-          </h2>
-
-          <p className="mx-auto mb-8 max-w-2xl text-balance text-lg text-muted-foreground">{subtitle}</p>
+      {/* Header Block */}
+      <div className="animate-in fade-in-50 slide-in-from-bottom-2 motion-reduce:animate-none">
+        <div
+          className="mb-6 inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/10 px-4 py-2 text-sm text-primary"
+          role="note"
+          title="rbee (pronounced are-bee)"
+        >
+          {badgeIcon}
+          {badgeText}
         </div>
 
-        {/* CTA Actions */}
-        <div
-          className="animate-in fade-in-50 [animation-delay:120ms] mb-4 flex flex-col items-center justify-center gap-3 motion-reduce:animate-none sm:flex-row sm:gap-4"
-          aria-describedby="providers-cta-reassurance"
-        >
-          <Button
-            size="lg"
-            className="w-full bg-primary text-primary-foreground hover:bg-primary/90 sm:w-auto"
-            aria-label={primaryCTA.ariaLabel}
-          >
-            {primaryCTA.label}
-            <span className="ml-2">→</span>
-          </Button>
-          <Button
-            size="lg"
-            variant="outline"
-            className="w-full border-border bg-transparent text-foreground hover:bg-secondary sm:w-auto"
-            aria-label={secondaryCTA.ariaLabel}
-          >
-            {secondaryCTA.label}
-          </Button>
-        </div>
+        <h2 id="providers-cta-h2" className="mb-6 text-balance text-4xl font-bold text-foreground lg:text-5xl">
+          {title}
+        </h2>
 
-        {/* Micro-credibility */}
-        <p className="mb-10 text-xs text-muted-foreground/70">{disclaimerText}</p>
+        <p className="mx-auto mb-8 max-w-2xl text-balance text-lg text-muted-foreground">{subtitle}</p>
+      </div>
 
-        {/* Reassurance Bar */}
-        <div
-          id="providers-cta-reassurance"
-          className="animate-in fade-in-50 [animation-delay:200ms] mt-10 text-sm text-muted-foreground motion-reduce:animate-none"
+      {/* CTA Actions */}
+      <div
+        className="animate-in fade-in-50 [animation-delay:120ms] mb-4 flex flex-col items-center justify-center gap-3 motion-reduce:animate-none sm:flex-row sm:gap-4"
+        aria-describedby="providers-cta-reassurance"
+      >
+        <Button
+          size="lg"
+          className="w-full bg-primary text-primary-foreground hover:bg-primary/90 sm:w-auto"
+          aria-label={primaryCTA.ariaLabel}
         >
-          <StatsGrid variant="inline" columns={3} stats={stats} />
+          {primaryCTA.label}
+          <span className="ml-2">→</span>
+        </Button>
+        <Button
+          size="lg"
+          variant="outline"
+          className="w-full border-border bg-transparent text-foreground hover:bg-secondary sm:w-auto"
+          aria-label={secondaryCTA.ariaLabel}
+        >
+          {secondaryCTA.label}
+        </Button>
+      </div>
+
+      {/* Micro-credibility */}
+      <p className="mb-10 text-xs text-muted-foreground/70">{disclaimerText}</p>
+
+      {/* Reassurance Bar */}
+      <div
+        id="providers-cta-reassurance"
+        className="animate-in fade-in-50 [animation-delay:200ms] mt-10 text-sm text-muted-foreground motion-reduce:animate-none"
+      >
+        <StatsGrid variant="inline" columns={3} stats={stats} />
       </div>
     </div>
   )

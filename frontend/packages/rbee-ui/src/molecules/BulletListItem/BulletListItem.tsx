@@ -199,7 +199,9 @@ export function BulletListItem({
             <div className="text-xs text-muted-foreground whitespace-nowrap font-sans translate-y-[2px]">{meta}</div>
           )}
         </div>
-        {description && <div className="text-sm text-muted-foreground font-sans">{parseInlineMarkdown(description)}</div>}
+        {description && (
+          <div className="text-sm text-muted-foreground font-sans">{parseInlineMarkdown(description)}</div>
+        )}
       </div>
     </li>
   )

@@ -114,24 +114,8 @@ export function SecurityMesh({ className }: SecurityMeshProps) {
         <line x1="660" y1="312" x2="600" y2="494" stroke="rgb(59 130 246)" strokeWidth="0.75" />
 
         {/* Amber accent lines (time-bounded execution) */}
-        <line
-          x1="120"
-          y1="312"
-          x2="300"
-          y2="312"
-          stroke="rgb(245 158 11)"
-          strokeWidth="0.5"
-          strokeDasharray="4 4"
-        />
-        <line
-          x1="840"
-          y1="312"
-          x2="1020"
-          y2="312"
-          stroke="rgb(245 158 11)"
-          strokeWidth="0.5"
-          strokeDasharray="4 4"
-        />
+        <line x1="120" y1="312" x2="300" y2="312" stroke="rgb(245 158 11)" strokeWidth="0.5" strokeDasharray="4 4" />
+        <line x1="840" y1="312" x2="1020" y2="312" stroke="rgb(245 158 11)" strokeWidth="0.5" strokeDasharray="4 4" />
       </g>
 
       {/* Connection lines - dark theme */}
@@ -155,24 +139,8 @@ export function SecurityMesh({ className }: SecurityMeshProps) {
         <line x1="660" y1="312" x2="600" y2="494" stroke="rgb(96 165 250)" strokeWidth="1" />
 
         {/* Amber accent lines (time-bounded execution) */}
-        <line
-          x1="120"
-          y1="312"
-          x2="300"
-          y2="312"
-          stroke="rgb(251 191 36)"
-          strokeWidth="0.75"
-          strokeDasharray="4 4"
-        />
-        <line
-          x1="840"
-          y1="312"
-          x2="1020"
-          y2="312"
-          stroke="rgb(251 191 36)"
-          strokeWidth="0.75"
-          strokeDasharray="4 4"
-        />
+        <line x1="120" y1="312" x2="300" y2="312" stroke="rgb(251 191 36)" strokeWidth="0.75" strokeDasharray="4 4" />
+        <line x1="840" y1="312" x2="1020" y2="312" stroke="rgb(251 191 36)" strokeWidth="0.75" strokeDasharray="4 4" />
       </g>
     </svg>
   )

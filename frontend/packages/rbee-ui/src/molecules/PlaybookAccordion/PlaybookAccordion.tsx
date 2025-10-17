@@ -3,7 +3,7 @@
 import { Table, TableBody, TableCell, TableRow } from '@rbee/ui/atoms/Table'
 import type { IconPlateProps } from '@rbee/ui/molecules'
 import { IconPlate } from '@rbee/ui/molecules'
-import { cn, parseInlineMarkdown } from '@rbee/ui/utils'
+import { parseInlineMarkdown } from '@rbee/ui/utils'
 import type { ReactNode } from 'react'
 import { useEffect, useRef } from 'react'
 

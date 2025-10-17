@@ -2,8 +2,8 @@
 
 import { Badge } from '@rbee/ui/atoms/Badge'
 import { Button } from '@rbee/ui/atoms/Button'
-import { parseInlineMarkdown } from '@rbee/ui/utils'
 import { BulletListItem, ComplianceChip, PulseBadge, StatsGrid } from '@rbee/ui/molecules'
+import { parseInlineMarkdown } from '@rbee/ui/utils'
 import { ArrowRight, DollarSign, Star } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import type {

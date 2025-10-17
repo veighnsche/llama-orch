@@ -27,7 +27,7 @@ type Story = StoryObj<typeof Table>
 
 /**
  * ## Dark Mode Table Showcase
- * 
+ *
  * Demonstrates neutral hover states (cool white overlays, not amber) for data density contexts:
  * - Header: bg-[rgba(255,255,255,0.03)] with text-slate-200
  * - Row hover: bg-[rgba(255,255,255,0.025)]
@@ -76,7 +76,8 @@ export const NeutralHoverStates: Story = {
   parameters: {
     docs: {
       description: {
-        story: 'Hover over rows to see neutral white overlay (rgba(255,255,255,0.025)), not amber. Numeric cells use tabular-nums for scanning stability.',
+        story:
+          'Hover over rows to see neutral white overlay (rgba(255,255,255,0.025)), not amber. Numeric cells use tabular-nums for scanning stability.',
       },
     },
   },
@@ -127,7 +128,8 @@ export const SelectedRowWithFocus: Story = {
   parameters: {
     docs: {
       description: {
-        story: 'Selected row (middle) shows bg-[rgba(255,255,255,0.04)] with amber focus ring for keyboard navigation parity.',
+        story:
+          'Selected row (middle) shows bg-[rgba(255,255,255,0.04)] with amber focus ring for keyboard navigation parity.',
       },
     },
   },
@@ -170,7 +172,8 @@ export const HeaderAndFooter: Story = {
   parameters: {
     docs: {
       description: {
-        story: 'Header and footer use bg-[rgba(255,255,255,0.03)] for subtle separation. Text is text-slate-200 for legibility.',
+        story:
+          'Header and footer use bg-[rgba(255,255,255,0.03)] for subtle separation. Text is text-slate-200 for legibility.',
       },
     },
   },

@@ -19,23 +19,15 @@ import type {
   UseCasesTemplateProps,
 } from '@rbee/ui/templates'
 import {
-  Activity,
   AlertTriangle,
-  ArrowRight,
-  Box,
-  Check,
   CheckCircle,
   Cpu,
   DollarSign,
   Download,
-  GitBranch,
-  HardDrive,
   Home as HomeIcon,
   Laptop,
   Lock,
-  Monitor,
   Network,
-  Power,
   Server,
   Settings,
   Shield,
@@ -120,7 +112,8 @@ export const homelabEmailCaptureProps: EmailCaptureProps = {
     showPulse: true,
   },
   headline: 'Get the Homelab Setup Guide',
-  subheadline: 'Step-by-step instructions for setting up rbee across your homelab. Includes SSH configuration, GPU detection, and troubleshooting tips.',
+  subheadline:
+    'Step-by-step instructions for setting up rbee across your homelab. Includes SSH configuration, GPU detection, and troubleshooting tips.',
   emailInput: {
     placeholder: 'your@email.com',
     label: 'Email address',
@@ -163,7 +156,7 @@ export const homelabProblemProps: ProblemTemplateProps = {
     {
       icon: <DollarSign className="h-6 w-6" />,
       title: 'Wasted Hardware',
-      body: 'Thousands of dollars in GPUs sitting idle because there\'s no easy way to use them together.',
+      body: "Thousands of dollars in GPUs sitting idle because there's no easy way to use them together.",
     },
   ],
 }
@@ -364,10 +357,7 @@ rbee-keeper infer --model llama-3.1-70b --auto-balance`,
     { name: 'gaming-pc', label: 'gaming-pc\nRTX 4090', tone: 'chart-2' },
     { name: 'workstation', label: 'workstation\nRTX 3090', tone: 'chart-3' },
   ],
-  diagramArrows: [
-    { label: 'SSH: Deploy model shard 1/2' },
-    { label: 'SSH: Deploy model shard 2/2', indent: 'ml-16' },
-  ],
+  diagramArrows: [{ label: 'SSH: Deploy model shard 1/2' }, { label: 'SSH: Deploy model shard 2/2', indent: 'ml-16' }],
   legendItems: [{ label: 'All communication via SSH' }, { label: 'No agents or daemons required' }],
   provisioningTitle: 'Automatic Provisioning',
   provisioningSubtitle: 'rbee-keeper orchestrates model deployment across your homelab via SSH',
@@ -481,8 +471,7 @@ export const homelabPowerCostProps: ProvidersEarningsProps = {
   utilizationLabel: 'Average Load (%)',
   earningsTitle: 'Monthly Power Cost',
   monthlyLabel: 'Monthly',
-  basedOnText: (hours: number, utilization: number) =>
-    `Based on ${hours}h/month at ${utilization}% load, €0.30/kWh`,
+  basedOnText: (hours: number, utilization: number) => `Based on ${hours}h/month at ${utilization}% load, €0.30/kWh`,
   takeHomeLabel: 'Total Cost',
   dailyLabel: 'Daily',
   yearlyLabel: 'Yearly',
@@ -723,7 +712,8 @@ export const homelabFAQContainerProps: Omit<TemplateContainerProps, 'children'> 
 export const homelabCTAProps: CTATemplateProps = {
   eyebrow: 'Ready to Get Started?',
   title: 'Turn Your Homelab Into an AI Powerhouse',
-  subtitle: 'Download rbee and start running LLMs across all your machines. Free, open-source, and built for homelabbers.',
+  subtitle:
+    'Download rbee and start running LLMs across all your machines. Free, open-source, and built for homelabbers.',
   primary: {
     label: 'Download rbee',
     href: '/download',

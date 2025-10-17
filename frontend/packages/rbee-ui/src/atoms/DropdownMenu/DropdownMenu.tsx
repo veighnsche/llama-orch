@@ -2,7 +2,6 @@
 
 import * as DropdownMenuPrimitive from '@radix-ui/react-dropdown-menu'
 import { cn } from '@rbee/ui/utils'
-import { focusRing } from '@rbee/ui/utils/focus-ring'
 import { CheckIcon, ChevronRightIcon, CircleIcon } from 'lucide-react'
 import type * as React from 'react'
 

@@ -87,11 +87,7 @@ export function EmailCapture({
       {/* Supportive visual - homelab illustration */}
       {showIllustration && (
         <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
-          <HomelabBee
-            size={960}
-            className="opacity-20"
-            aria-hidden="true"
-          />
+          <HomelabBee size={960} className="opacity-20" aria-hidden="true" />
         </div>
       )}
 

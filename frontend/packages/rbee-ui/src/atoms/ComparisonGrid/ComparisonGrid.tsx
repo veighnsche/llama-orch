@@ -62,7 +62,7 @@ export function ComparisonGrid({ className }: ComparisonGridProps) {
         <circle cx="450" cy="200" r="6" className="fill-blue-500 dark:fill-blue-400" />
         <circle cx="450" cy="320" r="6" className="fill-blue-500 dark:fill-blue-400" />
         <circle cx="450" cy="440" r="6" className="fill-blue-500 dark:fill-blue-400" />
-        
+
         {/* Right lane points */}
         <circle cx="750" cy="200" r="6" className="fill-emerald-500 dark:fill-emerald-400" />
         <circle cx="750" cy="320" r="6" className="fill-emerald-500 dark:fill-emerald-400" />

@@ -35,7 +35,7 @@ export function OrchestrationFlow({ className }: OrchestrationFlowProps) {
             <feMergeNode in="SourceGraphic" />
           </feMerge>
         </filter>
-        
+
         <radialGradient id="orch-gradient" cx="50%" cy="50%">
           <stop offset="0%" stopColor="rgb(59 130 246)" stopOpacity="0.3" />
           <stop offset="100%" stopColor="rgb(59 130 246)" stopOpacity="0" />
@@ -45,8 +45,22 @@ export function OrchestrationFlow({ className }: OrchestrationFlowProps) {
       {/* Central orchestrator */}
       <g filter="url(#orch-glow)">
         <circle cx="600" cy="320" r="12" className="fill-blue-500 dark:fill-blue-400" />
-        <circle cx="600" cy="320" r="24" className="fill-none stroke-blue-500 dark:stroke-blue-400" strokeWidth="1.5" opacity="0.4" />
-        <circle cx="600" cy="320" r="36" className="fill-none stroke-blue-500 dark:stroke-blue-400" strokeWidth="1" opacity="0.2" />
+        <circle
+          cx="600"
+          cy="320"
+          r="24"
+          className="fill-none stroke-blue-500 dark:stroke-blue-400"
+          strokeWidth="1.5"
+          opacity="0.4"
+        />
+        <circle
+          cx="600"
+          cy="320"
+          r="36"
+          className="fill-none stroke-blue-500 dark:stroke-blue-400"
+          strokeWidth="1"
+          opacity="0.2"
+        />
       </g>
 
       {/* Worker nodes arranged in circle */}

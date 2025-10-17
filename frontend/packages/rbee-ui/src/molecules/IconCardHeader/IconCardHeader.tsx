@@ -1,4 +1,4 @@
-import { CardDescription, CardHeader, CardTitle } from '@rbee/ui/atoms'
+import { CardHeader } from '@rbee/ui/atoms'
 import { IconPlate } from '@rbee/ui/molecules'
 import { cn, parseInlineMarkdown } from '@rbee/ui/utils'
 import type * as React from 'react'

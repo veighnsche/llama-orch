@@ -2,8 +2,16 @@
 import type { Meta, StoryObj } from '@storybook/react'
 import { useState } from 'react'
 import { Button } from '../Button/Button'
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from './Dialog'
 import { Popover, PopoverContent, PopoverTrigger } from '../Popover/Popover'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from './Dialog'
 
 const meta: Meta<typeof Dialog> = {
   title: 'Atoms/Overlays/Dark Mode Polish',
@@ -30,7 +38,7 @@ type Story = StoryObj<typeof Dialog>
 
 /**
  * ## Dark Mode Polish: Overlays
- * 
+ *
  * Demonstrates:
  * - Scrim: bg-black/60 (reduced contrast jump)
  * - Blur: backdrop-blur-[2px] (improves readability behind overlay)
@@ -41,7 +49,7 @@ type Story = StoryObj<typeof Dialog>
 export const DialogWithScrim: Story = {
   render: () => {
     const [open, setOpen] = useState(false)
-    
+
     return (
       <div className="bg-[#0b1220] p-8 rounded-lg min-h-[400px]">
         <div className="bg-card border border-border rounded-xl p-6 max-w-2xl">
@@ -50,7 +58,7 @@ export const DialogWithScrim: Story = {
             Click the button to see the scrim + blur effect. The backdrop uses bg-black/60 backdrop-blur-[2px] to reduce
             perceived contrast jump and improve readability of content behind the overlay.
           </p>
-          
+
           <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild>
               <Button>Open Dialog</Button>
@@ -59,13 +67,12 @@ export const DialogWithScrim: Story = {
               <DialogHeader>
                 <DialogTitle>Scrim + Blur Overlay</DialogTitle>
                 <DialogDescription>
-                  Notice the subtle blur on the background content. This reduces the harsh contrast jump when the dialog opens.
+                  Notice the subtle blur on the background content. This reduces the harsh contrast jump when the dialog
+                  opens.
                 </DialogDescription>
               </DialogHeader>
               <div className="py-4">
-                <p className="text-sm">
-                  The overlay uses:
-                </p>
+                <p className="text-sm">The overlay uses:</p>
                 <ul className="list-disc list-inside text-sm space-y-1 mt-2 text-muted-foreground">
                   <li>bg-black/60 (darker than /50 for better separation)</li>
                   <li>backdrop-blur-[2px] (subtle blur, not heavy)</li>
@@ -110,7 +117,7 @@ export const PopoverWithShadow: Story = {
         <p className="text-sm text-muted-foreground mb-4">
           Popovers use var(--shadow-md) which includes ambient shadow + subtle highlight inset for depth on dark.
         </p>
-        
+
         <div className="flex gap-4">
           <Popover>
             <PopoverTrigger asChild>
@@ -123,8 +130,8 @@ export const PopoverWithShadow: Story = {
                   This popover uses the refined dark shadow with ambient + highlight inset:
                 </p>
                 <code className="text-xs block mt-2 p-2 bg-muted rounded">
-                  0 6px 16px rgba(0,0,0,0.45),<br />
-                  0 1px 0 rgba(255,255,255,0.04) inset
+                  0 6px 16px rgba(0,0,0,0.45),
+                  <br />0 1px 0 rgba(255,255,255,0.04) inset
                 </code>
               </div>
             </PopoverContent>
@@ -148,9 +155,15 @@ export const PopoverWithShadow: Story = {
         <div className="mt-6 p-4 bg-muted rounded-md">
           <p className="text-sm font-medium mb-2">Shadow Comparison</p>
           <div className="space-y-2 text-xs text-muted-foreground">
-            <p><strong>Dialog:</strong> var(--shadow-lg) — Heavier for full-screen modals</p>
-            <p><strong>Popover:</strong> var(--shadow-md) — Medium for floating panels</p>
-            <p><strong>Card:</strong> var(--shadow-sm) — Light for surface elevation</p>
+            <p>
+              <strong>Dialog:</strong> var(--shadow-lg) — Heavier for full-screen modals
+            </p>
+            <p>
+              <strong>Popover:</strong> var(--shadow-md) — Medium for floating panels
+            </p>
+            <p>
+              <strong>Card:</strong> var(--shadow-sm) — Light for surface elevation
+            </p>
           </div>
         </div>
       </div>
@@ -168,16 +181,16 @@ export const PopoverWithShadow: Story = {
 export const MotionComparison: Story = {
   render: () => {
     const [dialogOpen, setDialogOpen] = useState(false)
-    
+
     return (
       <div className="bg-[#0b1220] p-8 rounded-lg min-h-[400px]">
         <div className="bg-card border border-border rounded-xl p-6 max-w-2xl">
           <h3 className="text-lg font-semibold mb-4">Motion Choreography</h3>
           <p className="text-sm text-muted-foreground mb-4">
-            All overlays use consistent motion: fade-in-50/fade-out-50 + directional slide. This creates soft,
-            symmetric transitions that respect prefers-reduced-motion.
+            All overlays use consistent motion: fade-in-50/fade-out-50 + directional slide. This creates soft, symmetric
+            transitions that respect prefers-reduced-motion.
           </p>
-          
+
           <div className="space-y-4">
             <div>
               <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>

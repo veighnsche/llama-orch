@@ -1,6 +1,6 @@
 import { Slot } from '@radix-ui/react-slot'
 import { cn } from '@rbee/ui/utils'
-import { focusRing, focusRingDestructive, brandLink } from '@rbee/ui/utils/focus-ring'
+import { brandLink, focusRing, focusRingDestructive } from '@rbee/ui/utils/focus-ring'
 import { cva, type VariantProps } from 'class-variance-authority'
 import type * as React from 'react'
 
@@ -12,25 +12,25 @@ const buttonVariants = cva(
         default: cn(
           'bg-primary text-primary-foreground hover:bg-accent active:bg-[#92400e] active:scale-[0.98]',
           'dark:bg-[#b45309] dark:hover:bg-[#d97706] dark:active:bg-[#92400e]',
-          focusRing
+          focusRing,
         ),
         destructive: cn(
           'bg-destructive text-destructive-foreground hover:bg-destructive/90 active:bg-destructive/80 active:scale-[0.98] dark:bg-destructive/60',
-          focusRingDestructive
+          focusRingDestructive,
         ),
         outline: cn(
           'border border-border bg-transparent text-foreground shadow-xs hover:bg-[#f4f6f9] hover:border-slate-400 active:bg-[#eef2f6]',
           'dark:bg-input/30 dark:border-input dark:hover:bg-input/50 dark:hover:text-foreground',
-          focusRing
+          focusRing,
         ),
         secondary: cn(
           'bg-secondary text-secondary-foreground hover:bg-[#f4f6f9] active:bg-[#eef2f6] border border-transparent',
-          focusRing
+          focusRing,
         ),
         ghost: cn(
           'bg-transparent text-foreground hover:bg-[#f4f6f9] active:bg-[#eef2f6]',
           'dark:hover:bg-white/[0.04] dark:active:bg-white/[0.06]',
-          focusRing
+          focusRing,
         ),
         link: brandLink,
       },
@@ -62,13 +62,7 @@ function Button({
   }) {
   const Comp = asChild ? Slot : 'button'
 
-  return (
-    <Comp 
-      data-slot="button" 
-      className={cn(buttonVariants({ variant, size, className }))} 
-      {...props} 
-    />
-  )
+  return <Comp data-slot="button" className={cn(buttonVariants({ variant, size, className }))} {...props} />
 }
 
 export { Button, buttonVariants }

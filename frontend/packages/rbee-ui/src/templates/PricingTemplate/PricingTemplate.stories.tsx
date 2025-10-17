@@ -1,7 +1,10 @@
 import { TemplateContainer } from '@rbee/ui/molecules'
-import { pricingTemplateContainerProps as homePricingTemplateContainerProps, pricingTemplateProps as homePricingTemplateProps,  } from '@rbee/ui/pages/HomePage'
-import { pricingTemplateContainerProps, pricingTemplateProps } from '@rbee/ui/pages/PricingPage'
 import { educationCourseLevelsContainerProps, educationCourseLevelsProps } from '@rbee/ui/pages/EducationPage'
+import {
+  pricingTemplateContainerProps as homePricingTemplateContainerProps,
+  pricingTemplateProps as homePricingTemplateProps,
+} from '@rbee/ui/pages/HomePage'
+import { pricingTemplateContainerProps, pricingTemplateProps } from '@rbee/ui/pages/PricingPage'
 import type { Meta, StoryObj } from '@storybook/react'
 import { PricingTemplate } from './PricingTemplate'
 

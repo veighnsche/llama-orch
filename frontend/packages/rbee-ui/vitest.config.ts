@@ -1,6 +1,6 @@
+import path from 'node:path'
 import react from '@vitejs/plugin-react'
 import { defineConfig } from 'vitest/config'
-import path from 'path'
 
 export default defineConfig({
   plugins: [react()] as any, // Type assertion to handle Vite version conflicts
@@ -12,13 +12,7 @@ export default defineConfig({
     coverage: {
       provider: 'v8',
       reporter: ['text', 'json', 'html'],
-      exclude: [
-        'node_modules/',
-        'src/test/',
-        '**/*.stories.tsx',
-        '**/*.test.tsx',
-        '**/*.test.ts',
-      ],
+      exclude: ['node_modules/', 'src/test/', '**/*.stories.tsx', '**/*.test.tsx', '**/*.test.ts'],
     },
   },
   resolve: {

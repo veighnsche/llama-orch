@@ -108,7 +108,13 @@ export function SectorGrid({ className }: SectorGridProps) {
             className="dark:stroke-blue-400"
           />
           <circle cx="280" cy="210" r="4" className="fill-blue-500 dark:fill-blue-400" />
-          <text x="280" y="165" textAnchor="middle" className="fill-blue-600 dark:fill-blue-300 text-xs font-medium" opacity="0.5">
+          <text
+            x="280"
+            y="165"
+            textAnchor="middle"
+            className="fill-blue-600 dark:fill-blue-300 text-xs font-medium"
+            opacity="0.5"
+          >
             FIN
           </text>
         </g>
@@ -126,7 +132,13 @@ export function SectorGrid({ className }: SectorGridProps) {
             className="dark:stroke-blue-400"
           />
           <circle cx="920" cy="210" r="4" className="fill-blue-500 dark:fill-blue-400" />
-          <text x="920" y="165" textAnchor="middle" className="fill-blue-600 dark:fill-blue-300 text-xs font-medium" opacity="0.5">
+          <text
+            x="920"
+            y="165"
+            textAnchor="middle"
+            className="fill-blue-600 dark:fill-blue-300 text-xs font-medium"
+            opacity="0.5"
+          >
             MED
           </text>
         </g>
@@ -144,7 +156,13 @@ export function SectorGrid({ className }: SectorGridProps) {
             className="dark:stroke-blue-400"
           />
           <circle cx="280" cy="430" r="4" className="fill-blue-500 dark:fill-blue-400" />
-          <text x="280" y="385" textAnchor="middle" className="fill-blue-600 dark:fill-blue-300 text-xs font-medium" opacity="0.5">
+          <text
+            x="280"
+            y="385"
+            textAnchor="middle"
+            className="fill-blue-600 dark:fill-blue-300 text-xs font-medium"
+            opacity="0.5"
+          >
             LEG
           </text>
         </g>
@@ -162,7 +180,13 @@ export function SectorGrid({ className }: SectorGridProps) {
             className="dark:stroke-blue-400"
           />
           <circle cx="920" cy="430" r="4" className="fill-blue-500 dark:fill-blue-400" />
-          <text x="920" y="385" textAnchor="middle" className="fill-blue-600 dark:fill-blue-300 text-xs font-medium" opacity="0.5">
+          <text
+            x="920"
+            y="385"
+            textAnchor="middle"
+            className="fill-blue-600 dark:fill-blue-300 text-xs font-medium"
+            opacity="0.5"
+          >
             GOV
           </text>
         </g>

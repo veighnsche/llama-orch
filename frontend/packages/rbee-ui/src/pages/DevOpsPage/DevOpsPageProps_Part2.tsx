@@ -9,18 +9,7 @@ import type {
   FAQTemplateProps,
   RealTimeProgressProps,
 } from '@rbee/ui/templates'
-import {
-  Activity,
-  CheckCircle,
-  Clock,
-  Database,
-  Lock,
-  MessageSquare,
-  Network,
-  Rocket,
-  Server,
-  X,
-} from 'lucide-react'
+import { Activity, CheckCircle, Clock, Database, Lock, MessageSquare, Network, Rocket, Server, X } from 'lucide-react'
 
 // === Error Handling Section ===
 

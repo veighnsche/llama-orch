@@ -2,9 +2,9 @@ import { Alert, AlertDescription } from '@rbee/ui/atoms/Alert'
 import { Badge } from '@rbee/ui/atoms/Badge'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@rbee/ui/atoms/Tabs'
 import { BulletListItem } from '@rbee/ui/molecules/BulletListItem'
+import { parseInlineMarkdown } from '@rbee/ui/utils'
 import { Check } from 'lucide-react'
 import type { ReactNode } from 'react'
-import { cn, parseInlineMarkdown } from '@rbee/ui/utils'
 
 export interface TabConfig {
   value: string

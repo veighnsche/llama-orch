@@ -118,14 +118,12 @@ export const WithRating: Story = {
     <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl">
       <TestimonialCard
         name="Jan Bakker"
-        role="CTO"
         quote="Outstanding service. The performance is incredible and the support team is very responsive."
         company={{ name: 'FinTech Startup' }}
         rating={5}
       />
       <TestimonialCard
         name="Lisa Vermeer"
-        role="Lead Developer"
         quote="Great platform overall. Setup was straightforward and documentation is clear."
         company={{ name: 'Tech Company' }}
         rating={4}
@@ -151,14 +149,12 @@ export const InRailContext: Story = {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <TestimonialCard
           name="Dr. Sarah van den Berg"
-          role="Chief Medical Officer"
           quote="rbee allows us to process patient data with complete GDPR compliance. The Dutch data sovereignty gives us peace of mind that no patient information ever leaves the Netherlands."
           verified
           rating={5}
         />
         <TestimonialCard
           name="Mark de Vries"
-          role="GPU Provider"
           quote="I earn €150-200/month by sharing my gaming PC when I'm not using it. Setup took 10 minutes, and payments are automatic."
           highlight="€150-200/mo"
           verified
@@ -166,7 +162,6 @@ export const InRailContext: Story = {
         />
         <TestimonialCard
           name="Peter Smit"
-          role="Senior Developer"
           quote="The API is well-designed and the SDK makes integration easy. Excellent developer experience."
           company={{ name: 'Government Agency' }}
           rating={5}

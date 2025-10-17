@@ -1,21 +1,24 @@
 import { TemplateContainer } from '@rbee/ui/molecules'
+import { complianceSolutionContainerProps, complianceSolutionProps } from '@rbee/ui/pages/CompliancePage'
 import {
   solutionTemplateContainerProps as developersContainerProps,
   solutionTemplateProps as developersSolutionProps,
 } from '@rbee/ui/pages/DevelopersPage'
-import { enterpriseSolutionContainerProps, enterpriseSolutionProps } from '@rbee/ui/pages/EnterprisePage'
-import { solutionTemplateContainerProps as homeContainerProps, solutionTemplateProps as homeSolutionTemplateProps } from '@rbee/ui/pages/HomePage'
-import { educationSolutionContainerProps, educationSolutionProps } from '@rbee/ui/pages/EducationPage'
-import { complianceSolutionContainerProps, complianceSolutionProps } from '@rbee/ui/pages/CompliancePage'
 import { devopsSolutionContainerProps, devopsSolutionProps } from '@rbee/ui/pages/DevOpsPage'
-import { solutionContainerProps, solutionProps } from '@rbee/ui/pages/ResearchPage'
-import { securityDefenseLayersContainerProps, securityDefenseLayersProps } from '@rbee/ui/pages/SecurityPage'
+import { educationSolutionContainerProps, educationSolutionProps } from '@rbee/ui/pages/EducationPage'
+import { enterpriseSolutionContainerProps, enterpriseSolutionProps } from '@rbee/ui/pages/EnterprisePage'
+import {
+  solutionTemplateContainerProps as homeContainerProps,
+  solutionTemplateProps as homeSolutionTemplateProps,
+} from '@rbee/ui/pages/HomePage'
 import {
   providersMarketplaceContainerProps,
   providersMarketplaceSolutionProps,
   providersSolutionContainerProps,
   providersSolutionProps,
 } from '@rbee/ui/pages/ProvidersPage'
+import { solutionContainerProps, solutionProps } from '@rbee/ui/pages/ResearchPage'
+import { securityDefenseLayersContainerProps, securityDefenseLayersProps } from '@rbee/ui/pages/SecurityPage'
 import type { Meta, StoryObj } from '@storybook/react'
 import { SolutionTemplate } from './SolutionTemplate'
 

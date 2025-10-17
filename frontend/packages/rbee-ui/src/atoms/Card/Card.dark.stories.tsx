@@ -1,6 +1,6 @@
 // Dark Mode Showcase for Card component
 import type { Meta, StoryObj } from '@storybook/react'
-import { Globe, Shield, Server, Database } from 'lucide-react'
+import { Database, Globe, Server, Shield } from 'lucide-react'
 import { IconCardHeader } from '../../molecules/IconCardHeader/IconCardHeader'
 import { Button } from '../Button/Button'
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from './Card'
@@ -30,7 +30,7 @@ type Story = StoryObj<typeof Card>
 
 /**
  * ## Dark Mode Card Showcase
- * 
+ *
  * Demonstrates the refined dark theme with:
  * - Rich surfaces (#141c2a cards on #0b1220 canvas)
  * - Reduced glare (#e5eaf1 foreground)
@@ -63,7 +63,8 @@ export const CardOnCanvas: Story = {
   parameters: {
     docs: {
       description: {
-        story: 'Card on canvas background showing the refined dark surface hierarchy. Note the subtle shadow with inset highlight.',
+        story:
+          'Card on canvas background showing the refined dark surface hierarchy. Note the subtle shadow with inset highlight.',
       },
     },
   },
@@ -149,7 +150,12 @@ export const IconHeaderCards: Story = {
     <div className="bg-[#0b1220] p-8 rounded-lg">
       <div className="grid max-w-4xl gap-6 md:grid-cols-2">
         <Card className="rounded-2xl border-border bg-card/60 p-8">
-          <IconCardHeader icon={<Globe className="size-6" />} title="GDPR" subtitle="EU Regulation" titleId="card-gdpr-dark" />
+          <IconCardHeader
+            icon={<Globe className="size-6" />}
+            title="GDPR"
+            subtitle="EU Regulation"
+            titleId="card-gdpr-dark"
+          />
           <CardContent className="p-0">
             <p className="text-sm text-foreground/85">
               Built from the ground up to meet GDPR requirements with data processing agreements, right to erasure, and
@@ -159,7 +165,12 @@ export const IconHeaderCards: Story = {
         </Card>
 
         <Card className="rounded-2xl border-border bg-card/60 p-8">
-          <IconCardHeader icon={<Shield className="size-6" />} title="SOC2" subtitle="US Standard" titleId="card-soc2-dark" />
+          <IconCardHeader
+            icon={<Shield className="size-6" />}
+            title="SOC2"
+            subtitle="US Standard"
+            titleId="card-soc2-dark"
+          />
           <CardContent className="p-0">
             <p className="text-sm text-foreground/85">
               Security and availability controls with auditor query API, tamper-evident hash chains, and encryption at
@@ -169,7 +180,12 @@ export const IconHeaderCards: Story = {
         </Card>
 
         <Card className="rounded-2xl border-border bg-card/60 p-8">
-          <IconCardHeader icon={<Server className="size-6" />} title="ISO 27001" subtitle="Security" titleId="card-iso-dark" />
+          <IconCardHeader
+            icon={<Server className="size-6" />}
+            title="ISO 27001"
+            subtitle="Security"
+            titleId="card-iso-dark"
+          />
           <CardContent className="p-0">
             <p className="text-sm text-foreground/85">
               Information security management system with risk assessment, access controls, and continuous monitoring.
@@ -178,7 +194,12 @@ export const IconHeaderCards: Story = {
         </Card>
 
         <Card className="rounded-2xl border-border bg-card/60 p-8">
-          <IconCardHeader icon={<Database className="size-6" />} title="HIPAA" subtitle="Healthcare" titleId="card-hipaa-dark" />
+          <IconCardHeader
+            icon={<Database className="size-6" />}
+            title="HIPAA"
+            subtitle="Healthcare"
+            titleId="card-hipaa-dark"
+          />
           <CardContent className="p-0">
             <p className="text-sm text-foreground/85">
               Protected health information safeguards with encryption, audit logs, and business associate agreements.
@@ -210,14 +231,21 @@ export const BrandProgression: Story = {
             <p className="text-sm font-medium">Primary Button States:</p>
             <div className="flex gap-2">
               <Button size="sm">Default (#b45309)</Button>
-              <Button size="sm" className="bg-[#d97706]">Hover (#d97706)</Button>
-              <Button size="sm" className="bg-[#92400e]">Active (#92400e)</Button>
+              <Button size="sm" className="bg-[#d97706]">
+                Hover (#d97706)
+              </Button>
+              <Button size="sm" className="bg-[#92400e]">
+                Active (#92400e)
+              </Button>
             </div>
           </div>
           <div className="space-y-2">
             <p className="text-sm font-medium">Link States:</p>
             <div className="space-y-1">
-              <a href="#" className="text-[color:var(--accent)] underline underline-offset-2 decoration-amber-400 text-sm">
+              <a
+                href="#"
+                className="text-[color:var(--accent)] underline underline-offset-2 decoration-amber-400 text-sm"
+              >
                 Default link (#d97706)
               </a>
               <br />
@@ -233,7 +261,8 @@ export const BrandProgression: Story = {
   parameters: {
     docs: {
       description: {
-        story: 'Brand color progression: #b45309 (default) → #d97706 (hover) → #92400e (active). Links use #d97706 default, white on hover.',
+        story:
+          'Brand color progression: #b45309 (default) → #d97706 (hover) → #92400e (active). Links use #d97706 default, white on hover.',
       },
     },
   },

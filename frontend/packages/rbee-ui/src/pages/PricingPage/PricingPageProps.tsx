@@ -63,9 +63,7 @@ export const pricingTemplateContainerProps: Omit<TemplateContainerProps, 'childr
   description:
     "Every plan includes the full rbee orchestrator—no feature gates, no artificial limits. Start free and grow when you're ready.",
   background: {
-
     variant: 'background',
-
   },
   paddingY: '2xl',
   maxWidth: '7xl',
@@ -144,9 +142,7 @@ export const pricingTemplateProps: PricingTemplateProps = {
 export const pricingComparisonContainerProps: Omit<TemplateContainerProps, 'children'> = {
   title: '',
   background: {
-
     variant: 'secondary',
-
   },
   paddingY: '2xl',
 }
@@ -277,9 +273,7 @@ export const pricingFaqContainerProps: Omit<TemplateContainerProps, 'children'> 
   title: 'Pricing FAQs',
   description: 'Answers on licensing, upgrades, trials, and payments.',
   background: {
-
     variant: 'background',
-
   },
 }
 

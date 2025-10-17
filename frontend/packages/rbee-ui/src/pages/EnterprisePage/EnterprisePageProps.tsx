@@ -215,9 +215,7 @@ export const enterpriseProblemTemplateContainerProps: Omit<TemplateContainerProp
   kicker: 'The Compliance Risk',
   kickerVariant: 'destructive',
   background: {
-
     variant: 'gradient-destructive',
-
   },
   paddingY: 'xl',
   maxWidth: '7xl',
@@ -830,9 +828,7 @@ export const enterpriseComparisonContainerProps: Omit<TemplateContainerProps, 'c
   title: 'Why Enterprises Choose rbee',
   description: "See how rbee's compliance and security compare to external AI providers.",
   background: {
-
     variant: 'background',
-
   },
   paddingY: '2xl',
   maxWidth: '7xl',
@@ -861,9 +857,7 @@ export const enterpriseFeaturesContainerProps: Omit<TemplateContainerProps, 'chi
   title: 'Enterprise Features',
   description: 'Everything you need for compliant, resilient, EU-resident AI infrastructure.',
   background: {
-
     variant: 'background',
-
   },
   paddingY: '2xl',
   maxWidth: '7xl',
@@ -923,9 +917,7 @@ export const enterpriseTestimonialsContainerProps: Omit<TemplateContainerProps, 
   title: 'Trusted by Regulated Industries',
   description: 'Organizations in highly regulated industries trust rbee for compliance-first AI infrastructure.',
   background: {
-
     variant: 'background',
-
   },
   paddingY: '2xl',
   maxWidth: '6xl',
@@ -964,9 +956,7 @@ export const enterpriseCTAContainerProps: Omit<TemplateContainerProps, 'children
   title: 'Ready to Meet Your Compliance Requirements?',
   description: 'Book a demo with our compliance team, or download the documentation pack.',
   background: {
-
     variant: 'background',
-
   },
   paddingY: '2xl',
   maxWidth: '5xl',

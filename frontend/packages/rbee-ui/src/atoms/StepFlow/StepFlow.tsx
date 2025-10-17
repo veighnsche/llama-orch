@@ -39,34 +39,36 @@ export function StepFlow({ className }: StepFlowProps) {
 
       {/* Progress path - light theme */}
       <g className="dark:hidden" opacity="0.4">
-        <path
-          d="M 200 320 Q 400 200 600 320 T 1000 320"
-          stroke="rgb(59 130 246)"
-          strokeWidth="2"
-          fill="none"
-        />
+        <path d="M 200 320 Q 400 200 600 320 T 1000 320" stroke="rgb(59 130 246)" strokeWidth="2" fill="none" />
       </g>
 
       {/* Progress path - dark theme */}
       <g className="hidden dark:block" opacity="0.5">
-        <path
-          d="M 200 320 Q 400 200 600 320 T 1000 320"
-          stroke="rgb(96 165 250)"
-          strokeWidth="2.5"
-          fill="none"
-        />
+        <path d="M 200 320 Q 400 200 600 320 T 1000 320" stroke="rgb(96 165 250)" strokeWidth="2.5" fill="none" />
       </g>
 
       {/* Step circles */}
       <g filter="url(#step-glow)">
         {/* Step 1 - Completed */}
-        <circle cx="200" cy="320" r="20" className="fill-none stroke-emerald-500 dark:stroke-emerald-400" strokeWidth="2" />
+        <circle
+          cx="200"
+          cy="320"
+          r="20"
+          className="fill-none stroke-emerald-500 dark:stroke-emerald-400"
+          strokeWidth="2"
+        />
         <circle cx="200" cy="320" r="16" className="fill-emerald-500 dark:fill-emerald-400" opacity="0.3" />
-        
+
         {/* Step 2 - Completed */}
-        <circle cx="600" cy="320" r="20" className="fill-none stroke-emerald-500 dark:stroke-emerald-400" strokeWidth="2" />
+        <circle
+          cx="600"
+          cy="320"
+          r="20"
+          className="fill-none stroke-emerald-500 dark:stroke-emerald-400"
+          strokeWidth="2"
+        />
         <circle cx="600" cy="320" r="16" className="fill-emerald-500 dark:fill-emerald-400" opacity="0.3" />
-        
+
         {/* Step 3 - In Progress */}
         <circle cx="1000" cy="320" r="20" className="fill-none stroke-blue-500 dark:stroke-blue-400" strokeWidth="2" />
         <circle cx="1000" cy="320" r="16" className="fill-blue-500 dark:fill-blue-400" opacity="0.3" />
@@ -74,9 +76,15 @@ export function StepFlow({ className }: StepFlowProps) {
 
       {/* Step numbers */}
       <g className="fill-blue-500 dark:fill-blue-400" opacity="0.8">
-        <text x="200" y="328" textAnchor="middle" fontSize="16" fontWeight="600">1</text>
-        <text x="600" y="328" textAnchor="middle" fontSize="16" fontWeight="600">2</text>
-        <text x="1000" y="328" textAnchor="middle" fontSize="16" fontWeight="600">3</text>
+        <text x="200" y="328" textAnchor="middle" fontSize="16" fontWeight="600">
+          1
+        </text>
+        <text x="600" y="328" textAnchor="middle" fontSize="16" fontWeight="600">
+          2
+        </text>
+        <text x="1000" y="328" textAnchor="middle" fontSize="16" fontWeight="600">
+          3
+        </text>
       </g>
 
       {/* Checkmarks for completed steps */}
@@ -88,7 +96,13 @@ export function StepFlow({ className }: StepFlowProps) {
       {/* Pulse effect on current step */}
       <g opacity="0.3">
         <circle cx="1000" cy="320" r="28" className="fill-none stroke-blue-500 dark:stroke-blue-400" strokeWidth="1" />
-        <circle cx="1000" cy="320" r="36" className="fill-none stroke-blue-500 dark:stroke-blue-400" strokeWidth="0.5" />
+        <circle
+          cx="1000"
+          cy="320"
+          r="36"
+          className="fill-none stroke-blue-500 dark:stroke-blue-400"
+          strokeWidth="0.5"
+        />
       </g>
     </svg>
   )

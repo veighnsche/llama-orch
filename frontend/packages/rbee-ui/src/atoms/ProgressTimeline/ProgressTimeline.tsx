@@ -35,7 +35,7 @@ export function ProgressTimeline({ className }: ProgressTimelineProps) {
             <feMergeNode in="SourceGraphic" />
           </feMerge>
         </filter>
-        
+
         <linearGradient id="progress-gradient" x1="0%" y1="0%" x2="100%" y2="0%">
           <stop offset="0%" stopColor="rgb(16 185 129)" stopOpacity="0.8" />
           <stop offset="60%" stopColor="rgb(16 185 129)" stopOpacity="0.8" />
@@ -62,7 +62,7 @@ export function ProgressTimeline({ className }: ProgressTimelineProps) {
         <circle cx="300" cy="320" r="8" className="fill-emerald-500 dark:fill-emerald-400" />
         <circle cx="500" cy="320" r="8" className="fill-emerald-500 dark:fill-emerald-400" />
         <circle cx="680" cy="320" r="8" className="fill-amber-500 dark:fill-amber-400" />
-        
+
         {/* Upcoming milestones */}
         <circle cx="850" cy="320" r="6" className="fill-blue-500 dark:fill-blue-400" opacity="0.5" />
         <circle cx="950" cy="320" r="6" className="fill-blue-500 dark:fill-blue-400" opacity="0.5" />
@@ -76,22 +76,44 @@ export function ProgressTimeline({ className }: ProgressTimelineProps) {
 
       {/* Current step pulse */}
       <g opacity="0.4">
-        <circle cx="680" cy="320" r="16" className="fill-none stroke-amber-500 dark:stroke-amber-400" strokeWidth="1.5" />
+        <circle
+          cx="680"
+          cy="320"
+          r="16"
+          className="fill-none stroke-amber-500 dark:stroke-amber-400"
+          strokeWidth="1.5"
+        />
         <circle cx="680" cy="320" r="24" className="fill-none stroke-amber-500 dark:stroke-amber-400" strokeWidth="1" />
-        <circle cx="680" cy="320" r="32" className="fill-none stroke-amber-500 dark:stroke-amber-400" strokeWidth="0.5" />
+        <circle
+          cx="680"
+          cy="320"
+          r="32"
+          className="fill-none stroke-amber-500 dark:stroke-amber-400"
+          strokeWidth="0.5"
+        />
       </g>
 
       {/* Progress percentage indicator */}
       <g className="fill-emerald-500 dark:fill-emerald-400" opacity="0.7">
-        <text x="680" y="280" textAnchor="middle" fontSize="24" fontWeight="700">60%</text>
+        <text x="680" y="280" textAnchor="middle" fontSize="24" fontWeight="700">
+          60%
+        </text>
       </g>
 
       {/* Time markers */}
       <g className="fill-blue-500 dark:fill-blue-400" opacity="0.5">
-        <text x="300" y="370" textAnchor="middle" fontSize="12">0s</text>
-        <text x="500" y="370" textAnchor="middle" fontSize="12">2s</text>
-        <text x="680" y="370" textAnchor="middle" fontSize="12">4s</text>
-        <text x="850" y="370" textAnchor="middle" fontSize="12">6s</text>
+        <text x="300" y="370" textAnchor="middle" fontSize="12">
+          0s
+        </text>
+        <text x="500" y="370" textAnchor="middle" fontSize="12">
+          2s
+        </text>
+        <text x="680" y="370" textAnchor="middle" fontSize="12">
+          4s
+        </text>
+        <text x="850" y="370" textAnchor="middle" fontSize="12">
+          6s
+        </text>
       </g>
     </svg>
   )

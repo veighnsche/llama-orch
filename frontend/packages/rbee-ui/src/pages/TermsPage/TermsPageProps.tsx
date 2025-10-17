@@ -271,8 +271,7 @@ export const termsFaqProps: FAQTemplateProps = {
           </p>
           <p>
             <strong>Third-party components:</strong> rbee includes third-party libraries and dependencies, each with
-            their own licenses. See{' '}
-            <code className="px-1.5 py-0.5 bg-muted rounded text-sm">Cargo.toml</code> and{' '}
+            their own licenses. See <code className="px-1.5 py-0.5 bg-muted rounded text-sm">Cargo.toml</code> and{' '}
             <code className="px-1.5 py-0.5 bg-muted rounded text-sm">package.json</code> files for details.
           </p>
         </div>
@@ -528,8 +527,8 @@ export const termsFaqProps: FAQTemplateProps = {
       answer: (
         <div className="prose prose-neutral dark:prose-invert max-w-none prose-p:my-2">
           <p>
-            These Terms of Service, together with the Privacy Policy and GPL-3.0-or-later license, constitute the
-            entire agreement between you and the rbee project regarding your use of the Service.
+            These Terms of Service, together with the Privacy Policy and GPL-3.0-or-later license, constitute the entire
+            agreement between you and the rbee project regarding your use of the Service.
           </p>
           <p>
             These terms supersede all prior agreements, understandings, and communications, whether written or oral.

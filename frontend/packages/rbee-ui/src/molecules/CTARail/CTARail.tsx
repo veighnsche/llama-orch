@@ -1,6 +1,6 @@
 import { Button } from '@rbee/ui/atoms/Button'
 import { Card, CardContent } from '@rbee/ui/atoms/Card'
-import { cn, parseInlineMarkdown } from '@rbee/ui/utils'
+import { parseInlineMarkdown } from '@rbee/ui/utils'
 import Link from 'next/link'
 import React from 'react'
 

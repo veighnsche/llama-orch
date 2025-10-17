@@ -23,7 +23,6 @@ import {
   Calendar,
   CheckCircle,
   Clock,
-  Database,
   Eye,
   FileCheck,
   FileText,
@@ -372,7 +371,8 @@ export const complianceStandardsContainerProps: Omit<TemplateContainerProps, 'ch
   headingId: 'compliance-standards',
   auditReadinessCTA: {
     heading: 'Ready for Your Next Audit',
-    description: 'Download our compliance pack or schedule a call with our compliance team to discuss your requirements.',
+    description:
+      'Download our compliance pack or schedule a call with our compliance team to discuss your requirements.',
     note: 'Pack includes audit endpoints, retention policy, event types, and architecture diagrams.',
     noteAriaLabel: 'Compliance pack includes audit endpoints, retention policy, event types, and architecture diagrams',
     buttons: [
@@ -465,8 +465,7 @@ export const complianceStandardsProps: EnterpriseComplianceProps = {
 export const complianceSecurityContainerProps: Omit<TemplateContainerProps, 'children'> = {
   kicker: 'Security Architecture',
   title: 'Six Security Crates for Defense-in-Depth',
-  description:
-    'Every layer hardened—auth, audit, input validation, secrets, JWT lifecycle, and deadline enforcement.',
+  description: 'Every layer hardened—auth, audit, input validation, secrets, JWT lifecycle, and deadline enforcement.',
   background: {
     variant: 'background',
     decoration: (
@@ -535,8 +534,7 @@ export const complianceSecurityProps: EnterpriseSecurityProps = {
       icon: <Shield className="size-6" />,
       title: 'input-validation: First Line of Defense',
       subtitle: 'Trust No Input',
-      intro:
-        'Prevents SQL injection, command injection, path traversal, and resource exhaustion before execution.',
+      intro: 'Prevents SQL injection, command injection, path traversal, and resource exhaustion before execution.',
       bullets: [
         'SQL injection prevention',
         'Command injection prevention',
@@ -577,8 +575,7 @@ export const complianceSecurityProps: EnterpriseSecurityProps = {
       icon: <Clock className="size-6" />,
       title: 'deadline-propagation: Performance Enforcer',
       subtitle: 'Every Millisecond Counts',
-      intro:
-        'Propagates time budgets end-to-end from client to worker. Aborts doomed work to protect SLOs.',
+      intro: 'Propagates time budgets end-to-end from client to worker. Aborts doomed work to protect SLOs.',
       bullets: [
         'Deadline propagation (client → worker)',
         'Remaining time calculation',
@@ -618,19 +615,13 @@ export const complianceAuditProcessProps: EnterpriseHowItWorksProps = {
       title: 'Compliance Gap Analysis',
       intro:
         'We map your requirements (GDPR, SOC2, ISO 27001, HIPAA, PCI-DSS) and identify gaps in your current setup.',
-      items: [
-        'Regulatory framework mapping',
-        'Data flow analysis',
-        'Risk assessment report',
-        'Compliance roadmap',
-      ],
+      items: ['Regulatory framework mapping', 'Data flow analysis', 'Risk assessment report', 'Compliance roadmap'],
     },
     {
       index: 2,
       icon: <Server className="h-6 w-6" />,
       title: 'Deploy & Configure',
-      intro:
-        'Deploy rbee on EU infrastructure. Configure audit logging, retention policies, and data residency rules.',
+      intro: 'Deploy rbee on EU infrastructure. Configure audit logging, retention policies, and data residency rules.',
       items: [
         'EU data center deployment',
         'Audit logging configuration',
@@ -642,8 +633,7 @@ export const complianceAuditProcessProps: EnterpriseHowItWorksProps = {
       index: 3,
       icon: <CheckCircle className="h-6 w-6" />,
       title: 'Auditor Access',
-      intro:
-        'Provide auditors with query API access. Export compliance reports. Review audit trail with your team.',
+      intro: 'Provide auditors with query API access. Export compliance reports. Review audit trail with your team.',
       items: [
         'Auditor credentials provisioning',
         'Compliance report exports',
@@ -657,12 +647,7 @@ export const complianceAuditProcessProps: EnterpriseHowItWorksProps = {
       title: 'Certification',
       intro:
         'Pass your audit. Receive SOC2 Type II, ISO 27001, or GDPR certification. Maintain compliance with quarterly reviews.',
-      items: [
-        'Audit completion',
-        'Certification issuance',
-        'Quarterly compliance reviews',
-        'Continuous monitoring',
-      ],
+      items: ['Audit completion', 'Certification issuance', 'Quarterly compliance reviews', 'Continuous monitoring'],
     },
   ],
   timeline: {
@@ -772,12 +757,7 @@ export const complianceUseCasesProps: EnterpriseUseCasesProps = {
         'Legal-hold audit trail',
         'EU residency required',
       ],
-      solutions: [
-        'On-prem (firm servers)',
-        'Zero data transfer',
-        'Immutable legal-hold logs',
-        'Full confidentiality',
-      ],
+      solutions: ['On-prem (firm servers)', 'Zero data transfer', 'Immutable legal-hold logs', 'Full confidentiality'],
       href: '/industries/legal',
     },
     {
@@ -786,18 +766,8 @@ export const complianceUseCasesProps: EnterpriseUseCasesProps = {
       segments: 'Public Sector, Defense',
       badges: ['ISO 27001', 'Sovereignty'],
       summary: 'Government agency needed citizen services with strict sovereignty and security controls.',
-      challenges: [
-        'Data sovereignty',
-        'No foreign clouds',
-        'Transparent audit trail',
-        'ISO 27001 required',
-      ],
-      solutions: [
-        'Gov DC deployment',
-        'EU-only infra',
-        'ISO 27001 aligned',
-        'Complete sovereignty',
-      ],
+      challenges: ['Data sovereignty', 'No foreign clouds', 'Transparent audit trail', 'ISO 27001 required'],
+      solutions: ['Gov DC deployment', 'EU-only infra', 'ISO 27001 aligned', 'Complete sovereignty'],
       href: '/industries/government',
     },
   ],
@@ -844,7 +814,7 @@ export const complianceAuditCostCalculatorContainerProps: Omit<TemplateContainer
 const auditEventTypes: ProvidersEarningsGPUModel[] = [
   { name: 'Small (< 10K events/day)', baseRate: 0.05, vram: 10 },
   { name: 'Medium (10K-100K events/day)', baseRate: 0.15, vram: 50 },
-  { name: 'Large (100K-1M events/day)', baseRate: 0.50, vram: 500 },
+  { name: 'Large (100K-1M events/day)', baseRate: 0.5, vram: 500 },
   { name: 'Enterprise (> 1M events/day)', baseRate: 2.0, vram: 5000 },
 ]
 
@@ -865,8 +835,7 @@ export const complianceAuditCostCalculatorProps: ProvidersEarningsProps = {
   utilizationLabel: 'Storage Efficiency (%)',
   earningsTitle: 'Estimated Audit Costs',
   monthlyLabel: 'Monthly Storage Cost',
-  basedOnText: (years: number, efficiency: number) =>
-    `Based on ${years}-year retention at ${efficiency}% efficiency`,
+  basedOnText: (years: number, efficiency: number) => `Based on ${years}-year retention at ${efficiency}% efficiency`,
   takeHomeLabel: 'Total Annual Cost',
   dailyLabel: 'Daily Cost',
   yearlyLabel: 'Annual Cost',

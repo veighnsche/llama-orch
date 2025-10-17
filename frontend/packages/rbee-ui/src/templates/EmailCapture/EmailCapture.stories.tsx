@@ -1,16 +1,19 @@
 import { TemplateContainer } from '@rbee/ui/molecules'
+import { communityEmailCaptureContainerProps, communityEmailCaptureProps } from '@rbee/ui/pages/CommunityPage'
+import { complianceEmailCaptureContainerProps, complianceEmailCaptureProps } from '@rbee/ui/pages/CompliancePage'
 import { developersEmailCaptureContainerProps, developersEmailCaptureProps } from '@rbee/ui/pages/DevelopersPage'
+import { devopsEmailCaptureContainerProps, devopsEmailCaptureProps } from '@rbee/ui/pages/DevOpsPage'
 import { educationEmailCaptureContainerProps, educationEmailCaptureProps } from '@rbee/ui/pages/EducationPage'
 import { enterpriseEmailCaptureContainerProps, enterpriseEmailCaptureProps } from '@rbee/ui/pages/EnterprisePage'
 import { featuresEmailCaptureContainerProps, featuresEmailCaptureProps } from '@rbee/ui/pages/FeaturesPage'
 import { emailCaptureContainerProps, emailCaptureProps } from '@rbee/ui/pages/HomePage'
 import { pricingEmailCaptureContainerProps, pricingEmailCaptureProps } from '@rbee/ui/pages/PricingPage'
-import { emailCaptureContainerProps as researchEmailCaptureContainerProps, emailCaptureProps as researchEmailCaptureProps,  } from '@rbee/ui/pages/ResearchPage'
+import {
+  emailCaptureContainerProps as researchEmailCaptureContainerProps,
+  emailCaptureProps as researchEmailCaptureProps,
+} from '@rbee/ui/pages/ResearchPage'
 import { securityEmailCaptureContainerProps, securityEmailCaptureProps } from '@rbee/ui/pages/SecurityPage'
 import { useCasesEmailCaptureContainerProps, useCasesEmailCaptureProps } from '@rbee/ui/pages/UseCasesPage'
-import { communityEmailCaptureContainerProps, communityEmailCaptureProps } from '@rbee/ui/pages/CommunityPage'
-import { complianceEmailCaptureContainerProps, complianceEmailCaptureProps } from '@rbee/ui/pages/CompliancePage'
-import { devopsEmailCaptureContainerProps, devopsEmailCaptureProps } from '@rbee/ui/pages/DevOpsPage'
 import type { Meta, StoryObj } from '@storybook/react'
 import { EmailCapture } from './EmailCapture'
 

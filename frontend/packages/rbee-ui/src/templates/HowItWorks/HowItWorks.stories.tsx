@@ -1,14 +1,20 @@
 import { TemplateContainer } from '@rbee/ui/molecules'
+import { howToContributeContainerProps, howToContributeProps } from '@rbee/ui/pages/CommunityPage'
 import {
   howItWorksContainerProps as developersHowItWorksContainerProps,
   howItWorksProps as developersHowItWorksProps,
 } from '@rbee/ui/pages/DevelopersPage'
-import { howItWorksContainerProps as homeHowItWorksContainerProps, howItWorksProps as homeHowItWorksProps } from '@rbee/ui/pages/HomePage'
-import { providersHowItWorksContainerProps, providersHowItWorksProps } from '@rbee/ui/pages/ProvidersPage'
 import { educationLabExercisesContainerProps, educationLabExercisesProps } from '@rbee/ui/pages/EducationPage'
-import { howToContributeContainerProps, howToContributeProps } from '@rbee/ui/pages/CommunityPage'
+import {
+  howItWorksContainerProps as homeHowItWorksContainerProps,
+  howItWorksProps as homeHowItWorksProps,
+} from '@rbee/ui/pages/HomePage'
+import { providersHowItWorksContainerProps, providersHowItWorksProps } from '@rbee/ui/pages/ProvidersPage'
 import { workflowContainerProps, workflowProps } from '@rbee/ui/pages/ResearchPage'
-import { securityVulnerabilityDisclosureContainerProps, securityVulnerabilityDisclosureProps } from '@rbee/ui/pages/SecurityPage'
+import {
+  securityVulnerabilityDisclosureContainerProps,
+  securityVulnerabilityDisclosureProps,
+} from '@rbee/ui/pages/SecurityPage'
 import type { Meta, StoryObj } from '@storybook/react'
 import { HowItWorks } from './HowItWorks'
 

@@ -35,7 +35,7 @@ export function DiagnosticGrid({ className }: DiagnosticGridProps) {
             <feMergeNode in="SourceGraphic" />
           </feMerge>
         </filter>
-        
+
         <pattern id="diag-grid" x="0" y="0" width="80" height="80" patternUnits="userSpaceOnUse">
           <path
             d="M 80 0 L 0 0 0 80"
@@ -56,11 +56,11 @@ export function DiagnosticGrid({ className }: DiagnosticGridProps) {
         <circle cx="300" cy="200" r="6" className="fill-blue-500 dark:fill-blue-400" />
         <circle cx="600" cy="180" r="6" className="fill-blue-500 dark:fill-blue-400" />
         <circle cx="900" cy="220" r="6" className="fill-blue-500 dark:fill-blue-400" />
-        
+
         {/* Warning status (amber) */}
         <circle cx="400" cy="350" r="7" className="fill-amber-500 dark:fill-amber-400" opacity="0.8" />
         <circle cx="800" cy="380" r="7" className="fill-amber-500 dark:fill-amber-400" opacity="0.8" />
-        
+
         {/* Error status (red) */}
         <circle cx="500" cy="500" r="8" className="fill-red-500 dark:fill-red-400" opacity="0.7" />
       </g>
@@ -70,7 +70,7 @@ export function DiagnosticGrid({ className }: DiagnosticGridProps) {
         {/* Warning triangles */}
         <path d="M 400 330 L 410 350 L 390 350 Z" className="fill-amber-500 dark:fill-amber-400" />
         <path d="M 800 360 L 810 380 L 790 380 Z" className="fill-amber-500 dark:fill-amber-400" />
-        
+
         {/* Error cross */}
         <g className="stroke-red-500 dark:stroke-red-400" strokeWidth="2.5">
           <line x1="494" y1="494" x2="506" y2="506" />

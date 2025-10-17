@@ -3,7 +3,6 @@
 import { gpuEarnings } from '@rbee/ui/assets'
 import { TESTIMONIALS } from '@rbee/ui/data/testimonials'
 import type { TemplateContainerProps } from '@rbee/ui/molecules'
-import Image from 'next/image'
 import { CommissionStructureCard, ProvidersSecurityCard } from '@rbee/ui/molecules'
 import { CodeBlock } from '@rbee/ui/molecules/CodeBlock'
 import type { CommissionStructureCardProps } from '@rbee/ui/molecules/CommissionStructureCard'
@@ -43,6 +42,7 @@ import {
   Wallet,
   Zap,
 } from 'lucide-react'
+import Image from 'next/image'
 
 // ============================================================================
 // Props Objects
@@ -115,9 +115,7 @@ export const providersProblemContainerProps: Omit<TemplateContainerProps, 'child
   title: 'Stop Letting Your Hardware Bleed Money',
   description: 'Most GPUs sit idle ~90% of the time. They still draw power—and earn nothing.',
   background: {
-
     variant: 'gradient-destructive',
-
   },
   paddingY: '2xl',
   maxWidth: '7xl',
@@ -161,9 +159,7 @@ export const providersSolutionContainerProps: Omit<TemplateContainerProps, 'chil
   title: 'Turn Idle GPUs Into Reliable Monthly Income',
   description: 'rbee connects your spare GPU power to developers who need it. You set the price, we handle the rest.',
   background: {
-
     variant: 'background',
-
   },
   paddingY: '2xl',
   maxWidth: '7xl',
@@ -255,9 +251,7 @@ export const providersSolutionProps: SolutionTemplateProps = {
 export const providersHowItWorksContainerProps: Omit<TemplateContainerProps, 'children'> = {
   title: 'Start Earning in 4 Simple Steps',
   background: {
-
     variant: 'secondary',
-
   },
   paddingY: '2xl',
   maxWidth: '6xl',
@@ -475,9 +469,7 @@ export const providersUseCasesContainerProps: Omit<TemplateContainerProps, 'chil
   title: "Who's Earning with rbee?",
   description: 'From gamers to homelab builders, anyone with a spare GPU can turn idle time into income.',
   background: {
-
     variant: 'background',
-
   },
   paddingY: '2xl',
   maxWidth: '7xl',
@@ -566,9 +558,7 @@ export const providersEarningsContainerProps: Omit<TemplateContainerProps, 'chil
   title: 'Calculate Your Potential Earnings',
   description: 'See what you could earn based on GPU model, availability, and utilization.',
   background: {
-
     variant: 'background',
-
   },
   paddingY: '2xl',
   maxWidth: '4xl',
@@ -620,9 +610,7 @@ export const providersMarketplaceContainerProps: Omit<TemplateContainerProps, 'c
   title: 'How the rbee Marketplace Works',
   description: 'A fair, transparent marketplace connecting GPU providers with developers.',
   background: {
-
     variant: 'secondary',
-
   },
   paddingY: '2xl',
   maxWidth: '7xl',
@@ -700,9 +688,7 @@ export const providersSecurityContainerProps: Omit<TemplateContainerProps, 'chil
   title: 'Your Security Is Our Priority',
   description: 'Enterprise-grade protections for your hardware, data, and earnings.',
   background: {
-
     variant: 'background',
-
   },
   paddingY: '2xl',
   maxWidth: '4xl',
@@ -765,9 +751,7 @@ export const providersTestimonialsContainerProps: Omit<TemplateContainerProps, '
   description:
     'GPU owners on the rbee marketplace turn idle time into steady payouts—fully self-managed, OpenAI-compatible infrastructure.',
   background: {
-
     variant: 'background',
-
   },
   paddingY: '2xl',
   maxWidth: '7xl',

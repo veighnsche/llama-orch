@@ -1,6 +1,6 @@
 import { TemplateContainer } from '@rbee/ui/molecules'
-import { enterpriseFeaturesContainerProps, enterpriseFeaturesGridProps } from '@rbee/ui/pages/EnterprisePage'
 import { educationResourcesGridContainerProps, educationResourcesGridProps } from '@rbee/ui/pages/EducationPage'
+import { enterpriseFeaturesContainerProps, enterpriseFeaturesGridProps } from '@rbee/ui/pages/EnterprisePage'
 import {
   providersSecurityContainerProps,
   providersSecurityGridProps,

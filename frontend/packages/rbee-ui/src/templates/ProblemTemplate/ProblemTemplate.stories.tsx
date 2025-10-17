@@ -1,14 +1,14 @@
 import { TemplateContainer } from '@rbee/ui/molecules'
+import { complianceProblemTemplateContainerProps, complianceProblemTemplateProps } from '@rbee/ui/pages/CompliancePage'
 import {
   problemTemplateContainerProps as developersContainerProps,
   problemTemplateProps as developersProblems,
 } from '@rbee/ui/pages/DevelopersPage'
+import { devopsProblemContainerProps, devopsProblemProps } from '@rbee/ui/pages/DevOpsPage'
 import { educationProblemTemplateContainerProps, educationProblemTemplateProps } from '@rbee/ui/pages/EducationPage'
 import { enterpriseProblemTemplateContainerProps, enterpriseProblemTemplateProps } from '@rbee/ui/pages/EnterprisePage'
 import { problemTemplateProps as homeProblemTemplateProps } from '@rbee/ui/pages/HomePage'
 import { providersProblemContainerProps, providersProblemProps } from '@rbee/ui/pages/ProvidersPage'
-import { complianceProblemTemplateContainerProps, complianceProblemTemplateProps } from '@rbee/ui/pages/CompliancePage'
-import { devopsProblemContainerProps, devopsProblemProps } from '@rbee/ui/pages/DevOpsPage'
 import { problemContainerProps, problemProps } from '@rbee/ui/pages/ResearchPage'
 import { securityThreatModelContainerProps, securityThreatModelProps } from '@rbee/ui/pages/SecurityPage'
 import type { Meta, StoryObj } from '@storybook/react'

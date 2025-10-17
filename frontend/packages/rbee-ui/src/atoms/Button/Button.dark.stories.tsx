@@ -28,7 +28,7 @@ type Story = StoryObj<typeof Button>
 
 /**
  * ## Dark Mode Polish: Links & Visited States
- * 
+ *
  * Demonstrates:
  * - Link default: text-[color:var(--accent)] (#d97706)
  * - Link hover: text-white + decoration-amber-300
@@ -46,9 +46,7 @@ export const LinkStates: Story = {
             <Button variant="link" asChild>
               <a href="#default">Default Link (#d97706)</a>
             </Button>
-            <p className="text-xs text-muted-foreground mt-1">
-              Hover to see text-white + decoration-amber-300
-            </p>
+            <p className="text-xs text-muted-foreground mt-1">Hover to see text-white + decoration-amber-300</p>
           </div>
 
           <div>
@@ -57,18 +55,14 @@ export const LinkStates: Story = {
                 Visited Link (click to mark visited)
               </a>
             </Button>
-            <p className="text-xs text-muted-foreground mt-1">
-              After clicking, shows brand 700 (#b45309)
-            </p>
+            <p className="text-xs text-muted-foreground mt-1">After clicking, shows brand 700 (#b45309)</p>
           </div>
 
           <div>
             <Button variant="link" asChild>
               <a href="#focus">Focus this link (Tab key)</a>
             </Button>
-            <p className="text-xs text-muted-foreground mt-1">
-              Focus ring uses CSS variables for consistency
-            </p>
+            <p className="text-xs text-muted-foreground mt-1">Focus ring uses CSS variables for consistency</p>
           </div>
         </div>
       </div>
@@ -124,31 +118,25 @@ export const DisabledStates: Story = {
   render: () => (
     <div className="bg-[#0b1220] p-8 rounded-lg space-y-6 max-w-md">
       <h3 className="text-lg font-semibold mb-4">Disabled Button States</h3>
-      
+
       <div className="space-y-3">
         <div>
           <Button disabled>Primary Disabled</Button>
-          <p className="text-xs text-muted-foreground mt-1">
-            bg-[#1a2435], text-[#6c7a90], border-[#223047]
-          </p>
+          <p className="text-xs text-muted-foreground mt-1">bg-[#1a2435], text-[#6c7a90], border-[#223047]</p>
         </div>
 
         <div>
           <Button variant="outline" disabled>
             Outline Disabled
           </Button>
-          <p className="text-xs text-muted-foreground mt-1">
-            Same disabled colors for consistency
-          </p>
+          <p className="text-xs text-muted-foreground mt-1">Same disabled colors for consistency</p>
         </div>
 
         <div>
           <Button variant="secondary" disabled>
             Secondary Disabled
           </Button>
-          <p className="text-xs text-muted-foreground mt-1">
-            Prevents "vanishing" controls on deep canvas
-          </p>
+          <p className="text-xs text-muted-foreground mt-1">Prevents "vanishing" controls on deep canvas</p>
         </div>
 
         <div>
@@ -172,30 +160,36 @@ export const ButtonProgression: Story = {
   render: () => (
     <div className="bg-[#0b1220] p-8 rounded-lg space-y-6 max-w-md">
       <h3 className="text-lg font-semibold mb-4">Brand Progression</h3>
-      
+
       <div className="space-y-4">
         <div className="space-y-2">
           <p className="text-sm font-medium">Primary Button States</p>
           <div className="flex gap-2">
             <Button size="sm">Default</Button>
-            <Button size="sm" className="bg-[#d97706]">Hover</Button>
-            <Button size="sm" className="bg-[#92400e]">Active</Button>
+            <Button size="sm" className="bg-[#d97706]">
+              Hover
+            </Button>
+            <Button size="sm" className="bg-[#92400e]">
+              Active
+            </Button>
           </div>
-          <p className="text-xs text-muted-foreground">
-            #b45309 → #d97706 → #92400e
-          </p>
+          <p className="text-xs text-muted-foreground">#b45309 → #d97706 → #92400e</p>
         </div>
 
         <div className="space-y-2">
           <p className="text-sm font-medium">Ghost Button (Neutral)</p>
           <div className="flex gap-2">
-            <Button variant="ghost" size="sm">Default</Button>
-            <Button variant="ghost" size="sm" className="bg-white/[0.04]">Hover</Button>
-            <Button variant="ghost" size="sm" className="bg-white/[0.06]">Active</Button>
+            <Button variant="ghost" size="sm">
+              Default
+            </Button>
+            <Button variant="ghost" size="sm" className="bg-white/[0.04]">
+              Hover
+            </Button>
+            <Button variant="ghost" size="sm" className="bg-white/[0.06]">
+              Active
+            </Button>
           </div>
-          <p className="text-xs text-muted-foreground">
-            Neutral hover (not amber) for data density contexts
-          </p>
+          <p className="text-xs text-muted-foreground">Neutral hover (not amber) for data density contexts</p>
         </div>
       </div>
     </div>

@@ -44,11 +44,11 @@ export function NetworkMesh({ className }: NetworkMeshProps) {
         <circle cx="200" cy="200" r="5" className="fill-blue-500 dark:fill-blue-400" />
         <circle cx="400" cy="180" r="5" className="fill-blue-500 dark:fill-blue-400" />
         <circle cx="600" cy="220" r="5" className="fill-blue-500 dark:fill-blue-400" />
-        
+
         {/* Warning nodes (amber) */}
         <circle cx="800" cy="200" r="6" className="fill-amber-500 dark:fill-amber-400" opacity="0.8" />
         <circle cx="1000" cy="240" r="6" className="fill-amber-500 dark:fill-amber-400" opacity="0.8" />
-        
+
         {/* Disconnected nodes (red) */}
         <circle cx="300" cy="400" r="5" className="fill-red-500 dark:fill-red-400" opacity="0.7" />
         <circle cx="700" cy="420" r="5" className="fill-red-500 dark:fill-red-400" opacity="0.7" />
@@ -60,14 +60,32 @@ export function NetworkMesh({ className }: NetworkMeshProps) {
         {/* Working connections */}
         <line x1="200" y1="200" x2="400" y2="180" stroke="rgb(59 130 246)" strokeWidth="1.5" />
         <line x1="400" y1="180" x2="600" y2="220" stroke="rgb(59 130 246)" strokeWidth="1.5" />
-        
+
         {/* Degraded connections */}
         <line x1="600" y1="220" x2="800" y2="200" stroke="rgb(245 158 11)" strokeWidth="1.5" strokeDasharray="4 4" />
         <line x1="800" y1="200" x2="1000" y2="240" stroke="rgb(245 158 11)" strokeWidth="1.5" strokeDasharray="4 4" />
-        
+
         {/* Broken connections */}
-        <line x1="300" y1="400" x2="400" y2="380" stroke="rgb(239 68 68)" strokeWidth="1" strokeDasharray="2 6" opacity="0.5" />
-        <line x1="700" y1="420" x2="800" y2="400" stroke="rgb(239 68 68)" strokeWidth="1" strokeDasharray="2 6" opacity="0.5" />
+        <line
+          x1="300"
+          y1="400"
+          x2="400"
+          y2="380"
+          stroke="rgb(239 68 68)"
+          strokeWidth="1"
+          strokeDasharray="2 6"
+          opacity="0.5"
+        />
+        <line
+          x1="700"
+          y1="420"
+          x2="800"
+          y2="400"
+          stroke="rgb(239 68 68)"
+          strokeWidth="1"
+          strokeDasharray="2 6"
+          opacity="0.5"
+        />
       </g>
 
       {/* Connection lines - dark theme */}
@@ -75,14 +93,32 @@ export function NetworkMesh({ className }: NetworkMeshProps) {
         {/* Working connections */}
         <line x1="200" y1="200" x2="400" y2="180" stroke="rgb(96 165 250)" strokeWidth="2" />
         <line x1="400" y1="180" x2="600" y2="220" stroke="rgb(96 165 250)" strokeWidth="2" />
-        
+
         {/* Degraded connections */}
         <line x1="600" y1="220" x2="800" y2="200" stroke="rgb(251 191 36)" strokeWidth="2" strokeDasharray="4 4" />
         <line x1="800" y1="200" x2="1000" y2="240" stroke="rgb(251 191 36)" strokeWidth="2" strokeDasharray="4 4" />
-        
+
         {/* Broken connections */}
-        <line x1="300" y1="400" x2="400" y2="380" stroke="rgb(248 113 113)" strokeWidth="1.5" strokeDasharray="2 6" opacity="0.6" />
-        <line x1="700" y1="420" x2="800" y2="400" stroke="rgb(248 113 113)" strokeWidth="1.5" strokeDasharray="2 6" opacity="0.6" />
+        <line
+          x1="300"
+          y1="400"
+          x2="400"
+          y2="380"
+          stroke="rgb(248 113 113)"
+          strokeWidth="1.5"
+          strokeDasharray="2 6"
+          opacity="0.6"
+        />
+        <line
+          x1="700"
+          y1="420"
+          x2="800"
+          y2="400"
+          stroke="rgb(248 113 113)"
+          strokeWidth="1.5"
+          strokeDasharray="2 6"
+          opacity="0.6"
+        />
       </g>
 
       {/* Warning indicators */}
@@ -90,7 +126,7 @@ export function NetworkMesh({ className }: NetworkMeshProps) {
         {/* Alert triangles */}
         <path d="M 800 180 L 810 200 L 790 200 Z" className="fill-amber-500 dark:fill-amber-400" />
         <path d="M 1000 220 L 1010 240 L 990 240 Z" className="fill-amber-500 dark:fill-amber-400" />
-        
+
         {/* Error crosses */}
         <g className="stroke-red-500 dark:stroke-red-400" strokeWidth="2">
           <line x1="295" y1="395" x2="305" y2="405" />

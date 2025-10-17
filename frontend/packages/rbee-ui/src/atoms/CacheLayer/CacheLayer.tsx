@@ -54,17 +54,73 @@ export function CacheLayer({ className }: CacheLayerProps) {
       {/* Model rectangles */}
       <g filter="url(#cache-glow)">
         {/* L1 Cache - Hot models */}
-        <rect x="250" y="170" width="60" height="40" className="fill-emerald-500 dark:fill-emerald-400" opacity="0.5" rx="3" />
-        <rect x="350" y="170" width="60" height="40" className="fill-emerald-500 dark:fill-emerald-400" opacity="0.5" rx="3" />
-        
+        <rect
+          x="250"
+          y="170"
+          width="60"
+          height="40"
+          className="fill-emerald-500 dark:fill-emerald-400"
+          opacity="0.5"
+          rx="3"
+        />
+        <rect
+          x="350"
+          y="170"
+          width="60"
+          height="40"
+          className="fill-emerald-500 dark:fill-emerald-400"
+          opacity="0.5"
+          rx="3"
+        />
+
         {/* L2 Cache - Warm models */}
-        <rect x="250" y="300" width="60" height="40" className="fill-amber-500 dark:fill-amber-400" opacity="0.5" rx="3" />
-        <rect x="350" y="300" width="60" height="40" className="fill-amber-500 dark:fill-amber-400" opacity="0.5" rx="3" />
-        <rect x="450" y="300" width="60" height="40" className="fill-amber-500 dark:fill-amber-400" opacity="0.5" rx="3" />
-        
+        <rect
+          x="250"
+          y="300"
+          width="60"
+          height="40"
+          className="fill-amber-500 dark:fill-amber-400"
+          opacity="0.5"
+          rx="3"
+        />
+        <rect
+          x="350"
+          y="300"
+          width="60"
+          height="40"
+          className="fill-amber-500 dark:fill-amber-400"
+          opacity="0.5"
+          rx="3"
+        />
+        <rect
+          x="450"
+          y="300"
+          width="60"
+          height="40"
+          className="fill-amber-500 dark:fill-amber-400"
+          opacity="0.5"
+          rx="3"
+        />
+
         {/* L3 Cache - Cold models */}
-        <rect x="250" y="430" width="60" height="40" className="fill-blue-500 dark:fill-blue-400" opacity="0.4" rx="3" />
-        <rect x="350" y="430" width="60" height="40" className="fill-blue-500 dark:fill-blue-400" opacity="0.4" rx="3" />
+        <rect
+          x="250"
+          y="430"
+          width="60"
+          height="40"
+          className="fill-blue-500 dark:fill-blue-400"
+          opacity="0.4"
+          rx="3"
+        />
+        <rect
+          x="350"
+          y="430"
+          width="60"
+          height="40"
+          className="fill-blue-500 dark:fill-blue-400"
+          opacity="0.4"
+          rx="3"
+        />
       </g>
 
       {/* Arrow flows (cache hits) */}
@@ -75,9 +131,15 @@ export function CacheLayer({ className }: CacheLayerProps) {
 
       {/* Layer labels */}
       <g className="fill-blue-500 dark:fill-blue-400" opacity="0.6">
-        <text x="900" y="195" fontSize="14" fontWeight="600">L1</text>
-        <text x="900" y="325" fontSize="14" fontWeight="600">L2</text>
-        <text x="900" y="455" fontSize="14" fontWeight="600">L3</text>
+        <text x="900" y="195" fontSize="14" fontWeight="600">
+          L1
+        </text>
+        <text x="900" y="325" fontSize="14" fontWeight="600">
+          L2
+        </text>
+        <text x="900" y="455" fontSize="14" fontWeight="600">
+          L3
+        </text>
       </g>
     </svg>
   )

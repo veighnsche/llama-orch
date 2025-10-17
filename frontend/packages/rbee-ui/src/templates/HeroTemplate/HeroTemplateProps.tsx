@@ -175,4 +175,12 @@ export interface HeroTemplateProps {
 
   /** Section aria-labelledby ID */
   headingId?: string
+
+  /** Background pattern configuration (optional, for visual decoration) */
+  background?: {
+    variant?: 'honeycomb' | 'grid' | 'dots' | 'gradient' | 'radial' | 'custom' | 'none'
+    size?: 'small' | 'medium' | 'large'
+    fadeDirection?: 'radial' | 'top' | 'bottom'
+    className?: string
+  }
 }

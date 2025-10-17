@@ -1,9 +1,9 @@
 // Dark Mode Polish Showcase for Input/Select/Textarea
 import type { Meta, StoryObj } from '@storybook/react'
+import { Button } from '../Button/Button'
 import { Input } from '../Input/Input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../Select/Select'
 import { Textarea } from '../Textarea/Textarea'
-import { Button } from '../Button/Button'
 
 const meta: Meta<typeof Input> = {
   title: 'Atoms/Forms/Dark Mode Polish',
@@ -30,7 +30,7 @@ type Story = StoryObj<typeof Input>
 
 /**
  * ## Dark Mode Polish Features
- * 
+ *
  * Demonstrates:
  * - No drift: bg-[color:var(--background)] tracks canvas hue
  * - Selection: Amber-700 wash (rgba(185,83,9,0.32))
@@ -44,17 +44,13 @@ export const InputStates: Story = {
       <div className="space-y-2">
         <label className="text-sm font-medium">Default Input</label>
         <Input placeholder="Type to see accent caret..." />
-        <p className="text-xs text-muted-foreground">
-          Caret color: #f59e0b (accent). Select text to see amber wash.
-        </p>
+        <p className="text-xs text-muted-foreground">Caret color: #f59e0b (accent). Select text to see amber wash.</p>
       </div>
 
       <div className="space-y-2">
         <label className="text-sm font-medium">Disabled Input</label>
         <Input placeholder="Disabled state" disabled />
-        <p className="text-xs text-muted-foreground">
-          bg-[#1a2435], text-[#6c7a90], border-[#223047] for legibility.
-        </p>
+        <p className="text-xs text-muted-foreground">bg-[#1a2435], text-[#6c7a90], border-[#223047] for legibility.</p>
       </div>
 
       <div className="space-y-2">
@@ -87,9 +83,7 @@ export const SelectStates: Story = {
             <SelectItem value="3">Option 3</SelectItem>
           </SelectContent>
         </Select>
-        <p className="text-xs text-muted-foreground">
-          Placeholder: #8b9bb0 for legibility. Background tracks canvas.
-        </p>
+        <p className="text-xs text-muted-foreground">Placeholder: #8b9bb0 for legibility. Background tracks canvas.</p>
       </div>
 
       <div className="space-y-2">
@@ -99,9 +93,7 @@ export const SelectStates: Story = {
             <SelectValue placeholder="Disabled..." />
           </SelectTrigger>
         </Select>
-        <p className="text-xs text-muted-foreground">
-          Same disabled colors as Input for consistency.
-        </p>
+        <p className="text-xs text-muted-foreground">Same disabled colors as Input for consistency.</p>
       </div>
     </div>
   ),
@@ -120,9 +112,7 @@ export const TextareaStates: Story = {
       <div className="space-y-2">
         <label className="text-sm font-medium">Textarea</label>
         <Textarea placeholder="Type multiple lines..." rows={4} />
-        <p className="text-xs text-muted-foreground">
-          Same caret, selection, and inset shadow as Input.
-        </p>
+        <p className="text-xs text-muted-foreground">Same caret, selection, and inset shadow as Input.</p>
       </div>
 
       <div className="space-y-2">

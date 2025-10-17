@@ -68,9 +68,7 @@ export const useCasesHeroProps: UseCasesHeroTemplateProps = {
 export const useCasesPrimaryContainerProps: Omit<TemplateContainerProps, 'children'> = {
   title: 'Use Cases That Pay Off',
   background: {
-
     variant: 'background',
-
   },
 }
 
@@ -204,9 +202,7 @@ export const useCasesIndustryContainerProps: Omit<TemplateContainerProps, 'child
   title: 'Industry-Specific Solutions',
   description: 'rbee adapts to the unique compliance and security requirements of regulated industries.',
   background: {
-
     variant: 'secondary',
-
   },
 }
 

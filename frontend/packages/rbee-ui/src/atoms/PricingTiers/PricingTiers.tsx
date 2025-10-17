@@ -35,17 +35,17 @@ export function PricingTiers({ className }: PricingTiersProps) {
             <feMergeNode in="SourceGraphic" />
           </feMerge>
         </filter>
-        
+
         <linearGradient id="tier-gradient-1" x1="0%" y1="0%" x2="100%" y2="0%">
           <stop offset="0%" stopColor="rgb(59 130 246)" stopOpacity="0.1" />
           <stop offset="100%" stopColor="rgb(59 130 246)" stopOpacity="0.3" />
         </linearGradient>
-        
+
         <linearGradient id="tier-gradient-2" x1="0%" y1="0%" x2="100%" y2="0%">
           <stop offset="0%" stopColor="rgb(59 130 246)" stopOpacity="0.2" />
           <stop offset="100%" stopColor="rgb(59 130 246)" stopOpacity="0.4" />
         </linearGradient>
-        
+
         <linearGradient id="tier-gradient-3" x1="0%" y1="0%" x2="100%" y2="0%">
           <stop offset="0%" stopColor="rgb(59 130 246)" stopOpacity="0.3" />
           <stop offset="100%" stopColor="rgb(59 130 246)" stopOpacity="0.5" />
@@ -56,11 +56,11 @@ export function PricingTiers({ className }: PricingTiersProps) {
       <g className="dark:hidden">
         {/* Basic tier */}
         <rect x="200" y="400" width="800" height="120" fill="url(#tier-gradient-1)" rx="8" />
-        
+
         {/* Popular tier (highlighted) */}
         <rect x="200" y="260" width="800" height="120" fill="url(#tier-gradient-2)" rx="8" />
         <rect x="200" y="260" width="800" height="120" className="fill-amber-500" opacity="0.1" rx="8" />
-        
+
         {/* Premium tier */}
         <rect x="200" y="120" width="800" height="120" fill="url(#tier-gradient-3)" rx="8" />
       </g>
@@ -69,11 +69,11 @@ export function PricingTiers({ className }: PricingTiersProps) {
       <g className="hidden dark:block">
         {/* Basic tier */}
         <rect x="200" y="400" width="800" height="120" className="fill-blue-400" opacity="0.15" rx="8" />
-        
+
         {/* Popular tier (highlighted) */}
         <rect x="200" y="260" width="800" height="120" className="fill-blue-400" opacity="0.25" rx="8" />
         <rect x="200" y="260" width="800" height="120" className="fill-amber-400" opacity="0.15" rx="8" />
-        
+
         {/* Premium tier */}
         <rect x="200" y="120" width="800" height="120" className="fill-blue-400" opacity="0.35" rx="8" />
       </g>

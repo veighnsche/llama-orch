@@ -2,7 +2,6 @@
 
 import { Badge } from '@rbee/ui/atoms'
 import type { TemplateContainerProps } from '@rbee/ui/molecules'
-import { CodeBlock } from '@rbee/ui/molecules/CodeBlock'
 import type {
   ComparisonTemplateProps,
   CTATemplateProps,
@@ -16,7 +15,6 @@ import type {
 } from '@rbee/ui/templates'
 import type { EnterpriseHowItWorksProps } from '@rbee/ui/templates/EnterpriseHowItWorks'
 import type { HeroTemplateProps } from '@rbee/ui/templates/HeroTemplate'
-import type { PricingTemplateProps } from '@rbee/ui/templates/PricingTemplate'
 import type { TechnicalTemplateProps } from '@rbee/ui/templates/TechnicalTemplate'
 import {
   AlertTriangle,
@@ -24,7 +22,6 @@ import {
   BarChart3,
   Check,
   Code,
-  Cpu,
   DollarSign,
   Gauge,
   Lock,
@@ -32,9 +29,7 @@ import {
   Server,
   Shield,
   TrendingDown,
-  TrendingUp,
   Users,
-  Wallet,
   X,
   Zap,
 } from 'lucide-react'
@@ -216,7 +211,8 @@ export const startupsProblemProps: ProblemTemplateProps = {
 export const startupsSolutionContainerProps: Omit<TemplateContainerProps, 'children'> = {
   kicker: 'The rbee Advantage',
   title: 'Own Your Stack. Control Your Costs. Scale on Your Terms.',
-  description: 'Self-hosted AI infrastructure with OpenAI-compatible APIs. Build once, run anywhere, pay nothing per token.',
+  description:
+    'Self-hosted AI infrastructure with OpenAI-compatible APIs. Build once, run anywhere, pay nothing per token.',
   background: {
     variant: 'background',
   },
@@ -301,7 +297,7 @@ export const startupsSolutionProps: SolutionTemplateProps = {
 export const startupsROICalculatorContainerProps: Omit<TemplateContainerProps, 'children'> = {
   kicker: 'Do The Math',
   title: 'Calculate Your Savings',
-  description: 'See how much you\'ll save by switching from API providers to self-hosted rbee.',
+  description: "See how much you'll save by switching from API providers to self-hosted rbee.",
   background: {
     variant: 'secondary',
   },
@@ -366,33 +362,21 @@ export const startupsGrowthRoadmapProps: EnterpriseHowItWorksProps = {
       icon: <Rocket className="h-6 w-6" />,
       title: 'MVP Stage',
       intro: 'Prototype fast with full control. Start with one GPU and build without worrying about API costs.',
-      items: [
-        'Single GPU setup',
-        'OpenAI-compatible API',
-        '$0 per token',
-      ],
+      items: ['Single GPU setup', 'OpenAI-compatible API', '$0 per token'],
     },
     {
       index: 2,
       icon: <Server className="h-6 w-6" />,
       title: 'Launch Stage',
       intro: 'Scale to production. Add more GPUs as you get traction.',
-      items: [
-        'Multi-GPU orchestration',
-        'Unlimited requests',
-        'Production-ready',
-      ],
+      items: ['Multi-GPU orchestration', 'Unlimited requests', 'Production-ready'],
     },
     {
       index: 3,
       icon: <BarChart3 className="h-6 w-6" />,
       title: 'Scale Stage',
       intro: 'Grow without limits. Distribute across multiple machines.',
-      items: [
-        'Distributed cluster',
-        'Enterprise scale',
-        'Predictable costs',
-      ],
+      items: ['Distributed cluster', 'Enterprise scale', 'Predictable costs'],
     },
   ],
   timeline: {
@@ -433,7 +417,7 @@ export const startupsUseCasesProps: UseCasesTemplateProps = {
     {
       icon: <Users className="h-6 w-6" />,
       title: 'Consumer App',
-      scenario: 'Chat app with 10K users. OpenAI bills hit $5K/mo. Couldn\'t afford to scale.',
+      scenario: "Chat app with 10K users. OpenAI bills hit $5K/mo. Couldn't afford to scale.",
       solution: 'Deployed rbee on rented GPUs. Cut costs by 85%. Scaled to 50K users.',
       outcome: 'Profitable within 6 months. Raised Series A.',
       tags: ['Chat', 'Consumer'],
@@ -609,7 +593,7 @@ export const startupsTestimonialsProps: TestimonialsTemplateProps = {
     },
     {
       quote:
-        'Being able to run multiple models simultaneously gave us a huge competitive advantage. API providers couldn\'t match our speed.',
+        "Being able to run multiple models simultaneously gave us a huge competitive advantage. API providers couldn't match our speed.",
       author: 'Elena Rodriguez',
       role: 'CEO, AI Agent Platform',
       avatar: '👩‍💼',
@@ -644,12 +628,12 @@ export const startupsFAQProps: FAQTemplateProps = {
       value: 'compatible',
       question: 'Is it really OpenAI-compatible?',
       answer:
-        'Yes. rbee implements the OpenAI API spec. Change your baseURL and you\'re done. Your existing code, SDKs, and tools work unchanged. We support chat completions, embeddings, and streaming.',
+        "Yes. rbee implements the OpenAI API spec. Change your baseURL and you're done. Your existing code, SDKs, and tools work unchanged. We support chat completions, embeddings, and streaming.",
       category: 'Technical',
     },
     {
       value: 'no-gpus',
-      question: 'What if I don\'t have GPUs?',
+      question: "What if I don't have GPUs?",
       answer:
         'Rent them. Providers like Vast.ai, RunPod, and Lambda Labs offer GPU rentals starting at $0.20/hr. Still 80-90% cheaper than API providers, with no rate limits.',
       category: 'General',
@@ -665,7 +649,7 @@ export const startupsFAQProps: FAQTemplateProps = {
       value: 'setup-time',
       question: 'How long does setup take?',
       answer:
-        'About 10 minutes. Install rbee, point your code to localhost, and you\'re running. Our quickstart guide walks you through everything step by step.',
+        "About 10 minutes. Install rbee, point your code to localhost, and you're running. Our quickstart guide walks you through everything step by step.",
       category: 'Technical',
     },
     {

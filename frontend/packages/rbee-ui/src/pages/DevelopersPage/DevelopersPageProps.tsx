@@ -154,9 +154,7 @@ export const problemTemplateContainerProps: Omit<TemplateContainerProps, 'childr
   description:
     "You're building complex codebases with AI assistance. But what happens when your provider changes the rules?",
   background: {
-
     variant: 'gradient-destructive',
-
   },
   paddingY: '2xl',
   maxWidth: '6xl',
@@ -207,9 +205,7 @@ export const solutionTemplateContainerProps: Omit<TemplateContainerProps, 'child
   description:
     'rbee orchestrates AI inference across every device in your home network, turning idle hardware into a private, OpenAI-compatible AI platform.',
   background: {
-
     variant: 'background',
-
   },
   paddingY: '2xl',
   maxWidth: '7xl',
@@ -309,9 +305,7 @@ const response = await client.chat
 export const howItWorksContainerProps: Omit<TemplateContainerProps, 'children'> = {
   title: 'From zero to AI infrastructure in 15 minutes',
   background: {
-
     variant: 'secondary',
-
   },
   paddingY: '2xl',
   maxWidth: '6xl',
@@ -549,9 +543,7 @@ export const coreFeatureTabsContainerProps: Omit<TemplateContainerProps, 'childr
 export const useCasesTemplateContainerProps: Omit<TemplateContainerProps, 'children'> = {
   title: 'Built for developers who value independence',
   background: {
-
     variant: 'secondary',
-
   },
   paddingY: '2xl',
   maxWidth: '6xl',
@@ -613,9 +605,7 @@ export const codeExamplesContainerProps: Omit<TemplateContainerProps, 'children'
   title: 'Build AI agents with llama-orch-utils',
   description: 'TypeScript utilities for LLM pipelines and agentic workflows.',
   background: {
-
     variant: 'background',
-
   },
   paddingY: '2xl',
   maxWidth: '7xl',
@@ -694,9 +684,7 @@ export const developersPricingTemplateContainerProps: Omit<TemplateContainerProp
   title: 'Start Free. Scale When Ready.',
   description: 'Run rbee free at home. Add collaboration and governance when your team grows.',
   background: {
-
     variant: 'background',
-
   },
   paddingY: '2xl',
   maxWidth: '7xl',
@@ -779,9 +767,7 @@ export const developersPricingTemplateProps: PricingTemplateProps = {
 export const testimonialsTemplateContainerProps: Omit<TemplateContainerProps, 'children'> = {
   title: 'Trusted by Developers Who Value Independence',
   background: {
-
     variant: 'background',
-
   },
   paddingY: '2xl',
   maxWidth: '7xl',

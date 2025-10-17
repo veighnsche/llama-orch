@@ -26,7 +26,6 @@ import {
   GitBranch,
   KeyRound,
   Lock,
-  MessageSquare,
   Shield,
   ShieldAlert,
   ShieldCheck,
@@ -514,12 +513,7 @@ export const securityGuaranteesProps: EnterpriseComplianceProps = {
       ],
       box: {
         heading: 'Security Testing',
-        items: [
-          'Fuzzing with cargo-fuzz',
-          'Property-based testing',
-          'Security unit tests',
-          'Penetration testing',
-        ],
+        items: ['Fuzzing with cargo-fuzz', 'Property-based testing', 'Security unit tests', 'Penetration testing'],
         checkmarkColor: 'chart-2',
       },
     },
@@ -650,7 +644,8 @@ export const securityVulnerabilityDisclosureProps: HowItWorksProps = {
       number: 3,
       block: {
         kind: 'note',
-        content: 'Our security team will acknowledge your report within 48 hours and provide an initial assessment within 7 days.',
+        content:
+          'Our security team will acknowledge your report within 48 hours and provide an initial assessment within 7 days.',
       },
     },
     {
@@ -658,7 +653,8 @@ export const securityVulnerabilityDisclosureProps: HowItWorksProps = {
       number: 4,
       block: {
         kind: 'note',
-        content: 'We will work with you to understand the issue, develop a fix, and coordinate public disclosure. You will be credited in the security advisory.',
+        content:
+          'We will work with you to understand the issue, develop a fix, and coordinate public disclosure. You will be credited in the security advisory.',
       },
     },
   ],

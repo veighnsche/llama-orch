@@ -220,8 +220,7 @@ export const crossNodeOrchestrationContainerProps: Omit<TemplateContainerProps, 
   headingId: 'cross-node-orchestration',
   eyebrow: <Badge variant="secondary">Distributed execution</Badge>,
   title: 'Cross-Pool Orchestration',
-  description:
-    'Seamlessly orchestrate AI workloads across your network. One command runs on any machine in your pool.',
+  description: 'Seamlessly orchestrate AI workloads across your network. One command runs on any machine in your pool.',
   background: {
     variant: 'background',
     decoration: (
@@ -403,8 +402,7 @@ export const multiBackendGpuContainerProps: Omit<TemplateContainerProps, 'childr
   headingId: 'multi-backend-gpu',
   kicker: 'Explicit device selection',
   title: 'Multi-Backend GPU Support',
-  description:
-    'No silent fallbacks. You choose the backend.',
+  description: 'No silent fallbacks. You choose the backend.',
   background: {
     variant: 'background',
   },

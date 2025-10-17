@@ -27,7 +27,7 @@ type Story = StoryObj<typeof Table>
 
 /**
  * ## Dark Mode Polish: Sticky Headers & Focus
- * 
+ *
  * Demonstrates:
  * - Sticky headers: backdrop-blur-[2px] + bg-[rgba(20,28,42,0.85)]
  * - Row focus: ring-[color:var(--ring)] with proper offset
@@ -49,10 +49,10 @@ export const StickyHeader: Story = {
       <div className="bg-card border border-border rounded-xl p-6">
         <h3 className="text-lg font-semibold mb-4">Sticky Table Header</h3>
         <p className="text-sm text-muted-foreground mb-4">
-          Scroll down to see the sticky header remain visible with backdrop blur. The header uses
-          backdrop-blur-[2px] + bg-[rgba(20,28,42,0.85)] to match the card/canvas mix.
+          Scroll down to see the sticky header remain visible with backdrop blur. The header uses backdrop-blur-[2px] +
+          bg-[rgba(20,28,42,0.85)] to match the card/canvas mix.
         </p>
-        
+
         <div className="max-h-[400px] overflow-auto rounded-md border">
           <Table>
             <TableHeader>
@@ -114,7 +114,7 @@ export const KeyboardFocus: Story = {
           Tab through the rows to see the focus ring. Uses ring-[color:var(--ring)] with proper offset for clear
           keyboard path without amber flooding the grid.
         </p>
-        
+
         <Table>
           <TableHeader>
             <TableRow>
@@ -169,7 +169,7 @@ export const SelectedAndFocused: Story = {
           Shows the difference between hover, selected, and focused states. All use neutral white overlays (not amber)
           for data density contexts.
         </p>
-        
+
         <Table>
           <TableHeader>
             <TableRow>
@@ -198,7 +198,11 @@ export const SelectedAndFocused: Story = {
               <TableCell>{mockData[2].provider}</TableCell>
               <TableCell className="text-right">{mockData[2].price}</TableCell>
             </TableRow>
-            <TableRow data-state="selected" tabIndex={0} className="ring-2 ring-[color:var(--ring)] ring-offset-2 ring-offset-[color:var(--background)]">
+            <TableRow
+              data-state="selected"
+              tabIndex={0}
+              className="ring-2 ring-[color:var(--ring)] ring-offset-2 ring-offset-[color:var(--background)]"
+            >
               <TableCell className="font-medium">Selected + Focused</TableCell>
               <TableCell>{mockData[3].model}</TableCell>
               <TableCell>{mockData[3].provider}</TableCell>

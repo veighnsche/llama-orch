@@ -18,7 +18,15 @@
 // ============================================================================
 
 import { faqBeehive, homelabNetwork, pricingHero } from '@rbee/ui/assets'
-import { Badge, ComparisonGrid, NetworkMesh, OrchestrationFlow, PricingTiers, QuestionBubbles, StepFlow } from '@rbee/ui/atoms'
+import {
+  Badge,
+  ComparisonGrid,
+  NetworkMesh,
+  OrchestrationFlow,
+  PricingTiers,
+  QuestionBubbles,
+  StepFlow,
+} from '@rbee/ui/atoms'
 import { ComplianceShield, DevGrid, GpuMarket, RbeeArch } from '@rbee/ui/icons'
 import type { TemplateContainerProps } from '@rbee/ui/molecules'
 import { CodeBlock } from '@rbee/ui/molecules/CodeBlock'
@@ -313,12 +321,9 @@ export const audienceSelectorProps: AudienceSelectorProps = {
       icon: <Code2 className="size-6" />,
       category: 'For Developers',
       title: 'Build on Your Hardware',
-      description: 'Power Zed, Cursor, and your own agents on **your** GPUs. OpenAI-compatible - drop-in, zero API fees.',
-      features: [
-        'Zero API costs',
-        'Code stays local',
-        'Agentic TS utils',
-      ],
+      description:
+        'Power Zed, Cursor, and your own agents on **your** GPUs. OpenAI-compatible - drop-in, zero API fees.',
+      features: ['Zero API costs', 'Code stays local', 'Agentic TS utils'],
       href: '/developers',
       ctaText: 'Explore Developer Path',
       color: 'chart-2',
@@ -816,9 +821,7 @@ export const useCasesTemplateContainerProps: Omit<TemplateContainerProps, 'child
   title: 'Built for those who value independence',
   description: 'Run serious AI on your own hardware. Keep costs at zero, keep control at 100%.',
   background: {
-
     variant: 'secondary',
-
   },
   paddingY: '2xl',
   maxWidth: '6xl',
@@ -892,7 +895,7 @@ export const useCasesTemplateProps: UseCasesTemplateProps = {
  */
 export const comparisonTemplateContainerProps: Omit<TemplateContainerProps, 'children'> = {
   title: 'Why Developers Choose rbee',
-  description: 'Local-first AI that\'s faster, private, and costs $0 on your hardware.',
+  description: "Local-first AI that's faster, private, and costs $0 on your hardware.",
   background: {
     variant: 'secondary',
     decoration: (
@@ -1124,9 +1127,7 @@ export const pricingTemplateProps: PricingTemplateProps = {
 export const testimonialsTemplateContainerProps: Omit<TemplateContainerProps, 'children'> = {
   title: 'Built for developers who value independence',
   background: {
-
     variant: 'background',
-
   },
   paddingY: '2xl',
   maxWidth: '7xl',
@@ -1154,7 +1155,7 @@ export const testimonialsTemplateProps: TestimonialsTemplateProps = {
       author: 'Sarah M.',
       role: 'CTO',
       quote:
-        'We pooled our team\'s hardware and cut AI spend from $500/mo to zero. OpenAI-compatible API - no code changes.',
+        "We pooled our team's hardware and cut AI spend from $500/mo to zero. OpenAI-compatible API - no code changes.",
     },
     {
       avatar: '👨‍🔧',
@@ -1189,9 +1190,7 @@ export const technicalTemplateContainerProps: Omit<TemplateContainerProps, 'chil
   title: 'Built by AI Engineers, for Engineers building with AI',
   description: 'Rust-native orchestrator with process isolation, protocol awareness, and policy routing via Rhai.',
   background: {
-
     variant: 'background',
-
   },
   paddingY: '2xl',
   maxWidth: '7xl',
@@ -1462,7 +1461,7 @@ export const faqTemplateProps: FAQTemplateProps = {
  */
 export const ctaTemplateProps: CTATemplateProps = {
   title: 'Stop depending on AI providers. Start building today.',
-  subtitle: 'Join 500+ developers who\'ve taken control of their AI infrastructure.',
+  subtitle: "Join 500+ developers who've taken control of their AI infrastructure.",
   primary: {
     label: 'Get started free',
     href: '/getting-started',

@@ -1,17 +1,12 @@
 import { NetworkMesh } from '@rbee/ui/atoms'
 import type { TemplateContainerProps } from '@rbee/ui/molecules'
 import type {
-  ComparisonTemplateProps,
   EmailCaptureProps,
-  EnterpriseComplianceProps,
-  EnterpriseCTAProps,
   EnterpriseHeroProps,
   EnterpriseHowItWorksProps,
   EnterpriseSecurityProps,
   ErrorHandlingTemplateProps,
-  FAQTemplateProps,
   ProblemTemplateProps,
-  RealTimeProgressProps,
   SolutionTemplateProps,
 } from '@rbee/ui/templates'
 import {
@@ -23,7 +18,6 @@ import {
   FileText,
   GitBranch,
   Layers,
-  MessageSquare,
   Network,
   Rocket,
   Server,
@@ -403,12 +397,7 @@ export const devopsSecurityProps: EnterpriseSecurityProps = {
       title: 'Metrics Emission',
       subtitle: 'Prometheus-compatible metrics',
       intro: 'Export metrics for monitoring and alerting systems.',
-      bullets: [
-        'Worker status metrics',
-        'Latency histograms',
-        'VRAM utilization tracking',
-        'Prometheus format',
-      ],
+      bullets: ['Worker status metrics', 'Latency histograms', 'VRAM utilization tracking', 'Prometheus format'],
       docsHref: '/docs/observability/metrics',
     },
     {
@@ -429,12 +418,7 @@ export const devopsSecurityProps: EnterpriseSecurityProps = {
       title: 'Proof Bundles',
       subtitle: 'Debugging artifacts',
       intro: 'Automatic capture of debugging artifacts for root cause analysis.',
-      bullets: [
-        'Deterministic seeds recorded',
-        'Request/response logs',
-        'Error stack traces',
-        'Reproducible failures',
-      ],
+      bullets: ['Deterministic seeds recorded', 'Request/response logs', 'Error stack traces', 'Reproducible failures'],
       docsHref: '/docs/debugging/proof-bundles',
     },
   ],

@@ -1,4 +1,4 @@
-import { Badge, NetworkMesh } from '@rbee/ui/atoms'
+import { NetworkMesh } from '@rbee/ui/atoms'
 import type { TemplateContainerProps } from '@rbee/ui/molecules'
 import type {
   CTATemplateProps,
@@ -10,8 +10,8 @@ import type {
   TestimonialsTemplateProps,
   UseCasesTemplateProps,
 } from '@rbee/ui/templates'
-import type { HeroTemplateProps } from '@rbee/ui/templates/HeroTemplate/HeroTemplateProps'
 import type { AdditionalFeaturesGridProps } from '@rbee/ui/templates/AdditionalFeaturesGrid/AdditionalFeaturesGrid'
+import type { HeroTemplateProps } from '@rbee/ui/templates/HeroTemplate/HeroTemplateProps'
 import {
   ArrowRight,
   BookOpen,
@@ -46,11 +46,7 @@ export const communityHeroProps: HeroTemplateProps = {
     'Connect with developers building private AI infrastructure. Contribute code, share knowledge, and help shape the future of self-hosted AI.',
   proofElements: {
     variant: 'bullets',
-    items: [
-      { title: '100% open source' },
-      { title: 'Welcoming community' },
-      { title: 'Active development' },
-    ],
+    items: [{ title: '100% open source' }, { title: 'Welcoming community' }, { title: 'Active development' }],
   },
   ctas: {
     primary: {
@@ -64,11 +60,7 @@ export const communityHeroProps: HeroTemplateProps = {
     },
   },
   helperText: 'Star on GitHub • Active Contributors • Weekly Updates',
-  aside: (
-    <div className="relative aspect-square w-full max-w-md">
-      {/* Community visualization placeholder */}
-    </div>
-  ),
+  aside: <div className="relative aspect-square w-full max-w-md">{/* Community visualization placeholder */}</div>,
   asideAriaLabel: 'Community network visualization',
 }
 
@@ -468,7 +460,7 @@ export const featuredContributorsProps: TestimonialsTemplateProps = {
   testimonials: [
     {
       quote:
-        'Building rbee has been an incredible journey. The community\'s feedback and contributions have been invaluable.',
+        "Building rbee has been an incredible journey. The community's feedback and contributions have been invaluable.",
       author: 'Core Team',
       role: 'Maintainers',
       avatar: '👥',
@@ -492,9 +484,9 @@ export const featuredContributorsProps: TestimonialsTemplateProps = {
  * Roadmap - Adapted from EnterpriseHowItWorks
  */
 export const roadmapContainerProps: Omit<TemplateContainerProps, 'children'> = {
-  eyebrow: 'What\'s Next',
+  eyebrow: "What's Next",
   title: 'Project Roadmap',
-  description: 'Our development milestones and what\'s coming next.',
+  description: "Our development milestones and what's coming next.",
   background: {
     variant: 'secondary',
   },

@@ -1,6 +1,6 @@
+import { DeploymentFlow } from '@rbee/ui/atoms'
 import { Button } from '@rbee/ui/atoms/Button'
 import { Card, CardContent, CardFooter } from '@rbee/ui/atoms/Card'
-import { DeploymentFlow } from '@rbee/ui/atoms'
 import type { TemplateContainerProps } from '@rbee/ui/molecules'
 import { IconCardHeader } from '@rbee/ui/molecules'
 import { BeeArchitecture } from '@rbee/ui/organisms'
@@ -130,13 +130,13 @@ export const educationProblemTemplateProps: ProblemTemplateProps = {
     {
       icon: <Server className="h-6 w-6" />,
       title: 'No Real Infrastructure',
-      body: 'Cloud labs are expensive, time-limited, and don\'t teach production patterns.',
+      body: "Cloud labs are expensive, time-limited, and don't teach production patterns.",
       tone: 'destructive',
     },
     {
       icon: <Code className="h-6 w-6" />,
       title: 'Toy Examples',
-      body: 'Course projects use simplified code that doesn\'t reflect real-world complexity.',
+      body: "Course projects use simplified code that doesn't reflect real-world complexity.",
       tone: 'destructive',
     },
     {
@@ -150,8 +150,9 @@ export const educationProblemTemplateProps: ProblemTemplateProps = {
 
 export const educationProblemTemplateContainerProps: Omit<TemplateContainerProps, 'children'> = {
   title: 'The Learning Gap',
-  description: 'Theoretical Knowledge Isn\'t Enough',
-  kicker: 'Students learn distributed systems from slides and diagrams, but never touch real infrastructure. Cloud labs are expensive and limited. Learning stays theoretical.',
+  description: "Theoretical Knowledge Isn't Enough",
+  kicker:
+    'Students learn distributed systems from slides and diagrams, but never touch real infrastructure. Cloud labs are expensive and limited. Learning stays theoretical.',
   background: {
     variant: 'background',
   },
@@ -195,14 +196,14 @@ export const educationSolutionProps: SolutionTemplateProps = {
   ],
   aside: (
     <div className="relative aspect-square w-full">
-      <BeeArchitecture 
+      <BeeArchitecture
         topology={{
           mode: 'single-pc',
           hostLabel: 'Student Laptop',
           workers: [
             { id: 'w1', label: 'GPU 1', kind: 'cuda' },
             { id: 'w2', label: 'GPU 2', kind: 'cuda' },
-          ]
+          ],
         }}
       />
     </div>
@@ -211,7 +212,8 @@ export const educationSolutionProps: SolutionTemplateProps = {
 
 export const educationSolutionContainerProps: Omit<TemplateContainerProps, 'children'> = {
   title: 'Learn with Real Production Infrastructure',
-  description: 'rbee gives students hands-on experience with real distributed AI systems. Study production code, run real orchestration, and learn patterns that matter in industry.',
+  description:
+    'rbee gives students hands-on experience with real distributed AI systems. Study production code, run real orchestration, and learn patterns that matter in industry.',
   kicker: 'Hands-On Learning',
   background: {
     variant: 'muted',
@@ -307,12 +309,7 @@ export const educationCurriculumProps: EnterpriseSecurityProps = {
       title: 'Module 2: Orchestration',
       subtitle: 'Request Routing & Scheduling',
       intro: 'Request routing, GPU scheduling, and multi-backend support.',
-      bullets: [
-        'Orchestrator patterns',
-        'GPU pool management',
-        'CUDA, Metal, CPU backends',
-        'Load balancing',
-      ],
+      bullets: ['Orchestrator patterns', 'GPU pool management', 'CUDA, Metal, CPU backends', 'Load balancing'],
       docsHref: '/docs/orchestration',
     },
     {
@@ -320,12 +317,7 @@ export const educationCurriculumProps: EnterpriseSecurityProps = {
       title: 'Module 3: Multi-GPU',
       subtitle: 'Distributed Workloads',
       intro: 'Distributed GPU workloads, cross-node orchestration, and scaling.',
-      bullets: [
-        'Multi-GPU scheduling',
-        'Cross-node communication',
-        'Horizontal scaling',
-        'Resource optimization',
-      ],
+      bullets: ['Multi-GPU scheduling', 'Cross-node communication', 'Horizontal scaling', 'Resource optimization'],
       docsHref: '/docs/multi-gpu',
     },
     {
@@ -333,12 +325,7 @@ export const educationCurriculumProps: EnterpriseSecurityProps = {
       title: 'Module 4: Testing',
       subtitle: 'Behavior-Driven Development',
       intro: 'BDD with Gherkin, executable specs, and test-driven development.',
-      bullets: [
-        'Behavior-driven development',
-        'Gherkin scenarios',
-        'Executable specifications',
-        'Test automation',
-      ],
+      bullets: ['Behavior-driven development', 'Gherkin scenarios', 'Executable specifications', 'Test automation'],
       docsHref: '/docs/testing',
     },
     {
@@ -346,12 +333,7 @@ export const educationCurriculumProps: EnterpriseSecurityProps = {
       title: 'Module 5: Security',
       subtitle: 'Production Security Patterns',
       intro: 'Process isolation, audit trails, compliance, and production security.',
-      bullets: [
-        'Process isolation',
-        'Immutable audit logs',
-        'GDPR compliance',
-        'Security best practices',
-      ],
+      bullets: ['Process isolation', 'Immutable audit logs', 'GDPR compliance', 'Security best practices'],
       docsHref: '/docs/security',
     },
     {
@@ -359,12 +341,7 @@ export const educationCurriculumProps: EnterpriseSecurityProps = {
       title: 'Module 6: Production',
       subtitle: 'Real-World Operations',
       intro: 'Deployment, monitoring, error handling, and real-world operations.',
-      bullets: [
-        'Production deployment',
-        'Monitoring & metrics',
-        'Error recovery',
-        'Performance tuning',
-      ],
+      bullets: ['Production deployment', 'Monitoring & metrics', 'Error recovery', 'Performance tuning'],
       docsHref: '/docs/production',
     },
   ],
@@ -462,8 +439,10 @@ export const educationStudentTypesProps: UseCasesTemplateProps = {
       icon: <GraduationCap className="size-8" />,
       title: 'CS Student: Build Portfolio Projects',
       scenario: 'One gaming PC with a single GPU. Want to run AI locally for personal use.',
-      solution: 'Stand out with real distributed systems experience. Deploy production-grade AI infrastructure and showcase it to employers.',
-      outcome: 'Hands-on with real architecture. Portfolio-worthy projects. Open source contributions. Industry-relevant skills.',
+      solution:
+        'Stand out with real distributed systems experience. Deploy production-grade AI infrastructure and showcase it to employers.',
+      outcome:
+        'Hands-on with real architecture. Portfolio-worthy projects. Open source contributions. Industry-relevant skills.',
       tags: ['Portfolio', 'Real Experience', 'Open Source'],
       cta: {
         label: 'Start Learning',
@@ -474,7 +453,8 @@ export const educationStudentTypesProps: UseCasesTemplateProps = {
       icon: <Brain className="size-8" />,
       title: 'Career Switcher: Break Into AI Engineering',
       scenario: 'Switching careers into AI engineering. Need practical skills, not just theory.',
-      solution: 'Learn production AI systems from scratch. No PhD required. Build real skills that translate directly to industry roles.',
+      solution:
+        'Learn production AI systems from scratch. No PhD required. Build real skills that translate directly to industry roles.',
       outcome: 'No prerequisites needed. Progressive curriculum. Real-world patterns. Job-ready skills.',
       tags: ['Career Change', 'Practical Skills', 'Job Ready'],
       cta: {
@@ -486,7 +466,8 @@ export const educationStudentTypesProps: UseCasesTemplateProps = {
       icon: <GitBranch className="size-8" />,
       title: 'Researcher: Learn Reproducible Experiments',
       scenario: 'Need to run reproducible AI experiments with audit trails for research.',
-      solution: 'Master deterministic AI experiments with immutable audit trails. Learn the infrastructure behind reproducible research.',
+      solution:
+        'Master deterministic AI experiments with immutable audit trails. Learn the infrastructure behind reproducible research.',
       outcome: 'Deterministic seeds. Audit trail patterns. Distributed experiments. Research-grade infrastructure.',
       tags: ['Research', 'Reproducibility', 'Audit Trails'],
       cta: {
@@ -499,7 +480,7 @@ export const educationStudentTypesProps: UseCasesTemplateProps = {
 
 export const educationStudentTypesContainerProps: Omit<TemplateContainerProps, 'children'> = {
   title: 'Learning Paths for Different Goals',
-  description: 'Whether you\'re starting out or switching careers, rbee meets you where you are.',
+  description: "Whether you're starting out or switching careers, rbee meets you where you are.",
   kicker: 'Student Profiles',
   background: {
     variant: 'muted',
@@ -566,7 +547,9 @@ export const educationResourcesGridProps: CardGridTemplateProps = {
     <Card key="docs">
       <IconCardHeader icon={<BookOpen className="size-6" />} title="Documentation" />
       <CardContent className="px-6 py-0">
-        <p className="text-sm text-muted-foreground">Comprehensive guides covering architecture, APIs, and deployment.</p>
+        <p className="text-sm text-muted-foreground">
+          Comprehensive guides covering architecture, APIs, and deployment.
+        </p>
       </CardContent>
       <CardFooter className="mt-4">
         <Button asChild variant="ghost" size="sm">
@@ -686,8 +669,7 @@ export const educationFAQContainerProps: Omit<TemplateContainerProps, 'children'
 export const educationCTAProps: CTATemplateProps = {
   eyebrow: 'Start Learning Today',
   title: 'Build Real Skills with Real Infrastructure',
-  subtitle:
-    'Join hundreds of students learning distributed AI systems with production-grade open source tools.',
+  subtitle: 'Join hundreds of students learning distributed AI systems with production-grade open source tools.',
   primary: {
     label: 'Get Started',
     href: '#curriculum',
