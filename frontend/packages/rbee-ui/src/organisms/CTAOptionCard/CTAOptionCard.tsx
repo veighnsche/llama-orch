@@ -1,4 +1,5 @@
-import { Badge } from '@rbee/ui/atoms/Badge'
+import { Badge, Card, CardContent, CardFooter } from '@rbee/ui/atoms'
+import { IconCardHeader } from '@rbee/ui/molecules'
 import { cn } from '@rbee/ui/utils'
 import type { ReactNode } from 'react'
 
@@ -24,22 +25,15 @@ export function CTAOptionCard({
   className,
 }: CTAOptionCardProps) {
   const titleId = `cta-option-${title.toLowerCase().replace(/\s+/g, '-')}`
-  const bodyId = `${titleId}-body`
 
   return (
-    <article
-      role="region"
-      aria-labelledby={titleId}
-      aria-describedby={bodyId}
+    <Card
       className={cn(
-        // Base structure & surface
-        'group relative h-full flex flex-col rounded-2xl border/70 bg-card/70 p-6 sm:p-7 backdrop-blur-sm shadow-sm',
+        'group relative p-6 sm:p-7',
         // Entrance animation
         'animate-in fade-in-50 zoom-in-95 duration-300',
         // Interactive depth
         'hover:border-primary/40 hover:shadow-md focus-within:shadow-md transition-shadow',
-        // Focus ring for keyboard users
-        'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 focus-visible:ring-offset-2',
         // Primary tone overrides
         tone === 'primary' && 'border-primary/40 bg-primary/5',
         className,
@@ -53,51 +47,46 @@ export function CTAOptionCard({
         />
       )}
 
-      {/* Header: Icon chip + eyebrow */}
-      <header className="mb-4 flex flex-col items-center">
-        {/* Icon chip with halo */}
-        <div className="relative">
-          {/* Halo ring */}
-          <span aria-hidden="true" className="absolute inset-0 rounded-2xl ring-1 ring-primary/10" />
-          {/* Icon chip */}
-          <div className="relative rounded-xl bg-primary/12 text-primary p-3" aria-hidden="true">
-            {icon}
-          </div>
-        </div>
+      <IconCardHeader
+        icon={icon}
+        title={title}
+        titleId={titleId}
+        iconSize="lg"
+        iconTone="primary"
+        titleClassName={cn(
+          'text-2xl',
+          tone === 'primary' ? 'text-primary' : 'text-foreground',
+        )}
+        align="center"
+        className="flex-col items-center"
+      />
 
-        {/* Eyebrow label */}
-        {eyebrow && (
+      {/* Eyebrow label */}
+      {eyebrow && (
+        <div className="-mt-2 mb-4 flex justify-center">
           <Badge
             variant="outline"
-            className="mt-2 bg-primary/10 border-primary/30 text-primary text-[11px] font-medium"
+            className="bg-primary/10 border-primary/30 text-primary text-[11px] font-medium"
           >
             {eyebrow}
           </Badge>
-        )}
-      </header>
+        </div>
+      )}
 
-      {/* Content: Title + body */}
-      <div role="doc-subtitle" className="mb-5">
-        <h3
-          id={titleId}
-          className={cn(
-            'mb-2 text-center text-2xl font-semibold tracking-tight',
-            tone === 'primary' ? 'text-primary' : 'text-foreground',
-          )}
-        >
-          {title}
-        </h3>
-
-        <p id={bodyId} className="font-sans text-center text-sm leading-6 text-muted-foreground max-w-[80ch] mx-auto">
+      <CardContent className="p-0 text-center">
+        <p className="font-sans text-sm leading-6 text-muted-foreground max-w-[80ch] mx-auto">
           {body}
         </p>
-      </div>
+      </CardContent>
 
-      {/* Footer: Primary action + note */}
-      <footer className="mt-auto">
+      <CardFooter className="flex-col p-0 pt-5">
         {action}
-        {note && <p className="mt-2 text-center font-sans text-[11px] text-muted-foreground">{note}</p>}
-      </footer>
-    </article>
+        {note && (
+          <p className="mt-2 text-center font-sans text-[11px] text-muted-foreground">
+            {note}
+          </p>
+        )}
+      </CardFooter>
+    </Card>
   )
 }

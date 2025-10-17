@@ -11,16 +11,17 @@ import {
   EnterpriseHero,
   EnterpriseHowItWorks,
   EnterpriseSecurity,
-  EnterpriseTestimonials,
   EnterpriseUseCases,
   ProblemTemplate,
   SolutionTemplate,
+  TestimonialsTemplate,
 } from "@rbee/ui/templates";
 import {
   enterpriseComparisonContainerProps,
   enterpriseComparisonProps,
   enterpriseComplianceContainerProps,
   enterpriseComplianceProps,
+  enterpriseCTAContainerProps,
   enterpriseCTAProps,
   enterpriseEmailCaptureProps,
   enterpriseFeaturesContainerProps,
@@ -35,7 +36,7 @@ import {
   enterpriseSolutionContainerProps,
   enterpriseSolutionProps,
   enterpriseTestimonialsContainerProps,
-  enterpriseTestimonialsProps,
+  enterpriseTestimonialsData,
   enterpriseUseCasesContainerProps,
   enterpriseUseCasesProps,
 } from "./EnterprisePageProps";
@@ -83,10 +84,12 @@ export default function EnterprisePage() {
       </TemplateContainer>
 
       <TemplateContainer {...enterpriseTestimonialsContainerProps}>
-        <EnterpriseTestimonials {...enterpriseTestimonialsProps} />
+        <TestimonialsTemplate {...enterpriseTestimonialsData} />
       </TemplateContainer>
 
-      <EnterpriseCTA {...enterpriseCTAProps} />
+      <TemplateContainer {...enterpriseCTAContainerProps}>
+        <EnterpriseCTA {...enterpriseCTAProps} />
+      </TemplateContainer>
     </main>
   );
 }

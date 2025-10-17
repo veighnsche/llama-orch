@@ -68,7 +68,7 @@ export function TestimonialsTemplate({ testimonials, stats, className }: Testimo
       )}
 
       {/* Quotes grid */}
-      <div className="mx-auto mt-16 grid max-w-6xl gap-6 sm:grid-cols-2 lg:grid-cols-3">
+      <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
         {testimonials.map((testimonial, index) => (
           <TestimonialCard
             key={index}
@@ -83,7 +83,9 @@ export function TestimonialsTemplate({ testimonials, stats, className }: Testimo
 
       {/* Stats row */}
       {stats && stats.length > 0 && (
-        <StatsGrid stats={stats} variant="cards" columns={4} className="mx-auto mt-12 max-w-4xl" />
+        <div className="mt-12 animate-in fade-in-50" style={{ animationDelay: '200ms' }}>
+          <StatsGrid stats={stats} variant="tiles" columns={4} />
+        </div>
       )}
     </div>
   )

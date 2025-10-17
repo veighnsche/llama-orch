@@ -316,7 +316,9 @@ export function TemplateContainer({
           </div>
         )}
 
-        {children}
+        <div className={cn(maxWidthClasses[maxWidth], "mx-auto")}>
+          {children}
+        </div>
 
         {/* Security Guarantees */}
         {securityGuarantees && (
@@ -429,7 +431,7 @@ export function TemplateContainer({
         )}
 
         {/* Bottom CTAs */}
-        {ctas && (ctas.primary || ctas.secondary) && (
+        {ctas && (ctas.primary || ctas.secondary || ctas.caption) && (
           <div
             className={cn(
               "mt-12 text-center",
@@ -442,41 +444,43 @@ export function TemplateContainer({
                 {ctas.label}
               </p>
             )}
-            <div className="flex flex-col items-center justify-center gap-3 sm:flex-row">
-              {ctas.primary && (
-                <Button
-                  asChild
-                  size="lg"
-                  className="transition-transform active:scale-[0.98]"
-                >
-                  <a
-                    href={ctas.primary.href}
-                    aria-label={ctas.primary.ariaLabel || ctas.primary.label}
+            {(ctas.primary || ctas.secondary) && (
+              <div className="flex flex-col items-center justify-center gap-3 sm:flex-row">
+                {ctas.primary && (
+                  <Button
+                    asChild
+                    size="lg"
+                    className="transition-transform active:scale-[0.98]"
                   >
-                    {ctas.primary.label}
-                  </a>
-                </Button>
-              )}
-              {ctas.secondary && (
-                <Button
-                  asChild
-                  size="lg"
-                  variant="outline"
-                  className="transition-transform active:scale-[0.98]"
-                >
-                  <a
-                    href={ctas.secondary.href}
-                    aria-label={
-                      ctas.secondary.ariaLabel || ctas.secondary.label
-                    }
+                    <a
+                      href={ctas.primary.href}
+                      aria-label={ctas.primary.ariaLabel || ctas.primary.label}
+                    >
+                      {ctas.primary.label}
+                    </a>
+                  </Button>
+                )}
+                {ctas.secondary && (
+                  <Button
+                    asChild
+                    size="lg"
+                    variant="outline"
+                    className="transition-transform active:scale-[0.98]"
                   >
-                    {ctas.secondary.label}
-                  </a>
-                </Button>
-              )}
-            </div>
+                    <a
+                      href={ctas.secondary.href}
+                      aria-label={
+                        ctas.secondary.ariaLabel || ctas.secondary.label
+                      }
+                    >
+                      {ctas.secondary.label}
+                    </a>
+                  </Button>
+                )}
+              </div>
+            )}
             {ctas.caption && (
-              <p className="mt-4 text-xs text-muted-foreground font-sans">
+              <p className={cn("text-sm text-muted-foreground font-sans text-center", (ctas.primary || ctas.secondary) && "mt-4")}>
                 {ctas.caption}
               </p>
             )}

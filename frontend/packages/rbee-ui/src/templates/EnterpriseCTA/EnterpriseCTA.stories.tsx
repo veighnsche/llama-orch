@@ -1,4 +1,8 @@
-import { enterpriseCTAProps } from '@rbee/ui/pages/EnterprisePage'
+import { TemplateContainer } from '@rbee/ui/molecules'
+import {
+  enterpriseCTAContainerProps,
+  enterpriseCTAProps,
+} from '@rbee/ui/pages/EnterprisePage'
 import type { Meta, StoryObj } from '@storybook/react'
 import { EnterpriseCTA } from './EnterpriseCTA'
 
@@ -19,7 +23,13 @@ type Story = StoryObj<typeof meta>
  * - Three CTA options (Schedule Demo, Compliance Pack, Talk to Sales)
  * - Eyebrow labels for context
  * - Trust signals and response time commitments
+ * - Wrapped in TemplateContainer with title and description
  */
 export const OnEnterprisePage: Story = {
   args: enterpriseCTAProps,
+  render: (args) => (
+    <TemplateContainer {...enterpriseCTAContainerProps}>
+      <EnterpriseCTA {...args} />
+    </TemplateContainer>
+  ),
 }
