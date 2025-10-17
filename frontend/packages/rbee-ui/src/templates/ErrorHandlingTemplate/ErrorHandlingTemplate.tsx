@@ -1,6 +1,5 @@
 'use client'
 
-import { Badge } from '@rbee/ui/atoms'
 import { PlaybookHeader, PlaybookItem, StatusKPI, TerminalWindow } from '@rbee/ui/molecules'
 import { cn } from '@rbee/ui/utils'
 import type { ReactNode } from 'react'

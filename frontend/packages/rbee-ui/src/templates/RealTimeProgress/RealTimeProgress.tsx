@@ -1,6 +1,6 @@
 'use client'
 
-import { Badge, Card, CardContent } from '@rbee/ui/atoms'
+import { Card, CardContent } from '@rbee/ui/atoms'
 import { IconCardHeader, StatusKPI, TerminalWindow, TimelineStep } from '@rbee/ui/molecules'
 import { cn } from '@rbee/ui/utils'
 import type { ReactNode } from 'react'

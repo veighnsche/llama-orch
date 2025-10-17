@@ -1,6 +1,5 @@
 'use client'
 
-import { pricingHero } from '@rbee/ui/assets'
 import { PricingScaleVisual } from '@rbee/ui/icons'
 import type { Provider, Row, RowGroup, TemplateContainerProps } from '@rbee/ui/molecules'
 import type {
@@ -11,7 +10,7 @@ import type {
   PricingHeroTemplateProps,
   PricingTemplateProps,
 } from '@rbee/ui/templates'
-import { Layers, Shield, Sparkles, Unlock, Zap } from 'lucide-react'
+import { Sparkles } from 'lucide-react'
 
 // ============================================================================
 // Props Objects

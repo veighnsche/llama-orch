@@ -2,10 +2,10 @@ import { Card, CardContent } from '@rbee/ui/atoms/Card'
 import { BulletListItem } from '@rbee/ui/molecules/BulletListItem'
 import { ButtonCardFooter } from '@rbee/ui/molecules/ButtonCardFooter'
 import { cn } from '@rbee/ui/utils'
-import { cva, type VariantProps } from 'class-variance-authority'
+import { cva } from 'class-variance-authority'
 import type { ReactNode } from 'react'
 
-const audienceCardVariants = cva('', {
+const _audienceCardVariants = cva('', {
   variants: {
     color: {
       primary: '',

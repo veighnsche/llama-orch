@@ -1,6 +1,5 @@
 import { Slider } from '@rbee/ui/atoms/Slider'
 import { cn } from '@rbee/ui/utils'
-import type * as React from 'react'
 
 export interface LabeledSliderProps {
   /** Label text */

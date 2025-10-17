@@ -1,6 +1,5 @@
 'use client'
 
-import { Badge } from '@rbee/ui/atoms/Badge'
 import { Button } from '@rbee/ui/atoms/Button'
 import { Card } from '@rbee/ui/atoms/Card'
 import type { Provider, Row, RowGroup } from '@rbee/ui/molecules'

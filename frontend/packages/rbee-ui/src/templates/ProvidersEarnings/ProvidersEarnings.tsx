@@ -6,7 +6,6 @@ import { IconCardHeader } from '@rbee/ui/molecules/IconCardHeader'
 import { LabeledSlider } from '@rbee/ui/molecules/LabeledSlider'
 import { OptionSelector } from '@rbee/ui/molecules/OptionSelector'
 import { EarningsBreakdownCard, GPUSelector } from '@rbee/ui/organisms'
-import { cn } from '@rbee/ui/utils'
 import { Cpu, TrendingUp } from 'lucide-react'
 import { useRef, useState } from 'react'
 

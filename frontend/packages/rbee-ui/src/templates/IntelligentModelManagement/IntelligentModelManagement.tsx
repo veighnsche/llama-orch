@@ -1,6 +1,6 @@
 'use client'
 
-import { Alert, Badge, Card, CardContent } from '@rbee/ui/atoms'
+import { Alert, Card, CardContent } from '@rbee/ui/atoms'
 import { IconPlate } from '@rbee/ui/molecules'
 import { cn } from '@rbee/ui/utils'
 import { Check, CheckCircle2, Database } from 'lucide-react'

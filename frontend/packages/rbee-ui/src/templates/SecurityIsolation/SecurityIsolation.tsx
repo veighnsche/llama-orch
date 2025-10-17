@@ -1,10 +1,9 @@
 'use client'
 
-import { Badge, Card, CardContent } from '@rbee/ui/atoms'
+import { Card, CardContent } from '@rbee/ui/atoms'
 import { BulletListItem, CrateCard, IconCardHeader } from '@rbee/ui/molecules'
 import { cn } from '@rbee/ui/utils'
 import { Lock, Shield } from 'lucide-react'
-import type { ReactNode } from 'react'
 
 export interface SecurityCrate {
   name: string

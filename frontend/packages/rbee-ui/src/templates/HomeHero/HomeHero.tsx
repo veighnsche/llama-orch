@@ -2,7 +2,6 @@
 
 import { FloatingKPICard, ProgressBar, TerminalWindow } from '@rbee/ui/molecules'
 import { HeroTemplate } from '@rbee/ui/templates/HeroTemplate'
-import { ArrowRight, DollarSign, Star } from 'lucide-react'
 
 export interface BulletItem {
   title: string

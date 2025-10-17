@@ -1,9 +1,9 @@
 'use client'
 
-import { Badge, Card, CardContent, Separator } from '@rbee/ui/atoms'
-import { FeatureInfoCard, IconCardHeader, IconPlate, TerminalWindow } from '@rbee/ui/molecules'
+import { Card, CardContent, Separator } from '@rbee/ui/atoms'
+import { FeatureInfoCard, IconCardHeader, TerminalWindow } from '@rbee/ui/molecules'
 import { cn } from '@rbee/ui/utils'
-import { ArrowDown, CheckCircle2, GitBranch, Network } from 'lucide-react'
+import { ArrowDown, GitBranch, Network } from 'lucide-react'
 import type { ReactNode } from 'react'
 
 export interface DiagramNode {

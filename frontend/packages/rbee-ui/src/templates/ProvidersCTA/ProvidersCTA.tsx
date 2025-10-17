@@ -2,7 +2,6 @@ import { Button } from '@rbee/ui/atoms/Button'
 import { StatsGrid } from '@rbee/ui/molecules'
 import Image from 'next/image'
 import type * as React from 'react'
-import type { ReactNode } from 'react'
 
 // ────────────────────────────────────────────────────────────────────────────
 // Types

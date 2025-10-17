@@ -292,11 +292,7 @@ export function HeroTemplate({
             onClick={ctas.secondary.onClick}
             aria-label={ctas.secondary.ariaLabel}
           >
-            {ctas.secondary.href ? (
-              <a href={ctas.secondary.href}>{ctas.secondary.label}</a>
-            ) : (
-              <>{ctas.secondary.label}</>
-            )}
+            {ctas.secondary.href ? <a href={ctas.secondary.href}>{ctas.secondary.label}</a> : ctas.secondary.label}
           </Button>
         </div>
 

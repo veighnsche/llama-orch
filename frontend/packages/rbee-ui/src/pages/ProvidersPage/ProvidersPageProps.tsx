@@ -2,7 +2,6 @@
 
 import { gpuEarnings } from '@rbee/ui/assets'
 import { TESTIMONIALS } from '@rbee/ui/data/testimonials'
-import { FormerCryptoMiner, GamingPcOwner, HomelabEnthusiast, WorkstationOwner } from '@rbee/ui/icons'
 import type { TemplateContainerProps } from '@rbee/ui/molecules'
 import { CommissionStructureCard, ProvidersSecurityCard } from '@rbee/ui/molecules'
 import { CodeBlock } from '@rbee/ui/molecules/CodeBlock'
@@ -20,14 +19,13 @@ import type {
   TestimonialsTemplateProps,
 } from '@rbee/ui/templates'
 import type { ProblemTemplateProps } from '@rbee/ui/templates/ProblemTemplate'
-import type { Feature, SolutionTemplateProps } from '@rbee/ui/templates/SolutionTemplate'
+import type { SolutionTemplateProps } from '@rbee/ui/templates/SolutionTemplate'
 import {
   AlertCircle,
   BarChart3,
   Clock,
   Cpu,
   DollarSign,
-  Download,
   Eye,
   FileCheck,
   Gamepad2,
@@ -35,7 +33,6 @@ import {
   Lock,
   Monitor,
   Server,
-  Settings,
   Shield,
   Sliders,
   Star,

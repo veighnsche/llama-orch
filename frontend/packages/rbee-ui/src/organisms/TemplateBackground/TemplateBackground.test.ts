@@ -27,7 +27,7 @@ test.describe('TemplateBackground - All Variants', () => {
   for (const variant of variants) {
     test(`should render ${variant} variant correctly`, async ({ page }) => {
       // Navigate to the specific story
-      const storyName =
+      const _storyName =
         variant.charAt(0).toUpperCase() + variant.slice(1).replace(/-([a-z])/g, (g) => g[1].toUpperCase())
       await page.goto(`${STORYBOOK_URL}/?path=/story/organisms-templatebackground--${variant}`)
 
@@ -89,7 +89,7 @@ test.describe('TemplateContainer - Background Integration', () => {
   test('should work with all legacy bgVariant values', async ({ page }) => {
     const legacyVariants = ['background', 'secondary', 'card', 'muted', 'subtle', 'destructive-gradient']
 
-    for (const variant of legacyVariants) {
+    for (const _variant of legacyVariants) {
       await page.goto(`${STORYBOOK_URL}/?path=/story/molecules-templatecontainer--all-props-showcase`)
       await page.waitForSelector('#storybook-root')
 

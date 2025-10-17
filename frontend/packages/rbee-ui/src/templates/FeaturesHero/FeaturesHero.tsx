@@ -1,7 +1,5 @@
 import { featuresHeroImage } from '@rbee/ui/assets'
 import { BrandWordmark } from '@rbee/ui/atoms'
-import { Badge } from '@rbee/ui/atoms/Badge'
-import { Separator } from '@rbee/ui/atoms/Separator'
 import { FeatureInfoCard } from '@rbee/ui/molecules'
 import { HeroTemplate } from '@rbee/ui/templates/HeroTemplate'
 import { Cpu, Download, Power } from 'lucide-react'

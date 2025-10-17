@@ -312,7 +312,7 @@ export const FullPlaybook: Story = {
   render: () => {
     const [selectedCategories, setSelectedCategories] = useState<string[]>([])
     const [allExpanded, setAllExpanded] = useState(false)
-    const [openCategory, setOpenCategory] = useState<string | null>(null)
+    const [_openCategory, setOpenCategory] = useState<string | null>(null)
     const detailsRefs = useRef<Record<string, HTMLDetailsElement | null>>({})
 
     const categories = [
@@ -546,7 +546,7 @@ export const FullPlaybook: Story = {
     useEffect(() => {
       const allOpen = Object.values(detailsRefs.current).every((ref) => ref?.open)
       setAllExpanded(allOpen)
-    }, [openCategory])
+    }, [])
 
     const visibleCategories =
       selectedCategories.length === 0

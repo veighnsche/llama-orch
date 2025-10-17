@@ -3,7 +3,7 @@
 import { Alert, AlertDescription, AlertTitle, Badge, Card, CardContent } from '@rbee/ui/atoms'
 import { IconCardHeader, TerminalWindow } from '@rbee/ui/molecules'
 import { cn } from '@rbee/ui/utils'
-import { AlertTriangle, CheckCircle2, Cpu, X } from 'lucide-react'
+import { AlertTriangle, X } from 'lucide-react'
 import type { ReactNode } from 'react'
 
 export interface PolicyBadge {

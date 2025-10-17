@@ -1,10 +1,6 @@
 'use client'
 
-import { Badge } from '@rbee/ui/atoms/Badge'
-import { ComplianceShield, DevGrid, GpuMarket } from '@rbee/ui/icons'
 import { AudienceCard, type AudienceCardColor } from '@rbee/ui/organisms/AudienceCard'
-import { ChevronRight, Code2, Server, Shield } from 'lucide-react'
-import Link from 'next/link'
 import type { ReactNode } from 'react'
 
 export interface AudienceCardData {

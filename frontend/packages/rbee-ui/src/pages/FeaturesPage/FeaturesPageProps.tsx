@@ -23,13 +23,11 @@ import {
   Cpu,
   Database,
   Gauge,
-  Lock,
   MemoryStick,
   Network,
   Shield,
   Terminal,
   Timer,
-  XCircle,
   Zap,
 } from 'lucide-react'
 

@@ -1,5 +1,4 @@
-import { Card, CardContent, CardHeader, CardTitle } from '@rbee/ui/atoms/Card'
-import type { ReactNode } from 'react'
+import { Card, CardContent } from '@rbee/ui/atoms/Card'
 
 export interface CommissionExample {
   label: string

@@ -5,7 +5,6 @@ import { Badge } from '@rbee/ui/atoms/Badge'
 import { Card } from '@rbee/ui/atoms/Card'
 import { TerminalWindow } from '@rbee/ui/molecules'
 import { HeroTemplate } from '@rbee/ui/templates/HeroTemplate'
-import { Check } from 'lucide-react'
 import Image from 'next/image'
 import type * as React from 'react'
 
@@ -149,7 +148,7 @@ export function DevelopersHeroTemplate({
     text: label,
   }))
 
-  const secondaryCtaWithIcon = {
+  const _secondaryCtaWithIcon = {
     ...secondaryCta,
     // GitHub icon will be handled in the button rendering
   }

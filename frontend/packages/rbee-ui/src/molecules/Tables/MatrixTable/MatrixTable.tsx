@@ -1,5 +1,4 @@
 import { Badge } from '@rbee/ui/atoms/Badge'
-import { Separator } from '@rbee/ui/atoms/Separator'
 import { Table, TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRow } from '@rbee/ui/atoms/Table'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@rbee/ui/atoms/Tooltip'
 import { cn } from '@rbee/ui/utils'

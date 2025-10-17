@@ -1,4 +1,3 @@
-import { Button } from '@rbee/ui/atoms'
 import { CTARail } from '@rbee/ui/molecules/CTARail'
 import { Disclaimer } from '@rbee/ui/molecules/Disclaimer'
 import { FooterCTA } from '@rbee/ui/molecules/FooterCTA'

@@ -1,6 +1,5 @@
 import { Button } from '@rbee/ui/atoms'
 import type { Meta, StoryObj } from '@storybook/react'
-import { Shield, Sparkles } from 'lucide-react'
 import { TemplateContainer } from './TemplateContainer'
 
 const meta = {

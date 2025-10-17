@@ -1,5 +1,4 @@
 import { cn } from '@rbee/ui/utils'
-import * as React from 'react'
 
 export interface Option<T = any> {
   /** Unique identifier for the option */
