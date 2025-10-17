@@ -158,7 +158,9 @@ export const LegacyBgVariant: Story = {
   args: {
     title: 'Legacy bgVariant (Deprecated)',
     description: 'Using old bgVariant prop - still works for backward compatibility',
-    bgVariant: 'destructive-gradient',
+    background: {
+      variant: 'gradient-destructive',
+    },
     children: <SampleContent />,
   },
 }

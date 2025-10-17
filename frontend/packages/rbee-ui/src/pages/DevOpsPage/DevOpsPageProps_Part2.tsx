@@ -19,6 +19,7 @@ import {
   Network,
   Rocket,
   Server,
+  X,
 } from 'lucide-react'
 
 // === Error Handling Section ===
@@ -252,49 +253,49 @@ export const devopsComparisonProps: ComparisonTemplateProps = {
     {
       feature: 'SSH Lifecycle Control',
       values: {
-        rbee: <CheckCircle className="size-5 text-chart-3" />,
-        kubernetes: <span className="text-muted-foreground">Via kubectl</span>,
-        manual: <CheckCircle className="size-5 text-chart-3" />,
+        rbee: true,
+        kubernetes: 'Via kubectl',
+        manual: true,
       },
     },
     {
       feature: 'Cascading Shutdown',
       values: {
-        rbee: <CheckCircle className="size-5 text-chart-3" />,
-        kubernetes: <span className="text-muted-foreground">Pod lifecycle</span>,
-        manual: <span className="text-destructive">Manual</span>,
+        rbee: true,
+        kubernetes: 'Pod lifecycle',
+        manual: 'Manual',
       },
     },
     {
       feature: 'Health Monitoring',
       values: {
-        rbee: <span className="text-chart-3">30s heartbeat</span>,
-        kubernetes: <span className="text-chart-3">Liveness probes</span>,
-        manual: <span className="text-destructive">None</span>,
+        rbee: '30s heartbeat',
+        kubernetes: 'Liveness probes',
+        manual: 'None',
       },
     },
     {
       feature: 'Metrics Export',
       values: {
-        rbee: <span className="text-chart-3">Prometheus</span>,
-        kubernetes: <span className="text-chart-3">Prometheus</span>,
-        manual: <span className="text-destructive">None</span>,
+        rbee: 'Prometheus',
+        kubernetes: 'Prometheus',
+        manual: 'None',
       },
     },
     {
       feature: 'Proof Bundles',
       values: {
-        rbee: <CheckCircle className="size-5 text-chart-3" />,
-        kubernetes: <span className="text-destructive">None</span>,
-        manual: <span className="text-destructive">None</span>,
+        rbee: true,
+        kubernetes: false,
+        manual: false,
       },
     },
     {
       feature: 'Learning Curve',
       values: {
-        rbee: <span className="text-chart-3">Low</span>,
-        kubernetes: <span className="text-destructive">High</span>,
-        manual: <span className="text-chart-2">Medium</span>,
+        rbee: 'Low',
+        kubernetes: 'High',
+        manual: 'Medium',
       },
     },
   ],
@@ -304,7 +305,7 @@ export const devopsComparisonProps: ComparisonTemplateProps = {
       label: 'Supported',
     },
     {
-      icon: <span className="text-destructive">✗</span>,
+      icon: <X className="h-3.5 w-3.5 text-destructive" />,
       label: 'Not Available',
     },
   ],

@@ -576,3 +576,17 @@ export const devopsErrorHandlingContainerProps: Omit<TemplateContainerProps, 'ch
   paddingY: 'xl',
   maxWidth: '6xl',
 }
+
+// Re-export props from Part2 file
+export {
+  devopsComparisonContainerProps,
+  devopsComparisonProps,
+  devopsComplianceContainerProps,
+  devopsComplianceProps,
+  devopsCTAContainerProps,
+  devopsCTAProps,
+  devopsFAQContainerProps,
+  devopsFAQProps,
+  devopsRealTimeProgressContainerProps,
+  devopsRealTimeProgressProps,
+} from './DevOpsPageProps_Part2'

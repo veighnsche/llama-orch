@@ -57,7 +57,7 @@ export const featuresFeaturesTabsProps: FeaturesTabsProps = {
       icon: <Code className="size-6" />,
       label: 'OpenAI-Compatible',
       mobileLabel: 'API',
-      description: 'Drop-in API',
+      subtitle: 'Drop-in API',
       badge: 'Drop-in',
       description: 'Swap endpoints, keep your code. Works with Zed, Cursor, Continue—any OpenAI client.',
       content: (
@@ -82,7 +82,7 @@ export OPENAI_API_BASE=http://localhost:8080/v1`}
       icon: <Cpu className="size-6" />,
       label: 'Multi-GPU',
       mobileLabel: 'GPU',
-      description: 'Use every GPU',
+      subtitle: 'Use every GPU',
       badge: 'Scale',
       description: 'Run across CUDA, Metal, and CPU backends. Use every GPU across your network.',
       content: (
@@ -108,7 +108,7 @@ export OPENAI_API_BASE=http://localhost:8080/v1`}
       icon: <Gauge className="size-6" />,
       label: 'Programmable scheduler (Rhai)',
       mobileLabel: 'Rhai',
-      description: 'Route with Rhai',
+      subtitle: 'Route with Rhai',
       badge: 'Control',
       description: 'Write routing rules. Send 70B to multi-GPU, images to CUDA, everything else to cheapest.',
       content: (
@@ -138,7 +138,7 @@ else {
       icon: <Zap className="size-6" />,
       label: 'Task-based API with SSE',
       mobileLabel: 'SSE',
-      description: 'Live job stream',
+      subtitle: 'Live job stream',
       badge: 'Observe',
       description: 'See model loading, token generation, and costs stream in as they happen.',
       content: (
@@ -198,20 +198,16 @@ export const crossNodeOrchestrationContainerProps: Omit<TemplateContainerProps, 
   description:
     'Seamlessly orchestrate AI workloads across your entire network. One command runs inference on any machine in your pool.',
   background: {
-
     variant: 'background',
-
-  },
-  paddingY: '2xl',
-  maxWidth: '6xl',
-  align: 'center',
-  background: {
     decoration: (
       <div className="pointer-events-none absolute left-1/2 top-8 hidden w-[50rem] -translate-x-1/2 opacity-25 md:block">
         <DistributedNodes className="blur-[0.5px]" />
       </div>
     ),
   },
+  paddingY: '2xl',
+  maxWidth: '6xl',
+  align: 'center',
 }
 
 /**
@@ -286,20 +282,16 @@ export const intelligentModelManagementContainerProps: Omit<TemplateContainerPro
   title: 'Intelligent Model Management',
   description: 'Automatic model provisioning, caching, and validation. Download once; use everywhere.',
   background: {
-
     variant: 'background',
-
-  },
-  paddingY: '2xl',
-  maxWidth: '5xl',
-  align: 'center',
-  background: {
     decoration: (
       <div className="pointer-events-none absolute left-1/2 top-8 hidden w-[50rem] -translate-x-1/2 opacity-25 md:block">
         <CacheLayer className="blur-[0.5px]" />
       </div>
     ),
   },
+  paddingY: '2xl',
+  maxWidth: '5xl',
+  align: 'center',
 }
 
 /**
@@ -445,20 +437,16 @@ export const errorHandlingContainerProps: Omit<TemplateContainerProps, 'children
   title: 'Comprehensive Error Handling',
   description: '19+ error scenarios with clear messages and actionable fixes—no cryptic failures.',
   background: {
-
     variant: 'background',
-
-  },
-  paddingY: '2xl',
-  maxWidth: '6xl',
-  align: 'center',
-  background: {
     decoration: (
       <div className="pointer-events-none absolute left-1/2 top-8 hidden w-[50rem] -translate-x-1/2 opacity-25 md:block">
         <DiagnosticGrid className="blur-[0.5px]" />
       </div>
     ),
   },
+  paddingY: '2xl',
+  maxWidth: '6xl',
+  align: 'center',
 }
 
 /**
@@ -736,20 +724,16 @@ export const realTimeProgressContainerProps: Omit<TemplateContainerProps, 'child
   title: 'Real‑time Progress Tracking',
   description: 'Live narration of each step—model loading, token generation, resource usage—as it happens.',
   background: {
-
     variant: 'background',
-
-  },
-  paddingY: '2xl',
-  maxWidth: '6xl',
-  align: 'center',
-  background: {
     decoration: (
       <div className="pointer-events-none absolute left-1/2 top-8 hidden w-[50rem] -translate-x-1/2 opacity-25 md:block">
         <ProgressTimeline className="blur-[0.5px]" />
       </div>
     ),
   },
+  paddingY: '2xl',
+  maxWidth: '6xl',
+  align: 'center',
 }
 
 /**
@@ -964,7 +948,7 @@ export const additionalFeaturesGridProps: AdditionalFeaturesGridProps = {
           icon: <Shield className="size-6" />,
           iconTone: 'chart-2',
           title: 'Cascading Shutdown',
-          description: 'Ctrl+C tears down keeper → queen → hive → workers. No orphans, no VRAM leaks.',
+          subtitle: 'Ctrl+C tears down keeper → queen → hive → workers. No orphans, no VRAM leaks.',
           borderColor: 'before:h-[2px] before:bg-chart-2',
         },
         {
@@ -973,7 +957,7 @@ export const additionalFeaturesGridProps: AdditionalFeaturesGridProps = {
           icon: <Database className="size-6" />,
           iconTone: 'chart-3',
           title: 'Model Catalog',
-          description: 'Auto-provision models from Hugging Face with checksum verify and local cache.',
+          subtitle: 'Auto-provision models from Hugging Face with checksum verify and local cache.',
           borderColor: 'before:h-[2px] before:bg-chart-3',
         },
         {
@@ -982,7 +966,7 @@ export const additionalFeaturesGridProps: AdditionalFeaturesGridProps = {
           icon: <Network className="size-6" />,
           iconTone: 'primary',
           title: 'Network Orchestration',
-          description: 'Run jobs across gaming PCs, workstations, and Macs as one homelab cluster.',
+          subtitle: 'Run jobs across gaming PCs, workstations, and Macs as one homelab cluster.',
           borderColor:
             'before:h-1.5 before:bg-gradient-to-r before:from-primary before:via-chart-3 before:to-amber-500',
           featured: true,
@@ -998,7 +982,7 @@ export const additionalFeaturesGridProps: AdditionalFeaturesGridProps = {
           icon: <Terminal className="size-6" />,
           iconTone: 'muted',
           title: 'CLI & Web UI',
-          description: 'Automate with a fast CLI or manage visually in the web UI—your call.',
+          subtitle: 'Automate with a fast CLI or manage visually in the web UI—your call.',
           borderColor: 'before:h-[2px] before:bg-muted-foreground',
         },
         {
@@ -1007,7 +991,7 @@ export const additionalFeaturesGridProps: AdditionalFeaturesGridProps = {
           icon: <Code className="size-6" />,
           iconTone: 'primary',
           title: 'TypeScript SDK',
-          description: 'Type-safe utilities for building agents; async/await with full IDE help.',
+          subtitle: 'Type-safe utilities for building agents; async/await with full IDE help.',
           borderColor: 'before:h-[2px] before:bg-primary',
         },
         {
@@ -1016,7 +1000,7 @@ export const additionalFeaturesGridProps: AdditionalFeaturesGridProps = {
           icon: <Shield className="size-6" />,
           iconTone: 'chart-2',
           title: 'Security First',
-          description: 'Six Rust crates: auth, audit logs, input validation, secrets, JWT guardian, and deadlines.',
+          subtitle: 'Six Rust crates: auth, audit logs, input validation, secrets, JWT guardian, and deadlines.',
           borderColor: 'before:h-[2px] before:bg-chart-2',
         },
       ],

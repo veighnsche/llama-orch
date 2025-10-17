@@ -411,20 +411,16 @@ export const solutionTemplateContainerProps: Omit<TemplateContainerProps, 'child
   description:
     'rbee orchestrates inference across every GPU in your home network—workstations, gaming rigs, and Macs—turning idle hardware into a private, OpenAI-compatible AI platform.',
   background: {
-
     variant: 'background',
-
-  },
-  paddingY: '2xl',
-  maxWidth: '7xl',
-  align: 'center',
-  background: {
     decoration: (
       <div className="pointer-events-none absolute left-1/2 top-8 hidden w-[50rem] -translate-x-1/2 opacity-25 md:block">
         <OrchestrationFlow className="blur-[0.5px]" />
       </div>
     ),
   },
+  paddingY: '2xl',
+  maxWidth: '7xl',
+  align: 'center',
 }
 
 /**
@@ -497,20 +493,16 @@ export const solutionTemplateProps: SolutionTemplateProps = {
 export const howItWorksContainerProps: Omit<TemplateContainerProps, 'children'> = {
   title: 'From zero to AI infrastructure in 15 minutes',
   background: {
-
     variant: 'secondary',
-
-  },
-  paddingY: '2xl',
-  maxWidth: '7xl',
-  align: 'center',
-  background: {
     decoration: (
       <div className="pointer-events-none absolute left-1/2 top-8 hidden w-[50rem] -translate-x-1/2 opacity-25 md:block">
         <StepFlow className="blur-[0.5px]" />
       </div>
     ),
   },
+  paddingY: '2xl',
+  maxWidth: '7xl',
+  align: 'center',
 }
 
 /**
@@ -603,7 +595,7 @@ export const featuresTabsProps: FeaturesTabsProps = {
       icon: <Code className="size-6" />,
       label: 'OpenAI-Compatible',
       mobileLabel: 'API',
-      description: 'Drop-in API',
+      subtitle: 'Drop-in API',
       badge: 'Drop-in',
       description: 'Swap endpoints, keep your code. Works with Zed, Cursor, Continue—any OpenAI client.',
       content: (
@@ -628,7 +620,7 @@ export OPENAI_API_BASE=http://localhost:8080/v1`}
       icon: <Cpu className="size-6" />,
       label: 'Multi-GPU',
       mobileLabel: 'GPU',
-      description: 'Use every GPU',
+      subtitle: 'Use every GPU',
       badge: 'Scale',
       description: 'Run across CUDA, Metal, and CPU backends. Use every GPU across your network.',
       content: (
@@ -654,7 +646,7 @@ export OPENAI_API_BASE=http://localhost:8080/v1`}
       icon: <Gauge className="size-6" />,
       label: 'Programmable scheduler (Rhai)',
       mobileLabel: 'Rhai',
-      description: 'Route with Rhai',
+      subtitle: 'Route with Rhai',
       badge: 'Control',
       description:
         'Write routing rules in Home/Lab mode. Route 70B to multi-GPU, images to CUDA, everything else to cheapest. Platform mode uses an immutable scheduler.',
@@ -685,7 +677,7 @@ else {
       icon: <Zap className="size-6" />,
       label: 'Task-based API with SSE',
       mobileLabel: 'SSE',
-      description: 'Live job stream',
+      subtitle: 'Live job stream',
       badge: 'Observe',
       description: 'See model loading, token generation, and costs stream in as they happen.',
       content: (
@@ -835,20 +827,16 @@ export const comparisonTemplateContainerProps: Omit<TemplateContainerProps, 'chi
   title: 'Why Developers Choose rbee',
   description: "Local-first AI that's faster, private, and costs $0 on your hardware.",
   background: {
-
     variant: 'secondary',
-
-  },
-  paddingY: '2xl',
-  maxWidth: '7xl',
-  align: 'center',
-  background: {
     decoration: (
       <div className="pointer-events-none absolute left-1/2 top-8 hidden w-[50rem] -translate-x-1/2 opacity-25 md:block">
         <ComparisonGrid className="blur-[0.5px]" />
       </div>
     ),
   },
+  paddingY: '2xl',
+  maxWidth: '7xl',
+  align: 'center',
   footerCTA: {
     message: 'Bring your own GPUs, keep your data in-house.',
     ctas: [
@@ -952,20 +940,16 @@ export const pricingTemplateContainerProps: Omit<TemplateContainerProps, 'childr
   title: 'Start Free. Scale When Ready.',
   description: 'Run rbee free at home. Add collaboration and governance when your team grows.',
   background: {
-
     variant: 'background',
-
-  },
-  paddingY: '2xl',
-  maxWidth: '7xl',
-  align: 'center',
-  background: {
     decoration: (
       <div className="pointer-events-none absolute left-1/2 top-8 hidden w-[50rem] -translate-x-1/2 opacity-25 md:block">
         <PricingTiers className="blur-[0.5px]" />
       </div>
     ),
   },
+  paddingY: '2xl',
+  maxWidth: '7xl',
+  align: 'center',
 }
 
 /**
@@ -1230,20 +1214,16 @@ export const faqTemplateContainerProps: Omit<TemplateContainerProps, 'children'>
   title: 'rbee FAQ',
   description: 'Quick answers about setup, models, orchestration, and security.',
   background: {
-
     variant: 'secondary',
-
-  },
-  paddingY: '2xl',
-  maxWidth: '7xl',
-  align: 'center',
-  background: {
     decoration: (
       <div className="pointer-events-none absolute left-1/2 top-8 hidden w-[50rem] -translate-x-1/2 opacity-25 md:block">
         <QuestionBubbles className="blur-[0.5px]" />
       </div>
     ),
   },
+  paddingY: '2xl',
+  maxWidth: '7xl',
+  align: 'center',
 }
 
 /**

@@ -1,5 +1,8 @@
+import { Button } from '@rbee/ui/atoms/Button'
+import { Card, CardContent, CardFooter } from '@rbee/ui/atoms/Card'
 import { DeploymentFlow } from '@rbee/ui/atoms'
 import type { TemplateContainerProps } from '@rbee/ui/molecules'
+import { IconCardHeader } from '@rbee/ui/molecules'
 import { BeeArchitecture } from '@rbee/ui/organisms'
 import type {
   CardGridTemplateProps,
@@ -18,7 +21,6 @@ import type { HeroTemplateProps } from '@rbee/ui/templates/HeroTemplate'
 import {
   BookOpen,
   Brain,
-  CheckCircle,
   Code,
   Cpu,
   FileCode,
@@ -31,8 +33,8 @@ import {
   Shield,
   Terminal,
   Users,
-  Zap,
 } from 'lucide-react'
+import Link from 'next/link'
 
 // ============================================================================
 // Props Objects (in visual order matching page composition)
@@ -84,7 +86,7 @@ export const educationHeroContainerProps: Omit<TemplateContainerProps, 'children
   background: {
     variant: 'background',
   },
-  padding: 'none',
+  paddingY: 'lg',
 }
 
 // === Email Capture ===
@@ -112,7 +114,7 @@ export const educationEmailCaptureContainerProps: Omit<TemplateContainerProps, '
   background: {
     variant: 'muted',
   },
-  padding: 'default',
+  paddingY: 'xl',
 }
 
 // === Problem Template ===
@@ -153,7 +155,7 @@ export const educationProblemTemplateContainerProps: Omit<TemplateContainerProps
   background: {
     variant: 'background',
   },
-  padding: 'default',
+  paddingY: 'xl',
 }
 
 // === Solution Template ===
@@ -161,39 +163,48 @@ export const educationProblemTemplateContainerProps: Omit<TemplateContainerProps
 export const educationSolutionProps: SolutionTemplateProps = {
   features: [
     {
-      icon: Network,
+      icon: <Network className="h-8 w-8" />,
       title: 'Real Architecture',
-      description: 'Nature-inspired beehive architecture with smart/dumb patterns students can study.',
+      body: 'Nature-inspired beehive architecture with smart/dumb patterns students can study.',
     },
     {
-      icon: Code,
+      icon: <Code className="h-8 w-8" />,
       title: 'Production Code',
-      description: 'Open source GPL-3.0 codebase. Study real Rust systems programming.',
+      body: 'Open source GPL-3.0 codebase. Study real Rust systems programming.',
     },
     {
-      icon: FileCode,
+      icon: <FileCode className="h-8 w-8" />,
       title: 'BDD Testing',
-      description: 'Learn test-driven development with executable Gherkin specifications.',
+      body: 'Learn test-driven development with executable Gherkin specifications.',
     },
     {
-      icon: Cpu,
+      icon: <Cpu className="h-8 w-8" />,
       title: 'Multi-GPU Orchestration',
-      description: 'Hands-on with CUDA, Metal, CPU backends and distributed GPU scheduling.',
+      body: 'Hands-on with CUDA, Metal, CPU backends and distributed GPU scheduling.',
     },
     {
-      icon: Terminal,
+      icon: <Terminal className="h-8 w-8" />,
       title: 'Real CLI Tools',
-      description: 'Command-line tools students use in labs, not simplified mock interfaces.',
+      body: 'Command-line tools students use in labs, not simplified mock interfaces.',
     },
     {
-      icon: Shield,
+      icon: <Shield className="h-8 w-8" />,
       title: 'Security Patterns',
-      description: 'Learn production security: process isolation, audit trails, compliance.',
+      body: 'Learn production security: process isolation, audit trails, compliance.',
     },
   ],
   aside: (
     <div className="relative aspect-square w-full">
-      <BeeArchitecture topology="homelab" />
+      <BeeArchitecture 
+        topology={{
+          mode: 'single-pc',
+          hostLabel: 'Student Laptop',
+          workers: [
+            { id: 'w1', label: 'GPU 1', kind: 'cuda' },
+            { id: 'w2', label: 'GPU 2', kind: 'cuda' },
+          ]
+        }}
+      />
     </div>
   ),
 }
@@ -205,7 +216,7 @@ export const educationSolutionContainerProps: Omit<TemplateContainerProps, 'chil
   background: {
     variant: 'muted',
   },
-  padding: 'default',
+  paddingY: 'xl',
 }
 
 // === Pricing Template (Adapted for Course Levels) ===
@@ -213,58 +224,52 @@ export const educationSolutionContainerProps: Omit<TemplateContainerProps, 'chil
 export const educationCourseLevelsProps: PricingTemplateProps = {
   tiers: [
     {
-      name: 'Beginner',
-      description: 'Introduction to distributed systems',
+      title: 'Beginner',
       price: 'Module 1-3',
-      priceDescription: '4-6 weeks',
+      period: '4-6 weeks',
       features: [
-        { text: 'What is distributed AI?', included: true },
-        { text: 'Beehive architecture basics', included: true },
-        { text: 'Simple orchestration', included: true },
-        { text: 'CLI fundamentals', included: true },
-        { text: 'Basic Rust concepts', included: true },
+        'What is distributed AI?',
+        'Beehive architecture basics',
+        'Simple orchestration',
+        'CLI fundamentals',
+        'Basic Rust concepts',
       ],
-      cta: {
-        text: 'Start Learning',
-        variant: 'outline',
-      },
+      ctaText: 'Start Learning',
+      ctaHref: '#curriculum',
+      ctaVariant: 'outline',
       highlighted: false,
     },
     {
-      name: 'Intermediate',
-      description: 'Production patterns and orchestration',
+      title: 'Intermediate',
       price: 'Module 4-6',
-      priceDescription: '6-8 weeks',
+      period: '6-8 weeks',
       features: [
-        { text: 'Multi-GPU scheduling', included: true },
-        { text: 'SSE streaming', included: true },
-        { text: 'Error handling patterns', included: true },
-        { text: 'BDD testing', included: true },
-        { text: 'Production deployment', included: true },
+        'Multi-GPU scheduling',
+        'SSE streaming',
+        'Error handling patterns',
+        'BDD testing',
+        'Production deployment',
       ],
-      cta: {
-        text: 'Continue Path',
-        variant: 'default',
-      },
+      ctaText: 'Continue Path',
+      ctaHref: '#curriculum',
+      ctaVariant: 'default',
       highlighted: true,
       badge: 'Most Popular',
     },
     {
-      name: 'Advanced',
-      description: 'Architecture and systems design',
+      title: 'Advanced',
       price: 'Module 7-9',
-      priceDescription: '8-10 weeks',
+      period: '8-10 weeks',
       features: [
-        { text: 'Architecture design', included: true },
-        { text: 'Cross-node orchestration', included: true },
-        { text: 'Security & compliance', included: true },
-        { text: 'Performance optimization', included: true },
-        { text: 'Contribute to open source', included: true },
+        'Architecture design',
+        'Cross-node orchestration',
+        'Security & compliance',
+        'Performance optimization',
+        'Contribute to open source',
       ],
-      cta: {
-        text: 'Master Skills',
-        variant: 'outline',
-      },
+      ctaText: 'Master Skills',
+      ctaHref: '#curriculum',
+      ctaVariant: 'outline',
       highlighted: false,
     },
   ],
@@ -277,7 +282,7 @@ export const educationCourseLevelsContainerProps: Omit<TemplateContainerProps, '
   background: {
     variant: 'background',
   },
-  padding: 'default',
+  paddingY: 'xl',
 }
 
 // === Enterprise Security (Adapted for Curriculum Modules) ===
@@ -287,68 +292,80 @@ export const educationCurriculumProps: EnterpriseSecurityProps = {
     {
       icon: <Layers className="size-6" />,
       title: 'Module 1: Foundations',
-      description: 'Distributed systems basics, beehive architecture, and smart/dumb patterns.',
-      features: [
+      subtitle: 'Distributed Systems Basics',
+      intro: 'Distributed systems basics, beehive architecture, and smart/dumb patterns.',
+      bullets: [
         'What is distributed AI?',
         'Nature-inspired architecture',
         'Worker pools and orchestration',
         'Basic CLI commands',
       ],
+      docsHref: '/docs/foundations',
     },
     {
       icon: <Network className="size-6" />,
       title: 'Module 2: Orchestration',
-      description: 'Request routing, GPU scheduling, and multi-backend support.',
-      features: [
+      subtitle: 'Request Routing & Scheduling',
+      intro: 'Request routing, GPU scheduling, and multi-backend support.',
+      bullets: [
         'Orchestrator patterns',
         'GPU pool management',
         'CUDA, Metal, CPU backends',
         'Load balancing',
       ],
+      docsHref: '/docs/orchestration',
     },
     {
       icon: <Cpu className="size-6" />,
       title: 'Module 3: Multi-GPU',
-      description: 'Distributed GPU workloads, cross-node orchestration, and scaling.',
-      features: [
+      subtitle: 'Distributed Workloads',
+      intro: 'Distributed GPU workloads, cross-node orchestration, and scaling.',
+      bullets: [
         'Multi-GPU scheduling',
         'Cross-node communication',
         'Horizontal scaling',
         'Resource optimization',
       ],
+      docsHref: '/docs/multi-gpu',
     },
     {
       icon: <FileCode className="size-6" />,
       title: 'Module 4: Testing',
-      description: 'BDD with Gherkin, executable specs, and test-driven development.',
-      features: [
+      subtitle: 'Behavior-Driven Development',
+      intro: 'BDD with Gherkin, executable specs, and test-driven development.',
+      bullets: [
         'Behavior-driven development',
         'Gherkin scenarios',
         'Executable specifications',
         'Test automation',
       ],
+      docsHref: '/docs/testing',
     },
     {
       icon: <Shield className="size-6" />,
       title: 'Module 5: Security',
-      description: 'Process isolation, audit trails, compliance, and production security.',
-      features: [
+      subtitle: 'Production Security Patterns',
+      intro: 'Process isolation, audit trails, compliance, and production security.',
+      bullets: [
         'Process isolation',
         'Immutable audit logs',
         'GDPR compliance',
         'Security best practices',
       ],
+      docsHref: '/docs/security',
     },
     {
       icon: <Rocket className="size-6" />,
       title: 'Module 6: Production',
-      description: 'Deployment, monitoring, error handling, and real-world operations.',
-      features: [
+      subtitle: 'Real-World Operations',
+      intro: 'Deployment, monitoring, error handling, and real-world operations.',
+      bullets: [
         'Production deployment',
         'Monitoring & metrics',
         'Error recovery',
         'Performance tuning',
       ],
+      docsHref: '/docs/production',
     },
   ],
 }
@@ -360,7 +377,7 @@ export const educationCurriculumContainerProps: Omit<TemplateContainerProps, 'ch
   background: {
     variant: 'muted',
   },
-  padding: 'default',
+  paddingY: 'xl',
 }
 
 // === How It Works (Lab Exercises) ===
@@ -369,9 +386,9 @@ export const educationLabExercisesProps: HowItWorksProps = {
   steps: [
     {
       number: 1,
-      title: 'Lab 1: Deploy Your First Worker',
-      description: 'Set up a local worker, configure GPU backend, and verify connectivity.',
-      codeBlock: {
+      label: 'Lab 1: Deploy Your First Worker',
+      block: {
+        kind: 'code',
         language: 'bash',
         code: `# Start a worker with CUDA backend
 cargo run --bin worker-orcd -- \\
@@ -385,9 +402,9 @@ curl http://localhost:8080/health`,
     },
     {
       number: 2,
-      title: 'Lab 2: Orchestrate Multiple Workers',
-      description: 'Configure orchestrator, register workers, and route requests across GPU pool.',
-      codeBlock: {
+      label: 'Lab 2: Orchestrate Multiple Workers',
+      block: {
+        kind: 'code',
         language: 'bash',
         code: `# Start orchestrator
 cargo run --bin orchestratord -- \\
@@ -400,9 +417,9 @@ curl -X POST http://localhost:9000/workers \\
     },
     {
       number: 3,
-      title: 'Lab 3: Monitor with SSE Streaming',
-      description: 'Implement real-time progress tracking with Server-Sent Events.',
-      codeBlock: {
+      label: 'Lab 3: Monitor with SSE Streaming',
+      block: {
+        kind: 'code',
         language: 'bash',
         code: `# Stream inference progress
 curl -N http://localhost:9000/v1/chat/completions \\
@@ -412,9 +429,9 @@ curl -N http://localhost:9000/v1/chat/completions \\
     },
     {
       number: 4,
-      title: 'Lab 4: Write BDD Tests',
-      description: 'Create Gherkin scenarios and implement step definitions for your features.',
-      codeBlock: {
+      label: 'Lab 4: Write BDD Tests',
+      block: {
+        kind: 'code',
         language: 'gherkin',
         code: `Feature: Multi-GPU Orchestration
   Scenario: Route request to available GPU
@@ -434,61 +451,46 @@ export const educationLabExercisesContainerProps: Omit<TemplateContainerProps, '
   background: {
     variant: 'background',
   },
-  padding: 'default',
+  paddingY: 'xl',
 }
 
 // === Use Cases Template (Student Types) ===
 
 export const educationStudentTypesProps: UseCasesTemplateProps = {
-  useCases: [
+  items: [
     {
       icon: <GraduationCap className="size-8" />,
-      category: 'CS Student',
-      title: 'Build Portfolio Projects',
-      description:
-        'Stand out with real distributed systems experience. Deploy production-grade AI infrastructure and showcase it to employers.',
-      features: [
-        'Hands-on with real architecture',
-        'Portfolio-worthy projects',
-        'Open source contributions',
-        'Industry-relevant skills',
-      ],
+      title: 'CS Student: Build Portfolio Projects',
+      scenario: 'One gaming PC with a single GPU. Want to run AI locally for personal use.',
+      solution: 'Stand out with real distributed systems experience. Deploy production-grade AI infrastructure and showcase it to employers.',
+      outcome: 'Hands-on with real architecture. Portfolio-worthy projects. Open source contributions. Industry-relevant skills.',
+      tags: ['Portfolio', 'Real Experience', 'Open Source'],
       cta: {
-        text: 'Start Learning',
+        label: 'Start Learning',
         href: '#curriculum',
       },
     },
     {
       icon: <Brain className="size-8" />,
-      category: 'Career Switcher',
-      title: 'Break Into AI Engineering',
-      description:
-        'Learn production AI systems from scratch. No PhD required. Build real skills that translate directly to industry roles.',
-      features: [
-        'No prerequisites needed',
-        'Progressive curriculum',
-        'Real-world patterns',
-        'Job-ready skills',
-      ],
+      title: 'Career Switcher: Break Into AI Engineering',
+      scenario: 'Switching careers into AI engineering. Need practical skills, not just theory.',
+      solution: 'Learn production AI systems from scratch. No PhD required. Build real skills that translate directly to industry roles.',
+      outcome: 'No prerequisites needed. Progressive curriculum. Real-world patterns. Job-ready skills.',
+      tags: ['Career Change', 'Practical Skills', 'Job Ready'],
       cta: {
-        text: 'View Curriculum',
+        label: 'View Curriculum',
         href: '#curriculum',
       },
     },
     {
       icon: <GitBranch className="size-8" />,
-      category: 'Researcher',
-      title: 'Learn Reproducible Experiments',
-      description:
-        'Master deterministic AI experiments with immutable audit trails. Learn the infrastructure behind reproducible research.',
-      features: [
-        'Deterministic seeds',
-        'Audit trail patterns',
-        'Distributed experiments',
-        'Research-grade infrastructure',
-      ],
+      title: 'Researcher: Learn Reproducible Experiments',
+      scenario: 'Need to run reproducible AI experiments with audit trails for research.',
+      solution: 'Master deterministic AI experiments with immutable audit trails. Learn the infrastructure behind reproducible research.',
+      outcome: 'Deterministic seeds. Audit trail patterns. Distributed experiments. Research-grade infrastructure.',
+      tags: ['Research', 'Reproducibility', 'Audit Trails'],
       cta: {
-        text: 'Explore Research Use Case',
+        label: 'Explore Research Use Case',
         href: '/research',
       },
     },
@@ -502,7 +504,7 @@ export const educationStudentTypesContainerProps: Omit<TemplateContainerProps, '
   background: {
     variant: 'muted',
   },
-  padding: 'default',
+  paddingY: 'xl',
 }
 
 // === Testimonials Template (Student Outcomes) ===
@@ -513,42 +515,36 @@ export const educationTestimonialsData: TestimonialsTemplateProps = {
       quote:
         'Learning distributed AI with rbee gave me the hands-on experience I needed. I got a job offer before graduation.',
       author: 'Sarah Chen',
-      role: 'CS Graduate → ML Engineer',
-      company: 'Tech Startup',
+      role: 'CS Graduate → ML Engineer at Tech Startup',
       avatar: '/avatars/student-1.jpg',
     },
     {
       quote:
         'The BDD testing module changed how I write code. Now I write specs first, and my code quality improved dramatically.',
       author: 'Marcus Johnson',
-      role: 'Bootcamp Graduate → Backend Engineer',
-      company: 'SaaS Company',
+      role: 'Bootcamp Graduate → Backend Engineer at SaaS Company',
       avatar: '/avatars/student-2.jpg',
     },
     {
       quote:
         'I switched from web dev to AI engineering in 6 months. rbee taught me production patterns that actually matter.',
       author: 'Elena Rodriguez',
-      role: 'Career Switcher → AI Engineer',
-      company: 'AI Research Lab',
+      role: 'Career Switcher → AI Engineer at AI Research Lab',
       avatar: '/avatars/student-3.jpg',
     },
   ],
   stats: [
     {
       value: '500+',
-      label: 'Students Taught',
-      description: 'Across universities and bootcamps',
+      label: 'Students Taught Across Universities',
     },
     {
       value: '85%',
-      label: 'Job Placement',
-      description: 'Within 6 months of completion',
+      label: 'Job Placement Within 6 Months',
     },
     {
       value: '200+',
-      label: 'Projects Built',
-      description: 'Real distributed AI systems',
+      label: 'Real Distributed AI Projects Built',
     },
   ],
 }
@@ -560,49 +556,57 @@ export const educationTestimonialsContainerProps: Omit<TemplateContainerProps, '
   background: {
     variant: 'background',
   },
-  padding: 'default',
+  paddingY: 'xl',
 }
 
 // === Card Grid Template (Learning Resources) ===
 
 export const educationResourcesGridProps: CardGridTemplateProps = {
   cards: [
-    {
-      icon: <BookOpen className="size-6" />,
-      title: 'Documentation',
-      description: 'Comprehensive guides covering architecture, APIs, and deployment.',
-      cta: {
-        text: 'Read Docs',
-        href: '/docs',
-      },
-    },
-    {
-      icon: <Code className="size-6" />,
-      title: 'Code Examples',
-      description: 'Sample projects and reference implementations for every module.',
-      cta: {
-        text: 'Browse Examples',
-        href: '/examples',
-      },
-    },
-    {
-      icon: <Terminal className="size-6" />,
-      title: 'Video Tutorials',
-      description: 'Step-by-step video walkthroughs of labs and exercises.',
-      cta: {
-        text: 'Watch Tutorials',
-        href: '/tutorials',
-      },
-    },
-    {
-      icon: <Users className="size-6" />,
-      title: 'Community',
-      description: 'Join Discord for help, discussions, and peer learning.',
-      cta: {
-        text: 'Join Community',
-        href: '/community',
-      },
-    },
+    <Card key="docs">
+      <IconCardHeader icon={<BookOpen className="size-6" />} title="Documentation" />
+      <CardContent className="p-0">
+        <p className="text-sm text-muted-foreground">Comprehensive guides covering architecture, APIs, and deployment.</p>
+      </CardContent>
+      <CardFooter>
+        <Button asChild variant="ghost" size="sm">
+          <Link href="/docs">Read Docs</Link>
+        </Button>
+      </CardFooter>
+    </Card>,
+    <Card key="examples">
+      <IconCardHeader icon={<Code className="size-6" />} title="Code Examples" />
+      <CardContent className="p-0">
+        <p className="text-sm text-muted-foreground">Sample projects and reference implementations for every module.</p>
+      </CardContent>
+      <CardFooter>
+        <Button asChild variant="ghost" size="sm">
+          <Link href="/examples">Browse Examples</Link>
+        </Button>
+      </CardFooter>
+    </Card>,
+    <Card key="tutorials">
+      <IconCardHeader icon={<Terminal className="size-6" />} title="Video Tutorials" />
+      <CardContent className="p-0">
+        <p className="text-sm text-muted-foreground">Step-by-step video walkthroughs of labs and exercises.</p>
+      </CardContent>
+      <CardFooter>
+        <Button asChild variant="ghost" size="sm">
+          <Link href="/tutorials">Watch Tutorials</Link>
+        </Button>
+      </CardFooter>
+    </Card>,
+    <Card key="community">
+      <IconCardHeader icon={<Users className="size-6" />} title="Community" />
+      <CardContent className="p-0">
+        <p className="text-sm text-muted-foreground">Join Discord for help, discussions, and peer learning.</p>
+      </CardContent>
+      <CardFooter>
+        <Button asChild variant="ghost" size="sm">
+          <Link href="/community">Join Community</Link>
+        </Button>
+      </CardFooter>
+    </Card>,
   ],
 }
 
@@ -613,42 +617,56 @@ export const educationResourcesGridContainerProps: Omit<TemplateContainerProps, 
   background: {
     variant: 'muted',
   },
-  padding: 'default',
+  paddingY: 'xl',
 }
 
 // === FAQ Template ===
 
 export const educationFAQProps: FAQTemplateProps = {
-  faqs: [
+  badgeText: 'Education FAQ',
+  categories: ['Getting Started', 'Technical', 'Curriculum'],
+  faqItems: [
     {
+      value: 'prior-experience',
       question: 'Do I need prior experience with distributed systems?',
       answer:
         'No. The beginner modules start from basics and progressively build to advanced topics. If you know basic programming, you can start.',
+      category: 'Getting Started',
     },
     {
+      value: 'programming-language',
       question: 'What programming language is used?',
       answer:
         'rbee is built with Rust. The curriculum teaches Rust concepts as you go, but prior Rust experience is helpful but not required.',
+      category: 'Technical',
     },
     {
+      value: 'gpu-required',
       question: 'Do I need my own GPU?',
       answer:
         'Not required. You can run workers with CPU backend for learning. GPU access is helpful for advanced modules but not mandatory.',
+      category: 'Technical',
     },
     {
+      value: 'university-courses',
       question: 'Is this suitable for university courses?',
       answer:
         'Yes. Many universities use rbee for distributed systems and ML courses. We provide curriculum guides and lab materials for educators.',
+      category: 'Curriculum',
     },
     {
+      value: 'completion-time',
       question: 'How long does it take to complete?',
       answer:
         'Depends on your pace. Beginner modules: 4-6 weeks. Full curriculum (all 6 modules): 18-24 weeks at 10 hours/week.',
+      category: 'Curriculum',
     },
     {
+      value: 'contribute',
       question: 'Can I contribute to the project?',
       answer:
         'Absolutely! rbee is open source (GPL-3.0). Contributing is a great way to learn and build your portfolio. Check our contribution guide.',
+      category: 'Getting Started',
     },
   ],
 }
@@ -660,28 +678,27 @@ export const educationFAQContainerProps: Omit<TemplateContainerProps, 'children'
   background: {
     variant: 'background',
   },
-  padding: 'default',
+  paddingY: 'xl',
 }
 
 // === CTA Template ===
 
 export const educationCTAProps: CTATemplateProps = {
-  headline: 'Build Real Skills with Real Infrastructure',
-  description:
+  eyebrow: 'Start Learning Today',
+  title: 'Build Real Skills with Real Infrastructure',
+  subtitle:
     'Join hundreds of students learning distributed AI systems with production-grade open source tools.',
-  primaryCta: {
+  primary: {
     label: 'Get Started',
-    ariaLabel: 'Get started with rbee education',
+    href: '#curriculum',
   },
-  secondaryCta: {
+  secondary: {
     label: 'View Documentation',
     href: '/docs',
   },
-  features: [
-    { icon: <CheckCircle className="size-5" />, text: '100% Open Source' },
-    { icon: <CheckCircle className="size-5" />, text: 'Free for Education' },
-    { icon: <CheckCircle className="size-5" />, text: 'Community Support' },
-  ],
+  note: '100% Open Source • Free for Education • Community Support',
+  align: 'center',
+  emphasis: 'gradient',
 }
 
 export const educationCTAContainerProps: Omit<TemplateContainerProps, 'children'> = {
@@ -690,5 +707,5 @@ export const educationCTAContainerProps: Omit<TemplateContainerProps, 'children'
   background: {
     variant: 'muted',
   },
-  padding: 'default',
+  paddingY: 'xl',
 }

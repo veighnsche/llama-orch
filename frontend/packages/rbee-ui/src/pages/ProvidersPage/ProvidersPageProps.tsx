@@ -338,7 +338,7 @@ export const providersFeaturesProps: FeaturesTabsProps = {
       icon: <DollarSign className="size-4" />,
       label: 'Flexible Pricing Control',
       mobileLabel: 'Pricing',
-      description: 'Set your rates',
+      subtitle: 'Set your rates',
       badge: 'Control',
       description: 'Set your own hourly rates based on GPU model, demand, and your preferences.',
       content: (
@@ -369,7 +369,7 @@ export const providersFeaturesProps: FeaturesTabsProps = {
       icon: <Clock className="size-4" />,
       label: 'Availability Management',
       mobileLabel: 'Schedule',
-      description: 'Control when',
+      subtitle: 'Control when',
       badge: 'Flexible',
       description: 'Control exactly when your GPUs are available for rent.',
       content: (
@@ -396,7 +396,7 @@ export const providersFeaturesProps: FeaturesTabsProps = {
       icon: <Shield className="size-4" />,
       label: 'Security & Privacy',
       mobileLabel: 'Security',
-      description: 'Protected',
+      subtitle: 'Protected',
       badge: 'Safe',
       description: 'Your data and hardware are protected with enterprise-grade security.',
       content: (
@@ -420,7 +420,7 @@ export const providersFeaturesProps: FeaturesTabsProps = {
       icon: <BarChart3 className="size-4" />,
       label: 'Earnings Dashboard',
       mobileLabel: 'Analytics',
-      description: 'Track earnings',
+      subtitle: 'Track earnings',
       badge: 'Insights',
       description: 'Track your earnings, utilization, and performance in real‑time.',
       content: (
@@ -489,7 +489,7 @@ export const providersUseCasesProps: { cases: ProvidersCaseCardProps[] } = {
     {
       icon: <Gamepad2 />,
       title: 'Gaming PC Owners',
-      description: 'Most common provider type',
+      subtitle: 'Most common provider type',
       quote: "I game ~3-4 hours/day. The rest, my 4090 was idle. Now it earns ~€150/mo while I'm at work or asleep.",
       facts: [
         { label: 'Typical GPU:', value: 'RTX 4080–4090' },
@@ -500,7 +500,7 @@ export const providersUseCasesProps: { cases: ProvidersCaseCardProps[] } = {
     {
       icon: <Server />,
       title: 'Homelab Enthusiasts',
-      description: 'Multiple GPUs, high earnings',
+      subtitle: 'Multiple GPUs, high earnings',
       quote: 'Four GPUs across my homelab bring ~€400/mo. It covers power and leaves profit.',
       facts: [
         { label: 'Setup:', value: '3–6 GPUs' },
@@ -511,7 +511,7 @@ export const providersUseCasesProps: { cases: ProvidersCaseCardProps[] } = {
     {
       icon: <Cpu />,
       title: 'Former Crypto Miners',
-      description: 'Repurpose mining rigs',
+      subtitle: 'Repurpose mining rigs',
       quote: 'After PoS, my rig idled. rbee now earns more than mining—with better margins.',
       facts: [
         { label: 'Setup:', value: '6–12 GPUs' },
@@ -522,7 +522,7 @@ export const providersUseCasesProps: { cases: ProvidersCaseCardProps[] } = {
     {
       icon: <Monitor />,
       title: 'Workstation Owners',
-      description: 'Professional GPUs earning',
+      subtitle: 'Professional GPUs earning',
       quote: 'My RTX 4080 is busy on renders only. The rest of the time it makes ~€100/mo on rbee.',
       facts: [
         { label: 'Typical GPU:', value: 'RTX 4070–4080' },
@@ -714,28 +714,28 @@ export const providersSecurityProps: { items: ProvidersSecurityCardProps[] } = {
     {
       icon: <Shield className="size-6" />,
       title: 'Sandboxed Execution',
-      description: 'Complete isolation',
+      subtitle: 'Complete isolation',
       body: 'All jobs run in isolated sandboxes with no access to your files, network, or personal data.',
       points: ['No file system access', 'No network access', 'No personal data access', 'Automatic cleanup'],
     },
     {
       icon: <Lock className="size-6" />,
       title: 'Encrypted Communication',
-      description: 'End-to-end encryption',
+      subtitle: 'End-to-end encryption',
       body: 'All communication between your GPU and the marketplace is encrypted using industry-standard protocols.',
       points: ['TLS 1.3', 'Secure payment processing', 'Protected earnings data', 'Private job details'],
     },
     {
       icon: <Eye className="size-6" />,
       title: 'Malware Scanning',
-      description: 'Automatic protection',
+      subtitle: 'Automatic protection',
       body: 'Every job is automatically scanned for malware before execution. Suspicious jobs are blocked.',
       points: ['Real-time detection', 'Automatic blocking', 'Threat intel updates', 'Customer vetting'],
     },
     {
       icon: <FileCheck className="size-6" />,
       title: 'Hardware Protection',
-      description: 'Warranty-safe operation',
+      subtitle: 'Warranty-safe operation',
       body: 'Temperature monitoring, cooldown periods, and power limits protect your hardware and warranty.',
       points: ['Warranty-safe operation', 'Temperature monitoring', 'Cooldown periods', 'Power limit controls'],
     },
@@ -813,14 +813,6 @@ export const providersTestimonialsProps: TestimonialsTemplateProps = {
 export const providersCTAContainerProps: Omit<TemplateContainerProps, 'children'> = {
   title: null,
   background: {
-
-    variant: 'background',
-
-  },
-  paddingY: '2xl',
-  maxWidth: '4xl',
-  align: 'center',
-  background: {
     variant: 'gradient-warm',
     decoration: (
       <div className="pointer-events-none absolute -right-32 top-1/2 hidden -translate-y-1/2 opacity-[0.08] lg:block">
@@ -838,13 +830,16 @@ export const providersCTAContainerProps: Omit<TemplateContainerProps, 'children'
       </div>
     ),
   },
+  paddingY: '2xl',
+  maxWidth: '4xl',
+  align: 'center',
 }
 
 export const providersCTAProps: ProvidersCTAProps = {
   badgeIcon: <Zap className="h-4 w-4" aria-hidden="true" />,
   badgeText: 'Start earning today',
   title: 'Turn Idle GPUs Into Weekly Payouts',
-  description: 'Join 500+ providers monetizing spare GPU time on the rbee marketplace.',
+  subtitle: 'Join 500+ providers monetizing spare GPU time on the rbee marketplace.',
   primaryCTA: {
     label: 'Start Earning Now',
     ariaLabel: 'Start earning now — setup under 15 minutes',

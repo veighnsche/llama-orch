@@ -260,7 +260,9 @@ export const DestructiveVariant: Story = {
     kicker: 'Immediate action required',
     kickerVariant: 'destructive',
     description: 'Your attention is needed to resolve this issue',
-    bgVariant: 'destructive-gradient',
+    background: {
+      variant: 'gradient-destructive',
+    },
     children: (
       <div className="p-6 border border-destructive/30 rounded-lg bg-destructive/5">
         <p className="text-sm">This demonstrates the destructive gradient background and destructive kicker variant.</p>
@@ -286,7 +288,9 @@ export const BleedLayout: Story = {
   args: {
     title: 'Full-Width Background',
     description: 'The background extends edge-to-edge while content stays constrained',
-    bgVariant: 'muted',
+    background: {
+      variant: 'muted',
+    },
     bleed: true,
     children: (
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

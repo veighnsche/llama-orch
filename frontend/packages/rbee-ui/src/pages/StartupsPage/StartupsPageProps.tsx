@@ -1,3 +1,5 @@
+'use client'
+
 import { Badge } from '@rbee/ui/atoms'
 import type { TemplateContainerProps } from '@rbee/ui/molecules'
 import { CodeBlock } from '@rbee/ui/molecules/CodeBlock'

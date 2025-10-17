@@ -156,19 +156,19 @@ const pricingComparisonColumns: Provider[] = [
   {
     key: 'h',
     label: 'Home/Lab',
-    description: 'Solo / Homelab',
+    subtitle: 'Solo / Homelab',
   },
   {
     key: 't',
     label: 'Team',
-    description: 'Small teams',
+    subtitle: 'Small teams',
     badge: 'Best for most teams',
     accent: true,
   },
   {
     key: 'e',
     label: 'Enterprise',
-    description: 'Security & SLA',
+    subtitle: 'Security & SLA',
   },
 ]
 
@@ -246,7 +246,7 @@ const pricingComparisonRows: Row[] = [
 
 export const pricingComparisonProps: PricingComparisonTemplateProps = {
   title: 'Detailed Feature Comparison',
-  description: 'What changes across Home/Lab, Team, and Enterprise.',
+  subtitle: 'What changes across Home/Lab, Team, and Enterprise.',
   lastUpdated: 'This month',
   legend: {
     includedText: 'Included',

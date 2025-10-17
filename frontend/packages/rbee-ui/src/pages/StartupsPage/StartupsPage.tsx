@@ -1,3 +1,5 @@
+'use client'
+
 import { TemplateContainer } from '@rbee/ui/molecules'
 import {
   ComparisonTemplate,

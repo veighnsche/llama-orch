@@ -1,3 +1,5 @@
+'use client'
+
 import { NetworkMesh } from '@rbee/ui/atoms'
 import type { TemplateContainerProps } from '@rbee/ui/molecules'
 import type {
@@ -101,7 +103,8 @@ export const homelabHeroProps: HeroTemplateProps = {
   },
 }
 
-export const homelabHeroContainerProps: TemplateContainerProps = {
+export const homelabHeroContainerProps: Omit<TemplateContainerProps, 'children'> = {
+  title: null,
   paddingY: 'xl',
   maxWidth: '7xl',
 }
@@ -114,18 +117,23 @@ export const homelabHeroContainerProps: TemplateContainerProps = {
 export const homelabEmailCaptureProps: EmailCaptureProps = {
   badge: {
     text: 'Free Setup Guide',
-    icon: <Download className="h-3 w-3" />,
+    showPulse: true,
   },
-  title: 'Get the Homelab Setup Guide',
-  subtitle: 'Step-by-step instructions for setting up rbee across your homelab. Includes SSH configuration, GPU detection, and troubleshooting tips.',
-  placeholder: 'your@email.com',
-  buttonText: 'Send Me the Guide',
-  privacyText: 'We respect your privacy. Unsubscribe anytime.',
+  headline: 'Get the Homelab Setup Guide',
+  subheadline: 'Step-by-step instructions for setting up rbee across your homelab. Includes SSH configuration, GPU detection, and troubleshooting tips.',
+  emailInput: {
+    placeholder: 'your@email.com',
+    label: 'Email address',
+  },
+  submitButton: {
+    label: 'Send Me the Guide',
+  },
+  trustMessage: 'We respect your privacy. Unsubscribe anytime.',
   successMessage: 'Check your email! Setup guide sent.',
-  errorMessage: 'Something went wrong. Please try again.',
 }
 
-export const homelabEmailCaptureContainerProps: TemplateContainerProps = {
+export const homelabEmailCaptureContainerProps: Omit<TemplateContainerProps, 'children'> = {
+  title: null,
   paddingY: 'lg',
   maxWidth: '5xl',
 }
@@ -140,27 +148,28 @@ export const homelabProblemProps: ProblemTemplateProps = {
     {
       icon: <Server className="h-6 w-6" />,
       title: 'Scattered GPUs',
-      description: 'Gaming PC in bedroom, workstation in office, old server in closet. All idle most of the time.',
+      body: 'Gaming PC in bedroom, workstation in office, old server in closet. All idle most of the time.',
     },
     {
       icon: <Settings className="h-6 w-6" />,
       title: 'Manual Setup Hell',
-      description: 'Different OS versions, different CUDA drivers, different Python environments. Nothing works together.',
+      body: 'Different OS versions, different CUDA drivers, different Python environments. Nothing works together.',
     },
     {
       icon: <AlertTriangle className="h-6 w-6" />,
       title: 'No Orchestration',
-      description: 'Want to run a 70B model? Good luck manually splitting it across machines and keeping track of processes.',
+      body: 'Want to run a 70B model? Good luck manually splitting it across machines and keeping track of processes.',
     },
     {
       icon: <DollarSign className="h-6 w-6" />,
       title: 'Wasted Hardware',
-      description: 'Thousands of dollars in GPUs sitting idle because there\'s no easy way to use them together.',
+      body: 'Thousands of dollars in GPUs sitting idle because there\'s no easy way to use them together.',
     },
   ],
 }
 
-export const homelabProblemContainerProps: TemplateContainerProps = {
+export const homelabProblemContainerProps: Omit<TemplateContainerProps, 'children'> = {
+  title: null,
   paddingY: 'lg',
   maxWidth: '6xl',
   background: {
@@ -182,27 +191,28 @@ export const homelabSolutionProps: SolutionTemplateProps = {
     {
       icon: <Network className="h-6 w-6" />,
       title: 'Unified Orchestration',
-      description: 'One command to deploy models across all your machines. rbee handles SSH, GPU detection, and load balancing.',
+      body: 'One command to deploy models across all your machines. rbee handles SSH, GPU detection, and load balancing.',
     },
     {
       icon: <Terminal className="h-6 w-6" />,
       title: 'SSH-First Lifecycle',
-      description: 'No agents, no daemons. Pure SSH control. Start, stop, monitor—all from your terminal.',
+      body: 'No agents, no daemons. Pure SSH control. Start, stop, monitor—all from your terminal.',
     },
     {
       icon: <Cpu className="h-6 w-6" />,
       title: 'Use All Your Hardware',
-      description: 'CUDA, Metal, CPU—rbee detects and uses whatever you have. Mix and match architectures freely.',
+      body: 'CUDA, Metal, CPU—rbee detects and uses whatever you have. Mix and match architectures freely.',
     },
     {
       icon: <Lock className="h-6 w-6" />,
       title: 'Complete Privacy',
-      description: 'Zero telemetry. Zero tracking. Your data never leaves your network. Open-source and auditable.',
+      body: 'Zero telemetry. Zero tracking. Your data never leaves your network. Open-source and auditable.',
     },
   ],
 }
 
-export const homelabSolutionContainerProps: TemplateContainerProps = {
+export const homelabSolutionContainerProps: Omit<TemplateContainerProps, 'children'> = {
+  title: null,
   paddingY: 'lg',
   maxWidth: '6xl',
 }
@@ -217,7 +227,7 @@ export const homelabHowItWorksProps: HowItWorksProps = {
     {
       label: 'Install rbee-keeper',
       number: 1,
-      content: {
+      block: {
         kind: 'code',
         title: 'Install on your main machine',
         language: 'bash',
@@ -234,7 +244,7 @@ rbee-keeper --version`,
     {
       label: 'Add Your Machines',
       number: 2,
-      content: {
+      block: {
         kind: 'code',
         title: 'Register remote machines via SSH',
         language: 'bash',
@@ -255,7 +265,7 @@ rbee-keeper pool list`,
     {
       label: 'Deploy a Model',
       number: 3,
-      content: {
+      block: {
         kind: 'code',
         title: 'Run models across your homelab',
         language: 'bash',
@@ -275,7 +285,7 @@ rbee-keeper infer \\
     {
       label: 'Monitor & Manage',
       number: 4,
-      content: {
+      block: {
         kind: 'code',
         title: 'Monitor your homelab',
         language: 'bash',
@@ -295,7 +305,8 @@ rbee-keeper shutdown --pool gaming-pc`,
   ],
 }
 
-export const homelabHowItWorksContainerProps: TemplateContainerProps = {
+export const homelabHowItWorksContainerProps: Omit<TemplateContainerProps, 'children'> = {
+  title: null,
   paddingY: 'xl',
   maxWidth: '6xl',
 }
@@ -362,7 +373,8 @@ rbee-keeper infer --model llama-3.1-70b --auto-balance`,
   provisioningSubtitle: 'rbee-keeper orchestrates model deployment across your homelab via SSH',
 }
 
-export const homelabCrossNodeContainerProps: TemplateContainerProps = {
+export const homelabCrossNodeContainerProps: Omit<TemplateContainerProps, 'children'> = {
+  title: null,
   paddingY: 'xl',
   maxWidth: '7xl',
   background: {
@@ -380,62 +392,59 @@ export const homelabCrossNodeContainerProps: TemplateContainerProps = {
  * Multi-Backend GPU - Hardware support matrix
  */
 export const homelabMultiBackendProps: MultiBackendGpuTemplateProps = {
-  policyTitle: 'Hardware Support',
-  policySubtitle: 'rbee works with whatever hardware you have. Mix and match freely.',
-  policies: [
-    {
-      icon: <Cpu className="h-6 w-6" />,
-      title: 'NVIDIA CUDA',
-      description: 'RTX 20/30/40 series, Tesla, A100, H100. Automatic CUDA detection and driver compatibility checks.',
-    },
-    {
-      icon: <Laptop className="h-6 w-6" />,
-      title: 'Apple Metal',
-      description: 'M1, M2, M3 chips. Native Metal acceleration for maximum performance on Apple Silicon.',
-    },
-    {
-      icon: <Server className="h-6 w-6" />,
-      title: 'CPU Fallback',
-      description: 'No GPU? No problem. rbee runs on CPU with optimized quantization (Q4, Q8).',
-    },
+  policyTitle: 'Multi-Backend GPU Support',
+  policySubtitle: 'CUDA, Metal, and CPU backends. rbee detects your hardware and lets you choose explicitly.',
+  prohibitedBadges: [
+    { label: 'No silent CPU fallback', variant: 'destructive' },
+    { label: 'No hidden backend switches', variant: 'destructive' },
   ],
-  compatibilityTitle: 'Operating Systems',
-  compatibilitySubtitle: 'Cross-platform support for all major homelab OSes',
-  compatibilityItems: [
+  whatHappensBadges: [
+    { label: 'Explicit backend selection', variant: 'success' },
+    { label: 'Clear hardware detection', variant: 'success' },
+    { label: 'Helpful error messages', variant: 'success' },
+  ],
+  errorTitle: 'GPU not detected or insufficient VRAM',
+  errorSuggestions: [
+    'Check GPU drivers are installed (nvidia-smi for CUDA)',
+    'Use --backend cpu to run on CPU explicitly',
+    'Try a smaller quantized model (Q4_K_M)',
+  ],
+  terminalTitle: 'rbee detect — homelab-server.local',
+  terminalContent: (
+    <div className="space-y-1">
+      <div className="text-chart-3">✓ CUDA detected: RTX 3080 (10GB VRAM)</div>
+      <div className="text-chart-3">✓ CPU detected: 16 cores available</div>
+      <div className="text-muted-foreground">✗ Metal: not available (Linux)</div>
+    </div>
+  ),
+  backendDetections: [
+    { label: 'cuda × 1', variant: 'primary' },
+    { label: 'cpu × 1', variant: 'success' },
+    { label: 'metal × 0', variant: 'muted' },
+  ],
+  totalDevices: 2,
+  terminalFooter: 'Hardware detection cached for fast startup.',
+  featureCards: [
     {
-      icon: <Monitor className="h-5 w-5" />,
-      label: 'Ubuntu 20.04+',
-      description: 'Full support',
+      icon: <Cpu className="size-6" />,
+      title: 'NVIDIA CUDA',
+      description: 'RTX 20/30/40 series, Tesla, A100, H100. Automatic detection and VRAM checks.',
     },
     {
-      icon: <Monitor className="h-5 w-5" />,
-      label: 'Debian 11+',
-      description: 'Full support',
+      icon: <Laptop className="size-6" />,
+      title: 'Apple Metal',
+      description: 'M1, M2, M3 chips. Native Metal acceleration on Apple Silicon.',
     },
     {
-      icon: <Monitor className="h-5 w-5" />,
-      label: 'Arch Linux',
-      description: 'Full support',
-    },
-    {
-      icon: <Laptop className="h-5 w-5" />,
-      label: 'macOS 12+',
-      description: 'Full support',
-    },
-    {
-      icon: <Box className="h-5 w-5" />,
-      label: 'NixOS',
-      description: 'Community support',
-    },
-    {
-      icon: <Server className="h-5 w-5" />,
-      label: 'Proxmox',
-      description: 'GPU passthrough supported',
+      icon: <Server className="size-6" />,
+      title: 'CPU Fallback',
+      description: 'No GPU? Run on CPU with optimized quantization (Q4, Q8).',
     },
   ],
 }
 
-export const homelabMultiBackendContainerProps: TemplateContainerProps = {
+export const homelabMultiBackendContainerProps: Omit<TemplateContainerProps, 'children'> = {
+  title: null,
   paddingY: 'lg',
   maxWidth: '6xl',
 }
@@ -498,7 +507,8 @@ export const homelabPowerCostProps: ProvidersEarningsProps = {
   formatHourly: (n: number) => `${n.toFixed(2)} kW`,
 }
 
-export const homelabPowerCostContainerProps: TemplateContainerProps = {
+export const homelabPowerCostContainerProps: Omit<TemplateContainerProps, 'children'> = {
+  title: null,
   paddingY: 'xl',
   maxWidth: '7xl',
 }
@@ -513,44 +523,33 @@ export const homelabUseCasesProps: UseCasesTemplateProps = {
     {
       icon: <HomeIcon className="h-6 w-6" />,
       title: 'Single PC Setup',
-      description:
-        'One gaming PC with a single GPU. Perfect for personal AI assistant, code completion, and document processing. Start simple, scale later.',
-      bullets: [
-        'RTX 3070 or better',
-        'Run 7B-13B models locally',
-        'Zero cloud costs',
-        'Complete privacy',
-      ],
+      scenario: 'One gaming PC with a single GPU. Want to run AI locally for personal use.',
+      solution: 'Install rbee on your gaming PC. Run 7B-13B models locally with RTX 3070 or better.',
+      outcome: 'Personal AI assistant, code completion, document processing. Zero cloud costs, complete privacy.',
+      tags: ['Single GPU', 'Personal Use', 'Privacy'],
     },
     {
       icon: <Network className="h-6 w-6" />,
       title: 'Multi-Node Homelab',
-      description:
-        'Multiple machines with GPUs. Gaming PC + workstation + old server. Run larger models (70B+) by splitting across machines.',
-      bullets: [
-        '2-4 machines with GPUs',
-        'Run 70B+ models',
-        'Automatic load balancing',
-        'SSH orchestration',
-      ],
+      scenario: 'Multiple machines with GPUs scattered across your home. Want to run larger models.',
+      solution: 'Connect gaming PC + workstation + old server with rbee. Automatic SSH orchestration.',
+      outcome: 'Run 70B+ models by splitting across machines. Automatic load balancing, unified control.',
+      tags: ['Multi-GPU', 'Large Models', 'Distributed'],
     },
     {
       icon: <Wifi className="h-6 w-6" />,
       title: 'Hybrid Setup',
-      description:
-        'Mix local and remote GPUs. Use your homelab for privacy-sensitive workloads, rent cloud GPUs for burst capacity. Best of both worlds.',
-      bullets: [
-        'Local + cloud GPUs',
-        'Privacy-first routing',
-        'Burst to cloud when needed',
-        'Cost optimization',
-      ],
+      scenario: 'Need privacy for sensitive workloads but want cloud burst capacity.',
+      solution: 'Mix local homelab GPUs with rented cloud GPUs. Privacy-first routing with rbee.',
+      outcome: 'Best of both worlds. Local for privacy, cloud for burst. Cost-optimized workload distribution.',
+      tags: ['Hybrid', 'Privacy', 'Cloud Burst'],
     },
   ],
   columns: 3,
 }
 
-export const homelabUseCasesContainerProps: TemplateContainerProps = {
+export const homelabUseCasesContainerProps: Omit<TemplateContainerProps, 'children'> = {
+  title: null,
   paddingY: 'lg',
   maxWidth: '6xl',
 }
@@ -561,56 +560,48 @@ export const homelabUseCasesContainerProps: TemplateContainerProps = {
  * Security & Privacy - Process isolation and network security
  */
 export const homelabSecurityProps: SecurityIsolationProps = {
-  cratesTitle: 'Security & Privacy',
-  cratesSubtitle: 'Built for homelabbers who care about security and privacy',
+  cratesTitle: 'Security & Privacy First',
+  cratesSubtitle: 'Built for homelabbers who care about security and privacy.',
   securityCrates: [
     {
-      name: 'Process Isolation',
-      description: 'Each model runs in its own isolated process. Clean shutdown, no orphaned processes.',
-      icon: <Box className="h-5 w-5" />,
-      color: 'chart-3',
+      name: 'process-isolation',
+      description: 'Each model runs in isolated process. Clean shutdown, no orphans.',
+      hoverColor: 'hover:border-chart-3/50',
     },
     {
-      name: 'SSH Security',
+      name: 'ssh-security',
       description: 'Uses your existing SSH keys and known_hosts. No new attack surface.',
-      icon: <Lock className="h-5 w-5" />,
-      color: 'chart-2',
+      hoverColor: 'hover:border-chart-2/50',
     },
     {
-      name: 'Zero Telemetry',
-      description: 'No phone-home. No tracking. No analytics. Your data stays on your network.',
-      icon: <Shield className="h-5 w-5" />,
-      color: 'chart-3',
+      name: 'zero-telemetry',
+      description: 'No phone-home. No tracking. Your data stays on your network.',
+      hoverColor: 'hover:border-primary/50',
     },
     {
-      name: 'Open Source',
+      name: 'open-source',
       description: 'GPL-3.0-or-later. Fully auditable. No proprietary blobs.',
-      icon: <GitBranch className="h-5 w-5" />,
-      color: 'chart-2',
+      hoverColor: 'hover:border-chart-2/50',
     },
   ],
-  isolationTitle: 'Network Security',
-  isolationSubtitle: 'Your homelab, your rules',
-  isolationFeatures: [
-    {
-      title: 'LAN-Only Mode',
-      description: 'Run rbee entirely on your local network. No internet access required after initial setup.',
-      icon: <Wifi className="h-5 w-5" />,
-    },
-    {
-      title: 'Firewall Friendly',
-      description: 'All communication via SSH (port 22). No exotic ports or protocols.',
-      icon: <Shield className="h-5 w-5" />,
-    },
-    {
-      title: 'VPN Compatible',
-      description: 'Works seamlessly with WireGuard, Tailscale, or any VPN solution.',
-      icon: <Network className="h-5 w-5" />,
-    },
+  processIsolationTitle: 'Process Isolation',
+  processIsolationSubtitle: 'Each worker runs in its own isolated process.',
+  processFeatures: [
+    { title: 'Clean shutdown on exit', color: 'chart-3' },
+    { title: 'No orphaned processes', color: 'chart-3' },
+    { title: 'VRAM cleanup guaranteed', color: 'chart-3' },
+  ],
+  zeroTrustTitle: 'Network Security',
+  zeroTrustSubtitle: 'Your homelab, your rules. LAN-only mode available.',
+  zeroTrustFeatures: [
+    { title: 'LAN-only mode (no internet required)', color: 'chart-2' },
+    { title: 'SSH-only communication (port 22)', color: 'chart-2' },
+    { title: 'VPN compatible (WireGuard, Tailscale)', color: 'chart-2' },
   ],
 }
 
-export const homelabSecurityContainerProps: TemplateContainerProps = {
+export const homelabSecurityContainerProps: Omit<TemplateContainerProps, 'children'> = {
+  title: null,
   paddingY: 'lg',
   maxWidth: '6xl',
   background: {
@@ -629,105 +620,97 @@ export const homelabSecurityContainerProps: TemplateContainerProps = {
  */
 export const homelabFAQProps: FAQTemplateProps = {
   badgeText: 'Homelab FAQ',
-  categories: [
+  categories: ['Hardware', 'Setup', 'Networking', 'Troubleshooting'],
+  faqItems: [
     {
-      id: 'hardware',
-      label: 'Hardware',
-      icon: <Cpu className="h-4 w-4" />,
-    },
-    {
-      id: 'setup',
-      label: 'Setup',
-      icon: <Settings className="h-4 w-4" />,
-    },
-    {
-      id: 'networking',
-      label: 'Networking',
-      icon: <Network className="h-4 w-4" />,
-    },
-    {
-      id: 'troubleshooting',
-      label: 'Troubleshooting',
-      icon: <AlertTriangle className="h-4 w-4" />,
-    },
-  ],
-  faqs: [
-    {
-      category: 'hardware',
+      value: 'hardware-requirements',
       question: 'What hardware do I need to run rbee?',
       answer:
         'Minimum: Any x86_64 or ARM64 machine with 8GB RAM. Recommended: Machine with NVIDIA GPU (RTX 20 series or newer) or Apple Silicon (M1/M2/M3). rbee works with CPU-only setups but GPU acceleration provides much better performance.',
+      category: 'Hardware',
     },
     {
-      category: 'hardware',
+      value: 'mix-gpus',
       question: 'Can I mix different GPU types?',
       answer:
         'Yes! rbee supports mixing NVIDIA CUDA GPUs, Apple Metal GPUs, and CPU-only machines in the same pool. The orchestrator automatically detects capabilities and routes workloads appropriately.',
+      category: 'Hardware',
     },
     {
-      category: 'hardware',
+      value: 'vram-requirements',
       question: 'How much VRAM do I need?',
       answer:
         'Depends on model size. 7B models: 6-8GB VRAM. 13B models: 12-16GB VRAM. 70B models: 48GB+ VRAM (can split across multiple GPUs). Use quantization (Q4, Q8) to reduce VRAM requirements.',
+      category: 'Hardware',
     },
     {
-      category: 'setup',
+      value: 'add-machine',
       question: 'How do I add a machine to my homelab pool?',
       answer:
         'Use `rbee-keeper pool add --name <name> --host <ip> --ssh-key <path>`. rbee will SSH into the machine, detect GPUs, and register it in your pool. Requires SSH access and sudo privileges on the remote machine.',
+      category: 'Setup',
     },
     {
-      category: 'setup',
+      value: 'remote-install',
       question: 'Do I need to install anything on remote machines?',
       answer:
         'rbee-keeper will automatically install the rbee-worker binary on remote machines via SSH. You need: SSH access, sudo privileges, and basic dependencies (curl, tar). No manual setup required.',
+      category: 'Setup',
     },
     {
-      category: 'setup',
+      value: 'docker-support',
       question: 'Can I use rbee with Docker/Podman?',
       answer:
         'Yes! rbee workers can run in containers. Use GPU passthrough (--gpus all for Docker, --device for Podman). See docs for container setup examples.',
+      category: 'Setup',
     },
     {
-      category: 'networking',
+      value: 'lan-only',
       question: 'Does rbee work on a LAN-only network?',
       answer:
         'Yes! After initial setup (downloading models), rbee works entirely offline. All communication is via SSH on your local network. No internet access required for inference.',
+      category: 'Networking',
     },
     {
-      category: 'networking',
+      value: 'vpn-support',
       question: 'Can I use rbee over a VPN?',
       answer:
         'Absolutely. rbee works seamlessly with WireGuard, Tailscale, OpenVPN, or any VPN solution. Just use the VPN IP addresses when adding machines to your pool.',
+      category: 'Networking',
     },
     {
-      category: 'networking',
+      value: 'ports',
       question: 'What ports does rbee use?',
       answer:
         'SSH (port 22) for orchestration. Inference server (default 8080, configurable). All communication is over standard protocols—no exotic ports required.',
+      category: 'Networking',
     },
     {
-      category: 'troubleshooting',
+      value: 'gpu-not-detected',
       question: 'My GPU is not detected. What should I do?',
       answer:
         'Check: 1) NVIDIA drivers installed (`nvidia-smi` works), 2) CUDA toolkit installed, 3) User has permissions to access GPU. Run `rbee-keeper gpu-info` for diagnostics. See troubleshooting guide for detailed steps.',
+      category: 'Troubleshooting',
     },
     {
-      category: 'troubleshooting',
+      value: 'manual-download',
       question: 'Model download is slow. Can I download manually?',
       answer:
         'Yes! Download models from Hugging Face manually and place in `~/.rbee/models/`. rbee will detect and use them. Use `rbee-keeper models import` to register manually downloaded models.',
+      category: 'Troubleshooting',
     },
     {
-      category: 'troubleshooting',
+      value: 'cleanup-processes',
       question: 'How do I clean up orphaned processes?',
       answer:
         'rbee tracks all processes and cleans up automatically on shutdown. Use `rbee-keeper cleanup` to force cleanup. Check `rbee-keeper status` to see running processes. No manual process hunting required.',
+      category: 'Troubleshooting',
     },
   ],
 }
 
-export const homelabFAQContainerProps: TemplateContainerProps = {
+export const homelabFAQContainerProps: Omit<TemplateContainerProps, 'children'> = {
+  title: null,
   paddingY: 'xl',
   maxWidth: '5xl',
 }
@@ -738,40 +721,25 @@ export const homelabFAQContainerProps: TemplateContainerProps = {
  * Final CTA - Download and get started
  */
 export const homelabCTAProps: CTATemplateProps = {
-  eyebrow: 'Ready to Self-Host?',
-  heading: 'Turn Your Homelab Into an AI Powerhouse',
-  description:
-    'Download rbee and start running LLMs across all your machines. Free, open-source, and built for homelabbers.',
-  primaryCTA: {
+  eyebrow: 'Ready to Get Started?',
+  title: 'Turn Your Homelab Into an AI Powerhouse',
+  subtitle: 'Download rbee and start running LLMs across all your machines. Free, open-source, and built for homelabbers.',
+  primary: {
     label: 'Download rbee',
     href: '/download',
-    icon: <Download className="h-4 w-4" />,
+    iconLeft: Download,
   },
-  secondaryCTA: {
+  secondary: {
     label: 'Read Setup Guide',
     href: '/docs/homelab-setup',
   },
-  features: [
-    {
-      icon: <Check className="h-4 w-4" />,
-      text: 'Works with your existing hardware',
-    },
-    {
-      icon: <Check className="h-4 w-4" />,
-      text: 'SSH-based orchestration',
-    },
-    {
-      icon: <Check className="h-4 w-4" />,
-      text: 'Zero cloud dependencies',
-    },
-    {
-      icon: <Check className="h-4 w-4" />,
-      text: 'GPL-3.0-or-later license',
-    },
-  ],
+  note: 'Works with your existing hardware • SSH-based orchestration • GPL-3.0-or-later',
+  align: 'center',
+  emphasis: 'gradient',
 }
 
-export const homelabCTAContainerProps: TemplateContainerProps = {
+export const homelabCTAContainerProps: Omit<TemplateContainerProps, 'children'> = {
+  title: null,
   paddingY: 'xl',
   maxWidth: '5xl',
   background: {

@@ -35,7 +35,7 @@ export const OnHomeProblem: Story = {
     <TemplateContainer
       title="The Hidden Risk of AI Dependency"
       description="Building with AI assistance creates dependencies you can't control."
-      bgVariant="background"
+      background={{ variant: 'background' }}
       paddingY="2xl"
       maxWidth="6xl"
       align="center"

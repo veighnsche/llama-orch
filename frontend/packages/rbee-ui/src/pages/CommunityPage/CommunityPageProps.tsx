@@ -34,42 +34,42 @@ import {
  * Hero section props - Community introduction
  */
 export const communityHeroProps: HeroTemplateProps = {
-  badgeText: 'Open Source • GPL-3.0-or-later',
-  headlinePrefix: 'Join the',
-  headlineHighlight: 'rbee Community',
+  badge: {
+    variant: 'simple',
+    text: 'Open Source • GPL-3.0-or-later',
+  },
+  headline: {
+    variant: 'simple',
+    content: 'Join the rbee Community',
+  },
   subcopy:
     'Connect with developers building private AI infrastructure. Contribute code, share knowledge, and help shape the future of self-hosted AI.',
-  bullets: [
-    { title: '100% open source', variant: 'check', color: 'chart-3' },
-    { title: 'Welcoming community', variant: 'check', color: 'chart-3' },
-    { title: 'Active development', variant: 'check', color: 'chart-3' },
-  ],
-  primaryCTA: {
-    label: 'Join Discord',
-    href: 'https://discord.gg/rbee',
-    showIcon: true,
-    dataUmamiEvent: 'cta:join-discord',
+  proofElements: {
+    variant: 'bullets',
+    items: [
+      { title: '100% open source' },
+      { title: 'Welcoming community' },
+      { title: 'Active development' },
+    ],
   },
-  secondaryCTA: {
-    label: 'View GitHub',
-    href: 'https://github.com/veighnsche/llama-orch',
-    variant: 'outline',
-  },
-  trustBadges: [
-    {
-      type: 'github',
-      label: 'Star on GitHub',
+  ctas: {
+    primary: {
+      label: 'Join Discord',
+      href: 'https://discord.gg/rbee',
+      ariaLabel: 'Join rbee Discord community',
+    },
+    secondary: {
+      label: 'View GitHub',
       href: 'https://github.com/veighnsche/llama-orch',
     },
-    {
-      type: 'api',
-      label: 'Active Contributors',
-    },
-    {
-      type: 'cost',
-      label: 'Weekly Updates',
-    },
-  ],
+  },
+  helperText: 'Star on GitHub • Active Contributors • Weekly Updates',
+  aside: (
+    <div className="relative aspect-square w-full max-w-md">
+      {/* Community visualization placeholder */}
+    </div>
+  ),
+  asideAriaLabel: 'Community network visualization',
 }
 
 /**

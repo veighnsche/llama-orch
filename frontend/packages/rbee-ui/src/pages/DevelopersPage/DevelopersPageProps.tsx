@@ -399,7 +399,7 @@ export const coreFeatureTabsProps: FeaturesTabsProps = {
       icon: <Code className="size-6" />,
       label: 'OpenAI-Compatible',
       mobileLabel: 'API',
-      description: 'Drop-in API',
+      subtitle: 'Drop-in API',
       badge: 'Drop-in',
       description: 'Swap endpoints, keep your code. Works with Zed, Cursor, Continue—any OpenAI client.',
       content: (
@@ -424,7 +424,7 @@ export OPENAI_API_BASE=http://localhost:8080/v1`}
       icon: <Cpu className="size-6" />,
       label: 'Multi-GPU',
       mobileLabel: 'GPU',
-      description: 'Use every GPU',
+      subtitle: 'Use every GPU',
       badge: 'Scale',
       description: 'Run across CUDA, Metal, and CPU backends. Use every GPU across your network.',
       content: (
@@ -450,7 +450,7 @@ export OPENAI_API_BASE=http://localhost:8080/v1`}
       icon: <Gauge className="size-6" />,
       label: 'Programmable scheduler (Rhai)',
       mobileLabel: 'Rhai',
-      description: 'Route with Rhai',
+      subtitle: 'Route with Rhai',
       badge: 'Control',
       description: 'Write routing rules. Send 70B to multi-GPU, images to CUDA, everything else to cheapest.',
       content: (
@@ -480,7 +480,7 @@ else {
       icon: <Zap className="size-6" />,
       label: 'Task-based API with SSE',
       mobileLabel: 'SSE',
-      description: 'Live job stream',
+      subtitle: 'Live job stream',
       badge: 'Observe',
       description: 'See model loading, token generation, and costs stream in as they happen.',
       content: (
