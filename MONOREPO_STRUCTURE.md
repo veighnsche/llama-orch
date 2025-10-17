@@ -3,15 +3,15 @@
 ## Repository Layout
 
 ```
-llama-orch/
+rbee/
 ├── package.json              # Root orchestration (frontend only)
 ├── pnpm-workspace.yaml       # All workspaces (frontend + consumers)
 ├── turbo.json                # Turborepo config (frontend only)
 │
 ├── consumers/                # ❌ Independent workspaces
-│   ├── llama-orch-utils      # Utility package
+│   ├── rbee-utils      # Utility package
 │   ├── .examples/*           # Example projects
-│   └── llama-orch-sdk/ts     # TypeScript SDK
+│   └── rbee-sdk/ts     # TypeScript SDK
 │
 └── frontend/                 # ✅ Orchestrated workspaces
     ├── apps/
@@ -47,8 +47,8 @@ pnpm run dev:frontend     # UI + Commercial + Docs
 ### 2. Consumer Ecosystem (Independent)
 
 **Packages:**
-- `llama-orch-utils` - Utility functions
-- `llama-orch-sdk` - TypeScript SDK
+- `rbee-utils` - Utility functions
+- `rbee-sdk` - TypeScript SDK
 - `.examples/*` - Example projects
 
 **Characteristics:**
@@ -59,8 +59,8 @@ pnpm run dev:frontend     # UI + Commercial + Docs
 
 **Commands:**
 ```bash
-pnpm --filter llama-orch-sdk run build
-pnpm --filter llama-orch-utils run test
+pnpm --filter rbee-sdk run build
+pnpm --filter rbee-utils run test
 # Each package has its own workflow
 ```
 
@@ -103,7 +103,7 @@ pnpm run dev:commercial
 
 ```bash
 # Work with SDK
-cd consumers/llama-orch-sdk/ts
+cd consumers/rbee-sdk/ts
 pnpm install
 pnpm run build
 pnpm run test
@@ -118,9 +118,9 @@ pnpm run test
 ```yaml
 packages:
   # Consumers (independent)
-  - consumers/llama-orch-utils
+  - consumers/rbee-utils
   - consumers/.examples/*
-  - consumers/llama-orch-sdk/ts
+  - consumers/rbee-sdk/ts
   
   # Frontend (orchestrated)
   - frontend/bin/commercial
@@ -184,11 +184,11 @@ Frontend Ecosystem:
 
 Consumer Ecosystem:
 ┌──────────────────┐
-│ llama-orch-sdk   │  (independent)
+│ rbee-sdk   │  (independent)
 └──────────────────┘
 
 ┌──────────────────┐
-│ llama-orch-utils │  (independent)
+│ rbee-utils │  (independent)
 └──────────────────┘
 ```
 

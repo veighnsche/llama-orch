@@ -53,13 +53,16 @@ import {
 /**
  * Hero section props - Above-the-fold content with headline, terminal demo,
  * and GPU utilization visualization
+ * 
+ * Optional props not defined below:
+ * - floatingKPI.className (string) - Custom CSS classes for the floating KPI card
  */
 export const homeHeroProps: HomeHeroProps = {
   badgeText: "100% Open Source • GPL-3.0-or-later",
   headlinePrefix: "AI Infrastructure.",
   headlineHighlight: "On Your Terms.",
   subcopy:
-    "Run LLMs on your hardware—across any GPUs and machines. Build with AI, keep control, and avoid vendor lock-in.",
+    "rbee (pronounced \"are-bee\") is your OpenAI-compatible AI infrastructure. Run LLMs on YOUR hardware across all GPUs and machines. Build with AI, keep control, and escape provider lock-in.",
   bullets: [
     { title: "Your GPUs, your network", variant: "check", color: "chart-3" },
     { title: "Zero API fees", variant: "check", color: "chart-3" },
@@ -99,7 +102,7 @@ export const homeHeroProps: HomeHeroProps = {
     prompt: "Generate REST API",
     generating: "Generating code...",
   },
-  gpuPoolLabel: "GPU Pool (5 nodes):",
+  gpuPoolLabel: "GPU Pool (5 hosts):",
   gpuProgress: [
     { label: "Gaming PC 1", percentage: 91 },
     { label: "Gaming PC 2", percentage: 88 },
@@ -109,7 +112,7 @@ export const homeHeroProps: HomeHeroProps = {
   costLabel: "Local Inference",
   costValue: "$0.00",
   floatingKPI: {
-    gpuPool: { label: "GPU Pool", value: "5 nodes / 8 GPUs" },
+    gpuPool: { label: "GPU Pool", value: "5 hosts / 8 GPUs" },
     cost: { label: "Cost", value: "$0.00 / hr" },
     latency: { label: "Latency", value: "~34 ms" },
   },
@@ -117,6 +120,22 @@ export const homeHeroProps: HomeHeroProps = {
 
 /**
  * "What is rbee?" section container - Layout configuration
+ * 
+ * TemplateContainer optional props available but not defined:
+ * - subtitle/description (string | ReactNode) - Optional subtitle text
+ * - kicker (string | ReactNode) - Short lead-in sentence between eyebrow and title
+ * - kickerVariant ('default' | 'destructive') - Kicker color variant
+ * - actions (ReactNode) - Right-aligned controls near the title
+ * - centered (boolean) - Deprecated, use align instead
+ * - layout ('stack' | 'split') - Header layout style
+ * - bleed (boolean) - Full-width background while constraining inner content
+ * - className (string) - Additional CSS classes
+ * - headingId (string) - Optional ID for the heading
+ * - headlineLevel (1 | 2 | 3) - Semantic heading level
+ * - divider (boolean) - Show separator under header
+ * - ctas (object) - Bottom CTAs with label, primary, secondary, caption
+ * - disclaimer (object) - Disclaimer text with variant, showIcon
+ * - ribbon (object) - Ribbon banner with text
  */
 export const whatIsRbeeContainerProps: Omit<
   TemplateContainerProps,
@@ -137,6 +156,8 @@ export const whatIsRbeeContainerProps: Omit<
 /**
  * "What is rbee?" section content - Explanation with features, stats,
  * and visual diagram
+ * 
+ * No optional props available (all props are required or have defaults in component)
  */
 export const whatIsRbeeProps: WhatIsRbeeProps = {
   headlinePrefix: ": your private AI infrastructure",
@@ -144,7 +165,7 @@ export const whatIsRbeeProps: WhatIsRbeeProps = {
   pronunciationText: 'pronounced "are-bee"',
   pronunciationTooltip: 'Pronounced like "R.B."',
   description:
-    "is an open-source AI orchestration platform that unifies every computer in your home or office into a single, OpenAI-compatible AI cluster—private, controllable, and yours forever.",
+    "is an open-source AI orchestration platform that unifies every computer in your home or office into a single, OpenAI-compatible AI cluster—private, controllable, and yours forever. Build agentic AI coders with @rbee/utils on your hardware.",
   features: [
     {
       icon: <Zap className="size-6" />,
@@ -188,6 +209,9 @@ export const whatIsRbeeProps: WhatIsRbeeProps = {
 
 /**
  * Audience selector container - Layout configuration for persona cards
+ * 
+ * TemplateContainer optional props available but not defined:
+ * (See whatIsRbeeContainerProps comment above for full list)
  */
 export const audienceSelectorContainerProps: Omit<
   TemplateContainerProps,
@@ -206,6 +230,9 @@ export const audienceSelectorContainerProps: Omit<
 /**
  * Audience selector content - Three persona cards (Developers, GPU Owners, Enterprise)
  * with decision paths
+ * 
+ * Optional props not defined below:
+ * - showGradient (boolean) - Show radial gradient backplate (default: true)
  */
 export const audienceSelectorProps: AudienceSelectorProps = {
   cards: [
@@ -275,7 +302,13 @@ export const audienceSelectorProps: AudienceSelectorProps = {
   ],
 };
 
-// === Email Capture Section ===
+/**
+ * Email Capture section - Waitlist signup with badge, headline, and community footer
+ * 
+ * Optional props not defined below:
+ * - autoResetDelay (number) - Auto-reset delay in milliseconds (default: 3000)
+ * - onSubmit ((email: string) => void | Promise<void>) - Callback when email is submitted
+ */
 export const emailCaptureProps: EmailCaptureProps = {
   badge: {
     text: "In Development · M0 · 68%",
@@ -305,6 +338,9 @@ export const emailCaptureProps: EmailCaptureProps = {
 
 /**
  * Problem template container - Layout for "hidden risk" messaging
+ * 
+ * TemplateContainer optional props available but not defined:
+ * (See whatIsRbeeContainerProps comment above for full list)
  */
 export const problemTemplateContainerProps: Omit<
   TemplateContainerProps,
@@ -323,6 +359,13 @@ export const problemTemplateContainerProps: Omit<
 /**
  * Problem template content - Three pain points (model changes, price increases,
  * provider shutdowns)
+ * 
+ * Optional props not defined below:
+ * - ctaPrimary ({ label: string; href: string }) - Primary CTA button
+ * - ctaSecondary ({ label: string; href: string }) - Secondary CTA button
+ * - ctaCopy (string) - Copy text above CTA buttons
+ * - className (string) - Custom class name for root element
+ * - gridClassName (string) - Custom class name for grid
  */
 export const problemTemplateProps: ProblemTemplateProps = {
   items: [
@@ -349,6 +392,9 @@ export const problemTemplateProps: ProblemTemplateProps = {
 
 /**
  * Solution template container - Layout for solution messaging
+ * 
+ * TemplateContainer optional props available but not defined:
+ * (See whatIsRbeeContainerProps comment above for full list)
  */
 export const solutionTemplateContainerProps: Omit<
   TemplateContainerProps,
@@ -365,6 +411,16 @@ export const solutionTemplateContainerProps: Omit<
 
 /**
  * Solution template content - Four benefits with topology visualization
+ * 
+ * Optional props not defined below:
+ * - steps (Step[]) - Optional "How It Works" steps
+ * - earnings (Earnings) - Optional earnings/metrics sidebar
+ * - aside (ReactNode) - Custom aside content (overrides earnings)
+ * - illustration (ReactNode) - Optional decorative illustration
+ * - ctaPrimary ({ label, href, ariaLabel }) - Primary CTA button
+ * - ctaSecondary ({ label, href, ariaLabel }) - Secondary CTA button
+ * - ctaCaption (string) - Caption text below CTAs
+ * - className (string) - Custom class name
  */
 export const solutionTemplateProps: SolutionTemplateProps = {
   features: [
@@ -416,6 +472,9 @@ export const solutionTemplateProps: SolutionTemplateProps = {
 
 /**
  * How It Works container - Layout for step-by-step guide
+ * 
+ * TemplateContainer optional props available but not defined:
+ * (See whatIsRbeeContainerProps comment above for full list)
  */
 export const howItWorksContainerProps: Omit<
   TemplateContainerProps,
@@ -430,6 +489,10 @@ export const howItWorksContainerProps: Omit<
 
 /**
  * How It Works content - Four-step installation guide with terminal/code blocks
+ * 
+ * Optional props not defined below:
+ * - className (string) - Custom class name for root element
+ * - steps[].number (number) - Custom step number (defaults to index + 1)
  */
 export const howItWorksProps: HowItWorksProps = {
   steps: [
@@ -509,6 +572,10 @@ const code = await invoke({
 /**
  * Features tabs content - Four core capabilities (API, GPU, Scheduler, SSE)
  * with interactive examples. Self-contained, no container props.
+ * 
+ * Optional props not defined below:
+ * - sectionId (string) - Section ID for anchor links (default: 'feature-list')
+ * - bgClassName (string) - Background class name (default: 'bg-gradient-to-b from-secondary to-background')
  */
 export const featuresTabsProps: FeaturesTabsProps = {
   title: "Core capabilities",
@@ -584,7 +651,7 @@ export OPENAI_API_BASE=http://localhost:8080/v1`}
       subtitle: "Route with Rhai",
       badge: "Control",
       description:
-        "Write routing rules. Send 70B to multi-GPU, images to CUDA, everything else to cheapest.",
+        "Write routing rules in Home/Lab mode. Route 70B to multi-GPU, images to CUDA, everything else to cheapest. Platform mode uses an immutable scheduler.",
       content: (
         <CodeBlock
           code={`// Custom routing logic
@@ -682,6 +749,9 @@ else {
 
 /**
  * Use Cases template container - Layout for persona-based use case cards
+ * 
+ * TemplateContainer optional props available but not defined:
+ * (See whatIsRbeeContainerProps comment above for full list)
  */
 export const useCasesTemplateContainerProps: Omit<
   TemplateContainerProps,
@@ -699,6 +769,12 @@ export const useCasesTemplateContainerProps: Omit<
 /**
  * Use Cases template content - Six persona cards (solo dev, team, homelab,
  * enterprise, AI-dependent coder, agentic builder)
+ * 
+ * Optional props not defined below:
+ * - className (string) - Custom class name for root element
+ * - items[].tags (string[]) - Tags for each use case
+ * - items[].cta ({ label, href }) - CTA button for each use case
+ * - items[].illustrationSrc (string) - Illustration image source
  */
 export const useCasesTemplateProps: UseCasesTemplateProps = {
   items: [
@@ -761,6 +837,9 @@ export const useCasesTemplateProps: UseCasesTemplateProps = {
 
 /**
  * Comparison template container - Layout for feature comparison matrix
+ * 
+ * TemplateContainer optional props available but not defined:
+ * (See whatIsRbeeContainerProps comment above for full list)
  */
 export const comparisonTemplateContainerProps: Omit<
   TemplateContainerProps,
@@ -778,6 +857,9 @@ export const comparisonTemplateContainerProps: Omit<
 /**
  * Comparison template content - Feature matrix comparing rbee vs OpenAI/Anthropic,
  * Ollama, and Runpod/Vast.ai
+ * 
+ * Optional props not defined below:
+ * - className (string) - Custom class name for root element
  */
 export const comparisonTemplateProps: ComparisonTemplateProps = {
   columns: [
@@ -863,6 +945,9 @@ export const comparisonTemplateProps: ComparisonTemplateProps = {
 
 /**
  * Pricing template container - Layout for pricing tiers
+ * 
+ * TemplateContainer optional props available but not defined:
+ * (See whatIsRbeeContainerProps comment above for full list)
  */
 export const pricingTemplateContainerProps: Omit<
   TemplateContainerProps,
@@ -880,6 +965,11 @@ export const pricingTemplateContainerProps: Omit<
 /**
  * Pricing template content - Three tiers (Home/Lab, Team, Enterprise) with
  * monthly/yearly toggle and editorial image
+ * 
+ * Optional props not defined below:
+ * - className (string) - Custom class name for root element
+ * - editorialImage.width (number) - Image width
+ * - editorialImage.height (number) - Image height
  */
 export const pricingTemplateProps: PricingTemplateProps = {
   kickerBadges: [
@@ -971,6 +1061,9 @@ export const pricingTemplateProps: PricingTemplateProps = {
 
 /**
  * Testimonials template container - Layout for social proof section
+ * 
+ * TemplateContainer optional props available but not defined:
+ * (See whatIsRbeeContainerProps comment above for full list)
  */
 export const testimonialsTemplateContainerProps: Omit<
   TemplateContainerProps,
@@ -986,6 +1079,10 @@ export const testimonialsTemplateContainerProps: Omit<
 /**
  * Testimonials template content - Three testimonials with stats
  * (GitHub stars, installations, GPUs orchestrated, avg cost)
+ * 
+ * Optional props not defined below:
+ * - className (string) - Custom class name for root element
+ * - testimonials[].companyLogoSrc (string) - Company logo image URL
  */
 export const testimonialsTemplateProps: TestimonialsTemplateProps = {
   testimonials: [
@@ -1029,6 +1126,9 @@ export const testimonialsTemplateProps: TestimonialsTemplateProps = {
 
 /**
  * Technical template container - Layout for architecture deep-dive
+ * 
+ * TemplateContainer optional props available but not defined:
+ * (See whatIsRbeeContainerProps comment above for full list)
  */
 export const technicalTemplateContainerProps: Omit<
   TemplateContainerProps,
@@ -1046,6 +1146,9 @@ export const technicalTemplateContainerProps: Omit<
 /**
  * Technical template content - Architecture highlights, BDD coverage,
  * diagram, and tech stack (Rust, Candle ML, Rhai, SQLite, Axum+Vue)
+ * 
+ * Optional props not defined below:
+ * - className (string) - Custom class name for root element
  */
 export const technicalTemplateProps: TechnicalTemplateProps = {
   architectureHighlights: [
@@ -1116,6 +1219,9 @@ export const technicalTemplateProps: TechnicalTemplateProps = {
 
 /**
  * FAQ template container - Layout for FAQ section
+ * 
+ * TemplateContainer optional props available but not defined:
+ * (See whatIsRbeeContainerProps comment above for full list)
  */
 export const faqTemplateContainerProps: Omit<
   TemplateContainerProps,
@@ -1133,6 +1239,10 @@ export const faqTemplateContainerProps: Omit<
 /**
  * FAQ template content - Eight questions across six categories with searchable,
  * filterable accordion and support card
+ * 
+ * Optional props not defined below:
+ * - className (string) - Custom class name for root element
+ * - jsonLdEnabled (boolean) - Enable JSON-LD schema for SEO (default: false)
  */
 export const faqTemplateProps: FAQTemplateProps = {
   badgeText: "Support • Self-hosted AI",
@@ -1256,6 +1366,33 @@ export const faqTemplateProps: FAQTemplateProps = {
       ),
       category: "Security",
     },
+    {
+      value: "item-9",
+      question: "Does this work offline?",
+      answer: (
+        <div className="prose prose-neutral dark:prose-invert max-w-none prose-p:my-2 prose-code:px-1.5 prose-code:py-0.5 prose-code:bg-muted prose-code:rounded">
+          <p>
+            Yes. Everything runs on your own hardware and network—no cloud
+            required.
+          </p>
+        </div>
+      ),
+      category: "Setup",
+    },
+    {
+      value: "item-10",
+      question: "Is rbee GDPR-compliant?",
+      answer: (
+        <div className="prose prose-neutral dark:prose-invert max-w-none prose-p:my-2 prose-code:px-1.5 prose-code:py-0.5 prose-code:bg-muted prose-code:rounded">
+          <p>
+            Yes. rbee is EU-native: immutable audit trails with 7-year
+            retention, data export/deletion endpoints, and EU-only worker
+            routing when compliance is enabled.
+          </p>
+        </div>
+      ),
+      category: "Security",
+    },
   ],
   supportCard: {
     image: faqBeehive,
@@ -1281,6 +1418,12 @@ export const faqTemplateProps: FAQTemplateProps = {
 /**
  * CTA template content - Final call-to-action with gradient emphasis.
  * Self-contained with internal <section>.
+ * 
+ * Optional props not defined below:
+ * - eyebrow (string) - Optional eyebrow text above title
+ * - align ('center' | 'left') - Text alignment (default: 'center')
+ * - id (string) - Section ID for anchor links
+ * - className (string) - Custom class name for root element
  */
 export const ctaTemplateProps: CTATemplateProps = {
   title: "Stop depending on AI providers. Start building today.",

@@ -7,7 +7,7 @@
 
 ## Overview
 
-All package names have been updated to use the `@rbee/*` namespace, and consumer folders have been renamed from `llama-orch-*` to `rbee-*`.
+All package names have been updated to use the `@rbee/*` namespace, and consumer folders have been renamed from `rbee-*` to `rbee-*`.
 
 ---
 
@@ -15,7 +15,7 @@ All package names have been updated to use the `@rbee/*` namespace, and consumer
 
 ### 1. Root Package
 - **File**: `package.json`
-- **Before**: `llama-orch-monorepo`
+- **Before**: `rbee-monorepo`
 - **After**: `@rbee/monorepo`
 
 ### 2. Frontend Packages
@@ -41,26 +41,26 @@ All package names have been updated to use the `@rbee/*` namespace, and consumer
 ### 3. Consumer Packages (Renamed Folders + Packages)
 
 #### rbee-sdk
-- **Folder**: `consumers/llama-orch-sdk` → `consumers/rbee-sdk` ✅
+- **Folder**: `consumers/rbee-sdk` → `consumers/rbee-sdk` ✅
 - **Package**: `consumers/rbee-sdk/ts/package.json`
-  - **Before**: `@llama-orch/sdk`
+  - **Before**: `@rbee/sdk`
   - **After**: `@rbee/sdk` ✅
 - **Cargo**: `consumers/rbee-sdk/Cargo.toml`
-  - **Before**: `name = "llama-orch-sdk"`
+  - **Before**: `name = "rbee-sdk"`
   - **After**: `name = "rbee-sdk"` ✅
   - **Lib name**: `llama_orch_sdk` → `rbee_sdk` ✅
 - **README**: Updated all references ✅
 
 #### rbee-utils
-- **Folder**: `consumers/llama-orch-utils` → `consumers/rbee-utils` ✅
+- **Folder**: `consumers/rbee-utils` → `consumers/rbee-utils` ✅
 - **Package**: `consumers/rbee-utils/package.json`
-  - **Before**: `@llama-orch/utils`
+  - **Before**: `@rbee/utils`
   - **After**: `@rbee/utils` ✅
 - **Cargo**: `consumers/rbee-utils/Cargo.toml`
-  - **Before**: `name = "llama-orch-utils"`
+  - **Before**: `name = "rbee-utils"`
   - **After**: `name = "rbee-utils"` ✅
   - **Lib name**: `llama_orch_utils` → `rbee_utils` ✅
-  - **Dependency**: `llama-orch-sdk` → `rbee-sdk` ✅
+  - **Dependency**: `rbee-sdk` → `rbee-sdk` ✅
 - **README**: Updated all references ✅
 
 ---
@@ -82,7 +82,7 @@ All packages now use `@rbee/*` namespace:
 ## Folder Structure
 
 ```
-llama-orch/
+rbee/
 ├── package.json (@rbee/monorepo)
 ├── frontend/
 │   ├── bin/
@@ -102,8 +102,8 @@ llama-orch/
 
 ### Before
 ```typescript
-import { utils } from '@llama-orch/utils'
-import { Client } from '@llama-orch/sdk'
+import { utils } from '@rbee/utils'
+import { Client } from '@rbee/sdk'
 ```
 
 ### After
@@ -116,8 +116,8 @@ import { Client } from '@rbee/sdk'
 ```toml
 # Before
 [dependencies]
-llama-orch-sdk = "0.0.0"
-llama-orch-utils = "0.0.0"
+rbee-sdk = "0.0.0"
+rbee-utils = "0.0.0"
 
 # After
 [dependencies]
@@ -147,8 +147,8 @@ rbee-utils = "0.0.0"
 2. `/consumers/rbee-utils/README.md`
 
 ### Folders Renamed (2 total)
-1. `consumers/llama-orch-sdk` → `consumers/rbee-sdk`
-2. `consumers/llama-orch-utils` → `consumers/rbee-utils`
+1. `consumers/rbee-sdk` → `consumers/rbee-sdk`
+2. `consumers/rbee-utils` → `consumers/rbee-utils`
 
 ---
 

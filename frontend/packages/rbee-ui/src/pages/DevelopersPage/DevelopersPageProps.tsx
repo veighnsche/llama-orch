@@ -62,7 +62,7 @@ export const developersHeroProps: DevelopersHeroProps = {
   },
   secondaryCta: {
     label: 'View on GitHub',
-    href: 'https://github.com/orchyra/rbee',
+    href: 'https://github.com/veighnsche/llama-orch',
   },
   tertiaryLink: {
     label: 'How it works',
@@ -126,7 +126,7 @@ export const developersEmailCaptureProps: EmailCaptureProps = {
   communityFooter: {
     text: 'Join the community',
     linkText: 'GitHub',
-    linkHref: 'https://github.com/orchyra/rbee',
+    linkHref: 'https://github.com/veighnsche/llama-orch',
     subtext: 'Star us on GitHub or join our Discord',
   },
 }

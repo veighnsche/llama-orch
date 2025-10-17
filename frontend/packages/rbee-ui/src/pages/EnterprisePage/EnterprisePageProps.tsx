@@ -3,16 +3,16 @@ import { TESTIMONIAL_STATS } from '@rbee/ui/data/testimonials'
 import type { TemplateContainerProps } from '@rbee/ui/molecules'
 import type {
   EmailCaptureProps,
-  EnterpriseComparisonTemplateProps,
-  EnterpriseComplianceTemplateProps,
-  EnterpriseCTATemplateProps,
-  EnterpriseFeaturesTemplateProps,
-  EnterpriseHeroTemplateProps,
-  EnterpriseHowItWorksTemplateProps,
-  EnterpriseSecurityTemplateProps,
-  EnterpriseSolutionTemplateProps,
-  EnterpriseTestimonialsTemplateProps,
-  EnterpriseUseCasesTemplateProps,
+  EnterpriseComparisonProps,
+  EnterpriseComplianceProps,
+  EnterpriseCTAProps,
+  EnterpriseFeaturesProps,
+  EnterpriseHeroProps,
+  EnterpriseHowItWorksProps,
+  EnterpriseSecurityProps,
+  EnterpriseSolutionProps,
+  EnterpriseTestimonialsProps,
+  EnterpriseUseCasesProps,
   ProblemTemplateProps,
 } from '@rbee/ui/templates'
 import {
@@ -48,7 +48,7 @@ import Image from 'next/image'
 /**
  * Enterprise Hero - Main hero section with audit console visual
  */
-export const enterpriseHeroProps: EnterpriseHeroTemplateProps = {
+export const enterpriseHeroProps: EnterpriseHeroProps = {
   badge: {
     icon: <Shield className="size-6" />,
     text: 'EU-Native AI Infrastructure',
@@ -268,7 +268,7 @@ export const enterpriseSolutionContainerProps: Omit<TemplateContainerProps, 'chi
 /**
  * Enterprise Solution - How rbee Works section
  */
-export const enterpriseSolutionProps: EnterpriseSolutionTemplateProps = {
+export const enterpriseSolutionProps: EnterpriseSolutionProps = {
   id: 'how-it-works',
   kicker: 'How rbee Works',
   eyebrowIcon: <Shield className="h-4 w-4" aria-hidden="true" />,
@@ -382,7 +382,7 @@ export const enterpriseComplianceContainerProps: Omit<TemplateContainerProps, 'c
 /**
  * Enterprise Compliance - Compliance by Design section
  */
-export const enterpriseComplianceProps: EnterpriseComplianceTemplateProps = {
+export const enterpriseComplianceProps: EnterpriseComplianceProps = {
   id: 'compliance',
   backgroundImage: {
     src: '/decor/compliance-ledger.webp',
@@ -491,7 +491,7 @@ export const enterpriseSecurityContainerProps: Omit<TemplateContainerProps, 'chi
 /**
  * Enterprise Security - Defense-in-Depth section
  */
-export const enterpriseSecurityProps: EnterpriseSecurityTemplateProps = {
+export const enterpriseSecurityProps: EnterpriseSecurityProps = {
   backgroundImage: {
     src: '/decor/security-mesh.webp',
     alt: 'Abstract dark security mesh with linked nodes and amber highlights, suggesting hash-chains, zero-trust, and time-bounded execution',
@@ -618,7 +618,7 @@ export const enterpriseHowItWorksContainerProps: Omit<TemplateContainerProps, 'c
 /**
  * Enterprise How It Works - Deployment Process section
  */
-export const enterpriseHowItWorksProps: EnterpriseHowItWorksTemplateProps = {
+export const enterpriseHowItWorksProps: EnterpriseHowItWorksProps = {
   id: 'deployment',
   backgroundImage: {
     src: '/decor/deployment-flow.webp',
@@ -708,7 +708,7 @@ export const enterpriseUseCasesContainerProps: Omit<TemplateContainerProps, 'chi
 /**
  * Enterprise Use Cases - Industry Playbooks section
  */
-export const enterpriseUseCasesProps: EnterpriseUseCasesTemplateProps = {
+export const enterpriseUseCasesProps: EnterpriseUseCasesProps = {
   backgroundImage: {
     src: '/decor/sector-grid.webp',
     alt: 'Abstract EU-blue grid of industry tiles—finance, healthcare, legal, government—with soft amber accents; premium dark UI, compliance theme',
@@ -811,7 +811,7 @@ export const enterpriseComparisonContainerProps: Omit<TemplateContainerProps, 'c
 /**
  * Enterprise Comparison - Feature Matrix section
  */
-export const enterpriseComparisonProps: EnterpriseComparisonTemplateProps = {
+export const enterpriseComparisonProps: EnterpriseComparisonProps = {
   providers: PROVIDERS,
   features: FEATURES,
   footnote: '* Comparison based on publicly available information as of October 2025.',
@@ -835,7 +835,7 @@ export const enterpriseFeaturesContainerProps: Omit<TemplateContainerProps, 'chi
 /**
  * Enterprise Features - Enterprise Capabilities section
  */
-export const enterpriseFeaturesProps: EnterpriseFeaturesTemplateProps = {
+export const enterpriseFeaturesProps: EnterpriseFeaturesProps = {
   features: [
     {
       icon: <Shield />,
@@ -896,7 +896,7 @@ export const enterpriseTestimonialsContainerProps: Omit<TemplateContainerProps, 
 /**
  * Enterprise Testimonials - Trusted by Regulated Industries section
  */
-export const enterpriseTestimonialsProps: EnterpriseTestimonialsTemplateProps = {
+export const enterpriseTestimonialsProps: EnterpriseTestimonialsProps = {
   sectorFilter: ['finance', 'healthcare', 'legal'],
   layout: 'grid',
   showStats: true,
@@ -907,7 +907,7 @@ export const enterpriseTestimonialsProps: EnterpriseTestimonialsTemplateProps = 
 /**
  * Enterprise CTA - Final call to action section (no container, self-contained)
  */
-export const enterpriseCTAProps: EnterpriseCTATemplateProps = {
+export const enterpriseCTAProps: EnterpriseCTAProps = {
   eyebrow: 'Get Audit-Ready',
   heading: 'Ready to Meet Your Compliance Requirements?',
   description: 'Book a demo with our compliance team, or download the documentation pack.',

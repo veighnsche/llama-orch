@@ -1,13 +1,13 @@
 # rbee (pronounced "are-bee")
 **Escape dependency on big AI providers. Build your own AI infrastructure.**
 
-rbee (formerly llama-orch) is an OpenAI-compatible AI orchestration platform that lets you build your own AI infrastructure using ALL your home network hardware. Never depend on external AI providers again.
+rbee is an OpenAI-compatible AI orchestration platform that lets you build your own AI infrastructure using ALL your home network hardware. Never depend on external AI providers again.
 
 **🎯 PRIMARY TARGET AUDIENCE:** Developers who build with AI but don't want to depend on big AI providers.
 
 **THE FEAR:** You're building complex codebases with AI assistance (Claude, GPT-4). What happens when the AI provider changes their models, shuts down, or changes pricing? Your codebase becomes unmaintainable without AI. You've created a dependency you can't control.
 
-**THE SOLUTION:** Build AI coders from scratch using YOUR hardware. Agentic API with task-based streaming. llama-orch-utils: TypeScript library for building AI agents. OpenAI-compatible = drop-in replacement. Independence from external providers.
+**THE SOLUTION:** Build AI coders from scratch using YOUR hardware. Agentic API with task-based streaming. @rbee/utils: TypeScript library for building AI agents. OpenAI-compatible = drop-in replacement. Independence from external providers.
 
 **Current version**: `0.1.0` (68% complete - 42/62 BDD scenarios passing)  
 **License**: GPL-3.0-or-later (free and open source, copyleft)  
@@ -35,11 +35,11 @@ export OPENAI_API_BASE=http://localhost:8080/v1
 export OPENAI_API_KEY=your-rbee-token
 
 # 3. Now your AI tooling runs on YOUR infrastructure!
-# ✅ Zero external dependencies
-# ✅ Models never change without your permission
-# ✅ Always available (your hardware, your uptime)
-# ✅ Zero ongoing costs (electricity only)
-# ✅ Complete control over your AI tooling
+# Zero external dependencies
+# Models never change without your permission
+# Always available (your hardware, your uptime)
+# Zero ongoing costs (electricity only)
+# Complete control over your AI tooling
 ```
 
 **OpenAI-compatible API** means drop-in replacement for:
@@ -48,7 +48,7 @@ export OPENAI_API_KEY=your-rbee-token
 - Continue.dev
 - Any tool using OpenAI SDK
 
-**Build your own AI agents with llama-orch-utils** (TypeScript library):
+**Build your own AI agents with @rbee/utils** (TypeScript library):
 - File operations, LLM invocation, prompt management
 - Response extraction, model definitions
 - Composable utilities for agentic workflows
@@ -72,39 +72,39 @@ export OPENAI_API_KEY=your-rbee-token
 ### vs. Cloud APIs (OpenAI, Anthropic)
 
 **We win on:**
-- ✅ **Independence** - Never depend on external providers again
-- ✅ **Control** - Your models, your rules, never change without permission
-- ✅ **Privacy** - Code never leaves your network
-- ✅ **Cost** - Zero ongoing costs (electricity only)
-- ✅ **Availability** - Your hardware, your uptime
+- Independence - Never depend on external providers again
+- Control - Your models, your rules, never change without permission
+- Privacy - Code never leaves your network
+- Cost - Zero ongoing costs (electricity only)
+- Availability - Your hardware, your uptime
 
 **They win on:**
-- ✅ Ease of use (no infrastructure management)
-- ✅ Model selection (access to latest models)
+- Ease of use (no infrastructure management)
+- Model selection (access to latest models)
 
 ### vs. Self-Hosted (Ollama, llama.cpp)
 
 **We win on:**
-- ✅ **Multi-node orchestration** - Use ALL your computers' GPU power
-- ✅ **Agentic API** - Task-based streaming for building AI agents
-- ✅ **llama-orch-utils** - TypeScript library for AI agent development
-- ✅ **EU compliance** - GDPR built-in (7-year audit retention)
-- ✅ **Security-first** - 5 specialized security crates
-- ✅ **Test reproducibility** - Proof bundles for CI/CD
+- Multi-node orchestration - Use ALL your computers' GPU power
+- Agentic API - Task-based streaming for building AI agents
+- @rbee/utils - TypeScript library for AI agent development
+- EU compliance - GDPR built-in (7-year audit retention)
+- Security-first - 5 specialized security crates
+- Test reproducibility - Proof bundles for CI/CD
 
 **They win on:**
-- ✅ Simplicity (single binary)
-- ✅ Maturity (battle-tested)
+- Simplicity (single binary)
+- Maturity (battle-tested)
 
 ### Unique Features
 
 **No one else has:**
-- 🐝 **Character-Driven Development** - 99% AI-generated code with 6 specialized teams
-- 🐝 **Home Network Power** - Use GPUs across ALL your computers
-- 🐝 **Agentic API** - Task-based streaming designed for AI agents
-- 🐝 **llama-orch-utils** - TypeScript library for building LLM pipelines
-- 🐝 **Security-First** - 5 security crates (auth-min, audit-logging, input-validation, secrets-management, deadline-propagation)
-- 🐝 **EU-Native** - GDPR compliance from day 1
+- Character-Driven Development - 99% AI-generated code with 6 specialized teams
+- Home Network Power - Use GPUs across ALL your computers
+- Agentic API - Task-based streaming designed for AI agents
+- @rbee/utils - TypeScript library for building LLM pipelines
+- Security-First - 5 security crates (auth-min, audit-logging, input-validation, secrets-management, deadline-propagation)
+- EU-Native - GDPR compliance from day 1
 
 ---
 
@@ -364,7 +364,6 @@ rbee's security is built on **five specialized security crates** that work toget
 ---
 ## Documentation
 ### Core Specifications
-- [`.specs/00_llama-orch.md`](.specs/00_llama-orch.md) — Core requirements (ORCH-3xxx)
 - [`.specs/20_queen-rbee.md`](.specs/20_queen-rbee.md) — Control plane service
 - [`.specs/30_pool_managerd.md`](.specs/30_pool_managerd.md) — GPU worker service
 - [`.specs/metrics/otel-prom.md`](.specs/metrics/otel-prom.md) — Metrics contract
@@ -684,9 +683,9 @@ graph TB
 - `tools/openapi-client/` — Generated HTTP client
 ### Consumer Layering
 ```
-llama-orch-utils (applets, guardrails)
+@rbee/utils (applets, guardrails)
      ↓
-llama-orch-sdk (typed API, transport)
+@rbee/sdk (typed API, transport)
      ↓
 queen-rbee (HTTP API, ground truth)
 ```
@@ -705,7 +704,7 @@ See [`consumers/.docs/.adr/006-library-split.md`](consumers/.docs/.adr/006-libra
 | `contracts/` | OpenAPI specs, API types, config schema |
 | `test-harness/` | BDD, determinism, chaos, E2E test suites |
 | `tools/` | Code generation, spec extraction, README indexing |
-| `consumers/` | SDK (`llama-orch-sdk`), Utils (`llama-orch-utils`) |
+| `consumers/` | SDK (`@rbee/sdk`), Utils (`@rbee/utils`) |
 | `ci/` | Metrics linting, dashboards, alerts, link checking |
 ---
 ## API Overview
@@ -808,7 +807,7 @@ cargo test -p test-harness-metrics-contract -- --nocapture
 
 **⚠️ CRITICAL:** This is a Rust project. Do NOT write shell scripts for product features. See [NO_SHELL_SCRIPTS.md](NO_SHELL_SCRIPTS.md).
 
-llama-orch follows strict **Spec → Contract → Tests → Code** discipline:
+rbee follows strict **Spec → Contract → Tests → Code** discipline:
 1. **Spec**: Define requirements in `.specs/` with stable IDs (ORCH-3xxx)
 2. **Contract**: Update OpenAPI/types in `contracts/`
 3. **Tests**: Write BDD scenarios, unit tests, integration tests
@@ -824,7 +823,6 @@ See [`AGENTS.md`](AGENTS.md) for complete repository guidelines.
 ## Contributing
 ### Before You Start
 1. Read [`AGENTS.md`](AGENTS.md) — Repository guidelines and dev loop
-2. Read [`.specs/00_llama-orch.md`](.specs/00_llama-orch.md) — Core requirements
 3. Check [`TODO.md`](TODO.md) — Active work tracker
 ### Pull Request Checklist
 - [ ] Spec updated (if changing behavior)
@@ -856,9 +854,9 @@ ORCH-3027, ORCH-3028, ORCH-3044, ORCH-3045, ORCH-2002, ORCH-2101, ORCH-2102, ORC
 | [`bin/queen-rbee/bdd/`](bin/queen-rbee/bdd/README.md) | `queen-rbee-bdd` | core |
 OpenAPI | bdd, features, steps | ORCH-3004, ORCH-3005, ORCH-3008, ORCH-3010, ORCH-3011, ORCH-3016,
 ORCH-3017, ORCH-3027, ORCH-3028, ORCH-3044, ORCH-3045 |
-| [`consumers/llama-orch-sdk/`](consumers/llama-orch-sdk/README.md) | `llama-orch-sdk` | tool | — |
+| [`consumers/rbee-sdk/`](consumers/rbee-sdk/README.md) | `rbee-sdk` | tool | — |
 — | — |
-| [`consumers/llama-orch-utils/`](consumers/llama-orch-utils/README.md) | `llama-orch-utils` | tool
+| [`consumers/rbee-utils/`](consumers/rbee-utils/README.md) | `rbee-utils` | tool
 | — | — | — |
 | [`contracts/api-types/`](contracts/api-types/README.md) | `contracts-api-types` | contracts | — |
 — | ORCH-3044, ORCH-3030 |
@@ -937,13 +935,13 @@ OpenAPI | trybuild, ui | — |
 ### Glossary
 - `queen-rbee` — queen-rbee (core)
 - `queen-rbee-bdd` — queen-rbee-bdd (core)
-- `llama-orch-sdk` — Single-source SDK for llama-orch (Rust core, optional WASM for npm)
-- `llama-orch-utils` — Utils applets for composing Blueprint pipelines for llama-orch (M2).
+- `rbee-sdk` — Single-source SDK for rbee (Rust core, optional WASM for npm)
+- `rbee-utils` — Utils applets for composing Blueprint pipelines for rbee (M2).
 - `contracts-api-types` — contracts-api-types (contracts)
 - `contracts-config-schema` — contracts-config-schema (contracts)
 - `adapter-host` — adapter-host (adapter)
 - `auth-min` — auth-min (tool)
-- `catalog-core` — Model catalog: resolve/verify/cache and lifecycle for llama-orch
+- `catalog-core` — Model catalog: resolve/verify/cache and lifecycle for rbee
 - `catalog-core-bdd` — catalog-core-bdd (core)
 - `observability-narration-core` — observability-narration-core (tool)
 - `orchestrator-core` — orchestrator-core (core)
@@ -991,7 +989,7 @@ OpenAPI | trybuild, ui | — |
 **Key Features:**
 - 🐝 OpenAI-compatible API (drop-in replacement)
 - 🐝 Agentic API (task-based streaming for building AI agents)
-- 🐝 llama-orch-utils (TypeScript library for AI agent development)
+- 🐝 @rbee/utils (TypeScript library for AI agent development)
 - 🐝 Multi-backend support (CUDA, Metal, CPU)
 - 🐝 Home network power (use GPUs across ALL your computers)
 - 🐝 EU-native compliance (GDPR from day 1)

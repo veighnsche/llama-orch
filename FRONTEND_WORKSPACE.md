@@ -5,11 +5,11 @@
 The monorepo contains multiple workspaces, but **only the frontend packages** are orchestrated together for development:
 
 ```
-llama-orch/
+rbee/
 ├── consumers/              # ❌ NOT part of frontend workflow
-│   ├── llama-orch-utils
+│   ├── rbee-utils
 │   ├── .examples/*
-│   └── llama-orch-sdk/ts
+│   └── rbee-sdk/ts
 │
 └── frontend/              # ✅ Orchestrated together
     ├── apps/
@@ -76,10 +76,10 @@ pnpm run build:frontend
 
 ```bash
 # Work with SDK
-pnpm --filter llama-orch-sdk run build
+pnpm --filter rbee-sdk run build
 
 # Work with utils
-pnpm --filter llama-orch-utils run test
+pnpm --filter rbee-utils run test
 
 # These are NOT orchestrated with frontend
 ```
@@ -90,9 +90,9 @@ pnpm --filter llama-orch-utils run test
 ```yaml
 packages:
   # Consumers (independent)
-  - consumers/llama-orch-utils
+  - consumers/rbee-utils
   - consumers/.examples/*
-  - consumers/llama-orch-sdk/ts
+  - consumers/rbee-sdk/ts
   
   # Frontend (orchestrated)
   - frontend/bin/commercial

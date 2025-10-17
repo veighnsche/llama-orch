@@ -3,16 +3,16 @@
 import { TemplateContainer } from "@rbee/ui/molecules";
 import {
   EmailCapture,
-  EnterpriseComparisonTemplate,
-  EnterpriseComplianceTemplate,
-  EnterpriseCTATemplate,
-  EnterpriseFeaturesTemplate,
-  EnterpriseHeroTemplate,
-  EnterpriseHowItWorksTemplate,
-  EnterpriseSecurityTemplate,
-  EnterpriseSolutionTemplate,
-  EnterpriseTestimonialsTemplate,
-  EnterpriseUseCasesTemplate,
+  EnterpriseComparison,
+  EnterpriseCompliance,
+  EnterpriseCTA,
+  EnterpriseFeatures,
+  EnterpriseHero,
+  EnterpriseHowItWorks,
+  EnterpriseSecurity,
+  EnterpriseSolution,
+  EnterpriseTestimonials,
+  EnterpriseUseCases,
   ProblemTemplate,
 } from "@rbee/ui/templates";
 import {
@@ -27,7 +27,7 @@ import {
   enterpriseHeroProps,
   enterpriseHowItWorksContainerProps,
   enterpriseHowItWorksProps,
-  enterpriseProblemSectionContainerProps,
+  enterpriseProblemTemplateContainerProps,
   enterpriseProblemTemplateProps,
   enterpriseSecurityContainerProps,
   enterpriseSecurityProps,
@@ -42,46 +42,46 @@ import {
 export default function EnterprisePage() {
   return (
     <main>
-      <EnterpriseHeroTemplate {...enterpriseHeroProps} />
+      <EnterpriseHero {...enterpriseHeroProps} />
       <EmailCapture {...enterpriseEmailCaptureProps} />
 
-      <TemplateContainer {...enterpriseProblemSectionContainerProps}>
+      <TemplateContainer {...enterpriseProblemTemplateContainerProps}>
         <ProblemTemplate {...enterpriseProblemTemplateProps} />
       </TemplateContainer>
 
       <TemplateContainer {...enterpriseSolutionContainerProps}>
-        <EnterpriseSolutionTemplate {...enterpriseSolutionProps} />
+        <EnterpriseSolution {...enterpriseSolutionProps} />
       </TemplateContainer>
 
       <TemplateContainer {...enterpriseComplianceContainerProps}>
-        <EnterpriseComplianceTemplate {...enterpriseComplianceProps} />
+        <EnterpriseCompliance {...enterpriseComplianceProps} />
       </TemplateContainer>
 
       <TemplateContainer {...enterpriseSecurityContainerProps}>
-        <EnterpriseSecurityTemplate {...enterpriseSecurityProps} />
+        <EnterpriseSecurity {...enterpriseSecurityProps} />
       </TemplateContainer>
 
       <TemplateContainer {...enterpriseHowItWorksContainerProps}>
-        <EnterpriseHowItWorksTemplate {...enterpriseHowItWorksProps} />
+        <EnterpriseHowItWorks {...enterpriseHowItWorksProps} />
       </TemplateContainer>
 
       <TemplateContainer {...enterpriseUseCasesContainerProps}>
-        <EnterpriseUseCasesTemplate {...enterpriseUseCasesProps} />
+        <EnterpriseUseCases {...enterpriseUseCasesProps} />
       </TemplateContainer>
 
       <TemplateContainer {...enterpriseComparisonContainerProps}>
-        <EnterpriseComparisonTemplate {...enterpriseComparisonProps} />
+        <EnterpriseComparison {...enterpriseComparisonProps} />
       </TemplateContainer>
 
       <TemplateContainer {...enterpriseFeaturesContainerProps}>
-        <EnterpriseFeaturesTemplate {...enterpriseFeaturesProps} />
+        <EnterpriseFeatures {...enterpriseFeaturesProps} />
       </TemplateContainer>
 
       <TemplateContainer {...enterpriseTestimonialsContainerProps}>
-        <EnterpriseTestimonialsTemplate {...enterpriseTestimonialsProps} />
+        <EnterpriseTestimonials {...enterpriseTestimonialsProps} />
       </TemplateContainer>
 
-      <EnterpriseCTATemplate {...enterpriseCTAProps} />
+      <EnterpriseCTA {...enterpriseCTAProps} />
     </main>
   );
 }

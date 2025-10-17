@@ -8,10 +8,15 @@ set -euo pipefail
 # references throughout the codebase.
 #
 # Usage:
-#   ./rename-template.sh <TemplateName>
+#   ./rename-template.sh <TemplateName> [--force] [--skip-git-check]
+#
+# Options:
+#   --force           Skip all confirmation prompts
+#   --skip-git-check  Skip git working directory check
 #
 # Example:
 #   ./rename-template.sh ProvidersSecurityTemplate
+#   ./rename-template.sh ProvidersSecurityTemplate --force
 #
 # This will rename:
 #   - ProvidersSecurityTemplate/ → ProvidersSecurity/
@@ -55,13 +60,36 @@ log_error() {
 # Validation
 # ============================================================================
 
-if [ $# -ne 1 ]; then
-    log_error "Usage: $0 <TemplateName>"
+if [ $# -lt 1 ]; then
+    log_error "Usage: $0 <TemplateName> [--force] [--skip-git-check]"
     log_info "Example: $0 ProvidersSecurityTemplate"
+    log_info "Options:"
+    log_info "  --force           Skip all confirmation prompts"
+    log_info "  --skip-git-check  Skip git working directory check"
     exit 1
 fi
 
 TEMPLATE_NAME="$1"
+FORCE_MODE=0
+SKIP_GIT_CHECK=0
+
+# Parse optional flags
+shift
+while [ $# -gt 0 ]; do
+    case "$1" in
+        --force)
+            FORCE_MODE=1
+            ;;
+        --skip-git-check)
+            SKIP_GIT_CHECK=1
+            ;;
+        *)
+            log_error "Unknown option: $1"
+            exit 1
+            ;;
+    esac
+    shift
+done
 
 # Validate template name ends with "Template"
 if [[ ! "$TEMPLATE_NAME" =~ Template$ ]]; then
@@ -107,8 +135,11 @@ fi
 # Check 3: Required files exist
 REQUIRED_FILES=(
     "$TEMPLATE_NAME.tsx"
-    "$TEMPLATE_NAME.stories.tsx"
     "index.ts"
+)
+
+OPTIONAL_FILES=(
+    "$TEMPLATE_NAME.stories.tsx"
 )
 
 for file in "${REQUIRED_FILES[@]}"; do
@@ -120,18 +151,34 @@ for file in "${REQUIRED_FILES[@]}"; do
     fi
 done
 
+for file in "${OPTIONAL_FILES[@]}"; do
+    if [ ! -f "$TEMPLATE_DIR/$file" ]; then
+        log_warning "Optional file missing: $file (will be skipped)"
+    else
+        log_success "Found: $file"
+    fi
+done
+
 # Check 4: Git working directory is clean
-if ! git diff-index --quiet HEAD -- 2>/dev/null; then
-    log_warning "Git working directory has uncommitted changes"
-    log_warning "Consider committing or stashing changes before proceeding"
-    read -p "Continue anyway? (y/N) " -n 1 -r
-    echo
-    if [[ ! $REPLY =~ ^[Yy]$ ]]; then
-        log_info "Aborted by user"
-        exit 1
+if [ $SKIP_GIT_CHECK -eq 0 ]; then
+    if ! git diff-index --quiet HEAD -- 2>/dev/null; then
+        log_warning "Git working directory has uncommitted changes"
+        log_warning "Consider committing or stashing changes before proceeding"
+        if [ $FORCE_MODE -eq 0 ]; then
+            read -p "Continue anyway? (y/N) " -n 1 -r
+            echo
+            if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+                log_info "Aborted by user"
+                exit 1
+            fi
+        else
+            log_warning "--force mode: Continuing despite uncommitted changes"
+        fi
+    else
+        log_success "Git working directory is clean"
     fi
 else
-    log_success "Git working directory is clean"
+    log_warning "--skip-git-check: Skipping git working directory check"
 fi
 
 if [ $PREFLIGHT_FAILED -eq 1 ]; then
@@ -157,11 +204,15 @@ echo "     - src/pages/*/*.tsx"
 echo "     - src/pages/*/*.ts"
 echo ""
 
-read -p "Proceed with rename? (y/N) " -n 1 -r
-echo
-if [[ ! $REPLY =~ ^[Yy]$ ]]; then
-    log_info "Aborted by user"
-    exit 0
+if [ $FORCE_MODE -eq 0 ]; then
+    read -p "Proceed with rename? (y/N) " -n 1 -r
+    echo
+    if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+        log_info "Aborted by user"
+        exit 0
+    fi
+else
+    log_warning "--force mode: Proceeding without confirmation"
 fi
 
 # ============================================================================
@@ -178,8 +229,13 @@ log_success "Directory renamed"
 # Step 2: Rename files
 log_info "Renaming files..."
 mv "$NEW_DIR/${TEMPLATE_NAME}.tsx" "$NEW_DIR/${NEW_NAME}.tsx"
-mv "$NEW_DIR/${TEMPLATE_NAME}.stories.tsx" "$NEW_DIR/${NEW_NAME}.stories.tsx"
-log_success "Files renamed"
+if [ -f "$NEW_DIR/${TEMPLATE_NAME}.stories.tsx" ]; then
+    mv "$NEW_DIR/${TEMPLATE_NAME}.stories.tsx" "$NEW_DIR/${NEW_NAME}.stories.tsx"
+    log_success "Files renamed (including stories)"
+else
+    log_warning "Stories file not found, skipping"
+    log_success "Component file renamed"
+fi
 
 # Step 3: Update component file
 log_info "Updating component file..."
@@ -189,15 +245,19 @@ sed -i "s/ \* ${TEMPLATE_NAME} -/ \* ${NEW_NAME} -/g" "$NEW_DIR/${NEW_NAME}.tsx"
 sed -i "s/ \* <${TEMPLATE_NAME}/ \* <${NEW_NAME}/g" "$NEW_DIR/${NEW_NAME}.tsx"
 log_success "Component file updated"
 
-# Step 4: Update stories file
-log_info "Updating stories file..."
-sed -i "s/import { ${TEMPLATE_NAME} } from '.\/${TEMPLATE_NAME}'/import { ${NEW_NAME} } from '.\/${NEW_NAME}'/g" "$NEW_DIR/${NEW_NAME}.stories.tsx"
-sed -i "s/title: 'Templates\/${TEMPLATE_NAME}'/title: 'Templates\/${NEW_NAME}'/g" "$NEW_DIR/${NEW_NAME}.stories.tsx"
-sed -i "s/component: ${TEMPLATE_NAME}/component: ${NEW_NAME}/g" "$NEW_DIR/${NEW_NAME}.stories.tsx"
-sed -i "s/Meta<typeof ${TEMPLATE_NAME}>/Meta<typeof ${NEW_NAME}>/g" "$NEW_DIR/${NEW_NAME}.stories.tsx"
-sed -i "s/ \* ${TEMPLATE_NAME} as/ \* ${NEW_NAME} as/g" "$NEW_DIR/${NEW_NAME}.stories.tsx"
-sed -i "s/<${TEMPLATE_NAME} /<${NEW_NAME} /g" "$NEW_DIR/${NEW_NAME}.stories.tsx"
-log_success "Stories file updated"
+# Step 4: Update stories file (if exists)
+if [ -f "$NEW_DIR/${NEW_NAME}.stories.tsx" ]; then
+    log_info "Updating stories file..."
+    sed -i "s/import { ${TEMPLATE_NAME} } from '.\/${TEMPLATE_NAME}'/import { ${NEW_NAME} } from '.\/${NEW_NAME}'/g" "$NEW_DIR/${NEW_NAME}.stories.tsx"
+    sed -i "s/title: 'Templates\/${TEMPLATE_NAME}'/title: 'Templates\/${NEW_NAME}'/g" "$NEW_DIR/${NEW_NAME}.stories.tsx"
+    sed -i "s/component: ${TEMPLATE_NAME}/component: ${NEW_NAME}/g" "$NEW_DIR/${NEW_NAME}.stories.tsx"
+    sed -i "s/Meta<typeof ${TEMPLATE_NAME}>/Meta<typeof ${NEW_NAME}>/g" "$NEW_DIR/${NEW_NAME}.stories.tsx"
+    sed -i "s/ \* ${TEMPLATE_NAME} as/ \* ${NEW_NAME} as/g" "$NEW_DIR/${NEW_NAME}.stories.tsx"
+    sed -i "s/<${TEMPLATE_NAME} /<${NEW_NAME} /g" "$NEW_DIR/${NEW_NAME}.stories.tsx"
+    log_success "Stories file updated"
+else
+    log_warning "Stories file not found, skipping stories update"
+fi
 
 # Step 5: Update index.ts
 log_info "Updating index.ts..."
@@ -248,16 +308,27 @@ else
 fi
 
 # Check 3: New files exist
-NEW_FILES=(
+NEW_REQUIRED_FILES=(
     "$NEW_NAME.tsx"
-    "$NEW_NAME.stories.tsx"
     "index.ts"
 )
 
-for file in "${NEW_FILES[@]}"; do
+NEW_OPTIONAL_FILES=(
+    "$NEW_NAME.stories.tsx"
+)
+
+for file in "${NEW_REQUIRED_FILES[@]}"; do
     if [ ! -f "$NEW_DIR/$file" ]; then
         log_error "Expected file missing: $file"
         POSTCHECK_FAILED=1
+    else
+        log_success "Found: $file"
+    fi
+done
+
+for file in "${NEW_OPTIONAL_FILES[@]}"; do
+    if [ ! -f "$NEW_DIR/$file" ]; then
+        log_warning "Optional file not found: $file"
     else
         log_success "Found: $file"
     fi

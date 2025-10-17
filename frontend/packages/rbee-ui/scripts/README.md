@@ -7,13 +7,36 @@ Removes the "Template" suffix from a template directory and updates all referenc
 ### Usage
 
 ```bash
-./scripts/rename-template.sh <TemplateName>
+./scripts/rename-template.sh <TemplateName> [--force] [--skip-git-check]
 ```
 
-### Example
+### Options
 
+- `--force` - Skip all confirmation prompts (useful for batch operations)
+- `--skip-git-check` - Skip git working directory check
+
+### Examples
+
+**Interactive mode (default):**
 ```bash
 ./scripts/rename-template.sh ProvidersSecurityTemplate
+```
+
+**Force mode (no prompts):**
+```bash
+./scripts/rename-template.sh ProvidersSecurityTemplate --force
+```
+
+**Skip git check:**
+```bash
+./scripts/rename-template.sh ProvidersSecurityTemplate --skip-git-check
+```
+
+**Batch rename multiple templates:**
+```bash
+for template in EnterpriseHeroTemplate EnterpriseCTATemplate; do
+  ./scripts/rename-template.sh "$template" --force --skip-git-check
+done
 ```
 
 This will:
@@ -28,8 +51,9 @@ This will:
 **Preflight Checks:**
 - ✓ Template directory exists
 - ✓ Target directory doesn't already exist
-- ✓ Required files exist (`.tsx`, `.stories.tsx`, `index.ts`)
-- ✓ Git working directory status
+- ✓ Required files exist (`.tsx`, `index.ts`)
+- ⚠ Optional files (`.stories.tsx`) - warns if missing but continues
+- ✓ Git working directory status (can be skipped with `--skip-git-check`)
 
 **Operations:**
 1. Rename directory
@@ -56,6 +80,8 @@ This will:
 
 ### Notes
 
-- The script will prompt for confirmation before making changes
-- It's recommended to have a clean git working directory
+- The script will prompt for confirmation before making changes (unless `--force` is used)
+- It's recommended to have a clean git working directory (or use `--skip-git-check`)
 - TypeScript type checking is optional but recommended
+- Stories files are now optional - the script will warn but continue if missing
+- Use `--force` for batch operations or CI/CD pipelines

@@ -154,7 +154,7 @@ export const InNavigation: Story = {
           <IconButton>
             <Menu />
           </IconButton>
-          <span className="text-lg font-semibold">Orchyra</span>
+          <span className="text-lg font-semibold">rbee</span>
         </div>
         <div className="flex items-center gap-2">
           <IconButton>

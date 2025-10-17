@@ -173,8 +173,8 @@ cat run.log | less  # Now safe, file is complete
 
 ## 6. Vue/Frontend Rules
 
-- ✅ **Design tokens:** `@import 'orchyra-storybook/styles/tokens.css'`
-- ✅ **Components:** `import { Button } from 'orchyra-storybook/stories'`
+- ✅ **Design tokens:** `@import '@rbee-ui/styles/tokens.css'`
+- ✅ **Components:** `import { Button } from '@rbee-ui/stories'`
 - ❌ **NO relative imports:** `'../../../../../libs/storybook/stories'`
 - ✅ **File naming:** `CamelCase.vue`
 - ✅ **Workspace boundaries:** Use package entry points, never `../../`

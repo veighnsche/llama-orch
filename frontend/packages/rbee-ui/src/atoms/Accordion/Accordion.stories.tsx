@@ -39,9 +39,9 @@ export const Default: Story = {
   render: () => (
     <Accordion type="single" collapsible className="w-[500px]">
       <AccordionItem value="item-1">
-        <AccordionTrigger>What is Orchyra?</AccordionTrigger>
+        <AccordionTrigger>What is rbee?</AccordionTrigger>
         <AccordionContent>
-          Orchyra is a private LLM hosting platform based in the Netherlands. We make it easy to deploy and manage
+          rbee is a private LLM hosting platform based in the Netherlands. We make it easy to deploy and manage
           open-source language models with enterprise-grade security and compliance.
         </AccordionContent>
       </AccordionItem>
@@ -119,9 +119,9 @@ export const InFAQContext: Story = {
       </div>
       <Accordion type="single" collapsible className="w-full">
         <AccordionItem value="what-is">
-          <AccordionTrigger>What is Orchyra?</AccordionTrigger>
+          <AccordionTrigger>What is rbee?</AccordionTrigger>
           <AccordionContent>
-            Orchyra is a private LLM hosting platform that allows you to deploy and manage open-source language models
+            rbee is a private LLM hosting platform that allows you to deploy and manage open-source language models
             with enterprise-grade security.
           </AccordionContent>
         </AccordionItem>

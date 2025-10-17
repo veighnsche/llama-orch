@@ -7,7 +7,7 @@
 
 ## Brand Identity
 
-**Name:** llama-orch (technical) / Orchyra (marketing)  
+**Name:** rbee  
 **Tagline:** "EU-Native LLM Inference with Full Audit Trails"  
 **Positioning:** GDPR-compliant LLM inference for EU businesses
 
