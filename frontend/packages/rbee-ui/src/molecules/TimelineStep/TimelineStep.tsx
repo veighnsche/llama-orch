@@ -1,4 +1,4 @@
-import { cn } from '@rbee/ui/utils'
+import { cn, parseInlineMarkdown } from '@rbee/ui/utils'
 import type { ReactNode } from 'react'
 
 export interface TimelineStepProps {
@@ -51,7 +51,7 @@ export function TimelineStep({ timestamp, title, description, className, variant
     >
       <div className="text-xs text-muted-foreground">{timestamp}</div>
       <div className="font-semibold text-foreground mt-1">{title}</div>
-      {description && <p className="mt-1 text-sm text-muted-foreground">{description}</p>}
+      {description && <p className="mt-1 text-sm text-muted-foreground">{parseInlineMarkdown(description)}</p>}
     </div>
   )
 }

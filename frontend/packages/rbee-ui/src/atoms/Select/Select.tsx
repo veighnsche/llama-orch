@@ -31,9 +31,11 @@ function SelectTrigger({
       data-slot="select-trigger"
       data-size={size}
       className={cn(
-        "border-input data-[placeholder]:text-slate-400 [&_svg:not([class*='text-'])]:text-muted-foreground bg-white dark:bg-input/30 hover:border-slate-400 dark:hover:bg-input/50 flex w-fit items-center justify-between gap-2 rounded-md border px-3 py-2 text-sm whitespace-nowrap transition-[color,box-shadow,border-color] disabled:cursor-not-allowed disabled:opacity-50 data-[size=default]:h-9 data-[size=sm]:h-8 *:data-[slot=select-value]:line-clamp-1 *:data-[slot=select-value]:flex *:data-[slot=select-value]:items-center *:data-[slot=select-value]:gap-2 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
+        "border-input data-[placeholder]:text-slate-400 dark:data-[placeholder]:text-[#8b9bb0] [&_svg:not([class*='text-'])]:text-muted-foreground bg-white dark:bg-[color:var(--background)] hover:border-slate-400 dark:hover:bg-input/50 flex w-fit items-center justify-between gap-2 rounded-md border px-3 py-2 text-sm whitespace-nowrap transition-[color,box-shadow,border-color] disabled:cursor-not-allowed data-[size=default]:h-9 data-[size=sm]:h-8 *:data-[slot=select-value]:line-clamp-1 *:data-[slot=select-value]:flex *:data-[slot=select-value]:items-center *:data-[slot=select-value]:gap-2 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
         '[box-shadow:inset_0_1px_0_rgba(15,23,42,0.04),0_1px_2px_rgba(15,23,42,0.04)]',
+        'dark:[box-shadow:inset_0_1px_0_rgba(255,255,255,0.04),0_1px_2px_rgba(0,0,0,0.25)]',
         'focus-visible:border-ring',
+        'disabled:bg-[#1a2435] disabled:text-[#6c7a90] disabled:border-[#223047] disabled:data-[placeholder]:text-[#6c7a90]',
         focusRing,
         'aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive',
         className,

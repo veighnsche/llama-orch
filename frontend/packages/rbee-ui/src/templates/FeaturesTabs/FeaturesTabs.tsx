@@ -4,6 +4,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@rbee/ui/atoms/Tabs'
 import { BulletListItem } from '@rbee/ui/molecules/BulletListItem'
 import { Check } from 'lucide-react'
 import type { ReactNode } from 'react'
+import { cn, parseInlineMarkdown } from '@rbee/ui/utils'
 
 export interface TabConfig {
   value: string
@@ -43,7 +44,7 @@ export function FeaturesTabs({ title, description, tabs, defaultTab }: FeaturesT
           <div className="lg:sticky lg:top-24 self-start space-y-6">
             <div>
               <h2 className="text-3xl font-bold tracking-tight text-foreground">{title}</h2>
-              <p className="mt-2 text-muted-foreground">{description}</p>
+              <p className="mt-2 text-muted-foreground">{parseInlineMarkdown(description)}</p>
             </div>
 
             <TabsList aria-label="Core features">
@@ -82,7 +83,10 @@ export function FeaturesTabs({ title, description, tabs, defaultTab }: FeaturesT
                       <h3 className="text-2xl font-bold text-foreground">{tab.label}</h3>
                       <Badge variant="secondary">{tab.badge}</Badge>
                     </div>
-                    <p className="text-muted-foreground leading-relaxed">{tab.description}</p>
+                    <div className="space-y-1">
+                      <div className="text-sm font-medium text-foreground">{tab.subtitle}</div>
+                      <div className="text-xs text-muted-foreground">{parseInlineMarkdown(tab.description)}</div>
+                    </div>
                   </div>
 
                   {tab.content}

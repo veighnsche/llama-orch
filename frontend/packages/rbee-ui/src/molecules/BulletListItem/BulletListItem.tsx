@@ -1,4 +1,4 @@
-import { cn } from '@rbee/ui/utils'
+import { cn, parseInlineMarkdown } from '@rbee/ui/utils'
 import { cva, type VariantProps } from 'class-variance-authority'
 import { Check } from 'lucide-react'
 
@@ -199,7 +199,7 @@ export function BulletListItem({
             <div className="text-xs text-muted-foreground whitespace-nowrap font-sans translate-y-[2px]">{meta}</div>
           )}
         </div>
-        {description && <div className="text-sm text-muted-foreground font-sans">{description}</div>}
+        {description && <div className="text-sm text-muted-foreground font-sans">{parseInlineMarkdown(description)}</div>}
       </div>
     </li>
   )

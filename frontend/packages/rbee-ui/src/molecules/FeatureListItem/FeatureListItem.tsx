@@ -1,10 +1,10 @@
-import { IconPlate } from '@rbee/ui/molecules'
-import { cn } from '@rbee/ui/utils'
-import type * as React from 'react'
+import { IconPlate } from '@rbee/ui/molecules/IconPlate'
+import { cn, parseInlineMarkdown } from '@rbee/ui/utils'
+import type { ReactNode } from 'react'
 
 export interface FeatureListItemProps {
   /** Rendered icon component */
-  icon: React.ReactNode
+  icon: ReactNode
   /** Feature title (bold part) */
   title: string
   /** Feature description */
@@ -32,7 +32,7 @@ export function FeatureListItem({
     <li className={cn('flex items-center gap-3', className)}>
       <IconPlate icon={icon} size={iconSize} shape={iconVariant} tone={iconColor} className="flex-shrink-0" />
       <div className="text-base text-foreground">
-        <strong className="font-semibold">{title}:</strong> {description}
+        <strong className="font-semibold">{title}:</strong> {parseInlineMarkdown(description)}
       </div>
     </li>
   )

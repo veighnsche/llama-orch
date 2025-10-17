@@ -1,7 +1,7 @@
 import { Card, CardContent } from '@rbee/ui/atoms/Card'
 import { BulletListItem } from '@rbee/ui/molecules/BulletListItem'
 import { ButtonCardFooter } from '@rbee/ui/molecules/ButtonCardFooter'
-import { cn } from '@rbee/ui/utils'
+import { cn, parseInlineMarkdown } from '@rbee/ui/utils'
 import { cva } from 'class-variance-authority'
 import type { ReactNode } from 'react'
 
@@ -170,7 +170,7 @@ export function AudienceCard({
               id={descriptionId}
               className="mb-6 min-h-[72px] text-sm leading-relaxed text-muted-foreground sm:text-base"
             >
-              {description}
+              {parseInlineMarkdown(description)}
             </p>
 
             <ul className="mb-8 h-[120px] space-y-3">

@@ -1,6 +1,6 @@
 import { Badge } from '@rbee/ui/atoms/Badge'
 import { IconPlate } from '@rbee/ui/molecules'
-import { cn } from '@rbee/ui/utils'
+import { cn, parseInlineMarkdown } from '@rbee/ui/utils'
 import type { ReactNode } from 'react'
 
 export interface IndustryCardProps {
@@ -48,7 +48,7 @@ export function IndustryCard({ title, copy, icon, color, badge, anchor, classNam
       </h3>
 
       {/* Body copy */}
-      <p className="text-sm leading-relaxed text-muted-foreground">{copy}</p>
+      <p className="text-sm leading-relaxed text-muted-foreground">{parseInlineMarkdown(copy)}</p>
     </article>
   )
 }

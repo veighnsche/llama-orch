@@ -1,4 +1,6 @@
-import { Button, Card, CardContent } from '@rbee/ui/atoms'
+import { Button } from '@rbee/ui/atoms/Button'
+import { Card, CardContent } from '@rbee/ui/atoms/Card'
+import { cn, parseInlineMarkdown } from '@rbee/ui/utils'
 import Link from 'next/link'
 import React from 'react'
 
@@ -47,7 +49,7 @@ export function CTARail({ heading, description, buttons, links, footnote, classN
     <Card className="border-primary/20 bg-primary/5">
       <CardContent className="p-6 text-center">
         <p className="mb-6 text-lg font-semibold text-foreground">{heading}</p>
-        {description && <p className="mb-6 text-foreground/85">{description}</p>}
+        {description && <p className="mb-6 text-foreground/85">{parseInlineMarkdown(description)}</p>}
 
         <div className="flex flex-col items-center justify-center gap-3 sm:flex-row">
           {buttons.map((button, idx) => (

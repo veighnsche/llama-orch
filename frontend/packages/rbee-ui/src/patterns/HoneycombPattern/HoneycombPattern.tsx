@@ -13,7 +13,7 @@ export interface HoneycombPatternProps {
 }
 
 export const HoneycombPattern = React.forwardRef<HTMLDivElement, HoneycombPatternProps>(
-  ({ className, id, opacity = 0.1, size = 'large', fadeDirection = 'radial' }, ref) => {
+  ({ className, id, opacity = 0.2, size = 'large', fadeDirection = 'radial' }, ref) => {
     const patternId = `honeycomb-${id}`
     const maskId = `fade-mask-${id}`
     const gradientId = `fade-gradient-${id}`
@@ -23,33 +23,33 @@ export const HoneycombPattern = React.forwardRef<HTMLDivElement, HoneycombPatter
         <svg className="w-full h-full text-muted-foreground" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
           <defs>
             {size === 'small' ? (
-              <pattern id={patternId} x="0" y="0" width="40" height="69.28" patternUnits="userSpaceOnUse">
+              <pattern id={patternId} x="0" y="0" width="50" height="86.6" patternUnits="userSpaceOnUse">
                 <path
-                  d="M20 47.12L0 35.71L0 11.43L20 0L40 11.43L40 35.71L20 47.12L20 69.28"
+                  d="M25 58.9L0 44.64L0 14.29L25 0L50 14.29L50 44.64L25 58.9L25 86.6"
                   fill="none"
                   stroke="currentColor"
-                  strokeWidth="0.5"
+                  strokeWidth="1.5"
                 />
                 <path
-                  d="M20 0L20 24.28L0 35.71L0 60L20 69.28L40 60L40 35.71L20 24.28"
+                  d="M25 0L25 30.35L0 44.64L0 75L25 86.6L50 75L50 44.64L25 30.35"
                   fill="none"
                   stroke="currentColor"
-                  strokeWidth="0.5"
+                  strokeWidth="1.5"
                 />
               </pattern>
             ) : (
-              <pattern id={patternId} x="0" y="0" width="112" height="200" patternUnits="userSpaceOnUse">
+              <pattern id={patternId} x="0" y="0" width="140" height="250" patternUnits="userSpaceOnUse">
                 <path
-                  d="M56 132L0 100L0 32L56 0L112 32L112 100L56 132L56 200"
+                  d="M70 165L0 125L0 40L70 0L140 40L140 125L70 165L70 250"
                   fill="none"
                   stroke="currentColor"
-                  strokeWidth="0.5"
+                  strokeWidth="1.5"
                 />
                 <path
-                  d="M56 0L56 68L0 100L0 168L56 200L112 168L112 100L56 68"
+                  d="M70 0L70 85L0 125L0 210L70 250L140 210L140 125L70 85"
                   fill="none"
                   stroke="currentColor"
-                  strokeWidth="0.5"
+                  strokeWidth="1.5"
                 />
               </pattern>
             )}

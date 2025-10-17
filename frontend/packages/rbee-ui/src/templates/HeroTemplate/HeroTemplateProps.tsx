@@ -126,18 +126,6 @@ export type HeroLayout = {
 }
 
 // ────────────────────────────────────────────────────────────────────────────
-// Background Types
-// ────────────────────────────────────────────────────────────────────────────
-
-export type BackgroundVariant = 'gradient' | 'radial' | 'honeycomb' | 'custom'
-
-export type HeroBackground =
-  | { variant: 'gradient' }
-  | { variant: 'radial' }
-  | { variant: 'honeycomb'; size?: 'small' | 'large'; fadeDirection?: 'radial' | 'bottom' }
-  | { variant: 'custom'; className: string }
-
-// ────────────────────────────────────────────────────────────────────────────
 // Main Props
 // ────────────────────────────────────────────────────────────────────────────
 
@@ -174,9 +162,6 @@ export interface HeroTemplateProps {
 
   /** Layout configuration */
   layout?: HeroLayout
-
-  /** Background configuration */
-  background?: HeroBackground
 
   /** Padding variant */
   padding?: 'default' | 'compact' | 'spacious'

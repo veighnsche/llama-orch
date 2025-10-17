@@ -1,6 +1,6 @@
 import { CardDescription, CardHeader, CardTitle } from '@rbee/ui/atoms'
 import { IconPlate } from '@rbee/ui/molecules'
-import { cn } from '@rbee/ui/utils'
+import { cn, parseInlineMarkdown } from '@rbee/ui/utils'
 import type * as React from 'react'
 
 export interface IconCardHeaderProps {
@@ -63,10 +63,8 @@ export function IconCardHeader({
           shape="rounded"
         />
         <div className="flex-1">
-          <CardTitle id={titleId} className={titleClassName}>
-            {title}
-          </CardTitle>
-          {subtitle && <CardDescription className={subtitleClassName}>{subtitle}</CardDescription>}
+          <h3 className="text-xl font-semibold text-card-foreground mb-1">{title}</h3>
+          {subtitle && <p className="text-sm text-muted-foreground">{parseInlineMarkdown(subtitle)}</p>}
         </div>
       </div>
     </CardHeader>

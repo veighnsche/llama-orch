@@ -158,26 +158,30 @@
 }
 
 .dark {
-    /* Base colors - dark mode overrides */
-    --background: #020617;
-    --foreground: #f1f5f9;
-    --card: #1e293b;
-    --card-foreground: #f1f5f9;
-    --popover: #1e293b;
-    --popover-foreground: #f1f5f9;
-    --primary: #b45309;
+    /* Canvas & surfaces: deepen canvas slightly; lighten surfaces a touch for readable steps */
+    --background: #0b1220; /* deep slate/indigo mix; softer than #020617 */
+    --foreground: #e5eaf1; /* slightly softer than #f1f5f9 to reduce glare */
+
+    --card: #141c2a; /* +~8% over canvas for clear step from bg */
+    --card-foreground: #e5eaf1;
+    --popover: #161f2e; /* tiny lift over card to separate overlays */
+    --popover-foreground: #e5eaf1;
+
+    /* Brand system (dark): keep brand intact but slightly restrain chroma */
+    --primary: #b45309; /* amber-700 (current) – authority */
     --primary-foreground: #ffffff;
-    --secondary: #0f172a;
-    --secondary-foreground: #f1f5f9;
-    --muted: #0f172a;
-    --muted-foreground: #94a3b8;
-    --accent: #b45309;
-    --accent-foreground: #ffffff;
-    --destructive: #dc2626;
-    --destructive-foreground: #ffffff;
-    --border: #334155;
-    --input: #334155;
-    --ring: #b45309;
+    --accent: #d97706; /* amber-600 for hover/highlights */
+    --accent-foreground: #101522; /* readable text on pale ambers if used */
+
+    /* Structure & interaction */
+    --secondary: #0f172a; /* keep */
+    --secondary-foreground: #e5eaf1;
+    --muted: #0e1726; /* slightly lighter than secondary for chips/rows */
+    --muted-foreground: #a9b4c5; /* improve readability */
+
+    --border: #263347; /* softer than #334155 to avoid heavy outlines */
+    --input: #2a3a51; /* input shells slightly brighter than border */
+    --ring: #b45309; /* keep brand ring in dark for strong focus */
 
     /* Chart colors - dark mode */
     --chart-1: #b45309;
@@ -186,35 +190,43 @@
     --chart-4: #8b5cf6;
     --chart-5: #ef4444;
 
-    /* Terminal colors - dark mode (same as light) */
+    /* Terminal colors - dark mode */
     --terminal-red: #ef4444;
     --terminal-amber: #b45309;
     --terminal-green: #10b981;
 
     /* Code/Console backgrounds - dark mode */
-    --console-bg: #020617;
-    --console-fg: #f1f5f9;
+    --console-bg: #0a111e; /* align with canvas tone */
+    --console-fg: #e5eaf1;
 
-    /* Syntax highlighting colors - dark mode */
-    --syntax-keyword: #60a5fa; /* lighter blue for better contrast */
-    --syntax-import: #a78bfa; /* lighter purple for better contrast */
-    --syntax-string: #fbbf24; /* lighter amber for better contrast */
-    --syntax-function: #34d399; /* lighter green for better contrast */
-    --syntax-comment: #94a3b8; /* lighter muted for better contrast */
+    /* Syntax highlighting colors - dark mode (subtle desaturation to reduce neon) */
+    --syntax-keyword: #8bb4ff; /* softer blue than #60a5fa */
+    --syntax-import: #b6a4ff; /* softer violet */
+    --syntax-string: #f4c35a; /* softer amber */
+    --syntax-function: #6ee7b7; /* minty green */
+    --syntax-comment: #9aa8bf; /* readable muted */
 
     /* Error state colors - dark mode */
     --error-light: #b91c1c;
     --error-dark: #ef4444;
 
     /* Sidebar colors - dark mode */
-    --sidebar: #020617;
-    --sidebar-foreground: #f1f5f9;
+    --sidebar: #0b1220;
+    --sidebar-foreground: #e5eaf1;
     --sidebar-primary: #b45309;
     --sidebar-primary-foreground: #ffffff;
-    --sidebar-accent: #b45309;
-    --sidebar-accent-foreground: #ffffff;
-    --sidebar-border: #334155;
+    --sidebar-accent: #d97706;
+    --sidebar-accent-foreground: #0b1220;
+    --sidebar-border: #263347;
     --sidebar-ring: #b45309;
+
+    /* Elevation (dark-friendly, ambient + subtle highlight) */
+    --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.35), 0 0 0 1px rgba(255, 255, 255, 0.02) inset;
+    --shadow-sm: 0 2px 6px rgba(0, 0, 0, 0.4), 0 1px 0 rgba(255, 255, 255, 0.03) inset;
+    --shadow-md: 0 6px 16px rgba(0, 0, 0, 0.45), 0 1px 0 rgba(255, 255, 255, 0.04) inset;
+    --shadow-lg: 0 14px 30px rgba(0, 0, 0, 0.5), 0 1px 0 rgba(255, 255, 255, 0.05) inset;
+    --shadow-xl: 0 28px 48px rgba(0, 0, 0, 0.6), 0 1px 0 rgba(255, 255, 255, 0.06) inset;
+    --shadow-2xl: 0 40px 75px rgba(0, 0, 0, 0.65);
 }
 
 /* ========================================
@@ -267,4 +279,60 @@
     .animate-fade-in-up {
         animation: none;
     }
+}
+
+/* ========================================
+ * DARK MODE POLISH
+ * Selection, caret, scrollbars
+ * ======================================== */
+
+/* Selection colors (dark) */
+.dark ::selection {
+    background: rgba(185, 83, 9, 0.32); /* amber-700 wash */
+    color: #ffffff;
+}
+
+.dark ::-moz-selection {
+    background: rgba(185, 83, 9, 0.32);
+    color: #ffffff;
+}
+
+/* Caret color (dark) */
+.dark input,
+.dark textarea {
+    caret-color: #f59e0b; /* accent caret */
+}
+
+/* Scrollbar styling (dark) */
+.dark ::-webkit-scrollbar {
+    height: 10px;
+    width: 10px;
+}
+
+.dark ::-webkit-scrollbar-thumb {
+    background: #263347;
+    border-radius: 9999px;
+}
+
+.dark ::-webkit-scrollbar-thumb:hover {
+    background: #2f3f56;
+}
+
+.dark ::-webkit-scrollbar-track {
+    background: #0b1220;
+}
+
+/* Code block selection (dark) */
+.dark pre ::selection,
+.dark code ::selection {
+    background: rgba(255, 255, 255, 0.1);
+}
+
+/* Inline code styling (dark) */
+.dark :not(pre) > code {
+    font-weight: 500;
+    color: #e8eef7;
+    background: rgba(255, 255, 255, 0.05);
+    padding: 0.125rem 0.375rem;
+    border-radius: 0.25rem;
 }

@@ -13,7 +13,8 @@ import {
   TemplateBackground,
   type TemplateBackgroundProps,
 } from '@rbee/ui/organisms'
-import { cn } from '@rbee/ui/utils'
+import { Badge } from '@rbee/ui/atoms/Badge'
+import { cn, parseInlineMarkdown } from '@rbee/ui/utils'
 import type { ReactNode } from 'react'
 
 export interface TemplateContainerProps {
@@ -279,7 +280,9 @@ export function TemplateContainer({
                 </HTag>
 
                 {description && (
-                  <p className="text-lg text-muted-foreground leading-relaxed">{description}</p>
+                  <p className="text-lg text-muted-foreground leading-relaxed">
+                    {typeof description === 'string' ? parseInlineMarkdown(description) : description}
+                  </p>
                 )}
 
                 {divider && <div className="h-px bg-border/60 mt-6" />}

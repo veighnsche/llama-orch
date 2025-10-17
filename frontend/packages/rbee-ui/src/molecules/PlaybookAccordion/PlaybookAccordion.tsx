@@ -3,7 +3,9 @@
 import { Table, TableBody, TableCell, TableRow } from '@rbee/ui/atoms/Table'
 import type { IconPlateProps } from '@rbee/ui/molecules'
 import { IconPlate } from '@rbee/ui/molecules'
-import { type ReactNode, useEffect, useRef } from 'react'
+import { cn, parseInlineMarkdown } from '@rbee/ui/utils'
+import type { ReactNode } from 'react'
+import { useEffect, useRef } from 'react'
 
 type Severity = 'destructive' | 'primary' | 'chart-2' | 'chart-3'
 
@@ -164,7 +166,7 @@ export function PlaybookItem({
         </span>
       </summary>
       <div className="px-6 pb-5 animate-in fade-in duration-200 group-open:border-t group-open:border-border/80">
-        <p className="text-sm text-muted-foreground/90 mb-4 mt-4 max-w-3xl">{description}</p>
+        <p className="text-sm text-muted-foreground/90 mb-4 mt-4 max-w-3xl">{parseInlineMarkdown(description)}</p>
         <Table>
           <TableBody>
             {checks.map((check, i) => (
@@ -234,7 +236,7 @@ export function PlaybookHeader({
           <span className="inline-flex items-center justify-center rounded-md border border-transparent bg-secondary text-secondary-foreground px-2 py-0.5 text-xs font-medium">
             {title}
           </span>
-          <span className="text-sm font-semibold text-foreground">{description}</span>
+          <span className="text-sm font-semibold text-foreground">{parseInlineMarkdown(description)}</span>
         </div>
         <div className="flex items-center gap-2 flex-wrap">
           {filterCategories.map((category) => {

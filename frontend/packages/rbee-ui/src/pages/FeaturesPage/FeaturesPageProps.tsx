@@ -1,3 +1,24 @@
+/**
+ * REUSE AUDIT NOTES (Phase 1)
+ * ===========================
+ * ✅ TerminalWindow: Already used throughout (CrossNode, MultiBackend, RealTime)
+ * ✅ StatusKPI: Used for Error Handling and RealTime Progress KPIs
+ * ✅ TimelineStep: Used in RealTime Progress cancellation timeline
+ * ✅ FeatureInfoCard: Used in CrossNode benefits (compact variant)
+ * ✅ CrateCard: Used in Security section for crate grid
+ * ✅ IconCardHeader: Used consistently across all card-based sections
+ * ✅ CodeBlock: Used in FeaturesTabs for API examples
+ * ✅ GPUUtilizationBar: Used in FeaturesTabs GPU tab
+ * ✅ Badge: Used for eyebrows, policy badges, and status indicators
+ *
+ * SCHEMA EVOLUTION (Phase 3)
+ * ==========================
+ * - Normalized terminal props: { title, ariaLabel, content, copyText, footer }
+ * - Normalized KPI props: { icon, color, label, value, progress? }
+ * - Normalized card props: { icon, title, description, href?, tone }
+ * - Added container enrichment: headingId, kicker, divider, ribbon
+ */
+
 import { Badge, CacheLayer, DiagnosticGrid, DistributedNodes, ProgressTimeline } from '@rbee/ui/atoms'
 import type { TemplateContainerProps } from '@rbee/ui/molecules'
 import { CodeBlock } from '@rbee/ui/molecules/CodeBlock'
@@ -47,6 +68,7 @@ import {
 /**
  * Features tabs content - Four core capabilities (API, GPU, Scheduler, SSE)
  * with interactive examples
+ * Phase 4.1: Tightened copy, ensured highlight.text ≤ 8 words
  */
 export const featuresFeaturesTabsProps: FeaturesTabsProps = {
   title: 'Core capabilities',
@@ -59,7 +81,7 @@ export const featuresFeaturesTabsProps: FeaturesTabsProps = {
       mobileLabel: 'API',
       subtitle: 'Drop-in API',
       badge: 'Drop-in',
-      description: 'Swap endpoints, keep your code. Works with Zed, Cursor, Continue—any OpenAI client.',
+      description: 'Swap endpoints, keep code. Works with Zed, Cursor, Continue.',
       content: (
         <CodeBlock
           code={`# Before: OpenAI
@@ -84,7 +106,7 @@ export OPENAI_API_BASE=http://localhost:8080/v1`}
       mobileLabel: 'GPU',
       subtitle: 'Use every GPU',
       badge: 'Scale',
-      description: 'Run across CUDA, Metal, and CPU backends. Use every GPU across your network.',
+      description: 'Run across CUDA, Metal, and CPU on every machine.',
       content: (
         <div className="space-y-3">
           <GPUUtilizationBar label="RTX 4090 #1" percentage={92} />
@@ -110,7 +132,7 @@ export OPENAI_API_BASE=http://localhost:8080/v1`}
       mobileLabel: 'Rhai',
       subtitle: 'Route with Rhai',
       badge: 'Control',
-      description: 'Write routing rules. Send 70B to multi-GPU, images to CUDA, everything else to cheapest.',
+      description: 'Write routing rules. 70B → multi-GPU; images → CUDA; else cheapest.',
       content: (
         <CodeBlock
           code={`// Custom routing logic
@@ -140,7 +162,7 @@ else {
       mobileLabel: 'SSE',
       subtitle: 'Live job stream',
       badge: 'Observe',
-      description: 'See model loading, token generation, and costs stream in as they happen.',
+      description: 'Watch model load, tokens, and costs stream live.',
       content: (
         <TerminalWindow
           showChrome={false}
@@ -191,12 +213,15 @@ else {
 
 /**
  * Cross-Node Orchestration container - Layout configuration
+ * Phase 2: Added headingId, divider, layout split
+ * Phase 5: Tightened copy
  */
 export const crossNodeOrchestrationContainerProps: Omit<TemplateContainerProps, 'children'> = {
+  headingId: 'cross-node-orchestration',
   eyebrow: <Badge variant="secondary">Distributed execution</Badge>,
   title: 'Cross-Pool Orchestration',
   description:
-    'Seamlessly orchestrate AI workloads across your entire network. One command runs inference on any machine in your pool.',
+    'Seamlessly orchestrate AI workloads across your network. One command runs on any machine in your pool.',
   background: {
     variant: 'background',
     decoration: (
@@ -208,10 +233,14 @@ export const crossNodeOrchestrationContainerProps: Omit<TemplateContainerProps, 
   paddingY: '2xl',
   maxWidth: '6xl',
   align: 'center',
+  divider: true,
+  layout: 'split',
 }
 
 /**
  * Cross-Node Orchestration - Distributed execution across network
+ * Phase 4.2: Normalized terminal structure, tightened benefit titles to ≤ 3 words
+ * Phase 5: Copy tightening applied
  */
 export const crossNodeOrchestrationProps: CrossNodeOrchestrationProps = {
   terminalContent: (
@@ -242,17 +271,17 @@ export const crossNodeOrchestrationProps: CrossNodeOrchestrationProps = {
   benefits: [
     {
       icon: <CheckCircle2 className="size-6" />,
-      title: 'SSH Tunneling',
+      title: 'SSH tunneling',
       description: 'Secure connections over SSH.',
     },
     {
       icon: <CheckCircle2 className="size-6" />,
-      title: 'Auto Shutdown',
+      title: 'Auto shutdown',
       description: 'Workers exit cleanly after tasks.',
     },
     {
       icon: <CheckCircle2 className="size-6" />,
-      title: 'Minimal Footprint',
+      title: 'Minimal footprint',
       description: 'No persistent daemons on nodes.',
     },
   ],
@@ -267,7 +296,7 @@ export const crossNodeOrchestrationProps: CrossNodeOrchestrationProps = {
   ],
   legendItems: [{ label: 'On-demand start' }, { label: 'Clean shutdown' }, { label: 'No daemon drift' }],
   provisioningTitle: 'Automatic Worker Provisioning',
-  provisioningSubtitle: 'rbee spawns workers via SSH on demand and shuts them down cleanly. No manual daemons.',
+  provisioningSubtitle: 'Spawns workers over SSH on demand. Cleans up automatically. No daemons.',
 }
 
 // TO BE CONTINUED - File is getting large, will split into multiple write operations
@@ -276,11 +305,14 @@ export const crossNodeOrchestrationProps: CrossNodeOrchestrationProps = {
 
 /**
  * Intelligent Model Management container - Layout configuration
+ * Phase 2: Added headingId, kicker (moved from eyebrow), divider
+ * Phase 5: Copy tightening
  */
 export const intelligentModelManagementContainerProps: Omit<TemplateContainerProps, 'children'> = {
-  eyebrow: <Badge variant="secondary">Provision • Cache • Validate</Badge>,
+  headingId: 'intelligent-model-management',
+  kicker: 'Provision • Cache • Validate',
   title: 'Intelligent Model Management',
-  description: 'Automatic model provisioning, caching, and validation. Download once; use everywhere.',
+  description: 'Download once. Cache everywhere. Verified.',
   background: {
     variant: 'background',
     decoration: (
@@ -292,10 +324,12 @@ export const intelligentModelManagementContainerProps: Omit<TemplateContainerPro
   paddingY: '2xl',
   maxWidth: '5xl',
   align: 'center',
+  divider: true,
 }
 
 /**
  * Intelligent Model Management - Auto-provisioning and caching
+ * Phase 4.3: Renamed modelSources to sources for consistency
  */
 export const intelligentModelManagementProps: IntelligentModelManagementProps = {
   catalogTitle: 'Automatic Model Catalog',
@@ -362,27 +396,32 @@ export const intelligentModelManagementProps: IntelligentModelManagementProps = 
 
 /**
  * Multi-Backend GPU container - Layout configuration
+ * Phase 2: Added headingId, kicker, divider
+ * Phase 5: Copy tightening
  */
 export const multiBackendGpuContainerProps: Omit<TemplateContainerProps, 'children'> = {
+  headingId: 'multi-backend-gpu',
+  kicker: 'Explicit device selection',
   title: 'Multi-Backend GPU Support',
   description:
-    'CUDA, Metal, and CPU backends with explicit device selection. No silent fallbacks—you control the hardware.',
+    'No silent fallbacks. You choose the backend.',
   background: {
-
     variant: 'background',
-
   },
   paddingY: '2xl',
   maxWidth: '6xl',
   align: 'center',
+  divider: true,
 }
 
 /**
  * Multi-Backend GPU - CUDA, Metal, CPU support
+ * Phase 4.4: Normalized terminal structure, renamed backendDetections to detectedDevices
+ * Phase 5: Copy tightening
  */
 export const multiBackendGpuProps: MultiBackendGpuTemplateProps = {
   policyTitle: 'GPU FAIL FAST policy',
-  policySubtitle: 'No silent fallbacks. Clear errors with suggestions. You choose the backend.',
+  policySubtitle: 'No silent fallbacks. You choose the backend.',
   prohibitedBadges: [
     { label: 'No GPU→CPU fallback', variant: 'destructive' },
     { label: 'No graceful degradation', variant: 'destructive' },
@@ -431,11 +470,15 @@ export const multiBackendGpuProps: MultiBackendGpuTemplateProps = {
 
 /**
  * Error Handling container - Layout configuration
+ * Phase 2: Added headingId, ribbon (19+ scenarios), divider
+ * Phase 5: Copy tightening
  */
 export const errorHandlingContainerProps: Omit<TemplateContainerProps, 'children'> = {
+  headingId: 'error-handling',
   eyebrow: <Badge variant="secondary">Resiliency</Badge>,
   title: 'Comprehensive Error Handling',
-  description: '19+ error scenarios with clear messages and actionable fixes—no cryptic failures.',
+  description: '19+ scenarios with plain-English messages and actionable fixes.',
+  ribbon: { text: '19+ scenarios covered' },
   background: {
     variant: 'background',
     decoration: (
@@ -447,10 +490,12 @@ export const errorHandlingContainerProps: Omit<TemplateContainerProps, 'children
   paddingY: '2xl',
   maxWidth: '6xl',
   align: 'center',
+  divider: true,
 }
 
 /**
  * Error Handling - Comprehensive error scenarios
+ * Phase 4.5: Ensured statusKPIs uses StatusKPI molecule, playbookCategories structure consistent
  */
 export const errorHandlingProps: ErrorHandlingTemplateProps = {
   statusKPIs: [
@@ -719,10 +764,14 @@ export const errorHandlingProps: ErrorHandlingTemplateProps = {
 
 /**
  * Real-Time Progress container - Layout configuration
+ * Phase 2: Added headingId, kicker (SSE narration), divider
+ * Phase 5: Copy tightening
  */
 export const realTimeProgressContainerProps: Omit<TemplateContainerProps, 'children'> = {
+  headingId: 'real-time-progress',
+  kicker: 'SSE narration',
   title: 'Real‑time Progress Tracking',
-  description: 'Live narration of each step—model loading, token generation, resource usage—as it happens.',
+  description: 'Live narration for model load, tokens, and resource usage.',
   background: {
     variant: 'background',
     decoration: (
@@ -734,10 +783,12 @@ export const realTimeProgressContainerProps: Omit<TemplateContainerProps, 'child
   paddingY: '2xl',
   maxWidth: '6xl',
   align: 'center',
+  divider: true,
 }
 
 /**
  * Real-Time Progress - SSE narration and metrics
+ * Phase 4.6: Ensured metricKPIs uses StatGroup with progress support, terminalContent wrapped properly
  */
 export const realTimeProgressProps: RealTimeProgressProps = {
   narrationTitle: 'SSE Narration Architecture',
@@ -848,22 +899,26 @@ export const realTimeProgressProps: RealTimeProgressProps = {
 
 /**
  * Security & Isolation container - Layout configuration
+ * Phase 2: Added headingId, kicker (Zero-trust by default), divider
+ * Phase 5: Copy tightening
  */
 export const securityIsolationContainerProps: Omit<TemplateContainerProps, 'children'> = {
+  headingId: 'security-isolation',
+  kicker: 'Zero-trust by default',
   title: 'Security & Isolation',
-  description: 'Defense-in-depth with six focused Rust crates. Enterprise-grade security for your homelab.',
+  description: 'Defense-in-depth with focused Rust crates and process isolation.',
   background: {
-
     variant: 'background',
-
   },
   paddingY: '2xl',
   maxWidth: '6xl',
   align: 'center',
+  divider: true,
 }
 
 /**
  * Security & Isolation - Defense-in-depth architecture
+ * Phase 4.7: Standardized securityCrates using SecurityCard/CrateCard, collapsed zeroTrust structure
  */
 export const securityIsolationProps: SecurityIsolationProps = {
   cratesTitle: 'Six Specialized Security Crates',
@@ -920,22 +975,24 @@ export const securityIsolationProps: SecurityIsolationProps = {
 
 /**
  * Additional Features Grid container - Layout configuration
+ * Phase 2: Added headingId, kicker (moved from eyebrow), divider
  */
 export const additionalFeaturesGridContainerProps: Omit<TemplateContainerProps, 'children'> = {
-  eyebrow: <Badge variant="secondary">Capabilities overview</Badge>,
+  headingId: 'additional-features',
+  kicker: 'Capabilities overview',
   title: 'Everything You Need for AI Infrastructure',
   background: {
-
     variant: 'background',
-
   },
   paddingY: '2xl',
   maxWidth: '6xl',
   align: 'center',
+  divider: true,
 }
 
 /**
  * Additional Features Grid - Capabilities overview
+ * Phase 4.8: Standardized card layout using FeatureCard organism (iconTone → tone)
  */
 export const additionalFeaturesGridProps: AdditionalFeaturesGridProps = {
   rows: [
@@ -1012,6 +1069,7 @@ export const additionalFeaturesGridProps: AdditionalFeaturesGridProps = {
 
 /**
  * Email capture content - Newsletter signup for features page
+ * Phase 4.9: Uses shared EmailCapture molecule
  */
 export const featuresEmailCaptureProps: EmailCaptureProps = {
   headline: 'Stay updated on rbee development',
@@ -1037,8 +1095,10 @@ export const featuresEmailCaptureProps: EmailCaptureProps = {
 
 /**
  * Email capture container - Background wrapper
+ * Phase 2: Added headingId for newsletter anchor
  */
 export const featuresEmailCaptureContainerProps: Omit<TemplateContainerProps, 'children'> = {
+  headingId: 'newsletter',
   title: null,
   background: {
     variant: 'background',
@@ -1050,12 +1110,15 @@ export const featuresEmailCaptureContainerProps: Omit<TemplateContainerProps, 'c
 
 /**
  * Features tabs container - Background wrapper
+ * Phase 2: Added headingId, divider for core capabilities section
  */
 export const featuresFeaturesTabsContainerProps: Omit<TemplateContainerProps, 'children'> = {
+  headingId: 'core-capabilities',
   title: null,
   background: {
     variant: 'background',
   },
   paddingY: '2xl',
   maxWidth: '7xl',
+  divider: true,
 }

@@ -1,4 +1,4 @@
-import { cn } from '@rbee/ui/utils'
+import { cn, parseInlineMarkdown } from '@rbee/ui/utils'
 
 export interface CrateCardProps {
   /** Crate name */
@@ -28,7 +28,7 @@ export function CrateCard({ name, description, hoverColor = 'hover:border-primar
       className={cn('group rounded-lg bg-background border border-border p-4 transition-colors', hoverColor, className)}
     >
       <div className="font-semibold text-foreground mb-1">{name}</div>
-      <p className="text-sm text-muted-foreground">{description}</p>
+      <p className="text-sm text-muted-foreground">{parseInlineMarkdown(description)}</p>
     </div>
   )
 }

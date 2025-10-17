@@ -2,7 +2,7 @@
 
 import { Badge } from '@rbee/ui/atoms/Badge'
 import { Button } from '@rbee/ui/atoms/Button'
-import { HoneycombPattern } from '@rbee/ui/icons'
+import { parseInlineMarkdown } from '@rbee/ui/utils'
 import { BulletListItem, ComplianceChip, PulseBadge, StatsGrid } from '@rbee/ui/molecules'
 import { ArrowRight, DollarSign, Star } from 'lucide-react'
 import { useEffect, useState } from 'react'
@@ -33,7 +33,6 @@ export function HeroTemplate({
   aside,
   asideAriaLabel,
   layout = {},
-  background = { variant: 'gradient' },
   padding = 'default',
   animations = { enabled: true, stagger: true, direction: 'bottom' },
   headingId = 'hero-title',
@@ -75,35 +74,6 @@ export function HeroTemplate({
     medium: 'max-w-2xl',
     wide: 'max-w-prose',
   }[subcopyMaxWidth]
-
-  // Background rendering
-  const renderBackground = () => {
-    if (background.variant === 'honeycomb') {
-      return (
-        <HoneycombPattern
-          id="hero"
-          size={background.size || 'large'}
-          fadeDirection={background.fadeDirection || 'radial'}
-        />
-      )
-    }
-
-    if (background.variant === 'radial') {
-      return (
-        <div
-          aria-hidden
-          className="pointer-events-none absolute inset-0 bg-[radial-gradient(60rem_40rem_at_20%_-10%,theme(colors.primary/8),transparent)]"
-        />
-      )
-    }
-
-    if (background.variant === 'custom') {
-      return <div aria-hidden className={background.className} />
-    }
-
-    // Default gradient - no extra element needed
-    return null
-  }
 
   // Badge rendering
   const renderBadge = () => {
@@ -391,10 +361,8 @@ export function HeroTemplate({
   return (
     <section
       aria-labelledby={headingId}
-      className={`relative isolate min-h-[calc(100svh-3.5rem)] flex items-center overflow-hidden bg-gradient-to-b from-background to-card ${paddingClasses}`}
+      className={`relative min-h-[calc(100svh-3.5rem)] flex items-center ${paddingClasses}`}
     >
-      {renderBackground()}
-
       <div className="container mx-auto px-4 relative z-10">
         <div className={`grid lg:grid-cols-12 gap-${gap} items-center`}>
           {/* Left: Messaging Stack */}
@@ -406,7 +374,9 @@ export function HeroTemplate({
             {renderHeadline()}
 
             {/* Subcopy */}
-            <p className={`text-xl text-muted-foreground leading-8 ${subcopyMaxWidthClasses}`}>{subcopy}</p>
+            <p className={`text-xl text-muted-foreground leading-8 ${subcopyMaxWidthClasses}`}>
+              {typeof subcopy === 'string' ? parseInlineMarkdown(subcopy) : subcopy}
+            </p>
 
             {/* Proof Elements */}
             {renderProofElements()}
