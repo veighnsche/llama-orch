@@ -6,8 +6,8 @@
 
 use crate::registry::WorkerRegistry;
 use std::sync::Arc;
-use std::time::Duration;
-use tracing::{error, info};
+use std::time::{Duration, SystemTime};
+use tracing::{error, info, warn};
 
 /// Health monitor loop - checks worker health every 30 seconds
 ///
@@ -175,6 +175,70 @@ fn force_kill_worker(pid: u32, worker_id: &str) {
     }
 }
 
+/// TEAM-104: Determine if a worker should be restarted based on restart policy
+///
+/// # Restart Policy
+/// - Maximum 3 restart attempts per worker
+/// - Exponential backoff: 2^restart_count seconds (1s, 2s, 4s)
+/// - Circuit breaker: stop restarting after max attempts
+///
+/// # Arguments
+/// * `worker` - Worker info to check
+///
+/// # Returns
+/// `true` if worker should be restarted, `false` otherwise
+///
+/// # Example
+/// ```rust,no_run
+/// use rbee_hive::registry::WorkerInfo;
+///
+/// if should_restart_worker(&worker) {
+///     // Restart the worker
+///     // 1. Increment restart_count
+///     // 2. Set last_restart = SystemTime::now()
+///     // 3. Spawn new worker with same config
+/// }
+/// ```
+pub fn should_restart_worker(worker: &crate::registry::WorkerInfo) -> bool {
+    const MAX_RESTARTS: u32 = 3;
+    
+    // Check restart count - circuit breaker
+    if worker.restart_count >= MAX_RESTARTS {
+        warn!(
+            worker_id = %worker.id,
+            restart_count = worker.restart_count,
+            "TEAM-104: Worker exceeded max restart attempts (circuit breaker)"
+        );
+        return false;
+    }
+    
+    // Check exponential backoff
+    if let Some(last_restart) = worker.last_restart {
+        let backoff_duration = Duration::from_secs(2u64.pow(worker.restart_count));
+        let elapsed = SystemTime::now()
+            .duration_since(last_restart)
+            .unwrap_or(Duration::ZERO);
+        
+        if elapsed < backoff_duration {
+            info!(
+                worker_id = %worker.id,
+                restart_count = worker.restart_count,
+                backoff_remaining_secs = (backoff_duration - elapsed).as_secs(),
+                "TEAM-104: Worker in backoff period"
+            );
+            return false;
+        }
+    }
+    
+    // Passed all checks - can restart
+    info!(
+        worker_id = %worker.id,
+        restart_count = worker.restart_count,
+        "TEAM-104: Worker eligible for restart"
+    );
+    true
+}
+
 // TEAM-031: Unit tests for monitor module
 #[cfg(test)]
 mod tests {
@@ -212,6 +276,8 @@ mod tests {
             slots_available: 1,
             failed_health_checks: 0,
             pid: None, // TEAM-101: Added pid field
+            restart_count: 0, // TEAM-104: Added restart_count field
+            last_restart: None, // TEAM-104: Added last_restart field
         };
 
         registry.register(worker).await;

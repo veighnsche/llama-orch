@@ -362,6 +362,8 @@ pub async fn given_hive_spawns_worker_process(world: &mut World) {
         slots_available: 1,
         failed_health_checks: 0,
         pid: Some(std::process::id()),
+        restart_count: 0, // TEAM-104: Added restart tracking
+        last_restart: None, // TEAM-104: Added restart tracking
     };
     
     registry.register(worker).await;

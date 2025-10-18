@@ -13,7 +13,7 @@
 //! Created by: TEAM-026
 //! Modified by: TEAM-029, TEAM-030, TEAM-034
 
-use crate::http::{health, middleware::auth_middleware, models, workers};
+use crate::http::{health, metrics, middleware::auth_middleware, models, workers}; // TEAM-104: Added metrics
 use crate::provisioner::ModelProvisioner;
 use crate::registry::WorkerRegistry;
 use axum::{
@@ -71,9 +71,14 @@ pub fn create_router(
     };
 
     // TEAM-102: Split routes into public and protected
+    // TEAM-104: Added /metrics and Kubernetes health endpoints (public)
     let public_routes = Router::new()
-        // Health endpoint (public - no auth required)
-        .route("/v1/health", get(health::handle_health));
+        // Health endpoints (public - no auth required)
+        .route("/v1/health", get(health::handle_health))
+        .route("/health/live", get(health::handle_liveness)) // TEAM-104: Kubernetes liveness
+        .route("/health/ready", get(health::handle_readiness)) // TEAM-104: Kubernetes readiness
+        // TEAM-104: Metrics endpoint (public - Prometheus scraping)
+        .route("/metrics", get(metrics::handle_metrics));
 
     let protected_routes = Router::new()
         // Worker management (protected)

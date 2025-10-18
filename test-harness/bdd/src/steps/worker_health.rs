@@ -109,6 +109,8 @@ pub async fn given_worker_in_state(world: &mut World, state: String) {
             slots_available: 1,
             failed_health_checks: 0,
             pid: None,
+        restart_count: 0, // TEAM-104: Added restart tracking
+        last_restart: None, // TEAM-104: Added restart tracking
         };
         
         let registry = world.hive_registry();
@@ -224,6 +226,8 @@ pub async fn given_worker_idle_for(world: &mut World, minutes: u64) {
             slots_available: 1,
             failed_health_checks: 0,
             pid: None,
+        restart_count: 0, // TEAM-104: Added restart tracking
+        last_restart: None, // TEAM-104: Added restart tracking
         };
         
         let registry = world.hive_registry();

@@ -34,6 +34,8 @@ pub async fn when_register_worker(world: &mut World) {
         last_activity: std::time::SystemTime::now(),
         failed_health_checks: 0,
         pid: None,
+        restart_count: 0, // TEAM-104: Added restart tracking
+        last_restart: None, // TEAM-104: Added restart tracking
     };
     
     // Register worker via WorkerRegistry API

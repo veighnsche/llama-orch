@@ -52,3 +52,11 @@ futures = { workspace = true }
 auth-min = { path = "../shared-crates/auth-min" }
 secrets-management = { path = "../shared-crates/secrets-management" }
 input-validation = { path = "../shared-crates/input-validation" }
+
+# TEAM-104: Observability shared crates
+audit-logging = { path = "../shared-crates/audit-logging" }
+deadline-propagation = { path = "../shared-crates/deadline-propagation" }
+
+# TEAM-104: Prometheus metrics
+prometheus = "0.13"
+lazy_static = "1.4"

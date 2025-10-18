@@ -7,10 +7,13 @@
 //! - Health endpoint (`health`)
 //! - Worker management endpoints (`workers`)
 //! - Model management endpoints (`models`)
+//! - Metrics endpoint (`metrics`) - TEAM-104
 //!
 //! Created by: TEAM-026
+//! Modified by: TEAM-104 (added metrics)
 
 pub mod health;
+pub mod metrics; // TEAM-104: Prometheus metrics endpoint
 pub mod middleware; // TEAM-102: Authentication middleware
 pub mod models;
 pub mod routes;

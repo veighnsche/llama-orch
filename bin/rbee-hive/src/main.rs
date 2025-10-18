@@ -15,6 +15,7 @@
 mod cli;
 mod commands;
 mod http;
+mod metrics; // TEAM-104: Prometheus metrics
 mod monitor;
 mod timeout;
 
