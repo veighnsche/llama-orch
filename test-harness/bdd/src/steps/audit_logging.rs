@@ -217,8 +217,10 @@ pub async fn given_queen_logged_n_events(world: &mut World, count: usize) {
 
 #[given(expr = "audit log file exists at {string}")]
 pub async fn given_audit_log_file_exists(world: &mut World, path: String) {
+    // TEAM-102: Clone path before moving to avoid borrow error
+    let path_clone = path.clone();
     world.audit_log_path = Some(PathBuf::from(path));
-    tracing::info!("Audit log file path set to {}", path);
+    tracing::info!("Audit log file path set to {}", path_clone);
 }
 
 #[when(expr = "I modify audit entry #{int} in the log file")]

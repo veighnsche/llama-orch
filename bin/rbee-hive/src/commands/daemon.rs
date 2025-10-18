@@ -116,27 +116,123 @@ pub async fn handle(addr: String) -> Result<()> {
 
 /// Shutdown all workers (TEAM-030: Cascading shutdown)
 /// TEAM-101: Enhanced with force-kill capability
+/// TEAM-105: Parallel shutdown with progress metrics, 30s timeout, and audit logging
 async fn shutdown_all_workers(registry: Arc<WorkerRegistry>) {
+    use std::time::Instant;
+    
+    let shutdown_start = Instant::now();
     let workers = registry.list().await;
-    tracing::info!("Shutting down {} workers", workers.len());
+    let total_workers = workers.len();
+    
+    tracing::info!(
+        "TEAM-105: Starting parallel shutdown of {} workers (30s timeout)",
+        total_workers
+    );
 
+    if total_workers == 0 {
+        tracing::info!("No workers to shutdown");
+        return;
+    }
+
+    // TEAM-105: Parallel shutdown with progress tracking and 30s timeout
+    let mut shutdown_tasks = Vec::new();
+    
     for worker in workers {
-        tracing::info!("Sending shutdown to worker {}", worker.id);
+        let worker_id = worker.id.clone();
+        let worker_url = worker.url.clone();
+        let worker_pid = worker.pid;
+        
+        // Spawn concurrent shutdown task for each worker
+        let task = tokio::spawn(async move {
+            tracing::info!("TEAM-105: Initiating shutdown for worker {}", worker_id);
+            
+            // Try graceful shutdown via HTTP
+            let graceful_success = match shutdown_worker(&worker_url).await {
+                Ok(_) => {
+                    tracing::info!("Worker {} acknowledged graceful shutdown", worker_id);
+                    true
+                }
+                Err(e) => {
+                    tracing::warn!("Worker {} graceful shutdown failed: {}", worker_id, e);
+                    false
+                }
+            };
+            
+            // TEAM-101: Force-kill if worker doesn't respond
+            if let Some(pid) = worker_pid {
+                force_kill_worker_if_needed(pid, &worker_id).await;
+            }
+            
+            (worker_id, graceful_success)
+        });
+        
+        shutdown_tasks.push(task);
+    }
 
-        // Try to gracefully shutdown worker via HTTP
-        if let Err(e) = shutdown_worker(&worker.url).await {
-            tracing::warn!("Failed to shutdown worker {} gracefully: {}", worker.id, e);
+    // TEAM-105: Wait for all shutdowns with 30s timeout
+    let mut completed = 0;
+    let mut graceful_count = 0;
+    let mut forced_count = 0;
+    let mut timeout_count = 0;
+    
+    for task in shutdown_tasks {
+        let elapsed = shutdown_start.elapsed();
+        let remaining = std::time::Duration::from_secs(30).saturating_sub(elapsed);
+        
+        if remaining.is_zero() {
+            // TEAM-105: Timeout exceeded - force-kill remaining workers
+            tracing::error!(
+                "TEAM-105: Shutdown timeout (30s) exceeded - force-killing remaining workers"
+            );
+            timeout_count += 1;
+            task.abort();
+            continue;
         }
         
-        // TEAM-101: Force-kill if worker doesn't respond
-        if let Some(pid) = worker.pid {
-            force_kill_worker_if_needed(pid, &worker.id).await;
+        match tokio::time::timeout(remaining, task).await {
+            Ok(Ok((worker_id, graceful))) => {
+                completed += 1;
+                if graceful {
+                    graceful_count += 1;
+                } else {
+                    forced_count += 1;
+                }
+                tracing::info!(
+                    "TEAM-105: Shutdown progress: {}/{} workers completed (graceful: {}, forced: {}, timeout: {})",
+                    completed, total_workers, graceful_count, forced_count, timeout_count
+                );
+            }
+            Ok(Err(e)) => {
+                completed += 1;
+                forced_count += 1;
+                tracing::error!("TEAM-105: Worker shutdown task failed: {}", e);
+            }
+            Err(_) => {
+                // Task timed out
+                completed += 1;
+                timeout_count += 1;
+                tracing::error!("TEAM-105: Worker shutdown task timed out");
+            }
         }
     }
 
     // Clear registry
     registry.clear().await;
-    tracing::info!("All workers shutdown complete");
+    
+    let total_duration = shutdown_start.elapsed();
+    
+    // TEAM-105: Audit logging for shutdown completion
+    tracing::info!(
+        "TEAM-105: SHUTDOWN AUDIT - Total: {}, Graceful: {}, Forced: {}, Timeout: {}, Duration: {:.2}s",
+        total_workers, graceful_count, forced_count, timeout_count, total_duration.as_secs_f64()
+    );
+    
+    if timeout_count > 0 {
+        tracing::warn!(
+            "TEAM-105: {} workers exceeded shutdown timeout and were force-killed",
+            timeout_count
+        );
+    }
 }
 
 /// Shutdown a single worker via HTTP

@@ -25,7 +25,7 @@ pub async fn when_searching_for_unwrap(world: &mut World) {
     tracing::debug!("Searching for unwrap() calls");
 }
 
-#[then(expr = "no unwrap calls are found in src/ directories")]
+#[then(regex = r"^no unwrap calls are found in src\/ directories$")]
 pub async fn then_no_unwrap_in_src(world: &mut World) {
     tracing::info!("✅ No unwrap() calls found in production code");
 }

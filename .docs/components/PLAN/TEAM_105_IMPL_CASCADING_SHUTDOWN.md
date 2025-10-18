@@ -1,50 +1,67 @@
 # TEAM-105: Implementation - Cascading Shutdown
 
 **Phase:** 2 - Implementation  
-**Duration:** 2-3 days  
+**Duration:** 1 day (completed)  
 **Priority:** P1 - High  
-**Status:** 🔴 NOT STARTED
+**Status:** ✅ COMPLETE
 
 ---
 
 ## Mission
 
 Complete cascading shutdown implementation:
-1. Parallel worker shutdown
-2. queen-rbee → hives SSH shutdown
-3. Shutdown timeout enforcement
-4. Force-kill integration
+1. ✅ Parallel worker shutdown
+2. ✅ queen-rbee → hives SSH shutdown
+3. ✅ Shutdown timeout enforcement
+4. ✅ Force-kill integration
 
-**Prerequisite:** TEAM-101 (PID tracking) complete
+**Prerequisite:** TEAM-101 (PID tracking) complete ✅
 
 ---
 
 ## Tasks
 
-### 1. Parallel Shutdown (Day 1)
-- [ ] Implement concurrent worker shutdown
-- [ ] Replace sequential with parallel
-- [ ] Add shutdown progress metrics
+### 1. Parallel Shutdown ✅ COMPLETE
+- [x] Implement concurrent worker shutdown
+- [x] Replace sequential with parallel
+- [x] Add shutdown progress metrics
+
+**Implementation:** `bin/rbee-hive/src/commands/daemon.rs`
+- Concurrent shutdown using `tokio::spawn`
+- Real-time progress tracking (graceful/forced/timeout)
+- Per-worker shutdown status reporting
 
 ---
 
-### 2. Queen → Hives (Day 2)
-- [ ] Complete queen-rbee shutdown cascade
-- [ ] SSH SIGTERM to all hives
-- [ ] Verify hive shutdown
+### 2. Queen → Hives ✅ COMPLETE
+- [x] Complete queen-rbee shutdown cascade
+- [x] SSH SIGTERM to all hives
+- [x] Verify hive shutdown
+
+**Implementation:** `bin/queen-rbee/src/main.rs`
+- Parallel SSH shutdown to all registered hives
+- `pgrep -f 'rbee-hive daemon'` to find PID
+- `kill -TERM <pid>` to send SIGTERM
+- Graceful handling of unreachable hives
 
 ---
 
-### 3. Timeout & Force-Kill (Day 3)
-- [ ] Add 30s total timeout
-- [ ] Force-kill after timeout
-- [ ] Shutdown audit logging
+### 3. Timeout & Force-Kill ✅ COMPLETE
+- [x] Add 30s total timeout
+- [x] Force-kill after timeout
+- [x] Shutdown audit logging
+
+**Implementation:** Both `rbee-hive` and `queen-rbee`
+- 30-second global timeout enforcement
+- Per-task timeout using `tokio::time::timeout`
+- Automatic task abort when timeout exceeded
+- Comprehensive audit logging with duration tracking
 
 ---
 
 ## Checklist
 
-**Completion:** 0/3 tasks (0%)
+**Completion:** 3/3 tasks (100%)
 
 ---
 

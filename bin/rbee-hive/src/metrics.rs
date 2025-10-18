@@ -119,8 +119,8 @@ pub async fn update_worker_metrics(registry: Arc<crate::registry::WorkerRegistry
 ///
 /// # Arguments
 /// * `_download_tracker` - Download tracker (unused for now)
-pub async fn update_download_metrics(
-    _download_tracker: Arc<crate::download_tracker::DownloadTracker>,
+pub async fn update_download_metrics<T>(
+    _download_tracker: Arc<T>,
 ) {
     // TEAM-104: Placeholder - download metrics are updated directly in endpoints
     // via DOWNLOADS_ACTIVE.inc() / DOWNLOADS_ACTIVE.dec()

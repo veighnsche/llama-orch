@@ -490,6 +490,54 @@ pub struct World {
     
     /// Config has secrets flag
     pub config_has_secrets: bool,
+    
+    // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    // TEAM-105: Cascading Shutdown Testing (LIFE-007, LIFE-008, LIFE-009)
+    // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    /// Worker count for shutdown tests
+    pub worker_count: Option<u32>,
+    
+    /// Shutdown start time for performance measurement
+    pub shutdown_start_time: Option<std::time::Instant>,
+    
+    /// Number of responsive workers (respond to shutdown within timeout)
+    pub responsive_workers: Option<u32>,
+    
+    /// Number of unresponsive workers (require force-kill)
+    pub unresponsive_workers: Option<u32>,
+    
+    // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    // TEAM-101: Worker PID Tracking & Force-Kill Testing (LIFE-001 to LIFE-015)
+    // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    /// Last worker PID for tracking
+    pub last_worker_pid: Option<u32>,
+    
+    /// Worker timeout in seconds
+    pub worker_timeout: Option<u64>,
+    
+    /// Force-killed worker PID
+    pub force_killed_pid: Option<u32>,
+    
+    /// Worker hung flag
+    pub worker_hung: bool,
+    
+    /// Health check performed flag
+    pub health_check_performed: bool,
+    
+    /// Ready timeout in seconds
+    pub ready_timeout: Option<u64>,
+    
+    /// Worker crashed flag
+    pub worker_crashed: bool,
+    
+    /// Worker zombie flag
+    pub worker_zombie: bool,
+    
+    /// Worker responded flag
+    pub worker_responded: bool,
+    
+    /// Worker response time in seconds
+    pub worker_response_time: Option<u64>,
 }
 
 // TEAM-101: Manual Debug implementation to handle CaptureAdapter which doesn't implement Debug
@@ -729,6 +777,24 @@ impl Default for World {
             example_config_path: None,
             example_config_validated: false,
             config_has_secrets: false,
+            
+            // TEAM-105: Cascading Shutdown Testing
+            worker_count: None,
+            shutdown_start_time: None,
+            responsive_workers: None,
+            unresponsive_workers: None,
+            
+            // TEAM-101: Worker PID Tracking & Force-Kill Testing
+            last_worker_pid: None,
+            worker_timeout: None,
+            force_killed_pid: None,
+            worker_hung: false,
+            health_check_performed: false,
+            ready_timeout: None,
+            worker_crashed: false,
+            worker_zombie: false,
+            worker_responded: false,
+            worker_response_time: None,
         }
     }
 }

@@ -15,7 +15,9 @@ use observability_narration_core::CaptureAdapter;
 #[then(expr = "I should see narration {string} from {string}")]
 pub async fn then_see_narration_from(world: &mut World, text: String, actor: String) {
     // TEAM-085: Verify product code emitted narration
-    let captured = CaptureAdapter::drain();
+    // TEAM-102: Fixed method name from drain() to captured()
+    let adapter = CaptureAdapter::install();
+    let captured = adapter.captured();
     
     let found = captured.iter().any(|n| {
         n.actor == actor && n.human.contains(&text)
@@ -55,7 +57,9 @@ pub async fn then_see_narration_from(world: &mut World, text: String, actor: Str
 
 #[then(expr = "I should see narration {string} with model_ref {string}")]
 pub async fn then_see_narration_with_model_ref(world: &mut World, text: String, model_ref: String) {
-    let captured = CaptureAdapter::drain();
+    // TEAM-102: Fixed to use install() first
+    let adapter = CaptureAdapter::install();
+    let captured = adapter.captured();
     
     let found = captured.iter().any(|n| {
         n.human.contains(&text) && 
@@ -79,7 +83,9 @@ pub async fn then_see_narration_with_model_ref(world: &mut World, text: String, 
 
 #[then(expr = "I should see narration {string} with duration_ms")]
 pub async fn then_see_narration_with_duration(world: &mut World, text: String) {
-    let captured = CaptureAdapter::drain();
+    // TEAM-102: Fixed to use install() first
+    let adapter = CaptureAdapter::install();
+    let captured = adapter.captured();
     
     let found = captured.iter().any(|n| {
         n.human.contains(&text) && n.duration_ms.is_some()
@@ -102,7 +108,9 @@ pub async fn then_see_narration_with_duration(world: &mut World, text: String) {
 
 #[then(expr = "I should see narration {string} with worker_id {string}")]
 pub async fn then_see_narration_with_worker_id(world: &mut World, text: String, worker_id: String) {
-    let captured = CaptureAdapter::drain();
+    // TEAM-102: Fixed to use install() first
+    let adapter = CaptureAdapter::install();
+    let captured = adapter.captured();
     
     let found = captured.iter().any(|n| {
         n.human.contains(&text) && 

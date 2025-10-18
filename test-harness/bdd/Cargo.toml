@@ -34,6 +34,7 @@ nix = { version = "0.27", features = ["signal", "process"] }  # TEAM-062: Proces
 chrono = { workspace = true }  # TEAM-099: Deadline propagation timestamp handling
 sysinfo = "0.30"  # TEAM-101: Process liveness checks via PID
 serial_test = "3.0"  # TEAM-101: Serial test execution for configuration tests
+shellexpand = "3.1"  # TEAM-102: Path expansion for tilde and environment variables
 
 # TEAM-063: Real product dependencies for integration testing
 rbee-hive = { path = "../../bin/rbee-hive" }
