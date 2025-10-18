@@ -84,14 +84,5 @@ pub fn engine_down(config_path: PathBuf, pool_filter: Option<String>) -> Result<
     Ok(())
 }
 
-pub fn engine_up(_config_path: PathBuf, _pool_filter: Option<String>) -> Result<()> {
-    // TODO: Implement engine provisioning
-    println!("engine:up not yet implemented");
-    Ok(())
-}
-
-pub fn engine_plan(_config_path: PathBuf, _pool_filter: Option<String>) -> Result<()> {
-    // TODO: Implement engine planning
-    println!("engine:plan not yet implemented");
-    Ok(())
-}
+// TEAM-111: Removed engine_up and engine_plan stubs
+// These were never implemented and not used anywhere

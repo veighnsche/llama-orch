@@ -177,7 +177,42 @@ rbee-hive continues running
 
 ## Running Tests
 
-### Run All Features
+### 🚀 NEW: World-Class Test Runner (TEAM-111)
+
+**We now have a professional-grade test runner with:**
+- ✅ Live output by default (see everything in real-time!)
+- ✅ Failure-focused reporting (only failures shown at end)
+- ✅ Auto-generated rerun scripts (instant retry of failed tests)
+- ✅ 42 well-organized functions
+- ✅ Complete documentation
+
+**Quick Start:**
+```bash
+# Run all tests with live output
+./run-bdd-tests.sh
+
+# Run specific tests
+./run-bdd-tests.sh --tags @auth
+./run-bdd-tests.sh --feature lifecycle
+
+# Quiet mode (for CI/CD)
+./run-bdd-tests.sh --quiet
+
+# Help
+./run-bdd-tests.sh --help
+```
+
+**Documentation:**
+- `QUICK_START.md` - User guide with examples
+- `DEVELOPER_GUIDE.md` - For developers modifying the script
+- `ARCHITECTURE.md` - Complete architectural overview
+- `REFACTOR_COMPLETE.md` - Refactor details
+- `.docs/EXAMPLE_OUTPUT.md` - Visual examples
+
+### Legacy: Direct BDD Runner
+
+You can still run the BDD runner directly:
+
 ```bash
 # From repository root
 LLORCH_BDD_FEATURE_PATH=test-harness/bdd/tests/features \

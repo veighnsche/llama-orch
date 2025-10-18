@@ -1,71 +1,124 @@
-# xtask — xtask (tool)
+# xtask — Workspace Utility Tasks
 
-## 1. Name & Purpose
+**TEAM-111** - Cleaned up and modernized  
+**Status:** Active
 
-xtask (tool)
+---
 
-## 2. Why it exists (Spec traceability)
+## 🎯 Purpose
 
-- See spec and requirements for details.
-  - [.specs/00_llama-orch.md](../.specs/00_llama-orch.md)
-  - [requirements/00_llama-orch.yaml](../requirements/00_llama-orch.yaml)
+Developer tooling for the llama-orch workspace. Provides commands for:
+- Regenerating contracts and schemas
+- Running CI checks
+- Managing development workflow
+- Engine management
 
+---
 
-## 3. Public API surface
+## 📋 Available Commands
 
-- Rust crate API (internal)
-
-## 4. How it fits
-
-- Developer tooling supporting contracts and docs.
-
-```mermaid
-flowchart LR
-  devs[Developers] --> tool[Tool]
-  tool --> artifacts[Artifacts]
+### Regeneration Tasks
+```bash
+cargo xtask regen                # Regenerate all artifacts
+cargo xtask regen-openapi        # Regenerate OpenAPI types
+cargo xtask regen-schema         # Regenerate config schema
+cargo xtask spec-extract         # Extract spec requirements
 ```
 
-## 5. Build & Test
+### Development Tasks
+```bash
+cargo xtask dev:loop             # Full dev workflow (fmt, clippy, regen, test, links)
+cargo xtask docs:index           # Regenerate README index
+```
 
-- Workspace fmt/clippy: `cargo fmt --all -- --check` and `cargo clippy --all-targets --all-features
--- -D warnings`
-- Tests for this crate: `cargo test -p xtask -- --nocapture`
+### CI Tasks
+```bash
+cargo xtask ci:auth              # Test auth-min crate
+cargo xtask ci:determinism       # Run determinism suite
+cargo xtask ci:haiku:cpu         # Run haiku e2e tests
+```
 
+### Pact Tasks
+```bash
+cargo xtask pact:verify          # Verify pact contracts
+```
 
-## 6. Contracts
+### Engine Tasks
+```bash
+cargo xtask engine:status        # Check engine status
+cargo xtask engine:down          # Stop engines
+```
 
-- None
+---
 
+## 🔧 Common Workflows
 
-## 7. Config & Env
+### Daily Development
+```bash
+# Before committing
+cargo xtask dev:loop
+```
 
-- Not applicable.
+### After Changing Contracts
+```bash
+# Regenerate OpenAPI types
+cargo xtask regen-openapi
 
-## 8. Metrics & Logs
+# Regenerate config schema
+cargo xtask regen-schema
 
-- Minimal logs.
+# Or regenerate everything
+cargo xtask regen
+```
 
-## 9. Runbook (Dev)
+### Running Tests
+```bash
+# Run determinism tests
+cargo xtask ci:determinism
 
-- Regenerate artifacts: `cargo xtask regen-openapi && cargo xtask regen-schema`
-- Rebuild docs: `cargo run -p tools-readme-index --quiet`
+# Run haiku e2e tests
+cargo xtask ci:haiku:cpu
 
+# Verify pact contracts
+cargo xtask pact:verify
+```
 
-## 10. Status & Owners
+---
 
-- Status: alpha
-- Owners: @llama-orch-maintainers
+## 🧹 Recent Cleanup (TEAM-111)
 
-## 11. Changelog pointers
+**Removed deprecated/stub commands:**
+- ❌ `ci:haiku:gpu` - Never implemented
+- ❌ `pact:publish` - Never implemented
+- ❌ `engine:plan` - Never implemented
+- ❌ `engine:up` - Never implemented
 
-- None
+**Kept working commands:**
+- ✅ All regeneration tasks
+- ✅ Development workflow tasks
+- ✅ CI test tasks
+- ✅ Working engine tasks (status, down)
 
-## 12. Footnotes
+See `.archive/CLEANUP_PLAN.md` for details.
+
+---
+
+## 📚 Documentation
 
 - Spec: [.specs/00_llama-orch.md](../.specs/00_llama-orch.md)
 - Requirements: [requirements/00_llama-orch.yaml](../requirements/00_llama-orch.yaml)
+- Cleanup Plan: [.archive/CLEANUP_PLAN.md](.archive/CLEANUP_PLAN.md)
 
+---
 
-## What this crate is not
+## 🚀 Next Steps
 
-- Not a production service.
+**Planned additions:**
+- `bdd:test` - Run BDD tests (port from bash)
+- `bdd:test-quiet` - Run BDD tests quietly
+- `bdd:test-tags` - Run BDD tests with tag filter
+
+---
+
+**Status:** Active - Cleaned and ready for new tasks  
+**Owners:** @llama-orch-maintainers

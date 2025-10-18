@@ -20,8 +20,6 @@ pub enum Cmd {
     SpecExtract,
     #[command(name = "dev:loop")]
     DevLoop,
-    #[command(name = "ci:haiku:gpu")]
-    CiHaikuGpu,
     #[command(name = "ci:haiku:cpu")]
     CiHaikuCpu,
     #[command(name = "ci:determinism")]
@@ -30,28 +28,8 @@ pub enum Cmd {
     CiAuth,
     #[command(name = "pact:verify")]
     PactVerify,
-    #[command(name = "pact:publish")]
-    PactPublish,
     #[command(name = "docs:index")]
     DocsIndex,
-    #[command(name = "engine:plan")]
-    EnginePlan {
-        /// Path to config YAML
-        #[arg(long, default_value = "requirements/llamacpp-3090-source.yaml")]
-        config: PathBuf,
-        /// Optional pool id to plan for (defaults to all)
-        #[arg(long)]
-        pool: Option<String>,
-    },
-    #[command(name = "engine:up")]
-    EngineUp {
-        /// Path to config YAML
-        #[arg(long, default_value = "requirements/llamacpp-3090-source.yaml")]
-        config: PathBuf,
-        /// Optional pool id to provision (defaults to all)
-        #[arg(long)]
-        pool: Option<String>,
-    },
     #[command(name = "engine:status")]
     EngineStatus {
         /// Path to config YAML
