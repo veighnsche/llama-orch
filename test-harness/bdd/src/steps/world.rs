@@ -55,7 +55,7 @@ impl DebugQueenRegistry {
     }
 }
 
-#[derive(Debug, cucumber::World)]
+#[derive(cucumber::World)]
 pub struct World {
     // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
     // Topology & Configuration
@@ -422,7 +422,7 @@ pub struct World {
     // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
     // P2 Metrics & Observability (TEAM-100 - THE CENTENNIAL TEAM! 💯🎉)
     // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-    /// Narration capture adapter
+    /// Narration capture adapter (TEAM-101: Handled in manual Debug impl)
     pub narration_adapter: Option<observability_narration_core::CaptureAdapter>,
     
     /// Pool-managerd URL
@@ -490,6 +490,17 @@ pub struct World {
     
     /// Config has secrets flag
     pub config_has_secrets: bool,
+}
+
+// TEAM-101: Manual Debug implementation to handle CaptureAdapter which doesn't implement Debug
+impl std::fmt::Debug for World {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("World")
+            .field("topology", &self.topology)
+            .field("current_node", &self.current_node)
+            .field("narration_adapter", &self.narration_adapter.as_ref().map(|_| "<CaptureAdapter>"))
+            .finish_non_exhaustive()
+    }
 }
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━

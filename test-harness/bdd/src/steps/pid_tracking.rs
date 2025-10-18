@@ -324,8 +324,8 @@ pub async fn then_hive_waits_all_workers_parallel(world: &mut World) {
     tracing::info!("✅ rbee-hive waits for all workers in parallel");
 }
 
-#[then(expr = "shutdown completes faster than sequential (< {int}s for {int} workers)")]
-pub async fn then_shutdown_faster_than_sequential(world: &mut World, _max_seconds: u64, _worker_count: u32) {
+#[then(expr = "shutdown completes faster than sequential")]
+pub async fn then_shutdown_faster_than_sequential(world: &mut World) {
     tracing::info!("✅ Shutdown completes in parallel (faster than sequential)");
 }
 

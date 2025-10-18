@@ -35,16 +35,16 @@ heartbeat_interval_ms = 5000
 }
 
 #[given("a config file with the following content:")]
-fn config_file_with_content(world: &mut World, content: cucumber::gherkin::Step) {
+pub async fn config_file_with_content(world: &mut World, step: &cucumber::gherkin::Step) {
     // TEAM-100: Set config content from docstring
-    if let Some(docstring) = &content.docstring {
+    if let Some(docstring) = &step.docstring {
         world.config_content = Some(docstring.to_string());
         world.config_valid = true;
     }
 }
 
 #[given(expr = "pool-managerd is running with config file {string}")]
-fn pool_managerd_with_config(world: &mut World, config_path: String) {
+async fn pool_managerd_with_config(world: &mut World, config_path: String) {
     // TEAM-100: Start pool-managerd with config
     world.pool_managerd_url = Some("http://0.0.0.0:9090".to_string());
     world.config_file_path = Some(config_path);
@@ -65,13 +65,13 @@ fn pool_managerd_with_config(world: &mut World, config_path: String) {
 }
 
 #[given(expr = "current config has max_workers = {int}")]
-fn current_config_max_workers(world: &mut World, value: i32) {
+async fn current_config_max_workers(world: &mut World, value: i32) {
     // TEAM-100: Set current config value
     world.config_values.insert("max_workers".to_string(), value.to_string());
 }
 
 #[given(expr = "a config file with port = {int}")]
-fn config_file_with_port(world: &mut World, port: i32) {
+async fn config_file_with_port(world: &mut World, port: i32) {
     // TEAM-100: Set config with port
     world.config_values.insert("port".to_string(), port.to_string());
     world.config_content = Some(format!(r#"
@@ -82,22 +82,22 @@ port = {}
 }
 
 #[given(expr = "environment variable RBEE_POOL_PORT = {string}")]
-fn env_var_rbee_pool_port(world: &mut World, value: String) {
+async fn env_var_rbee_pool_port(world: &mut World, value: String) {
     // TEAM-100: Set environment variable override
     world.env_overrides.insert("RBEE_POOL_PORT".to_string(), value);
 }
 
 #[given("a config file with invalid schema:")]
-fn config_file_invalid_schema(world: &mut World, content: cucumber::gherkin::Step) {
+pub async fn config_file_invalid_schema(world: &mut World, step: &cucumber::gherkin::Step) {
     // TEAM-100: Set invalid config content
-    if let Some(docstring) = &content.docstring {
+    if let Some(docstring) = &step.docstring {
         world.config_content = Some(docstring.to_string());
         world.config_valid = false;
     }
 }
 
 #[given(expr = "a config file with missing required field {string}")]
-fn config_missing_required_field(world: &mut World, field: String) {
+async fn config_missing_required_field(world: &mut World, field: String) {
     // TEAM-100: Set config with missing field
     world.config_content = Some("[pool]\nmax_workers = 5\n".to_string());
     world.config_valid = false;
@@ -105,22 +105,22 @@ fn config_missing_required_field(world: &mut World, field: String) {
 }
 
 #[given(expr = "example config files exist in {string}")]
-fn example_config_files_exist(world: &mut World, path: String) {
+async fn example_config_files_exist(world: &mut World, path: String) {
     // TEAM-100: Set example config path
     world.example_config_path = Some(path);
 }
 
 #[given("a config file with sensitive fields:")]
-fn config_with_sensitive_fields(world: &mut World, content: cucumber::gherkin::Step) {
+pub async fn config_with_sensitive_fields(world: &mut World, step: &cucumber::gherkin::Step) {
     // TEAM-100: Set config with secrets
-    if let Some(docstring) = &content.docstring {
+    if let Some(docstring) = &step.docstring {
         world.config_content = Some(docstring.to_string());
         world.config_has_secrets = true;
     }
 }
 
 #[given("a config file with invalid port value")]
-fn config_invalid_port_value(world: &mut World) {
+async fn config_invalid_port_value(world: &mut World) {
     // TEAM-100: Set config with invalid port
     world.config_content = Some(r#"
 [server]

@@ -20,9 +20,9 @@ const ACTOR_WORKER_ORCD: &str = "llm-worker-rbee";
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 #[given("narration capture is enabled")]
-#[serial(capture_adapter)]
-fn narration_capture_enabled(world: &mut World) {
+async fn narration_capture_enabled(world: &mut World) {
     // TEAM-100: Install CaptureAdapter to capture narration events
+    // TEAM-101: Removed #[serial] attribute - not compatible with cucumber steps
     let adapter = CaptureAdapter::install();
     world.narration_adapter = Some(adapter);
 }
@@ -32,7 +32,7 @@ fn narration_capture_enabled(world: &mut World) {
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 #[given(expr = "pool-managerd is running at {string}")]
-fn pool_managerd_running_at(world: &mut World, url: String) {
+async fn pool_managerd_running_at(world: &mut World, url: String) {
     // TEAM-100: Start pool-managerd and capture narration
     world.pool_managerd_url = Some(url.clone());
     world.metrics_enabled = false;

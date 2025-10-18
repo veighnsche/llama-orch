@@ -268,6 +268,9 @@ pub async fn handle_spawn_worker(
                 ));
             }
             
+            // TEAM-101: Store PID for force-kill and process liveness checks
+            let pid = child.id(); // Returns Option<u32> in newer Tokio
+            
             // Register worker in loading state
             let worker = WorkerInfo {
                 id: worker_id.clone(),
@@ -280,9 +283,16 @@ pub async fn handle_spawn_worker(
                 slots_total: 1,
                 slots_available: 0,
                 failed_health_checks: 0, // TEAM-096: Initialize counter
+                pid, // TEAM-101: Store PID for lifecycle management (Option<u32>)
             };
 
             state.registry.register(worker).await;
+            
+            info!(
+                worker_id = %worker_id,
+                pid = pid,
+                "TEAM-101: Worker PID stored for lifecycle management"
+            );
 
             info!(
                 worker_id = %worker_id,
@@ -437,6 +447,7 @@ mod tests {
             slots_total: 1,
             slots_available: 1,
             failed_health_checks: 0,
+            pid: None, // TEAM-101: Added pid field
         };
 
         let response = ListWorkersResponse { workers: vec![worker] };

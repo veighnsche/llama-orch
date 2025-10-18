@@ -102,8 +102,9 @@ mod tests {
         let _ = fs::remove_dir_all(&temp_dir);
         fs::create_dir_all(&temp_dir).unwrap();
 
-        // Create model directory with .gguf file
-        let model_dir = temp_dir.join("tinyllama-1.1b-chat-v1.0-gguf");
+        // TEAM-101: Create model directory with mapped name "tinyllama" (not full reference)
+        // extract_model_name() maps "TheBloke/TinyLlama-1.1B-Chat-v1.0-GGUF" -> "tinyllama"
+        let model_dir = temp_dir.join("tinyllama");
         fs::create_dir_all(&model_dir).unwrap();
         let model_file = model_dir.join("model.gguf");
         fs::write(&model_file, b"test").unwrap();

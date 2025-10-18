@@ -133,8 +133,9 @@ fn test_list_models_multiple_gguf_files_in_one_directory() {
 fn test_find_local_model_exists() {
     let (provisioner, temp_dir) = setup_test_provisioner();
 
-    // Create model matching HuggingFace reference pattern
-    let model_dir = temp_dir.join("tinyllama-1.1b-chat-v1.0-gguf");
+    // TEAM-101: Create model with mapped name "tinyllama" (not full reference)
+    // extract_model_name() maps "TheBloke/TinyLlama-1.1B-Chat-v1.0-GGUF" -> "tinyllama"
+    let model_dir = temp_dir.join("tinyllama");
     fs::create_dir_all(&model_dir).unwrap();
     let model_file = model_dir.join("model.gguf");
     fs::write(&model_file, b"test").unwrap();
@@ -160,8 +161,8 @@ fn test_find_local_model_not_exists() {
 fn test_find_local_model_case_insensitive() {
     let (provisioner, temp_dir) = setup_test_provisioner();
 
-    // Create model with lowercase directory name
-    let model_dir = temp_dir.join("tinyllama-1.1b-chat-v1.0-gguf");
+    // TEAM-101: Create model with mapped name "tinyllama"
+    let model_dir = temp_dir.join("tinyllama");
     fs::create_dir_all(&model_dir).unwrap();
     fs::write(model_dir.join("model.gguf"), b"test").unwrap();
 
@@ -176,7 +177,8 @@ fn test_find_local_model_case_insensitive() {
 fn test_find_local_model_returns_first_gguf() {
     let (provisioner, temp_dir) = setup_test_provisioner();
 
-    let model_dir = temp_dir.join("tinyllama-1.1b-chat-v1.0-gguf");
+    // TEAM-101: Use mapped name "tinyllama"
+    let model_dir = temp_dir.join("tinyllama");
     fs::create_dir_all(&model_dir).unwrap();
 
     // Create multiple .gguf files
@@ -251,9 +253,9 @@ fn test_get_model_size_empty_file() {
 fn test_extract_model_name_tinyllama() {
     let (provisioner, temp_dir) = setup_test_provisioner();
 
-    // TEAM-032: The provisioner extracts last part of reference and lowercases it
-    // "TheBloke/TinyLlama-1.1B-Chat-v1.0-GGUF" -> "tinyllama-1.1b-chat-v1.0-gguf"
-    let model_dir = temp_dir.join("tinyllama-1.1b-chat-v1.0-gguf");
+    // TEAM-101: extract_model_name() maps references to short names
+    // "TheBloke/TinyLlama-1.1B-Chat-v1.0-GGUF" -> "tinyllama"
+    let model_dir = temp_dir.join("tinyllama");
     fs::create_dir_all(&model_dir).unwrap();
     fs::write(model_dir.join("model.gguf"), b"test").unwrap();
 
@@ -267,8 +269,8 @@ fn test_extract_model_name_tinyllama() {
 fn test_extract_model_name_qwen() {
     let (provisioner, temp_dir) = setup_test_provisioner();
 
-    // TEAM-032: "Qwen/Qwen2.5-0.5B-Instruct-GGUF" -> "qwen2.5-0.5b-instruct-gguf"
-    let model_dir = temp_dir.join("qwen2.5-0.5b-instruct-gguf");
+    // TEAM-101: extract_model_name() maps "Qwen/Qwen2.5-0.5B-Instruct-GGUF" -> "qwen"
+    let model_dir = temp_dir.join("qwen");
     fs::create_dir_all(&model_dir).unwrap();
     fs::write(model_dir.join("model.gguf"), b"test").unwrap();
 
@@ -310,9 +312,9 @@ fn test_find_local_model_empty_directory() {
 fn test_realistic_model_directory_structure() {
     let (provisioner, temp_dir) = setup_test_provisioner();
 
-    // TEAM-032: Simulate realistic HuggingFace model download structure
-    // Directory name matches the lowercased reference
-    let model_dir = temp_dir.join("tinyllama-1.1b-chat-v1.0-gguf");
+    // TEAM-101: Simulate realistic HuggingFace model download structure
+    // Directory name uses mapped name "tinyllama"
+    let model_dir = temp_dir.join("tinyllama");
     fs::create_dir_all(&model_dir).unwrap();
 
     // Create typical files from HuggingFace

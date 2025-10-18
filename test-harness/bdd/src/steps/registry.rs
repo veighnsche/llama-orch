@@ -87,6 +87,7 @@ pub async fn given_worker_with_model_and_state(
     world.workers.insert(worker_id.clone(), world_worker);
     
     // TEAM-064: ALSO register in rbee-hive registry
+    // TEAM-101: Added missing fields (failed_health_checks, pid)
     let registry = world.hive_registry();
     let hive_worker = HiveWorkerInfo {
         id: worker_id.clone(),
@@ -103,6 +104,8 @@ pub async fn given_worker_with_model_and_state(
         last_activity: std::time::SystemTime::now(),
         slots_total: 1,
         slots_available,
+        failed_health_checks: 0,
+        pid: None,
     };
     registry.register(hive_worker).await;
     

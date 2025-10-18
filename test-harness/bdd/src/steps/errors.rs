@@ -19,13 +19,13 @@ pub async fn given_production_code_analyzed(world: &mut World) {
     tracing::debug!("Production code analyzed for unwrap() calls");
 }
 
-#[when(expr = "searching for unwrap() calls in non-test code")]
+#[when(expr = "searching for unwrap calls in non-test code")]
 pub async fn when_searching_for_unwrap(world: &mut World) {
     // In real implementation, would scan source files
     tracing::debug!("Searching for unwrap() calls");
 }
 
-#[then(expr = "no unwrap() calls are found in src/ directories")]
+#[then(expr = "no unwrap calls are found in src/ directories")]
 pub async fn then_no_unwrap_in_src(world: &mut World) {
     tracing::info!("✅ No unwrap() calls found in production code");
 }
@@ -140,9 +140,9 @@ pub async fn when_token_validation_fails(world: &mut World) {
     tracing::debug!("Token validation fails");
 }
 
-#[then(expr = "error message contains token prefix only (first {int} chars)")]
-pub async fn then_error_contains_token_prefix(world: &mut World, chars: u32) {
-    tracing::info!("✅ Error message contains token prefix only (first {} chars)", chars);
+#[then(expr = "error message contains token prefix only")]
+pub async fn then_error_contains_token_prefix(world: &mut World) {
+    tracing::info!("✅ Error message contains token prefix only");
 }
 
 #[then(expr = "full token is logged securely (not in response)")]

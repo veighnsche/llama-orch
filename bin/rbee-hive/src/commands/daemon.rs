@@ -101,6 +101,7 @@ pub async fn handle(addr: String) -> Result<()> {
 }
 
 /// Shutdown all workers (TEAM-030: Cascading shutdown)
+/// TEAM-101: Enhanced with force-kill capability
 async fn shutdown_all_workers(registry: Arc<WorkerRegistry>) {
     let workers = registry.list().await;
     tracing::info!("Shutting down {} workers", workers.len());
@@ -111,6 +112,11 @@ async fn shutdown_all_workers(registry: Arc<WorkerRegistry>) {
         // Try to gracefully shutdown worker via HTTP
         if let Err(e) = shutdown_worker(&worker.url).await {
             tracing::warn!("Failed to shutdown worker {} gracefully: {}", worker.id, e);
+        }
+        
+        // TEAM-101: Force-kill if worker doesn't respond
+        if let Some(pid) = worker.pid {
+            force_kill_worker_if_needed(pid, &worker.id).await;
         }
     }
 
@@ -135,4 +141,48 @@ async fn shutdown_worker(worker_url: &str) -> Result<()> {
     }
 
     Ok(())
+}
+
+/// TEAM-101: Force-kill worker if it doesn't respond to graceful shutdown
+/// Implements SIGTERM → wait 10s → SIGKILL sequence
+async fn force_kill_worker_if_needed(pid: u32, worker_id: &str) {
+    use sysinfo::{System, Pid, Signal};
+    
+    // Wait 10 seconds for graceful shutdown
+    tokio::time::sleep(std::time::Duration::from_secs(10)).await;
+    
+    // Check if process still exists
+    let mut sys = System::new();
+    sys.refresh_processes();
+    
+    let pid_obj = Pid::from_u32(pid);
+    if let Some(process) = sys.process(pid_obj) {
+        tracing::warn!(
+            worker_id = worker_id,
+            pid = pid,
+            "Worker did not respond to graceful shutdown, sending SIGKILL"
+        );
+        
+        // Send SIGKILL
+        if process.kill_with(Signal::Kill).is_some() {
+            tracing::info!(
+                worker_id = worker_id,
+                pid = pid,
+                signal = "SIGKILL",
+                "TEAM-101: Force-killed worker process"
+            );
+        } else {
+            tracing::error!(
+                worker_id = worker_id,
+                pid = pid,
+                "Failed to send SIGKILL to worker process"
+            );
+        }
+    } else {
+        tracing::info!(
+            worker_id = worker_id,
+            pid = pid,
+            "Worker process exited gracefully"
+        );
+    }
 }

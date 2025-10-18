@@ -100,6 +100,7 @@ mod tests {
             slots_total: 1,
             slots_available: 1,
             failed_health_checks: 0,
+            pid: None, // TEAM-101: Added pid field
         };
 
         registry.register(worker).await;

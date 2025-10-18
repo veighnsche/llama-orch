@@ -22,11 +22,6 @@ pub async fn given_token_file_exists(world: &mut World, path: String) {
     world.secret_file_path = Some(path);
 }
 
-#[given(expr = "file permissions are {string} (owner read/write only)")]
-#[given(expr = "file permissions are {string} (world-readable)")]
-#[given(expr = "file permissions are {string} (group-readable)")]
-#[given(expr = "file permissions are {string} (owner read-only)")]
-#[given(expr = "file permissions are {string} (no permissions)")]
 #[given(expr = "file permissions are {string}")]
 pub async fn given_file_permissions(world: &mut World, perms: String) {
     let path = world.secret_file_path.as_ref().expect("No secret file path");
@@ -154,10 +149,10 @@ pub async fn then_key_salt(world: &mut World, salt: String) {
     tracing::info!("Expected salt: {}", salt);
 }
 
-#[then(expr = "derived key is {int} bytes ({int} bits)")]
-pub async fn then_key_size(world: &mut World, bytes: usize, bits: usize) {
+#[then(expr = "derived key is {int} bytes")]
+pub async fn then_key_size(world: &mut World, bytes: usize) {
     // TODO: Verify key size
-    tracing::info!("Expected key size: {} bytes ({} bits)", bytes, bits);
+    tracing::info!("Expected key size: {} bytes", bytes);
 }
 
 #[then(expr = "derived key is different from API token")]

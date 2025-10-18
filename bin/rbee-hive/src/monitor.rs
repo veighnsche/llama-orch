@@ -18,6 +18,7 @@ use tracing::{error, info};
 /// - Polls each worker's health endpoint every 30s
 /// - Logs health status
 /// - TEAM-096: Fail-fast - removes workers after 3 failed health checks
+/// - TEAM-101: Ready timeout - kills workers stuck in Loading > 30s
 pub async fn health_monitor_loop(registry: Arc<WorkerRegistry>) {
     let mut interval = tokio::time::interval(Duration::from_secs(30));
 
@@ -33,6 +34,45 @@ pub async fn health_monitor_loop(registry: Arc<WorkerRegistry>) {
         info!("🔍 Health monitor: Checking {} workers", workers.len());
         
         for worker in workers {
+            // TEAM-101: Check for workers stuck in Loading state
+            if worker.state == crate::registry::WorkerState::Loading {
+                let loading_duration = worker.last_activity.elapsed().unwrap_or(Duration::from_secs(0));
+                if loading_duration > Duration::from_secs(30) {
+                    error!(
+                        worker_id = %worker.id,
+                        duration_secs = loading_duration.as_secs(),
+                        "TEAM-101: Worker stuck in Loading state, force-killing"
+                    );
+                    
+                    // Force-kill the worker
+                    if let Some(pid) = worker.pid {
+                        force_kill_worker(pid, &worker.id);
+                    }
+                    
+                    // Remove from registry
+                    registry.remove(&worker.id).await;
+                    continue;
+                }
+            }
+            
+            // TEAM-101: Process liveness check - verify process exists via PID
+            if let Some(pid) = worker.pid {
+                use sysinfo::{System, Pid};
+                let mut sys = System::new();
+                sys.refresh_processes();
+                
+                let pid_obj = Pid::from_u32(pid);
+                if sys.process(pid_obj).is_none() {
+                    error!(
+                        worker_id = %worker.id,
+                        pid = pid,
+                        "TEAM-101: Worker process no longer exists (crashed), removing from registry"
+                    );
+                    registry.remove(&worker.id).await;
+                    continue;
+                }
+            }
+            
             // Check worker health: GET {worker.url}/v1/health
             let client = reqwest::Client::new();
             match client
@@ -46,7 +86,8 @@ pub async fn health_monitor_loop(registry: Arc<WorkerRegistry>) {
                         worker_id = %worker.id,
                         url = %worker.url,
                         state = ?worker.state,
-                        "✅ Worker healthy"
+                        pid = ?worker.pid,
+                        "✅ Worker healthy (HTTP + process liveness verified)"
                     );
                     // Reset counter on success
                     registry.update_state(&worker.id, worker.state).await;
@@ -96,6 +137,44 @@ pub async fn health_monitor_loop(registry: Arc<WorkerRegistry>) {
     }
 }
 
+/// TEAM-101: Force-kill a worker process using its PID
+fn force_kill_worker(pid: u32, worker_id: &str) {
+    use sysinfo::{System, Pid, Signal};
+    
+    let mut sys = System::new();
+    sys.refresh_processes();
+    
+    let pid_obj = Pid::from_u32(pid);
+    if let Some(process) = sys.process(pid_obj) {
+        info!(
+            worker_id = worker_id,
+            pid = pid,
+            "TEAM-101: Force-killing worker process"
+        );
+        
+        if process.kill_with(Signal::Kill).is_some() {
+            info!(
+                worker_id = worker_id,
+                pid = pid,
+                signal = "SIGKILL",
+                "Successfully force-killed worker"
+            );
+        } else {
+            error!(
+                worker_id = worker_id,
+                pid = pid,
+                "Failed to send SIGKILL to worker"
+            );
+        }
+    } else {
+        info!(
+            worker_id = worker_id,
+            pid = pid,
+            "Worker process already exited"
+        );
+    }
+}
+
 // TEAM-031: Unit tests for monitor module
 #[cfg(test)]
 mod tests {
@@ -132,6 +211,7 @@ mod tests {
             slots_total: 1,
             slots_available: 1,
             failed_health_checks: 0,
+            pid: None, // TEAM-101: Added pid field
         };
 
         registry.register(worker).await;
