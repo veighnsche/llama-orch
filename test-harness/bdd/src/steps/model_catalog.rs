@@ -107,8 +107,9 @@ pub async fn when_register_model_in_catalog(world: &mut World) {
     world.last_action = Some("model_registered".to_string());
 }
 
-#[when(expr = "rbee-hive calculates model size")]
-pub async fn when_calculate_model_size(world: &mut World) {
+// TEAM-112: Removed duplicate - use gguf.rs version instead (more specific)
+// #[when(expr = "rbee-hive calculates model size")]
+pub async fn _when_calculate_model_size_removed(world: &mut World) {
     // TEAM-079: Read file size from disk (simulated with temp file)
     let temp_dir = world.temp_dir.as_ref()
         .expect("Temp dir not set");
@@ -133,8 +134,9 @@ pub async fn then_query_returns_local_path(world: &mut World, path: String) {
     tracing::info!("TEAM-079: Verified local_path: {}", path);
 }
 
-#[then(expr = "the query returns no results")]
-pub async fn then_query_returns_no_results(world: &mut World) {
+// TEAM-112: Removed duplicate - use beehive_registry.rs version instead
+// #[then(expr = "the query returns no results")]
+pub async fn _then_query_returns_no_results_removed(world: &mut World) {
     // TEAM-079: Verify query returned empty result
     assert!(world.last_action.as_ref().unwrap().contains("catalog_checked_false"));
     tracing::info!("TEAM-079: Verified no results");

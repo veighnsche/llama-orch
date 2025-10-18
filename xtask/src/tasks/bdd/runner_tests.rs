@@ -18,6 +18,7 @@ mod tests {
             quiet: false,
             really_quiet: false,
             show_quiet_warning: false,
+            run_all: true,
         };
         
         // Behavior: Config should store values correctly
@@ -34,6 +35,7 @@ mod tests {
             quiet: true,
             really_quiet: false,
             show_quiet_warning: false,
+            run_all: true,
         };
         
         // Behavior: Config should handle no filters
@@ -51,6 +53,7 @@ mod tests {
             quiet: false,
             really_quiet: false,
             show_quiet_warning: false,
+            run_all: true,
         };
         
         let cmd = "cargo test --test cucumber".to_string();
@@ -68,6 +71,7 @@ mod tests {
             quiet: false,
             really_quiet: false,
             show_quiet_warning: false,
+            run_all: true,
         };
         
         let mut cmd = "cargo test --test cucumber".to_string();
@@ -88,6 +92,7 @@ mod tests {
             quiet: false,
             really_quiet: false,
             show_quiet_warning: false,
+            run_all: true,
         };
         
         let mut cmd = "cargo test --test cucumber".to_string();
@@ -108,6 +113,7 @@ mod tests {
             quiet: false,
             really_quiet: false,
             show_quiet_warning: false,
+            run_all: true,
         };
         
         let mut cmd = "cargo test --test cucumber".to_string();
@@ -205,6 +211,7 @@ mod tests {
             quiet: false,
             really_quiet: false,
             show_quiet_warning: false,
+            run_all: true,
         };
         
         let mut cmd = "cargo test --test cucumber".to_string();
@@ -224,6 +231,7 @@ mod tests {
             quiet: false,
             really_quiet: false,
             show_quiet_warning: false,
+            run_all: true,
         };
         
         let mut cmd = "cargo test --test cucumber".to_string();
@@ -243,6 +251,7 @@ mod tests {
             quiet: true,
             really_quiet: false,
             show_quiet_warning: false,
+            run_all: true,
         };
         
         let config2 = config1.clone();
@@ -310,6 +319,7 @@ mod tests {
             quiet: false,
             really_quiet: false,
             show_quiet_warning: false,
+            run_all: true,
         };
         
         // Behavior: Should be debuggable
@@ -325,6 +335,7 @@ mod tests {
             quiet: false,
             really_quiet: false,
             show_quiet_warning: false,
+            run_all: true,
         };
         
         // Behavior: Should handle empty strings (though not recommended)

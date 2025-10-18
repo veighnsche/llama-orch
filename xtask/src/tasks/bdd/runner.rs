@@ -16,6 +16,9 @@ use std::time::Duration;
 
 /// Main entry point for BDD test execution
 pub fn run_bdd_tests(config: BddConfig) -> Result<()> {
+    // Start timer
+    let start_time = std::time::Instant::now();
+    
     // Validate cargo is available
     validate_cargo_available()?;
     
@@ -46,7 +49,27 @@ pub fn run_bdd_tests(config: BddConfig) -> Result<()> {
     
     // Phase 4: Run tests
     println!("\n{} {}", "[3/4]".yellow(), "Running BDD tests...".cyan());
-    let test_cmd = build_test_command(&config);
+    
+    // Check if we should run only failing tests
+    let test_cmd = if config.run_all {
+        println!("{}", "🔄 Running ALL tests (--all flag specified)".yellow());
+        build_test_command(&config)
+    } else {
+        // Try to find the last rerun command
+        match find_last_rerun_command(&paths.log_dir) {
+            Some(rerun_cmd) => {
+                println!("{}", "⚡ Running ONLY failing tests from last run (default behavior)".green().bold());
+                println!("{}", "💡 Use --all to run all tests".cyan());
+                println!();
+                rerun_cmd
+            }
+            None => {
+                println!("{}", "📝 No previous failures found - running ALL tests".yellow());
+                build_test_command(&config)
+            }
+        }
+    };
+    
     println!("{} {}", "Command:".blue(), test_cmd);
     
     let results = execute_tests(&bdd_dir, &test_cmd, &paths, config.quiet)?;
@@ -54,7 +77,10 @@ pub fn run_bdd_tests(config: BddConfig) -> Result<()> {
     // Phase 5: Parse and report results
     println!("\n{} {}", "[4/4]".yellow(), "Parsing test results...".cyan());
     
-    reporter::print_test_summary(&results);
+    // Calculate elapsed time
+    let elapsed = start_time.elapsed();
+    
+    reporter::print_test_summary(&results, elapsed);
     
     // Handle failures if any
     if results.failed > 0 {
@@ -67,7 +93,7 @@ pub fn run_bdd_tests(config: BddConfig) -> Result<()> {
     files::generate_summary_file(&paths, &test_cmd, &results)?;
     
     // Display output files
-    reporter::print_output_files(&paths, results.failed > 0);
+    reporter::print_output_files(&paths, results.failed > 0, results.failed, elapsed);
     
     // Final banner
     reporter::print_final_banner(results.exit_code == 0);
@@ -83,6 +109,28 @@ pub fn run_bdd_tests(config: BddConfig) -> Result<()> {
 fn get_bdd_directory() -> Result<PathBuf> {
     let root = crate::util::repo_root()?;
     Ok(root.join("test-harness/bdd"))
+}
+
+fn find_last_rerun_command(log_dir: &PathBuf) -> Option<String> {
+    // Look for the rerun-failures-cmd.txt file
+    let rerun_file = log_dir.join("rerun-failures-cmd.txt");
+    
+    if !rerun_file.exists() {
+        return None;
+    }
+    
+    // Read the command from the file
+    match fs::read_to_string(&rerun_file) {
+        Ok(content) => {
+            let content = content.trim();
+            if content.is_empty() {
+                None
+            } else {
+                Some(content.to_string())
+            }
+        }
+        Err(_) => None,
+    }
 }
 
 fn validate_cargo_available() -> Result<()> {

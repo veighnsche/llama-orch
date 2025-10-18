@@ -22,7 +22,7 @@ fn main() -> Result<()> {
         Cmd::DocsIndex => tasks::ci::docs_index()?,
         Cmd::EngineStatus { config, pool } => tasks::engine::engine_status(config, pool)?,
         Cmd::EngineDown { config, pool } => tasks::engine::engine_down(config, pool)?,
-        Cmd::BddTest { tags, feature, quiet, really_quiet } => {
+        Cmd::BddTest { tags, feature, quiet, really_quiet, all } => {
             // Handle the quiet flag logic:
             // - If --really-quiet is set, use quiet mode (no warning)
             // - If --quiet is set (but not --really-quiet), show warning and use live mode
@@ -36,9 +36,13 @@ fn main() -> Result<()> {
                 quiet: actual_quiet,
                 really_quiet,
                 show_quiet_warning,
+                run_all: all,
             };
             tasks::bdd::run_bdd_tests(config)?
         }
+        Cmd::BddTail { lines } => tasks::bdd::bdd_tail(lines)?,
+        Cmd::BddHead { lines } => tasks::bdd::bdd_head(lines)?,
+        Cmd::BddGrep { pattern, ignore_case } => tasks::bdd::bdd_grep(pattern, ignore_case)?,
     }
     Ok(())
 }

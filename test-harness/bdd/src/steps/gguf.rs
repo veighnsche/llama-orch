@@ -179,7 +179,8 @@ pub async fn when_worker_loads_each_model(world: &mut World) {
     }
 }
 
-// TEAM-071: Calculate model size from filesystem NICE!
+// TEAM-112: Removed duplicate - conflicts with model_catalog.rs
+// Keep this one since it's more specific to GGUF files
 #[when(expr = "rbee-hive calculates model size")]
 pub async fn when_calculate_model_size(world: &mut World) {
     let mut total_size: u64 = 0;

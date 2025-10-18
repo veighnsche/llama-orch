@@ -72,6 +72,7 @@ mod tests {
             quiet: true,
             really_quiet: false,
             show_quiet_warning: false,
+            run_all: true,
         };
         
         assert_eq!(config.tags, Some("@auth".to_string()));
@@ -87,6 +88,7 @@ mod tests {
             quiet: false,
             really_quiet: false,
             show_quiet_warning: false,
+            run_all: true,
         };
         
         assert!(config.tags.is_none());
@@ -149,6 +151,7 @@ mod tests {
             quiet: false,
             really_quiet: false,
             show_quiet_warning: false,
+            run_all: true,
         };
         
         let config2 = config1.clone();

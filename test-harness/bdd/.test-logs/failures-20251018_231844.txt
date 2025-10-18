@@ -1,0 +1,646 @@
+FAILURE DETAILS
+========================================
+
+Failed Tests: 1
+
+========================================
+
+Downloading model... [████████████--------] 60% (3.0 MB / 5.0 MB)
+   ✔  When rbee-hive retries download
+[2m2025-10-18T21:21:29.946107Z[0m [34mDEBUG[0m [2mtest_harness_bdd::steps::error_handling[0m[2m:[0m All 6 attempts failed: DOWNLOAD_FAILED
+   ✔  Then rbee-hive displays:
+[2m2025-10-18T21:21:29.947205Z[0m [32m INFO[0m [2mtest_harness_bdd::steps::cli_commands[0m[2m:[0m ✅ Exit code is 1
+   ✔  And if all 6 attempts fail, error "DOWNLOAD_FAILED" is returned
+[2m2025-10-18T21:21:29.947598Z[0m [32m INFO[0m [2mcucumber[0m[2m:[0m ⏱️  Scenario 'EC2 - Model download failure with retry' completed in 39.004143ms
+   ✔  And the exit code is 1
+[2m2025-10-18T21:21:30.448026Z[0m [34mDEBUG[0m [2mtest_harness_bdd::steps::world[0m[2m:[0m World dropped, cleaning up scenario-specific resources
+[2m2025-10-18T21:21:30.450189Z[0m [32m INFO[0m [2mcucumber[0m[2m:[0m 🎬 Starting scenario: Build worker from git succeeds
+Feature: Worker Provisioning
+  Scenario: Build worker from git succeeds
+[2m2025-10-18T21:21:30.451218Z[0m [32m INFO[0m [2mtest_harness_bdd::steps::background[0m[2m:[0m ✅ Test setup: Topology configured with 2 nodes
+
+   ✔  Then rbee-hive displays:
+[2m2025-10-18T21:21:29.947205Z[0m [32m INFO[0m [2mtest_harness_bdd::steps::cli_commands[0m[2m:[0m ✅ Exit code is 1
+   ✔  And if all 6 attempts fail, error "DOWNLOAD_FAILED" is returned
+[2m2025-10-18T21:21:29.947598Z[0m [32m INFO[0m [2mcucumber[0m[2m:[0m ⏱️  Scenario 'EC2 - Model download failure with retry' completed in 39.004143ms
+   ✔  And the exit code is 1
+[2m2025-10-18T21:21:30.448026Z[0m [34mDEBUG[0m [2mtest_harness_bdd::steps::world[0m[2m:[0m World dropped, cleaning up scenario-specific resources
+[2m2025-10-18T21:21:30.450189Z[0m [32m INFO[0m [2mcucumber[0m[2m:[0m 🎬 Starting scenario: Build worker from git succeeds
+Feature: Worker Provisioning
+  Scenario: Build worker from git succeeds
+[2m2025-10-18T21:21:30.451218Z[0m [32m INFO[0m [2mtest_harness_bdd::steps::background[0m[2m:[0m ✅ Test setup: Topology configured with 2 nodes
+[2m2025-10-18T21:21:30.452482Z[0m [32m INFO[0m [2mtest_harness_bdd::steps::background[0m[2m:[0m ✅ Test setup: Current node set to: workstation
+   ✔> Given the following topology:
+       | node        | hostname              | components                 | capabilities        |
+
+[queen-rbee] ❌ SSH connection failed: SSH connection failed: Connection timeout
+
+[2m2025-10-18T21:21:17.652926Z[0m [33m WARN[0m [2mtest_harness_bdd::steps::cli_commands[0m[2m:[0m stderr: Error: SSH connection failed: SSH connection failed: Connection timeout
+
+[2m2025-10-18T21:21:17.656484Z[0m [32m INFO[0m [2mcucumber[0m[2m:[0m ⏱️  Scenario 'EH-001a - SSH connection timeout' completed in 25.758604ms
+   ✔  When I run:
+   ✘  Then queen-rbee attempts SSH connection with 10s timeout
+      Step failed:
+
+[2m2025-10-18T21:21:21.466132Z[0m [32m INFO[0m [2mtest_harness_bdd::steps::error_handling[0m[2m:[0m ✅ Duplicate node detected, exit code set to 1
+   ✔  When I run:
+[2m2025-10-18T21:21:21.467533Z[0m [34mDEBUG[0m [2mtest_harness_bdd::steps::cli_commands[0m[2m:[0m rbee-keeper should display: [queen-rbee] ❌ Error: Node 'workstation' already exists in registry
+
+To update this node, run:
+  rbee-keeper setup update-node --name workstation ...
+
+To remove and re-add:
+
+[queen-rbee] Submitting inference task...
+
+[2m2025-10-18T21:21:22.018373Z[0m [33m WARN[0m [2mtest_harness_bdd::steps::cli_commands[0m[2m:[0m stderr: Error: Inference request failed: HTTP 503 Service Unavailable
+
+[2m2025-10-18T21:21:22.021464Z[0m [31mERROR[0m [2mtest_harness_bdd::steps::happy_path[0m[2m:[0m ❌ Registry query: node 'workstation' not found
+   ✔  When I run:
+[2m2025-10-18T21:21:22.024686Z[0m [32m INFO[0m [2mtest_harness_bdd::steps::beehive_registry[0m[2m:[0m ✅ Query returned no results (as expected)
+   ✔  Then queen-rbee queries rbee-hive registry for node "workstation"
+
+[2m2025-10-18T21:21:25.752576Z[0m [34mDEBUG[0m [2mtest_harness_bdd::steps::error_handling[0m[2m:[0m Detected status code 404
+   ✔  When rbee-hive attempts to download model
+[2m2025-10-18T21:21:25.755037Z[0m [34mDEBUG[0m [2mtest_harness_bdd::steps::cli_commands[0m[2m:[0m rbee-keeper should display: [rbee-hive] ❌ Error: Model not found
+  Model: hf:NonExistent/FakeModel
+
+Suggestion: Check model reference on https://huggingface.co/
+   ✔  Then Hugging Face returns 404 Not Found
+   ✔  And rbee-hive detects 404 status code
+
+[2m2025-10-18T21:21:26.272461Z[0m [34mDEBUG[0m [2mtest_harness_bdd::steps::error_handling[0m[2m:[0m Hugging Face returned 403
+   ✔  Given model "hf:PrivateOrg/PrivateModel" requires authentication
+[2m2025-10-18T21:21:26.274210Z[0m [34mDEBUG[0m [2mtest_harness_bdd::steps::cli_commands[0m[2m:[0m rbee-keeper should display: [rbee-hive] ❌ Error: Access denied to model
+  Model: hf:PrivateOrg/PrivateModel
+
+This model requires authentication. Provide HF token:
+  export HF_TOKEN=your_token_here
+   ✔  When rbee-hive attempts to download without credentials
+
+[2m2025-10-18T21:21:29.942348Z[0m [32m INFO[0m [2mtest_harness_bdd::steps::edge_cases[0m[2m:[0m ✅ Real download retry failed (exit code Some(1))
+[2m2025-10-18T21:21:29.944222Z[0m [34mDEBUG[0m [2mtest_harness_bdd::steps::edge_cases[0m[2m:[0m rbee-hive should display: Downloading model... [████████------------] 40% (2.0 MB / 5.0 MB)
+Error: Connection reset by peer
+Retrying download (attempt 2/6)... delay 100ms
+Downloading model... [████████████--------] 60% (3.0 MB / 5.0 MB)
+   ✔  When rbee-hive retries download
+[2m2025-10-18T21:21:29.946107Z[0m [34mDEBUG[0m [2mtest_harness_bdd::steps::error_handling[0m[2m:[0m All 6 attempts failed: DOWNLOAD_FAILED
+   ✔  Then rbee-hive displays:
+
+[2m2025-10-18T21:21:39.815020Z[0m [34mDEBUG[0m [2mtest_harness_bdd::steps::error_handling[0m[2m:[0m ✅ JSON parse error detected and verified
+   ✔  When queen-rbee queries worker registry
+[2m2025-10-18T21:21:39.816135Z[0m [34mDEBUG[0m [2mtest_harness_bdd::steps::cli_commands[0m[2m:[0m rbee-keeper should display: [queen-rbee] ❌ Error: Invalid response from rbee-hive
+  Expected valid JSON, got parse error at position 12
+
+Suggestion: rbee-hive may be corrupted, try restarting:
+  ssh workstation pkill rbee-hive
+   ✔  And rbee-hive returns invalid JSON: "{ workers: [ incomplete"
+
+   ✔  And rbee-hive version is "0.2.0"
+[2m2025-10-18T21:21:41.384363Z[0m [32m INFO[0m [2mtest_harness_bdd::steps::edge_cases[0m[2m:[0m ✅ Real version check failed (exit code Some(1))
+[2m2025-10-18T21:21:41.385338Z[0m [34mDEBUG[0m [2mtest_harness_bdd::steps::cli_commands[0m[2m:[0m rbee-keeper should display: Error: Version mismatch
+  rbee-keeper: v0.1.0
+  rbee-hive: v0.2.0
+
+Please upgrade rbee-keeper to v0.2.0:
+  cargo install rbee-keeper --version 0.2.0
+
+[2m2025-10-18T21:21:42.402824Z[0m [32m INFO[0m [2mtest_harness_bdd::steps::ssh_preflight[0m[2m:[0m TEAM-082: Timeout detected
+   ✔  When queen-rbee validates SSH connection
+[2m2025-10-18T21:21:42.403700Z[0m [34mDEBUG[0m [2mtest_harness_bdd::steps::cli_commands[0m[2m:[0m rbee-keeper should display: [queen-rbee] ❌ Error: SSH connection timeout
+  Host: unreachable.example.com
+  Timeout: 10s
+
+Check network connectivity:
+  ping unreachable.example.com
+
+[2m2025-10-18T21:21:47.650786Z[0m [32m INFO[0m [2mtest_harness_bdd::steps::worker_preflight[0m[2m:[0m ✅ rbee-hive returns error: INSUFFICIENT_RAM
+   ✔  Then rbee-hive calculates required RAM as 6000 MB
+[2m2025-10-18T21:21:47.651355Z[0m [34mDEBUG[0m [2mtest_harness_bdd::steps::cli_commands[0m[2m:[0m rbee-keeper should display: [rbee-hive] ❌ Error: Insufficient RAM on workstation
+  Required: 6000 MB (model size * 1.2)
+  Available: 4000 MB
+
+Suggestions:
+  - Close other applications to free RAM
+
+   ✔  When disk space is exhausted mid-download
+[2m2025-10-18T21:21:51.213538Z[0m [34mDEBUG[0m [2mtest_harness_bdd::steps::cli_commands[0m[2m:[0m rbee-keeper should display: [rbee-hive] Downloading... [████████------------] 40% (2.0 MB / 5.0 MB)
+[rbee-hive] ❌ Error: Disk full during download
+[rbee-hive] 🗑️  Cleaning up partial download
+
+Free up disk space and try again.
+   ✔  Then download fails with "No space left on device"
+   ✔  And rbee-hive cleans up partial download
+
+[2m2025-10-18T21:21:51.718432Z[0m [34mDEBUG[0m [2mtest_harness_bdd::steps::error_handling[0m[2m:[0m Performing VRAM check
+   ✔  Given the model requires 6000 MB
+[2m2025-10-18T21:21:51.719601Z[0m [34mDEBUG[0m [2mtest_harness_bdd::steps::cli_commands[0m[2m:[0m rbee-keeper should display: Error: Insufficient VRAM on workstation
+  Required: 6000 MB
+  Available: 4000 MB
+
+Suggestion: Try a smaller quantized model (Q4 instead of Q8)
+   ✔  And only 4000 MB is available
+
+[2m2025-10-18T21:21:56.866164Z[0m [32m INFO[0m [2mtest_harness_bdd::steps::pool_preflight[0m[2m:[0m ✅ rbee-keeper aborts with error: LOADING_TIMEOUT
+   ✔  And the worker is stuck at 28/32 layers
+[2m2025-10-18T21:21:56.867596Z[0m [34mDEBUG[0m [2mtest_harness_bdd::steps::cli_commands[0m[2m:[0m rbee-keeper should display: [rbee-keeper] ❌ Error: Model loading timeout after 5 minutes
+  Worker state: loading (stuck at 28/32 layers)
+  Elapsed: 5m 0s
+
+Suggestion: Check worker logs on workstation:
+  ssh workstation tail -f ~/.rbee/logs/worker-abc123.log
+
+[2m2025-10-18T21:21:57.377092Z[0m [34mDEBUG[0m [2mtest_harness_bdd::steps::worker_health[0m[2m:[0m Timeout expired
+   ✔> And queen-rbee is running at "http://localhost:8080"
+[2m2025-10-18T21:21:57.378755Z[0m [34mDEBUG[0m [2mtest_harness_bdd::steps::cli_commands[0m[2m:[0m rbee-keeper should display: Error: Model loading timeout after 5 minutes
+Worker state: loading (stuck at 28/32 layers)
+
+Suggestion: Check worker logs on workstation for errors
+   ✔  Given the worker is loading for over 5 minutes
+   ✔  When rbee-keeper timeout expires
+
+[2m2025-10-18T21:22:12.240333Z[0m [34mDEBUG[0m [2mtest_harness_bdd::steps::error_handling[0m[2m:[0m Request canceled
+   ✔  Then rbee-keeper detects stall timeout
+[2m2025-10-18T21:22:12.240996Z[0m [34mDEBUG[0m [2mtest_harness_bdd::steps::cli_commands[0m[2m:[0m rbee-keeper should display: [rbee-keeper] ❌ Error: Worker timeout - no response for 60s
+  Request may be stuck
+
+Canceling request...
+   ✔  And rbee-keeper cancels request
+   ✔  And rbee-keeper displays:
+
+[2m2025-10-18T21:22:12.750034Z[0m [34mDEBUG[0m [2mtest_harness_bdd::steps::cli_commands[0m[2m:[0m rbee-keeper should display: Once upon a time, in a small
+
+[rbee-keeper] ❌ Error: Worker connection lost
+  Network may be down
+
+Partial result: 8 tokens generated
+   ✔  And rbee-keeper displays partial results
+   ✔  And rbee-keeper displays:
+
+Attempt 2: Connecting to workstation.home.arpa:8080... (timeout 10s, delay 200ms)
+Attempt 3: Connecting to workstation.home.arpa:8080... (timeout 10s, delay 400ms)
+Error: Cannot connect to workstation.home.arpa:8080 after 3 attempts
+Suggestion: Check if rbee-hive is running on workstation
+   ✔  When rbee-keeper attempts connection
+   ✔  Then rbee-keeper displays:
+[2m2025-10-18T21:22:13.308687Z[0m [32m INFO[0m [2mcucumber[0m[2m:[0m ⏱️  Scenario 'EC1 - Connection timeout with retry and backoff' completed in 55.068782ms
+   ✘  And the exit code is 1
+
+   ✔  When the worker process dies unexpectedly
+[2m2025-10-18T21:22:13.824750Z[0m [34mDEBUG[0m [2mtest_harness_bdd::steps::cli_commands[0m[2m:[0m rbee-keeper should display: Once upon a time, in a small village, there lived a curious cat
+Error: SSE stream closed unexpectedly
+
+Partial result saved to: /tmp/rbee-partial-abc123.txt
+Tokens generated: 12 / 20
+   ✔  Then rbee-keeper detects SSE stream closed
+   ✔  And rbee-keeper displays:
+
+Worker is busy, retrying in 2 seconds...
+Worker is busy, retrying in 4 seconds...
+Error: Worker still busy after 3 retries
+Suggestion: Wait for current request to complete or use a different node
+   ✔  And rbee-keeper retries with backoff
+[2m2025-10-18T21:22:14.343694Z[0m [32m INFO[0m [2mtest_harness_bdd::steps::cli_commands[0m[2m:[0m ✅ Exit code is 1
+   ✔  And rbee-keeper displays:
+[2m2025-10-18T21:22:14.344130Z[0m [32m INFO[0m [2mcucumber[0m[2m:[0m ⏱️  Scenario 'EC6 - Queue full with retry' completed in 14.329902ms
+
+[queen-rbee] Submitting inference task...
+
+[2m2025-10-18T21:22:16.940757Z[0m [33m WARN[0m [2mtest_harness_bdd::steps::cli_commands[0m[2m:[0m stderr: Error: Inference request failed: HTTP 503 Service Unavailable
+
+[2m2025-10-18T21:22:16.943551Z[0m [34mDEBUG[0m [2mtest_harness_bdd::steps::error_handling[0m[2m:[0m Validating model reference format
+   ✔  When I run:
+   ✔  Then rbee-keeper validates model reference format
+[2m2025-10-18T21:22:16.946133Z[0m [32m INFO[0m [2mcucumber[0m[2m:[0m ⏱️  Scenario 'EH-015a - Invalid model reference format' completed in 42.967653ms
+
+[queen-rbee] Submitting inference task...
+
+[2m2025-10-18T21:22:17.481104Z[0m [33m WARN[0m [2mtest_harness_bdd::steps::cli_commands[0m[2m:[0m stderr: Error: Inference request failed: HTTP 503 Service Unavailable
+
+[2m2025-10-18T21:22:17.482659Z[0m [34mDEBUG[0m [2mtest_harness_bdd::steps::error_handling[0m[2m:[0m Validating backend name
+   ✔  When I run:
+[2m2025-10-18T21:22:17.483735Z[0m [32m INFO[0m [2mcucumber[0m[2m:[0m ⏱️  Scenario 'EH-015b - Invalid backend name' completed in 33.441151ms
+   ✔  Then rbee-keeper validates backend name
+
+}
+   ✔  Given rbee-hive requires API key
+[2m2025-10-18T21:22:19.090032Z[0m [34mDEBUG[0m [2mtest_harness_bdd::steps::cli_commands[0m[2m:[0m rbee-keeper should display: [rbee-keeper] ❌ Error: Authentication required
+  Missing API key for workstation.home.arpa
+
+Configure API key in:
+  ~/.rbee/config.yaml
+   ✔  When queen-rbee sends request without Authorization header
+
+[2m2025-10-18T21:22:34.506706Z[0m [32m INFO[0m [2mtest_harness_bdd::steps::cli_commands[0m[2m:[0m stdout: 📦 Installing rbee binaries...
+
+[2m2025-10-18T21:22:34.506721Z[0m [33m WARN[0m [2mtest_harness_bdd::steps::cli_commands[0m[2m:[0m stderr: Error: Failed to create config directory
+
+Caused by:
+    Permission denied (os error 13)
+
+[2m2025-10-18T21:22:34.508302Z[0m [34mDEBUG[0m [2mtest_harness_bdd::steps::cli_commands[0m[2m:[0m Binaries should be installed to: /usr/local/bin/
+
+[queen-rbee] Submitting inference task...
+
+[2m2025-10-18T21:22:36.042682Z[0m [33m WARN[0m [2mtest_harness_bdd::steps::cli_commands[0m[2m:[0m stderr: Error: error sending request for url (http://localhost:8080/v2/tasks)
+
+Caused by:
+    0: client error (Connect)
+    1: tcp connect error
+    2: Connection refused (os error 111)
+
+
+
+[2m2025-10-18T21:22:36.564783Z[0m [33m WARN[0m [2mtest_harness_bdd::steps::cli_commands[0m[2m:[0m stderr: Error: error sending request for url (http://localhost:8080/v2/workers/list)
+
+Caused by:
+    0: client error (Connect)
+    1: tcp connect error
+    2: Connection refused (os error 111)
+
+
+
+[2m2025-10-18T21:22:37.087218Z[0m [33m WARN[0m [2mtest_harness_bdd::steps::cli_commands[0m[2m:[0m stderr: Error: error sending request for url (http://localhost:8080/v2/workers/health?node=workstation)
+
+Caused by:
+    0: client error (Connect)
+    1: tcp connect error
+    2: Connection refused (os error 111)
+
+
+
+[2m2025-10-18T21:22:37.609865Z[0m [33m WARN[0m [2mtest_harness_bdd::steps::cli_commands[0m[2m:[0m stderr: Error: error sending request for url (http://localhost:8080/v2/workers/shutdown)
+
+Caused by:
+    0: client error (Connect)
+    1: tcp connect error
+    2: Connection refused (os error 111)
+
+
+
+[2m2025-10-18T21:22:38.134262Z[0m [33m WARN[0m [2mtest_harness_bdd::steps::cli_commands[0m[2m:[0m stderr: Error: error sending request for url (http://localhost:8080/v2/logs?node=workstation&follow=true)
+
+Caused by:
+    0: client error (Connect)
+    1: tcp connect error
+    2: Connection refused (os error 111)
+
+      Defined: tests/features/010-ssh-registry-management.feature:214:5
+      Matched: test-harness/bdd/src/steps/cli_commands.rs:364:1
+      Step panicked. Captured output: assertion `left == right` failed: Expected validation to fail with exit code 1
+        left: Some(0)
+       right: Some(1)
+[2m2025-10-18T21:21:21.437900Z[0m [34mDEBUG[0m [2mtest_harness_bdd::steps::world[0m[2m:[0m World dropped, cleaning up scenario-specific resources
+  Scenario: EH-011b - Duplicate node name
+[2m2025-10-18T21:21:21.439554Z[0m [32m INFO[0m [2mcucumber[0m[2m:[0m 🎬 Starting scenario: EH-011b - Duplicate node name
+
+      Defined: tests/features/020-model-catalog.feature:57:5
+      Matched: test-harness/bdd/src/steps/model_catalog.rs:188:1
+      Step panicked. Captured output: assertion `left == right` failed
+        left: 6
+       right: 2
+[2m2025-10-18T21:21:24.691620Z[0m [34mDEBUG[0m [2mtest_harness_bdd::steps::world[0m[2m:[0m World dropped, cleaning up scenario-specific resources
+[2m2025-10-18T21:21:24.692940Z[0m [32m INFO[0m [2mcucumber[0m[2m:[0m 🎬 Starting scenario: GGUF model size calculation
+  Scenario: GGUF model size calculation
+
+      Defined: tests/features/030-model-provisioner.feature:53:5
+      Matched: test-harness/bdd/src/steps/cli_commands.rs:260:1
+      Step panicked. Captured output: assertion `left == right` failed: Expected exit code 1, got None
+        left: None
+       right: Some(1)
+[2m2025-10-18T21:21:26.259543Z[0m [34mDEBUG[0m [2mtest_harness_bdd::steps::world[0m[2m:[0m World dropped, cleaning up scenario-specific resources
+  Scenario: EH-007b - Model repository is private
+[2m2025-10-18T21:21:26.261677Z[0m [32m INFO[0m [2mcucumber[0m[2m:[0m 🎬 Starting scenario: EH-007b - Model repository is private
+
+      Defined: tests/features/030-model-provisioner.feature:68:5
+      Matched: test-harness/bdd/src/steps/cli_commands.rs:260:1
+      Step panicked. Captured output: assertion `left == right` failed: Expected exit code 1, got None
+        left: None
+       right: Some(1)
+[2m2025-10-18T21:21:26.777455Z[0m [34mDEBUG[0m [2mtest_harness_bdd::steps::world[0m[2m:[0m World dropped, cleaning up scenario-specific resources
+  Scenario: EH-008a - Model download timeout
+[2m2025-10-18T21:21:26.779083Z[0m [32m INFO[0m [2mcucumber[0m[2m:[0m 🎬 Starting scenario: EH-008a - Model download timeout
+
+      Defined: tests/features/030-model-provisioner.feature:83:5
+      Matched: test-harness/bdd/src/steps/cli_commands.rs:260:1
+      Step panicked. Captured output: assertion `left == right` failed: Expected exit code 1, got Some(0)
+        left: Some(0)
+       right: Some(1)
+[2m2025-10-18T21:21:27.302888Z[0m [34mDEBUG[0m [2mtest_harness_bdd::steps::world[0m[2m:[0m World dropped, cleaning up scenario-specific resources
+  Scenario: EH-008b - Model download fails with retry
+[2m2025-10-18T21:21:27.304776Z[0m [32m INFO[0m [2mcucumber[0m[2m:[0m 🎬 Starting scenario: EH-008b - Model download fails with retry
+
+      Defined: tests/features/060-rbee-hive-worker-registry.feature:86:5
+      Matched: test-harness/bdd/src/steps/cli_commands.rs:260:1
+      Step panicked. Captured output: assertion `left == right` failed: Expected exit code 1, got Some(0)
+        left: Some(0)
+       right: Some(1)
+[2m2025-10-18T21:21:40.317697Z[0m [34mDEBUG[0m [2mtest_harness_bdd::steps::world[0m[2m:[0m World dropped, cleaning up scenario-specific resources
+  Scenario: Pool preflight connection timeout with retry
+[2m2025-10-18T21:21:40.319200Z[0m [32m INFO[0m [2mcucumber[0m[2m:[0m 🎬 Starting scenario: Pool preflight connection timeout with retry
+
+      Defined: tests/features/070-ssh-preflight-validation.feature:46:5
+      Matched: test-harness/bdd/src/steps/cli_commands.rs:260:1
+      Step panicked. Captured output: assertion `left == right` failed: Expected exit code 1, got None
+        left: None
+       right: Some(1)
+[2m2025-10-18T21:21:42.904864Z[0m [34mDEBUG[0m [2mtest_harness_bdd::steps::world[0m[2m:[0m World dropped, cleaning up scenario-specific resources
+  Scenario: EH-001b - SSH authentication failure
+[2m2025-10-18T21:21:42.905907Z[0m [32m INFO[0m [2mcucumber[0m[2m:[0m 🎬 Starting scenario: EH-001b - SSH authentication failure
+
+      Defined: tests/features/090-worker-resource-preflight.feature:161:5
+      Matched: test-harness/bdd/src/steps/cli_commands.rs:260:1
+      Step panicked. Captured output: assertion `left == right` failed: Expected exit code 1, got Some(0)
+        left: Some(0)
+       right: Some(1)
+[2m2025-10-18T21:21:51.714791Z[0m [34mDEBUG[0m [2mtest_harness_bdd::steps::world[0m[2m:[0m World dropped, cleaning up scenario-specific resources
+  Scenario: EC3 - Insufficient VRAM
+[2m2025-10-18T21:21:51.715670Z[0m [32m INFO[0m [2mcucumber[0m[2m:[0m 🎬 Starting scenario: EC3 - Insufficient VRAM
+
+      Defined: tests/features/090-worker-resource-preflight.feature:176:5
+      Matched: test-harness/bdd/src/steps/cli_commands.rs:260:1
+      Step panicked. Captured output: assertion `left == right` failed: Expected exit code 1, got None
+        left: None
+       right: Some(1)
+[2m2025-10-18T21:21:52.221430Z[0m [34mDEBUG[0m [2mtest_harness_bdd::steps::world[0m[2m:[0m World dropped, cleaning up scenario-specific resources
+Feature: worker-rbee Daemon Lifecycle
+[2m2025-10-18T21:21:52.222773Z[0m [32m INFO[0m [2mcucumber[0m[2m:[0m 🎬 Starting scenario: Worker startup sequence
+
+      Defined: tests/features/100-worker-rbee-lifecycle.feature:183:5
+      Matched: test-harness/bdd/src/steps/cli_commands.rs:260:1
+      Step panicked. Captured output: assertion `left == right` failed: Expected exit code 1, got None
+        left: None
+       right: Some(1)
+[2m2025-10-18T21:21:57.881115Z[0m [34mDEBUG[0m [2mtest_harness_bdd::steps::world[0m[2m:[0m World dropped, cleaning up scenario-specific resources
+Feature: rbee-hive Daemon Lifecycle
+[2m2025-10-18T21:21:57.883633Z[0m [32m INFO[0m [2mcucumber[0m[2m:[0m 🎬 Starting scenario: Rbee-hive remains running as persistent HTTP daemon
+
+      Defined: tests/features/130-inference-execution.feature:50:5
+      Matched: test-harness/bdd/src/steps/cli_commands.rs:260:1
+      Step panicked. Captured output: assertion `left == right` failed: Expected exit code 0, got Some(1)
+        left: Some(1)
+       right: Some(0)
+[2m2025-10-18T21:22:11.217652Z[0m [34mDEBUG[0m [2mtest_harness_bdd::steps::world[0m[2m:[0m World dropped, cleaning up scenario-specific resources
+[2m2025-10-18T21:22:11.218911Z[0m [32m INFO[0m [2mcucumber[0m[2m:[0m 🎬 Starting scenario: EH-018a - Worker busy with all slots occupied
+  Scenario: EH-018a - Worker busy with all slots occupied
+
+      Defined: tests/features/130-inference-execution.feature:122:5
+      Matched: test-harness/bdd/src/steps/cli_commands.rs:260:1
+      Step panicked. Captured output: assertion `left == right` failed: Expected exit code 1, got None
+        left: None
+       right: Some(1)
+[2m2025-10-18T21:22:12.742095Z[0m [34mDEBUG[0m [2mtest_harness_bdd::steps::world[0m[2m:[0m World dropped, cleaning up scenario-specific resources
+[2m2025-10-18T21:22:12.742895Z[0m [32m INFO[0m [2mcucumber[0m[2m:[0m 🎬 Starting scenario: EH-003a - Worker HTTP connection lost mid-inference
+  Scenario: EH-003a - Worker HTTP connection lost mid-inference
+
+      Defined: tests/features/130-inference-execution.feature:139:5
+      Matched: test-harness/bdd/src/steps/cli_commands.rs:260:1
+      Step panicked. Captured output: assertion `left == right` failed: Expected exit code 1, got None
+        left: None
+       right: Some(1)
+[2m2025-10-18T21:22:13.251600Z[0m [34mDEBUG[0m [2mtest_harness_bdd::steps::world[0m[2m:[0m World dropped, cleaning up scenario-specific resources
+[2m2025-10-18T21:22:13.253582Z[0m [32m INFO[0m [2mcucumber[0m[2m:[0m 🎬 Starting scenario: EC1 - Connection timeout with retry and backoff
+  Scenario: EC1 - Connection timeout with retry and backoff
+
+      Defined: tests/features/130-inference-execution.feature:153:5
+      Matched: test-harness/bdd/src/steps/cli_commands.rs:260:1
+      Step panicked. Captured output: assertion `left == right` failed: Expected exit code 1, got Some(255)
+        left: Some(255)
+       right: Some(1)
+[2m2025-10-18T21:22:13.809478Z[0m [34mDEBUG[0m [2mtest_harness_bdd::steps::world[0m[2m:[0m World dropped, cleaning up scenario-specific resources
+[2m2025-10-18T21:22:13.811302Z[0m [32m INFO[0m [2mcucumber[0m[2m:[0m 🎬 Starting scenario: EC4 - Worker crash during inference
+  Scenario: EC4 - Worker crash during inference
+
+      Defined: tests/features/140-input-validation.feature:116:5
+      Matched: test-harness/bdd/src/steps/cli_commands.rs:260:1
+      Step panicked. Captured output: assertion `left == right` failed: Expected exit code 1, got None
+        left: None
+       right: Some(1)
+[2m2025-10-18T21:22:19.596265Z[0m [34mDEBUG[0m [2mtest_harness_bdd::steps::world[0m[2m:[0m World dropped, cleaning up scenario-specific resources
+  Scenario: EH-017b - Invalid API key
+[2m2025-10-18T21:22:19.600150Z[0m [32m INFO[0m [2mcucumber[0m[2m:[0m 🎬 Starting scenario: EH-017b - Invalid API key
+
+      Defined: tests/features/140-input-validation.feature:167:5
+      Matched: test-harness/bdd/src/steps/validation.rs:39:1
+      Step panicked. Captured output: assertion `left == right` failed: Expected status 400
+        left: None
+       right: Some(400)
+[2m2025-10-18T21:22:21.136875Z[0m [34mDEBUG[0m [2mtest_harness_bdd::steps::world[0m[2m:[0m World dropped, cleaning up scenario-specific resources
+  Scenario: VAL-002 - Prevent log injection with ANSI escape codes
+[2m2025-10-18T21:22:21.138750Z[0m [32m INFO[0m [2mcucumber[0m[2m:[0m 🎬 Starting scenario: VAL-002 - Prevent log injection with ANSI escape codes
+
+      Defined: tests/features/140-input-validation.feature:176:5
+      Matched: test-harness/bdd/src/steps/validation.rs:39:1
+      Step panicked. Captured output: assertion `left == right` failed: Expected status 400
+        left: None
+       right: Some(400)
+[2m2025-10-18T21:22:21.659713Z[0m [34mDEBUG[0m [2mtest_harness_bdd::steps::world[0m[2m:[0m World dropped, cleaning up scenario-specific resources
+  Scenario: VAL-003 - Prevent log injection with null bytes
+[2m2025-10-18T21:22:21.661389Z[0m [32m INFO[0m [2mcucumber[0m[2m:[0m 🎬 Starting scenario: VAL-003 - Prevent log injection with null bytes
+
+      Defined: tests/features/140-input-validation.feature:184:5
+      Matched: test-harness/bdd/src/steps/validation.rs:39:1
+      Step panicked. Captured output: assertion `left == right` failed: Expected status 400
+        left: None
+       right: Some(400)
+[2m2025-10-18T21:22:22.182105Z[0m [34mDEBUG[0m [2mtest_harness_bdd::steps::world[0m[2m:[0m World dropped, cleaning up scenario-specific resources
+  Scenario: VAL-004 - Prevent path traversal (../../etc/passwd)
+[2m2025-10-18T21:22:22.184609Z[0m [32m INFO[0m [2mcucumber[0m[2m:[0m 🎬 Starting scenario: VAL-004 - Prevent path traversal (../../etc/passwd)
+
+      Defined: tests/features/140-input-validation.feature:191:5
+      Matched: test-harness/bdd/src/steps/validation.rs:39:1
+      Step panicked. Captured output: assertion `left == right` failed: Expected status 400
+        left: None
+       right: Some(400)
+[2m2025-10-18T21:22:22.708037Z[0m [34mDEBUG[0m [2mtest_harness_bdd::steps::world[0m[2m:[0m World dropped, cleaning up scenario-specific resources
+  Scenario: VAL-005 - Prevent path traversal (absolute paths)
+[2m2025-10-18T21:22:22.710363Z[0m [32m INFO[0m [2mcucumber[0m[2m:[0m 🎬 Starting scenario: VAL-005 - Prevent path traversal (absolute paths)
+
+      Defined: tests/features/140-input-validation.feature:199:5
+      Matched: test-harness/bdd/src/steps/validation.rs:39:1
+      Step panicked. Captured output: assertion `left == right` failed: Expected status 400
+        left: None
+       right: Some(400)
+[2m2025-10-18T21:22:23.233667Z[0m [34mDEBUG[0m [2mtest_harness_bdd::steps::world[0m[2m:[0m World dropped, cleaning up scenario-specific resources
+  Scenario: VAL-006 - Prevent path traversal (symlinks)
+[2m2025-10-18T21:22:23.239422Z[0m [32m INFO[0m [2mcucumber[0m[2m:[0m 🎬 Starting scenario: VAL-006 - Prevent path traversal (symlinks)
+
+      Defined: tests/features/140-input-validation.feature:207:5
+      Matched: test-harness/bdd/src/steps/validation.rs:39:1
+      Step panicked. Captured output: assertion `left == right` failed: Expected status 400
+        left: None
+       right: Some(400)
+[2m2025-10-18T21:22:23.763953Z[0m [34mDEBUG[0m [2mtest_harness_bdd::steps::world[0m[2m:[0m World dropped, cleaning up scenario-specific resources
+  Scenario: VAL-007 - Prevent command injection (shell metacharacters)
+[2m2025-10-18T21:22:23.767448Z[0m [32m INFO[0m [2mcucumber[0m[2m:[0m 🎬 Starting scenario: VAL-007 - Prevent command injection (shell metacharacters)
+
+      Defined: tests/features/140-input-validation.feature:215:5
+      Matched: test-harness/bdd/src/steps/validation.rs:39:1
+      Step panicked. Captured output: assertion `left == right` failed: Expected status 400
+        left: None
+       right: Some(400)
+[2m2025-10-18T21:22:24.291448Z[0m [34mDEBUG[0m [2mtest_harness_bdd::steps::world[0m[2m:[0m World dropped, cleaning up scenario-specific resources
+  Scenario: VAL-008 - Prevent command injection (backticks)
+[2m2025-10-18T21:22:24.293006Z[0m [32m INFO[0m [2mcucumber[0m[2m:[0m 🎬 Starting scenario: VAL-008 - Prevent command injection (backticks)
+
+      Defined: tests/features/140-input-validation.feature:223:5
+      Matched: test-harness/bdd/src/steps/validation.rs:39:1
+      Step panicked. Captured output: assertion `left == right` failed: Expected status 400
+        left: None
+       right: Some(400)
+[2m2025-10-18T21:22:24.815095Z[0m [34mDEBUG[0m [2mtest_harness_bdd::steps::world[0m[2m:[0m World dropped, cleaning up scenario-specific resources
+  Scenario: VAL-009 - Prevent command injection (pipe characters)
+[2m2025-10-18T21:22:24.817198Z[0m [32m INFO[0m [2mcucumber[0m[2m:[0m 🎬 Starting scenario: VAL-009 - Prevent command injection (pipe characters)
+
+      Defined: tests/features/140-input-validation.feature:230:5
+      Matched: test-harness/bdd/src/steps/validation.rs:39:1
+      Step panicked. Captured output: assertion `left == right` failed: Expected status 400
+        left: None
+       right: Some(400)
+[2m2025-10-18T21:22:25.337511Z[0m [34mDEBUG[0m [2mtest_harness_bdd::steps::world[0m[2m:[0m World dropped, cleaning up scenario-specific resources
+  Scenario: VAL-010 - Validate model reference format (hf:org/repo)
+[2m2025-10-18T21:22:25.339452Z[0m [32m INFO[0m [2mcucumber[0m[2m:[0m 🎬 Starting scenario: VAL-010 - Validate model reference format (hf:org/repo)
+
+      Defined: tests/features/140-input-validation.feature:246:5
+      Matched: test-harness/bdd/src/steps/validation.rs:39:1
+      Step panicked. Captured output: assertion `left == right` failed: Expected status 400
+        left: None
+       right: Some(400)
+[2m2025-10-18T21:22:26.380519Z[0m [34mDEBUG[0m [2mtest_harness_bdd::steps::world[0m[2m:[0m World dropped, cleaning up scenario-specific resources
+  Scenario: VAL-012 - Validate worker ID format (alphanumeric + dash)
+[2m2025-10-18T21:22:26.382856Z[0m [32m INFO[0m [2mcucumber[0m[2m:[0m 🎬 Starting scenario: VAL-012 - Validate worker ID format (alphanumeric + dash)
+
+      Defined: tests/features/140-input-validation.feature:315:5
+      Matched: test-harness/bdd/src/steps/validation.rs:39:1
+      Step panicked. Captured output: assertion `left == right` failed: Expected status 400
+        left: None
+       right: Some(400)
+[2m2025-10-18T21:22:29.997743Z[0m [34mDEBUG[0m [2mtest_harness_bdd::steps::world[0m[2m:[0m World dropped, cleaning up scenario-specific resources
+  Scenario: VAL-019 - Reject XSS attempts
+[2m2025-10-18T21:22:30.000761Z[0m [32m INFO[0m [2mcucumber[0m[2m:[0m 🎬 Starting scenario: VAL-019 - Reject XSS attempts
+
+      Defined: tests/features/140-input-validation.feature:324:5
+      Matched: test-harness/bdd/src/steps/validation.rs:39:1
+      Step panicked. Captured output: assertion `left == right` failed: Expected status 400
+        left: None
+       right: Some(400)
+[2m2025-10-18T21:22:30.521210Z[0m [34mDEBUG[0m [2mtest_harness_bdd::steps::world[0m[2m:[0m World dropped, cleaning up scenario-specific resources
+  Scenario: VAL-020 - Property-based testing (proptest fuzzing)
+[2m2025-10-18T21:22:30.525359Z[0m [32m INFO[0m [2mcucumber[0m[2m:[0m 🎬 Starting scenario: VAL-020 - Property-based testing (proptest fuzzing)
+
+      Defined: tests/features/140-input-validation.feature:341:5
+      Matched: test-harness/bdd/src/steps/validation.rs:39:1
+      Step panicked. Captured output: assertion `left == right` failed: Expected status 400
+        left: None
+       right: Some(400)
+[2m2025-10-18T21:22:31.559081Z[0m [34mDEBUG[0m [2mtest_harness_bdd::steps::world[0m[2m:[0m World dropped, cleaning up scenario-specific resources
+  Scenario: VAL-022 - Enforce request body size limits
+[2m2025-10-18T21:22:31.564889Z[0m [32m INFO[0m [2mcucumber[0m[2m:[0m 🎬 Starting scenario: VAL-022 - Enforce request body size limits
+
+      Defined: tests/features/140-input-validation.feature:356:5
+      Matched: test-harness/bdd/src/steps/validation.rs:319:1
+      Step panicked. Captured output: assertion `left == right` failed: Expected status 429
+        left: None
+       right: Some(429)
+[2m2025-10-18T21:22:32.580864Z[0m [34mDEBUG[0m [2mtest_harness_bdd::steps::world[0m[2m:[0m World dropped, cleaning up scenario-specific resources
+  Scenario: VAL-024 - Safe error messages (no payload echoed)
+[2m2025-10-18T21:22:32.586063Z[0m [32m INFO[0m [2mcucumber[0m[2m:[0m 🎬 Starting scenario: VAL-024 - Safe error messages (no payload echoed)
+
+      Defined: tests/features/140-input-validation.feature:363:5
+      Matched: test-harness/bdd/src/steps/validation.rs:39:1
+      Step panicked. Captured output: assertion `left == right` failed: Expected status 400
+        left: None
+       right: Some(400)
+[2m2025-10-18T21:22:33.109659Z[0m [34mDEBUG[0m [2mtest_harness_bdd::steps::world[0m[2m:[0m World dropped, cleaning up scenario-specific resources
+  Scenario: VAL-025 - Comprehensive validation on all endpoints
+[2m2025-10-18T21:22:33.112329Z[0m [32m INFO[0m [2mcucumber[0m[2m:[0m 🎬 Starting scenario: VAL-025 - Comprehensive validation on all endpoints
+
+      Defined: tests/features/150-cli-commands.feature:45:5
+      Matched: test-harness/bdd/src/steps/cli_commands.rs:260:1
+      Step panicked. Captured output: assertion `left == right` failed: Expected exit code 0, got Some(1)
+        left: Some(1)
+       right: Some(0)
+[2m2025-10-18T21:22:35.013840Z[0m [34mDEBUG[0m [2mtest_harness_bdd::steps::world[0m[2m:[0m World dropped, cleaning up scenario-specific resources
+  Scenario: Config file loading with XDG priority
+[2m2025-10-18T21:22:35.014868Z[0m [32m INFO[0m [2mcucumber[0m[2m:[0m 🎬 Starting scenario: Config file loading with XDG priority
+
+      Defined: tests/features/150-cli-commands.feature:88:5
+      Matched: test-harness/bdd/src/steps/cli_commands.rs:260:1
+      Step panicked. Captured output: assertion `left == right` failed: Expected exit code 0, got Some(1)
+        left: Some(1)
+       right: Some(0)
+[2m2025-10-18T21:22:36.549880Z[0m [34mDEBUG[0m [2mtest_harness_bdd::steps::world[0m[2m:[0m World dropped, cleaning up scenario-specific resources
+[2m2025-10-18T21:22:36.550838Z[0m [32m INFO[0m [2mcucumber[0m[2m:[0m 🎬 Starting scenario: CLI command - list workers
+  Scenario: CLI command - list workers
+
+      Defined: tests/features/150-cli-commands.feature:94:5
+      Matched: test-harness/bdd/src/steps/cli_commands.rs:260:1
+      Step panicked. Captured output: assertion `left == right` failed: Expected exit code 0, got Some(1)
+        left: Some(1)
+       right: Some(0)
+[2m2025-10-18T21:22:37.071395Z[0m [34mDEBUG[0m [2mtest_harness_bdd::steps::world[0m[2m:[0m World dropped, cleaning up scenario-specific resources
+[2m2025-10-18T21:22:37.072767Z[0m [32m INFO[0m [2mcucumber[0m[2m:[0m 🎬 Starting scenario: CLI command - check worker health
+  Scenario: CLI command - check worker health
+
+      Defined: tests/features/150-cli-commands.feature:99:5
+      Matched: test-harness/bdd/src/steps/cli_commands.rs:260:1
+      Step panicked. Captured output: assertion `left == right` failed: Expected exit code 0, got Some(1)
+        left: Some(1)
+       right: Some(0)
+[2m2025-10-18T21:22:37.592802Z[0m [34mDEBUG[0m [2mtest_harness_bdd::steps::world[0m[2m:[0m World dropped, cleaning up scenario-specific resources
+[2m2025-10-18T21:22:37.593809Z[0m [32m INFO[0m [2mcucumber[0m[2m:[0m 🎬 Starting scenario: CLI command - manually shutdown worker
+  Scenario: CLI command - manually shutdown worker
+
+      Defined: tests/features/150-cli-commands.feature:106:5
+      Matched: test-harness/bdd/src/steps/cli_commands.rs:260:1
+      Step panicked. Captured output: assertion `left == right` failed: Expected exit code 0, got Some(1)
+        left: Some(1)
+       right: Some(0)
+[2m2025-10-18T21:22:38.116291Z[0m [34mDEBUG[0m [2mtest_harness_bdd::steps::world[0m[2m:[0m World dropped, cleaning up scenario-specific resources
+[2m2025-10-18T21:22:38.119766Z[0m [32m INFO[0m [2mcucumber[0m[2m:[0m 🎬 Starting scenario: CLI command - view logs
+  Scenario: CLI command - view logs
+
+      Defined: tests/features/300-authentication.feature:178:5
+      Matched: test-harness/bdd/src/steps/authentication.rs:81:1
+      Step panicked. Captured output: assertion `left == right` failed: Expected status 401
+        left: None
+       right: Some(401)
+[2m2025-10-18T21:23:03.077736Z[0m [34mDEBUG[0m [2mtest_harness_bdd::steps::world[0m[2m:[0m World dropped, cleaning up scenario-specific resources
+  Scenario: AUTH-017 - Auth required for all HTTP methods
+[2m2025-10-18T21:23:03.083614Z[0m [32m INFO[0m [2mcucumber[0m[2m:[0m 🎬 Starting scenario: AUTH-017 - Auth required for all HTTP methods
+
+========================================
+Errors:
+========================================
+[2m2025-10-18T21:21:17.652926Z[0m [33m WARN[0m [2mtest_harness_bdd::steps::cli_commands[0m[2m:[0m stderr: Error: SSH connection failed: SSH connection failed: Connection timeout
+[2m2025-10-18T21:21:21.467533Z[0m [34mDEBUG[0m [2mtest_harness_bdd::steps::cli_commands[0m[2m:[0m rbee-keeper should display: [queen-rbee] ❌ Error: Node 'workstation' already exists in registry
+[2m2025-10-18T21:21:22.018373Z[0m [33m WARN[0m [2mtest_harness_bdd::steps::cli_commands[0m[2m:[0m stderr: Error: Inference request failed: HTTP 503 Service Unavailable
+[2m2025-10-18T21:21:25.755037Z[0m [34mDEBUG[0m [2mtest_harness_bdd::steps::cli_commands[0m[2m:[0m rbee-keeper should display: [rbee-hive] ❌ Error: Model not found
+[2m2025-10-18T21:21:26.274210Z[0m [34mDEBUG[0m [2mtest_harness_bdd::steps::cli_commands[0m[2m:[0m rbee-keeper should display: [rbee-hive] ❌ Error: Access denied to model
+Error: Connection reset by peer
+[2m2025-10-18T21:21:39.816135Z[0m [34mDEBUG[0m [2mtest_harness_bdd::steps::cli_commands[0m[2m:[0m rbee-keeper should display: [queen-rbee] ❌ Error: Invalid response from rbee-hive
+[2m2025-10-18T21:21:41.385338Z[0m [34mDEBUG[0m [2mtest_harness_bdd::steps::cli_commands[0m[2m:[0m rbee-keeper should display: Error: Version mismatch
+[2m2025-10-18T21:21:42.403700Z[0m [34mDEBUG[0m [2mtest_harness_bdd::steps::cli_commands[0m[2m:[0m rbee-keeper should display: [queen-rbee] ❌ Error: SSH connection timeout
+[2m2025-10-18T21:21:47.651355Z[0m [34mDEBUG[0m [2mtest_harness_bdd::steps::cli_commands[0m[2m:[0m rbee-keeper should display: [rbee-hive] ❌ Error: Insufficient RAM on workstation
+[rbee-hive] ❌ Error: Disk full during download
+[2m2025-10-18T21:21:51.719601Z[0m [34mDEBUG[0m [2mtest_harness_bdd::steps::cli_commands[0m[2m:[0m rbee-keeper should display: Error: Insufficient VRAM on workstation
+[2m2025-10-18T21:21:56.867596Z[0m [34mDEBUG[0m [2mtest_harness_bdd::steps::cli_commands[0m[2m:[0m rbee-keeper should display: [rbee-keeper] ❌ Error: Model loading timeout after 5 minutes
+[2m2025-10-18T21:21:57.378755Z[0m [34mDEBUG[0m [2mtest_harness_bdd::steps::cli_commands[0m[2m:[0m rbee-keeper should display: Error: Model loading timeout after 5 minutes
+[2m2025-10-18T21:22:12.240996Z[0m [34mDEBUG[0m [2mtest_harness_bdd::steps::cli_commands[0m[2m:[0m rbee-keeper should display: [rbee-keeper] ❌ Error: Worker timeout - no response for 60s
+[rbee-keeper] ❌ Error: Worker connection lost
+Error: Cannot connect to workstation.home.arpa:8080 after 3 attempts
+Error: SSE stream closed unexpectedly
+Error: Worker still busy after 3 retries
+[2m2025-10-18T21:22:16.940757Z[0m [33m WARN[0m [2mtest_harness_bdd::steps::cli_commands[0m[2m:[0m stderr: Error: Inference request failed: HTTP 503 Service Unavailable
+[2m2025-10-18T21:22:17.481104Z[0m [33m WARN[0m [2mtest_harness_bdd::steps::cli_commands[0m[2m:[0m stderr: Error: Inference request failed: HTTP 503 Service Unavailable
+[2m2025-10-18T21:22:19.090032Z[0m [34mDEBUG[0m [2mtest_harness_bdd::steps::cli_commands[0m[2m:[0m rbee-keeper should display: [rbee-keeper] ❌ Error: Authentication required
+[2m2025-10-18T21:22:34.506721Z[0m [33m WARN[0m [2mtest_harness_bdd::steps::cli_commands[0m[2m:[0m stderr: Error: Failed to create config directory
+[2m2025-10-18T21:22:36.042682Z[0m [33m WARN[0m [2mtest_harness_bdd::steps::cli_commands[0m[2m:[0m stderr: Error: error sending request for url (http://localhost:8080/v2/tasks)
+[2m2025-10-18T21:22:36.564783Z[0m [33m WARN[0m [2mtest_harness_bdd::steps::cli_commands[0m[2m:[0m stderr: Error: error sending request for url (http://localhost:8080/v2/workers/list)
+[2m2025-10-18T21:22:37.087218Z[0m [33m WARN[0m [2mtest_harness_bdd::steps::cli_commands[0m[2m:[0m stderr: Error: error sending request for url (http://localhost:8080/v2/workers/health?node=workstation)
+[2m2025-10-18T21:22:37.609865Z[0m [33m WARN[0m [2mtest_harness_bdd::steps::cli_commands[0m[2m:[0m stderr: Error: error sending request for url (http://localhost:8080/v2/workers/shutdown)
+[2m2025-10-18T21:22:38.134262Z[0m [33m WARN[0m [2mtest_harness_bdd::steps::cli_commands[0m[2m:[0m stderr: Error: error sending request for url (http://localhost:8080/v2/logs?node=workstation&follow=true)
+
+========================================
+Panics:
+========================================

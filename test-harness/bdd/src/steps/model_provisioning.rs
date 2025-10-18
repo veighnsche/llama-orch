@@ -18,8 +18,9 @@ use std::path::PathBuf;
 use rbee_hive::provisioner::ModelProvisioner;
 
 // TEAM-066: Check filesystem catalog via ModelProvisioner
-#[given(expr = "the model catalog contains:")]
-pub async fn given_model_catalog_contains(world: &mut World, step: &cucumber::gherkin::Step) {
+// TEAM-112: Removed duplicate - use model_catalog.rs version instead
+// #[given(expr = "the model catalog contains:")]
+pub async fn _given_model_catalog_contains_removed(world: &mut World, step: &cucumber::gherkin::Step) {
     let table = step.table.as_ref().expect("Expected a data table");
 
     // Create provisioner to check filesystem
@@ -55,9 +56,9 @@ pub async fn given_model_catalog_contains(world: &mut World, step: &cucumber::gh
     tracing::info!("✅ Model catalog setup with {} entries", world.model_catalog.len());
 }
 
-// TEAM-068: Verify model not in catalog via ModelProvisioner
-#[given(expr = "the model is not in the catalog")]
-pub async fn given_model_not_in_catalog(world: &mut World) {
+// TEAM-112: Removed duplicate - use model_catalog.rs version instead
+// #[given(expr = "the model is not in the catalog")]
+pub async fn _given_model_not_in_catalog_removed(world: &mut World) {
     let base_dir = std::env::var("LLORCH_MODELS_DIR")
         .unwrap_or_else(|_| "/tmp/llorch-test-models".to_string());
     let provisioner = ModelProvisioner::new(PathBuf::from(&base_dir));
@@ -193,8 +194,9 @@ pub async fn when_download_fails(world: &mut World, error: String, progress: u32
 }
 
 // TEAM-076: Call catalog registration with proper error handling
-#[when(expr = "rbee-hive registers the model in the catalog")]
-pub async fn when_register_model(world: &mut World) {
+// TEAM-112: Removed duplicate - use model_catalog.rs version instead
+// #[when(expr = "rbee-hive registers the model in the catalog")]
+pub async fn _when_register_model_in_catalog_removed(world: &mut World) {
     // TEAM-076: Register model with error handling
     let model_entry = ModelCatalogEntry {
         provider: "hf".to_string(),

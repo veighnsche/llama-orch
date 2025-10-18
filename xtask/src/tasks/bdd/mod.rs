@@ -13,6 +13,7 @@ mod parser;
 mod reporter;
 mod files;
 mod types;
+mod live_filters;
 
 // Test modules - Testing behavior, not coverage
 #[cfg(test)]
@@ -28,3 +29,4 @@ mod runner_tests;
 
 pub use runner::run_bdd_tests;
 pub use types::BddConfig;
+pub use live_filters::{bdd_tail, bdd_head, bdd_grep};

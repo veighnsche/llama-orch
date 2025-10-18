@@ -12,6 +12,7 @@ mod tests {
             quiet: false,
             really_quiet: false,
             show_quiet_warning: false,
+            run_all: true,
         };
         let timestamp = "20251018_220000";
         
@@ -30,6 +31,7 @@ mod tests {
             quiet: true,
             really_quiet: false,
             show_quiet_warning: false,
+            run_all: true,
         };
         let timestamp = "20251018_220000";
         
@@ -46,6 +48,7 @@ mod tests {
             quiet: false,
             really_quiet: false,
             show_quiet_warning: false,
+            run_all: true,
         };
         let timestamp = "20251018_220000";
         
@@ -62,6 +65,7 @@ mod tests {
             quiet: false,
             really_quiet: false,
             show_quiet_warning: false,
+            run_all: true,
         };
         let timestamp = "20251018_220000";
         
@@ -78,6 +82,7 @@ mod tests {
             quiet: false,
             really_quiet: false,
             show_quiet_warning: false,
+            run_all: true,
         };
         let timestamp = "20251018_220000";
         
@@ -94,6 +99,7 @@ mod tests {
             quiet: false,
             really_quiet: false,
             show_quiet_warning: false,
+            run_all: true,
         };
         let timestamp = "20251018_220000";
         
@@ -239,6 +245,7 @@ mod tests {
             quiet: false,
             really_quiet: false,
             show_quiet_warning: false,
+            run_all: true,
         };
         let timestamp = "2025-10-18_22:00:00";
         
@@ -255,6 +262,7 @@ mod tests {
             quiet: false,
             really_quiet: false,
             show_quiet_warning: false,
+            run_all: true,
         };
         let timestamp = "20251018_220000";
         
@@ -271,6 +279,7 @@ mod tests {
             quiet: false,
             really_quiet: false,
             show_quiet_warning: false,
+            run_all: true,
         };
         let timestamp = "";
         
@@ -287,6 +296,7 @@ mod tests {
             quiet: false,
             really_quiet: false,
             show_quiet_warning: false,
+            run_all: true,
         };
         let timestamp = "20251018_220000";
         

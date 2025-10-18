@@ -62,5 +62,28 @@ pub enum Cmd {
         /// Actually suppress live output (only show summary). Use this for CI/CD.
         #[arg(long)]
         really_quiet: bool,
+        /// Run ALL tests (default: only failing tests from last run)
+        #[arg(long)]
+        all: bool,
+    },
+    #[command(name = "bdd:tail")]
+    BddTail {
+        /// Number of lines to show (default: 50)
+        #[arg(short, long, default_value = "50")]
+        lines: usize,
+    },
+    #[command(name = "bdd:head")]
+    BddHead {
+        /// Number of lines to show (default: 100)
+        #[arg(short, long, default_value = "100")]
+        lines: usize,
+    },
+    #[command(name = "bdd:grep")]
+    BddGrep {
+        /// Pattern to search for
+        pattern: String,
+        /// Case insensitive search
+        #[arg(short, long)]
+        ignore_case: bool,
     },
 }

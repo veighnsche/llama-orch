@@ -50,7 +50,7 @@ pub fn print_test_execution_end() {
     println!("{}", separator.cyan());
 }
 
-pub fn print_test_summary(results: &TestResults) {
+pub fn print_test_summary(results: &TestResults, elapsed: std::time::Duration) {
     let separator = "═".repeat(64);
     println!();
     println!("{}", format!("╔{}╗", separator).cyan());
@@ -69,6 +69,17 @@ pub fn print_test_summary(results: &TestResults) {
     println!("   {} {}", "✅ Passed:".green(), results.passed);
     println!("   {} {}", "❌ Failed:".red(), results.failed);
     println!("   {} {}", "⏭️  Skipped:".yellow(), results.skipped);
+    println!();
+    
+    // Show elapsed time
+    let secs = elapsed.as_secs();
+    let mins = secs / 60;
+    let remaining_secs = secs % 60;
+    if mins > 0 {
+        println!("{} {}m {}s", "⏱️  Duration:".blue(), mins, remaining_secs);
+    } else {
+        println!("{} {}s", "⏱️  Duration:".blue(), secs);
+    }
     println!();
 }
 
@@ -106,7 +117,7 @@ pub fn print_failure_details(paths: &OutputPaths) -> Result<()> {
     Ok(())
 }
 
-pub fn print_output_files(paths: &OutputPaths, has_failures: bool) {
+pub fn print_output_files(paths: &OutputPaths, has_failures: bool, failed_count: usize, elapsed: std::time::Duration) {
     println!("{}", "📁 Output Files:".blue());
     println!("   {} {}", "Summary:".cyan(), paths.results_file.display());
     
@@ -134,6 +145,35 @@ pub fn print_output_files(paths: &OutputPaths, has_failures: bool) {
     println!("   {} {}", "View summary:".cyan(), format!("cat {}", paths.results_file.display()));
     println!("   {} {}", "View test log:".cyan(), format!("less {}", paths.test_output.display()));
     println!();
+    
+    // Encouragement message (different based on context)
+    if has_failures {
+        let separator = "━".repeat(64);
+        println!("{}", separator.cyan());
+        println!("{}", "💡 NEXT STEPS".cyan().bold());
+        println!("{}", separator.cyan());
+        println!();
+        
+        let secs = elapsed.as_secs();
+        let mins = secs / 60;
+        let time_str = if mins > 0 {
+            format!("{}m {}s", mins, secs % 60)
+        } else {
+            format!("{}s", secs)
+        };
+        
+        println!("{}", format!("This run took: {}", time_str).cyan());
+        println!("{}", format!("You have {} failing test(s).", failed_count).red());
+        println!();
+        println!("{}", "🚀 GOOD NEWS:".green().bold());
+        println!("   {}", "Next time you run 'cargo xtask bdd:test', it will".green());
+        println!("   {}", "AUTOMATICALLY run ONLY these failing tests!".green().bold());
+        println!();
+        println!("{}", "⚡ This means 10-100x FASTER debugging iterations!".yellow().bold());
+        println!();
+        println!("{}", separator.cyan());
+        println!();
+    }
 }
 
 pub fn print_final_banner(success: bool) {
@@ -169,6 +209,32 @@ pub fn print_quiet_warning() {
     println!();
     println!("{}", "To remove this warning:".cyan());
     println!("  {}", "cargo xtask bdd:test  # Just omit --quiet".green());
+    println!();
+    println!("{}", separator.red());
+    println!("{}", "🚨 CRITICAL: DO NOT USE PIPES! 🚨".red().bold());
+    println!("{}", separator.red());
+    println!();
+    println!("{}", "❌ WRONG - These BLOCK live output:".red().bold());
+    println!("  {}", "cargo xtask bdd:test 2>&1 | tail -50".red());
+    println!("  {}", "cargo xtask bdd:test 2>&1 | grep FAIL".red());
+    println!("  {}", "cargo xtask bdd:test 2>&1 | head -100".red());
+    println!();
+    println!("{}", "✅ RIGHT - Use built-in filters instead:".green().bold());
+    println!("  {}", "cargo xtask bdd:tail      # Last 50 lines".green());
+    println!("  {}", "cargo xtask bdd:grep FAIL # Search output".green());
+    println!("  {}", "cargo xtask bdd:head      # First 100 lines".green());
+    println!();
+    println!("{}", "These show LIVE output AND let you filter!".cyan());
+    println!();
+    println!("{}", separator.yellow());
+    println!("{}", "⚡ IMPORTANT: DEFAULT BEHAVIOR CHANGED! ⚡".yellow().bold());
+    println!("{}", separator.yellow());
+    println!();
+    println!("{}", "By default, 'cargo xtask bdd:test' now runs ONLY failing tests!".green().bold());
+    println!("{}", "This makes debugging 10-100x FASTER!".green());
+    println!();
+    println!("{}", "To run ALL tests:".cyan());
+    println!("  {}", "cargo xtask bdd:test --all".green());
     println!();
     println!("{}", separator.yellow());
     println!();

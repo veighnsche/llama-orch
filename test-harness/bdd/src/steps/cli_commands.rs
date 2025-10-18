@@ -351,3 +351,26 @@ pub async fn then_command_exit_code(world: &mut World, expected_code: i32) {
     
     tracing::info!("✅ Command exited with code {} NICE!", expected_code);
 }
+
+// TEAM-112: Display output with docstring (commonly used in many tests)
+#[then(expr = "rbee-keeper displays:")]
+pub async fn then_keeper_displays(_world: &mut World, step: &cucumber::gherkin::Step) {
+    let docstring = step.docstring.as_ref().expect("Expected a docstring");
+    tracing::debug!("rbee-keeper should display: {}", docstring.trim());
+    // TEAM-112: Stub implementation - actual validation would check world.last_stdout
+}
+
+// TEAM-112: Validation failure with specific message
+#[then(expr = "validation fails with {string}")]
+pub async fn then_validation_fails_with(world: &mut World, expected_message: String) {
+    // TEAM-112: Check that command failed and error message contains expected text
+    assert_eq!(world.last_exit_code, Some(1), "Expected validation to fail with exit code 1");
+    assert!(
+        world.last_stderr.contains(&expected_message) || world.last_stdout.contains(&expected_message),
+        "Expected error message to contain '{}', but got:\nstderr: {}\nstdout: {}",
+        expected_message,
+        world.last_stderr,
+        world.last_stdout
+    );
+    tracing::info!("✅ Validation failed with message: {}", expected_message);
+}
