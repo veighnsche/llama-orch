@@ -24,6 +24,8 @@ use futures::StreamExt;
 use std::io::Write;
 use std::time::Duration;
 use crate::queen_lifecycle::ensure_queen_rbee_running;
+// TEAM-113: Input validation for CLI arguments
+use input_validation::{validate_model_ref, validate_identifier};
 
 /// Handle infer command
 ///
@@ -41,6 +43,19 @@ pub async fn handle(
     backend: Option<String>,
     device: Option<u32>,
 ) -> Result<()> {
+    // TEAM-113: Validate inputs before sending to queen-rbee
+    validate_model_ref(&model)
+        .map_err(|e| anyhow::anyhow!("Invalid model reference format: {}", e))?;
+    
+    validate_identifier(&node, 64)
+        .map_err(|e| anyhow::anyhow!("Invalid node name: {}", e))?;
+    
+    // Validate backend if provided
+    if let Some(ref backend_name) = backend {
+        validate_identifier(backend_name, 64)
+            .map_err(|e| anyhow::anyhow!("Invalid backend name: {}", e))?;
+    }
+    
     println!("{}", "=== Inference via queen-rbee Orchestration ===".cyan().bold());
     println!("Node: {}", node.cyan());
     println!("Model: {}", model.cyan());

@@ -18,6 +18,8 @@ use tracing::{error, info};
 use crate::beehive_registry::BeehiveNode;
 use crate::http::routes::AppState;
 use crate::http::types::{AddNodeRequest, AddNodeResponse, ListNodesResponse, RemoveNodeResponse};
+// TEAM-113: Input validation for node names
+use input_validation::validate_identifier;
 
 /// Handle POST /v2/registry/beehives/add
 ///
@@ -26,6 +28,19 @@ pub async fn handle_add_node(
     State(state): State<AppState>,
     Json(req): Json<AddNodeRequest>,
 ) -> impl IntoResponse {
+    // TEAM-113: Validate node name before processing
+    if let Err(e) = validate_identifier(&req.node_name, 64) {
+        error!("Invalid node name: {}", e);
+        return (
+            StatusCode::BAD_REQUEST,
+            Json(AddNodeResponse {
+                success: false,
+                message: format!("Invalid node name: {}", e),
+                node_name: req.node_name,
+            }),
+        );
+    }
+    
     // TEAM-044: Smart SSH mocking for tests
     // If MOCK_SSH is set, simulate SSH based on hostname:
     // - "unreachable" in hostname -> fail (to test error handling)
@@ -129,6 +144,18 @@ pub async fn handle_remove_node(
     Json(req): Json<serde_json::Value>,
 ) -> impl IntoResponse {
     let node_name = req["node_name"].as_str().unwrap_or("");
+    
+    // TEAM-113: Validate node name before processing
+    if let Err(e) = validate_identifier(node_name, 64) {
+        error!("Invalid node name: {}", e);
+        return (
+            StatusCode::BAD_REQUEST,
+            Json(RemoveNodeResponse {
+                success: false,
+                message: format!("Invalid node name: {}", e),
+            }),
+        );
+    }
 
     match state.beehive_registry.remove_node(node_name).await {
         Ok(true) => (

@@ -5,11 +5,20 @@
 //!
 //! # Endpoints
 //! - `GET /v1/health` - Basic health check
-//! - `GET /health/live` - Kubernetes liveness probe (TEAM-104)
-//! - `GET /health/ready` - Kubernetes readiness probe (TEAM-104)
+//! - `GET /health/live` - Kubernetes liveness probe (TEAM-104) - ⚠️ REMOVED BY TEAM-113
+//! - `GET /health/ready` - Kubernetes readiness probe (TEAM-104) - ⚠️ REMOVED BY TEAM-113
+//!
+//! # ⚠️ WARNING: NO KUBERNETES PATTERNS
+//!
+//! rbee IS the orchestrator, not an app running IN Kubernetes.
+//! We don't need Kubernetes-style liveness/readiness/startup probes.
+//! The simple /v1/health endpoint is sufficient.
+//!
+//! See: .docs/components/TEAM_113_EXIT_INTERVIEW.md for why Kubernetes drift kills products.
 //!
 //! Created by: TEAM-026
 //! Modified by: TEAM-104 (added Kubernetes-compatible endpoints)
+//! Modified by: TEAM-113 (removed Kubernetes drift, kept comments for history)
 
 use axum::{extract::State, http::StatusCode, Json};
 use serde::Serialize;
@@ -75,68 +84,26 @@ mod tests {
     }
 }
 
-/// TEAM-104: Liveness probe response
-#[derive(Serialize)]
-pub struct LivenessResponse {
-    status: String,
-}
-
-/// TEAM-104: Readiness probe response
-#[derive(Serialize)]
-pub struct ReadinessResponse {
-    status: String,
-    workers_total: usize,
-    workers_ready: usize,
-}
-
-/// TEAM-104: Handle GET /health/live
-///
-/// Kubernetes liveness probe - checks if the process is alive
-/// Returns 200 OK if the service is running
-pub async fn handle_liveness() -> Json<LivenessResponse> {
-    debug!("Liveness probe requested");
-    Json(LivenessResponse {
-        status: "alive".to_string(),
-    })
-}
-
-/// TEAM-104: Handle GET /health/ready
-///
-/// Kubernetes readiness probe - checks if the service is ready to accept traffic
-/// Returns 200 OK if at least one worker is ready, 503 otherwise
-pub async fn handle_readiness(
-    State(state): State<crate::http::routes::AppState>,
-) -> Result<Json<ReadinessResponse>, StatusCode> {
-    debug!("Readiness probe requested");
-
-    let workers = state.registry.list().await;
-    let workers_ready = workers
-        .iter()
-        .filter(|w| {
-            matches!(
-                w.state,
-                crate::registry::WorkerState::Idle | crate::registry::WorkerState::Busy
-            )
-        })
-        .count();
-
-    if workers_ready > 0 {
-        debug!(
-            workers_total = workers.len(),
-            workers_ready = workers_ready,
-            "Service ready"
-        );
-        Ok(Json(ReadinessResponse {
-            status: "ready".to_string(),
-            workers_total: workers.len(),
-            workers_ready,
-        }))
-    } else {
-        // No ready workers - service not ready
-        debug!(
-            workers_total = workers.len(),
-            "Service not ready - no workers available"
-        );
-        Err(StatusCode::SERVICE_UNAVAILABLE)
-    }
-}
+// ============================================================================
+// ⚠️ KUBERNETES DRIFT REMOVED BY TEAM-113
+// ============================================================================
+//
+// TEAM-104 added /health/live and /health/ready endpoints labeled as
+// "Kubernetes liveness/readiness probes". This was KUBERNETES DRIFT.
+//
+// WHY THIS WAS REMOVED:
+// - rbee IS the orchestrator, not an app running IN Kubernetes
+// - We don't need Kubernetes-style probes (liveness, readiness, startup)
+// - The simple /v1/health endpoint is sufficient
+// - Kubernetes patterns lead to complexity creep and product death
+//
+// IF YOU'RE THINKING OF ADDING KUBERNETES PATTERNS:
+// 1. Read: .docs/components/TEAM_113_EXIT_INTERVIEW.md
+// 2. Read: .docs/components/KUBERNETES_DRIFT_FOUND.md
+// 3. Ask yourself: "Does rbee run IN Kubernetes?" (Answer: NO)
+// 4. Ask yourself: "Is rbee the orchestrator?" (Answer: YES)
+// 5. Don't add Kubernetes patterns
+//
+// rbee is the SIMPLE alternative to Kubernetes. Keep it that way.
+//
+// ============================================================================

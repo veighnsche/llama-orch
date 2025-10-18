@@ -1,8 +1,14 @@
 // TEAM-110: Audited 2025-10-18 - ✅ CLEAN - Readiness check with loading progress URL
+// TEAM-113: Verified 2025-10-18 - ✅ NOT KUBERNETES DRIFT
 //
 //! GET /v1/ready endpoint - Worker readiness check
 //!
 //! Returns the worker's readiness state for accepting inference requests.
+//!
+//! ⚠️ NOTE: This is NOT a Kubernetes readiness probe!
+//! This endpoint is for rbee-hive to check if the worker is ready.
+//! rbee-hive IS the orchestrator that monitors workers.
+//! This is orchestrator-to-worker communication, not Kubernetes patterns.
 //!
 //! Created by: TEAM-045
 //!

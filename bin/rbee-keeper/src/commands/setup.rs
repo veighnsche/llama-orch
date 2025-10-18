@@ -9,6 +9,8 @@ use colored::Colorize;
 use serde::{Deserialize, Serialize};
 
 use crate::cli::SetupAction;
+// TEAM-113: Input validation for node names and identifiers
+use input_validation::validate_identifier;
 
 const QUEEN_RBEE_URL: &str = "http://localhost:8080";
 
@@ -96,6 +98,10 @@ async fn handle_add_node(
     git_branch: String,
     install_path: String,
 ) -> Result<()> {
+    // TEAM-113: Validate node name before sending to queen-rbee
+    validate_identifier(&name, 64)
+        .map_err(|e| anyhow::anyhow!("Invalid node name: {}", e))?;
+    
     println!("{} Adding node '{}' to registry...", "[queen-rbee]".cyan(), name);
 
     let client = reqwest::Client::new();
@@ -185,6 +191,10 @@ async fn handle_list_nodes() -> Result<()> {
 }
 
 async fn handle_remove_node(name: String) -> Result<()> {
+    // TEAM-113: Validate node name before sending to queen-rbee
+    validate_identifier(&name, 64)
+        .map_err(|e| anyhow::anyhow!("Invalid node name: {}", e))?;
+    
     println!("{} Removing node '{}' from registry...", "[queen-rbee]".cyan(), name);
 
     let client = reqwest::Client::new();
@@ -211,6 +221,10 @@ async fn handle_remove_node(name: String) -> Result<()> {
 }
 
 async fn handle_install(node: String) -> Result<()> {
+    // TEAM-113: Validate node name before proceeding
+    validate_identifier(&node, 64)
+        .map_err(|e| anyhow::anyhow!("Invalid node name: {}", e))?;
+    
     println!("{} Installing rbee-hive on node '{}'...", "[queen-rbee]".cyan(), node);
 
     // First, get node details from registry

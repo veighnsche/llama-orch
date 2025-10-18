@@ -30,6 +30,7 @@ use std::sync::Arc;
 /// TEAM-034: Added download tracker for SSE streaming
 /// TEAM-091: Added server_addr for correct callback URL construction
 /// TEAM-102: Added expected_token for authentication
+/// TEAM-114: Added audit_logger for security audit trail
 #[derive(Clone)]
 pub struct AppState {
     pub registry: Arc<WorkerRegistry>,
@@ -39,6 +40,8 @@ pub struct AppState {
     pub server_addr: std::net::SocketAddr,
     // TEAM-102: API token for authentication (loaded from file via secrets-management)
     pub expected_token: String,
+    // TEAM-114: Audit logger for security events (disabled by default for home lab mode)
+    pub audit_logger: Option<Arc<audit_logging::AuditLogger>>,
 }
 
 /// Create HTTP router with all endpoints
@@ -72,11 +75,13 @@ pub fn create_router(
 
     // TEAM-102: Split routes into public and protected
     // TEAM-104: Added /metrics and Kubernetes health endpoints (public)
+    // TEAM-113: Removed Kubernetes health endpoints (drift prevention)
     let public_routes = Router::new()
         // Health endpoints (public - no auth required)
         .route("/v1/health", get(health::handle_health))
-        .route("/health/live", get(health::handle_liveness)) // TEAM-104: Kubernetes liveness
-        .route("/health/ready", get(health::handle_readiness)) // TEAM-104: Kubernetes readiness
+        // TEAM-104: Kubernetes probes - REMOVED BY TEAM-113 (see health.rs for explanation)
+        // .route("/health/live", get(health::handle_liveness)) // ⚠️ REMOVED - Kubernetes drift
+        // .route("/health/ready", get(health::handle_readiness)) // ⚠️ REMOVED - Kubernetes drift
         // TEAM-104: Metrics endpoint (public - Prometheus scraping)
         .route("/metrics", get(metrics::handle_metrics));
 

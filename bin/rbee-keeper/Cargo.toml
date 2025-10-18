@@ -33,3 +33,5 @@ toml = "0.8"
 hostname = "0.4"
 # TEAM-084: Added tracing for logging
 tracing = "0.1"
+# TEAM-113: Added input validation for CLI arguments
+input-validation = { path = "../shared-crates/input-validation" }

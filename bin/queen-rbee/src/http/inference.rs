@@ -25,6 +25,8 @@ use tracing::{error, info};
 use crate::beehive_registry::BeehiveNode;
 use crate::http::routes::AppState;
 use crate::http::types::{InferenceRequest, InferenceTaskRequest, ReadyResponse, WorkerSpawnResponse};
+// TEAM-113: Input validation for inference requests
+use input_validation::{validate_model_ref, validate_identifier};
 
 /// Handle POST /v2/tasks
 ///
@@ -36,6 +38,12 @@ pub async fn handle_create_inference_task(
 ) -> impl IntoResponse {
     info!("Received inference task: node={}, model={}", req.node, req.model);
     
+    // TEAM-113: Validate inputs before processing
+    if let Err(e) = validate_identifier(&req.node, 64) {
+        error!("Invalid node name: {}", e);
+        return (StatusCode::BAD_REQUEST, format!("Invalid node name: {}", e)).into_response();
+    }
+    
     // TEAM-087: Validate and normalize model reference
     // rbee-hive requires "provider:reference" format (e.g., "hf:model-name")
     let model_ref = if req.model.contains(':') {
@@ -44,6 +52,13 @@ pub async fn handle_create_inference_task(
         // Default to "hf:" prefix for convenience
         format!("hf:{}", req.model)
     };
+    
+    // TEAM-113: Validate model_ref format
+    if let Err(e) = validate_model_ref(&model_ref) {
+        error!("Invalid model reference: {}", e);
+        return (StatusCode::BAD_REQUEST, format!("Invalid model_ref: {}", e)).into_response();
+    }
+    
     info!("Using model_ref: {}", model_ref);
     
     // TEAM-085: Handle localhost specially - no SSH needed!

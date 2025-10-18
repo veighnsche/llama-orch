@@ -12,6 +12,7 @@ mod worker_registry;
 
 use anyhow::Result;
 use clap::Parser;
+use std::path::PathBuf;
 use std::sync::Arc;
 use tracing::{error, info};
 
@@ -62,6 +63,46 @@ async fn main() -> Result<()> {
     if !expected_token.is_empty() {
         info!("✅ API token loaded (authentication enabled)");
     }
+
+    // TEAM-113: Initialize audit logging (Week 2)
+    // Disabled by default for home lab mode (zero overhead)
+    // Set LLORCH_AUDIT_MODE=local to enable file-based audit logging
+    let audit_mode = std::env::var("LLORCH_AUDIT_MODE")
+        .ok()
+        .and_then(|mode| match mode.as_str() {
+            "local" => {
+                let base_dir = std::env::var("LLORCH_AUDIT_DIR")
+                    .unwrap_or_else(|_| "/var/log/llama-orch/audit".to_string());
+                Some(audit_logging::AuditMode::Local {
+                    base_dir: PathBuf::from(base_dir),
+                })
+            }
+            _ => None,
+        })
+        .unwrap_or(audit_logging::AuditMode::Disabled);
+    
+    let audit_config = audit_logging::AuditConfig {
+        mode: audit_mode,
+        service_id: "queen-rbee".to_string(),
+        rotation_policy: audit_logging::RotationPolicy::Daily,
+        retention_policy: audit_logging::RetentionPolicy::default(),
+        flush_mode: audit_logging::FlushMode::Hybrid {
+            batch_size: 100,
+            batch_interval_secs: 5,
+            critical_immediate: true, // Always flush security events immediately
+        },
+    };
+    
+    let audit_logger = match audit_logging::AuditLogger::new(audit_config) {
+        Ok(logger) => {
+            info!("✅ Audit logging initialized (disabled for home lab mode)");
+            Some(Arc::new(logger))
+        }
+        Err(e) => {
+            info!("⚠️  Audit logging disabled: {}", e);
+            None
+        }
+    };
 
     // Create router with registries
     // TEAM-052: Updated to use refactored http module

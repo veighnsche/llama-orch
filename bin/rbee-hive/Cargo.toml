@@ -30,6 +30,8 @@ hostname = "0.4"
 chrono = { version = "0.4", features = ["serde"] }
 dirs = "5.0"  # TEAM-029: For home directory detection
 # TEAM-022: nix removed - replaced with sysinfo for cross-platform process management
+# TEAM-113: nix re-added for signal handling (SIGTERM/SIGKILL) in force-kill logic
+nix = { version = "0.27", features = ["signal", "process"] }
 daemonize = { workspace = true }
 indicatif = { workspace = true }
 sysinfo = { workspace = true }

@@ -63,6 +63,10 @@ auth-min = { path = "../shared-crates/auth-min" }
 secrets-management = { path = "../shared-crates/secrets-management" }
 input-validation = { path = "../shared-crates/input-validation" }
 
+# TEAM-113: Observability shared crates (Week 2)
+audit-logging = { path = "../shared-crates/audit-logging" }
+deadline-propagation = { path = "../shared-crates/deadline-propagation" }
+
 [dev-dependencies]
 tempfile = "3.0"
 wiremock = "0.6"
