@@ -1,0 +1,35 @@
+# Dockerfile for queen-rbee integration testing
+# Created by: TEAM-106
+
+FROM rust:1.75-slim as builder
+
+WORKDIR /build
+
+# Install dependencies
+RUN apt-get update && apt-get install -y \
+    pkg-config \
+    libssl-dev \
+    && rm -rf /var/lib/apt/lists/*
+
+# Copy workspace files
+COPY Cargo.toml Cargo.lock ./
+COPY bin/queen-rbee ./bin/queen-rbee
+COPY bin/shared-crates ./bin/shared-crates
+COPY contracts ./contracts
+
+# Build queen-rbee
+RUN cargo build --release --bin queen-rbee
+
+# Runtime image
+FROM debian:bookworm-slim
+
+RUN apt-get update && apt-get install -y \
+    ca-certificates \
+    curl \
+    && rm -rf /var/lib/apt/lists/*
+
+COPY --from=builder /build/target/release/queen-rbee /usr/local/bin/
+
+EXPOSE 8080
+
+CMD ["queen-rbee"]

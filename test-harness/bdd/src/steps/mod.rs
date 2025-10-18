@@ -58,3 +58,7 @@ pub mod worker_provisioning; // TEAM-078: Worker binary provisioning (cargo buil
 pub mod worker_registration;
 pub mod worker_startup;
 pub mod world;
+
+// TEAM-106: Integration testing step definitions
+pub mod full_stack_integration;
+pub mod integration_scenarios;

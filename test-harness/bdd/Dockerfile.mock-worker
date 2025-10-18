@@ -1,0 +1,125 @@
+# Dockerfile for mock worker integration testing
+# Created by: TEAM-106
+# Purpose: Lightweight mock worker for testing without actual inference
+
+FROM rust:1.75-slim as builder
+
+WORKDIR /build
+
+# Create a minimal mock worker binary
+RUN cat > main.rs << 'EOF'
+use std::env;
+use std::net::SocketAddr;
+use axum::{
+    Router,
+    routing::{get, post},
+    Json,
+    http::StatusCode,
+};
+use serde::{Deserialize, Serialize};
+use tokio::time::{sleep, Duration};
+
+#[derive(Serialize)]
+struct ReadyResponse {
+    state: String,
+    model_ref: String,
+    worker_id: String,
+}
+
+#[derive(Serialize)]
+struct HealthResponse {
+    status: String,
+}
+
+#[derive(Deserialize)]
+struct InferenceRequest {
+    prompt: String,
+}
+
+#[derive(Serialize)]
+struct TokenEvent {
+    token: String,
+}
+
+async fn health() -> Json<HealthResponse> {
+    Json(HealthResponse {
+        status: "healthy".to_string(),
+    })
+}
+
+async fn ready() -> Json<ReadyResponse> {
+    let worker_id = env::var("LLORCH_WORKER_ID").unwrap_or_else(|_| "worker-mock-001".to_string());
+    let model_ref = env::var("LLORCH_MODEL_REF").unwrap_or_else(|_| "tinyllama-q4".to_string());
+    
+    Json(ReadyResponse {
+        state: "ready".to_string(),
+        model_ref,
+        worker_id,
+    })
+}
+
+async fn inference(Json(_req): Json<InferenceRequest>) -> (StatusCode, String) {
+    // Simulate token streaming
+    let tokens = vec!["Hello", " world", "!", " This", " is", " a", " test", "."];
+    let mut response = String::new();
+    
+    for token in tokens {
+        response.push_str(&format!("data: {{\"token\": \"{}\"}}\n\n", token));
+    }
+    
+    response.push_str("data: [DONE]\n\n");
+    
+    (StatusCode::OK, response)
+}
+
+#[tokio::main]
+async fn main() {
+    let port = env::var("LLORCH_WORKER_PORT")
+        .unwrap_or_else(|_| "8001".to_string())
+        .parse::<u16>()
+        .expect("Invalid port");
+    
+    let app = Router::new()
+        .route("/health", get(health))
+        .route("/v1/ready", get(ready))
+        .route("/v1/inference", post(inference));
+    
+    let addr = SocketAddr::from(([0, 0, 0, 0], port));
+    println!("Mock worker listening on {}", addr);
+    
+    axum::Server::bind(&addr)
+        .serve(app.into_make_service())
+        .await
+        .unwrap();
+}
+EOF
+
+# Create Cargo.toml
+RUN cat > Cargo.toml << 'EOF'
+[package]
+name = "mock-worker"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+axum = "0.6"
+tokio = { version = "1", features = ["full"] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+EOF
+
+RUN cargo build --release
+
+# Runtime image
+FROM debian:bookworm-slim
+
+RUN apt-get update && apt-get install -y \
+    ca-certificates \
+    curl \
+    && rm -rf /var/lib/apt/lists/*
+
+COPY --from=builder /build/target/release/mock-worker /usr/local/bin/
+
+EXPOSE 8001
+
+CMD ["mock-worker"]

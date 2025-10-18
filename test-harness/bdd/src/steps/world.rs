@@ -422,8 +422,16 @@ pub struct World {
     // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
     // P2 Metrics & Observability (TEAM-100 - THE CENTENNIAL TEAM! 💯🎉)
     // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-    /// Narration capture adapter (TEAM-101: Handled in manual Debug impl)
+    /// Narration capture adapter    // TEAM-100: Narration verification (observability-narration-core)
     pub narration_adapter: Option<observability_narration_core::CaptureAdapter>,
+    
+    // TEAM-106: Integration testing fields
+    pub integration_env_ready: bool,
+    pub request_start_time: Option<std::time::Instant>,
+    pub active_requests: Vec<String>,
+    pub registered_workers: Vec<String>,
+    pub auth_required: bool,
+    pub auth_token: Option<String>,
     
     /// Pool-managerd URL
     pub pool_managerd_url: Option<String>,
@@ -795,6 +803,14 @@ impl Default for World {
             worker_zombie: false,
             worker_responded: false,
             worker_response_time: None,
+            
+            // TEAM-106: Integration testing
+            integration_env_ready: false,
+            request_start_time: None,
+            active_requests: Vec::new(),
+            registered_workers: Vec::new(),
+            auth_required: false,
+            auth_token: None,
         }
     }
 }
