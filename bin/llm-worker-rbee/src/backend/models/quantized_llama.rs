@@ -1,3 +1,5 @@
+// TEAM-109: Audited 2025-10-18 - ✅ CLEAN - Quantized Llama GGUF support
+
 //! Quantized Llama model wrapper for GGUF files
 //!
 //! Created by: TEAM-036

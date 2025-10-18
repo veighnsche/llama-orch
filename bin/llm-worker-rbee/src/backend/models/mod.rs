@@ -1,3 +1,5 @@
+// TEAM-109: Audited 2025-10-18 - ✅ CLEAN - Model factory with enum pattern
+
 //! Model factory - Auto-detect and load models
 //!
 //! Created by: TEAM-017

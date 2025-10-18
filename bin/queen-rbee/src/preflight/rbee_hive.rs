@@ -1,3 +1,5 @@
+// TEAM-110: Audited 2025-10-18 - ✅ CLEAN - Standard HTTP client for preflight checks with proper timeouts
+//
 //! rbee-hive Preflight Validation
 //!
 //! Created by: TEAM-079

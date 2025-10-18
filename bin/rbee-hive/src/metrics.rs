@@ -1,3 +1,7 @@
+// TEAM-109: Audited 2025-10-18 - ✅ CLEAN - Good Prometheus integration
+
+// TEAM-109: Audited 2025-10-18 - ✅ CLEAN - Prometheus metrics implementation
+
 //! Prometheus metrics for rbee-hive
 //!
 //! Exposes metrics about worker pool state, health, and operations.

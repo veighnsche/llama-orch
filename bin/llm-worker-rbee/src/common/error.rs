@@ -1,3 +1,5 @@
+// TEAM-109: Audited 2025-10-18 - ✅ CLEAN - Error types with HTTP responses
+
 //! Worker error types
 
 use axum::{

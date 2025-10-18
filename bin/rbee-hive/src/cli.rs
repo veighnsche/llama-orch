@@ -1,3 +1,5 @@
+// TEAM-109: Audited 2025-10-18 - ✅ CLEAN - CLI argument parsing
+
 //! CLI argument parsing
 //!
 //! Created by: TEAM-022

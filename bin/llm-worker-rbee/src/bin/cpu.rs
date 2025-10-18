@@ -1,3 +1,5 @@
+// TEAM-109: Audited 2025-10-18 - ⚠️ KNOWN ISSUE - Secrets in env vars (line 101)
+
 //! CPU-only worker binary
 //!
 //! Uses MKL (Linux/Windows) or Accelerate (macOS) for CPU inference.

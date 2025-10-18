@@ -1,3 +1,5 @@
+// TEAM-109: Audited 2025-10-18 - 🔴 CRITICAL - Command injection vulnerability (line 79)
+
 //! SSH Connection Validation
 //!
 //! Created by: TEAM-043

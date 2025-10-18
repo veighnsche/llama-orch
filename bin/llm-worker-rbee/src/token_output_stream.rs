@@ -1,3 +1,5 @@
+// TEAM-109: Audited 2025-10-18 - ✅ CLEAN - Token streaming implementation
+
 //! Token output stream for proper space handling
 //!
 //! TEAM-014: Copied from candle-examples to fix missing spaces bug.

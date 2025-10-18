@@ -1,3 +1,5 @@
+// TEAM-110: Audited 2025-10-18 - ✅ CLEAN - Clean platform-agnostic trait with stateful backend support
+//
 //! Platform-agnostic inference backend trait
 //!
 //! This trait abstracts the inference execution layer, allowing worker-http

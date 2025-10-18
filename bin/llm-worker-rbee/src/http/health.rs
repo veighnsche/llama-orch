@@ -1,3 +1,5 @@
+// TEAM-110: Audited 2025-10-18 - ✅ CLEAN - Standard health check endpoint with VRAM tracking
+//
 //! GET /health endpoint - Health check
 //!
 //! Returns a simple health status for the worker.

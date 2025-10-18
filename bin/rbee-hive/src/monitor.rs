@@ -1,3 +1,5 @@
+// TEAM-109: Audited 2025-10-18 - ✅ CLEAN - PID tracking and force-kill implemented
+
 //! Health monitoring loop
 //!
 //! Per test-001-mvp.md Phase 5: Monitor worker health every 30s

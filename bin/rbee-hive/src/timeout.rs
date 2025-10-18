@@ -1,3 +1,5 @@
+// TEAM-109: Audited 2025-10-18 - ✅ CLEAN - Idle timeout implementation
+
 //! Idle timeout enforcement
 //!
 //! Per test-001-mvp.md Phase 8: Auto-shutdown after 5 minutes idle
@@ -100,7 +102,9 @@ mod tests {
             slots_total: 1,
             slots_available: 1,
             failed_health_checks: 0,
-            pid: None, // TEAM-101: Added pid field
+            pid: None,
+            restart_count: 0,
+            last_restart: None,
         };
 
         registry.register(worker).await;

@@ -1,3 +1,5 @@
+// TEAM-109: Audited 2025-10-18 - ✅ CLEAN - Sampling configuration
+
 //! Sampling configuration and `LogitsProcessor` creation
 //!
 //! Created by: TEAM-015 (refactored from `candle_backend.rs`)

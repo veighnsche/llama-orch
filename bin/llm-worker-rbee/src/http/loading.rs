@@ -1,3 +1,5 @@
+// TEAM-110: Audited 2025-10-18 - ✅ CLEAN - Industry-standard SSE with three-state machine and [DONE] marker
+//
 //! Model loading progress endpoint
 //!
 //! Created by: TEAM-035

@@ -1,3 +1,5 @@
+// TEAM-110: Audited 2025-10-18 - ✅ CLEAN - Readiness check with loading progress URL
+//
 //! GET /v1/ready endpoint - Worker readiness check
 //!
 //! Returns the worker's readiness state for accepting inference requests.

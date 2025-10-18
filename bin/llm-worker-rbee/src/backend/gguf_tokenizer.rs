@@ -1,3 +1,5 @@
+// TEAM-109: Audited 2025-10-18 - ✅ CLEAN - GGUF tokenizer extraction from metadata
+
 //! GGUF tokenizer extraction
 //!
 //! Created by: TEAM-090

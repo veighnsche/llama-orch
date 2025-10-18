@@ -1,3 +1,5 @@
+// TEAM-109: Audited 2025-10-18 - ✅ CLEAN - Common module exports
+
 //! Worker Common Types
 //!
 //! Shared types and utilities for llama-orch workers.

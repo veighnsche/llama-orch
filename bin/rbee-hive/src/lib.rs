@@ -1,3 +1,5 @@
+// TEAM-109: Audited 2025-10-18 - ✅ CLEAN - Module exports
+
 //! rbee-hive library
 //!
 //! Exposes modules for testing

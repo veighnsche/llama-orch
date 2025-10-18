@@ -1,3 +1,5 @@
+// TEAM-109: Audited 2025-10-18 - ✅ CLEAN - Inference result with stop reasons
+
 //! Inference result tracking with stop reason
 //!
 //! This module provides a unified result type that tracks why inference

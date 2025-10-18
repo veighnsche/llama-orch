@@ -1,3 +1,5 @@
+// TEAM-109: Audited 2025-10-18 - ✅ CLEAN - Module structure
+
 //! llm-worker-rbee - Candle-based Llama-2 inference library
 //!
 //! TEAM-009 rewrite: Uses `candle-transformers::models::llama::Llama` directly

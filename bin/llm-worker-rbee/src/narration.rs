@@ -1,3 +1,5 @@
+// TEAM-109: Audited 2025-10-18 - ✅ CLEAN - Dual-output narration (stdout + SSE)
+
 //! Narration constants and dual-output wrapper for llm-worker-rbee
 //!
 //! Defines all actor and action constants for triple-narration observability.

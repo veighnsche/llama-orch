@@ -1,3 +1,5 @@
+// TEAM-109: Audited 2025-10-18 - ✅ CLEAN - Pool manager callback implementation
+
 //! Worker startup and pool manager callback
 
 use crate::narration::{ACTOR_LLM_WORKER_RBEE, ACTION_CALLBACK_READY, ACTION_ERROR};

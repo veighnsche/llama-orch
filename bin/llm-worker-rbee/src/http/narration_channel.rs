@@ -1,3 +1,5 @@
+// TEAM-110: Audited 2025-10-18 - ✅ CLEAN - Excellent thread-local channel pattern for request-scoped narration
+//
 //! Narration SSE channel management
 //!
 //! TEAM-039: Provides thread-local channel for narration events to flow into SSE stream

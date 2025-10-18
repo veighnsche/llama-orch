@@ -1,3 +1,5 @@
+// TEAM-109: Audited 2025-10-18 - ✅ CLEAN - Sampling configuration with validation
+
 //! Unified sampling configuration
 //!
 //! This module provides a single configuration type that encapsulates

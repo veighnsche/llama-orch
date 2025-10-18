@@ -1,3 +1,5 @@
+// TEAM-109: Audited 2025-10-18 - ✅ CLEAN - Thread-safe state management
+
 //! Worker registry - in-memory worker tracking
 //!
 //! Per test-001-mvp.md Phase 5: Worker Startup

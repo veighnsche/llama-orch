@@ -1,3 +1,5 @@
+// TEAM-109: Audited 2025-10-18 - ✅ CLEAN - In-memory worker registry
+
 //! Worker Registry Module (In-Memory)
 //!
 //! Created by: TEAM-043

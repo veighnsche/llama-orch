@@ -1,3 +1,5 @@
+// TEAM-109: Audited 2025-10-18 - ⚠️ KNOWN ISSUE - Secrets in env vars (line 106)
+
 //! CUDA GPU worker binary
 //!
 //! Uses NVIDIA CUDA for GPU inference with strict device residency.

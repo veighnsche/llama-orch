@@ -1,3 +1,5 @@
+// TEAM-109: Audited 2025-10-18 - ✅ CLEAN - SSE streaming with broadcast channels
+
 //! Download progress tracking with SSE streaming
 //!
 //! Per test-001-mvp.md Phase 3: Model Download Progress

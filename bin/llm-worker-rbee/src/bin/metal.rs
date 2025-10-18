@@ -1,3 +1,5 @@
+// TEAM-109: Audited 2025-10-18 - ⚠️ KNOWN ISSUE - Secrets in env vars (line 104)
+
 //! Apple Metal GPU worker binary
 //!
 //! Uses Apple Metal for GPU inference on macOS with Apple Silicon.
