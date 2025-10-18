@@ -1,0 +1,52 @@
+{
+  "name": "Worker Crash Scenarios",
+  "created_by": "TEAM-107",
+  "date": "2025-10-18",
+  "scenarios": [
+    {
+      "id": "WC-001",
+      "name": "Worker crash during inference",
+      "description": "Kill worker process while processing request",
+      "target": "mock-worker",
+      "signal": "SIGKILL",
+      "timing": "during_inference",
+      "expected_behavior": "Request should be retried on another worker or fail gracefully"
+    },
+    {
+      "id": "WC-002",
+      "name": "Worker crash during registration",
+      "description": "Kill worker during registration handshake",
+      "target": "mock-worker",
+      "signal": "SIGKILL",
+      "timing": "during_registration",
+      "expected_behavior": "Registration should timeout and worker should be marked as failed"
+    },
+    {
+      "id": "WC-003",
+      "name": "Worker OOM kill",
+      "description": "Simulate OOM killer terminating worker",
+      "target": "mock-worker",
+      "signal": "SIGKILL",
+      "timing": "random",
+      "expected_behavior": "Hive should detect worker death and remove from pool"
+    },
+    {
+      "id": "WC-004",
+      "name": "Worker graceful shutdown timeout",
+      "description": "Worker doesn't respond to SIGTERM within timeout",
+      "target": "mock-worker",
+      "signal": "SIGTERM",
+      "timeout_seconds": 5,
+      "expected_behavior": "Hive should force-kill worker after timeout"
+    },
+    {
+      "id": "WC-005",
+      "name": "Multiple worker crashes",
+      "description": "Kill 50% of workers simultaneously",
+      "target": "mock-worker",
+      "signal": "SIGKILL",
+      "count": "50%",
+      "expected_behavior": "System should continue with remaining workers"
+    }
+  ]
+}

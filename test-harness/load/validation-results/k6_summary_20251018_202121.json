@@ -1,0 +1,148 @@
+{
+    "root_group": {
+        "name": "",
+        "path": "",
+        "id": "d41d8cd98f00b204e9800998ecf8427e",
+        "groups": {},
+        "checks": {
+                "status is 200": {
+                    "name": "status is 200",
+                    "path": "::status is 200",
+                    "id": "6210a8cd14cd70477eba5c5e4cb3fb5f",
+                    "passes": 353,
+                    "fails": 0
+                },
+                "has response body": {
+                    "passes": 353,
+                    "fails": 0,
+                    "name": "has response body",
+                    "path": "::has response body",
+                    "id": "1514b1467f95f95e2104aaea04d69846"
+                }
+            }
+    },
+    "metrics": {
+        "http_req_sending": {
+            "med": 0.0685795,
+            "max": 0.252413,
+            "p(90)": 0.11723080000000001,
+            "p(95)": 0.14673645,
+            "avg": 0.07635711016949147,
+            "min": 0.027098
+        },
+        "http_req_failed": {
+            "passes": 0,
+            "fails": 354,
+            "value": 0
+        },
+        "iteration_duration": {
+            "avg": 589.9212566118979,
+            "min": 512.04089,
+            "med": 585.041781,
+            "max": 765.25194,
+            "p(90)": 654.4877308,
+            "p(95)": 690.7523877999998
+        },
+        "checks": {
+            "passes": 706,
+            "fails": 0,
+            "value": 1
+        },
+        "http_req_waiting": {
+            "avg": 88.1728172570621,
+            "min": 0.369551,
+            "med": 82.9041565,
+            "max": 263.868205,
+            "p(90)": 152.88849019999998,
+            "p(95)": 189.22820324999984
+        },
+        "data_sent": {
+            "count": 86914,
+            "rate": 2847.4554063690084
+        },
+        "data_received": {
+            "count": 115450,
+            "rate": 3782.3449233184756
+        },
+        "vus_max": {
+            "value": 10,
+            "min": 10,
+            "max": 10
+        },
+        "http_req_duration": {
+            "med": 83.159318,
+            "max": 264.024302,
+            "p(90)": 153.1048103,
+            "p(95)": 189.40126074999984,
+            "avg": 88.41663854237281,
+            "min": 0.510998,
+            "thresholds": {
+                "p(95)<1000": false
+            }
+        },
+        "http_req_blocked": {
+            "max": 1.618326,
+            "p(90)": 0.5545377,
+            "p(95)": 0.6148865499999999,
+            "avg": 0.38298837853107365,
+            "min": 0.164209,
+            "med": 0.349977
+        },
+        "http_req_tls_handshaking": {
+            "max": 0,
+            "p(90)": 0,
+            "p(95)": 0,
+            "avg": 0,
+            "min": 0,
+            "med": 0
+        },
+        "http_req_receiving": {
+            "med": 0.1479645,
+            "max": 0.915534,
+            "p(90)": 0.27028759999999985,
+            "p(95)": 0.3103203999999999,
+            "avg": 0.1674641751412429,
+            "min": 0.065073
+        },
+        "http_req_duration{expected_response:true}": {
+            "avg": 88.41663854237281,
+            "min": 0.510998,
+            "med": 83.159318,
+            "max": 264.024302,
+            "p(90)": 153.1048103,
+            "p(95)": 189.40126074999984
+        },
+        "errors": {
+            "fails": 353,
+            "passes": 0,
+            "thresholds": {
+                "rate<0.1": false
+            },
+            "value": 0
+        },
+        "http_req_connecting": {
+            "avg": 0.281700802259887,
+            "min": 0.115123,
+            "med": 0.26266999999999996,
+            "max": 1.505926,
+            "p(90)": 0.4026529,
+            "p(95)": 0.4614573999999997
+        },
+        "iterations": {
+            "count": 353,
+            "rate": 11.564900458479185
+        },
+        "http_reqs": {
+            "count": 354,
+            "rate": 11.597662216151932
+        },
+        "vus": {
+            "value": 1,
+            "min": 1,
+            "max": 10
+        }
+    },
+    "setup_data": {
+        "startTime": "2025-10-18T18:21:24.093Z"
+    }
+}

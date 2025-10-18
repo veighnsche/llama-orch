@@ -1,0 +1,53 @@
+{
+  "name": "Resource Exhaustion Scenarios",
+  "created_by": "TEAM-107",
+  "date": "2025-10-18",
+  "scenarios": [
+    {
+      "id": "RE-001",
+      "name": "Disk full",
+      "description": "Fill disk to 100% capacity",
+      "resource": "disk",
+      "target": "rbee-hive",
+      "threshold": "100%",
+      "expected_behavior": "Service should reject new requests with 507 Insufficient Storage"
+    },
+    {
+      "id": "RE-002",
+      "name": "Memory exhaustion",
+      "description": "Consume all available memory",
+      "resource": "memory",
+      "target": "mock-worker",
+      "threshold": "95%",
+      "expected_behavior": "OOM killer should terminate process, hive should detect and remove worker"
+    },
+    {
+      "id": "RE-003",
+      "name": "CPU saturation",
+      "description": "Pin CPU to 100% usage",
+      "resource": "cpu",
+      "target": "queen-rbee",
+      "threshold": "100%",
+      "duration_seconds": 60,
+      "expected_behavior": "Requests should queue but eventually process"
+    },
+    {
+      "id": "RE-004",
+      "name": "File descriptor exhaustion",
+      "description": "Exhaust available file descriptors",
+      "resource": "file_descriptors",
+      "target": "rbee-hive",
+      "threshold": "ulimit",
+      "expected_behavior": "Service should reject new connections gracefully"
+    },
+    {
+      "id": "RE-005",
+      "name": "VRAM exhaustion",
+      "description": "Allocate all GPU memory",
+      "resource": "vram",
+      "target": "mock-worker",
+      "threshold": "100%",
+      "expected_behavior": "Worker should reject new inference requests with 507"
+    }
+  ]
+}

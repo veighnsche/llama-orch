@@ -1,0 +1,5 @@
+🧪 TEAM-107 Quick Validation
+=============================
+
+📁 Directory Structure
+✅ chaos/ exists

@@ -1,0 +1,106 @@
+# Created by: TEAM-107 | 2025-10-18
+# Chaos testing infrastructure with toxiproxy for network failure injection
+
+version: '3.8'
+
+services:
+  # Toxiproxy for network chaos injection
+  toxiproxy:
+    image: ghcr.io/shopify/toxiproxy:2.9.0
+    ports:
+      - "8474:8474"  # Toxiproxy API
+      - "8080:8080"  # Proxied queen-rbee
+      - "9200:9200"  # Proxied rbee-hive
+    networks:
+      - chaos-net
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:8474/version"]
+      interval: 5s
+      timeout: 3s
+      retries: 3
+
+  # Queen-rbee service (behind toxiproxy)
+  queen-rbee:
+    build:
+      context: ../bdd
+      dockerfile: Dockerfile.queen-rbee
+    environment:
+      - RUST_LOG=info
+      - LLORCH_QUEEN_BIND=0.0.0.0:8081
+      - LLORCH_HIVE_URL=http://toxiproxy:9201
+    ports:
+      - "8081:8081"
+    networks:
+      - chaos-net
+    depends_on:
+      toxiproxy:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:8081/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Rbee-hive service (behind toxiproxy)
+  rbee-hive:
+    build:
+      context: ../bdd
+      dockerfile: Dockerfile.rbee-hive
+    environment:
+      - RUST_LOG=info
+      - LLORCH_HIVE_BIND=0.0.0.0:9201
+      - LLORCH_WORKER_TIMEOUT=30
+    ports:
+      - "9201:9201"
+    networks:
+      - chaos-net
+    depends_on:
+      toxiproxy:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:9201/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Mock worker for testing
+  mock-worker:
+    build:
+      context: ../bdd
+      dockerfile: Dockerfile.mock-worker
+    environment:
+      - RUST_LOG=info
+      - LLORCH_WORKER_ID=chaos-worker-001
+      - LLORCH_HIVE_URL=http://toxiproxy:9201
+    networks:
+      - chaos-net
+    depends_on:
+      rbee-hive:
+        condition: service_healthy
+
+  # Chaos controller - runs chaos scenarios
+  chaos-controller:
+    image: python:3.11-slim
+    volumes:
+      - ./scenarios:/scenarios:ro
+      - ./scripts:/scripts:ro
+      - ./results:/results
+    working_dir: /scripts
+    environment:
+      - TOXIPROXY_URL=http://toxiproxy:8474
+      - QUEEN_URL=http://toxiproxy:8080
+      - HIVE_URL=http://toxiproxy:9200
+    networks:
+      - chaos-net
+    depends_on:
+      toxiproxy:
+        condition: service_healthy
+      queen-rbee:
+        condition: service_healthy
+      rbee-hive:
+        condition: service_healthy
+    command: ["sleep", "infinity"]
+
+networks:
+  chaos-net:
+    driver: bridge
