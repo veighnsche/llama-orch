@@ -77,7 +77,7 @@ impl QuantizedPhiModel {
             actor: "model-loader",
             action: "gguf_load_complete",
             target: path.display().to_string(),
-            human: format!("GGUF Phi model loaded (vocab={}, eos={})", vocab_size, eos_token_id),
+            human: format!("GGUF Phi model loaded (vocab={vocab_size}, eos={eos_token_id})"),
             cute: Some("GGUF Phi model loaded successfully! Ready to generate! 🎉✨".to_string()),
             ..Default::default()
         });

@@ -155,7 +155,7 @@ async fn main() -> anyhow::Result<()> {
         }
         Err(e) => {
             // TEAM-088: Narrate model loading failure with detailed error
-            let error_msg = format!("{:#}", e);
+            let error_msg = format!("{e:#}");
 
             narrate(NarrationFields {
                 actor: ACTOR_MODEL_LOADER,

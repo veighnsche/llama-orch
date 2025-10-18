@@ -78,7 +78,7 @@ impl QuantizedQwenModel {
             actor: "model-loader",
             action: "gguf_load_complete",
             target: path.display().to_string(),
-            human: format!("GGUF Qwen model loaded (vocab={}, eos={})", vocab_size, eos_token_id),
+            human: format!("GGUF Qwen model loaded (vocab={vocab_size}, eos={eos_token_id})"),
             cute: Some("GGUF Qwen model loaded successfully! Ready to generate! 🎉✨".to_string()),
             ..Default::default()
         });

@@ -15,9 +15,9 @@ pub fn print_banner(config: &BddConfig, timestamp: &str) {
 
     // Show output mode
     if config.quiet {
-        println!("{} {}", "🔇 Output Mode:".yellow(), "QUIET (summary only)");
+        println!("{} QUIET (summary only)", "🔇 Output Mode:".yellow());
     } else {
-        println!("{} {}", "📺 Output Mode:".green(), "LIVE (all stdout/stderr shown in real-time)");
+        println!("{} LIVE (all stdout/stderr shown in real-time)", "📺 Output Mode:".green());
     }
     println!();
 

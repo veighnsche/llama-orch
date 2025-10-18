@@ -43,7 +43,7 @@ use tokio::sync::Mutex;
 /// TEAM-017: Updated to accept Mutex-wrapped backend
 /// TEAM-035: Added /v1/loading/progress and renamed /execute to /v1/inference
 /// TEAM-045: Added /v1/ready endpoint
-/// TEAM-102: Added authentication middleware with expected_token
+/// TEAM-102: Added authentication middleware with `expected_token`
 pub fn create_router<B: InferenceBackend + 'static>(
     backend: Arc<Mutex<B>>,
     expected_token: String, // TEAM-102: API token for authentication

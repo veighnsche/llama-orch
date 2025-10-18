@@ -18,7 +18,7 @@ struct ReadyCallback {
 }
 
 /// Call back to pool manager to report worker ready
-/// TEAM-092: Updated to match rbee-hive's WorkerReadyRequest structure
+/// TEAM-092: Updated to match rbee-hive's `WorkerReadyRequest` structure
 pub async fn callback_ready(
     callback_url: &str,
     worker_id: &str,

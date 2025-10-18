@@ -95,7 +95,7 @@ impl QuantizedLlamaModel {
         });
 
         // TEAM-088: List all available metadata keys for debugging
-        let available_keys: Vec<String> = content.metadata.keys().map(|k| k.to_string()).collect();
+        let available_keys: Vec<String> = content.metadata.keys().map(std::string::ToString::to_string).collect();
         tracing::debug!(keys = ?available_keys, "Available GGUF metadata keys");
 
         narrate(NarrationFields {
@@ -128,8 +128,8 @@ impl QuantizedLlamaModel {
                         actor: "model-loader",
                         action: "gguf_vocab_size_derived",
                         target: path.display().to_string(),
-                        human: format!("Derived vocab_size={} from tokenizer.ggml.tokens array", size),
-                        cute: Some(format!("Found vocab_size by counting {} tokens! 🔢✨", size)),
+                        human: format!("Derived vocab_size={size} from tokenizer.ggml.tokens array"),
+                        cute: Some(format!("Found vocab_size by counting {size} tokens! 🔢✨")),
                         ..Default::default()
                     });
                     
@@ -144,7 +144,7 @@ impl QuantizedLlamaModel {
             })
             .with_context(|| {
                 // TEAM-088: Narrate missing vocab_size with helpful context
-                let available_keys: Vec<String> = content.metadata.keys().map(|k| k.to_string()).collect();
+                let available_keys: Vec<String> = content.metadata.keys().map(std::string::ToString::to_string).collect();
                 narrate(NarrationFields {
                     actor: "model-loader",
                     action: "gguf_metadata_missing",
@@ -187,7 +187,7 @@ impl QuantizedLlamaModel {
                 eos_token_id,
                 content.tensor_infos.len()
             ),
-            cute: Some(format!("Found vocab_size={}! Metadata looks good! ✅", vocab_size)),
+            cute: Some(format!("Found vocab_size={vocab_size}! Metadata looks good! ✅")),
             ..Default::default()
         });
 
@@ -228,7 +228,7 @@ impl QuantizedLlamaModel {
             actor: "model-loader",
             action: "gguf_load_complete",
             target: path.display().to_string(),
-            human: format!("GGUF model loaded (vocab={}, eos={})", vocab_size, eos_token_id),
+            human: format!("GGUF model loaded (vocab={vocab_size}, eos={eos_token_id})"),
             cute: Some("GGUF model loaded successfully! Ready to generate! 🎉✨".to_string()),
             ..Default::default()
         });

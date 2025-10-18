@@ -8,7 +8,7 @@
 //! GGUF files contain embedded tokenizers in metadata:
 //! - tokenizer.ggml.tokens: Array of token strings
 //! - tokenizer.ggml.scores: Token scores
-//! - tokenizer.ggml.token_type: Token types (normal, unknown, control, etc.)
+//! - `tokenizer.ggml.token_type`: Token types (normal, unknown, control, etc.)
 //! - tokenizer.ggml.merges: BPE merge rules (optional)
 
 use anyhow::{Context, Result};
@@ -22,7 +22,7 @@ use tokenizers::{AddedToken, Tokenizer};
 /// Extract tokenizer from GGUF file metadata
 ///
 /// TEAM-090: GGUF files have embedded tokenizers - extract them!
-/// This builds a proper HuggingFace Tokenizer from GGUF metadata.
+/// This builds a proper `HuggingFace` Tokenizer from GGUF metadata.
 pub fn extract_tokenizer_from_gguf(gguf_path: &Path) -> Result<Tokenizer> {
     // TEAM-090: Narrate tokenizer extraction start
     narrate(NarrationFields {
@@ -53,7 +53,7 @@ pub fn extract_tokenizer_from_gguf(gguf_path: &Path) -> Result<Tokenizer> {
         human: format!(
             "Extracted tokenizer metadata: {} tokens, {} merges",
             tokens.len(),
-            merges.as_ref().map(|m| m.len()).unwrap_or(0)
+            merges.as_ref().map_or(0, std::vec::Vec::len)
         ),
         cute: Some(format!("Found {} tokens in the GGUF! Building tokenizer... 🔧", tokens.len())),
         ..Default::default()
@@ -62,7 +62,7 @@ pub fn extract_tokenizer_from_gguf(gguf_path: &Path) -> Result<Tokenizer> {
     tracing::info!(
         tokens = tokens.len(),
         scores = scores.len(),
-        merges = merges.as_ref().map(|m| m.len()),
+        merges = merges.as_ref().map(std::vec::Vec::len),
         "Extracted GGUF tokenizer metadata"
     );
 
@@ -108,17 +108,17 @@ fn extract_tokens(content: &Content) -> Result<Vec<String>> {
             for val in arr {
                 let token_str = match val {
                     Value::String(s) => s.clone(),
-                    Value::U8(n) => format!("{}", n),
-                    Value::I8(n) => format!("{}", n),
-                    Value::U16(n) => format!("{}", n),
-                    Value::I16(n) => format!("{}", n),
-                    Value::U32(n) => format!("{}", n),
-                    Value::I32(n) => format!("{}", n),
-                    Value::F32(n) => format!("{}", n),
-                    Value::U64(n) => format!("{}", n),
-                    Value::I64(n) => format!("{}", n),
-                    Value::F64(n) => format!("{}", n),
-                    Value::Bool(b) => format!("{}", b),
+                    Value::U8(n) => format!("{n}"),
+                    Value::I8(n) => format!("{n}"),
+                    Value::U16(n) => format!("{n}"),
+                    Value::I16(n) => format!("{n}"),
+                    Value::U32(n) => format!("{n}"),
+                    Value::I32(n) => format!("{n}"),
+                    Value::F32(n) => format!("{n}"),
+                    Value::U64(n) => format!("{n}"),
+                    Value::I64(n) => format!("{n}"),
+                    Value::F64(n) => format!("{n}"),
+                    Value::Bool(b) => format!("{b}"),
                     Value::Array(_) => {
                         anyhow::bail!("Unexpected array value in tokenizer.ggml.tokens")
                     }
@@ -165,12 +165,9 @@ fn extract_scores(content: &Content) -> Result<Vec<f32>> {
 ///
 /// TEAM-090: Merges define BPE merge rules
 fn extract_merges(content: &Content) -> Result<Option<Vec<(String, String)>>> {
-    let merges = match content.metadata.get("tokenizer.ggml.merges") {
-        Some(val) => val,
-        None => {
-            tracing::debug!("No tokenizer.ggml.merges found in GGUF (optional)");
-            return Ok(None);
-        }
+    let merges = if let Some(val) = content.metadata.get("tokenizer.ggml.merges") { val } else {
+        tracing::debug!("No tokenizer.ggml.merges found in GGUF (optional)");
+        return Ok(None);
     };
 
     match merges {
@@ -210,7 +207,7 @@ fn extract_merges(content: &Content) -> Result<Option<Vec<(String, String)>>> {
 
 /// Build a Tokenizer from extracted GGUF metadata
 ///
-/// TEAM-090: Construct a HuggingFace Tokenizer from raw token data
+/// TEAM-090: Construct a `HuggingFace` Tokenizer from raw token data
 fn build_tokenizer(
     tokens: Vec<String>,
     _scores: Vec<f32>,

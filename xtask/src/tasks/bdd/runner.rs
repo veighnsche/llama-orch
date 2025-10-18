@@ -154,7 +154,7 @@ fn validate_environment(bdd_dir: &PathBuf) -> Result<()> {
     }
 
     if !bdd_dir.join("tests/features").exists() {
-        println!("{} {}", "⚠️  WARNING:".yellow(), "No tests/features directory found");
+        println!("{} No tests/features directory found", "⚠️  WARNING:".yellow());
     }
 
     Ok(())
@@ -290,22 +290,18 @@ fn execute_tests_live(cmd: &mut Command, paths: &OutputPaths) -> Result<TestResu
     // Spawn thread for stdout
     let stdout_handle = thread::spawn(move || {
         let reader = BufReader::new(stdout);
-        for line in reader.lines() {
-            if let Ok(line) = line {
-                println!("{}", line);
-                output_content_stdout.lock().unwrap().push(line);
-            }
+        for line in reader.lines().flatten() {
+            println!("{}", line);
+            output_content_stdout.lock().unwrap().push(line);
         }
     });
 
     // Spawn thread for stderr
     let stderr_handle = thread::spawn(move || {
         let reader = BufReader::new(stderr);
-        for line in reader.lines() {
-            if let Ok(line) = line {
-                eprintln!("{}", line);
-                output_content_stderr.lock().unwrap().push(line);
-            }
+        for line in reader.lines().flatten() {
+            eprintln!("{}", line);
+            output_content_stderr.lock().unwrap().push(line);
         }
     });
 

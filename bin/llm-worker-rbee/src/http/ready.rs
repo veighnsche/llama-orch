@@ -27,7 +27,7 @@ use tracing::debug;
 /// Worker readiness response
 ///
 /// Indicates whether the worker is ready to accept inference requests.
-/// While loading, provides a progress_url for streaming loading status.
+/// While loading, provides a `progress_url` for streaming loading status.
 #[derive(Serialize)]
 pub struct ReadyResponse {
     /// Whether the worker is ready for inference
@@ -63,7 +63,7 @@ pub async fn handle_ready<B: InferenceBackend>(
         "error".to_string()
     };
 
-    let progress_url = if !ready { Some("/v1/loading/progress".to_string()) } else { None };
+    let progress_url = if ready { None } else { Some("/v1/loading/progress".to_string()) };
 
     let model_loaded = if ready { Some(true) } else { None };
 
@@ -71,7 +71,7 @@ pub async fn handle_ready<B: InferenceBackend>(
         actor: ACTOR_HTTP_SERVER,
         action: ACTION_HEALTH_CHECK,
         target: state.clone(),
-        human: format!("Readiness check: ready={}, state={}", ready, state),
+        human: format!("Readiness check: ready={ready}, state={state}"),
         cute: if ready {
             Some("Ready to serve! 🚀".to_string())
         } else {

@@ -387,7 +387,7 @@ impl InferenceBackend for CandleInferenceBackend {
                 duration_ms,
                 tokens_per_sec
             ),
-            cute: Some(format!("Answer: \"{}\" 🎉 ({} tok/s)", text_preview, tokens_per_sec)),
+            cute: Some(format!("Answer: \"{text_preview}\" 🎉 ({tokens_per_sec} tok/s)")),
             tokens_out: Some(generated_tokens.len() as u64),
             decode_time_ms: Some(duration_ms),
             ..Default::default()

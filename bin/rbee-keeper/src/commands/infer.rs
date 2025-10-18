@@ -160,19 +160,19 @@ pub async fn handle(
                 if error_str.contains("Connection refused") {
                     println!(
                         "{}",
-                        format!("  💡 queen-rbee is not responding on port 8080").yellow()
+                        "  💡 queen-rbee is not responding on port 8080".to_string().yellow()
                     );
                     println!(
                         "{}",
-                        format!("  💡 Verify: curl http://localhost:8080/health").dimmed()
+                        "  💡 Verify: curl http://localhost:8080/health".to_string().dimmed()
                     );
                 } else if error_str.contains("timeout") {
-                    println!("{}", format!("  💡 Request timed out after 30 seconds").yellow());
-                    println!("{}", format!("  💡 queen-rbee may be overloaded or stuck").dimmed());
+                    println!("{}", "  💡 Request timed out after 30 seconds".to_string().yellow());
+                    println!("{}", "  💡 queen-rbee may be overloaded or stuck".to_string().dimmed());
                 } else if error_str.contains("dns") || error_str.contains("resolve") {
-                    println!("{}", format!("  💡 DNS resolution failed for localhost").yellow());
+                    println!("{}", "  💡 DNS resolution failed for localhost".to_string().yellow());
                 } else {
-                    println!("{}", format!("  💡 Network error occurred").yellow());
+                    println!("{}", "  💡 Network error occurred".to_string().yellow());
                 }
 
                 last_error = Some(e.to_string());
