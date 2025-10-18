@@ -17,7 +17,7 @@ Feature: Worker Provisioning
       | blep        | blep.home.arpa        | rbee-keeper, queen-rbee                         | cpu                    |
       | workstation | workstation.home.arpa | rbee-hive, llm-worker-rbee                      | cuda:0, cuda:1, cpu    |
     And I am on node "workstation"
-    And rbee-hive is running at "http://localhost:8081"
+    And rbee-hive is running at "http://localhost:9200"
     And the worker catalog is SQLite at "~/.rbee/workers.db"
 
   Scenario: Build worker from git succeeds

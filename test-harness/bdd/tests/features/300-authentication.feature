@@ -92,7 +92,7 @@ Feature: Authentication
   @p0 @auth @multi-component
   Scenario: AUTH-008 - Multiple components all require auth
     Given queen-rbee is running with auth at "http://0.0.0.0:8080"
-    And rbee-hive is running with auth at "http://workstation.home.arpa:8081"
+    And rbee-hive is running with auth at "http://workstation.home.arpa:9200"
     And llm-worker-rbee is running with auth at "http://workstation.home.arpa:8082"
     When I send request to queen-rbee without auth
     Then response status is 401 Unauthorized
@@ -217,7 +217,7 @@ Feature: Authentication
   @p0 @auth @integration
   Scenario: AUTH-019 - End-to-end auth flow (queen → hive → worker)
     Given queen-rbee is running with auth at "http://0.0.0.0:8080"
-    And rbee-hive is running with auth at "http://workstation.home.arpa:8081"
+    And rbee-hive is running with auth at "http://workstation.home.arpa:9200"
     And queen-rbee has API token "queen-token-123"
     And rbee-hive has API token "hive-token-456"
     When rbee-keeper sends inference request to queen-rbee with token "queen-token-123"

@@ -186,7 +186,7 @@ Feature: Input Validation
 
   @p0 @validation @path-traversal @security
   Scenario: VAL-004 - Prevent path traversal (../../etc/passwd)
-    Given rbee-hive is running at "http://localhost:8081"
+    Given rbee-hive is running at "http://localhost:9200"
     When I send request with model_path "../../etc/passwd"
     Then request is rejected with 400 Bad Request
     And error message is "Invalid path: path traversal detected"
@@ -194,14 +194,14 @@ Feature: Input Validation
 
   @p0 @validation @path-traversal @security
   Scenario: VAL-005 - Prevent path traversal (absolute paths)
-    Given rbee-hive is running at "http://localhost:8081"
+    Given rbee-hive is running at "http://localhost:9200"
     When I send request with model_path "/etc/passwd"
     Then request is rejected with 400 Bad Request
     And error message is "Invalid path: absolute paths not allowed"
 
   @p0 @validation @path-traversal @security
   Scenario: VAL-006 - Prevent path traversal (symlinks)
-    Given rbee-hive is running at "http://localhost:8081"
+    Given rbee-hive is running at "http://localhost:9200"
     And symlink exists at "/tmp/llorch-test/evil-link" pointing to "/etc/passwd"
     When I send request with model_path "/tmp/llorch-test/evil-link"
     Then request is rejected with 400 Bad Request
@@ -210,7 +210,7 @@ Feature: Input Validation
 
   @p0 @validation @command-injection @security
   Scenario: VAL-007 - Prevent command injection (shell metacharacters)
-    Given rbee-hive is running at "http://localhost:8081"
+    Given rbee-hive is running at "http://localhost:9200"
     When I send request with worker_id "worker-123; rm -rf /"
     Then request is rejected with 400 Bad Request
     And error message is "Invalid worker ID: contains shell metacharacters"
@@ -218,14 +218,14 @@ Feature: Input Validation
 
   @p0 @validation @command-injection @security
   Scenario: VAL-008 - Prevent command injection (backticks)
-    Given rbee-hive is running at "http://localhost:8081"
+    Given rbee-hive is running at "http://localhost:9200"
     When I send request with worker_id "worker-`whoami`"
     Then request is rejected with 400 Bad Request
     And error message is "Invalid worker ID: contains backticks"
 
   @p0 @validation @command-injection @security
   Scenario: VAL-009 - Prevent command injection (pipe characters)
-    Given rbee-hive is running at "http://localhost:8081"
+    Given rbee-hive is running at "http://localhost:9200"
     When I send request with worker_id "worker-123 | cat /etc/passwd"
     Then request is rejected with 400 Bad Request
     And error message is "Invalid worker ID: contains pipe characters"
@@ -248,7 +248,7 @@ Feature: Input Validation
 
   @p0 @validation @format
   Scenario: VAL-012 - Validate worker ID format (alphanumeric + dash)
-    Given rbee-hive is running at "http://localhost:8081"
+    Given rbee-hive is running at "http://localhost:9200"
     When I send request with worker_id "worker-123-abc"
     Then request is accepted
     When I send request with worker_id "worker_123_abc"
@@ -257,14 +257,14 @@ Feature: Input Validation
 
   @p0 @validation @format
   Scenario: VAL-013 - Validate worker ID length (max 64 chars)
-    Given rbee-hive is running at "http://localhost:8081"
+    Given rbee-hive is running at "http://localhost:9200"
     When I send request with worker_id "worker-" repeated 20 times
     Then request is rejected with 400 Bad Request
     And error message is "Invalid worker ID: exceeds maximum length of 64 characters"
 
   @p0 @validation @format
   Scenario: VAL-014 - Validate backend name (cuda, metal, cpu only)
-    Given rbee-hive is running at "http://localhost:8081"
+    Given rbee-hive is running at "http://localhost:9200"
     When I send request with backend "cuda"
     Then request is accepted
     When I send request with backend "metal"
@@ -277,7 +277,7 @@ Feature: Input Validation
 
   @p0 @validation @format
   Scenario: VAL-015 - Validate device ID (non-negative integer)
-    Given rbee-hive is running at "http://localhost:8081"
+    Given rbee-hive is running at "http://localhost:9200"
     When I send request with device "0"
     Then request is accepted
     When I send request with device "5"

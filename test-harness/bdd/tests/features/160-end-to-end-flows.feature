@@ -61,17 +61,17 @@ Feature: End-to-End Integration Flows
     And rbee-hive performs worker preflight checks
     And RAM check passes with 8000 MB available
     And CUDA backend check passes
-    And rbee-hive spawns worker process "llm-worker-rbee" on port 8001 with cuda device 1
-    And the worker HTTP server starts on port 8001
+    And rbee-hive spawns worker process "llm-worker-rbee" on port 8081 with cuda device 1
+    And the worker HTTP server starts on port 8081
     And the worker sends ready callback to "http://workstation.home.arpa:9200/v1/workers/ready"
     And rbee-hive registers the worker in the in-memory registry
     And rbee-hive returns worker details to queen-rbee
     And queen-rbee returns worker URL to rbee-keeper
-    And rbee-keeper polls worker readiness at "http://workstation.home.arpa:8001/v1/ready"
+    And rbee-keeper polls worker readiness at "http://workstation.home.arpa:8081/v1/ready"
     And the worker returns state "loading" with progress_url
     And rbee-keeper streams loading progress showing layers loaded
     And the worker completes loading and returns state "ready"
-    And rbee-keeper sends inference request to "http://workstation.home.arpa:8001/v1/inference"
+    And rbee-keeper sends inference request to "http://workstation.home.arpa:8081/v1/inference"
     And the worker streams tokens via SSE
     And rbee-keeper displays tokens to stdout in real-time
     And the inference completes with 20 tokens generated
@@ -102,7 +102,7 @@ Feature: End-to-End Integration Flows
     Then rbee-keeper queries the worker registry
     And the registry returns worker "worker-abc123" with state "idle"
     And queen-rbee skips pool preflight and model provisioning
-    And rbee-keeper sends inference request directly to "http://workstation.home.arpa:8001/v1/inference"
+    And rbee-keeper sends inference request directly to "http://workstation.home.arpa:8081/v1/inference"
     And the worker streams tokens via SSE
     And the inference completes successfully
     And the total latency is under 5 seconds

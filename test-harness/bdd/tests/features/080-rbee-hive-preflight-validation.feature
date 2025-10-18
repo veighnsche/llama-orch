@@ -20,7 +20,7 @@ Feature: rbee-hive Preflight Validation
       | workstation | workstation.home.arpa | rbee-hive, llm-worker-rbee                      | cuda:0, cuda:1, cpu    |
     And I am on node "blep"
     And queen-rbee is running at "http://localhost:8080"
-    And rbee-hive is running at "http://workstation.home.arpa:8081"
+    And rbee-hive is running at "http://workstation.home.arpa:9200"
 
   Scenario: rbee-hive HTTP API health check succeeds
     Given rbee-hive is running

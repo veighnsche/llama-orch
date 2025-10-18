@@ -16,7 +16,7 @@ Feature: Deadline Propagation - Timeout Handling Across Components
       | workstation | workstation.home.arpa | rbee-hive, llm-worker-rbee                      | cuda:0, cuda:1, cpu    |
     And I am on node "blep"
     And queen-rbee is running at "http://0.0.0.0:8080"
-    And rbee-hive is running at "http://workstation.home.arpa:8081"
+    And rbee-hive is running at "http://workstation.home.arpa:9200"
 
   @p1 @deadline @timeout
   Scenario: DEAD-001 - Propagate timeout queen → hive → worker

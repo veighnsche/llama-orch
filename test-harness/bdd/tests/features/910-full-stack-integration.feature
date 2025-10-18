@@ -12,7 +12,7 @@ Feature: Full Stack Integration
     Given the integration test environment is running
     And queen-rbee is healthy at 'http://localhost:8080'
     And rbee-hive is healthy at 'http://localhost:9200'
-    And mock-worker is healthy at 'http://localhost:8001'
+    And mock-worker is healthy at 'http://localhost:8081'
 
   @integration @p0 @full-stack
   Scenario: FULL-001 - Complete inference flow with all components
