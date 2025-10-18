@@ -16,7 +16,7 @@
 //! - BDD test-001.feature: Worker readiness polling
 
 use crate::http::backend::InferenceBackend;
-use crate::narration::{ACTOR_HTTP_SERVER, ACTION_HEALTH_CHECK};
+use crate::narration::{ACTION_HEALTH_CHECK, ACTOR_HTTP_SERVER};
 use axum::{extract::State, Json};
 use observability_narration_core::{narrate, NarrationFields};
 use serde::Serialize;
@@ -53,7 +53,7 @@ pub async fn handle_ready<B: InferenceBackend>(
 
     let backend = backend.lock().await;
     let ready = backend.is_ready();
-    
+
     // TEAM-045: Determine state based on readiness and health
     let state = if !ready {
         "loading".to_string()
@@ -63,11 +63,7 @@ pub async fn handle_ready<B: InferenceBackend>(
         "error".to_string()
     };
 
-    let progress_url = if !ready {
-        Some("/v1/loading/progress".to_string())
-    } else {
-        None
-    };
+    let progress_url = if !ready { Some("/v1/loading/progress".to_string()) } else { None };
 
     let model_loaded = if ready { Some(true) } else { None };
 
@@ -84,12 +80,7 @@ pub async fn handle_ready<B: InferenceBackend>(
         ..Default::default()
     });
 
-    Json(ReadyResponse {
-        ready,
-        state,
-        progress_url,
-        model_loaded,
-    })
+    Json(ReadyResponse { ready, state, progress_url, model_loaded })
 }
 
 #[cfg(test)]

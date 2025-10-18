@@ -7,8 +7,8 @@
 // ⚠️ CRITICAL: These steps MUST connect to real product code from /bin/
 // ⚠️ Import queen_rbee::preflight::ssh and test actual SSH connections
 
-use cucumber::{given, then, when};
 use crate::steps::world::World;
+use cucumber::{given, then, when};
 use queen_rbee::preflight::ssh::SshPreflight;
 
 #[given(expr = "SSH credentials are configured for {string}")]
@@ -45,7 +45,7 @@ pub async fn when_validate_ssh_connection(world: &mut World) {
     // TEAM-079: Validate SSH connection with real checker
     let host = "workstation.home.arpa".to_string();
     let preflight = SshPreflight::new(host, 22, "user".to_string());
-    
+
     match preflight.validate_connection().await {
         Ok(_) => {
             tracing::info!("TEAM-079: SSH validation succeeded");
@@ -70,7 +70,7 @@ pub async fn when_execute_test_command(world: &mut World, command: String) {
     // TEAM-079: Execute SSH command with real checker
     let host = "workstation.home.arpa".to_string();
     let preflight = SshPreflight::new(host, 22, "user".to_string());
-    
+
     match preflight.execute_command(&command).await {
         Ok(output) => {
             tracing::info!("TEAM-079: Command output: {}", output);
@@ -89,7 +89,7 @@ pub async fn when_measure_rtt(world: &mut World) {
     // TEAM-079: Measure SSH latency with real checker
     let host = "workstation.home.arpa".to_string();
     let preflight = SshPreflight::new(host, 22, "user".to_string());
-    
+
     match preflight.measure_latency().await {
         Ok(latency) => {
             tracing::info!("TEAM-079: SSH latency: {:?}", latency);
@@ -113,8 +113,11 @@ pub async fn when_check_rbee_hive_binary(world: &mut World) {
 pub async fn then_ssh_connection_succeeds(world: &mut World, host: String) {
     // TEAM-082: Verify connection success
     let action = world.last_action.as_ref().expect("No action recorded");
-    assert!(action.contains("ssh_validate_success") || action.contains("ssh_connected"),
-        "Expected successful SSH connection, got: {}", action);
+    assert!(
+        action.contains("ssh_validate_success") || action.contains("ssh_connected"),
+        "Expected successful SSH connection, got: {}",
+        action
+    );
     tracing::info!("TEAM-082: SSH connection to {} succeeded", host);
 }
 
@@ -129,8 +132,11 @@ pub async fn then_queen_logs(world: &mut World, message: String) {
 pub async fn then_preflight_passes(world: &mut World) {
     // TEAM-082: Verify preflight success
     let action = world.last_action.as_ref().expect("No action recorded");
-    assert!(action.contains("ssh_validate_success") || action.contains("ssh_connected"),
-        "Expected successful preflight, got: {}", action);
+    assert!(
+        action.contains("ssh_validate_success") || action.contains("ssh_connected"),
+        "Expected successful preflight, got: {}",
+        action
+    );
     tracing::info!("TEAM-082: Preflight check passed");
 }
 
@@ -138,8 +144,11 @@ pub async fn then_preflight_passes(world: &mut World) {
 pub async fn then_detects_timeout(world: &mut World) {
     // TEAM-082: Verify timeout detection
     let action = world.last_action.as_ref().expect("No action recorded");
-    assert!(action.contains("ssh_timeout") || action.contains("ssh_validate_failed"),
-        "Expected timeout detection, got: {}", action);
+    assert!(
+        action.contains("ssh_timeout") || action.contains("ssh_validate_failed"),
+        "Expected timeout detection, got: {}",
+        action
+    );
     tracing::info!("TEAM-082: Timeout detected");
 }
 
@@ -147,8 +156,11 @@ pub async fn then_detects_timeout(world: &mut World) {
 pub async fn then_ssh_auth_fails(world: &mut World) {
     // TEAM-082: Verify auth failure
     let action = world.last_action.as_ref().expect("No action recorded");
-    assert!(action.contains("ssh_invalid") || action.contains("ssh_validate_failed"),
-        "Expected SSH auth failure, got: {}", action);
+    assert!(
+        action.contains("ssh_invalid") || action.contains("ssh_validate_failed"),
+        "Expected SSH auth failure, got: {}",
+        action
+    );
     tracing::info!("TEAM-082: SSH authentication failed");
 }
 
@@ -156,8 +168,11 @@ pub async fn then_ssh_auth_fails(world: &mut World) {
 pub async fn then_command_succeeds(world: &mut World) {
     // TEAM-082: Verify command success
     let action = world.last_action.as_ref().expect("No action recorded");
-    assert!(action.contains("ssh_exec_") && !action.contains("_failed"),
-        "Expected successful command execution, got: {}", action);
+    assert!(
+        action.contains("ssh_exec_") && !action.contains("_failed"),
+        "Expected successful command execution, got: {}",
+        action
+    );
     tracing::info!("TEAM-082: Command succeeded");
 }
 
@@ -166,8 +181,7 @@ pub async fn then_stdout_is(world: &mut World, output: String) {
     // TEAM-082: Verify stdout content
     assert!(world.last_action.is_some(), "No action recorded");
     // Verify stdout was captured (stored in world.last_stdout)
-    assert!(!world.last_stdout.is_empty() || output.is_empty(),
-        "Expected stdout to be captured");
+    assert!(!world.last_stdout.is_empty() || output.is_empty(), "Expected stdout to be captured");
     tracing::info!("TEAM-082: stdout is: {}", output);
 }
 
@@ -175,8 +189,7 @@ pub async fn then_stdout_is(world: &mut World, output: String) {
 pub async fn then_latency_less_than(world: &mut World, ms: u32) {
     // TEAM-082: Verify latency threshold
     let action = world.last_action.as_ref().expect("No action recorded");
-    assert!(action.contains("ssh_rtt"),
-        "Expected latency measurement, got: {}", action);
+    assert!(action.contains("ssh_rtt"), "Expected latency measurement, got: {}", action);
     tracing::info!("TEAM-082: Latency < {}ms", ms);
 }
 
@@ -184,7 +197,10 @@ pub async fn then_latency_less_than(world: &mut World, ms: u32) {
 pub async fn then_specific_command_succeeds(world: &mut World, command: String) {
     // TEAM-082: Verify specific command success
     let action = world.last_action.as_ref().expect("No action recorded");
-    assert!(action.contains("ssh_exec_") || action.contains("ssh_check_binary"),
-        "Expected command execution, got: {}", action);
+    assert!(
+        action.contains("ssh_exec_") || action.contains("ssh_check_binary"),
+        "Expected command execution, got: {}",
+        action
+    );
     tracing::info!("TEAM-082: Command '{}' succeeded", command);
 }

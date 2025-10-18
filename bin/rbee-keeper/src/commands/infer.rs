@@ -18,14 +18,14 @@
 //! Created by: TEAM-024
 //! Modified by: TEAM-027, TEAM-030, TEAM-048, TEAM-050, TEAM-085, TEAM-086, TEAM-088
 
+use crate::queen_lifecycle::ensure_queen_rbee_running;
 use anyhow::Result;
 use colored::Colorize;
 use futures::StreamExt;
 use std::io::Write;
 use std::time::Duration;
-use crate::queen_lifecycle::ensure_queen_rbee_running;
 // TEAM-113: Input validation for CLI arguments
-use input_validation::{validate_model_ref, validate_identifier};
+use input_validation::{validate_identifier, validate_model_ref};
 
 /// Handle infer command
 ///
@@ -46,16 +46,15 @@ pub async fn handle(
     // TEAM-113: Validate inputs before sending to queen-rbee
     validate_model_ref(&model)
         .map_err(|e| anyhow::anyhow!("Invalid model reference format: {}", e))?;
-    
-    validate_identifier(&node, 64)
-        .map_err(|e| anyhow::anyhow!("Invalid node name: {}", e))?;
-    
+
+    validate_identifier(&node, 64).map_err(|e| anyhow::anyhow!("Invalid node name: {}", e))?;
+
     // Validate backend if provided
     if let Some(ref backend_name) = backend {
         validate_identifier(backend_name, 64)
             .map_err(|e| anyhow::anyhow!("Invalid backend name: {}", e))?;
     }
-    
+
     println!("{}", "=== Inference via queen-rbee Orchestration ===".cyan().bold());
     println!("Node: {}", node.cyan());
     println!("Model: {}", model.cyan());
@@ -90,18 +89,21 @@ pub async fn handle(
     } else {
         3
     };
-    
+
     let mut last_error = None;
     let mut response = None;
     for attempt in 0..max_attempts {
         if attempt > 0 {
-            println!("{}", format!("  ⏳ Retry attempt {}/{}...", attempt + 1, max_attempts).dimmed());
+            println!(
+                "{}",
+                format!("  ⏳ Retry attempt {}/{}...", attempt + 1, max_attempts).dimmed()
+            );
         }
-        
+
         println!("{}", format!("  🔌 Connecting to queen-rbee at {}...", queen_url).dimmed());
         println!("{}", format!("  📤 Sending POST request to {}/v2/tasks", queen_url).dimmed());
         println!("{}", format!("  📋 Request payload: node={}, model={}", node, model).dimmed());
-        
+
         match client
             .post(format!("{}/v2/tasks", queen_url))
             .json(&task_request)
@@ -110,7 +112,10 @@ pub async fn handle(
             .await
         {
             Ok(resp) if resp.status().is_success() => {
-                println!("{}", format!("  ✅ Request accepted by queen-rbee (HTTP {})", resp.status()).green());
+                println!(
+                    "{}",
+                    format!("  ✅ Request accepted by queen-rbee (HTTP {})", resp.status()).green()
+                );
                 response = Some(resp);
                 break;
             }
@@ -118,7 +123,7 @@ pub async fn handle(
                 // TEAM-086: Non-success HTTP status
                 let status = resp.status();
                 println!("{}", format!("  ❌ HTTP error: {}", status).red());
-                
+
                 // Try to get error body for debugging
                 match resp.text().await {
                     Ok(body) if !body.is_empty() => {
@@ -129,26 +134,38 @@ pub async fn handle(
                         last_error = Some(format!("HTTP {} (no body)", status));
                     }
                     Err(e) => {
-                        println!("{}", format!("  ⚠️  Could not read response body: {}", e).dimmed());
+                        println!(
+                            "{}",
+                            format!("  ⚠️  Could not read response body: {}", e).dimmed()
+                        );
                         last_error = Some(format!("HTTP {}", status));
                     }
                 }
-                
+
                 if attempt < max_attempts - 1 {
                     let backoff = 1000 * (attempt + 1) as u64;
-                    println!("{}", format!("  ⏱️  Backing off for {}ms before retry...", backoff).dimmed());
+                    println!(
+                        "{}",
+                        format!("  ⏱️  Backing off for {}ms before retry...", backoff).dimmed()
+                    );
                     tokio::time::sleep(Duration::from_millis(backoff)).await;
                 }
             }
             Err(e) => {
                 // TEAM-086: Connection/network error
                 println!("{}", format!("  ❌ Connection error: {}", e).red());
-                
+
                 // TEAM-086: More specific diagnostics based on error type
                 let error_str = e.to_string();
                 if error_str.contains("Connection refused") {
-                    println!("{}", format!("  💡 queen-rbee is not responding on port 8080").yellow());
-                    println!("{}", format!("  💡 Verify: curl http://localhost:8080/health").dimmed());
+                    println!(
+                        "{}",
+                        format!("  💡 queen-rbee is not responding on port 8080").yellow()
+                    );
+                    println!(
+                        "{}",
+                        format!("  💡 Verify: curl http://localhost:8080/health").dimmed()
+                    );
                 } else if error_str.contains("timeout") {
                     println!("{}", format!("  💡 Request timed out after 30 seconds").yellow());
                     println!("{}", format!("  💡 queen-rbee may be overloaded or stuck").dimmed());
@@ -157,12 +174,15 @@ pub async fn handle(
                 } else {
                     println!("{}", format!("  💡 Network error occurred").yellow());
                 }
-                
+
                 last_error = Some(e.to_string());
-                
+
                 if attempt < max_attempts - 1 {
                     let backoff = 1000 * (attempt + 1) as u64;
-                    println!("{}", format!("  ⏱️  Backing off for {}ms before retry...", backoff).dimmed());
+                    println!(
+                        "{}",
+                        format!("  ⏱️  Backing off for {}ms before retry...", backoff).dimmed()
+                    );
                     tokio::time::sleep(Duration::from_millis(backoff)).await;
                 }
             }
@@ -186,7 +206,7 @@ pub async fn handle(
 
     let mut stream = response.bytes_stream();
     let mut buffer = String::new();
-    let mut done = false;  // TEAM-049: Track when [DONE] is received
+    let mut done = false; // TEAM-049: Track when [DONE] is received
 
     while let Some(chunk) = stream.next().await {
         if done {
@@ -208,7 +228,7 @@ pub async fn handle(
                 continue;
             }
         };
-        
+
         buffer.push_str(&String::from_utf8_lossy(&chunk));
 
         // Process complete SSE events

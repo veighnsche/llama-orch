@@ -73,19 +73,21 @@ impl BackendCapabilities {
 
     /// Convert to JSON-compatible format for registry
     pub fn to_json_strings(&self) -> (String, String) {
-        let backends_json = serde_json::to_string(&self.backends)
-            .unwrap_or_else(|_| "[]".to_string());
-        let devices_json = serde_json::to_string(&self.devices)
-            .unwrap_or_else(|_| "{}".to_string());
+        let backends_json =
+            serde_json::to_string(&self.backends).unwrap_or_else(|_| "[]".to_string());
+        let devices_json =
+            serde_json::to_string(&self.devices).unwrap_or_else(|_| "{}".to_string());
         (backends_json, devices_json)
     }
 
     /// Parse from JSON strings
     pub fn from_json_strings(backends_json: &str, devices_json: &str) -> Result<Self> {
-        let backends: Vec<Backend> = serde_json::from_str(backends_json)
-            .map_err(|e| crate::error::GpuError::Other(format!("Failed to parse backends: {}", e)))?;
-        let devices: HashMap<Backend, u32> = serde_json::from_str(devices_json)
-            .map_err(|e| crate::error::GpuError::Other(format!("Failed to parse devices: {}", e)))?;
+        let backends: Vec<Backend> = serde_json::from_str(backends_json).map_err(|e| {
+            crate::error::GpuError::Other(format!("Failed to parse backends: {}", e))
+        })?;
+        let devices: HashMap<Backend, u32> = serde_json::from_str(devices_json).map_err(|e| {
+            crate::error::GpuError::Other(format!("Failed to parse devices: {}", e))
+        })?;
         Ok(Self { backends, devices })
     }
 }
@@ -142,10 +144,8 @@ fn detect_cuda_devices() -> Option<u32> {
 #[cfg(target_os = "macos")]
 fn detect_metal_devices() -> Option<u32> {
     // On macOS, Metal is available if we can run system_profiler
-    let output = std::process::Command::new("system_profiler")
-        .args(["SPDisplaysDataType"])
-        .output()
-        .ok()?;
+    let output =
+        std::process::Command::new("system_profiler").args(["SPDisplaysDataType"]).output().ok()?;
 
     if !output.status.success() {
         return None;
@@ -153,10 +153,8 @@ fn detect_metal_devices() -> Option<u32> {
 
     let stdout = String::from_utf8_lossy(&output.stdout);
     // Count "Chipset Model:" entries which indicate GPUs
-    let count = stdout.lines()
-        .filter(|line| line.contains("Chipset Model:"))
-        .count();
-    
+    let count = stdout.lines().filter(|line| line.contains("Chipset Model:")).count();
+
     if count > 0 {
         Some(count as u32)
     } else {

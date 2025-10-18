@@ -11,7 +11,11 @@ use super::sampling;
 use super::tokenizer_loader;
 use crate::common::{InferenceResult, SamplingConfig};
 use crate::http::InferenceBackend;
-use crate::narration::{ACTOR_MODEL_LOADER, ACTION_MODEL_LOAD, ACTOR_CANDLE_BACKEND, ACTION_WARMUP, ACTION_INFERENCE_START, ACTOR_TOKENIZER, ACTION_TOKENIZE, ACTION_CACHE_RESET, ACTION_TOKEN_GENERATE, ACTION_INFERENCE_COMPLETE};
+use crate::narration::{
+    ACTION_CACHE_RESET, ACTION_INFERENCE_COMPLETE, ACTION_INFERENCE_START, ACTION_MODEL_LOAD,
+    ACTION_TOKENIZE, ACTION_TOKEN_GENERATE, ACTION_WARMUP, ACTOR_CANDLE_BACKEND,
+    ACTOR_MODEL_LOADER, ACTOR_TOKENIZER,
+};
 use crate::token_output_stream::TokenOutputStream;
 use anyhow::{Context, Result};
 use async_trait::async_trait;
@@ -295,7 +299,7 @@ impl InferenceBackend for CandleInferenceBackend {
             let tokenizer_eos_id = self.tokenizer.token_to_id("</s>");
             let is_eos = tokenizer_eos_id.map_or_else(
                 || next_token == self.model.eos_token_id(),
-                |eos_id| next_token == eos_id
+                |eos_id| next_token == eos_id,
             );
 
             // TEAM-095: Debug EOS detection
@@ -383,11 +387,7 @@ impl InferenceBackend for CandleInferenceBackend {
                 duration_ms,
                 tokens_per_sec
             ),
-            cute: Some(format!(
-                "Answer: \"{}\" 🎉 ({} tok/s)",
-                text_preview,
-                tokens_per_sec
-            )),
+            cute: Some(format!("Answer: \"{}\" 🎉 ({} tok/s)", text_preview, tokens_per_sec)),
             tokens_out: Some(generated_tokens.len() as u64),
             decode_time_ms: Some(duration_ms),
             ..Default::default()

@@ -105,12 +105,11 @@ async fn main() -> Result<()> {
     let backend = Arc::new(Mutex::new(backend));
 
     // TEAM-102: Load API token for authentication
-    let expected_token = std::env::var("LLORCH_API_TOKEN")
-        .unwrap_or_else(|_| {
-            tracing::info!("⚠️  LLORCH_API_TOKEN not set - using dev mode (no auth)");
-            String::new()
-        });
-    
+    let expected_token = std::env::var("LLORCH_API_TOKEN").unwrap_or_else(|_| {
+        tracing::info!("⚠️  LLORCH_API_TOKEN not set - using dev mode (no auth)");
+        String::new()
+    });
+
     if !expected_token.is_empty() {
         tracing::info!("✅ API token loaded (authentication enabled)");
     }

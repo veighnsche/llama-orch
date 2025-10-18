@@ -12,10 +12,10 @@
 // Modified by: TEAM-064 (added explicit warning preservation notice)
 // Modified by: TEAM-099 (added chrono import for deadline propagation tests)
 
+use rbee_hive::registry::WorkerRegistry;
 use std::collections::HashMap;
 use std::path::PathBuf;
 use std::time::Duration;
-use rbee_hive::registry::WorkerRegistry;
 
 // TEAM-064: Wrapper for WorkerRegistry to implement Debug
 pub struct DebugWorkerRegistry(WorkerRegistry);
@@ -30,7 +30,7 @@ impl DebugWorkerRegistry {
     pub fn new() -> Self {
         Self(WorkerRegistry::new())
     }
-    
+
     pub fn inner_mut(&mut self) -> &mut WorkerRegistry {
         &mut self.0
     }
@@ -49,7 +49,7 @@ impl DebugQueenRegistry {
     pub fn new() -> Self {
         Self(queen_rbee::WorkerRegistry::new())
     }
-    
+
     pub fn inner(&self) -> &queen_rbee::WorkerRegistry {
         &self.0
     }
@@ -129,14 +129,14 @@ pub struct World {
     /// Last HTTP response received (body as String)
     /// TEAM-058: Changed from HttpResponse to Option<String> for simpler access
     pub last_http_response: Option<String>,
-    
+
     /// Last HTTP status code
     /// TEAM-058: Added for status code tracking
     pub last_http_status: Option<u16>,
 
     /// SSE events received
     pub sse_events: Vec<SseEvent>,
-    
+
     /// Start time for latency tracking
     /// TEAM-058: Added for latency verification
     pub start_time: Option<std::time::Instant>,
@@ -182,10 +182,10 @@ pub struct World {
     // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
     /// rbee-hive worker registry (actual product code)
     pub hive_registry: Option<DebugWorkerRegistry>,
-    
+
     /// Next available port for workers
     pub next_worker_port: u16,
-    
+
     /// Last worker ID (TEAM-098: For PID tracking tests)
     pub last_worker_id: Option<String>,
 
@@ -194,7 +194,7 @@ pub struct World {
     // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
     /// Last action performed (for step tracking)
     pub last_action: Option<String>,
-    
+
     // TEAM-085: Narration capture
     pub narration_enabled: bool,
     pub last_narration: Option<Vec<observability_narration_core::CapturedNarration>>,
@@ -205,226 +205,226 @@ pub struct World {
     /// queen-rbee worker registry for concurrency tests
     #[allow(dead_code)]
     pub queen_registry: Option<DebugQueenRegistry>,
-    
+
     /// Concurrent operation results
     pub concurrent_results: Vec<Result<String, String>>,
-    
+
     // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
     // Concurrency Testing Extensions (TEAM-081)
     // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
     /// Concurrent task handles for async operations
     pub concurrent_handles: Vec<tokio::task::JoinHandle<bool>>,
-    
+
     /// Active request ID for tracking
     pub active_request_id: Option<String>,
-    
+
     // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
     // P0 Security Testing (TEAM-097)
     // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
     /// Authentication enabled flag
     pub auth_enabled: bool,
-    
+
     /// Expected API token for auth tests
     pub expected_token: Option<String>,
-    
+
     /// Queen-rbee URL for auth tests
     pub queen_url: Option<String>,
-    
+
     /// rbee-hive URL for validation tests
     pub hive_url: Option<String>,
-    
+
     /// llm-worker-rbee URL for auth tests
     pub worker_url: Option<String>,
-    
+
     /// Last HTTP status code
     pub last_status_code: Option<u16>,
-    
+
     /// Last HTTP response body
     pub last_response_body: Option<String>,
-    
+
     /// Last HTTP response headers
     pub last_response_headers: Option<reqwest::header::HeaderMap>,
-    
+
     /// Last error message
     pub last_error_message: Option<String>,
-    
+
     /// Last request body
     pub last_request_body: Option<String>,
-    
+
     /// Timing measurements for auth tests
     pub timing_measurements: Option<Vec<Duration>>,
-    
+
     /// Timing measurements for invalid tokens
     pub timing_measurements_invalid: Option<Vec<Duration>>,
-    
+
     /// Bind address for queen-rbee
     pub bind_address: Option<String>,
-    
+
     /// Process started flag
     pub process_started: bool,
-    
+
     /// Queen token for multi-component tests
     pub queen_token: Option<String>,
-    
+
     /// Hive token for multi-component tests
     pub hive_token: Option<String>,
-    
+
     /// Secret file path for secrets tests
     pub secret_file_path: Option<String>,
-    
+
     /// File permissions for secrets tests
     pub file_permissions: Option<String>,
-    
+
     /// Last config for secrets tests
     pub last_config: Option<String>,
-    
+
     /// Systemd credential path
     pub systemd_credential_path: Option<String>,
-    
+
     /// Systemd credential name
     pub systemd_credential_name: Option<String>,
-    
+
     /// Hive token file path
     pub hive_token_file: Option<String>,
-    
+
     /// Worker token file path
     pub worker_token_file: Option<String>,
-    
+
     // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
     // P1 Audit Logging (TEAM-099)
     // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
     /// Audit logging enabled flag
     pub audit_enabled: bool,
-    
+
     /// Audit log entries (JSON objects)
     pub audit_log_entries: Vec<serde_json::Value>,
-    
+
     /// Last audit entry hash
     pub audit_last_hash: Option<String>,
-    
+
     /// Audit log file path
     pub audit_log_path: Option<PathBuf>,
-    
+
     /// Tampered audit entry number
     pub audit_tampered_entry: Option<usize>,
-    
+
     /// Audit log rotation size in MB
     pub audit_rotation_size_mb: Option<usize>,
-    
+
     /// Current audit log size in MB
     pub audit_current_size_mb: Option<usize>,
-    
+
     /// Audit log rotated flag
     pub audit_rotated: bool,
-    
+
     /// Audit directory free space in MB
     pub audit_free_space_mb: Option<usize>,
-    
+
     /// Audit logs consumed space in MB
     pub audit_consumed_mb: Option<usize>,
-    
+
     /// Last warning message
     pub last_warning: Option<String>,
-    
+
     /// Process restarted flag
     pub process_restarted: bool,
-    
+
     /// Last model reference
     pub last_model_ref: Option<String>,
-    
+
     /// Last node name
     pub last_node: Option<String>,
-    
+
     // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
     // P1 Deadline Propagation (TEAM-099)
     // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
     /// Request timeout in seconds
     pub request_timeout_secs: Option<u64>,
-    
+
     /// Request deadline timestamp
     pub request_deadline: Option<chrono::DateTime<chrono::Utc>>,
-    
+
     /// Queen-rbee received request flag
     pub queen_received_request: bool,
-    
+
     /// Queen-rbee calculated deadline
     pub queen_deadline: Option<chrono::DateTime<chrono::Utc>>,
-    
+
     /// Hive received deadline
     pub hive_received_deadline: Option<chrono::DateTime<chrono::Utc>>,
-    
+
     /// Worker received deadline
     pub worker_received_deadline: Option<chrono::DateTime<chrono::Utc>>,
-    
+
     /// Worker processing duration
     pub worker_processing_duration: Option<Duration>,
-    
+
     /// Deadline exceeded flag
     pub deadline_exceeded: bool,
-    
+
     /// Deadline exceeded at duration
     pub deadline_exceeded_at: Option<Duration>,
-    
+
     /// Queen cancelled request flag
     pub queen_cancelled_request: bool,
-    
+
     /// Hive received cancellation flag
     pub hive_received_cancellation: bool,
-    
+
     /// Worker received cancellation flag
     pub worker_received_cancellation: bool,
-    
+
     /// Worker stopped flag
     pub worker_stopped: bool,
-    
+
     /// Worker spawned flag
     pub worker_spawned: bool,
-    
+
     /// Hive received request flag
     pub hive_received_request: bool,
-    
+
     /// Worker received request flag
     pub worker_received_request: bool,
-    
+
     /// Last request headers
     pub last_request_headers: HashMap<String, String>,
-    
+
     /// Last response content type
     pub last_response_content_type: Option<String>,
-    
+
     /// Last error code
     pub last_error_code: Option<String>,
-    
+
     /// Worker processing flag
     pub worker_processing: bool,
-    
+
     /// Worker stopped token generation flag
     pub worker_stopped_tokens: bool,
-    
+
     /// Worker released GPU flag
     pub worker_released_gpu: bool,
-    
+
     /// Worker slot available flag
     pub worker_slot_available: bool,
-    
+
     /// Last worker event
     pub last_worker_event: Option<String>,
-    
+
     /// Malicious deadline attempt
     pub malicious_deadline_attempt: Option<chrono::DateTime<chrono::Utc>>,
-    
+
     /// Deadline extension rejected flag
     pub deadline_extension_rejected: bool,
-    
+
     /// Expected timeout in seconds
     pub expected_timeout_secs: Option<u64>,
-    
+
     // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
     // P2 Metrics & Observability (TEAM-100 - THE CENTENNIAL TEAM! 💯🎉)
     // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
     /// Narration capture adapter    // TEAM-100: Narration verification (observability-narration-core)
     pub narration_adapter: Option<observability_narration_core::CaptureAdapter>,
-    
+
     // TEAM-106: Integration testing fields
     pub integration_env_ready: bool,
     pub request_start_time: Option<std::time::Instant>,
@@ -432,118 +432,118 @@ pub struct World {
     pub registered_workers: Vec<String>,
     pub auth_required: bool,
     pub auth_token: Option<String>,
-    
+
     /// Pool-managerd URL
     pub pool_managerd_url: Option<String>,
-    
+
     /// Metrics enabled flag
     pub metrics_enabled: bool,
-    
+
     /// Last response status
     pub last_response_status: Option<u16>,
-    
+
     /// Request count for metrics
     pub request_count: usize,
-    
+
     /// Correlation ID for request tracking
     pub correlation_id: Option<String>,
-    
+
     /// Environment variable overrides
     pub env_overrides: HashMap<String, String>,
-    
+
     // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
     // P2 Configuration Management (TEAM-100)
     // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
     /// Config file path
     pub config_file_path: Option<String>,
-    
+
     /// Config file content
     pub config_content: Option<String>,
-    
+
     /// Config valid flag
     pub config_valid: bool,
-    
+
     /// Config loaded flag
     pub config_loaded: bool,
-    
+
     /// Config validation passed flag
     pub config_validation_passed: bool,
-    
+
     /// Config validation error
     pub config_validation_error: Option<String>,
-    
+
     /// Config values
     pub config_values: HashMap<String, String>,
-    
+
     /// Config updated flag
     pub config_updated: bool,
-    
+
     /// Config reloaded flag
     pub config_reloaded: bool,
-    
+
     /// Pool-managerd running flag
     pub pool_managerd_running: bool,
-    
+
     /// Startup failed flag
     pub startup_failed: bool,
-    
+
     /// Exit code
     pub exit_code: Option<i32>,
-    
+
     /// Example config path
     pub example_config_path: Option<String>,
-    
+
     /// Example config validated flag
     pub example_config_validated: bool,
-    
+
     /// Config has secrets flag
     pub config_has_secrets: bool,
-    
+
     // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
     // TEAM-105: Cascading Shutdown Testing (LIFE-007, LIFE-008, LIFE-009)
     // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
     /// Worker count for shutdown tests
     pub worker_count: Option<u32>,
-    
+
     /// Shutdown start time for performance measurement
     pub shutdown_start_time: Option<std::time::Instant>,
-    
+
     /// Number of responsive workers (respond to shutdown within timeout)
     pub responsive_workers: Option<u32>,
-    
+
     /// Number of unresponsive workers (require force-kill)
     pub unresponsive_workers: Option<u32>,
-    
+
     // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
     // TEAM-101: Worker PID Tracking & Force-Kill Testing (LIFE-001 to LIFE-015)
     // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
     /// Last worker PID for tracking
     pub last_worker_pid: Option<u32>,
-    
+
     /// Worker timeout in seconds
     pub worker_timeout: Option<u64>,
-    
+
     /// Force-killed worker PID
     pub force_killed_pid: Option<u32>,
-    
+
     /// Worker hung flag
     pub worker_hung: bool,
-    
+
     /// Health check performed flag
     pub health_check_performed: bool,
-    
+
     /// Ready timeout in seconds
     pub ready_timeout: Option<u64>,
-    
+
     /// Worker crashed flag
     pub worker_crashed: bool,
-    
+
     /// Worker zombie flag
     pub worker_zombie: bool,
-    
+
     /// Worker responded flag
     pub worker_responded: bool,
-    
+
     /// Worker response time in seconds
     pub worker_response_time: Option<u64>,
 }
@@ -554,7 +554,10 @@ impl std::fmt::Debug for World {
         f.debug_struct("World")
             .field("topology", &self.topology)
             .field("current_node", &self.current_node)
-            .field("narration_adapter", &self.narration_adapter.as_ref().map(|_| "<CaptureAdapter>"))
+            .field(
+                "narration_adapter",
+                &self.narration_adapter.as_ref().map(|_| "<CaptureAdapter>"),
+            )
             .finish_non_exhaustive()
     }
 }
@@ -681,15 +684,15 @@ impl Default for World {
             next_worker_port: 8001,
             last_worker_id: None, // TEAM-098: PID tracking tests
             last_action: None,
-            
+
             // TEAM-085: Narration
             narration_enabled: false,
-            last_narration: None, // TEAM-078: Action tracking
-            queen_registry: None, // TEAM-080: Concurrency testing
+            last_narration: None,           // TEAM-078: Action tracking
+            queen_registry: None,           // TEAM-080: Concurrency testing
             concurrent_results: Vec::new(), // TEAM-080: Concurrent operation results
             concurrent_handles: Vec::new(), // TEAM-081: Concurrent task handles
-            active_request_id: None, // TEAM-081: Active request tracking
-            
+            active_request_id: None,        // TEAM-081: Active request tracking
+
             // TEAM-097: P0 Security Testing
             auth_enabled: false,
             expected_token: None,
@@ -714,7 +717,7 @@ impl Default for World {
             systemd_credential_name: None,
             hive_token_file: None,
             worker_token_file: None,
-            
+
             // TEAM-099: P1 Audit Logging
             audit_enabled: false,
             audit_log_entries: Vec::new(),
@@ -730,7 +733,7 @@ impl Default for World {
             process_restarted: false,
             last_model_ref: None,
             last_node: None,
-            
+
             // TEAM-099: P1 Deadline Propagation
             request_timeout_secs: None,
             request_deadline: None,
@@ -759,7 +762,7 @@ impl Default for World {
             malicious_deadline_attempt: None,
             deadline_extension_rejected: false,
             expected_timeout_secs: None,
-            
+
             // TEAM-100: P2 Metrics & Observability
             narration_adapter: None,
             pool_managerd_url: None,
@@ -768,7 +771,7 @@ impl Default for World {
             request_count: 0,
             correlation_id: None,
             env_overrides: HashMap::new(),
-            
+
             // TEAM-100: P2 Configuration Management
             config_file_path: None,
             config_content: None,
@@ -785,13 +788,13 @@ impl Default for World {
             example_config_path: None,
             example_config_validated: false,
             config_has_secrets: false,
-            
+
             // TEAM-105: Cascading Shutdown Testing
             worker_count: None,
             shutdown_start_time: None,
             responsive_workers: None,
             unresponsive_workers: None,
-            
+
             // TEAM-101: Worker PID Tracking & Force-Kill Testing
             last_worker_pid: None,
             worker_timeout: None,
@@ -803,7 +806,7 @@ impl Default for World {
             worker_zombie: false,
             worker_responded: false,
             worker_response_time: None,
-            
+
             // TEAM-106: Integration testing
             integration_env_ready: false,
             request_start_time: None,
@@ -835,7 +838,7 @@ impl World {
         self.last_http_status = None;
         self.last_error = None;
         self.start_time = None;
-        
+
         tracing::debug!("TEAM-082: World state reset for new scenario");
     }
 
@@ -871,7 +874,7 @@ impl World {
         self.worker_processes.clear();
         self.last_action = None; // TEAM-078: Clear action tracking
     }
-    
+
     /// TEAM-100: Get or create correlation ID for request tracking
     pub fn get_or_create_correlation_id(&mut self) -> String {
         if let Some(id) = &self.correlation_id {
@@ -889,7 +892,7 @@ impl Drop for World {
         // TEAM-051: DON'T kill queen-rbee - it's a shared global instance
         // Only kill scenario-specific processes (rbee-hive, workers)
         // TEAM-061: Enhanced cleanup with timeout to prevent hangs
-        
+
         if let Some(_proc) = self.queen_rbee_process.take() {
             // Just drop the reference - the global instance will be cleaned up at the end
             tracing::debug!("Released reference to global queen-rbee");
@@ -915,15 +918,15 @@ impl Drop for World {
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 /// TEAM-061: Create HTTP client with aggressive timeouts to prevent hangs
-/// 
+///
 /// All HTTP requests in BDD tests MUST use this client factory.
 /// - Total request timeout: 10 seconds
 /// - Connection timeout: 5 seconds
-/// 
+///
 /// This prevents tests from hanging indefinitely when servers don't respond.
 pub fn create_http_client() -> reqwest::Client {
     reqwest::Client::builder()
-        .timeout(Duration::from_secs(10))        // Total request timeout
+        .timeout(Duration::from_secs(10)) // Total request timeout
         .connect_timeout(Duration::from_secs(5)) // Connection timeout
         .build()
         .expect("Failed to create HTTP client with timeouts")

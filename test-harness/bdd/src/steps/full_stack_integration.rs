@@ -2,8 +2,8 @@
 // Created by: TEAM-106
 // Purpose: Step definitions for complete system integration tests
 
-use cucumber::{given, when, then};
 use crate::steps::world::World;
+use cucumber::{given, then, when};
 use std::time::{Duration, Instant};
 
 // Background steps
@@ -18,7 +18,7 @@ pub async fn given_integration_env_running(world: &mut World) {
 pub async fn given_queen_healthy(world: &mut World, url: String) {
     let client = reqwest::Client::new();
     let health_url = format!("{}/health", url);
-    
+
     match client.get(&health_url).send().await {
         Ok(resp) if resp.status().is_success() => {
             tracing::info!("✅ queen-rbee is healthy at {}", url);
@@ -37,7 +37,7 @@ pub async fn given_queen_healthy(world: &mut World, url: String) {
 pub async fn given_hive_healthy(world: &mut World, url: String) {
     let client = reqwest::Client::new();
     let health_url = format!("{}/v1/health", url);
-    
+
     match client.get(&health_url).send().await {
         Ok(resp) if resp.status().is_success() => {
             tracing::info!("✅ rbee-hive is healthy at {}", url);
@@ -56,7 +56,7 @@ pub async fn given_hive_healthy(world: &mut World, url: String) {
 pub async fn given_worker_healthy(world: &mut World, url: String) {
     let client = reqwest::Client::new();
     let ready_url = format!("{}/v1/ready", url);
-    
+
     match client.get(&ready_url).send().await {
         Ok(resp) if resp.status().is_success() => {
             tracing::info!("✅ mock-worker is healthy at {}", url);
@@ -81,16 +81,15 @@ pub async fn given_no_active_requests(world: &mut World) {
 
 #[when("client sends inference request to queen-rbee")]
 pub async fn when_client_sends_inference_request(world: &mut World) {
-    let queen_url = world.queen_rbee_url.as_ref()
-        .expect("queen-rbee URL not set");
-    
+    let queen_url = world.queen_rbee_url.as_ref().expect("queen-rbee URL not set");
+
     let client = reqwest::Client::new();
     let request_body = serde_json::json!({
         "model": "tinyllama-q4",
         "prompt": "Hello, world!",
         "max_tokens": 10
     });
-    
+
     let start = Instant::now();
     let response = client
         .post(format!("{}/v2/tasks", queen_url))
@@ -98,22 +97,18 @@ pub async fn when_client_sends_inference_request(world: &mut World) {
         .send()
         .await
         .expect("Failed to send request");
-    
+
     world.last_status_code = Some(response.status().as_u16());
     world.last_response_body = response.text().await.ok();
     world.request_start_time = Some(start);
-    
+
     tracing::info!("✅ Inference request sent to queen-rbee");
 }
 
 #[then("queen-rbee accepts the request")]
 pub async fn then_queen_accepts_request(world: &mut World) {
     let status = world.last_status_code.expect("No status code");
-    assert!(
-        status == 200 || status == 202,
-        "Expected 200 or 202, got {}",
-        status
-    );
+    assert!(status == 200 || status == 202, "Expected 200 or 202, got {}", status);
     tracing::info!("✅ queen-rbee accepted the request");
 }
 
@@ -144,9 +139,8 @@ pub async fn then_tokens_stream_sse(_world: &mut World) {
 
 #[then("client receives all tokens")]
 pub async fn then_client_receives_tokens(world: &mut World) {
-    let body = world.last_response_body.as_ref()
-        .expect("No response body");
-    
+    let body = world.last_response_body.as_ref().expect("No response body");
+
     assert!(!body.is_empty(), "Response body is empty");
     tracing::info!("✅ client received tokens");
 }
@@ -161,14 +155,14 @@ pub async fn then_worker_returns_idle(_world: &mut World) {
 pub async fn then_request_completes_in_time(world: &mut World, seconds: u64) {
     let start = world.request_start_time.expect("No start time");
     let elapsed = start.elapsed();
-    
+
     assert!(
         elapsed < Duration::from_secs(seconds),
         "Request took {:?}, expected under {}s",
         elapsed,
         seconds
     );
-    
+
     tracing::info!("✅ request completed in {:?}", elapsed);
 }
 
@@ -189,17 +183,15 @@ pub async fn given_client_has_jwt(world: &mut World) {
 
 #[when("client sends authenticated request to queen-rbee")]
 pub async fn when_client_sends_auth_request(world: &mut World) {
-    let queen_url = world.queen_rbee_url.as_ref()
-        .expect("queen-rbee URL not set");
-    let token = world.auth_token.as_ref()
-        .expect("No auth token");
-    
+    let queen_url = world.queen_rbee_url.as_ref().expect("queen-rbee URL not set");
+    let token = world.auth_token.as_ref().expect("No auth token");
+
     let client = reqwest::Client::new();
     let request_body = serde_json::json!({
         "model": "tinyllama-q4",
         "prompt": "Authenticated request"
     });
-    
+
     let response = client
         .post(format!("{}/v2/tasks", queen_url))
         .header("Authorization", token)
@@ -207,11 +199,11 @@ pub async fn when_client_sends_auth_request(world: &mut World) {
         .send()
         .await
         .expect("Failed to send request");
-    
+
     world.last_status_code = Some(response.status().as_u16());
     world.last_response_headers = Some(response.headers().clone());
     world.last_response_body = response.text().await.ok();
-    
+
     tracing::info!("✅ authenticated request sent");
 }
 
@@ -248,13 +240,12 @@ pub async fn then_worker_processes(_world: &mut World) {
 
 #[then("response includes auth correlation ID")]
 pub async fn then_response_includes_correlation_id(world: &mut World) {
-    let headers = world.last_response_headers.as_ref()
-        .expect("No response headers");
-    
+    let headers = world.last_response_headers.as_ref().expect("No response headers");
+
     // Check for correlation ID header
-    let has_correlation_id = headers.contains_key("x-correlation-id") ||
-        headers.contains_key("x-request-id");
-    
+    let has_correlation_id =
+        headers.contains_key("x-correlation-id") || headers.contains_key("x-request-id");
+
     assert!(has_correlation_id, "Response missing correlation ID header");
     tracing::info!("✅ response includes correlation ID");
 }
@@ -269,11 +260,9 @@ pub async fn given_no_workers_registered(world: &mut World) {
 
 #[when("mock-worker starts and sends ready callback")]
 pub async fn when_worker_sends_ready(world: &mut World) {
-    let hive_url = world.hive_url.as_ref()
-        .expect("hive URL not set");
-    let worker_url = world.worker_url.as_ref()
-        .expect("worker URL not set");
-    
+    let hive_url = world.hive_url.as_ref().expect("hive URL not set");
+    let worker_url = world.worker_url.as_ref().expect("worker URL not set");
+
     let client = reqwest::Client::new();
     let ready_body = serde_json::json!({
         "worker_id": "worker-test-001",
@@ -282,14 +271,14 @@ pub async fn when_worker_sends_ready(world: &mut World) {
         "backend": "cpu",
         "device": 0
     });
-    
+
     let response = client
         .post(format!("{}/v1/workers/ready", hive_url))
         .json(&ready_body)
         .send()
         .await
         .expect("Failed to send ready callback");
-    
+
     world.last_status_code = Some(response.status().as_u16());
     tracing::info!("✅ worker sent ready callback");
 }
@@ -303,23 +292,19 @@ pub async fn then_hive_registers_worker(world: &mut World) {
 
 #[then("worker appears in registry")]
 pub async fn then_worker_in_registry(world: &mut World) {
-    let hive_url = world.hive_url.as_ref()
-        .expect("hive URL not set");
-    
+    let hive_url = world.hive_url.as_ref().expect("hive URL not set");
+
     let client = reqwest::Client::new();
     let response = client
         .get(format!("{}/v1/workers/list", hive_url))
         .send()
         .await
         .expect("Failed to list workers");
-    
-    let workers: serde_json::Value = response.json().await
-        .expect("Failed to parse workers");
-    
-    let worker_count = workers.as_array()
-        .map(|arr| arr.len())
-        .unwrap_or(0);
-    
+
+    let workers: serde_json::Value = response.json().await.expect("Failed to parse workers");
+
+    let worker_count = workers.as_array().map(|arr| arr.len()).unwrap_or(0);
+
     assert!(worker_count > 0, "No workers in registry");
     tracing::info!("✅ worker appears in registry ({} workers)", worker_count);
 }
@@ -337,16 +322,15 @@ pub async fn then_worker_available(_world: &mut World) {
 
 #[then("worker health check passes")]
 pub async fn then_worker_health_passes(world: &mut World) {
-    let worker_url = world.worker_url.as_ref()
-        .expect("worker URL not set");
-    
+    let worker_url = world.worker_url.as_ref().expect("worker URL not set");
+
     let client = reqwest::Client::new();
     let response = client
         .get(format!("{}/health", worker_url))
         .send()
         .await
         .expect("Failed to check worker health");
-    
+
     assert!(response.status().is_success(), "Worker health check failed");
     tracing::info!("✅ worker health check passed");
 }

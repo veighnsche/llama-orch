@@ -31,8 +31,8 @@
 
 use lazy_static::lazy_static;
 use prometheus::{
-    opts, register_gauge_vec, register_int_counter, register_int_gauge, GaugeVec, IntCounter,
-    IntGauge, TextEncoder, Encoder,
+    opts, register_gauge_vec, register_int_counter, register_int_gauge, Encoder, GaugeVec,
+    IntCounter, IntGauge, TextEncoder,
 };
 use std::sync::Arc;
 
@@ -76,6 +76,24 @@ lazy_static! {
         opts!("rbee_hive_download_active", "Currently active downloads")
     )
     .expect("Failed to register downloads_active metric");
+
+    /// TEAM-114: Worker restart failures total
+    pub static ref WORKER_RESTART_FAILURES_TOTAL: IntCounter = register_int_counter!(
+        opts!(
+            "rbee_hive_worker_restart_failures_total",
+            "Total worker restart failures"
+        )
+    )
+    .expect("Failed to register worker_restart_failures_total metric");
+
+    /// TEAM-114: Circuit breaker activations total
+    pub static ref CIRCUIT_BREAKER_ACTIVATIONS_TOTAL: IntCounter = register_int_counter!(
+        opts!(
+            "rbee_hive_circuit_breaker_activations_total",
+            "Total circuit breaker activations"
+        )
+    )
+    .expect("Failed to register circuit_breaker_activations_total metric");
 }
 
 /// Update worker metrics from registry state
@@ -123,9 +141,7 @@ pub async fn update_worker_metrics(registry: Arc<crate::registry::WorkerRegistry
 ///
 /// # Arguments
 /// * `_download_tracker` - Download tracker (unused for now)
-pub async fn update_download_metrics<T>(
-    _download_tracker: Arc<T>,
-) {
+pub async fn update_download_metrics<T>(_download_tracker: Arc<T>) {
     // TEAM-104: Placeholder - download metrics are updated directly in endpoints
     // via DOWNLOADS_ACTIVE.inc() / DOWNLOADS_ACTIVE.dec()
 }
@@ -154,6 +170,8 @@ mod tests {
         let _ = &*WORKERS_RESTART_COUNT;
         let _ = &*MODELS_DOWNLOADED_TOTAL;
         let _ = &*DOWNLOADS_ACTIVE;
+        let _ = &*WORKER_RESTART_FAILURES_TOTAL; // TEAM-114
+        let _ = &*CIRCUIT_BREAKER_ACTIVATIONS_TOTAL; // TEAM-114
     }
 
     #[test]
@@ -164,7 +182,9 @@ mod tests {
         let _ = &*WORKERS_RESTART_COUNT;
         let _ = &*MODELS_DOWNLOADED_TOTAL;
         let _ = &*DOWNLOADS_ACTIVE;
-        
+        let _ = &*WORKER_RESTART_FAILURES_TOTAL; // TEAM-114
+        let _ = &*CIRCUIT_BREAKER_ACTIVATIONS_TOTAL; // TEAM-114
+
         // Should be able to render metrics
         let result = render_metrics();
         assert!(result.is_ok());
@@ -177,7 +197,7 @@ mod tests {
     async fn test_update_worker_metrics() {
         use crate::registry::WorkerRegistry;
         let registry = Arc::new(WorkerRegistry::new());
-        
+
         // Should not panic with empty registry
         update_worker_metrics(registry).await;
     }
@@ -186,7 +206,7 @@ mod tests {
     async fn test_update_download_metrics() {
         use crate::download_tracker::DownloadTracker;
         let tracker = Arc::new(DownloadTracker::new());
-        
+
         // Should not panic with empty tracker
         update_download_metrics(tracker).await;
     }

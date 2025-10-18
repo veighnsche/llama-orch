@@ -97,7 +97,7 @@ impl WorkerRegistry {
     }
 
     // TEAM-046: Additional methods for worker management
-    
+
     /// List all workers with extended info for API
     pub async fn list_workers(&self) -> anyhow::Result<Vec<WorkerInfoExtended>> {
         let workers = self.workers.read().await;
@@ -135,10 +135,7 @@ impl WorkerRegistry {
         if let Some(worker) = workers.get(worker_id) {
             // Send shutdown request to worker
             let client = reqwest::Client::new();
-            let response = client
-                .post(format!("{}/v1/admin/shutdown", worker.url))
-                .send()
-                .await?;
+            let response = client.post(format!("{}/v1/admin/shutdown", worker.url)).send().await?;
 
             if !response.status().is_success() {
                 anyhow::bail!("Worker shutdown failed: HTTP {}", response.status());

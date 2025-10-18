@@ -26,8 +26,8 @@ pub struct BeehiveNode {
     pub last_connected_unix: Option<i64>,
     pub status: String,
     // TEAM-052: Backend capabilities
-    pub backends: Option<String>,  // JSON array: ["cuda", "metal", "cpu"]
-    pub devices: Option<String>,   // JSON object: {"cuda": 2, "metal": 1, "cpu": 1}
+    pub backends: Option<String>, // JSON array: ["cuda", "metal", "cpu"]
+    pub devices: Option<String>,  // JSON object: {"cuda": 2, "metal": 1, "cpu": 1}
 }
 
 pub struct BeehiveRegistry {

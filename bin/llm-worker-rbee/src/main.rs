@@ -14,7 +14,13 @@
 
 use clap::Parser;
 use llm_worker_rbee::{
-    backend::CandleInferenceBackend, callback_ready, create_router, narration::{ACTOR_LLM_WORKER_RBEE, ACTION_STARTUP, ACTOR_MODEL_LOADER, ACTION_MODEL_LOAD, ACTION_CALLBACK_READY}, HttpServer,
+    backend::CandleInferenceBackend,
+    callback_ready, create_router,
+    narration::{
+        ACTION_CALLBACK_READY, ACTION_MODEL_LOAD, ACTION_STARTUP, ACTOR_LLM_WORKER_RBEE,
+        ACTOR_MODEL_LOADER,
+    },
+    HttpServer,
 };
 use observability_narration_core::{narrate, NarrationFields};
 use std::net::SocketAddr;
@@ -76,7 +82,7 @@ async fn main() -> anyhow::Result<()> {
     // TEAM-088: Initialize tracing with human-friendly format for development
     // Use LLORCH_LOG_FORMAT=json for machine-readable output (production/SSH)
     let log_format = std::env::var("LLORCH_LOG_FORMAT").unwrap_or_else(|_| "pretty".to_string());
-    
+
     if log_format == "json" {
         // JSON format for production/SSH (machine-readable)
         tracing_subscriber::fmt().with_target(false).json().init();
@@ -134,7 +140,7 @@ async fn main() -> anyhow::Result<()> {
     let backend = match CandleInferenceBackend::load(&args.model, device) {
         Ok(backend) => {
             tracing::info!("Model loaded successfully");
-            
+
             narrate(NarrationFields {
                 actor: ACTOR_MODEL_LOADER,
                 action: "model_load_success",
@@ -144,30 +150,33 @@ async fn main() -> anyhow::Result<()> {
                 worker_id: Some(args.worker_id.clone()),
                 ..Default::default()
             });
-            
+
             backend
         }
         Err(e) => {
             // TEAM-088: Narrate model loading failure with detailed error
             let error_msg = format!("{:#}", e);
-            
+
             narrate(NarrationFields {
                 actor: ACTOR_MODEL_LOADER,
                 action: "model_load_failed",
                 target: args.model.clone(),
-                human: format!("Model load failed: {}", error_msg.lines().next().unwrap_or("unknown error")),
+                human: format!(
+                    "Model load failed: {}",
+                    error_msg.lines().next().unwrap_or("unknown error")
+                ),
                 cute: Some("Oh no! Couldn't load the model! 😟💔".to_string()),
                 worker_id: Some(args.worker_id.clone()),
                 error_kind: Some("model_load_error".to_string()),
                 ..Default::default()
             });
-            
+
             tracing::error!(
                 model = %args.model,
                 error = %error_msg,
                 "Model loading failed"
             );
-            
+
             // TEAM-088: Try to callback to rbee-hive with error state
             if !args.callback_url.contains("localhost:9999") {
                 narrate(NarrationFields {
@@ -179,12 +188,12 @@ async fn main() -> anyhow::Result<()> {
                     worker_id: Some(args.worker_id.clone()),
                     ..Default::default()
                 });
-                
+
                 // TODO: Implement error callback to rbee-hive
                 // For now, just log the intent
                 tracing::warn!("Worker failed to load model, should callback error to rbee-hive");
             }
-            
+
             return Err(e);
         }
     };
@@ -199,7 +208,7 @@ async fn main() -> anyhow::Result<()> {
     // - Worker type and capabilities
     if args.callback_url.contains("localhost:9999") {
         tracing::info!("Test mode: skipping pool manager callback");
-        
+
         narrate(NarrationFields {
             actor: ACTOR_LLM_WORKER_RBEE,
             action: "test_mode",
@@ -249,12 +258,11 @@ async fn main() -> anyhow::Result<()> {
 
     // TEAM-102: Load API token for authentication
     // TODO: Replace with secrets-management file-based loading
-    let expected_token = std::env::var("LLORCH_API_TOKEN")
-        .unwrap_or_else(|_| {
-            tracing::info!("⚠️  LLORCH_API_TOKEN not set - using dev mode (no auth)");
-            String::new()
-        });
-    
+    let expected_token = std::env::var("LLORCH_API_TOKEN").unwrap_or_else(|_| {
+        tracing::info!("⚠️  LLORCH_API_TOKEN not set - using dev mode (no auth)");
+        String::new()
+    });
+
     if !expected_token.is_empty() {
         tracing::info!("✅ API token loaded (authentication enabled)");
     }

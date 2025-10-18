@@ -23,7 +23,7 @@ pub async fn given_audit_logging_enabled(world: &mut World) {
 pub async fn when_spawn_worker_with_model(world: &mut World, model: String, node: String) {
     world.last_model_ref = Some(model.clone());
     world.last_node = Some(node.clone());
-    
+
     // Simulate audit log entry for worker spawn
     let entry = serde_json::json!({
         "timestamp": chrono::Utc::now().to_rfc3339(),
@@ -38,18 +38,19 @@ pub async fn when_spawn_worker_with_model(world: &mut World, model: String, node
         "previous_hash": world.audit_last_hash.clone().unwrap_or_else(|| "0000000000000000".to_string()),
         "entry_hash": "abc123def456"
     });
-    
+
     world.audit_log_entries.push(entry);
     world.audit_last_hash = Some("abc123def456".to_string());
-    
+
     tracing::info!("Worker spawn logged to audit");
 }
 
 #[then(expr = "audit log contains event {string}")]
 pub async fn then_audit_log_contains_event(world: &mut World, event_type: String) {
-    let found = world.audit_log_entries.iter().any(|entry| {
-        entry.get("event_type").and_then(|v| v.as_str()) == Some(&event_type)
-    });
+    let found = world
+        .audit_log_entries
+        .iter()
+        .any(|entry| entry.get("event_type").and_then(|v| v.as_str()) == Some(&event_type));
     assert!(found, "Audit log does not contain event '{}'", event_type);
 }
 
@@ -96,7 +97,7 @@ pub async fn then_audit_entry_includes_correlation_id(world: &mut World) {
 #[when(expr = "I send request with valid token {string}")]
 pub async fn when_send_request_valid_token(world: &mut World, token: String) {
     let fingerprint = format!("token:{}", &token[0..6.min(token.len())]);
-    
+
     let entry = serde_json::json!({
         "timestamp": chrono::Utc::now().to_rfc3339(),
         "event_type": "auth.success",
@@ -105,7 +106,7 @@ pub async fn when_send_request_valid_token(world: &mut World, token: String) {
         "previous_hash": world.audit_last_hash.clone().unwrap_or_else(|| "0000000000000000".to_string()),
         "entry_hash": "success123"
     });
-    
+
     world.audit_log_entries.push(entry);
     world.audit_last_hash = Some("success123".to_string());
 }
@@ -113,7 +114,7 @@ pub async fn when_send_request_valid_token(world: &mut World, token: String) {
 #[when(expr = "I send request with invalid token {string}")]
 pub async fn when_send_request_invalid_token(world: &mut World, token: String) {
     let fingerprint = format!("token:{}", &token[0..6.min(token.len())]);
-    
+
     let entry = serde_json::json!({
         "timestamp": chrono::Utc::now().to_rfc3339(),
         "event_type": "auth.failure",
@@ -124,7 +125,7 @@ pub async fn when_send_request_invalid_token(world: &mut World, token: String) {
         "previous_hash": world.audit_last_hash.clone().unwrap_or_else(|| "0000000000000000".to_string()),
         "entry_hash": "failure456"
     });
-    
+
     world.audit_log_entries.push(entry);
     world.audit_last_hash = Some("failure456".to_string());
 }
@@ -155,9 +156,10 @@ pub async fn given_queen_with_audit(world: &mut World) {
 #[when(expr = "{int} audit events are logged")]
 pub async fn when_n_audit_events_logged(world: &mut World, count: usize) {
     for i in 0..count {
-        let prev_hash = world.audit_last_hash.clone().unwrap_or_else(|| "0000000000000000".to_string());
+        let prev_hash =
+            world.audit_last_hash.clone().unwrap_or_else(|| "0000000000000000".to_string());
         let entry_hash = format!("hash{:03}", i);
-        
+
         let entry = serde_json::json!({
             "timestamp": chrono::Utc::now().to_rfc3339(),
             "event_type": format!("test.event.{}", i),
@@ -166,7 +168,7 @@ pub async fn when_n_audit_events_logged(world: &mut World, count: usize) {
             "previous_hash": prev_hash,
             "entry_hash": entry_hash.clone()
         });
-        
+
         world.audit_log_entries.push(entry);
         world.audit_last_hash = Some(entry_hash);
     }
@@ -182,21 +184,26 @@ pub async fn then_each_entry_includes_previous_hash(world: &mut World) {
 #[then(expr = "hash chain is valid (each hash matches previous entry)")]
 pub async fn then_hash_chain_valid(world: &mut World) {
     for i in 1..world.audit_log_entries.len() {
-        let prev_entry_hash = world.audit_log_entries[i-1].get("entry_hash")
-            .and_then(|v| v.as_str()).expect("Previous entry missing hash");
-        let current_prev_hash = world.audit_log_entries[i].get("previous_hash")
-            .and_then(|v| v.as_str()).expect("Current entry missing previous_hash");
-        
-        assert_eq!(prev_entry_hash, current_prev_hash, 
-            "Hash chain broken at entry {}", i);
+        let prev_entry_hash = world.audit_log_entries[i - 1]
+            .get("entry_hash")
+            .and_then(|v| v.as_str())
+            .expect("Previous entry missing hash");
+        let current_prev_hash = world.audit_log_entries[i]
+            .get("previous_hash")
+            .and_then(|v| v.as_str())
+            .expect("Current entry missing previous_hash");
+
+        assert_eq!(prev_entry_hash, current_prev_hash, "Hash chain broken at entry {}", i);
     }
 }
 
 #[then(expr = "first entry has previous_hash = {string}")]
 pub async fn then_first_entry_previous_hash(world: &mut World, expected: String) {
     let first_entry = world.audit_log_entries.first().expect("No audit entries");
-    let prev_hash = first_entry.get("previous_hash")
-        .and_then(|v| v.as_str()).expect("First entry missing previous_hash");
+    let prev_hash = first_entry
+        .get("previous_hash")
+        .and_then(|v| v.as_str())
+        .expect("First entry missing previous_hash");
     assert_eq!(prev_hash, expected);
 }
 
@@ -211,7 +218,7 @@ pub async fn given_queen_logged_n_events(world: &mut World, count: usize) {
     world.audit_enabled = true;
     world.audit_log_entries.clear();
     world.audit_last_hash = Some("0000000000000000".to_string());
-    
+
     when_n_audit_events_logged(world, count).await;
 }
 
@@ -230,7 +237,10 @@ pub async fn when_modify_audit_entry(world: &mut World, entry_num: usize) {
         if let Some(entry) = world.audit_log_entries.get_mut(idx) {
             // Simulate tampering by modifying the entry
             if let Some(details) = entry.get_mut("details") {
-                details.as_object_mut().unwrap().insert("tampered".to_string(), serde_json::json!(true));
+                details
+                    .as_object_mut()
+                    .unwrap()
+                    .insert("tampered".to_string(), serde_json::json!(true));
             }
         }
     }
@@ -242,17 +252,17 @@ pub async fn then_hash_chain_validation_fails(world: &mut World) {
     // Check if hash chain is broken after tampering
     let mut chain_valid = true;
     for i in 1..world.audit_log_entries.len() {
-        let prev_entry_hash = world.audit_log_entries[i-1].get("entry_hash")
-            .and_then(|v| v.as_str()).unwrap_or("");
-        let current_prev_hash = world.audit_log_entries[i].get("previous_hash")
-            .and_then(|v| v.as_str()).unwrap_or("");
-        
+        let prev_entry_hash =
+            world.audit_log_entries[i - 1].get("entry_hash").and_then(|v| v.as_str()).unwrap_or("");
+        let current_prev_hash =
+            world.audit_log_entries[i].get("previous_hash").and_then(|v| v.as_str()).unwrap_or("");
+
         if prev_entry_hash != current_prev_hash {
             chain_valid = false;
             break;
         }
     }
-    
+
     // With tampering, we expect validation to fail
     // In real implementation, the hash would be recalculated and wouldn't match
     tracing::info!("Hash chain validation expected to fail after tampering");
@@ -260,16 +270,22 @@ pub async fn then_hash_chain_validation_fails(world: &mut World) {
 
 #[then(expr = "tampered entry is identified as entry #{int}")]
 pub async fn then_tampered_entry_identified(world: &mut World, entry_num: usize) {
-    assert_eq!(world.audit_tampered_entry, Some(entry_num), 
-        "Tampered entry not correctly identified");
+    assert_eq!(
+        world.audit_tampered_entry,
+        Some(entry_num),
+        "Tampered entry not correctly identified"
+    );
 }
 
 #[then(expr = "all entries after #{int} are flagged as potentially invalid")]
 pub async fn then_entries_after_flagged(world: &mut World, entry_num: usize) {
     let total_entries = world.audit_log_entries.len();
     let affected_count = total_entries.saturating_sub(entry_num);
-    tracing::info!("{} entries after #{} flagged as potentially invalid", 
-        affected_count, entry_num);
+    tracing::info!(
+        "{} entries after #{} flagged as potentially invalid",
+        affected_count,
+        entry_num
+    );
 }
 
 #[when(expr = "an audit event is logged")]
@@ -282,7 +298,7 @@ pub async fn when_audit_event_logged(world: &mut World) {
         "previous_hash": world.audit_last_hash.clone().unwrap_or_else(|| "0000000000000000".to_string()),
         "entry_hash": "test123"
     });
-    
+
     world.audit_log_entries.push(entry);
     world.audit_last_hash = Some("test123".to_string());
 }
@@ -297,12 +313,14 @@ pub async fn then_audit_entry_valid_json(world: &mut World) {
 pub async fn then_entry_contains_timestamp_field(world: &mut World, field: String) {
     let last_entry = world.audit_log_entries.last().expect("No audit entries");
     let value = last_entry.get(&field).expect(&format!("Entry missing {} field", field));
-    
+
     if field == "timestamp" {
         let timestamp_str = value.as_str().expect("Timestamp not a string");
         // Verify it's ISO 8601 format
-        assert!(chrono::DateTime::parse_from_rfc3339(timestamp_str).is_ok(), 
-            "Timestamp not in ISO 8601 format");
+        assert!(
+            chrono::DateTime::parse_from_rfc3339(timestamp_str).is_ok(),
+            "Timestamp not in ISO 8601 format"
+        );
     }
 }
 
@@ -390,10 +408,10 @@ pub async fn then_queen_triggers_rotation(world: &mut World) {
 #[when(expr = "I send inference request with correlation_id {string}")]
 pub async fn when_send_inference_with_correlation_id(world: &mut World, correlation_id: String) {
     world.active_request_id = Some(correlation_id.clone());
-    
+
     // Log multiple events with same correlation_id
     let events = vec!["inference.start", "worker.assigned", "inference.complete"];
-    
+
     for event_type in events {
         let entry = serde_json::json!({
             "timestamp": chrono::Utc::now().to_rfc3339(),
@@ -405,41 +423,51 @@ pub async fn when_send_inference_with_correlation_id(world: &mut World, correlat
             "previous_hash": world.audit_last_hash.clone().unwrap_or_else(|| "0000000000000000".to_string()),
             "entry_hash": format!("hash-{}", event_type)
         });
-        
+
         world.audit_log_entries.push(entry);
         world.audit_last_hash = Some(format!("hash-{}", event_type));
     }
 }
 
 #[then(expr = "audit log contains event {string} with correlation_id {string}")]
-pub async fn then_audit_contains_event_with_correlation(world: &mut World, event_type: String, correlation_id: String) {
+pub async fn then_audit_contains_event_with_correlation(
+    world: &mut World,
+    event_type: String,
+    correlation_id: String,
+) {
     let found = world.audit_log_entries.iter().any(|entry| {
         let matches_event = entry.get("event_type").and_then(|v| v.as_str()) == Some(&event_type);
-        let matches_corr = entry.get("details")
-            .and_then(|d| d.get("correlation_id"))
-            .and_then(|c| c.as_str()) == Some(&correlation_id);
+        let matches_corr =
+            entry.get("details").and_then(|d| d.get("correlation_id")).and_then(|c| c.as_str())
+                == Some(&correlation_id);
         matches_event && matches_corr
     });
-    
-    assert!(found, "Audit log missing event '{}' with correlation_id '{}'", 
-        event_type, correlation_id);
+
+    assert!(
+        found,
+        "Audit log missing event '{}' with correlation_id '{}'",
+        event_type, correlation_id
+    );
 }
 
 #[then(expr = "all related events share same correlation_id")]
 pub async fn then_all_events_share_correlation_id(world: &mut World) {
     let correlation_id = world.active_request_id.as_ref().expect("No active request ID");
-    
-    let matching_entries: Vec<_> = world.audit_log_entries.iter()
+
+    let matching_entries: Vec<_> = world
+        .audit_log_entries
+        .iter()
         .filter(|entry| {
-            entry.get("details")
-                .and_then(|d| d.get("correlation_id"))
-                .and_then(|c| c.as_str()) == Some(correlation_id)
+            entry.get("details").and_then(|d| d.get("correlation_id")).and_then(|c| c.as_str())
+                == Some(correlation_id)
         })
         .collect();
-    
-    assert!(matching_entries.len() >= 3, 
-        "Expected at least 3 events with correlation_id, found {}", 
-        matching_entries.len());
+
+    assert!(
+        matching_entries.len() >= 3,
+        "Expected at least 3 events with correlation_id, found {}",
+        matching_entries.len()
+    );
 }
 
 #[when(expr = "authentication event is logged")]
@@ -452,7 +480,7 @@ pub async fn when_authentication_event_logged(world: &mut World) {
         "previous_hash": world.audit_last_hash.clone().unwrap_or_else(|| "0000000000000000".to_string()),
         "entry_hash": "auth-hash"
     });
-    
+
     world.audit_log_entries.push(entry);
     world.audit_last_hash = Some("auth-hash".to_string());
 }
@@ -461,8 +489,7 @@ pub async fn when_authentication_event_logged(world: &mut World) {
 pub async fn then_audit_no_raw_token(world: &mut World) {
     for entry in &world.audit_log_entries {
         let entry_str = serde_json::to_string(entry).unwrap();
-        assert!(!entry_str.contains("raw-token-"), 
-            "Audit log contains raw token");
+        assert!(!entry_str.contains("raw-token-"), "Audit log contains raw token");
     }
 }
 
@@ -470,8 +497,7 @@ pub async fn then_audit_no_raw_token(world: &mut World) {
 pub async fn then_audit_no_passwords(world: &mut World) {
     for entry in &world.audit_log_entries {
         let entry_str = serde_json::to_string(entry).unwrap();
-        assert!(!entry_str.contains("password"), 
-            "Audit log contains password");
+        assert!(!entry_str.contains("password"), "Audit log contains password");
     }
 }
 
@@ -479,8 +505,7 @@ pub async fn then_audit_no_passwords(world: &mut World) {
 pub async fn then_audit_no_ssh_keys(world: &mut World) {
     for entry in &world.audit_log_entries {
         let entry_str = serde_json::to_string(entry).unwrap();
-        assert!(!entry_str.contains("-----BEGIN"), 
-            "Audit log contains SSH key");
+        assert!(!entry_str.contains("-----BEGIN"), "Audit log contains SSH key");
     }
 }
 

@@ -25,14 +25,14 @@ pub async fn given_no_workers_for_model(world: &mut World, model_ref: String) {
     // Query registry and remove workers with this model_ref
     let registry = world.hive_registry();
     let workers = registry.list().await;
-    
+
     for worker in workers {
         if worker.model_ref == model_ref {
             registry.remove(&worker.id).await;
             tracing::info!("✅ Removed worker {} for model {}", worker.id, model_ref);
         }
     }
-    
+
     // Also clear World state for backward compatibility
     world.workers.retain(|_, worker| worker.model_ref != model_ref);
     tracing::info!("✅ Cleared workers for model: {}", model_ref);
@@ -84,7 +84,7 @@ pub async fn then_query_worker_registry(world: &mut World, url: String) {
     // Query registry
     let registry = world.hive_registry();
     let workers = registry.list().await;
-    
+
     // Store response in World state
     let response = serde_json::json!({
         "workers": workers.iter().map(|w| serde_json::json!({
@@ -99,7 +99,7 @@ pub async fn then_query_worker_registry(world: &mut World, url: String) {
             }
         })).collect::<Vec<_>>()
     });
-    
+
     world.last_http_response = Some(response.to_string());
     world.last_http_status = Some(200);
     tracing::info!("✅ Queried registry at {}: {} workers", url, workers.len());
@@ -111,9 +111,9 @@ pub async fn then_registry_returns_empty(world: &mut World) {
     // Verify registry is empty
     let registry = world.hive_registry();
     let workers = registry.list().await;
-    
+
     assert!(workers.is_empty(), "Expected empty registry but found {} workers", workers.len());
-    
+
     // Also clear World state for backward compatibility
     world.workers.clear();
     tracing::info!("✅ Verified registry is empty");
@@ -124,12 +124,12 @@ pub async fn then_registry_returns_empty(world: &mut World) {
 pub async fn then_pool_preflight_check(world: &mut World, url: String) {
     let client = crate::steps::world::create_http_client();
     let health_url = format!("{}/health", url);
-    
+
     match client.get(&health_url).send().await {
         Ok(response) => {
             let status = response.status().as_u16();
             let body = response.text().await.unwrap_or_default();
-            
+
             world.last_http_status = Some(status);
             world.last_http_response = Some(body.clone());
             tracing::info!("✅ Pool preflight check completed: {} - {}", status, body);
@@ -174,12 +174,12 @@ pub async fn then_download_from_hf(world: &mut World) {
 pub async fn then_download_progress_stream(world: &mut World, url: String) {
     // TEAM-076: Connect to real SSE stream with timeout
     use tokio::time::{timeout, Duration};
-    
+
     let client = reqwest::Client::builder()
         .timeout(Duration::from_secs(10))
         .build()
         .expect("Failed to create HTTP client");
-    
+
     // Attempt to connect to SSE stream
     match timeout(Duration::from_secs(5), client.get(&url).send()).await {
         Ok(Ok(response)) => {
@@ -238,11 +238,11 @@ pub async fn then_display_progress_bar(world: &mut World) {
 pub async fn then_download_completes(world: &mut World) {
     use rbee_hive::provisioner::ModelProvisioner;
     use std::path::PathBuf;
-    
+
     let base_dir = std::env::var("LLORCH_MODELS_DIR")
         .unwrap_or_else(|_| "/tmp/llorch-test-models".to_string());
     let provisioner = ModelProvisioner::new(PathBuf::from(&base_dir));
-    
+
     // Check if model exists in filesystem
     let model_path = provisioner.find_local_model("TinyLlama-1.1B-Chat-v1.0-GGUF");
     if let Some(path) = model_path {
@@ -271,11 +271,11 @@ pub async fn then_download_completes(world: &mut World) {
 pub async fn then_register_model_in_catalog(world: &mut World, local_path: String) {
     use rbee_hive::provisioner::ModelProvisioner;
     use std::path::PathBuf;
-    
+
     let base_dir = std::env::var("LLORCH_MODELS_DIR")
         .unwrap_or_else(|_| "/tmp/llorch-test-models".to_string());
     let provisioner = ModelProvisioner::new(PathBuf::from(&base_dir));
-    
+
     // Verify model is in catalog
     let model = provisioner.find_local_model("TinyLlama-1.1B-Chat-v1.0-GGUF");
     if model.is_some() {
@@ -283,7 +283,7 @@ pub async fn then_register_model_in_catalog(world: &mut World, local_path: Strin
     } else {
         tracing::warn!("Model not found in catalog, using test data");
     }
-    
+
     world.model_catalog.insert(
         "hf:TheBloke/TinyLlama-1.1B-Chat-v1.0-GGUF".to_string(),
         crate::steps::world::ModelCatalogEntry {
@@ -293,7 +293,7 @@ pub async fn then_register_model_in_catalog(world: &mut World, local_path: Strin
             size_bytes: 5242880,
         },
     );
-    
+
     tracing::info!("✅ Verified model registered in catalog: {}", local_path);
 }
 
@@ -326,10 +326,10 @@ pub async fn then_cuda_check_passes(world: &mut World) {
 #[then(expr = "rbee-hive spawns worker process {string} on port {int}")]
 pub async fn then_spawn_worker(world: &mut World, binary: String, port: u16) {
     use rbee_hive::registry::{WorkerInfo, WorkerState};
-    
+
     let worker_id = uuid::Uuid::new_v4().to_string();
     let registry = world.hive_registry();
-    
+
     let worker = WorkerInfo {
         id: worker_id.clone(),
         url: format!("http://127.0.0.1:{}", port),
@@ -341,11 +341,11 @@ pub async fn then_spawn_worker(world: &mut World, binary: String, port: u16) {
         slots_total: 1,
         slots_available: 1,
         failed_health_checks: 0, // TEAM-104: Added missing field
-        pid: None, // TEAM-104: Added missing field
-        restart_count: 0, // TEAM-104: Added restart tracking
-        last_restart: None, // TEAM-104: Added restart tracking
+        pid: None,               // TEAM-104: Added missing field
+        restart_count: 0,        // TEAM-104: Added restart tracking
+        last_restart: None,      // TEAM-104: Added restart tracking
     };
-    
+
     registry.register(worker).await;
     tracing::info!("✅ Worker spawned: {} on port {} (binary: {})", worker_id, port, binary);
 }
@@ -355,10 +355,10 @@ pub async fn then_spawn_worker(world: &mut World, binary: String, port: u16) {
 #[then(expr = "rbee-hive spawns worker process {string} on port {int} with cuda device {int}")]
 pub async fn then_spawn_worker_cuda(world: &mut World, binary: String, port: u16, device: u8) {
     use rbee_hive::registry::{WorkerInfo, WorkerState};
-    
+
     let worker_id = uuid::Uuid::new_v4().to_string();
     let registry = world.hive_registry();
-    
+
     // TEAM-073: Register worker in Loading state (not Idle)
     let worker = WorkerInfo {
         id: worker_id.clone(),
@@ -366,18 +366,24 @@ pub async fn then_spawn_worker_cuda(world: &mut World, binary: String, port: u16
         model_ref: "test-model".to_string(),
         backend: "cuda".to_string(),
         device: device as u32,
-        state: WorkerState::Loading,  // TEAM-073: Fixed - workers start in Loading state
+        state: WorkerState::Loading, // TEAM-073: Fixed - workers start in Loading state
         last_activity: std::time::SystemTime::now(),
         slots_total: 1,
         slots_available: 1,
         failed_health_checks: 0, // TEAM-104: Added missing field
-        pid: None, // TEAM-104: Added missing field
-        restart_count: 0, // TEAM-104: Added restart tracking
-        last_restart: None, // TEAM-104: Added restart tracking
+        pid: None,               // TEAM-104: Added missing field
+        restart_count: 0,        // TEAM-104: Added restart tracking
+        last_restart: None,      // TEAM-104: Added restart tracking
     };
-    
+
     registry.register(worker).await;
-    tracing::info!("✅ Worker spawned: {} on port {} with CUDA device {} (binary: {}) - State: Loading", worker_id, port, device, binary);
+    tracing::info!(
+        "✅ Worker spawned: {} on port {} with CUDA device {} (binary: {}) - State: Loading",
+        worker_id,
+        port,
+        device,
+        binary
+    );
 }
 
 #[then(expr = "the worker HTTP server starts on port {int}")]
@@ -391,14 +397,18 @@ pub async fn then_worker_http_starts(world: &mut World, port: u16) {
 pub async fn then_worker_ready_callback(world: &mut World, url: String) {
     let registry = world.hive_registry();
     let workers = registry.list().await;
-    
+
     assert!(!workers.is_empty(), "No workers in registry after callback");
     let worker = &workers[0];
-    
+
     // Verify worker is registered and in loading state
-    assert_eq!(worker.state, WorkerState::Loading,
-        "Worker should be in Loading state after callback, got {:?}", worker.state);
-    
+    assert_eq!(
+        worker.state,
+        WorkerState::Loading,
+        "Worker should be in Loading state after callback, got {:?}",
+        worker.state
+    );
+
     // Also update World state for backward compatibility
     world.workers.insert(
         worker.id.clone(),
@@ -413,7 +423,7 @@ pub async fn then_worker_ready_callback(world: &mut World, url: String) {
             slots_available: worker.slots_available,
         },
     );
-    
+
     tracing::info!("✅ Verified worker {} sent ready callback to: {}", worker.id, url);
 }
 
@@ -430,11 +440,11 @@ pub async fn then_return_worker_details(world: &mut World) {
     let registry = world.hive_registry();
     let workers = registry.list().await;
     assert!(!workers.is_empty(), "No workers to return");
-    
+
     let worker = &workers[0];
     assert!(!worker.url.is_empty(), "Worker URL should be set");
     assert!(!worker.model_ref.is_empty(), "Model ref should be set");
-    
+
     tracing::info!("✅ Verified worker details: {} at {}", worker.id, worker.url);
 }
 
@@ -443,10 +453,10 @@ pub async fn then_return_worker_url(world: &mut World) {
     let registry = world.hive_registry();
     let workers = registry.list().await;
     assert!(!workers.is_empty(), "No workers");
-    
+
     let worker = &workers[0];
     assert!(worker.url.starts_with("http://"), "Invalid worker URL: {}", worker.url);
-    
+
     tracing::info!("✅ Verified worker URL returned: {}", worker.url);
 }
 
@@ -455,10 +465,10 @@ pub async fn then_poll_worker_readiness(world: &mut World, url: String) {
     let registry = world.hive_registry();
     let workers = registry.list().await;
     assert!(!workers.is_empty(), "No workers to poll");
-    
+
     let worker = &workers[0];
     assert_eq!(worker.url, url, "Worker URL mismatch");
-    
+
     tracing::info!("✅ Verified worker readiness poll at: {}", url);
 }
 
@@ -473,11 +483,11 @@ pub async fn then_worker_state_with_progress(world: &mut World, state: String) {
 pub async fn then_stream_loading_progress(world: &mut World) {
     // TEAM-076: Connect to worker SSE stream at /v1/progress
     use tokio::time::{timeout, Duration};
-    
+
     // Get worker URL from registry
     let registry = world.hive_registry();
     let workers = registry.list().await;
-    
+
     if workers.is_empty() {
         world.last_exit_code = Some(1);
         world.last_error = Some(crate::steps::world::ErrorResponse {
@@ -488,15 +498,15 @@ pub async fn then_stream_loading_progress(world: &mut World) {
         tracing::error!("❌ No workers in registry");
         return;
     }
-    
+
     let worker = &workers[0];
     let progress_url = format!("{}/v1/progress", worker.url);
-    
+
     let client = reqwest::Client::builder()
         .timeout(Duration::from_secs(10))
         .build()
         .expect("Failed to create HTTP client");
-    
+
     // Attempt to connect to worker progress stream
     match timeout(Duration::from_secs(5), client.get(&progress_url).send()).await {
         Ok(Ok(response)) => {
@@ -549,27 +559,29 @@ pub async fn then_stream_loading_progress(world: &mut World) {
 pub async fn then_worker_completes_loading(world: &mut World, state: String) {
     let registry = world.hive_registry();
     let workers = registry.list().await;
-    
+
     assert!(!workers.is_empty(), "No workers in registry");
     let worker = &workers[0];
-    
+
     let expected_state = match state.as_str() {
         "idle" => WorkerState::Idle,
         "busy" => WorkerState::Busy,
         "loading" => WorkerState::Loading,
         _ => panic!("Unknown state: {}", state),
     };
-    
-    assert_eq!(worker.state, expected_state, 
-        "Worker state mismatch: expected {:?}, got {:?}", 
-        expected_state, worker.state);
-    
+
+    assert_eq!(
+        worker.state, expected_state,
+        "Worker state mismatch: expected {:?}, got {:?}",
+        expected_state, worker.state
+    );
+
     // Also update World state for backward compatibility
     if let Some(w) = world.workers.get_mut(&worker.id) {
         w.state = state.clone();
         w.slots_available = 1;
     }
-    
+
     tracing::info!("✅ Verified worker {} completed loading, state: {:?}", worker.id, worker.state);
 }
 
@@ -584,11 +596,11 @@ pub async fn then_send_inference_request(world: &mut World, url: String) {
 pub async fn then_stream_tokens(world: &mut World) {
     // TEAM-076: Connect to worker SSE stream at /v1/inference/stream
     use tokio::time::{timeout, Duration};
-    
+
     // Get worker URL from registry
     let registry = world.hive_registry();
     let workers = registry.list().await;
-    
+
     if workers.is_empty() {
         world.last_exit_code = Some(1);
         world.last_error = Some(crate::steps::world::ErrorResponse {
@@ -599,21 +611,22 @@ pub async fn then_stream_tokens(world: &mut World) {
         tracing::error!("❌ No workers in registry");
         return;
     }
-    
+
     let worker = &workers[0];
     let stream_url = format!("{}/v1/inference/stream", worker.url);
-    
+
     let client = reqwest::Client::builder()
         .timeout(Duration::from_secs(30))
         .build()
         .expect("Failed to create HTTP client");
-    
+
     // Attempt to connect to inference stream
     match timeout(Duration::from_secs(10), client.get(&stream_url).send()).await {
         Ok(Ok(response)) => {
             if response.status().is_success() {
                 // Store mock token events for test verification
-                let tokens = vec!["Once", " upon", " a", " time", " in", " a", " small", " village"];
+                let tokens =
+                    vec!["Once", " upon", " a", " time", " in", " a", " small", " village"];
                 for token in tokens {
                     world.tokens_generated.push(token.to_string());
                     world.sse_events.push(crate::steps::world::SseEvent {
@@ -622,7 +635,10 @@ pub async fn then_stream_tokens(world: &mut World) {
                     });
                 }
                 world.last_exit_code = Some(0);
-                tracing::info!("✅ Token streaming connected: {} tokens", world.tokens_generated.len());
+                tracing::info!(
+                    "✅ Token streaming connected: {} tokens",
+                    world.tokens_generated.len()
+                );
             } else {
                 world.last_exit_code = Some(1);
                 world.last_error = Some(crate::steps::world::ErrorResponse {
@@ -674,14 +690,21 @@ pub async fn then_inference_completes_with_tokens(world: &mut World, token_count
         world.last_exit_code = Some(1);
         world.last_error = Some(crate::steps::world::ErrorResponse {
             code: "TOKEN_COUNT_MISMATCH".to_string(),
-            message: format!("Expected {} tokens, got {}", token_count, world.tokens_generated.len()),
+            message: format!(
+                "Expected {} tokens, got {}",
+                token_count,
+                world.tokens_generated.len()
+            ),
             details: Some(serde_json::json!({
                 "expected": token_count,
                 "actual": world.tokens_generated.len()
             })),
         });
-        tracing::error!("❌ Token count mismatch: expected {}, got {}", 
-            token_count, world.tokens_generated.len());
+        tracing::error!(
+            "❌ Token count mismatch: expected {}, got {}",
+            token_count,
+            world.tokens_generated.len()
+        );
     }
 }
 
@@ -691,7 +714,7 @@ pub async fn then_worker_transitions_to_state(world: &mut World, state: String) 
     // TEAM-076: Enhanced with proper error handling
     let registry = world.hive_registry();
     let workers = registry.list().await;
-    
+
     if workers.is_empty() {
         world.last_exit_code = Some(1);
         world.last_error = Some(crate::steps::world::ErrorResponse {
@@ -702,9 +725,9 @@ pub async fn then_worker_transitions_to_state(world: &mut World, state: String) 
         tracing::error!("❌ No workers in registry");
         return;
     }
-    
+
     let worker = &workers[0];
-    
+
     let expected_state = match state.as_str() {
         "idle" => WorkerState::Idle,
         "busy" => WorkerState::Busy,
@@ -721,26 +744,37 @@ pub async fn then_worker_transitions_to_state(world: &mut World, state: String) 
             return;
         }
     };
-    
+
     if worker.state == expected_state {
         world.last_exit_code = Some(0);
         // Also update World state for backward compatibility
         if let Some(w) = world.workers.get_mut(&worker.id) {
             w.state = state.clone();
         }
-        tracing::info!("✅ Verified worker {} transitioned to state: {:?}", worker.id, worker.state);
+        tracing::info!(
+            "✅ Verified worker {} transitioned to state: {:?}",
+            worker.id,
+            worker.state
+        );
     } else {
         world.last_exit_code = Some(1);
         world.last_error = Some(crate::steps::world::ErrorResponse {
             code: "WORKER_STATE_MISMATCH".to_string(),
-            message: format!("Worker state mismatch: expected {:?}, got {:?}", expected_state, worker.state),
+            message: format!(
+                "Worker state mismatch: expected {:?}, got {:?}",
+                expected_state, worker.state
+            ),
             details: Some(serde_json::json!({
                 "expected": format!("{:?}", expected_state),
                 "actual": format!("{:?}", worker.state),
                 "worker_id": worker.id
             })),
         });
-        tracing::error!("❌ Worker state mismatch: expected {:?}, got {:?}", expected_state, worker.state);
+        tracing::error!(
+            "❌ Worker state mismatch: expected {:?}, got {:?}",
+            expected_state,
+            worker.state
+        );
     }
 }
 
@@ -751,11 +785,11 @@ pub async fn then_worker_transitions_to_state(world: &mut World, state: String) 
 pub async fn then_connect_to_progress_sse(world: &mut World) {
     // TEAM-076: Real SSE connection with error handling
     use tokio::time::{timeout, Duration};
-    
+
     // Get worker URL from registry
     let registry = world.hive_registry();
     let workers = registry.list().await;
-    
+
     if workers.is_empty() {
         world.last_exit_code = Some(1);
         world.last_error = Some(crate::steps::world::ErrorResponse {
@@ -766,15 +800,15 @@ pub async fn then_connect_to_progress_sse(world: &mut World) {
         tracing::error!("❌ No workers for SSE connection");
         return;
     }
-    
+
     let worker = &workers[0];
     let sse_url = format!("{}/v1/progress", worker.url);
-    
+
     let client = reqwest::Client::builder()
         .timeout(Duration::from_secs(10))
         .build()
         .expect("Failed to create HTTP client");
-    
+
     match timeout(Duration::from_secs(5), client.get(&sse_url).send()).await {
         Ok(Ok(response)) => {
             if response.status().is_success() {
@@ -848,7 +882,7 @@ pub async fn then_registry_returns_ssh_details(world: &mut World, node: String) 
             tracing::error!("❌ SSH user is empty for node '{}'", node);
             return;
         }
-        
+
         if node_info.ssh_host.is_empty() {
             world.last_exit_code = Some(1);
             world.last_error = Some(crate::steps::world::ErrorResponse {
@@ -859,7 +893,7 @@ pub async fn then_registry_returns_ssh_details(world: &mut World, node: String) 
             tracing::error!("❌ SSH host is empty for node '{}'", node);
             return;
         }
-        
+
         world.last_exit_code = Some(0);
         tracing::info!(
             "✅ Registry returned SSH details: {}@{}",
@@ -882,36 +916,41 @@ pub async fn then_start_beehive_via_ssh(world: &mut World, hostname: String) {
 // TEAM-067: Update last_connected via queen-rbee HTTP API
 #[then(expr = "queen-rbee updates registry with last_connected_unix")]
 pub async fn then_update_last_connected(world: &mut World) {
-    let timestamp = std::time::SystemTime::now()
-        .duration_since(std::time::UNIX_EPOCH)
-        .unwrap()
-        .as_secs() as i64;
-    
+    let timestamp =
+        std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_secs()
+            as i64;
+
     // Make HTTP PATCH request for each node
     let client = crate::steps::world::create_http_client();
     for (node_name, node) in world.beehive_nodes.iter_mut() {
-        let url = format!("{}/v2/registry/beehives/{}", 
-            world.queen_rbee_url.as_ref().unwrap_or(&"http://localhost:8080".to_string()), 
-            node_name);
-        
+        let url = format!(
+            "{}/v2/registry/beehives/{}",
+            world.queen_rbee_url.as_ref().unwrap_or(&"http://localhost:8080".to_string()),
+            node_name
+        );
+
         let payload = serde_json::json!({
             "last_connected_unix": timestamp
         });
-        
+
         match client.patch(&url).json(&payload).send().await {
             Ok(response) if response.status().is_success() => {
                 tracing::info!("✅ Updated last_connected for node '{}' via HTTP PATCH", node_name);
             }
             Ok(response) => {
-                tracing::warn!("PATCH returned status {} for node '{}'", response.status(), node_name);
+                tracing::warn!(
+                    "PATCH returned status {} for node '{}'",
+                    response.status(),
+                    node_name
+                );
             }
             Err(e) => {
                 tracing::warn!("Failed to PATCH node '{}': {}", node_name, e);
             }
         }
-        
+
         node.last_connected_unix = Some(timestamp);
     }
-    
+
     tracing::info!("✅ Updated last_connected_unix: {}", timestamp);
 }

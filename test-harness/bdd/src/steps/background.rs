@@ -68,7 +68,7 @@ pub async fn given_worker_registry_ephemeral(world: &mut World) {
     // Verify registry exists and is in-memory (not persisted to disk)
     let registry = world.hive_registry();
     let workers = registry.list().await;
-    
+
     // In-memory registry should be accessible
     tracing::info!("✅ Worker registry is in-memory ephemeral ({} workers) NICE!", workers.len());
 }

@@ -20,7 +20,7 @@ mod tests {
             show_quiet_warning: false,
             run_all: true,
         };
-        
+
         // Behavior: Config should store values correctly
         assert_eq!(config.tags, Some("@auth".to_string()));
         assert_eq!(config.feature, Some("lifecycle".to_string()));
@@ -37,7 +37,7 @@ mod tests {
             show_quiet_warning: false,
             run_all: true,
         };
-        
+
         // Behavior: Config should handle no filters
         assert!(config.tags.is_none());
         assert!(config.feature.is_none());
@@ -55,9 +55,9 @@ mod tests {
             show_quiet_warning: false,
             run_all: true,
         };
-        
+
         let cmd = "cargo test --test cucumber".to_string();
-        
+
         // Behavior: Should build basic command with no filters
         assert_eq!(cmd, "cargo test --test cucumber");
     }
@@ -73,12 +73,12 @@ mod tests {
             show_quiet_warning: false,
             run_all: true,
         };
-        
+
         let mut cmd = "cargo test --test cucumber".to_string();
         if let Some(ref tags) = config.tags {
             cmd.push_str(&format!(" -- --tags {}", tags));
         }
-        
+
         // Behavior: Should append tags to command
         assert!(cmd.contains("--tags @auth"));
     }
@@ -94,12 +94,12 @@ mod tests {
             show_quiet_warning: false,
             run_all: true,
         };
-        
+
         let mut cmd = "cargo test --test cucumber".to_string();
         if let Some(ref feature) = config.feature {
             cmd.push_str(&format!(" -- {}", feature));
         }
-        
+
         // Behavior: Should append feature to command
         assert!(cmd.contains("-- lifecycle"));
     }
@@ -115,7 +115,7 @@ mod tests {
             show_quiet_warning: false,
             run_all: true,
         };
-        
+
         let mut cmd = "cargo test --test cucumber".to_string();
         if let Some(ref tags) = config.tags {
             cmd.push_str(&format!(" -- --tags {}", tags));
@@ -123,7 +123,7 @@ mod tests {
         if let Some(ref feature) = config.feature {
             cmd.push_str(&format!(" -- {}", feature));
         }
-        
+
         // Behavior: Should append both filters
         assert!(cmd.contains("--tags @p0"));
         assert!(cmd.contains("-- authentication"));
@@ -133,9 +133,9 @@ mod tests {
     fn test_output_paths_structure() {
         let log_dir = std::path::PathBuf::from("/tmp/test-logs");
         let timestamp = "20251018_220000";
-        
+
         let paths = OutputPaths::new(log_dir.clone(), timestamp);
-        
+
         // Behavior: Paths should be constructed correctly
         assert_eq!(paths.log_dir, log_dir);
         assert!(paths.compile_log.to_string_lossy().contains("compile-"));
@@ -149,9 +149,9 @@ mod tests {
     fn test_output_paths_failure_files_initially_none() {
         let log_dir = std::path::PathBuf::from("/tmp/test-logs");
         let timestamp = "20251018_220000";
-        
+
         let paths = OutputPaths::new(log_dir, timestamp);
-        
+
         // Behavior: Failure files should be None initially
         assert!(paths.failures_file.is_none());
         assert!(paths.rerun_file.is_none());
@@ -161,17 +161,17 @@ mod tests {
     fn test_output_paths_set_failure_files() {
         let log_dir = std::path::PathBuf::from("/tmp/test-logs");
         let timestamp = "20251018_220000";
-        
+
         let mut paths = OutputPaths::new(log_dir, timestamp);
         paths.set_failure_files(timestamp);
-        
+
         // Behavior: Failure files should be set after calling set_failure_files
         assert!(paths.failures_file.is_some());
         assert!(paths.rerun_file.is_some());
-        
+
         let failures_file = paths.failures_file.unwrap();
         assert!(failures_file.to_string_lossy().contains("failures-"));
-        
+
         let rerun_file = paths.rerun_file.unwrap();
         assert!(rerun_file.to_string_lossy().contains("rerun-failures-cmd.txt"));
     }
@@ -179,7 +179,7 @@ mod tests {
     #[test]
     fn test_test_results_default_values() {
         let results = TestResults::default();
-        
+
         // Behavior: Default should be all zeros
         assert_eq!(results.passed, 0);
         assert_eq!(results.failed, 0);
@@ -189,13 +189,8 @@ mod tests {
 
     #[test]
     fn test_test_results_with_values() {
-        let results = TestResults {
-            passed: 10,
-            failed: 2,
-            skipped: 1,
-            exit_code: 1,
-        };
-        
+        let results = TestResults { passed: 10, failed: 2, skipped: 1, exit_code: 1 };
+
         // Behavior: Should store values correctly
         assert_eq!(results.passed, 10);
         assert_eq!(results.failed, 2);
@@ -213,12 +208,12 @@ mod tests {
             show_quiet_warning: false,
             run_all: true,
         };
-        
+
         let mut cmd = "cargo test --test cucumber".to_string();
         if let Some(ref tags) = config.tags {
             cmd.push_str(&format!(" -- --tags {}", tags));
         }
-        
+
         // Behavior: Should handle special characters
         assert!(cmd.contains("@auth & @p0"));
     }
@@ -233,12 +228,12 @@ mod tests {
             show_quiet_warning: false,
             run_all: true,
         };
-        
+
         let mut cmd = "cargo test --test cucumber".to_string();
         if let Some(ref tags) = config.tags {
             cmd.push_str(&format!(" -- --tags {}", tags));
         }
-        
+
         // Behavior: Should handle multiple tags with spaces
         assert!(cmd.contains("@auth @p0 @critical"));
     }
@@ -253,9 +248,9 @@ mod tests {
             show_quiet_warning: false,
             run_all: true,
         };
-        
+
         let config2 = config1.clone();
-        
+
         // Behavior: Clone should create independent copy
         assert_eq!(config1.tags, config2.tags);
         assert_eq!(config1.feature, config2.feature);
@@ -266,9 +261,9 @@ mod tests {
     fn test_output_paths_with_relative_log_dir() {
         let log_dir = std::path::PathBuf::from("./test-logs");
         let timestamp = "20251018_220000";
-        
+
         let paths = OutputPaths::new(log_dir.clone(), timestamp);
-        
+
         // Behavior: Should handle relative paths
         assert_eq!(paths.log_dir, log_dir);
     }
@@ -277,22 +272,17 @@ mod tests {
     fn test_output_paths_with_absolute_log_dir() {
         let log_dir = std::path::PathBuf::from("/var/tmp/test-logs");
         let timestamp = "20251018_220000";
-        
+
         let paths = OutputPaths::new(log_dir.clone(), timestamp);
-        
+
         // Behavior: Should handle absolute paths
         assert_eq!(paths.log_dir, log_dir);
     }
 
     #[test]
     fn test_test_results_success_condition() {
-        let results = TestResults {
-            passed: 10,
-            failed: 0,
-            skipped: 0,
-            exit_code: 0,
-        };
-        
+        let results = TestResults { passed: 10, failed: 0, skipped: 0, exit_code: 0 };
+
         // Behavior: Success means no failures and exit code 0
         assert_eq!(results.failed, 0);
         assert_eq!(results.exit_code, 0);
@@ -300,13 +290,8 @@ mod tests {
 
     #[test]
     fn test_test_results_failure_condition() {
-        let results = TestResults {
-            passed: 8,
-            failed: 2,
-            skipped: 0,
-            exit_code: 1,
-        };
-        
+        let results = TestResults { passed: 8, failed: 2, skipped: 0, exit_code: 1 };
+
         // Behavior: Failure means failed > 0 or exit code != 0
         assert!(results.failed > 0 || results.exit_code != 0);
     }
@@ -321,7 +306,7 @@ mod tests {
             show_quiet_warning: false,
             run_all: true,
         };
-        
+
         // Behavior: Should be debuggable
         let debug_str = format!("{:?}", config);
         assert!(debug_str.contains("BddConfig"));
@@ -337,7 +322,7 @@ mod tests {
             show_quiet_warning: false,
             run_all: true,
         };
-        
+
         // Behavior: Should handle empty strings (though not recommended)
         assert_eq!(config.tags, Some("".to_string()));
         assert_eq!(config.feature, Some("".to_string()));
@@ -347,9 +332,9 @@ mod tests {
     fn test_output_paths_with_unicode_timestamp() {
         let log_dir = std::path::PathBuf::from("/tmp/test-logs");
         let timestamp = "2025年10月18日";
-        
+
         let paths = OutputPaths::new(log_dir, timestamp);
-        
+
         // Behavior: Should handle unicode in timestamp
         assert!(paths.compile_log.to_string_lossy().contains(timestamp));
     }

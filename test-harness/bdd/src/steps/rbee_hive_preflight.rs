@@ -7,8 +7,8 @@
 // ⚠️ CRITICAL: These steps MUST connect to real product code from /bin/
 // ⚠️ Import queen_rbee::preflight::rbee_hive and test actual HTTP health checks
 
-use cucumber::{given, then, when};
 use crate::steps::world::World;
+use cucumber::{given, then, when};
 use queen_rbee::preflight::rbee_hive::RbeeHivePreflight;
 
 #[given(expr = "rbee-hive is running")]
@@ -40,7 +40,7 @@ pub async fn when_check_health_endpoint(world: &mut World) {
     // TEAM-079: Check health endpoint with real HTTP client
     let base_url = "http://workstation.home.arpa:8081".to_string();
     let preflight = RbeeHivePreflight::new(base_url);
-    
+
     match preflight.check_health().await {
         Ok(health) => {
             tracing::info!("TEAM-079: Health check succeeded: {:?}", health);
@@ -58,7 +58,7 @@ pub async fn when_validate_version(world: &mut World) {
     // TEAM-079: Validate version with real checker
     let base_url = "http://workstation.home.arpa:8081".to_string();
     let preflight = RbeeHivePreflight::new(base_url);
-    
+
     match preflight.check_version_compatibility(">=0.1.0").await {
         Ok(compatible) => {
             tracing::info!("TEAM-079: Version compatible: {}", compatible);
@@ -76,7 +76,7 @@ pub async fn when_query_backends(world: &mut World) {
     // TEAM-079: Query backends with real HTTP client
     let base_url = "http://workstation.home.arpa:8081".to_string();
     let preflight = RbeeHivePreflight::new(base_url);
-    
+
     match preflight.query_backends().await {
         Ok(backends) => {
             tracing::info!("TEAM-079: Found {} backends", backends.len());
@@ -94,11 +94,14 @@ pub async fn when_query_resources(world: &mut World) {
     // TEAM-079: Query resources with real HTTP client
     let base_url = "http://workstation.home.arpa:8081".to_string();
     let preflight = RbeeHivePreflight::new(base_url);
-    
+
     match preflight.query_resources().await {
         Ok(resources) => {
-            tracing::info!("TEAM-079: Resources - RAM: {}GB, Disk: {}GB", 
-                resources.ram_available_gb, resources.disk_available_gb);
+            tracing::info!(
+                "TEAM-079: Resources - RAM: {}GB, Disk: {}GB",
+                resources.ram_available_gb,
+                resources.disk_available_gb
+            );
             world.last_action = Some("query_resources_success".to_string());
         }
         Err(e) => {
@@ -113,8 +116,7 @@ pub async fn then_health_returns_ok(world: &mut World, status: u16) {
     // TEAM-082: Verify health endpoint status
     assert_eq!(status, 200, "Expected 200 OK status");
     let action = world.last_action.as_ref().expect("No action recorded");
-    assert!(action.contains("check_health"),
-        "Expected health check action, got: {}", action);
+    assert!(action.contains("check_health"), "Expected health check action, got: {}", action);
     tracing::info!("TEAM-082: Health endpoint returned {} OK", status);
 }
 
@@ -123,8 +125,11 @@ pub async fn then_response_body_is(world: &mut World, step: &cucumber::gherkin::
     // TEAM-082: Verify response body structure
     assert!(world.last_action.is_some(), "No action recorded");
     let action = world.last_action.as_ref().unwrap();
-    assert!(action.contains("check_health") || action.contains("query_"),
-        "Expected health/query action, got: {}", action);
+    assert!(
+        action.contains("check_health") || action.contains("query_"),
+        "Expected health/query action, got: {}",
+        action
+    );
     tracing::info!("TEAM-082: Response body verified");
 }
 
@@ -132,8 +137,11 @@ pub async fn then_response_body_is(world: &mut World, step: &cucumber::gherkin::
 pub async fn then_version_check_passes(world: &mut World) {
     // TEAM-082: Verify version compatibility
     let action = world.last_action.as_ref().expect("No action recorded");
-    assert!(action.contains("validate_version"),
-        "Expected version validation action, got: {}", action);
+    assert!(
+        action.contains("validate_version"),
+        "Expected version validation action, got: {}",
+        action
+    );
     tracing::info!("TEAM-082: Version check passed");
 }
 
@@ -141,8 +149,7 @@ pub async fn then_version_check_passes(world: &mut World) {
 pub async fn then_response_contains_backends(world: &mut World, step: &cucumber::gherkin::Step) {
     // TEAM-082: Verify backends in response
     let action = world.last_action.as_ref().expect("No action recorded");
-    assert!(action.contains("query_backends"),
-        "Expected backend query action, got: {}", action);
+    assert!(action.contains("query_backends"), "Expected backend query action, got: {}", action);
     tracing::info!("TEAM-082: Detected backends verified");
 }
 
@@ -151,8 +158,11 @@ pub async fn then_response_contains(world: &mut World, step: &cucumber::gherkin:
     // TEAM-082: Verify response structure
     assert!(world.last_action.is_some(), "No action recorded");
     let action = world.last_action.as_ref().unwrap();
-    assert!(action.contains("query_") || action.contains("check_"),
-        "Expected query/check action, got: {}", action);
+    assert!(
+        action.contains("query_") || action.contains("check_"),
+        "Expected query/check action, got: {}",
+        action
+    );
     tracing::info!("TEAM-082: Response content verified");
 }
 
@@ -160,8 +170,7 @@ pub async fn then_response_contains(world: &mut World, step: &cucumber::gherkin:
 pub async fn then_ram_available(world: &mut World, gb: u32) {
     // TEAM-082: Verify RAM availability
     let action = world.last_action.as_ref().expect("No action recorded");
-    assert!(action.contains("query_resources"),
-        "Expected resource query action, got: {}", action);
+    assert!(action.contains("query_resources"), "Expected resource query action, got: {}", action);
     tracing::info!("TEAM-082: RAM available >= {} GB", gb);
 }
 
@@ -169,7 +178,6 @@ pub async fn then_ram_available(world: &mut World, gb: u32) {
 pub async fn then_disk_available(world: &mut World, gb: u32) {
     // TEAM-082: Verify disk availability
     let action = world.last_action.as_ref().expect("No action recorded");
-    assert!(action.contains("query_resources"),
-        "Expected resource query action, got: {}", action);
+    assert!(action.contains("query_resources"), "Expected resource query action, got: {}", action);
     tracing::info!("TEAM-082: Disk available >= {} GB", gb);
 }

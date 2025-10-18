@@ -13,7 +13,7 @@
 
 use crate::steps::world::World;
 use cucumber::{given, then, when};
-use std::os::unix::process::ExitStatusExt;  // TEAM-060: For ExitStatus::from_raw
+use std::os::unix::process::ExitStatusExt; // TEAM-060: For ExitStatus::from_raw
 
 // TEAM-074: Model download failure simulation with proper error state
 #[given(expr = "model download fails at {int}% with {string}")]
@@ -76,15 +76,17 @@ pub async fn given_worker_idle(world: &mut World) {
 pub async fn when_attempt_connection(world: &mut World) {
     // TEAM-060: Execute REAL SSH command that actually fails (unreachable host)
     let result = tokio::process::Command::new("ssh")
-        .arg("-o").arg("ConnectTimeout=1")
-        .arg("-o").arg("StrictHostKeyChecking=no")
+        .arg("-o")
+        .arg("ConnectTimeout=1")
+        .arg("-o")
+        .arg("StrictHostKeyChecking=no")
         .arg("unreachable.invalid")
         .arg("echo test")
         .output()
         .await
         .expect("Failed to execute ssh");
-    
-    world.last_exit_code = result.status.code();  // REAL exit code!
+
+    world.last_exit_code = result.status.code(); // REAL exit code!
     world.last_stderr = String::from_utf8_lossy(&result.stderr).to_string();
     tracing::info!("✅ Real connection attempt failed (exit code {:?})", world.last_exit_code);
 }
@@ -95,15 +97,19 @@ pub async fn when_retry_download(world: &mut World) {
     // TEAM-112: Normalize exit code to 1 (curl returns 6 for DNS failures)
     let result = tokio::process::Command::new("curl")
         .arg("--fail")
-        .arg("--max-time").arg("2")
-        .arg("--retry").arg("2")
-        .arg("--retry-delay").arg("0")
+        .arg("--max-time")
+        .arg("2")
+        .arg("--retry")
+        .arg("2")
+        .arg("--retry-delay")
+        .arg("0")
         .arg("http://unreachable.invalid/model.gguf")
-        .arg("-o").arg("/dev/null")
+        .arg("-o")
+        .arg("/dev/null")
         .output()
         .await
         .expect("Failed to execute curl");
-    
+
     // TEAM-112: Normalize any non-zero exit code to 1 for consistency
     world.last_exit_code = if result.status.success() { Some(0) } else { Some(1) };
     world.last_stderr = String::from_utf8_lossy(&result.stderr).to_string();
@@ -122,8 +128,8 @@ pub async fn when_worker_dies(world: &mut World) {
         .output()
         .await
         .expect("Failed to execute sh");
-    
-    world.last_exit_code = result.status.code();  // REAL exit code from crashed process!
+
+    world.last_exit_code = result.status.code(); // REAL exit code from crashed process!
     tracing::info!("✅ Real worker process died (exit code {:?})", world.last_exit_code);
 }
 
@@ -137,8 +143,8 @@ pub async fn when_user_ctrl_c(world: &mut World) {
         .output()
         .await
         .expect("Failed to execute sh");
-    
-    world.last_exit_code = result.status.code();  // REAL exit code 130!
+
+    world.last_exit_code = result.status.code(); // REAL exit code 130!
     tracing::info!("✅ Real Ctrl+C simulation (exit code {:?})", world.last_exit_code);
 }
 
@@ -152,8 +158,8 @@ pub async fn when_version_check(world: &mut World) {
         .output()
         .await
         .expect("Failed to execute version check");
-    
-    world.last_exit_code = result.status.code();  // REAL exit code from version mismatch!
+
+    world.last_exit_code = result.status.code(); // REAL exit code from version mismatch!
     world.last_stderr = "Error: Version mismatch detected".to_string();
     tracing::info!("✅ Real version check failed (exit code {:?})", world.last_exit_code);
 }
@@ -163,7 +169,7 @@ pub async fn when_send_request_with_header(world: &mut World, header: String) {
     // TEAM-060: Execute REAL HTTP request with authentication header
     // TEAM-063: Testing against actual rbee-hive registry health
     let is_invalid = header.contains("wrong_key") || header.contains("invalid");
-    
+
     if is_invalid {
         world.last_exit_code = Some(1);
         world.last_stderr = "Error: Invalid API key".to_string();
@@ -292,11 +298,11 @@ pub async fn then_next_triggers_cold_start(world: &mut World) {
 pub async fn given_model_file_corrupted(world: &mut World) {
     use std::fs;
     use std::io::Write;
-    
+
     // Create a temporary corrupted file
     if let Some(ref temp_dir) = world.temp_dir {
         let corrupt_file = temp_dir.path().join("corrupted_model.gguf");
-        
+
         // Write invalid GGUF header
         match fs::File::create(&corrupt_file) {
             Ok(mut file) => {
@@ -348,21 +354,21 @@ pub async fn given_disk_space_low(world: &mut World) {
 pub async fn when_validation_runs(world: &mut World) {
     // Check for various error conditions
     let mut validation_errors = Vec::new();
-    
+
     // Check disk space
     if let Some(disk_space) = world.node_ram.get("disk_space_mb") {
         if *disk_space < 1000 {
             validation_errors.push("Insufficient disk space");
         }
     }
-    
+
     // Check for corrupted models
     for (model_ref, entry) in &world.model_catalog {
         if model_ref.contains("corrupted") {
             validation_errors.push("Corrupted model file detected");
         }
     }
-    
+
     if !validation_errors.is_empty() {
         world.last_exit_code = Some(1);
         world.last_stderr = validation_errors.join("; ");
@@ -377,14 +383,16 @@ pub async fn when_validation_runs(world: &mut World) {
 #[then(expr = "the error code is {string}")]
 pub async fn then_error_code_is(world: &mut World, expected_code: String) {
     if let Some(ref error) = world.last_error {
-        assert_eq!(error.code, expected_code, 
-                   "Expected error code '{}', got '{}'", expected_code, error.code);
+        assert_eq!(
+            error.code, expected_code,
+            "Expected error code '{}', got '{}'",
+            expected_code, error.code
+        );
         tracing::info!("✅ Verified error code: {} NICE!", expected_code);
     } else {
         // Check exit code as alternative
         if expected_code == "1" || expected_code == "ERROR" {
-            assert_eq!(world.last_exit_code, Some(1), 
-                       "Expected error exit code 1");
+            assert_eq!(world.last_exit_code, Some(1), "Expected error exit code 1");
             tracing::info!("✅ Verified error exit code NICE!");
         } else {
             panic!("No error found in World state");
@@ -403,15 +411,11 @@ pub async fn then_cleanup_partial_download(world: &mut World) {
             .flatten()
             .filter_map(|e| e.ok())
             .filter(|e| {
-                e.file_name()
-                    .to_string_lossy()
-                    .ends_with(".partial") || 
-                e.file_name()
-                    .to_string_lossy()
-                    .ends_with(".tmp")
+                e.file_name().to_string_lossy().ends_with(".partial")
+                    || e.file_name().to_string_lossy().ends_with(".tmp")
             })
             .collect();
-        
+
         if partial_files.is_empty() {
             tracing::info!("✅ No partial downloads found - cleanup verified NICE!");
         } else {

@@ -5,8 +5,8 @@
 // ⚠️ CRITICAL: These steps test worker registry logic
 // ⚠️ Using local in-memory implementation until queen-rbee SQLite conflict is resolved
 
-use cucumber::{given, then, when};
 use crate::steps::world::World;
+use cucumber::{given, then, when};
 use std::collections::HashMap;
 
 #[derive(Debug, Clone)]
@@ -31,9 +31,7 @@ thread_local! {
 fn get_registry() -> WorkerRegistry {
     REGISTRY.with(|r| {
         let registry = r.borrow();
-        WorkerRegistry {
-            workers: registry.workers.clone(),
-        }
+        WorkerRegistry { workers: registry.workers.clone() }
     })
 }
 
@@ -46,23 +44,21 @@ where
 
 impl WorkerRegistry {
     fn new() -> Self {
-        Self {
-            workers: HashMap::new(),
-        }
+        Self { workers: HashMap::new() }
     }
-    
+
     fn register(&mut self, worker: WorkerInfo) {
         self.workers.insert(worker.id.clone(), worker);
     }
-    
+
     fn list(&self) -> Vec<WorkerInfo> {
         self.workers.values().cloned().collect()
     }
-    
+
     fn remove(&mut self, worker_id: &str) -> bool {
         self.workers.remove(worker_id).is_some()
     }
-    
+
     fn clear(&mut self) {
         self.workers.clear();
     }
@@ -73,7 +69,7 @@ pub async fn given_no_workers_registered(world: &mut World) {
     // TEAM-079: Clear worker registry
     // TEAM-112: Store registry in World using a thread-local or static
     with_registry_mut(|registry| registry.clear());
-    
+
     tracing::info!("TEAM-079: queen-rbee registry cleared");
     world.last_action = Some("no_workers".to_string());
 }
@@ -84,26 +80,21 @@ pub async fn given_queen_has_workers(world: &mut World, step: &cucumber::gherkin
     // TEAM-112: Store registry in thread-local so it persists across steps
     with_registry_mut(|registry| {
         registry.clear();
-        
+
         if let Some(table) = step.table.as_ref() {
             for row in table.rows.iter().skip(1) {
                 let worker_id = row[0].clone();
                 let url = row[1].clone();
                 let capabilities = row[2].split(',').map(|s| s.trim().to_string()).collect();
                 let last_heartbeat = row[3].parse::<i64>().unwrap_or(0);
-                
-                let worker = WorkerInfo {
-                    id: worker_id,
-                    url,
-                    capabilities,
-                    last_heartbeat,
-                };
-                
+
+                let worker = WorkerInfo { id: worker_id, url, capabilities, last_heartbeat };
+
                 registry.register(worker);
             }
         }
     });
-    
+
     let count = get_registry().list().len();
     tracing::info!("TEAM-079: queen-rbee registry populated with {} workers", count);
     world.last_action = Some(format!("workers_populated_{}", count));
@@ -120,7 +111,7 @@ pub async fn given_worker_registered(world: &mut World, worker_id: String) {
         last_heartbeat: 0,
     };
     with_registry_mut(|registry| registry.register(worker));
-    
+
     tracing::info!("TEAM-079: Worker {} registered", worker_id);
     world.last_action = Some(format!("worker_registered_{}", worker_id));
 }
@@ -143,7 +134,7 @@ pub async fn when_report_worker(world: &mut World, worker_id: String, capabiliti
         last_heartbeat: 0,
     };
     with_registry_mut(|registry| registry.register(worker));
-    
+
     tracing::info!("TEAM-079: Worker {} reported with capabilities {}", worker_id, capabilities);
     world.last_action = Some(format!("report_worker_{}_{}", worker_id, capabilities));
 }
@@ -154,7 +145,7 @@ pub async fn when_query_all_workers(world: &mut World) {
     // TEAM-112: Use thread-local registry
     let workers = get_registry().list();
     let worker_count = workers.len();
-    
+
     tracing::info!("TEAM-079: Queried {} workers", worker_count);
     world.last_action = Some(format!("query_all_workers_{}", worker_count));
 }
@@ -178,7 +169,7 @@ pub async fn when_remove_worker(world: &mut World, worker_id: String) {
     // TEAM-079: Remove worker from registry
     // TEAM-112: Use thread-local registry
     let removed = with_registry_mut(|registry| registry.remove(&worker_id));
-    
+
     tracing::info!("TEAM-079: Worker {} removed: {}", worker_id, removed);
     world.last_action = Some(format!("remove_worker_{}_{}", worker_id, removed));
 }
@@ -193,8 +184,11 @@ pub async fn when_run_stale_cleanup(world: &mut World) {
 #[then(expr = "queen-rbee registers the worker")]
 pub async fn then_register_via_post(world: &mut World) {
     // TEAM-082: Verify worker was registered via POST
-    assert!(world.last_action.as_ref().unwrap().starts_with("report_worker_"),
-        "Expected worker registration action, got: {:?}", world.last_action);
+    assert!(
+        world.last_action.as_ref().unwrap().starts_with("report_worker_"),
+        "Expected worker registration action, got: {:?}",
+        world.last_action
+    );
     tracing::info!("TEAM-082: Worker registered via POST");
 }
 
@@ -204,8 +198,11 @@ pub async fn then_request_body_is(world: &mut World, step: &cucumber::gherkin::S
     assert!(world.last_action.is_some(), "No action recorded");
     // Verify action indicates worker registration occurred
     let action = world.last_action.as_ref().unwrap();
-    assert!(action.contains("report_worker_") || action.contains("worker_registered"),
-        "Expected worker registration, got: {}", action);
+    assert!(
+        action.contains("report_worker_") || action.contains("worker_registered"),
+        "Expected worker registration, got: {}",
+        action
+    );
     tracing::info!("TEAM-082: Request body verified");
 }
 
@@ -221,8 +218,11 @@ pub async fn then_returns_created(world: &mut World, status: u16) {
 pub async fn then_added_to_registry(world: &mut World) {
     // TEAM-082: Verify worker was added to registry
     let action = world.last_action.as_ref().expect("No action recorded");
-    assert!(action.contains("report_worker_") || action.contains("worker_registered"),
-        "Expected worker registration action, got: {}", action);
+    assert!(
+        action.contains("report_worker_") || action.contains("worker_registered"),
+        "Expected worker registration action, got: {}",
+        action
+    );
     tracing::info!("TEAM-082: Worker added to registry");
 }
 
@@ -241,7 +241,7 @@ pub async fn then_response_contains_workers(world: &mut World, count: usize) {
     let parts: Vec<&str> = action.split('_').collect();
     let actual_count: usize = parts.last().unwrap().parse().unwrap();
     assert_eq!(actual_count, count);
-    
+
     tracing::info!("TEAM-079: Response contains {} workers", count);
 }
 
@@ -249,8 +249,11 @@ pub async fn then_response_contains_workers(world: &mut World, count: usize) {
 pub async fn then_workers_have_fields(world: &mut World) {
     // TEAM-082: Verify response structure
     let action = world.last_action.as_ref().expect("No action recorded");
-    assert!(action.contains("query_all_workers") || action.contains("workers_populated"),
-        "Expected worker query/population action, got: {}", action);
+    assert!(
+        action.contains("query_all_workers") || action.contains("workers_populated"),
+        "Expected worker query/population action, got: {}",
+        action
+    );
     tracing::info!("TEAM-082: Workers have required fields");
 }
 
@@ -287,9 +290,10 @@ pub async fn then_removes_from_registry(world: &mut World) {
     // TEAM-079: Verify worker was removed
     // TEAM-112: Fixed assertion - check for remove_worker action with true result
     assert!(
-        world.last_action.as_ref().unwrap().starts_with("remove_worker_") 
-        && world.last_action.as_ref().unwrap().ends_with("_true"),
-        "Expected worker removal action, got: {:?}", world.last_action
+        world.last_action.as_ref().unwrap().starts_with("remove_worker_")
+            && world.last_action.as_ref().unwrap().ends_with("_true"),
+        "Expected worker removal action, got: {:?}",
+        world.last_action
     );
     tracing::info!("TEAM-079: Worker removed from registry");
 }
@@ -305,23 +309,32 @@ pub async fn then_returns_no_content(world: &mut World, status: u16) {
 #[then(expr = "queen-rbee marks worker-002 as stale \\(no heartbeat for >120s\\)")]
 pub async fn then_marks_stale(world: &mut World) {
     // TEAM-082: Verify stale detection logic executed
-    assert!(world.last_action.as_ref().unwrap().contains("stale_cleanup"),
-        "Expected stale cleanup action, got: {:?}", world.last_action);
+    assert!(
+        world.last_action.as_ref().unwrap().contains("stale_cleanup"),
+        "Expected stale cleanup action, got: {:?}",
+        world.last_action
+    );
     tracing::info!("TEAM-082: Worker marked as stale");
 }
 
 #[then(expr = "queen-rbee removes worker-002 from registry")]
 pub async fn then_removes_stale_worker(world: &mut World) {
     // TEAM-082: Verify stale worker was removed
-    assert!(world.last_action.as_ref().unwrap().contains("stale_cleanup"),
-        "Expected stale cleanup action, got: {:?}", world.last_action);
+    assert!(
+        world.last_action.as_ref().unwrap().contains("stale_cleanup"),
+        "Expected stale cleanup action, got: {:?}",
+        world.last_action
+    );
     tracing::info!("TEAM-082: Stale worker removed");
 }
 
 #[then(expr = "queen-rbee keeps worker-001 \\(heartbeat within 120s\\)")]
 pub async fn then_keeps_active_worker(world: &mut World) {
     // TEAM-082: Verify active worker was kept (not removed)
-    assert!(world.last_action.as_ref().unwrap().contains("stale_cleanup"),
-        "Expected stale cleanup action, got: {:?}", world.last_action);
+    assert!(
+        world.last_action.as_ref().unwrap().contains("stale_cleanup"),
+        "Expected stale cleanup action, got: {:?}",
+        world.last_action
+    );
     tracing::info!("TEAM-082: Active worker kept");
 }

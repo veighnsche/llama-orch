@@ -13,10 +13,15 @@ use cucumber::{given, then, when};
 
 #[when(expr = "I send POST to {string} with model_ref {string}")]
 pub async fn when_post_with_model_ref(world: &mut World, endpoint: String, model_ref: String) {
-    let url = format!("{}{}", world.queen_url.as_ref().unwrap_or(&"http://localhost:8080".to_string()), endpoint);
-    
+    let url = format!(
+        "{}{}",
+        world.queen_url.as_ref().unwrap_or(&"http://localhost:8080".to_string()),
+        endpoint
+    );
+
     let client = reqwest::Client::new();
-    let response = client.post(&url)
+    let response = client
+        .post(&url)
         .json(&serde_json::json!({
             "model_ref": model_ref,
             "backend": "cpu",
@@ -24,7 +29,7 @@ pub async fn when_post_with_model_ref(world: &mut World, endpoint: String, model
         }))
         .send()
         .await;
-    
+
     match response {
         Ok(resp) => {
             world.last_status_code = Some(resp.status().as_u16());
@@ -73,16 +78,17 @@ pub async fn given_hive_running(world: &mut World, url: String) {
 #[when(expr = "I send request with model_path {string}")]
 pub async fn when_request_with_path(world: &mut World, path: String) {
     let url = format!("{}/v1/workers/spawn", world.hive_url.as_ref().unwrap());
-    
+
     let client = reqwest::Client::new();
-    let response = client.post(&url)
+    let response = client
+        .post(&url)
         .json(&serde_json::json!({
             "model_path": path,
             "backend": "cpu"
         }))
         .send()
         .await;
-    
+
     match response {
         Ok(resp) => {
             world.last_status_code = Some(resp.status().as_u16());
@@ -115,10 +121,10 @@ pub async fn then_symlink_not_followed(_world: &mut World) {
 #[when(expr = "I send request with worker_id {string}")]
 pub async fn when_request_with_worker_id(world: &mut World, worker_id: String) {
     let url = format!("{}/v1/workers/{}", world.hive_url.as_ref().unwrap(), worker_id);
-    
+
     let client = reqwest::Client::new();
     let response = client.get(&url).send().await;
-    
+
     match response {
         Ok(resp) => {
             world.last_status_code = Some(resp.status().as_u16());
@@ -150,16 +156,17 @@ pub async fn then_request_accepted(world: &mut World) {
 #[when(expr = "I send request with backend {string}")]
 pub async fn when_request_with_backend(world: &mut World, backend: String) {
     let url = format!("{}/v1/workers/spawn", world.hive_url.as_ref().unwrap());
-    
+
     let client = reqwest::Client::new();
-    let response = client.post(&url)
+    let response = client
+        .post(&url)
         .json(&serde_json::json!({
             "model_ref": "hf:test/model",
             "backend": backend
         }))
         .send()
         .await;
-    
+
     match response {
         Ok(resp) => {
             world.last_status_code = Some(resp.status().as_u16());
@@ -174,9 +181,10 @@ pub async fn when_request_with_backend(world: &mut World, backend: String) {
 #[when(expr = "I send request with device {string}")]
 pub async fn when_request_with_device(world: &mut World, device: String) {
     let url = format!("{}/v1/workers/spawn", world.hive_url.as_ref().unwrap());
-    
+
     let client = reqwest::Client::new();
-    let response = client.post(&url)
+    let response = client
+        .post(&url)
         .json(&serde_json::json!({
             "model_ref": "hf:test/model",
             "backend": "cuda",
@@ -184,7 +192,7 @@ pub async fn when_request_with_device(world: &mut World, device: String) {
         }))
         .send()
         .await;
-    
+
     match response {
         Ok(resp) => {
             world.last_status_code = Some(resp.status().as_u16());
@@ -199,9 +207,10 @@ pub async fn when_request_with_device(world: &mut World, device: String) {
 #[when(expr = "I send request with node {string}")]
 pub async fn when_request_with_node(world: &mut World, node: String) {
     let url = format!("{}/v1/workers/spawn", world.queen_url.as_ref().unwrap());
-    
+
     let client = reqwest::Client::new();
-    let response = client.post(&url)
+    let response = client
+        .post(&url)
         .json(&serde_json::json!({
             "model_ref": "hf:test/model",
             "backend": "cpu",
@@ -209,7 +218,7 @@ pub async fn when_request_with_node(world: &mut World, node: String) {
         }))
         .send()
         .await;
-    
+
     match response {
         Ok(resp) => {
             world.last_status_code = Some(resp.status().as_u16());
@@ -278,16 +287,13 @@ pub async fn then_no_memory_leaks(_world: &mut World) {
 #[when(expr = "I send request with {int} MB body")]
 pub async fn when_send_large_body(world: &mut World, size_mb: usize) {
     let url = format!("{}/v1/workers/spawn", world.queen_url.as_ref().unwrap());
-    
+
     // Create large payload
     let large_body = "x".repeat(size_mb * 1024 * 1024);
-    
+
     let client = reqwest::Client::new();
-    let response = client.post(&url)
-        .body(large_body)
-        .send()
-        .await;
-    
+    let response = client.post(&url).body(large_body).send().await;
+
     match response {
         Ok(resp) => {
             world.last_status_code = Some(resp.status().as_u16());
@@ -335,15 +341,16 @@ pub async fn then_error_not_contains(world: &mut World, text: String) {
 #[when(expr = "I send malicious input to {string}")]
 pub async fn when_send_malicious_to_endpoint(world: &mut World, endpoint: String) {
     let url = format!("{}{}", world.queen_url.as_ref().unwrap(), endpoint);
-    
+
     let client = reqwest::Client::new();
-    let response = client.post(&url)
+    let response = client
+        .post(&url)
         .json(&serde_json::json!({
             "malicious": "<script>alert('XSS')</script>"
         }))
         .send()
         .await;
-    
+
     match response {
         Ok(resp) => {
             world.last_status_code = Some(resp.status().as_u16());

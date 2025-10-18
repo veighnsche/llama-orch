@@ -55,10 +55,7 @@ pub fn extract_tokenizer_from_gguf(gguf_path: &Path) -> Result<Tokenizer> {
             tokens.len(),
             merges.as_ref().map(|m| m.len()).unwrap_or(0)
         ),
-        cute: Some(format!(
-            "Found {} tokens in the GGUF! Building tokenizer... 🔧",
-            tokens.len()
-        )),
+        cute: Some(format!("Found {} tokens in the GGUF! Building tokenizer... 🔧", tokens.len())),
         ..Default::default()
     });
 
@@ -199,12 +196,12 @@ fn extract_merges(content: &Content) -> Result<Option<Vec<(String, String)>>> {
                 }
                 result.push((parts[0].to_string(), parts[1].to_string()));
             }
-            
+
             if result.is_empty() {
                 tracing::debug!("No valid merges found in tokenizer.ggml.merges");
                 return Ok(None);
             }
-            
+
             Ok(Some(result))
         }
         _ => anyhow::bail!("tokenizer.ggml.merges is not an array"),
@@ -227,15 +224,15 @@ fn build_tokenizer(
 
     // Build BPE model using BpeBuilder
     let merges = merges.unwrap_or_default();
-    
+
     let mut builder = BpeBuilder::new();
     builder = builder.vocab_and_merges(vocab.clone(), merges);
     // TEAM-094: Use <unk> to match Llama tokenizer convention (was [UNK])
     builder = builder.unk_token("<unk>".to_string());
-    
-    let bpe = builder
-        .build()
-        .map_err(|e| anyhow::anyhow!("Failed to build BPE model from GGUF tokenizer data: {}", e))?;
+
+    let bpe = builder.build().map_err(|e| {
+        anyhow::anyhow!("Failed to build BPE model from GGUF tokenizer data: {}", e)
+    })?;
 
     let mut tokenizer = Tokenizer::new(bpe);
 

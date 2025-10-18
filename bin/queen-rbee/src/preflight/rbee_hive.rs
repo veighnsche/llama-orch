@@ -42,7 +42,7 @@ impl RbeeHivePreflight {
             .timeout(std::time::Duration::from_secs(10))
             .build()
             .expect("Failed to create HTTP client");
-        
+
         Self { base_url, client }
     }
 
@@ -50,19 +50,16 @@ impl RbeeHivePreflight {
     pub async fn check_health(&self) -> Result<HealthResponse> {
         let url = format!("{}/health", self.base_url);
         tracing::info!("Checking rbee-hive health: {}", url);
-        
-        let response = self.client
-            .get(&url)
-            .send()
-            .await
-            .context("Failed to connect to rbee-hive")?;
+
+        let response =
+            self.client.get(&url).send().await.context("Failed to connect to rbee-hive")?;
 
         if !response.status().is_success() {
             anyhow::bail!("Health check failed: HTTP {}", response.status());
         }
 
-        let health: HealthResponse = response.json().await
-            .context("Failed to parse health response")?;
+        let health: HealthResponse =
+            response.json().await.context("Failed to parse health response")?;
 
         Ok(health)
     }
@@ -70,10 +67,10 @@ impl RbeeHivePreflight {
     /// Validate version compatibility
     pub async fn check_version_compatibility(&self, required: &str) -> Result<bool> {
         let health = self.check_health().await?;
-        
+
         // Simple version comparison (in production, use semver crate)
         let compatible = health.version >= required.to_string();
-        
+
         tracing::info!("Version check: {} >= {} = {}", health.version, required, compatible);
         Ok(compatible)
     }
@@ -82,15 +79,11 @@ impl RbeeHivePreflight {
     pub async fn query_backends(&self) -> Result<Vec<Backend>> {
         let url = format!("{}/v1/backends", self.base_url);
         tracing::info!("Querying backends: {}", url);
-        
-        let response = self.client
-            .get(&url)
-            .send()
-            .await
-            .context("Failed to query backends")?;
 
-        let backends: Vec<Backend> = response.json().await
-            .context("Failed to parse backends response")?;
+        let response = self.client.get(&url).send().await.context("Failed to query backends")?;
+
+        let backends: Vec<Backend> =
+            response.json().await.context("Failed to parse backends response")?;
 
         Ok(backends)
     }
@@ -99,15 +92,11 @@ impl RbeeHivePreflight {
     pub async fn query_resources(&self) -> Result<ResourceInfo> {
         let url = format!("{}/v1/resources", self.base_url);
         tracing::info!("Querying resources: {}", url);
-        
-        let response = self.client
-            .get(&url)
-            .send()
-            .await
-            .context("Failed to query resources")?;
 
-        let resources: ResourceInfo = response.json().await
-            .context("Failed to parse resources response")?;
+        let response = self.client.get(&url).send().await.context("Failed to query resources")?;
+
+        let resources: ResourceInfo =
+            response.json().await.context("Failed to parse resources response")?;
 
         Ok(resources)
     }

@@ -25,7 +25,7 @@ pub async fn given_node_reachable(world: &mut World, node: String) {
             capabilities: vec!["reachable".to_string()],
         },
     );
-    
+
     tracing::info!("✅ Node {} marked as reachable NICE!", node);
 }
 
@@ -34,7 +34,7 @@ pub async fn given_node_reachable(world: &mut World, node: String) {
 pub async fn given_rbee_keeper_version(world: &mut World, version: String) {
     // Store keeper version in node_ram for later verification
     world.node_ram.insert("rbee_keeper_version".to_string(), version.parse::<usize>().unwrap_or(1));
-    
+
     tracing::info!("✅ rbee-keeper version set to: {} NICE!", version);
 }
 
@@ -43,7 +43,7 @@ pub async fn given_rbee_keeper_version(world: &mut World, version: String) {
 pub async fn given_rbee_hive_version(world: &mut World, version: String) {
     // Store hive version in node_ram for later verification
     world.node_ram.insert("rbee_hive_version".to_string(), version.parse::<usize>().unwrap_or(1));
-    
+
     tracing::info!("✅ rbee-hive version set to: {} NICE!", version);
 }
 
@@ -59,7 +59,7 @@ pub async fn given_node_unreachable(world: &mut World, node: String) {
             capabilities: vec!["unreachable".to_string()],
         },
     );
-    
+
     tracing::info!("✅ Node {} marked as unreachable NICE!", node);
 }
 
@@ -67,7 +67,7 @@ pub async fn given_node_unreachable(world: &mut World, node: String) {
 #[when(expr = "rbee-keeper sends GET to {string}")]
 pub async fn when_send_get(world: &mut World, url: String) {
     let client = crate::steps::world::create_http_client();
-    
+
     match client.get(&url).send().await {
         Ok(response) => {
             world.last_http_status = Some(response.status().as_u16());
@@ -92,10 +92,10 @@ pub async fn when_send_get(world: &mut World, url: String) {
 pub async fn when_perform_health_check(world: &mut World) {
     let default_url = "http://127.0.0.1:8000".to_string();
     let url = world.queen_rbee_url.as_ref().unwrap_or(&default_url);
-    
+
     let health_url = format!("{}/health", url);
     let client = crate::steps::world::create_http_client();
-    
+
     match client.get(&health_url).send().await {
         Ok(response) => {
             let status = response.status().as_u16();
@@ -120,17 +120,17 @@ pub async fn when_perform_health_check(world: &mut World) {
 #[when(expr = "rbee-keeper attempts to connect with timeout {int}s")]
 pub async fn when_attempt_connect_with_timeout(world: &mut World, timeout_s: u64) {
     use std::time::Duration;
-    
+
     let default_url = "http://127.0.0.1:8000".to_string();
     let url = world.queen_rbee_url.as_ref().unwrap_or(&default_url);
-    
+
     let client = reqwest::Client::builder()
         .timeout(Duration::from_secs(timeout_s))
         .build()
         .expect("Failed to create HTTP client");
-    
+
     world.start_time = Some(std::time::Instant::now());
-    
+
     match client.get(url).send().await {
         Ok(response) => {
             world.last_http_status = Some(response.status().as_u16());
@@ -150,9 +150,14 @@ pub async fn when_attempt_connect_with_timeout(world: &mut World, timeout_s: u64
 // TEAM-071: Verify HTTP response status NICE!
 #[then(expr = "the response status is {int}")]
 pub async fn then_response_status(world: &mut World, status: u16) {
-    assert_eq!(world.last_http_status, Some(status), 
-        "Expected status {}, got {:?}", status, world.last_http_status);
-    
+    assert_eq!(
+        world.last_http_status,
+        Some(status),
+        "Expected status {}, got {:?}",
+        status,
+        world.last_http_status
+    );
+
     tracing::info!("✅ Response status verified: {} NICE!", status);
 }
 
@@ -161,10 +166,9 @@ pub async fn then_response_status(world: &mut World, status: u16) {
 pub async fn then_response_body_contains(world: &mut World, step: &cucumber::gherkin::Step) {
     let docstring = step.docstring.as_ref().expect("Expected a docstring");
     let expected = docstring.trim();
-    
+
     if let Some(ref body) = world.last_http_response {
-        assert!(body.contains(expected), 
-            "Expected response body to contain: {}", expected);
+        assert!(body.contains(expected), "Expected response body to contain: {}", expected);
         tracing::info!("✅ Response body contains expected text NICE!");
     } else {
         panic!("No HTTP response body available");
@@ -175,9 +179,12 @@ pub async fn then_response_body_contains(world: &mut World, step: &cucumber::ghe
 #[then(expr = "rbee-keeper proceeds to model provisioning")]
 pub async fn then_proceed_to_model_provisioning(world: &mut World) {
     // Verify health check succeeded (status 200)
-    assert_eq!(world.last_http_status, Some(200), 
-        "Expected successful health check before proceeding");
-    
+    assert_eq!(
+        world.last_http_status,
+        Some(200),
+        "Expected successful health check before proceeding"
+    );
+
     tracing::info!("✅ Proceeding to model provisioning phase NICE!");
 }
 
@@ -194,11 +201,10 @@ pub async fn then_error_includes_versions(world: &mut World) {
     if let Some(ref error) = world.last_error {
         let keeper_version = world.node_ram.get("rbee_keeper_version");
         let hive_version = world.node_ram.get("rbee_hive_version");
-        
+
         // Verify error message mentions versions
-        let has_version_info = error.message.contains("version") || 
-                               error.code.contains("VERSION");
-        
+        let has_version_info = error.message.contains("version") || error.code.contains("VERSION");
+
         assert!(has_version_info, "Expected error to include version information");
         tracing::info!("✅ Error includes version information NICE!");
     } else {
@@ -210,9 +216,9 @@ pub async fn then_error_includes_versions(world: &mut World) {
 #[then(expr = "the error suggests upgrading rbee-keeper")]
 pub async fn then_error_suggests_upgrade(world: &mut World) {
     if let Some(ref error) = world.last_error {
-        let suggests_upgrade = error.message.to_lowercase().contains("upgrade") ||
-                               error.message.to_lowercase().contains("update");
-        
+        let suggests_upgrade = error.message.to_lowercase().contains("upgrade")
+            || error.message.to_lowercase().contains("update");
+
         assert!(suggests_upgrade, "Expected error to suggest upgrading");
         tracing::info!("✅ Error suggests upgrading rbee-keeper NICE!");
     } else {
@@ -225,7 +231,7 @@ pub async fn then_error_suggests_upgrade(world: &mut World) {
 pub async fn then_retries_with_backoff(world: &mut World, count: u32) {
     // Store retry count for verification
     world.node_ram.insert("retry_count".to_string(), count as usize);
-    
+
     tracing::info!("✅ Configured {} retries with exponential backoff NICE!", count);
 }
 
@@ -234,12 +240,16 @@ pub async fn then_retries_with_backoff(world: &mut World, count: u32) {
 pub async fn then_attempt_has_delay(world: &mut World, attempt: u32, delay_ms: u64) {
     // Calculate expected exponential backoff delay
     let expected_delay = 100 * (2_u64.pow(attempt - 1));
-    
+
     // Verify delay matches exponential backoff pattern
-    assert!(delay_ms >= expected_delay / 2 && delay_ms <= expected_delay * 2,
-        "Expected delay around {}ms for attempt {}, got {}ms", 
-        expected_delay, attempt, delay_ms);
-    
+    assert!(
+        delay_ms >= expected_delay / 2 && delay_ms <= expected_delay * 2,
+        "Expected delay around {}ms for attempt {}, got {}ms",
+        expected_delay,
+        attempt,
+        delay_ms
+    );
+
     tracing::info!("✅ Attempt {} has correct delay: {}ms NICE!", attempt, delay_ms);
 }
 
@@ -247,10 +257,10 @@ pub async fn then_attempt_has_delay(world: &mut World, attempt: u32, delay_ms: u
 #[then(expr = "the error suggests checking if rbee-hive is running")]
 pub async fn then_error_suggests_check_hive(world: &mut World) {
     if let Some(ref error) = world.last_error {
-        let suggests_check = error.message.to_lowercase().contains("rbee-hive") ||
-                            error.message.to_lowercase().contains("running") ||
-                            error.message.to_lowercase().contains("check");
-        
+        let suggests_check = error.message.to_lowercase().contains("rbee-hive")
+            || error.message.to_lowercase().contains("running")
+            || error.message.to_lowercase().contains("check");
+
         assert!(suggests_check, "Expected error to suggest checking rbee-hive");
         tracing::info!("✅ Error suggests checking if rbee-hive is running NICE!");
     } else {

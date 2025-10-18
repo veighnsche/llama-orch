@@ -15,10 +15,10 @@ use std::path::Path;
 pub mod llama;
 pub mod mistral;
 pub mod phi;
-pub mod qwen;
 pub mod quantized_llama;
 pub mod quantized_phi;
 pub mod quantized_qwen;
+pub mod qwen;
 
 /// Multi-model enum using Candle's idiomatic pattern
 ///
@@ -241,7 +241,7 @@ pub fn load_model(model_path: &str, device: &Device) -> Result<Model> {
     if model_path.ends_with(".gguf") {
         // Detect architecture from GGUF metadata
         let architecture = detect_architecture_from_gguf(path)?;
-        
+
         tracing::info!(
             path = %model_path,
             architecture = %architecture,
@@ -262,7 +262,10 @@ pub fn load_model(model_path: &str, device: &Device) -> Result<Model> {
                 let model = quantized_qwen::QuantizedQwenModel::load(path, device)?;
                 Ok(Model::QuantizedQwen(model))
             }
-            _ => bail!("Unsupported quantized architecture: {} (only llama, phi, qwen supported)", architecture),
+            _ => bail!(
+                "Unsupported quantized architecture: {} (only llama, phi, qwen supported)",
+                architecture
+            ),
         }
     } else {
         // Otherwise, load from safetensors with config.json

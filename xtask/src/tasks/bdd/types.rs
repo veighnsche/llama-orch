@@ -10,7 +10,7 @@ pub struct BddConfig {
     pub quiet: bool,
     pub really_quiet: bool,
     pub show_quiet_warning: bool,
-    pub run_all: bool,  // If true, run all tests. If false, run only failing tests from last run.
+    pub run_all: bool, // If true, run all tests. If false, run only failing tests from last run.
 }
 
 /// Test execution results

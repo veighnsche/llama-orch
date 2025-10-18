@@ -16,11 +16,11 @@ use cucumber::{then, when};
 // TEAM-069: Call WorkerRegistry.register() NICE!
 #[when(expr = "rbee-hive registers the worker")]
 pub async fn when_register_worker(world: &mut World) {
-    use rbee_hive::registry::{WorkerRegistry, WorkerInfo, WorkerState};
-    
+    use rbee_hive::registry::{WorkerInfo, WorkerRegistry, WorkerState};
+
     // Get port before borrowing registry
     let port = world.next_worker_port;
-    
+
     // Create test worker info
     let worker_info = WorkerInfo {
         id: format!("worker-{}", port),
@@ -34,15 +34,15 @@ pub async fn when_register_worker(world: &mut World) {
         last_activity: std::time::SystemTime::now(),
         failed_health_checks: 0,
         pid: None,
-        restart_count: 0, // TEAM-104: Added restart tracking
+        restart_count: 0,   // TEAM-104: Added restart tracking
         last_restart: None, // TEAM-104: Added restart tracking
     };
-    
+
     // Register worker via WorkerRegistry API
     let registry = world.hive_registry();
     registry.register(worker_info.clone()).await;
     world.next_worker_port += 1;
-    
+
     tracing::info!("✅ Worker registered: {} at {}", worker_info.id, worker_info.url);
 }
 
@@ -50,26 +50,29 @@ pub async fn when_register_worker(world: &mut World) {
 #[then(expr = "the in-memory HashMap is updated with:")]
 pub async fn then_hashmap_updated(world: &mut World, step: &cucumber::gherkin::Step) {
     let table = step.table.as_ref().expect("Expected a data table");
-    
+
     let registry = world.hive_registry();
     let workers = registry.list().await;
-    
+
     // Verify workers were registered
     assert!(!workers.is_empty(), "Registry should have workers after registration");
-    
+
     // Verify expected fields from table
     let field_count = table.rows.len() - 1; // Skip header row
     let expected_fields = vec!["worker_id", "url", "model_ref", "state", "backend", "device"];
-    
+
     for worker in &workers {
         // Verify worker has all required fields
         assert!(!worker.id.is_empty(), "Worker should have ID");
         assert!(!worker.url.is_empty(), "Worker should have URL");
         assert!(!worker.model_ref.is_empty(), "Worker should have model_ref");
     }
-    
-    tracing::info!("✅ Registry HashMap updated with {} workers, {} expected fields",
-        workers.len(), field_count);
+
+    tracing::info!(
+        "✅ Registry HashMap updated with {} workers, {} expected fields",
+        workers.len(),
+        field_count
+    );
 }
 
 #[then(regex = r"^the registration is ephemeral \(lost on rbee-hive restart\)$")]

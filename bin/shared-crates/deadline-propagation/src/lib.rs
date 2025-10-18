@@ -98,11 +98,28 @@ impl Deadline {
         format!("{}", self.deadline_ms)
     }
 
-    // TODO(ARCH-CHANGE): Add deadline propagation helpers:
-    // - pub fn from_header(header: &str) -> Result<Self> (parse X-Deadline header)
-    // - pub fn to_tokio_timeout(&self) -> Duration (convert to tokio timeout)
-    // - pub fn propagate_to_request(&self, req: &mut Request) (add header)
-    // - pub fn with_buffer(&self, buffer_ms: u64) -> Self (add safety margin)
+    /// TEAM-114: Parse deadline from X-Deadline header
+    pub fn from_header(header: &str) -> Result<Self> {
+        let deadline_ms = header
+            .parse::<u64>()
+            .map_err(|e| DeadlineError::InvalidFormat(format!("Invalid deadline header: {}", e)))?;
+        Ok(Self { deadline_ms })
+    }
+
+    /// TEAM-114: Convert to tokio timeout duration
+    pub fn to_tokio_timeout(&self) -> Duration {
+        Duration::from_millis(self.remaining_ms())
+    }
+
+    /// TEAM-114: Add deadline with safety margin
+    pub fn with_buffer(&self, buffer_ms: u64) -> Self {
+        Self { deadline_ms: self.deadline_ms.saturating_sub(buffer_ms) }
+    }
+
+    /// TEAM-114: Get deadline as milliseconds since epoch
+    pub fn as_ms(&self) -> u64 {
+        self.deadline_ms
+    }
 }
 
 #[cfg(test)]

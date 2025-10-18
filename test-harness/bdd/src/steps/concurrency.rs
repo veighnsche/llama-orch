@@ -6,8 +6,8 @@
 // ⚠️ CRITICAL: These steps MUST connect to real product code from /bin/
 // ⚠️ Test actual race conditions and thread-safety
 
-use cucumber::{given, then, when};
 use crate::steps::world::World;
+use cucumber::{given, then, when};
 use queen_rbee::worker_registry::{WorkerInfo, WorkerState};
 
 #[given(expr = "{int} rbee-hive instances are running")]
@@ -46,12 +46,11 @@ pub async fn given_worker_slots(world: &mut World, slots: usize) {
 
 #[given(expr = "{int} rbee-hive instances are downloading {string}")]
 pub async fn given_multiple_downloads(world: &mut World, count: usize, model: String) {
-
     // TEAM-083: Wire to real DownloadTracker for concurrent downloads
     use rbee_hive::download_tracker::DownloadTracker;
-    
+
     let tracker = DownloadTracker::new();
-    
+
     // Spawn concurrent download tasks
     for i in 0..count {
         let model_ref = model.clone();
@@ -62,7 +61,7 @@ pub async fn given_multiple_downloads(world: &mut World, count: usize, model: St
         });
         world.concurrent_handles.push(handle);
     }
-    
+
     tracing::info!("TEAM-083: {} instances downloading {}", count, model);
     world.last_action = Some(format!("concurrent_downloads_{}_{}", count, model));
 }
@@ -74,21 +73,24 @@ pub async fn given_cleanup_running(world: &mut World) {
         world.queen_registry = Some(crate::steps::world::DebugQueenRegistry::new());
     }
     let registry = world.queen_registry.as_ref().expect("Registry not initialized").inner();
-    
+
     // Spawn async cleanup task
     let reg = registry.clone();
     let handle = tokio::spawn(async move {
         // Simulate stale worker cleanup
         let workers = reg.list().await;
-        let stale_count = workers.iter().filter(|w| {
-            // Workers with no heartbeat in 300s are stale
-            false // Placeholder logic
-        }).count();
+        let stale_count = workers
+            .iter()
+            .filter(|w| {
+                // Workers with no heartbeat in 300s are stale
+                false // Placeholder logic
+            })
+            .count();
         tracing::info!("TEAM-083: Cleanup found {} stale workers", stale_count);
         true
     });
     world.concurrent_handles.push(handle);
-    
+
     tracing::info!("TEAM-083: Stale worker cleanup running");
     world.last_action = Some("cleanup_running".to_string());
 }
@@ -100,14 +102,14 @@ pub async fn given_worker_transitioning(world: &mut World, from: String, to: Str
         world.queen_registry = Some(crate::steps::world::DebugQueenRegistry::new());
     }
     let registry = world.queen_registry.as_ref().expect("Registry not initialized").inner();
-    
+
     let from_state = match from.as_str() {
         "idle" => WorkerState::Idle,
         "busy" => WorkerState::Busy,
         "loading" => WorkerState::Loading,
         _ => panic!("Unknown state: {}", from),
     };
-    
+
     let worker = WorkerInfo {
         id: "worker-001".to_string(),
         url: "http://localhost:8081".to_string(),
@@ -121,7 +123,7 @@ pub async fn given_worker_transitioning(world: &mut World, from: String, to: Str
         node_name: "test-node".to_string(),
     };
     registry.register(worker).await;
-    
+
     // Spawn async transition
     let to_state = match to.as_str() {
         "idle" => WorkerState::Idle,
@@ -129,7 +131,7 @@ pub async fn given_worker_transitioning(world: &mut World, from: String, to: Str
         "loading" => WorkerState::Loading,
         _ => panic!("Unknown state: {}", to),
     };
-    
+
     let reg = registry.clone();
     let handle = tokio::spawn(async move {
         tokio::time::sleep(tokio::time::Duration::from_millis(50)).await;
@@ -137,7 +139,7 @@ pub async fn given_worker_transitioning(world: &mut World, from: String, to: Str
         true
     });
     world.concurrent_handles.push(handle);
-    
+
     tracing::info!("TEAM-081: Worker-001 transitioning {} -> {}", from, to);
     world.last_action = Some(format!("transitioning_{}_{}", from, to));
 }
@@ -146,7 +148,7 @@ pub async fn given_worker_transitioning(world: &mut World, from: String, to: Str
 pub async fn when_concurrent_registration(world: &mut World, count: usize, worker_id: String) {
     // TEAM-080: Test concurrent registration with real WorkerRegistry
     let registry = world.queen_registry.as_ref().expect("Registry not initialized").inner().clone();
-    
+
     // Spawn concurrent registration tasks
     let mut handles = vec![];
     for i in 0..count {
@@ -175,14 +177,14 @@ pub async fn when_concurrent_registration(world: &mut World, count: usize, worke
         });
         handles.push(handle);
     }
-    
+
     // Collect results
     world.concurrent_results.clear();
     for handle in handles {
         let result = handle.await.unwrap();
         world.concurrent_results.push(result);
     }
-    
+
     tracing::info!("TEAM-080: {} concurrent registrations completed", count);
     world.last_action = Some(format!("concurrent_register_{}_{}", count, worker_id));
 }
@@ -197,14 +199,14 @@ pub async fn when_request_a_updates(world: &mut World, state: String, time: u32)
         "loading" => WorkerState::Loading,
         _ => WorkerState::Idle,
     };
-    
+
     let handle = tokio::spawn(async move {
         tokio::time::sleep(tokio::time::Duration::from_millis(time as u64)).await;
         registry.update_state("worker-001", target_state).await;
         true
     });
     world.concurrent_handles.push(handle);
-    
+
     tracing::info!("TEAM-081: Request-A updates to {} at T+{}ms", state, time);
     world.last_action = Some(format!("request_a_{}_{}", state, time));
 }
@@ -219,26 +221,25 @@ pub async fn when_request_b_updates(world: &mut World, state: String, time: u32)
         "loading" => WorkerState::Loading,
         _ => WorkerState::Idle,
     };
-    
+
     let handle = tokio::spawn(async move {
         tokio::time::sleep(tokio::time::Duration::from_millis(time as u64)).await;
         registry.update_state("worker-001", target_state).await;
         true
     });
     world.concurrent_handles.push(handle);
-    
+
     tracing::info!("TEAM-081: Request-B updates to {} at T+{}ms", state, time);
     world.last_action = Some(format!("request_b_{}_{}", state, time));
 }
 
 #[when(expr = "all {int} complete download simultaneously")]
 pub async fn when_concurrent_download_complete(world: &mut World, count: usize) {
-
     // TEAM-083: Wire to real DownloadTracker completion
     use rbee_hive::download_tracker::DownloadTracker;
-    
+
     let tracker = DownloadTracker::new();
-    
+
     // Spawn concurrent completion tasks
     let mut handles = vec![];
     for i in 0..count {
@@ -249,26 +250,27 @@ pub async fn when_concurrent_download_complete(world: &mut World, count: usize) 
         });
         handles.push(handle);
     }
-    
+
     // Wait for all completions
     for handle in handles {
         let _ = handle.await;
     }
-    
+
     tracing::info!("TEAM-083: {} downloads complete simultaneously", count);
     world.last_action = Some(format!("downloads_complete_{}", count));
 }
 
 #[when(expr = "all {int} attempt to register in catalog")]
 pub async fn when_concurrent_catalog_register(world: &mut World, count: usize) {
-
     // TEAM-083: Wire to real ModelCatalog for concurrent registration
     use model_catalog::ModelCatalog;
-    
-    let catalog_path = world.model_catalog_path.as_ref()
+
+    let catalog_path = world
+        .model_catalog_path
+        .as_ref()
         .map(|p| p.to_string_lossy().to_string())
         .unwrap_or_else(|| "/tmp/test-catalog.db".to_string());
-    
+
     // Spawn concurrent registration tasks
     for i in 0..count {
         let path = catalog_path.clone();
@@ -280,13 +282,13 @@ pub async fn when_concurrent_catalog_register(world: &mut World, count: usize) {
             // Real catalog.register() would be called here
             Ok::<_, String>(model_ref)
         });
-        
+
         // Collect result
         if let Ok(result) = handle.await {
             world.concurrent_results.push(result);
         }
     }
-    
+
     tracing::info!("TEAM-083: {} instances registering in catalog", count);
     world.last_action = Some(format!("catalog_register_{}", count));
 }
@@ -295,7 +297,7 @@ pub async fn when_concurrent_catalog_register(world: &mut World, count: usize) {
 pub async fn when_concurrent_slot_requests(world: &mut World, count: usize) {
     // TEAM-080: Test slot allocation race with real registry
     let registry = world.queen_registry.as_ref().expect("Registry not initialized").inner().clone();
-    
+
     // Spawn concurrent slot allocation attempts
     let mut handles = vec![];
     for i in 0..count {
@@ -314,14 +316,14 @@ pub async fn when_concurrent_slot_requests(world: &mut World, count: usize) {
         });
         handles.push(handle);
     }
-    
+
     // Collect results
     world.concurrent_results.clear();
     for handle in handles {
         let result = handle.await.unwrap();
         world.concurrent_results.push(result);
     }
-    
+
     tracing::info!("TEAM-080: {} concurrent slot requests completed", count);
     world.last_action = Some(format!("slot_race_{}", count));
 }
@@ -333,7 +335,7 @@ pub async fn given_slots_busy(world: &mut World, count: usize) {
         world.queen_registry = Some(crate::steps::world::DebugQueenRegistry::new());
     }
     let registry = world.queen_registry.as_ref().unwrap().inner();
-    
+
     // Register worker with busy slots
     let worker = WorkerInfo {
         id: "worker-001".to_string(),
@@ -386,9 +388,9 @@ pub async fn given_worker_state(world: &mut World, state: String) {
 pub async fn when_concurrent_download_start(world: &mut World, count: usize) {
     // TEAM-083: Wire to real DownloadTracker for concurrent start
     use rbee_hive::download_tracker::DownloadTracker;
-    
+
     let tracker = DownloadTracker::new();
-    
+
     // Spawn concurrent download start tasks
     for i in 0..count {
         let handle = tokio::spawn(async move {
@@ -397,13 +399,13 @@ pub async fn when_concurrent_download_start(world: &mut World, count: usize) {
             let download_id = format!("download_id_{}", i);
             Ok::<_, String>(download_id)
         });
-        
+
         // Collect download ID
         if let Ok(result) = handle.await {
             world.concurrent_results.push(result);
         }
     }
-    
+
     tracing::info!("TEAM-083: {} instances starting download", count);
     world.last_action = Some(format!("download_start_{}", count));
 }
@@ -412,12 +414,12 @@ pub async fn when_concurrent_download_start(world: &mut World, count: usize) {
 pub async fn when_new_registration(world: &mut World) {
     // TEAM-083: Wire to real WorkerRegistry registration during cleanup
     use queen_rbee::worker_registry::{WorkerInfo, WorkerState};
-    
+
     if world.queen_registry.is_none() {
         world.queen_registry = Some(crate::steps::world::DebugQueenRegistry::new());
     }
     let registry = world.queen_registry.as_ref().expect("Registry not initialized").inner();
-    
+
     // Register new worker while cleanup is running
     let worker = WorkerInfo {
         id: "worker-new".to_string(),
@@ -432,7 +434,7 @@ pub async fn when_new_registration(world: &mut World) {
         node_name: "new-node".to_string(),
     };
     registry.register(worker).await;
-    
+
     tracing::info!("TEAM-083: New worker registration arrives");
     world.last_action = Some("new_registration".to_string());
 }
@@ -444,7 +446,7 @@ pub async fn when_heartbeat_during_transition(world: &mut World) {
         world.queen_registry = Some(crate::steps::world::DebugQueenRegistry::new());
     }
     let registry = world.queen_registry.as_ref().expect("Registry not initialized").inner();
-    
+
     // Send heartbeat while worker is transitioning
     let reg = registry.clone();
     let handle = tokio::spawn(async move {
@@ -458,7 +460,7 @@ pub async fn when_heartbeat_during_transition(world: &mut World) {
         }
     });
     world.concurrent_handles.push(handle);
-    
+
     tracing::info!("TEAM-083: Heartbeat during transition");
     world.last_action = Some("heartbeat_mid_transition".to_string());
 }
@@ -467,17 +469,27 @@ pub async fn when_heartbeat_during_transition(world: &mut World) {
 pub async fn then_one_registration_succeeds(world: &mut World) {
     // TEAM-080: Verify only one registration succeeded
     let success_count = world.concurrent_results.iter().filter(|r| r.is_ok()).count();
-    assert_eq!(success_count, 1, "Expected exactly 1 successful registration, got {}", success_count);
+    assert_eq!(
+        success_count, 1,
+        "Expected exactly 1 successful registration, got {}",
+        success_count
+    );
     tracing::info!("TEAM-080: Verified only one registration succeeded");
 }
 
 #[then(expr = "the other {int} receive {string}")]
 pub async fn then_others_receive_error(world: &mut World, count: usize, error: String) {
     // TEAM-080: Verify others got error
-    let error_count = world.concurrent_results.iter()
+    let error_count = world
+        .concurrent_results
+        .iter()
         .filter(|r| r.as_ref().err().map(|e| e.contains(&error)).unwrap_or(false))
         .count();
-    assert_eq!(error_count, count, "Expected {} errors with '{}', got {}", count, error, error_count);
+    assert_eq!(
+        error_count, count,
+        "Expected {} errors with '{}', got {}",
+        count, error, error_count
+    );
     tracing::info!("TEAM-080: Verified {} received error: {}", count, error);
 }
 
@@ -504,16 +516,16 @@ pub async fn then_worker_appears_once(world: &mut World) {
 pub async fn then_one_update_succeeds(world: &mut World) {
     // TEAM-081: Verify state update consistency by checking final state
     let registry = world.queen_registry.as_ref().expect("Registry not initialized").inner();
-    
+
     // Wait for all concurrent updates to complete
     for handle in world.concurrent_handles.drain(..) {
         let _ = handle.await;
     }
-    
+
     // Verify worker exists and has a consistent state
     let worker = registry.get("worker-001").await;
     assert!(worker.is_some(), "Worker should exist after concurrent updates");
-    
+
     tracing::info!("TEAM-081: Verified state update consistency");
 }
 
@@ -524,8 +536,11 @@ pub async fn then_other_receives_error(world: &mut World, error: String) {
     // This is expected behavior for state transitions
     assert!(world.last_action.is_some(), "No action recorded");
     let action = world.last_action.as_ref().unwrap();
-    assert!(action.contains("request_") || action.contains("worker_"),
-        "Expected concurrent operation action, got: {}", action);
+    assert!(
+        action.contains("request_") || action.contains("worker_"),
+        "Expected concurrent operation action, got: {}",
+        action
+    );
     tracing::info!("TEAM-082: Concurrent updates handled (last-write-wins): {}", error);
 }
 
@@ -568,7 +583,11 @@ pub async fn then_state_consistent(world: &mut World, state: String) {
 pub async fn then_one_gets_slot(world: &mut World) {
     // TEAM-080: Verify only one slot allocation succeeded
     let success_count = world.concurrent_results.iter().filter(|r| r.is_ok()).count();
-    assert!(success_count <= 1, "Expected at most 1 successful slot allocation, got {}", success_count);
+    assert!(
+        success_count <= 1,
+        "Expected at most 1 successful slot allocation, got {}",
+        success_count
+    );
     tracing::info!("TEAM-080: Verified slot allocation (success count: {})", success_count);
 }
 
@@ -579,7 +598,12 @@ pub async fn then_slot_count_consistent(world: &mut World) {
     if let Some(worker) = registry.get("worker-001").await {
         let total = worker.slots_total;
         let available = worker.slots_available;
-        assert!(available <= total, "Available slots ({}) cannot exceed total ({})", available, total);
+        assert!(
+            available <= total,
+            "Available slots ({}) cannot exceed total ({})",
+            available,
+            total
+        );
         tracing::info!("TEAM-080: Slot count consistent ({}/{})", available, total);
     }
 }
@@ -595,7 +619,9 @@ pub async fn then_one_downloads(world: &mut World) {
 #[then(expr = "the other {int} wait for completion")]
 pub async fn then_others_wait(world: &mut World, count: usize) {
     // TEAM-080: Verify others waited (got wait status)
-    let wait_count = world.concurrent_results.iter()
+    let wait_count = world
+        .concurrent_results
+        .iter()
         .filter(|r| r.as_ref().err().map(|e| e.contains("WAIT")).unwrap_or(false))
         .count();
     assert!(wait_count >= count, "Expected at least {} waiting, got {}", count, wait_count);
@@ -613,7 +639,9 @@ pub async fn then_all_proceed(world: &mut World, count: usize) {
 #[then(expr = "bandwidth is not wasted on duplicate downloads")]
 pub async fn then_no_bandwidth_waste(world: &mut World) {
     // TEAM-080: Verify only one download occurred (no duplicates)
-    let download_count = world.concurrent_results.iter()
+    let download_count = world
+        .concurrent_results
+        .iter()
         .filter(|r| r.as_ref().ok().map(|s| s.contains("download")).unwrap_or(false))
         .count();
     assert!(download_count <= 1, "Expected at most 1 download, got {}", download_count);

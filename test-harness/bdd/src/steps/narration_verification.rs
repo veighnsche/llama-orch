@@ -18,16 +18,13 @@ pub async fn then_see_narration_from(world: &mut World, text: String, actor: Str
     // TEAM-102: Fixed method name from drain() to captured()
     let adapter = CaptureAdapter::install();
     let captured = adapter.captured();
-    
-    let found = captured.iter().any(|n| {
-        n.actor == actor && n.human.contains(&text)
-    });
-    
+
+    let found = captured.iter().any(|n| n.actor == actor && n.human.contains(&text));
+
     if !found {
-        let available: Vec<String> = captured.iter()
-            .map(|n| format!("{}:{}", n.actor, n.human))
-            .collect();
-        
+        let available: Vec<String> =
+            captured.iter().map(|n| format!("{}:{}", n.actor, n.human)).collect();
+
         panic!(
             "❌ PRODUCT CODE DID NOT EMIT NARRATION!\n\
              \n\
@@ -50,7 +47,7 @@ pub async fn then_see_narration_from(world: &mut World, text: String, actor: Str
             actor, text, available, actor, text
         );
     }
-    
+
     tracing::info!("✅ Product code emitted narration: '{}' from '{}'", text, actor);
     world.last_narration = Some(captured);
 }
@@ -60,12 +57,11 @@ pub async fn then_see_narration_with_model_ref(world: &mut World, text: String, 
     // TEAM-102: Fixed to use install() first
     let adapter = CaptureAdapter::install();
     let captured = adapter.captured();
-    
+
     let found = captured.iter().any(|n| {
-        n.human.contains(&text) && 
-        n.model_ref.as_ref().map_or(false, |m| m.contains(&model_ref))
+        n.human.contains(&text) && n.model_ref.as_ref().map_or(false, |m| m.contains(&model_ref))
     });
-    
+
     if !found {
         panic!(
             "❌ PRODUCT CODE DID NOT EMIT NARRATION WITH model_ref!\n\
@@ -76,7 +72,7 @@ pub async fn then_see_narration_with_model_ref(world: &mut World, text: String, 
             text, model_ref
         );
     }
-    
+
     tracing::info!("✅ Narration includes model_ref: '{}'", model_ref);
     world.last_narration = Some(captured);
 }
@@ -86,11 +82,9 @@ pub async fn then_see_narration_with_duration(world: &mut World, text: String) {
     // TEAM-102: Fixed to use install() first
     let adapter = CaptureAdapter::install();
     let captured = adapter.captured();
-    
-    let found = captured.iter().any(|n| {
-        n.human.contains(&text) && n.duration_ms.is_some()
-    });
-    
+
+    let found = captured.iter().any(|n| n.human.contains(&text) && n.duration_ms.is_some());
+
     if !found {
         panic!(
             "❌ PRODUCT CODE DID NOT INCLUDE duration_ms!\n\
@@ -101,7 +95,7 @@ pub async fn then_see_narration_with_duration(world: &mut World, text: String) {
             text
         );
     }
-    
+
     tracing::info!("✅ Narration includes duration_ms");
     world.last_narration = Some(captured);
 }
@@ -111,12 +105,11 @@ pub async fn then_see_narration_with_worker_id(world: &mut World, text: String, 
     // TEAM-102: Fixed to use install() first
     let adapter = CaptureAdapter::install();
     let captured = adapter.captured();
-    
+
     let found = captured.iter().any(|n| {
-        n.human.contains(&text) && 
-        n.worker_id.as_ref().map_or(false, |w| w.contains(&worker_id))
+        n.human.contains(&text) && n.worker_id.as_ref().map_or(false, |w| w.contains(&worker_id))
     });
-    
+
     if !found {
         panic!(
             "❌ PRODUCT CODE DID NOT INCLUDE worker_id!\n\
@@ -127,20 +120,21 @@ pub async fn then_see_narration_with_worker_id(world: &mut World, text: String, 
             text, worker_id
         );
     }
-    
+
     tracing::info!("✅ Narration includes worker_id: '{}'", worker_id);
     world.last_narration = Some(captured);
 }
 
 #[then(expr = "narration should include error_kind {string}")]
 pub async fn then_narration_includes_error_kind(world: &mut World, error_kind: String) {
-    let narrations = world.last_narration.as_ref()
+    let narrations = world
+        .last_narration
+        .as_ref()
         .expect("No narration captured - call 'I should see narration' first");
-    
-    let found = narrations.iter().any(|n| {
-        n.error_kind.as_ref().map_or(false, |e| e == &error_kind)
-    });
-    
+
+    let found =
+        narrations.iter().any(|n| n.error_kind.as_ref().map_or(false, |e| e == &error_kind));
+
     if !found {
         panic!(
             "❌ PRODUCT CODE DID NOT SET error_kind!\n\
@@ -151,20 +145,20 @@ pub async fn then_narration_includes_error_kind(world: &mut World, error_kind: S
             error_kind
         );
     }
-    
+
     tracing::info!("✅ Narration includes error_kind: '{}'", error_kind);
 }
 
 #[then(expr = "all narration events should have correlation IDs")]
 pub async fn then_all_narration_has_correlation_ids(world: &mut World) {
-    let narrations = world.last_narration.as_ref()
-        .expect("No narration captured");
-    
-    let missing: Vec<String> = narrations.iter()
+    let narrations = world.last_narration.as_ref().expect("No narration captured");
+
+    let missing: Vec<String> = narrations
+        .iter()
         .filter(|n| n.correlation_id.is_none())
         .map(|n| format!("{}:{}", n.actor, n.action))
         .collect();
-    
+
     if !missing.is_empty() {
         panic!(
             "❌ PRODUCT CODE MISSING CORRELATION IDs!\n\
@@ -179,20 +173,20 @@ pub async fn then_all_narration_has_correlation_ids(world: &mut World) {
             missing
         );
     }
-    
+
     tracing::info!("✅ All narration events have correlation IDs");
 }
 
 #[then(expr = "narration human field should be under 100 characters")]
 pub async fn then_narration_under_100_chars(world: &mut World) {
-    let narrations = world.last_narration.as_ref()
-        .expect("No narration captured");
-    
-    let too_long: Vec<(String, usize)> = narrations.iter()
+    let narrations = world.last_narration.as_ref().expect("No narration captured");
+
+    let too_long: Vec<(String, usize)> = narrations
+        .iter()
         .filter(|n| n.human.len() > 100)
         .map(|n| (n.human.clone(), n.human.len()))
         .collect();
-    
+
     if !too_long.is_empty() {
         panic!(
             "❌ NARRATION TOO LONG! (Editorial Standard: ≤100 chars)\n\
@@ -205,6 +199,6 @@ pub async fn then_narration_under_100_chars(world: &mut World) {
             too_long
         );
     }
-    
+
     tracing::info!("✅ All narration under 100 characters (editorial standard)");
 }

@@ -5,25 +5,24 @@
 // ⚠️ CRITICAL: These steps MUST connect to real product code from /bin/
 // ⚠️ Import model_catalog and test actual SQLite operations
 
-use cucumber::{given, then, when};
 use crate::steps::world::World;
+use cucumber::{given, then, when};
 use model_catalog::{ModelCatalog, ModelInfo};
 
 #[given(expr = "the model catalog contains:")]
 pub async fn given_model_catalog_contains(world: &mut World, step: &cucumber::gherkin::Step) {
     // TEAM-079: Wire to real SQLite catalog using existing model-catalog crate
-    let catalog_path = world.model_catalog_path.as_ref()
-        .expect("Model catalog path not set");
+    let catalog_path = world.model_catalog_path.as_ref().expect("Model catalog path not set");
     let catalog = ModelCatalog::new(catalog_path.to_string_lossy().to_string());
     catalog.init().await.expect("Failed to init catalog");
-    
+
     // Parse table data and insert entries
     if let Some(table) = step.table.as_ref() {
         for row in table.rows.iter().skip(1) {
             let provider = row[0].clone();
             let reference = row[1].clone();
             let local_path = row[2].clone();
-            
+
             let model = ModelInfo {
                 provider,
                 reference,
@@ -31,11 +30,11 @@ pub async fn given_model_catalog_contains(world: &mut World, step: &cucumber::gh
                 size_bytes: 5242880,
                 downloaded_at: 1728508603,
             };
-            
+
             catalog.register_model(&model).await.expect("Failed to insert model");
         }
     }
-    
+
     tracing::info!("TEAM-079: Model catalog populated with test data");
     world.last_action = Some("model_catalog_populated".to_string());
 }
@@ -43,11 +42,10 @@ pub async fn given_model_catalog_contains(world: &mut World, step: &cucumber::gh
 #[given(expr = "the model is not in the catalog")]
 pub async fn given_model_not_in_catalog(world: &mut World) {
     // TEAM-079: Initialize empty catalog
-    let catalog_path = world.model_catalog_path.as_ref()
-        .expect("Model catalog path not set");
+    let catalog_path = world.model_catalog_path.as_ref().expect("Model catalog path not set");
     let catalog = ModelCatalog::new(catalog_path.to_string_lossy().to_string());
     catalog.init().await.expect("Failed to init catalog");
-    
+
     tracing::info!("TEAM-079: Model catalog initialized (empty)");
     world.last_action = Some("model_not_in_catalog".to_string());
 }
@@ -55,15 +53,15 @@ pub async fn given_model_not_in_catalog(world: &mut World) {
 #[when(expr = "rbee-hive checks the model catalog")]
 pub async fn when_rbee_hive_checks_catalog(world: &mut World) {
     // TEAM-079: Query catalog for model
-    let catalog_path = world.model_catalog_path.as_ref()
-        .expect("Model catalog path not set");
+    let catalog_path = world.model_catalog_path.as_ref().expect("Model catalog path not set");
     let catalog = ModelCatalog::new(catalog_path.to_string_lossy().to_string());
-    
+
     // Try to find tinyllama model
-    let result = catalog.find_model("TheBloke/TinyLlama-1.1B-Chat-v1.0-GGUF", "hf")
+    let result = catalog
+        .find_model("TheBloke/TinyLlama-1.1B-Chat-v1.0-GGUF", "hf")
         .await
         .expect("Failed to query catalog");
-    
+
     world.last_action = Some(format!("catalog_checked_{}", result.is_some()));
     tracing::info!("TEAM-079: Catalog query returned: {:?}", result.is_some());
 }
@@ -71,17 +69,12 @@ pub async fn when_rbee_hive_checks_catalog(world: &mut World) {
 #[when(expr = "rbee-hive queries models with provider {string}")]
 pub async fn when_query_models_by_provider(world: &mut World, provider: String) {
     // TEAM-079: Query all models and filter by provider
-    let catalog_path = world.model_catalog_path.as_ref()
-        .expect("Model catalog path not set");
+    let catalog_path = world.model_catalog_path.as_ref().expect("Model catalog path not set");
     let catalog = ModelCatalog::new(catalog_path.to_string_lossy().to_string());
-    
-    let all_models = catalog.list_models()
-        .await
-        .expect("Failed to list models");
-    let results: Vec<_> = all_models.into_iter()
-        .filter(|m| m.provider == provider)
-        .collect();
-    
+
+    let all_models = catalog.list_models().await.expect("Failed to list models");
+    let results: Vec<_> = all_models.into_iter().filter(|m| m.provider == provider).collect();
+
     world.last_action = Some(format!("query_provider_{}_{}", provider, results.len()));
     tracing::info!("TEAM-079: Found {} models for provider {}", results.len(), provider);
 }
@@ -89,10 +82,9 @@ pub async fn when_query_models_by_provider(world: &mut World, provider: String) 
 #[when(expr = "rbee-hive registers the model in the catalog")]
 pub async fn when_register_model_in_catalog(world: &mut World) {
     // TEAM-079: Insert model into catalog
-    let catalog_path = world.model_catalog_path.as_ref()
-        .expect("Model catalog path not set");
+    let catalog_path = world.model_catalog_path.as_ref().expect("Model catalog path not set");
     let catalog = ModelCatalog::new(catalog_path.to_string_lossy().to_string());
-    
+
     let model = ModelInfo {
         provider: "hf".to_string(),
         reference: "TheBloke/TinyLlama-1.1B-Chat-v1.0-GGUF".to_string(),
@@ -100,9 +92,9 @@ pub async fn when_register_model_in_catalog(world: &mut World) {
         size_bytes: 5242880,
         downloaded_at: 1728508603,
     };
-    
+
     catalog.register_model(&model).await.expect("Failed to insert model");
-    
+
     tracing::info!("TEAM-079: Model registered in catalog");
     world.last_action = Some("model_registered".to_string());
 }
@@ -111,18 +103,15 @@ pub async fn when_register_model_in_catalog(world: &mut World) {
 // #[when(expr = "rbee-hive calculates model size")]
 pub async fn _when_calculate_model_size_removed(world: &mut World) {
     // TEAM-079: Read file size from disk (simulated with temp file)
-    let temp_dir = world.temp_dir.as_ref()
-        .expect("Temp dir not set");
+    let temp_dir = world.temp_dir.as_ref().expect("Temp dir not set");
     let model_path = temp_dir.path().join("tinyllama-q4.gguf");
-    
+
     // Create a dummy file for testing
-    std::fs::write(&model_path, vec![0u8; 5242880])
-        .expect("Failed to create test file");
-    
-    let metadata = std::fs::metadata(&model_path)
-        .expect("Failed to read file metadata");
+    std::fs::write(&model_path, vec![0u8; 5242880]).expect("Failed to create test file");
+
+    let metadata = std::fs::metadata(&model_path).expect("Failed to read file metadata");
     let size_bytes = metadata.len();
-    
+
     tracing::info!("TEAM-079: Model size calculated: {} bytes", size_bytes);
     world.last_action = Some(format!("model_size_{}", size_bytes));
 }
@@ -146,8 +135,11 @@ pub async fn _then_query_returns_no_results_removed(world: &mut World) {
 pub async fn then_skip_model_download(world: &mut World) {
     // TEAM-082: Verify download was not triggered
     let action = world.last_action.as_ref().expect("No action recorded");
-    assert!(action.contains("catalog_checked_true"),
-        "Expected model found in catalog, got: {}", action);
+    assert!(
+        action.contains("catalog_checked_true"),
+        "Expected model found in catalog, got: {}",
+        action
+    );
     tracing::info!("TEAM-082: Model download skipped");
 }
 
@@ -155,8 +147,11 @@ pub async fn then_skip_model_download(world: &mut World) {
 pub async fn then_trigger_model_download(world: &mut World) {
     // TEAM-082: Verify download was triggered
     let action = world.last_action.as_ref().expect("No action recorded");
-    assert!(action.contains("catalog_checked_false") || action.contains("model_not_in_catalog"),
-        "Expected model not in catalog, got: {}", action);
+    assert!(
+        action.contains("catalog_checked_false") || action.contains("model_not_in_catalog"),
+        "Expected model not in catalog, got: {}",
+        action
+    );
     tracing::info!("TEAM-082: Model download triggered");
 }
 
@@ -165,23 +160,22 @@ pub async fn then_sqlite_insert_statement(world: &mut World, step: &cucumber::gh
     // TEAM-082: Verify SQL statement structure
     assert!(world.last_action.is_some(), "No action recorded");
     let action = world.last_action.as_ref().unwrap();
-    assert!(action.contains("model_registered"),
-        "Expected model registration, got: {}", action);
+    assert!(action.contains("model_registered"), "Expected model registration, got: {}", action);
     tracing::info!("TEAM-082: SQLite INSERT statement verified");
 }
 
 #[then(expr = "the catalog query now returns the model")]
 pub async fn then_catalog_returns_model(world: &mut World) {
     // TEAM-079: Verify model is now in catalog
-    let catalog_path = world.model_catalog_path.as_ref()
-        .expect("Model catalog path not set");
+    let catalog_path = world.model_catalog_path.as_ref().expect("Model catalog path not set");
     let catalog = ModelCatalog::new(catalog_path.to_string_lossy().to_string());
-    
-    let result = catalog.find_model("TheBloke/TinyLlama-1.1B-Chat-v1.0-GGUF", "hf")
+
+    let result = catalog
+        .find_model("TheBloke/TinyLlama-1.1B-Chat-v1.0-GGUF", "hf")
         .await
         .expect("Failed to query catalog");
     assert!(result.is_some());
-    
+
     tracing::info!("TEAM-079: Model found in catalog");
 }
 
@@ -192,28 +186,23 @@ pub async fn then_query_returns_count(world: &mut World, count: usize) {
     let parts: Vec<&str> = action.split('_').collect();
     let actual_count: usize = parts.last().unwrap().parse().unwrap();
     assert_eq!(actual_count, count);
-    
+
     tracing::info!("TEAM-079: Verified query returned {} models", count);
 }
 
 #[then(expr = "all returned models have provider {string}")]
 pub async fn then_models_have_provider(world: &mut World, provider: String) {
     // TEAM-079: Verify all results match provider filter
-    let catalog_path = world.model_catalog_path.as_ref()
-        .expect("Model catalog path not set");
+    let catalog_path = world.model_catalog_path.as_ref().expect("Model catalog path not set");
     let catalog = ModelCatalog::new(catalog_path.to_string_lossy().to_string());
-    
-    let all_models = catalog.list_models()
-        .await
-        .expect("Failed to list models");
-    let results: Vec<_> = all_models.into_iter()
-        .filter(|m| m.provider == provider)
-        .collect();
-    
+
+    let all_models = catalog.list_models().await.expect("Failed to list models");
+    let results: Vec<_> = all_models.into_iter().filter(|m| m.provider == provider).collect();
+
     for model in &results {
         assert_eq!(model.provider, provider);
     }
-    
+
     tracing::info!("TEAM-079: Verified all models have provider: {}", provider);
 }
 

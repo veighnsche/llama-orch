@@ -14,20 +14,23 @@
 
 use crate::steps::world::{ModelCatalogEntry, World};
 use cucumber::{given, then, when};
-use std::path::PathBuf;
 use rbee_hive::provisioner::ModelProvisioner;
+use std::path::PathBuf;
 
 // TEAM-066: Check filesystem catalog via ModelProvisioner
 // TEAM-112: Removed duplicate - use model_catalog.rs version instead
 // #[given(expr = "the model catalog contains:")]
-pub async fn _given_model_catalog_contains_removed(world: &mut World, step: &cucumber::gherkin::Step) {
+pub async fn _given_model_catalog_contains_removed(
+    world: &mut World,
+    step: &cucumber::gherkin::Step,
+) {
     let table = step.table.as_ref().expect("Expected a data table");
 
     // Create provisioner to check filesystem
     let base_dir = std::env::var("LLORCH_MODELS_DIR")
         .unwrap_or_else(|_| "/tmp/llorch-test-models".to_string());
     let provisioner = ModelProvisioner::new(PathBuf::from(&base_dir));
-    
+
     for row in table.rows.iter().skip(1) {
         let provider = row[0].clone();
         let reference = row[1].clone();
@@ -36,7 +39,7 @@ pub async fn _given_model_catalog_contains_removed(world: &mut World, step: &cuc
         // Check if model exists in catalog
         let model_ref = format!("{}:{}", provider, reference);
         let found = provisioner.find_local_model(&reference);
-        
+
         if found.is_some() {
             tracing::info!("✅ Model {} found in catalog", model_ref);
         } else {
@@ -62,11 +65,11 @@ pub async fn _given_model_not_in_catalog_removed(world: &mut World) {
     let base_dir = std::env::var("LLORCH_MODELS_DIR")
         .unwrap_or_else(|_| "/tmp/llorch-test-models".to_string());
     let provisioner = ModelProvisioner::new(PathBuf::from(&base_dir));
-    
+
     // Verify a test model is NOT in catalog
     let test_ref = "test-model-not-found";
     let found = provisioner.find_local_model(test_ref);
-    
+
     assert!(found.is_none(), "Expected model '{}' to NOT be in catalog", test_ref);
     tracing::info!("✅ Verified model '{}' not in catalog", test_ref);
 }
@@ -75,14 +78,14 @@ pub async fn _given_model_not_in_catalog_removed(world: &mut World) {
 #[given(expr = "the model downloaded successfully to {string}")]
 pub async fn given_model_downloaded(world: &mut World, path: String) {
     let path_buf = PathBuf::from(&path);
-    
+
     // Check if path exists (in test environment, may not exist)
     if path_buf.exists() {
         tracing::info!("✅ Model downloaded to: {}", path);
     } else {
         tracing::warn!("⚠️  Path '{}' does not exist (test environment)", path);
     }
-    
+
     // Store in World for later verification
     world.model_catalog.insert(
         "downloaded-model".to_string(),
@@ -111,7 +114,7 @@ pub async fn when_check_model_catalog(world: &mut World) {
     let base_dir = std::env::var("LLORCH_MODELS_DIR")
         .unwrap_or_else(|_| "/tmp/llorch-test-models".to_string());
     let provisioner = ModelProvisioner::new(PathBuf::from(&base_dir));
-    
+
     // Check for any models in the catalog
     for (model_ref, _entry) in &world.model_catalog {
         let found = provisioner.find_local_model(model_ref);
@@ -128,7 +131,7 @@ pub async fn when_check_model_catalog(world: &mut World) {
 #[when(expr = "rbee-hive initiates download from Hugging Face")]
 pub async fn when_initiate_download(world: &mut World) {
     use rbee_hive::download_tracker::DownloadTracker;
-    
+
     // TEAM-074: Wrap in error handling
     match std::panic::catch_unwind(|| {
         let tracker = DownloadTracker::new();
@@ -156,7 +159,7 @@ pub async fn when_initiate_download(world: &mut World) {
 #[when(expr = "rbee-hive attempts download")]
 pub async fn when_attempt_download(world: &mut World) {
     use rbee_hive::download_tracker::DownloadTracker;
-    
+
     // TEAM-074: Wrap in error handling
     match std::panic::catch_unwind(|| {
         let tracker = DownloadTracker::new();
@@ -189,7 +192,7 @@ pub async fn when_download_fails(world: &mut World, error: String, progress: u32
         details: Some(serde_json::json!({ "progress": progress })),
     });
     world.last_exit_code = Some(1);
-    
+
     tracing::info!("✅ Download fails with '{}' at {}%", error, progress);
 }
 
@@ -204,7 +207,7 @@ pub async fn _when_register_model_in_catalog_removed(world: &mut World) {
         local_path: PathBuf::from("/tmp/models/test-model"),
         size_bytes: 1_048_576,
     };
-    
+
     // Validate model entry before registration
     if model_entry.reference.is_empty() {
         world.last_exit_code = Some(1);
@@ -216,7 +219,7 @@ pub async fn _when_register_model_in_catalog_removed(world: &mut World) {
         tracing::error!("❌ Invalid model reference");
         return;
     }
-    
+
     if !model_entry.local_path.to_string_lossy().starts_with("/") {
         world.last_exit_code = Some(1);
         world.last_error = Some(crate::steps::world::ErrorResponse {
@@ -227,13 +230,10 @@ pub async fn _when_register_model_in_catalog_removed(world: &mut World) {
         tracing::error!("❌ Invalid model path: {:?}", model_entry.local_path);
         return;
     }
-    
+
     // Register model in catalog
-    world.model_catalog.insert(
-        "registered-model".to_string(),
-        model_entry,
-    );
-    
+    world.model_catalog.insert("registered-model".to_string(), model_entry);
+
     world.last_exit_code = Some(0);
     tracing::info!("✅ Model registered in catalog");
 }
@@ -244,7 +244,7 @@ pub async fn then_query_returns_path(world: &mut World, path: String) {
     let base_dir = std::env::var("LLORCH_MODELS_DIR")
         .unwrap_or_else(|_| "/tmp/llorch-test-models".to_string());
     let provisioner = ModelProvisioner::new(PathBuf::from(&base_dir));
-    
+
     // Try to find any model in catalog
     let mut found_any = false;
     for (model_ref, entry) in &world.model_catalog {
@@ -254,7 +254,7 @@ pub async fn then_query_returns_path(world: &mut World, path: String) {
             tracing::info!("✅ Query returned path: {:?}", found_path);
         }
     }
-    
+
     if !found_any {
         tracing::warn!("⚠️  No models found in catalog (test environment)");
     }
@@ -273,10 +273,12 @@ pub async fn then_skip_download(world: &mut World) {
 #[then(expr = "rbee-hive proceeds to worker preflight")]
 pub async fn then_proceed_to_worker_preflight(world: &mut World) {
     // Verify no errors occurred
-    assert!(world.last_exit_code.is_none() || world.last_exit_code == Some(0),
-        "Should proceed to preflight only if no errors");
+    assert!(
+        world.last_exit_code.is_none() || world.last_exit_code == Some(0),
+        "Should proceed to preflight only if no errors"
+    );
     assert!(!world.model_catalog.is_empty(), "Model catalog should have entries");
-    
+
     tracing::info!("✅ Proceeding to worker preflight");
 }
 
@@ -285,9 +287,11 @@ pub async fn then_proceed_to_worker_preflight(world: &mut World) {
 pub async fn then_create_sse_endpoint(world: &mut World, endpoint: String) {
     // Verify endpoint format
     assert!(endpoint.starts_with("/"), "Endpoint should start with /");
-    assert!(endpoint.contains("download") || endpoint.contains("progress"),
-        "Endpoint should be for download/progress");
-    
+    assert!(
+        endpoint.contains("download") || endpoint.contains("progress"),
+        "Endpoint should be for download/progress"
+    );
+
     tracing::info!("✅ SSE endpoint created: {}", endpoint);
 }
 
@@ -307,13 +311,13 @@ pub async fn then_connect_to_sse(world: &mut World) {
 #[then(expr = "the stream emits progress events:")]
 pub async fn then_stream_emits_events(world: &mut World, step: &cucumber::gherkin::Step) {
     let docstring = step.docstring.as_ref().expect("Expected a docstring");
-    
+
     // Parse expected events from docstring
     let lines: Vec<&str> = docstring.trim().lines().collect();
     let event_count = lines.iter().filter(|l| l.contains("event:") || l.contains("data:")).count();
-    
+
     tracing::info!("✅ Stream should emit {} progress events", event_count / 2);
-    
+
     // Verify we have SSE events in World
     if !world.sse_events.is_empty() {
         tracing::info!("✅ Received {} SSE events", world.sse_events.len());
@@ -328,9 +332,11 @@ pub async fn then_display_progress_with_speed(world: &mut World) {
         for event in &world.sse_events {
             if event.event_type == "downloading" {
                 // Verify event has progress fields
-                assert!(event.data.get("bytes_downloaded").is_some() || 
-                       event.data.get("percentage").is_some(),
-                       "Progress event should have download data");
+                assert!(
+                    event.data.get("bytes_downloaded").is_some()
+                        || event.data.get("percentage").is_some(),
+                    "Progress event should have download data"
+                );
             }
         }
         tracing::info!("✅ Progress bar displays percentage and speed");
@@ -343,67 +349,77 @@ pub async fn then_display_progress_with_speed(world: &mut World) {
 #[then(expr = "rbee-hive inserts model into SQLite catalog")]
 pub async fn then_insert_into_catalog(world: &mut World) {
     // Verify model exists in catalog
-    assert!(!world.model_catalog.is_empty(), "Model catalog should have entries for SQLite insertion");
-    
+    assert!(
+        !world.model_catalog.is_empty(),
+        "Model catalog should have entries for SQLite insertion"
+    );
+
     // In real implementation, would verify SQLite INSERT was executed
     // For now, verify catalog state is ready for insertion
-    let last_model = world.model_catalog.values().last()
-        .expect("Expected at least one model in catalog");
-    
+    let last_model =
+        world.model_catalog.values().last().expect("Expected at least one model in catalog");
+
     assert!(!last_model.provider.is_empty(), "Provider should be set");
     assert!(!last_model.reference.is_empty(), "Reference should be set");
     assert!(last_model.local_path.as_os_str().len() > 0, "Local path should be set");
-    
-    tracing::info!("✅ Model ready for SQLite catalog insertion: {}:{}", 
-        last_model.provider, last_model.reference);
+
+    tracing::info!(
+        "✅ Model ready for SQLite catalog insertion: {}:{}",
+        last_model.provider,
+        last_model.reference
+    );
 }
 
 // TEAM-069: Verify download retry with delay NICE!
 #[then(expr = "rbee-hive retries download with delay {int}ms")]
 pub async fn then_retry_download(world: &mut World, delay_ms: u64) {
     use rbee_hive::download_tracker::DownloadTracker;
-    
+
     // Verify delay is reasonable (between 100ms and 10s)
-    assert!(delay_ms >= 100 && delay_ms <= 10_000, 
-        "Retry delay should be between 100ms and 10s, got {}ms", delay_ms);
-    
+    assert!(
+        delay_ms >= 100 && delay_ms <= 10_000,
+        "Retry delay should be between 100ms and 10s, got {}ms",
+        delay_ms
+    );
+
     // In real implementation, would verify DownloadTracker retry logic
     let tracker = DownloadTracker::new();
     let download_id = tracker.start_download().await;
-    
-    tracing::info!("✅ Download retry scheduled with {}ms delay, download_id: {}", 
-        delay_ms, download_id);
+
+    tracing::info!(
+        "✅ Download retry scheduled with {}ms delay, download_id: {}",
+        delay_ms,
+        download_id
+    );
 }
 
 // TEAM-069: Verify resume from checkpoint NICE!
 #[then(expr = "rbee-hive resumes from last checkpoint")]
 pub async fn then_resume_from_checkpoint(world: &mut World) {
     use rbee_hive::download_tracker::DownloadTracker;
-    
+
     let tracker = DownloadTracker::new();
     let download_id = tracker.start_download().await;
-    
+
     // Verify download tracking capability exists
     let can_subscribe = tracker.subscribe(&download_id).await.is_some();
-    
+
     if can_subscribe {
         tracing::info!("✅ Resume from checkpoint: download tracking active");
     } else {
         tracing::warn!("⚠️  Download tracking not available (test environment)");
     }
-    
+
     // Verify model catalog has entries (checkpoint data)
-    assert!(!world.model_catalog.is_empty(), 
-        "Model catalog should have checkpoint data");
+    assert!(!world.model_catalog.is_empty(), "Model catalog should have checkpoint data");
 }
 
 // TEAM-069: Verify retry count limit NICE!
 #[then(expr = "rbee-hive retries up to {int} times")]
 pub async fn then_retry_up_to(world: &mut World, count: u32) {
     // Verify retry count is reasonable (1-10 retries)
-    assert!(count >= 1 && count <= 10, 
-        "Retry count should be between 1 and 10, got {}", count);
-    
+    assert!(count >= 1 && count <= 10, "Retry count should be between 1 and 10, got {}", count);
+
     // Store retry count for verification
     if let Some(error) = &mut world.last_error {
         if let Some(details) = &mut error.details {
@@ -412,7 +428,7 @@ pub async fn then_retry_up_to(world: &mut World, count: u32) {
             }
         }
     }
-    
+
     tracing::info!("✅ Retry limit set: {} attempts", count);
 }
 
@@ -437,7 +453,7 @@ pub async fn then_if_retries_fail_return_error(world: &mut World, error_code: St
 pub async fn given_model_download_completes(world: &mut World) {
     // Mark download as complete
     world.last_exit_code = Some(0);
-    
+
     // Add model to catalog
     if world.model_catalog.is_empty() {
         use std::path::PathBuf;
@@ -451,25 +467,23 @@ pub async fn given_model_download_completes(world: &mut World) {
             },
         );
     }
-    
+
     tracing::info!("✅ Model download completed");
 }
 
 // TEAM-069: Verify error display to user NICE!
 #[then(expr = "rbee-keeper displays the error to the user")]
 pub async fn then_display_error(world: &mut World) {
-    let error = world.last_error.as_ref()
-        .expect("Expected error to be set for display");
-    
+    let error = world.last_error.as_ref().expect("Expected error to be set for display");
+
     // Verify error has user-friendly message
     assert!(!error.message.is_empty(), "Error message should not be empty");
     assert!(error.message.len() >= 10, "Error message should be descriptive");
-    
+
     // Verify error code is set
     assert!(!error.code.is_empty(), "Error code should be set");
-    
-    tracing::info!("✅ Error displayed to user: [{}] {}", 
-        error.code, error.message);
+
+    tracing::info!("✅ Error displayed to user: [{}] {}", error.code, error.message);
 }
 
 // TEAM-069: Verify SQLite INSERT statement NICE!
@@ -477,18 +491,21 @@ pub async fn then_display_error(world: &mut World) {
 pub async fn then_sqlite_insert(world: &mut World, step: &cucumber::gherkin::Step) {
     let docstring = step.docstring.as_ref().expect("Expected a docstring");
     let sql = docstring.trim();
-    
+
     // Verify SQL statement structure
-    assert!(sql.to_uppercase().contains("INSERT INTO"), 
-        "Statement should be an INSERT INTO");
-    assert!(sql.to_lowercase().contains("model") || sql.to_lowercase().contains("catalog"),
-        "Statement should reference model or catalog table");
-    
+    assert!(sql.to_uppercase().contains("INSERT INTO"), "Statement should be an INSERT INTO");
+    assert!(
+        sql.to_lowercase().contains("model") || sql.to_lowercase().contains("catalog"),
+        "Statement should reference model or catalog table"
+    );
+
     // Verify required fields are present
     let sql_lower = sql.to_lowercase();
-    assert!(sql_lower.contains("provider") || sql_lower.contains("reference"),
-        "Statement should include model identifiers");
-    
+    assert!(
+        sql_lower.contains("provider") || sql_lower.contains("reference"),
+        "Statement should include model identifiers"
+    );
+
     tracing::info!("✅ SQLite INSERT statement verified: {} chars", sql.len());
 }
 
@@ -498,25 +515,32 @@ pub async fn then_catalog_returns_model(world: &mut World) {
     let base_dir = std::env::var("LLORCH_MODELS_DIR")
         .unwrap_or_else(|_| "/tmp/llorch-test-models".to_string());
     let provisioner = ModelProvisioner::new(PathBuf::from(&base_dir));
-    
+
     // Verify at least one model is in catalog
-    assert!(!world.model_catalog.is_empty(), 
-        "Model catalog should have entries after registration");
-    
+    assert!(
+        !world.model_catalog.is_empty(),
+        "Model catalog should have entries after registration"
+    );
+
     // Try to find models via provisioner
     let mut found_count = 0;
     for (model_ref, entry) in &world.model_catalog {
         if let Some(found_path) = provisioner.find_local_model(model_ref) {
-            assert_eq!(found_path, entry.local_path, 
-                "Catalog should return correct path for model '{}'", model_ref);
+            assert_eq!(
+                found_path, entry.local_path,
+                "Catalog should return correct path for model '{}'",
+                model_ref
+            );
             found_count += 1;
         }
     }
-    
+
     if found_count > 0 {
         tracing::info!("✅ Catalog query returns {} model(s)", found_count);
     } else {
-        tracing::warn!("⚠️  No models found via provisioner (test environment), but {} in World catalog",
-            world.model_catalog.len());
+        tracing::warn!(
+            "⚠️  No models found via provisioner (test environment), but {} in World catalog",
+            world.model_catalog.len()
+        );
     }
 }

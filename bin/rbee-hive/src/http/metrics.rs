@@ -18,9 +18,7 @@ use tracing::debug;
 /// - `rbee_hive_workers_restart_count` - Total restart count
 /// - `rbee_hive_models_downloaded_total` - Total models downloaded
 /// - `rbee_hive_download_active` - Currently active downloads
-pub async fn handle_metrics(
-    State(state): State<AppState>,
-) -> Result<String, (StatusCode, String)> {
+pub async fn handle_metrics(State(state): State<AppState>) -> Result<String, (StatusCode, String)> {
     debug!("Metrics requested");
 
     // Update metrics from current state
@@ -28,8 +26,9 @@ pub async fn handle_metrics(
     rbee_hive::metrics::update_download_metrics(state.download_tracker.clone()).await;
 
     // Render metrics
-    rbee_hive::metrics::render_metrics()
-        .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, format!("Failed to render metrics: {}", e)))
+    rbee_hive::metrics::render_metrics().map_err(|e| {
+        (StatusCode::INTERNAL_SERVER_ERROR, format!("Failed to render metrics: {}", e))
+    })
 }
 
 #[cfg(test)]
@@ -62,7 +61,7 @@ mod tests {
 
         let result = handle_metrics(State(state)).await;
         assert!(result.is_ok());
-        
+
         let metrics = result.unwrap();
         assert!(metrics.contains("rbee_hive"));
     }

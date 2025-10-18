@@ -23,11 +23,7 @@ impl WorkerProvisioner {
     }
 
     /// Build a worker binary with specified features
-    pub fn build_worker(
-        &self,
-        worker_type: &str,
-        features: &[String],
-    ) -> Result<PathBuf> {
+    pub fn build_worker(&self, worker_type: &str, features: &[String]) -> Result<PathBuf> {
         tracing::info!("Building worker {} with features {:?}", worker_type, features);
 
         let mut cmd = Command::new("cargo");
@@ -41,17 +37,14 @@ impl WorkerProvisioner {
             cmd.arg("--features").arg(features.join(","));
         }
 
-        let output = cmd.output()
-            .context("Failed to execute cargo build")?;
+        let output = cmd.output().context("Failed to execute cargo build")?;
 
         if !output.status.success() {
             let stderr = String::from_utf8_lossy(&output.stderr);
             anyhow::bail!("Build failed: {}", stderr);
         }
 
-        let binary_path = self.workspace_root
-            .join("target/release")
-            .join(worker_type);
+        let binary_path = self.workspace_root.join("target/release").join(worker_type);
 
         Ok(binary_path)
     }
@@ -65,8 +58,7 @@ impl WorkerProvisioner {
         #[cfg(unix)]
         {
             use std::os::unix::fs::PermissionsExt;
-            let metadata = std::fs::metadata(path)
-                .context("Failed to read binary metadata")?;
+            let metadata = std::fs::metadata(path).context("Failed to read binary metadata")?;
             let permissions = metadata.permissions();
             if permissions.mode() & 0o111 == 0 {
                 anyhow::bail!("Binary is not executable");
@@ -78,9 +70,7 @@ impl WorkerProvisioner {
 
     /// Get the expected binary path for a worker type
     pub fn binary_path(&self, worker_type: &str) -> PathBuf {
-        self.workspace_root
-            .join("target/release")
-            .join(worker_type)
+        self.workspace_root.join("target/release").join(worker_type)
     }
 }
 

@@ -27,10 +27,7 @@ pub struct GlobalQueenRbee {
 
 impl GlobalQueenRbee {
     fn new(process: Child, url: String) -> Self {
-        Self {
-            process: std::sync::Mutex::new(Some(process)),
-            url,
-        }
+        Self { process: std::sync::Mutex::new(Some(process)), url }
     }
 
     pub fn url(&self) -> &str {
@@ -69,31 +66,31 @@ pub async fn start_global_queen_rbee() {
     let binary_path = workspace_dir.join("target/debug/queen-rbee");
 
     tracing::info!("🐝 Starting GLOBAL queen-rbee process at {:?}...", binary_path);
-    
+
     let child = {
         // TEAM-058: Changed to inherit stdio to see panic messages
         let mut child = tokio::process::Command::new(&binary_path)
-                .args(["--port", "8080", "--database"])
-                .arg(&db_path)
-                .env("MOCK_SSH", "true")
-                .current_dir(&workspace_dir)
-                .stdout(std::process::Stdio::inherit())  // Print to console
-                .stderr(std::process::Stdio::inherit())  // Print to console
-                .spawn()
-                .expect("Failed to start global queen-rbee");
+            .args(["--port", "8080", "--database"])
+            .arg(&db_path)
+            .env("MOCK_SSH", "true")
+            .current_dir(&workspace_dir)
+            .stdout(std::process::Stdio::inherit()) // Print to console
+            .stderr(std::process::Stdio::inherit()) // Print to console
+            .spawn()
+            .expect("Failed to start global queen-rbee");
 
         // TEAM-061: Wait for server to be ready with 30s timeout
         let client = crate::steps::world::create_http_client();
         let start = std::time::Instant::now();
         let timeout = Duration::from_secs(30);
-        
+
         for i in 0..300 {
             // TEAM-061: Check timeout first
             if start.elapsed() > timeout {
                 let _ = child.start_kill();
                 panic!("❌ Global queen-rbee failed to start within 30s - timeout exceeded");
             }
-            
+
             // Check if process is still alive
             match child.try_wait() {
                 Ok(Some(status)) => {
@@ -106,14 +103,14 @@ pub async fn start_global_queen_rbee() {
                     tracing::warn!("Failed to check process status: {}", e);
                 }
             }
-            
+
             if let Ok(resp) = client.get("http://localhost:8080/health").send().await {
                 if resp.status().is_success() {
                     tracing::info!("✅ Global queen-rbee is ready (took {:?})", start.elapsed());
                     break;
                 }
             }
-            
+
             if i % 10 == 0 && i > 0 {
                 tracing::info!("⏳ Waiting for global queen-rbee... ({:?})", start.elapsed());
             }
@@ -127,9 +124,9 @@ pub async fn start_global_queen_rbee() {
     std::mem::forget(temp_dir);
 
     let queen = GlobalQueenRbee::new(child, "http://localhost:8080".to_string());
-    
+
     let _ = GLOBAL_QUEEN.set(queen);
-    
+
     tracing::info!("✅ Global queen-rbee available at: http://localhost:8080");
 }
 

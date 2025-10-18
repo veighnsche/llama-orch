@@ -99,9 +99,8 @@ async fn handle_add_node(
     install_path: String,
 ) -> Result<()> {
     // TEAM-113: Validate node name before sending to queen-rbee
-    validate_identifier(&name, 64)
-        .map_err(|e| anyhow::anyhow!("Invalid node name: {}", e))?;
-    
+    validate_identifier(&name, 64).map_err(|e| anyhow::anyhow!("Invalid node name: {}", e))?;
+
     println!("{} Adding node '{}' to registry...", "[queen-rbee]".cyan(), name);
 
     let client = reqwest::Client::new();
@@ -192,9 +191,8 @@ async fn handle_list_nodes() -> Result<()> {
 
 async fn handle_remove_node(name: String) -> Result<()> {
     // TEAM-113: Validate node name before sending to queen-rbee
-    validate_identifier(&name, 64)
-        .map_err(|e| anyhow::anyhow!("Invalid node name: {}", e))?;
-    
+    validate_identifier(&name, 64).map_err(|e| anyhow::anyhow!("Invalid node name: {}", e))?;
+
     println!("{} Removing node '{}' from registry...", "[queen-rbee]".cyan(), name);
 
     let client = reqwest::Client::new();
@@ -222,9 +220,8 @@ async fn handle_remove_node(name: String) -> Result<()> {
 
 async fn handle_install(node: String) -> Result<()> {
     // TEAM-113: Validate node name before proceeding
-    validate_identifier(&node, 64)
-        .map_err(|e| anyhow::anyhow!("Invalid node name: {}", e))?;
-    
+    validate_identifier(&node, 64).map_err(|e| anyhow::anyhow!("Invalid node name: {}", e))?;
+
     println!("{} Installing rbee-hive on node '{}'...", "[queen-rbee]".cyan(), node);
 
     // First, get node details from registry

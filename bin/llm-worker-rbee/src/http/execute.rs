@@ -11,7 +11,9 @@ use crate::http::{
     sse::InferenceEvent,
     validation::{ExecuteRequest, ValidationErrorResponse},
 };
-use crate::narration::{self, ACTOR_HTTP_SERVER, ACTION_ERROR, ACTION_EXECUTE_REQUEST, ACTOR_CANDLE_BACKEND};
+use crate::narration::{
+    self, ACTION_ERROR, ACTION_EXECUTE_REQUEST, ACTOR_CANDLE_BACKEND, ACTOR_HTTP_SERVER,
+};
 use axum::{
     extract::State,
     response::{sse::Event, Sse},

@@ -20,7 +20,7 @@ use serde_json::json;
 use std::sync::Arc;
 
 /// TEAM-102: Authentication state
-/// 
+///
 /// Holds the expected API token for authentication.
 /// This is separate from the backend state to keep concerns separated.
 #[derive(Clone)]
@@ -29,10 +29,10 @@ pub struct AuthState {
 }
 
 /// TEAM-102: Authentication middleware
-/// 
+///
 /// Validates Bearer tokens using timing-safe comparison.
 /// Logs authentication events with token fingerprints (never raw tokens).
-/// 
+///
 /// Returns 401 Unauthorized if:
 /// - No Authorization header
 /// - Invalid Bearer token format
@@ -43,10 +43,7 @@ pub async fn auth_middleware(
     next: Next,
 ) -> Result<Response, impl IntoResponse> {
     // TEAM-102: Parse Authorization header
-    let auth_header = req
-        .headers()
-        .get("authorization")
-        .and_then(|h| h.to_str().ok());
+    let auth_header = req.headers().get("authorization").and_then(|h| h.to_str().ok());
 
     // TEAM-102: Parse Bearer token (RFC 6750 compliant)
     let token = match parse_bearer(auth_header) {
@@ -138,12 +135,7 @@ mod tests {
         let app = create_test_app("test-token-12345".to_string());
 
         let response = app
-            .oneshot(
-                Request::builder()
-                    .uri("/test")
-                    .body(Body::empty())
-                    .unwrap(),
-            )
+            .oneshot(Request::builder().uri("/test").body(Body::empty()).unwrap())
             .await
             .unwrap();
 

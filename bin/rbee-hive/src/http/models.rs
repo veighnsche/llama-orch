@@ -58,10 +58,10 @@ pub async fn handle_download_model(
 ) -> Result<Json<DownloadModelResponse>, (StatusCode, String)> {
     // TEAM-103: Validate model reference
     use input_validation::validate_model_ref;
-    
+
     validate_model_ref(&request.model_ref)
         .map_err(|e| (StatusCode::BAD_REQUEST, format!("Invalid model_ref: {}", e)))?;
-    
+
     info!(model_ref = %request.model_ref, "Model download requested");
 
     // Parse model reference (format: "hf:TheBloke/TinyLlama-1.1B-Chat-v1.0-GGUF")

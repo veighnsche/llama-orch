@@ -22,13 +22,11 @@
 pub mod audit_logging; // TEAM-099: P1 audit logging tests (tamper-evident logs)
 pub mod authentication; // TEAM-097: P0 authentication tests (auth-min crate)
 pub mod background;
-pub mod configuration_management; // TEAM-100: P2 configuration management tests (TOML config, hot-reload) 🎀
-pub mod deadline_propagation; // TEAM-099: P1 deadline propagation tests (timeout handling)
-pub mod metrics_observability; // TEAM-100: P2 metrics & observability tests (Prometheus, narration-core) 💯
-pub mod pid_tracking; // TEAM-098: P0 PID tracking and force-kill tests
 pub mod beehive_registry;
 pub mod cli_commands;
 pub mod concurrency; // TEAM-079: Concurrency and race condition testing
+pub mod configuration_management; // TEAM-100: P2 configuration management tests (TOML config, hot-reload) 🎀
+pub mod deadline_propagation; // TEAM-099: P1 deadline propagation tests (timeout handling)
 pub mod edge_cases;
 pub mod error_handling;
 pub mod error_helpers; // TEAM-062: Error verification helpers
@@ -36,15 +34,17 @@ pub mod error_responses;
 pub mod errors; // TEAM-098: P0 error handling tests (structured errors, no unwrap)
 pub mod failure_recovery; // TEAM-079: Failover and recovery scenarios
 pub mod gguf;
-pub mod global_hive;   // TEAM-085: Global rbee-hive lifecycle for localhost tests
+pub mod global_hive; // TEAM-085: Global rbee-hive lifecycle for localhost tests
 pub mod global_queen;
 pub mod happy_path;
 pub mod inference_execution;
 pub mod integration; // TEAM-083: Integration and E2E tests
 pub mod lifecycle;
+pub mod metrics_observability; // TEAM-100: P2 metrics & observability tests (Prometheus, narration-core) 💯
 pub mod model_catalog; // TEAM-078: SQLite model catalog queries
 pub mod model_provisioning;
 pub mod narration_verification; // TEAM-085: Verify product code emits narration
+pub mod pid_tracking; // TEAM-098: P0 PID tracking and force-kill tests
 pub mod pool_preflight;
 pub mod queen_rbee_registry; // TEAM-078: Global worker registry (in-memory)
 pub mod rbee_hive_preflight; // TEAM-078: rbee-hive preflight validation

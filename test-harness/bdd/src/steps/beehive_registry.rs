@@ -30,7 +30,7 @@ pub async fn given_queen_rbee_running(world: &mut World) {
         tracing::info!("✅ Using global queen-rbee at: http://localhost:8080");
         return;
     }
-    
+
     tracing::info!("✅ queen-rbee is running at: {:?}", world.queen_rbee_url);
 }
 
@@ -66,7 +66,7 @@ pub async fn given_queen_rbee_running_OLD(world: &mut World) {
         // TEAM-051: Wait for server to be ready, but verify it's OUR process
         let client = reqwest::Client::new();
         let mut process_started = false;
-        
+
         for i in 0..600 {
             // Check if our process is still alive
             match child.try_wait() {
@@ -86,7 +86,7 @@ pub async fn given_queen_rbee_running_OLD(world: &mut World) {
                     tracing::warn!("Failed to check process status: {}", e);
                 }
             }
-            
+
             if let Ok(resp) = client.get("http://localhost:8080/health").send().await {
                 if resp.status().is_success() {
                     tracing::info!("✅ queen-rbee is ready (took {}ms)", i * 100);
@@ -127,7 +127,7 @@ pub async fn given_node_in_registry(world: &mut World, node: String) {
     if world.queen_rbee_process.is_none() {
         given_queen_rbee_running(world).await;
     }
-    
+
     // TEAM-044: Actually register the node in queen-rbee via HTTP API
     // TEAM-061: Use timeout client to prevent hangs
     let client = crate::steps::world::create_http_client();
@@ -176,7 +176,8 @@ pub async fn given_node_in_registry(world: &mut World, node: String) {
                 tracing::warn!("⚠️ Attempt {} failed: {}, retrying...", attempt + 1, e);
                 last_error = Some(e);
                 // TEAM-058: Increased backoff from 100ms to 200ms base per TEAM-057 recommendation
-                tokio::time::sleep(std::time::Duration::from_millis(200 * 2_u64.pow(attempt))).await;
+                tokio::time::sleep(std::time::Duration::from_millis(200 * 2_u64.pow(attempt)))
+                    .await;
                 continue;
             }
             Err(e) => {
@@ -218,7 +219,7 @@ pub async fn given_node_in_registry_with_ssh(world: &mut World, node: String) {
 pub async fn given_multiple_nodes_in_registry(world: &mut World) {
     // TEAM-045: Ensure queen-rbee is running before registering nodes
     given_queen_rbee_running(world).await;
-    
+
     // TEAM-044: Register both nodes via HTTP
     given_node_in_registry(world, "mac".to_string()).await;
     given_node_in_registry(world, "workstation".to_string()).await;
@@ -278,25 +279,30 @@ pub async fn then_save_node_to_registry(world: &mut World, step: &cucumber::gher
     }
 
     let node_name = node_data.get("node_name").unwrap().clone();
-    
+
     // Make HTTP GET to verify node was saved
     let client = crate::steps::world::create_http_client();
-    let url = format!("{}/v2/registry/beehives/{}", 
-        world.queen_rbee_url.as_ref().unwrap_or(&"http://localhost:8080".to_string()), 
-        node_name);
-    
+    let url = format!(
+        "{}/v2/registry/beehives/{}",
+        world.queen_rbee_url.as_ref().unwrap_or(&"http://localhost:8080".to_string()),
+        node_name
+    );
+
     match client.get(&url).send().await {
         Ok(response) if response.status() == 200 => {
             tracing::info!("✅ Verified node '{}' saved to registry via HTTP GET", node_name);
         }
         Ok(response) => {
-            tracing::warn!("Node query returned status {}, storing in World state", response.status());
+            tracing::warn!(
+                "Node query returned status {}, storing in World state",
+                response.status()
+            );
         }
         Err(e) => {
             tracing::warn!("Failed to query node from registry: {}, storing in World state", e);
         }
     }
-    
+
     // Also update World state for test assertions
     world.beehive_nodes.insert(
         node_name.clone(),
@@ -361,13 +367,18 @@ pub async fn then_remove_node_from_registry(world: &mut World) {
     if let Some(node_name) = world.beehive_nodes.keys().next().cloned() {
         // Make HTTP DELETE request
         let client = crate::steps::world::create_http_client();
-        let url = format!("{}/v2/registry/beehives/{}", 
-            world.queen_rbee_url.as_ref().unwrap_or(&"http://localhost:8080".to_string()), 
-            node_name);
-        
+        let url = format!(
+            "{}/v2/registry/beehives/{}",
+            world.queen_rbee_url.as_ref().unwrap_or(&"http://localhost:8080".to_string()),
+            node_name
+        );
+
         match client.delete(&url).send().await {
             Ok(response) if response.status().is_success() => {
-                tracing::info!("✅ Verified node '{}' removed from registry via HTTP DELETE", node_name);
+                tracing::info!(
+                    "✅ Verified node '{}' removed from registry via HTTP DELETE",
+                    node_name
+                );
             }
             Ok(response) => {
                 tracing::warn!("Node deletion returned status {}", response.status());
@@ -376,7 +387,7 @@ pub async fn then_remove_node_from_registry(world: &mut World) {
                 tracing::warn!("Failed to delete node: {}", e);
             }
         }
-        
+
         world.beehive_nodes.remove(&node_name);
     }
 }

@@ -26,28 +26,30 @@ use std::time::Duration;
 #[given(expr = "SSH key at {string} has wrong permissions")]
 pub async fn given_ssh_key_wrong_permissions(world: &mut World, key_path: String) {
     // Create temporary SSH key with wrong permissions (644 instead of 600)
-    let temp_dir = world.temp_dir.get_or_insert_with(|| {
-        tempfile::TempDir::new().expect("Failed to create temp dir")
-    });
-    
+    let temp_dir = world
+        .temp_dir
+        .get_or_insert_with(|| tempfile::TempDir::new().expect("Failed to create temp dir"));
+
     let key_file = temp_dir.path().join("bad_ssh_key");
-    std::fs::write(&key_file, "-----BEGIN OPENSSH PRIVATE KEY-----\nfake key content\n-----END OPENSSH PRIVATE KEY-----")
-        .expect("Failed to write SSH key");
-    
+    std::fs::write(
+        &key_file,
+        "-----BEGIN OPENSSH PRIVATE KEY-----\nfake key content\n-----END OPENSSH PRIVATE KEY-----",
+    )
+    .expect("Failed to write SSH key");
+
     // Set wrong permissions (644 instead of 600)
     #[cfg(unix)]
     {
         use std::os::unix::fs::PermissionsExt;
         let perms = std::fs::Permissions::from_mode(0o644);
-        std::fs::set_permissions(&key_file, perms)
-            .expect("Failed to set permissions");
+        std::fs::set_permissions(&key_file, perms).expect("Failed to set permissions");
     }
-    
+
     // Store key path in world for later use
     if let Some(node) = world.beehive_nodes.get_mut("workstation") {
         node.ssh_key_path = Some(key_file.to_string_lossy().to_string());
     }
-    
+
     tracing::debug!("Created SSH key with wrong permissions: {:?}", key_file);
 }
 
@@ -68,29 +70,31 @@ pub async fn given_rbee_hive_binary_not_found(world: &mut World) {
 // TEAM-062: Actually attempt SSH connection with timeout
 #[then(expr = "queen-rbee attempts SSH connection with {int}s timeout")]
 pub async fn then_queen_attempts_ssh_with_timeout(world: &mut World, timeout: u16) {
-    let node = world.beehive_nodes.get("workstation")
-        .expect("Node 'workstation' not in registry");
-    
+    let node = world.beehive_nodes.get("workstation").expect("Node 'workstation' not in registry");
+
     let start = std::time::Instant::now();
-    
+
     // Attempt SSH connection with timeout to unreachable host
     let result = tokio::time::timeout(
         Duration::from_secs(timeout as u64),
         tokio::process::Command::new("ssh")
-            .arg("-o").arg(format!("ConnectTimeout={}", timeout))
-            .arg("-o").arg("StrictHostKeyChecking=no")
-            .arg("-o").arg("BatchMode=yes")  // Non-interactive
+            .arg("-o")
+            .arg(format!("ConnectTimeout={}", timeout))
+            .arg("-o")
+            .arg("StrictHostKeyChecking=no")
+            .arg("-o")
+            .arg("BatchMode=yes") // Non-interactive
             .arg(format!("{}@{}", node.ssh_user, node.ssh_host))
             .arg("echo test")
-            .output()
+            .output(),
     )
     .await;
-    
+
     match result {
         Ok(Ok(output)) => {
             world.last_exit_code = output.status.code();
             world.last_stderr = String::from_utf8_lossy(&output.stderr).to_string();
-            
+
             if !output.status.success() {
                 world.last_error = Some(crate::steps::world::ErrorResponse {
                     code: "SSH_CONNECTION_FAILED".to_string(),
@@ -116,33 +120,32 @@ pub async fn then_queen_attempts_ssh_with_timeout(world: &mut World, timeout: u1
             });
         }
     }
-    
+
     let elapsed = start.elapsed();
-    tracing::debug!("SSH attempt completed in {:?}, exit code: {:?}", 
-                   elapsed, world.last_exit_code);
+    tracing::debug!(
+        "SSH attempt completed in {:?}, exit code: {:?}",
+        elapsed,
+        world.last_exit_code
+    );
 }
 
 // TEAM-062: Verify SSH connection timeout occurred
 #[then(expr = "the SSH connection fails with timeout")]
 pub async fn then_ssh_connection_fails_timeout(world: &mut World) {
     use crate::steps::error_helpers::*;
-    
+
     // Verify error was recorded
-    verify_error_occurred(world)
-        .expect("Expected SSH timeout error but none occurred");
-    
+    verify_error_occurred(world).expect("Expected SSH timeout error but none occurred");
+
     // Verify error code is SSH_TIMEOUT
-    verify_error_code(world, "SSH_TIMEOUT")
-        .expect("Expected SSH_TIMEOUT error code");
-    
+    verify_error_code(world, "SSH_TIMEOUT").expect("Expected SSH_TIMEOUT error code");
+
     // Verify error message mentions timeout
-    verify_error_message_contains(world, "timeout")
-        .expect("Error message should mention timeout");
-    
+    verify_error_message_contains(world, "timeout").expect("Error message should mention timeout");
+
     // Verify exit code is 255 (SSH failure)
-    verify_exit_code(world, 255)
-        .expect("SSH timeout should exit with code 255");
-    
+    verify_exit_code(world, 255).expect("SSH timeout should exit with code 255");
+
     tracing::debug!("✅ SSH connection timeout verified");
 }
 
@@ -155,21 +158,17 @@ pub async fn then_queen_retries_with_backoff(_world: &mut World, _attempts: u8) 
 #[then(expr = "the SSH connection fails with {string}")]
 pub async fn then_ssh_connection_fails_with(world: &mut World, error: String) {
     use crate::steps::error_helpers::*;
-    
+
     // Verify error occurred
-    verify_error_occurred(world)
-        .expect("Expected SSH error but none occurred");
-    
+    verify_error_occurred(world).expect("Expected SSH error but none occurred");
+
     // Verify error message contains expected text
     verify_error_message_contains(world, &error)
         .expect(&format!("Error message should contain '{}'", error));
-    
+
     // Verify exit code is non-zero
-    assert!(
-        world.last_exit_code.unwrap_or(0) != 0,
-        "Expected non-zero exit code for SSH failure"
-    );
-    
+    assert!(world.last_exit_code.unwrap_or(0) != 0, "Expected non-zero exit code for SSH failure");
+
     tracing::debug!("✅ SSH connection failed as expected: {}", error);
 }
 
@@ -182,11 +181,10 @@ pub async fn then_queen_attempts_ssh(_world: &mut World) {
 #[then(expr = "the SSH command fails with {string}")]
 pub async fn then_ssh_command_fails(world: &mut World, error: String) {
     use crate::steps::error_helpers::*;
-    
+
     // Verify error occurred
-    verify_error_occurred(world)
-        .expect("Expected SSH command error but none occurred");
-    
+    verify_error_occurred(world).expect("Expected SSH command error but none occurred");
+
     // Verify error message contains expected text
     verify_error_message_contains(world, &error)
         .or_else(|_| {
@@ -194,53 +192,53 @@ pub async fn then_ssh_command_fails(world: &mut World, error: String) {
             verify_error_message_contains(world, "not found")
         })
         .expect(&format!("Error message should contain '{}' or 'not found'", error));
-    
+
     // Verify exit code indicates failure
     assert!(
         world.last_exit_code.unwrap_or(0) != 0,
         "Expected non-zero exit code for SSH command failure"
     );
-    
+
     tracing::debug!("✅ SSH command failed as expected: {}", error);
 }
 
 // TEAM-062: Attempt to start rbee-hive via SSH (will fail if binary doesn't exist)
 #[when(expr = "queen-rbee attempts to start rbee-hive via SSH")]
 pub async fn when_queen_starts_rbee_hive_ssh(world: &mut World) {
-    let node = world.beehive_nodes.get("workstation")
-        .expect("Node 'workstation' not in registry");
-    
+    let node = world.beehive_nodes.get("workstation").expect("Node 'workstation' not in registry");
+
     // Check if we're simulating binary not found
-    let command = if world.last_command.as_ref()
-        .map(|c| c.contains("binary_not_found"))
-        .unwrap_or(false)
-    {
-        // Use non-existent binary path
-        "/nonexistent/rbee-hive"
-    } else {
-        // Use normal path
-        "~/rbee/target/release/rbee-hive"
-    };
-    
+    let command =
+        if world.last_command.as_ref().map(|c| c.contains("binary_not_found")).unwrap_or(false) {
+            // Use non-existent binary path
+            "/nonexistent/rbee-hive"
+        } else {
+            // Use normal path
+            "~/rbee/target/release/rbee-hive"
+        };
+
     // Attempt SSH command
     let result = tokio::time::timeout(
         Duration::from_secs(10),
         tokio::process::Command::new("ssh")
-            .arg("-o").arg("ConnectTimeout=5")
-            .arg("-o").arg("StrictHostKeyChecking=no")
-            .arg("-o").arg("BatchMode=yes")
+            .arg("-o")
+            .arg("ConnectTimeout=5")
+            .arg("-o")
+            .arg("StrictHostKeyChecking=no")
+            .arg("-o")
+            .arg("BatchMode=yes")
             .arg(format!("{}@{}", node.ssh_user, node.ssh_host))
             .arg(format!("test -x {} && echo 'exists' || echo 'not found'", command))
-            .output()
+            .output(),
     )
     .await;
-    
+
     match result {
         Ok(Ok(output)) => {
             world.last_exit_code = output.status.code();
             world.last_stdout = String::from_utf8_lossy(&output.stdout).to_string();
             world.last_stderr = String::from_utf8_lossy(&output.stderr).to_string();
-            
+
             if world.last_stdout.contains("not found") || !output.status.success() {
                 world.last_error = Some(crate::steps::world::ErrorResponse {
                     code: "SSH_COMMAND_FAILED".to_string(),
@@ -269,7 +267,7 @@ pub async fn when_queen_starts_rbee_hive_ssh(world: &mut World) {
             });
         }
     }
-    
+
     tracing::debug!("SSH command attempt completed, exit code: {:?}", world.last_exit_code);
 }
 
@@ -293,7 +291,7 @@ pub async fn given_rbee_hive_crashed(world: &mut World) {
         let _ = proc.kill().await;
         tracing::debug!("Killed rbee-hive process");
     }
-    
+
     // Mark that HTTP requests should fail
     world.last_command = Some("rbee_hive_crashed".to_string());
     tracing::debug!("rbee-hive process crashed (simulated)");
@@ -312,26 +310,21 @@ pub async fn given_rbee_hive_buggy(world: &mut World) {
 pub async fn when_queen_queries_worker_registry(world: &mut World, url: String) {
     let client = crate::steps::world::create_http_client();
     let start = std::time::Instant::now();
-    
+
     // Attempt HTTP GET with timeout (client already has 10s timeout)
-    let result = client.get(&url)
-        .send()
-        .await;
-    
+    let result = client.get(&url).send().await;
+
     match result {
         Ok(response) => {
             world.last_http_status = Some(response.status().as_u16());
-            
+
             // Try to read response body
             match response.text().await {
                 Ok(body) => {
                     world.last_http_response = Some(body.clone());
-                    
+
                     // If marked as buggy, body might be malformed JSON
-                    if world.last_command.as_ref()
-                        .map(|c| c.contains("buggy"))
-                        .unwrap_or(false)
-                    {
+                    if world.last_command.as_ref().map(|c| c.contains("buggy")).unwrap_or(false) {
                         // Try to parse as JSON to detect malformed response
                         if serde_json::from_str::<serde_json::Value>(&body).is_err() {
                             world.last_error = Some(crate::steps::world::ErrorResponse {
@@ -355,7 +348,7 @@ pub async fn when_queen_queries_worker_registry(world: &mut World, url: String) 
         }
         Err(e) => {
             let elapsed = start.elapsed();
-            
+
             if e.is_timeout() {
                 world.last_error = Some(crate::steps::world::ErrorResponse {
                     code: "HTTP_TIMEOUT".to_string(),
@@ -377,7 +370,7 @@ pub async fn when_queen_queries_worker_registry(world: &mut World, url: String) 
             }
         }
     }
-    
+
     tracing::debug!("HTTP query completed, error: {:?}", world.last_error);
 }
 
@@ -386,25 +379,28 @@ pub async fn when_queen_queries_worker_registry(world: &mut World, url: String) 
 #[when(expr = "queen-rbee queries worker registry")]
 pub async fn when_queen_queries_registry(world: &mut World) {
     let registry = world.hive_registry();
-    
+
     match registry.list().await {
         workers => {
             world.last_exit_code = Some(0);
             tracing::info!("✅ Registry query successful: {} workers found", workers.len());
-            
+
             // Store workers in world state for verification
             world.workers.clear();
             for worker in workers {
-                world.workers.insert(worker.id.clone(), crate::steps::world::WorkerInfo {
-                    id: worker.id,
-                    url: worker.url,
-                    model_ref: worker.model_ref,
-                    state: format!("{:?}", worker.state),
-                    backend: worker.backend,
-                    device: worker.device,
-                    slots_total: worker.slots_total,
-                    slots_available: worker.slots_available,
-                });
+                world.workers.insert(
+                    worker.id.clone(),
+                    crate::steps::world::WorkerInfo {
+                        id: worker.id,
+                        url: worker.url,
+                        model_ref: worker.model_ref,
+                        state: format!("{:?}", worker.state),
+                        backend: worker.backend,
+                        device: worker.device,
+                        slots_total: worker.slots_total,
+                        slots_available: worker.slots_available,
+                    },
+                );
             }
         }
     }
@@ -415,7 +411,7 @@ pub async fn when_queen_queries_registry(world: &mut World) {
 pub async fn when_rbee_hive_returns_invalid_json(world: &mut World, json: String) {
     // Store the malformed JSON in response
     world.last_http_response = Some(json.clone());
-    
+
     // Try to parse it to trigger error
     if let Err(e) = serde_json::from_str::<serde_json::Value>(&json) {
         world.last_error = Some(crate::steps::world::ErrorResponse {
@@ -427,7 +423,7 @@ pub async fn when_rbee_hive_returns_invalid_json(world: &mut World, json: String
             })),
         });
     }
-    
+
     tracing::debug!("Stored malformed JSON response");
 }
 
@@ -435,22 +431,21 @@ pub async fn when_rbee_hive_returns_invalid_json(world: &mut World, json: String
 #[then(expr = "the HTTP request times out after {int}s")]
 pub async fn then_http_times_out(world: &mut World, timeout: u16) {
     use crate::steps::error_helpers::*;
-    
+
     // Verify error occurred
-    verify_error_occurred(world)
-        .expect("Expected HTTP timeout error but none occurred");
-    
+    verify_error_occurred(world).expect("Expected HTTP timeout error but none occurred");
+
     // Verify error code is HTTP_TIMEOUT or HTTP_CONNECTION_FAILED
     verify_error_code(world, "HTTP_TIMEOUT")
         .or_else(|_| verify_error_code(world, "HTTP_CONNECTION_FAILED"))
         .expect("Expected HTTP_TIMEOUT or HTTP_CONNECTION_FAILED error code");
-    
+
     // Verify error message mentions timeout or connection
     verify_error_message_contains(world, "timeout")
         .or_else(|_| verify_error_message_contains(world, "connect"))
         .or_else(|_| verify_error_message_contains(world, "connection"))
         .expect("Error message should mention timeout or connection");
-    
+
     tracing::debug!("✅ HTTP timeout verified after {}s", timeout);
 }
 
@@ -458,11 +453,10 @@ pub async fn then_http_times_out(world: &mut World, timeout: u16) {
 #[then(expr = "all retries fail")]
 pub async fn then_all_retries_fail(world: &mut World) {
     use crate::steps::error_helpers::*;
-    
+
     // Verify error still exists after retries
-    verify_error_occurred(world)
-        .expect("Expected error after all retries failed");
-    
+    verify_error_occurred(world).expect("Expected error after all retries failed");
+
     // Error should still be present, indicating retries didn't succeed
     tracing::debug!("✅ Verified all retries failed, error persists");
 }
@@ -471,21 +465,19 @@ pub async fn then_all_retries_fail(world: &mut World) {
 #[then(expr = "queen-rbee detects JSON parse error")]
 pub async fn then_queen_detects_parse_error(world: &mut World) {
     use crate::steps::error_helpers::*;
-    
+
     // Verify error occurred
-    verify_error_occurred(world)
-        .expect("Expected JSON parse error but none occurred");
-    
+    verify_error_occurred(world).expect("Expected JSON parse error but none occurred");
+
     // Verify error code
-    verify_error_code(world, "JSON_PARSE_ERROR")
-        .expect("Expected JSON_PARSE_ERROR error code");
-    
+    verify_error_code(world, "JSON_PARSE_ERROR").expect("Expected JSON_PARSE_ERROR error code");
+
     // Verify error message mentions JSON or parse
     verify_error_message_contains(world, "JSON")
         .or_else(|_| verify_error_message_contains(world, "parse"))
         .or_else(|_| verify_error_message_contains(world, "Invalid"))
         .expect("Error message should mention JSON or parse error");
-    
+
     tracing::debug!("✅ JSON parse error detected and verified");
 }
 
@@ -1155,7 +1147,7 @@ pub async fn given_error_condition(world: &mut World) {
                 .as_secs()
         })),
     });
-    
+
     world.last_exit_code = Some(1);
     tracing::info!("✅ Error condition set up NICE!");
 }
@@ -1186,10 +1178,10 @@ pub async fn when_error_occurs(world: &mut World) {
 pub async fn then_error_propagated(world: &mut World) {
     // Verify error exists in World state
     assert!(world.last_error.is_some(), "Expected error to be set");
-    
+
     // Verify exit code indicates failure
     assert_eq!(world.last_exit_code, Some(1), "Expected exit code 1");
-    
+
     // Verify stderr contains error message
     if let Some(ref error) = world.last_error {
         assert!(
@@ -1205,16 +1197,13 @@ pub async fn then_error_propagated(world: &mut World) {
 pub async fn then_cleanup_performed(world: &mut World) {
     // Verify cleanup by checking temp directory is empty or cleaned
     if let Some(ref temp_dir) = world.temp_dir {
-        let entries = std::fs::read_dir(temp_dir.path())
-            .ok()
-            .map(|dir| dir.count())
-            .unwrap_or(0);
-        
+        let entries = std::fs::read_dir(temp_dir.path()).ok().map(|dir| dir.count()).unwrap_or(0);
+
         tracing::info!("✅ Cleanup verified: {} temp files remaining NICE!", entries);
     } else {
         tracing::info!("✅ Cleanup verified: no temp directory NICE!");
     }
-    
+
     // Verify processes are cleaned up
     let active_processes = world.rbee_hive_processes.len() + world.worker_processes.len();
     if active_processes == 0 {
@@ -1268,14 +1257,14 @@ pub async fn when_gpu_vram_exhausted(world: &mut World) {
 pub async fn then_gpu_fails_immediately(world: &mut World) {
     assert_eq!(world.last_exit_code, Some(1), "Expected exit code 1 for FAIL FAST");
     assert!(world.last_error.is_some(), "Expected error to be set");
-    
+
     if let Some(ref error) = world.last_error {
         assert!(
             error.code == "CUDA_DEVICE_FAILED" || error.code == "GPU_VRAM_EXHAUSTED",
             "Expected GPU error code"
         );
     }
-    
+
     tracing::info!("✅ FAIL FAST verified: exit code 1, NO fallback attempted");
 }
 
@@ -1367,11 +1356,11 @@ pub async fn when_request_exceeds_capacity(world: &mut World) {
 pub async fn then_request_rejected_503(world: &mut World) {
     assert_eq!(world.last_http_status, Some(503), "Expected 503 status");
     assert!(world.last_error.is_some(), "Expected error to be set");
-    
+
     if let Some(ref error) = world.last_error {
         assert_eq!(error.code, "SERVICE_UNAVAILABLE", "Expected SERVICE_UNAVAILABLE error code");
     }
-    
+
     tracing::info!("✅ Request rejected with 503 Service Unavailable");
 }
 

@@ -19,14 +19,14 @@ use rbee_hive::registry::{WorkerInfo as HiveWorkerInfo, WorkerState};
 pub async fn given_no_workers(world: &mut World) {
     // TEAM-064: Clear both World state AND registry
     world.workers.clear();
-    
+
     // Clear rbee-hive registry
     let registry = world.hive_registry();
     let workers = registry.list().await;
     for worker in workers {
         registry.remove(&worker.id).await;
     }
-    
+
     tracing::info!("✅ Cleared all workers from World AND registry");
 }
 
@@ -85,7 +85,7 @@ pub async fn given_worker_with_model_and_state(
         slots_available,
     };
     world.workers.insert(worker_id.clone(), world_worker);
-    
+
     // TEAM-064: ALSO register in rbee-hive registry
     // TEAM-101: Added missing fields (failed_health_checks, pid)
     let registry = world.hive_registry();
@@ -106,11 +106,11 @@ pub async fn given_worker_with_model_and_state(
         slots_available,
         failed_health_checks: 0,
         pid: None,
-        restart_count: 0, // TEAM-104: Added restart tracking
+        restart_count: 0,   // TEAM-104: Added restart tracking
         last_restart: None, // TEAM-104: Added restart tracking
     };
     registry.register(hive_worker).await;
-    
+
     tracing::info!("✅ Registered worker {} in BOTH World AND registry", worker_id);
 }
 
@@ -143,7 +143,10 @@ pub async fn when_query_url(world: &mut World, url: String) {
 #[when(expr = "rbee-keeper queries the worker registry")]
 pub async fn when_query_worker_registry(world: &mut World) {
     // TEAM-058: Implemented worker registry query per TEAM-057 TODO
-    let url = format!("{}/v2/workers/list", world.queen_rbee_url.as_ref().unwrap_or(&"http://localhost:8080".to_string()));
+    let url = format!(
+        "{}/v2/workers/list",
+        world.queen_rbee_url.as_ref().unwrap_or(&"http://localhost:8080".to_string())
+    );
     let client = reqwest::Client::new();
     match client.get(&url).send().await {
         Ok(resp) => {
@@ -166,13 +169,13 @@ pub async fn then_response_is(world: &mut World, step: &cucumber::gherkin::Step)
 
     // TEAM-058: Implemented JSON response verification per TEAM-057 TODO
     let actual_response = world.last_http_response.as_ref().expect("No HTTP response captured");
-    
+
     // Parse both as JSON for comparison
-    let expected: serde_json::Value = serde_json::from_str(expected_json)
-        .expect("Expected JSON is not valid");
+    let expected: serde_json::Value =
+        serde_json::from_str(expected_json).expect("Expected JSON is not valid");
     let actual: serde_json::Value = serde_json::from_str(actual_response)
         .unwrap_or_else(|_| serde_json::json!({"raw": actual_response}));
-    
+
     assert_eq!(actual, expected, "Response JSON mismatch");
     tracing::info!("✅ Response matches expected JSON");
 }
@@ -196,27 +199,30 @@ pub async fn then_proceed_to_phase_8_expect_503(world: &mut World) {
 pub async fn then_registry_returns_worker(world: &mut World, worker_id: String, state: String) {
     // TEAM-064: Verify against rbee-hive registry, not just HTTP response
     let registry = world.hive_registry();
-    
+
     // Get worker from registry
-    let worker = registry.get(&worker_id).await
+    let worker = registry
+        .get(&worker_id)
+        .await
         .expect(&format!("Worker {} not found in registry", worker_id));
-    
+
     // Verify state matches
     let actual_state = match worker.state {
         WorkerState::Idle => "idle",
         WorkerState::Busy => "busy",
         WorkerState::Loading => "loading",
     };
-    
+
     assert_eq!(actual_state, state, "Worker state mismatch in registry");
     tracing::info!("✅ Registry has worker {} with state {} (verified)", worker_id, state);
-    
+
     // ALSO verify HTTP response if available (backward compat)
     if let Some(response) = world.last_http_response.as_ref() {
         if let Ok(workers) = serde_json::from_str::<serde_json::Value>(response) {
             if let Some(workers_array) = workers.as_array() {
-                if let Some(http_worker) = workers_array.iter()
-                    .find(|w| w["id"].as_str() == Some(&worker_id)) {
+                if let Some(http_worker) =
+                    workers_array.iter().find(|w| w["id"].as_str() == Some(&worker_id))
+                {
                     let http_state = http_worker["state"].as_str().unwrap_or("unknown");
                     assert_eq!(http_state, state, "HTTP response state mismatch");
                     tracing::info!("✅ HTTP response also matches (double-verified)");
@@ -240,7 +246,7 @@ pub async fn then_send_inference_direct(world: &mut World, url: String) {
         "prompt": "test prompt",
         "max_tokens": 10
     });
-    
+
     match client.post(&url).json(&payload).send().await {
         Ok(resp) => {
             let status = resp.status();

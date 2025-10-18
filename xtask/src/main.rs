@@ -29,10 +29,10 @@ fn main() -> Result<()> {
             // - If neither is set, use live mode (no warning)
             let show_quiet_warning = quiet && !really_quiet;
             let actual_quiet = really_quiet;
-            
-            let config = tasks::bdd::BddConfig { 
-                tags, 
-                feature, 
+
+            let config = tasks::bdd::BddConfig {
+                tags,
+                feature,
                 quiet: actual_quiet,
                 really_quiet,
                 show_quiet_warning,

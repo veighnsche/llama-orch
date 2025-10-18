@@ -23,24 +23,24 @@ impl SshPreflight {
     /// Validate SSH connection
     pub async fn validate_connection(&self) -> Result<()> {
         tracing::info!("Validating SSH connection to {}@{}:{}", self.user, self.host, self.port);
-        
+
         // Simulate SSH validation
         // In real implementation, would use ssh2 crate
         if self.host.contains("unreachable") {
             anyhow::bail!("SSH connection timeout");
         }
-        
+
         if self.host.contains("invalid") {
             anyhow::bail!("SSH authentication failed");
         }
-        
+
         Ok(())
     }
 
     /// Execute a test command over SSH
     pub async fn execute_command(&self, command: &str) -> Result<String> {
         tracing::info!("Executing SSH command: {}", command);
-        
+
         // Simulate command execution
         // In real implementation, would use ssh2 crate
         if command == "echo test" {
@@ -57,7 +57,7 @@ impl SshPreflight {
         let start = Instant::now();
         self.execute_command("echo test").await?;
         let elapsed = start.elapsed();
-        
+
         tracing::info!("SSH latency: {:?}", elapsed);
         Ok(elapsed)
     }
@@ -75,22 +75,14 @@ mod tests {
 
     #[tokio::test]
     async fn test_ssh_preflight_creation() {
-        let preflight = SshPreflight::new(
-            "localhost".to_string(),
-            22,
-            "user".to_string(),
-        );
+        let preflight = SshPreflight::new("localhost".to_string(), 22, "user".to_string());
         assert_eq!(preflight.host, "localhost");
         assert_eq!(preflight.port, 22);
     }
 
     #[tokio::test]
     async fn test_execute_command() {
-        let preflight = SshPreflight::new(
-            "localhost".to_string(),
-            22,
-            "user".to_string(),
-        );
+        let preflight = SshPreflight::new("localhost".to_string(), 22, "user".to_string());
         let result = preflight.execute_command("echo test").await.unwrap();
         assert_eq!(result, "test");
     }

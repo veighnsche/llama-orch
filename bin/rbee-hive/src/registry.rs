@@ -153,29 +153,29 @@ impl WorkerRegistry {
         let mut workers = self.workers.write().await;
         workers.clear();
     }
-    
+
     /// Force-kill a worker by PID (TEAM-113: For hung worker cleanup)
-    /// 
+    ///
     /// Attempts graceful SIGTERM first, waits 10 seconds, then sends SIGKILL if needed.
     /// Returns true if worker was found and kill signal was sent.
     pub async fn force_kill_worker(&self, worker_id: &str) -> Result<bool, String> {
         use nix::sys::signal::{kill, Signal};
         use nix::unistd::Pid;
         use std::time::Duration;
-        
+
         let workers = self.workers.read().await;
         let worker = match workers.get(worker_id) {
             Some(w) => w,
             None => return Ok(false), // Worker not found
         };
-        
+
         let pid = match worker.pid {
             Some(p) => p,
             None => return Err("Worker has no PID stored".to_string()),
         };
-        
+
         tracing::info!("Force-killing worker {} (PID {})", worker_id, pid);
-        
+
         // Try SIGTERM first (graceful shutdown)
         let pid_i32 = pid as i32;
         if let Err(e) = kill(Pid::from_raw(pid_i32), Signal::SIGTERM) {
@@ -183,15 +183,15 @@ impl WorkerRegistry {
             tracing::warn!("SIGTERM failed for PID {}: {}", pid, e);
             return Ok(true); // Consider it handled
         }
-        
+
         tracing::info!("Sent SIGTERM to PID {}, waiting 10 seconds...", pid);
-        
+
         // Drop the read lock before sleeping
         drop(workers);
-        
+
         // Wait 10 seconds for graceful shutdown
         tokio::time::sleep(Duration::from_secs(10)).await;
-        
+
         // Check if process still alive
         if process_still_alive(pid) {
             tracing::warn!("Process {} still alive after SIGTERM, sending SIGKILL", pid);
@@ -203,7 +203,7 @@ impl WorkerRegistry {
         } else {
             tracing::info!("Process {} terminated gracefully", pid);
         }
-        
+
         Ok(true)
     }
 }
@@ -212,7 +212,7 @@ impl WorkerRegistry {
 fn process_still_alive(pid: u32) -> bool {
     use nix::sys::signal::kill;
     use nix::unistd::Pid;
-    
+
     // Signal 0 doesn't actually send a signal, just checks if process exists
     // Use None as signal to check process existence
     kill(Pid::from_raw(pid as i32), None).is_ok()

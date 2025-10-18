@@ -35,13 +35,13 @@ pub async fn when_error_returned(world: &mut World) {
 #[then(expr = "the response format is:")]
 pub async fn then_response_format(world: &mut World, step: &cucumber::gherkin::Step) {
     let docstring = step.docstring.as_ref().expect("Expected a docstring");
-    let expected_json: serde_json::Value = serde_json::from_str(docstring.trim())
-        .expect("Expected valid JSON in docstring");
-    
+    let expected_json: serde_json::Value =
+        serde_json::from_str(docstring.trim()).expect("Expected valid JSON in docstring");
+
     // Verify error has required fields
     assert!(expected_json.get("code").is_some(), "Expected 'code' field");
     assert!(expected_json.get("message").is_some(), "Expected 'message' field");
-    
+
     tracing::info!("✅ Response format validated: code, message, details");
 }
 
@@ -49,7 +49,7 @@ pub async fn then_response_format(world: &mut World, step: &cucumber::gherkin::S
 #[then(expr = "the error code is one of the defined error codes")]
 pub async fn then_error_code_defined(world: &mut World) {
     let error = world.last_error.as_ref().expect("Expected error to be set");
-    
+
     // Defined error codes from spec
     let valid_codes = vec![
         "INSUFFICIENT_RAM",
@@ -59,13 +59,13 @@ pub async fn then_error_code_defined(world: &mut World) {
         "WORKER_BUSY",
         "WORKER_ERROR",
     ];
-    
+
     assert!(
         valid_codes.contains(&error.code.as_str()),
         "Error code '{}' not in defined list",
         error.code
     );
-    
+
     tracing::info!("✅ Error code '{}' is defined", error.code);
 }
 
@@ -73,11 +73,11 @@ pub async fn then_error_code_defined(world: &mut World) {
 #[then(expr = "the message is human-readable")]
 pub async fn then_message_human_readable(world: &mut World) {
     let error = world.last_error.as_ref().expect("Expected error to be set");
-    
+
     assert!(!error.message.is_empty(), "Error message should not be empty");
     assert!(error.message.len() >= 10, "Error message too short: {}", error.message);
     assert!(error.message.len() <= 500, "Error message too long: {} chars", error.message.len());
-    
+
     tracing::info!("✅ Error message is human-readable: {} chars", error.message.len());
 }
 
@@ -85,10 +85,9 @@ pub async fn then_message_human_readable(world: &mut World) {
 #[then(expr = "the details provide actionable context")]
 pub async fn then_details_actionable(world: &mut World) {
     let error = world.last_error.as_ref().expect("Expected error to be set");
-    
+
     if let Some(details) = &error.details {
-        assert!(details.is_object() || details.is_string(), 
-            "Details should be object or string");
+        assert!(details.is_object() || details.is_string(), "Details should be object or string");
         tracing::info!("✅ Error details provide actionable context");
     } else {
         tracing::warn!("⚠️  No details provided, but not required");

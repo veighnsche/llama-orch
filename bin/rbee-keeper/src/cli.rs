@@ -225,7 +225,16 @@ pub async fn handle_command(cli: Cli) -> anyhow::Result<()> {
         Commands::Setup { action } => crate::commands::setup::handle(action).await,
         Commands::Hive { action } => crate::commands::hive::handle(action),
         Commands::Infer { node, model, prompt, max_tokens, temperature, backend, device } => {
-            crate::commands::infer::handle(node, model, prompt, max_tokens, temperature, backend, device).await
+            crate::commands::infer::handle(
+                node,
+                model,
+                prompt,
+                max_tokens,
+                temperature,
+                backend,
+                device,
+            )
+            .await
         }
         Commands::Workers { action } => crate::commands::workers::handle(action).await,
         Commands::Logs { node, follow } => crate::commands::logs::handle(node, follow).await,

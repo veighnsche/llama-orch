@@ -40,7 +40,7 @@ pub async fn handle_add_node(
             }),
         );
     }
-    
+
     // TEAM-044: Smart SSH mocking for tests
     // If MOCK_SSH is set, simulate SSH based on hostname:
     // - "unreachable" in hostname -> fail (to test error handling)
@@ -144,7 +144,7 @@ pub async fn handle_remove_node(
     Json(req): Json<serde_json::Value>,
 ) -> impl IntoResponse {
     let node_name = req["node_name"].as_str().unwrap_or("");
-    
+
     // TEAM-113: Validate node name before processing
     if let Err(e) = validate_identifier(node_name, 64) {
         error!("Invalid node name: {}", e);

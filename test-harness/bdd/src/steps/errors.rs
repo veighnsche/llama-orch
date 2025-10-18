@@ -174,7 +174,7 @@ pub async fn then_error_contains_generic_network_desc(world: &mut World) {
 pub async fn when_health_check_fails_once(world: &mut World) {
     let registry = world.hive_registry();
     let workers = registry.list().await;
-    
+
     if let Some(worker) = workers.first() {
         let count = registry.increment_failed_health_checks(&worker.id).await;
         tracing::info!("✅ Worker health check failed, count: {:?}", count);

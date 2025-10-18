@@ -53,6 +53,7 @@ pub struct AppState {
 /// * `download_tracker` - Download tracker (shared state)
 /// * `server_addr` - Server bind address for callback URL construction
 /// * `expected_token` - API token for authentication (TEAM-102)
+/// * `audit_logger` - Audit logger for security events (TEAM-114)
 ///
 /// # Returns
 /// Router with all endpoints configured
@@ -63,14 +64,16 @@ pub fn create_router(
     download_tracker: Arc<DownloadTracker>,
     server_addr: std::net::SocketAddr,
     expected_token: String, // TEAM-102: API token for authentication
+    audit_logger: Option<Arc<audit_logging::AuditLogger>>, // TEAM-114: Audit logging
 ) -> Router {
-    let state = AppState { 
-        registry, 
-        model_catalog, 
-        provisioner, 
-        download_tracker, 
+    let state = AppState {
+        registry,
+        model_catalog,
+        provisioner,
+        download_tracker,
         server_addr,
         expected_token, // TEAM-102
+        audit_logger,   // TEAM-114
     };
 
     // TEAM-102: Split routes into public and protected
@@ -97,9 +100,7 @@ pub fn create_router(
         .layer(middleware::from_fn_with_state(state.clone(), auth_middleware));
 
     // TEAM-102: Merge public and protected routes
-    public_routes
-        .merge(protected_routes)
-        .with_state(state)
+    public_routes.merge(protected_routes).with_state(state)
 }
 
 #[cfg(test)]
@@ -119,7 +120,16 @@ mod tests {
         let download_tracker = Arc::new(DownloadTracker::new());
         let addr: std::net::SocketAddr = "127.0.0.1:9200".parse().unwrap();
         let expected_token = "test-token-12345".to_string(); // TEAM-102
-        let _router = create_router(registry, catalog, provisioner, download_tracker, addr, expected_token);
+        let audit_logger = None; // TEAM-114: Disabled for tests
+        let _router = create_router(
+            registry,
+            catalog,
+            provisioner,
+            download_tracker,
+            addr,
+            expected_token,
+            audit_logger,
+        );
         // Router creation should not panic
     }
 }

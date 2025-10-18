@@ -62,12 +62,11 @@ pub async fn handle(addr: String) -> Result<()> {
 
     // TEAM-102: Load API token for authentication
     // TODO: Replace with secrets-management file-based loading
-    let expected_token = std::env::var("LLORCH_API_TOKEN")
-        .unwrap_or_else(|_| {
-            tracing::info!("⚠️  LLORCH_API_TOKEN not set - using dev mode (no auth)");
-            String::new()
-        });
-    
+    let expected_token = std::env::var("LLORCH_API_TOKEN").unwrap_or_else(|_| {
+        tracing::info!("⚠️  LLORCH_API_TOKEN not set - using dev mode (no auth)");
+        String::new()
+    });
+
     if !expected_token.is_empty() {
         tracing::info!("✅ API token loaded (authentication enabled)");
     }
@@ -81,14 +80,12 @@ pub async fn handle(addr: String) -> Result<()> {
             "local" => {
                 let base_dir = std::env::var("LLORCH_AUDIT_DIR")
                     .unwrap_or_else(|_| "/var/log/llama-orch/audit".to_string());
-                Some(audit_logging::AuditMode::Local {
-                    base_dir: PathBuf::from(base_dir),
-                })
+                Some(audit_logging::AuditMode::Local { base_dir: PathBuf::from(base_dir) })
             }
             _ => None,
         })
         .unwrap_or(audit_logging::AuditMode::Disabled);
-    
+
     let audit_config = audit_logging::AuditConfig {
         mode: audit_mode,
         service_id: "rbee-hive".to_string(),
@@ -100,7 +97,7 @@ pub async fn handle(addr: String) -> Result<()> {
             critical_immediate: true, // Always flush security events immediately
         },
     };
-    
+
     let audit_logger = match audit_logging::AuditLogger::new(audit_config) {
         Ok(logger) => {
             tracing::info!("✅ Audit logging initialized (disabled for home lab mode)");
@@ -114,13 +111,15 @@ pub async fn handle(addr: String) -> Result<()> {
 
     // Create router
     // TEAM-102: Added expected_token for authentication
+    // TEAM-114: Added audit_logger for security events
     let router = create_router(
         registry.clone(),
         model_catalog.clone(),
         provisioner.clone(),
         download_tracker.clone(),
         addr,
-        expected_token, // TEAM-102
+        expected_token,       // TEAM-102
+        audit_logger.clone(), // TEAM-114
     );
 
     // Create HTTP server
@@ -160,11 +159,11 @@ pub async fn handle(addr: String) -> Result<()> {
 /// TEAM-105: Parallel shutdown with progress metrics, 30s timeout, and audit logging
 async fn shutdown_all_workers(registry: Arc<WorkerRegistry>) {
     use std::time::Instant;
-    
+
     let shutdown_start = Instant::now();
     let workers = registry.list().await;
     let total_workers = workers.len();
-    
+
     tracing::info!(
         "TEAM-105: Starting parallel shutdown of {} workers (30s timeout)",
         total_workers
@@ -177,16 +176,16 @@ async fn shutdown_all_workers(registry: Arc<WorkerRegistry>) {
 
     // TEAM-105: Parallel shutdown with progress tracking and 30s timeout
     let mut shutdown_tasks = Vec::new();
-    
+
     for worker in workers {
         let worker_id = worker.id.clone();
         let worker_url = worker.url.clone();
         let worker_pid = worker.pid;
-        
+
         // Spawn concurrent shutdown task for each worker
         let task = tokio::spawn(async move {
             tracing::info!("TEAM-105: Initiating shutdown for worker {}", worker_id);
-            
+
             // Try graceful shutdown via HTTP
             let graceful_success = match shutdown_worker(&worker_url).await {
                 Ok(_) => {
@@ -198,15 +197,15 @@ async fn shutdown_all_workers(registry: Arc<WorkerRegistry>) {
                     false
                 }
             };
-            
+
             // TEAM-101: Force-kill if worker doesn't respond
             if let Some(pid) = worker_pid {
                 force_kill_worker_if_needed(pid, &worker_id).await;
             }
-            
+
             (worker_id, graceful_success)
         });
-        
+
         shutdown_tasks.push(task);
     }
 
@@ -215,11 +214,11 @@ async fn shutdown_all_workers(registry: Arc<WorkerRegistry>) {
     let mut graceful_count = 0;
     let mut forced_count = 0;
     let mut timeout_count = 0;
-    
+
     for task in shutdown_tasks {
         let elapsed = shutdown_start.elapsed();
         let remaining = std::time::Duration::from_secs(30).saturating_sub(elapsed);
-        
+
         if remaining.is_zero() {
             // TEAM-105: Timeout exceeded - force-kill remaining workers
             tracing::error!(
@@ -229,7 +228,7 @@ async fn shutdown_all_workers(registry: Arc<WorkerRegistry>) {
             task.abort();
             continue;
         }
-        
+
         match tokio::time::timeout(remaining, task).await {
             Ok(Ok((worker_id, graceful))) => {
                 completed += 1;
@@ -259,15 +258,15 @@ async fn shutdown_all_workers(registry: Arc<WorkerRegistry>) {
 
     // Clear registry
     registry.clear().await;
-    
+
     let total_duration = shutdown_start.elapsed();
-    
+
     // TEAM-105: Audit logging for shutdown completion
     tracing::info!(
         "TEAM-105: SHUTDOWN AUDIT - Total: {}, Graceful: {}, Forced: {}, Timeout: {}, Duration: {:.2}s",
         total_workers, graceful_count, forced_count, timeout_count, total_duration.as_secs_f64()
     );
-    
+
     if timeout_count > 0 {
         tracing::warn!(
             "TEAM-105: {} workers exceeded shutdown timeout and were force-killed",
@@ -297,15 +296,15 @@ async fn shutdown_worker(worker_url: &str) -> Result<()> {
 /// TEAM-101: Force-kill worker if it doesn't respond to graceful shutdown
 /// Implements SIGTERM → wait 10s → SIGKILL sequence
 async fn force_kill_worker_if_needed(pid: u32, worker_id: &str) {
-    use sysinfo::{System, Pid, Signal};
-    
+    use sysinfo::{Pid, Signal, System};
+
     // Wait 10 seconds for graceful shutdown
     tokio::time::sleep(std::time::Duration::from_secs(10)).await;
-    
+
     // Check if process still exists
     let mut sys = System::new();
     sys.refresh_processes();
-    
+
     let pid_obj = Pid::from_u32(pid);
     if let Some(process) = sys.process(pid_obj) {
         tracing::warn!(
@@ -313,7 +312,7 @@ async fn force_kill_worker_if_needed(pid: u32, worker_id: &str) {
             pid = pid,
             "Worker did not respond to graceful shutdown, sending SIGKILL"
         );
-        
+
         // Send SIGKILL
         if process.kill_with(Signal::Kill).is_some() {
             tracing::info!(
@@ -330,10 +329,6 @@ async fn force_kill_worker_if_needed(pid: u32, worker_id: &str) {
             );
         }
     } else {
-        tracing::info!(
-            worker_id = worker_id,
-            pid = pid,
-            "Worker process exited gracefully"
-        );
+        tracing::info!(worker_id = worker_id, pid = pid, "Worker process exited gracefully");
     }
 }

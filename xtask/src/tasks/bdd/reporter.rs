@@ -12,7 +12,7 @@ pub fn print_banner(config: &BddConfig, timestamp: &str) {
     println!("{}", format!("╚{}╝", separator).cyan());
     println!();
     println!("{} {}", "📅 Timestamp:".blue(), timestamp);
-    
+
     // Show output mode
     if config.quiet {
         println!("{} {}", "🔇 Output Mode:".yellow(), "QUIET (summary only)");
@@ -20,7 +20,7 @@ pub fn print_banner(config: &BddConfig, timestamp: &str) {
         println!("{} {}", "📺 Output Mode:".green(), "LIVE (all stdout/stderr shown in real-time)");
     }
     println!();
-    
+
     // Show filters
     if let Some(ref tags) = config.tags {
         println!("{} {}", "🏷️  Tags:".blue(), tags);
@@ -57,20 +57,20 @@ pub fn print_test_summary(results: &TestResults, elapsed: std::time::Duration) {
     println!("{}", "║                        TEST RESULTS                            ║".cyan());
     println!("{}", format!("╚{}╝", separator).cyan());
     println!();
-    
+
     if results.exit_code == 0 {
         println!("{}", "✅ ALL TESTS PASSED".green());
     } else {
         println!("{}", "❌ TESTS FAILED".red());
     }
-    
+
     println!();
     println!("{}", "📊 Summary:".blue());
     println!("   {} {}", "✅ Passed:".green(), results.passed);
     println!("   {} {}", "❌ Failed:".red(), results.failed);
     println!("   {} {}", "⏭️  Skipped:".yellow(), results.skipped);
     println!();
-    
+
     // Show elapsed time
     let secs = elapsed.as_secs();
     let mins = secs / 60;
@@ -91,16 +91,16 @@ pub fn print_failure_details(paths: &OutputPaths) -> Result<()> {
             println!("{}", "                    ❌ FAILURE DETAILS ❌".red());
             println!("{}", separator.red());
             println!();
-            
+
             let content = fs::read_to_string(failures_file)?;
             println!("{}", content);
-            
+
             println!();
             println!("{}", separator.red());
             println!();
-            
+
             println!("{} {}", "💾 Detailed failures saved to:".blue(), failures_file.display());
-            
+
             if let Some(ref rerun_file) = paths.rerun_file {
                 println!();
                 println!("{}", "🔄 Rerun command generated:".green());
@@ -113,39 +113,59 @@ pub fn print_failure_details(paths: &OutputPaths) -> Result<()> {
             println!();
         }
     }
-    
+
     Ok(())
 }
 
-pub fn print_output_files(paths: &OutputPaths, has_failures: bool, failed_count: usize, elapsed: std::time::Duration) {
+pub fn print_output_files(
+    paths: &OutputPaths,
+    has_failures: bool,
+    failed_count: usize,
+    elapsed: std::time::Duration,
+) {
     println!("{}", "📁 Output Files:".blue());
     println!("   {} {}", "Summary:".cyan(), paths.results_file.display());
-    
+
     if has_failures {
         if let Some(ref failures_file) = paths.failures_file {
-            println!("   {} {}  {}", "Failures:".red(), failures_file.display(), "⭐ START HERE".yellow());
+            println!(
+                "   {} {}  {}",
+                "Failures:".red(),
+                failures_file.display(),
+                "⭐ START HERE".yellow()
+            );
         }
         if let Some(ref rerun_file) = paths.rerun_file {
-            println!("   {} {}  {}", "Rerun Cmd:".green(), rerun_file.display(), "📋 COPY-PASTE".yellow());
+            println!(
+                "   {} {}  {}",
+                "Rerun Cmd:".green(),
+                rerun_file.display(),
+                "📋 COPY-PASTE".yellow()
+            );
         }
     }
-    
+
     println!("   {} {}", "Test Output:".cyan(), paths.test_output.display());
     println!("   {} {}", "Compile Log:".cyan(), paths.compile_log.display());
     println!("   {} {}", "Full Log:".cyan(), paths.full_log.display());
     println!();
-    
+
     // Quick commands
     println!("{}", "💡 Quick Commands:".blue());
     if has_failures {
         if let Some(ref failures_file) = paths.failures_file {
-            println!("   {} {}  {}", "View failures:".red(), format!("less {}", failures_file.display()), "⭐ DEBUG".yellow());
+            println!(
+                "   {} {}  {}",
+                "View failures:".red(),
+                format!("less {}", failures_file.display()),
+                "⭐ DEBUG".yellow()
+            );
         }
     }
     println!("   {} {}", "View summary:".cyan(), format!("cat {}", paths.results_file.display()));
     println!("   {} {}", "View test log:".cyan(), format!("less {}", paths.test_output.display()));
     println!();
-    
+
     // Encouragement message (different based on context)
     if has_failures {
         let separator = "━".repeat(64);
@@ -153,15 +173,12 @@ pub fn print_output_files(paths: &OutputPaths, has_failures: bool, failed_count:
         println!("{}", "💡 NEXT STEPS".cyan().bold());
         println!("{}", separator.cyan());
         println!();
-        
+
         let secs = elapsed.as_secs();
         let mins = secs / 60;
-        let time_str = if mins > 0 {
-            format!("{}m {}s", mins, secs % 60)
-        } else {
-            format!("{}s", secs)
-        };
-        
+        let time_str =
+            if mins > 0 { format!("{}m {}s", mins, secs % 60) } else { format!("{}s", secs) };
+
         println!("{}", format!("This run took: {}", time_str).cyan());
         println!("{}", format!("You have {} failing test(s).", failed_count).red());
         println!();
@@ -180,7 +197,10 @@ pub fn print_final_banner(success: bool) {
     let separator = "═".repeat(64);
     if success {
         println!("{}", format!("╔{}╗", separator).green());
-        println!("{}", "║                    ✅ SUCCESS ✅                               ║".green());
+        println!(
+            "{}",
+            "║                    ✅ SUCCESS ✅                               ║".green()
+        );
         println!("{}", format!("╚{}╝", separator).green());
     } else {
         println!("{}", format!("╔{}╗", separator).red());
@@ -196,7 +216,10 @@ pub fn print_quiet_warning() {
     println!("{}", "⚠️  WARNING: --quiet flag is deprecated!".yellow().bold());
     println!("{}", separator.yellow());
     println!();
-    println!("{}", "The --quiet flag has been disabled because you need to see the console".yellow());
+    println!(
+        "{}",
+        "The --quiet flag has been disabled because you need to see the console".yellow()
+    );
     println!("{}", "output during debugging. Live output helps you:".yellow());
     println!();
     println!("  {} See failures in real-time", "•".yellow());
@@ -230,7 +253,10 @@ pub fn print_quiet_warning() {
     println!("{}", "⚡ IMPORTANT: DEFAULT BEHAVIOR CHANGED! ⚡".yellow().bold());
     println!("{}", separator.yellow());
     println!();
-    println!("{}", "By default, 'cargo xtask bdd:test' now runs ONLY failing tests!".green().bold());
+    println!(
+        "{}",
+        "By default, 'cargo xtask bdd:test' now runs ONLY failing tests!".green().bold()
+    );
     println!("{}", "This makes debugging 10-100x FASTER!".green());
     println!();
     println!("{}", "To run ALL tests:".cyan());

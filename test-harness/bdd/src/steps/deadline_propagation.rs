@@ -15,7 +15,8 @@ use std::time::Duration;
 #[given(expr = "rbee-keeper sends inference request with timeout {int}s")]
 pub async fn given_rbee_keeper_sends_with_timeout(world: &mut World, timeout_secs: u64) {
     world.request_timeout_secs = Some(timeout_secs);
-    world.request_deadline = Some(chrono::Utc::now() + chrono::Duration::seconds(timeout_secs as i64));
+    world.request_deadline =
+        Some(chrono::Utc::now() + chrono::Duration::seconds(timeout_secs as i64));
     tracing::info!("Request sent with timeout {}s", timeout_secs);
 }
 
@@ -61,12 +62,12 @@ pub async fn then_all_components_same_deadline(world: &mut World) {
     let queen_dl = world.queen_deadline.expect("Queen deadline not set");
     let hive_dl = world.hive_received_deadline.expect("Hive deadline not set");
     let worker_dl = world.worker_received_deadline.expect("Worker deadline not set");
-    
+
     // Allow 1 second tolerance for propagation
     let tolerance = chrono::Duration::seconds(1);
     assert!((queen_dl - hive_dl).abs() < tolerance, "Queen and Hive deadlines differ");
     assert!((hive_dl - worker_dl).abs() < tolerance, "Hive and Worker deadlines differ");
-    
+
     tracing::info!("All components using same deadline");
 }
 
@@ -167,8 +168,7 @@ pub async fn when_hive_forwards_to_worker(world: &mut World) {
 
 #[then(expr = "request includes same {string} header")]
 pub async fn then_request_includes_same_header(world: &mut World, header: String) {
-    assert!(world.last_request_headers.contains_key(&header), 
-        "Request missing header: {}", header);
+    assert!(world.last_request_headers.contains_key(&header), "Request missing header: {}", header);
     tracing::info!("Request includes same header: {}", header);
 }
 

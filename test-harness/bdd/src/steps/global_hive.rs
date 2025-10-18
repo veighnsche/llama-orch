@@ -24,10 +24,7 @@ pub struct GlobalRbeeHive {
 
 impl GlobalRbeeHive {
     fn new(process: Child, url: String) -> Self {
-        Self {
-            process: std::sync::Mutex::new(Some(process)),
-            url,
-        }
+        Self { process: std::sync::Mutex::new(Some(process)), url }
     }
 
     pub fn url(&self) -> &str {
@@ -60,28 +57,28 @@ pub async fn start_global_rbee_hive() {
     let binary_path = workspace_dir.join("target/debug/rbee-hive");
 
     tracing::info!("🐝 Starting GLOBAL rbee-hive process at {:?}...", binary_path);
-    
+
     let child = {
         let mut child = tokio::process::Command::new(&binary_path)
-                .args(["daemon", "--addr", "127.0.0.1:9200"])
-                .env("RBEE_WORKER_HOST", "127.0.0.1")
-                .current_dir(&workspace_dir)
-                .stdout(std::process::Stdio::inherit())
-                .stderr(std::process::Stdio::inherit())
-                .spawn()
-                .expect("Failed to start global rbee-hive");
+            .args(["daemon", "--addr", "127.0.0.1:9200"])
+            .env("RBEE_WORKER_HOST", "127.0.0.1")
+            .current_dir(&workspace_dir)
+            .stdout(std::process::Stdio::inherit())
+            .stderr(std::process::Stdio::inherit())
+            .spawn()
+            .expect("Failed to start global rbee-hive");
 
         // Wait for server to be ready with 30s timeout
         let client = crate::steps::world::create_http_client();
         let start = std::time::Instant::now();
         let timeout = Duration::from_secs(30);
-        
+
         for i in 0..300 {
             if start.elapsed() > timeout {
                 let _ = child.start_kill();
                 panic!("❌ Global rbee-hive failed to start within 30s - timeout exceeded");
             }
-            
+
             // Check if process is still alive
             match child.try_wait() {
                 Ok(Some(status)) => {
@@ -94,14 +91,14 @@ pub async fn start_global_rbee_hive() {
                     tracing::warn!("Failed to check process status: {}", e);
                 }
             }
-            
+
             if let Ok(resp) = client.get("http://127.0.0.1:9200/v1/health").send().await {
                 if resp.status().is_success() {
                     tracing::info!("✅ Global rbee-hive is ready (took {:?})", start.elapsed());
                     break;
                 }
             }
-            
+
             if i % 10 == 0 && i > 0 {
                 tracing::info!("⏳ Waiting for global rbee-hive... ({:?})", start.elapsed());
             }
@@ -112,9 +109,9 @@ pub async fn start_global_rbee_hive() {
     };
 
     let hive = GlobalRbeeHive::new(child, "http://127.0.0.1:9200".to_string());
-    
+
     let _ = GLOBAL_HIVE.set(hive);
-    
+
     tracing::info!("✅ Global rbee-hive available at: http://127.0.0.1:9200");
 }
 

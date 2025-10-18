@@ -2,7 +2,7 @@
 
 //! Worker startup and pool manager callback
 
-use crate::narration::{ACTOR_LLM_WORKER_RBEE, ACTION_CALLBACK_READY, ACTION_ERROR};
+use crate::narration::{ACTION_CALLBACK_READY, ACTION_ERROR, ACTOR_LLM_WORKER_RBEE};
 use anyhow::Result;
 use observability_narration_core::{narrate, NarrationFields};
 use serde::{Deserialize, Serialize};

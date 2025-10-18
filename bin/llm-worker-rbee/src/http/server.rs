@@ -13,7 +13,10 @@
 //! - M0-W-1320: Health endpoint
 //! - WORK-3010: HTTP server foundation
 
-use crate::narration::{ACTOR_HTTP_SERVER, ACTION_SERVER_START, ACTION_ERROR, ACTION_SERVER_BIND, ACTION_SERVER_SHUTDOWN};
+use crate::narration::{
+    ACTION_ERROR, ACTION_SERVER_BIND, ACTION_SERVER_SHUTDOWN, ACTION_SERVER_START,
+    ACTOR_HTTP_SERVER,
+};
 use axum::Router;
 use observability_narration_core::{narrate, NarrationFields};
 use std::net::SocketAddr;

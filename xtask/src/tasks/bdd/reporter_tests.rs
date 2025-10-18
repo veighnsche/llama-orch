@@ -15,7 +15,7 @@ mod tests {
             run_all: true,
         };
         let timestamp = "20251018_220000";
-        
+
         // Behavior: Banner should display timestamp
         // We can't easily capture stdout in unit tests, but we can verify
         // the function doesn't panic and accepts valid inputs
@@ -34,7 +34,7 @@ mod tests {
             run_all: true,
         };
         let timestamp = "20251018_220000";
-        
+
         // Behavior: Banner should indicate quiet mode
         super::super::reporter::print_banner(&config, timestamp);
         // Should execute without panic
@@ -51,7 +51,7 @@ mod tests {
             run_all: true,
         };
         let timestamp = "20251018_220000";
-        
+
         // Behavior: Banner should indicate live mode
         super::super::reporter::print_banner(&config, timestamp);
         // Should execute without panic
@@ -68,7 +68,7 @@ mod tests {
             run_all: true,
         };
         let timestamp = "20251018_220000";
-        
+
         // Behavior: Banner should show tags when provided
         super::super::reporter::print_banner(&config, timestamp);
         // Should execute without panic
@@ -85,7 +85,7 @@ mod tests {
             run_all: true,
         };
         let timestamp = "20251018_220000";
-        
+
         // Behavior: Banner should show feature when provided
         super::super::reporter::print_banner(&config, timestamp);
         // Should execute without panic
@@ -102,7 +102,7 @@ mod tests {
             run_all: true,
         };
         let timestamp = "20251018_220000";
-        
+
         // Behavior: Banner should show both filters
         super::super::reporter::print_banner(&config, timestamp);
         // Should execute without panic
@@ -110,13 +110,8 @@ mod tests {
 
     #[test]
     fn test_test_summary_success() {
-        let results = TestResults {
-            passed: 10,
-            failed: 0,
-            skipped: 0,
-            exit_code: 0,
-        };
-        
+        let results = TestResults { passed: 10, failed: 0, skipped: 0, exit_code: 0 };
+
         // Behavior: Should display success message
         super::super::reporter::print_test_summary(&results);
         // Should execute without panic
@@ -124,13 +119,8 @@ mod tests {
 
     #[test]
     fn test_test_summary_failure() {
-        let results = TestResults {
-            passed: 8,
-            failed: 2,
-            skipped: 0,
-            exit_code: 1,
-        };
-        
+        let results = TestResults { passed: 8, failed: 2, skipped: 0, exit_code: 1 };
+
         // Behavior: Should display failure message
         super::super::reporter::print_test_summary(&results);
         // Should execute without panic
@@ -138,13 +128,8 @@ mod tests {
 
     #[test]
     fn test_test_summary_with_skipped() {
-        let results = TestResults {
-            passed: 5,
-            failed: 1,
-            skipped: 3,
-            exit_code: 1,
-        };
-        
+        let results = TestResults { passed: 5, failed: 1, skipped: 3, exit_code: 1 };
+
         // Behavior: Should display all counts including skipped
         super::super::reporter::print_test_summary(&results);
         // Should execute without panic
@@ -152,13 +137,8 @@ mod tests {
 
     #[test]
     fn test_test_summary_zero_tests() {
-        let results = TestResults {
-            passed: 0,
-            failed: 0,
-            skipped: 0,
-            exit_code: 0,
-        };
-        
+        let results = TestResults { passed: 0, failed: 0, skipped: 0, exit_code: 0 };
+
         // Behavior: Should handle zero tests gracefully
         super::super::reporter::print_test_summary(&results);
         // Should execute without panic
@@ -166,13 +146,8 @@ mod tests {
 
     #[test]
     fn test_test_summary_large_numbers() {
-        let results = TestResults {
-            passed: 999,
-            failed: 123,
-            skipped: 456,
-            exit_code: 1,
-        };
-        
+        let results = TestResults { passed: 999, failed: 123, skipped: 456, exit_code: 1 };
+
         // Behavior: Should handle large numbers
         super::super::reporter::print_test_summary(&results);
         // Should execute without panic
@@ -196,7 +171,7 @@ mod tests {
     fn test_output_files_display_no_failures() {
         let temp_dir = std::env::temp_dir();
         let paths = OutputPaths::new(temp_dir, "20251018_220000");
-        
+
         // Behavior: Should display output files without failure-specific files
         super::super::reporter::print_output_files(&paths, false);
         // Should execute without panic
@@ -207,7 +182,7 @@ mod tests {
         let temp_dir = std::env::temp_dir();
         let mut paths = OutputPaths::new(temp_dir, "20251018_220000");
         paths.set_failure_files("20251018_220000");
-        
+
         // Behavior: Should display output files including failure files
         super::super::reporter::print_output_files(&paths, true);
         // Should execute without panic
@@ -231,7 +206,7 @@ mod tests {
     fn test_failure_details_with_no_file() {
         let temp_dir = std::env::temp_dir();
         let paths = OutputPaths::new(temp_dir, "20251018_220000");
-        
+
         // Behavior: Should handle missing failure file gracefully
         let result = super::super::reporter::print_failure_details(&paths);
         assert!(result.is_ok());
@@ -248,7 +223,7 @@ mod tests {
             run_all: true,
         };
         let timestamp = "2025-10-18_22:00:00";
-        
+
         // Behavior: Should handle special characters in filters
         super::super::reporter::print_banner(&config, timestamp);
         // Should execute without panic
@@ -265,7 +240,7 @@ mod tests {
             run_all: true,
         };
         let timestamp = "20251018_220000";
-        
+
         // Behavior: Should handle unicode in filters
         super::super::reporter::print_banner(&config, timestamp);
         // Should execute without panic
@@ -282,7 +257,7 @@ mod tests {
             run_all: true,
         };
         let timestamp = "";
-        
+
         // Behavior: Should handle empty timestamp
         super::super::reporter::print_banner(&config, timestamp);
         // Should execute without panic
@@ -299,7 +274,7 @@ mod tests {
             run_all: true,
         };
         let timestamp = "20251018_220000";
-        
+
         // Behavior: Should handle long filter strings
         super::super::reporter::print_banner(&config, timestamp);
         // Should execute without panic

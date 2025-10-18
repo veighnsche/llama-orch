@@ -17,6 +17,7 @@ mod commands;
 mod http;
 mod metrics; // TEAM-104: Prometheus metrics
 mod monitor;
+mod restart; // TEAM-114: Worker restart policy
 mod timeout;
 
 // TEAM-032: Use library modules for testing

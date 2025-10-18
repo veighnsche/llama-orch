@@ -1,55 +1,59 @@
 # Week 2 Progress: Reliability Features
 
-**Team:** TEAM-113 (continuing)  
+**Team:** TEAM-114  
 **Week:** 2 of 4  
 **Goal:** Wire existing libraries, add worker lifecycle features  
-**Status:** 🟡 IN PROGRESS
+**Status:** 🟢 MAJOR PROGRESS
 
 ---
 
 ## 📋 Tasks Overview
 
 ### Priority 1: Wire Audit Logging (1 day)
-**Status:** 🟡 IN PROGRESS
+**Status:** ✅ COMPLETE
 
 **Steps:**
 1. ✅ Add audit-logging dependency to queen-rbee/Cargo.toml
 2. ✅ Add audit-logging dependency to rbee-hive/Cargo.toml (already exists!)
-3. ⏳ Initialize audit logger in queen-rbee startup
-4. ⏳ Initialize audit logger in rbee-hive startup
-5. ⏳ Log authentication events (success/failure)
-6. ⏳ Log worker spawn/shutdown events
-7. ⏳ Log configuration changes
+3. ✅ Initialize audit logger in queen-rbee startup
+4. ✅ Initialize audit logger in rbee-hive startup
+5. ✅ Log authentication events (success/failure) in queen-rbee
+6. ✅ Log authentication events (success/failure) in rbee-hive
+7. ✅ Pass AuditLogger through AppState (both services)
+8. ⏳ Log worker spawn/shutdown events (deferred)
+9. ⏳ Log configuration changes (deferred)
 
 **Impact:** Compliance features enabled, security audit trail
 
 ---
 
 ### Priority 2: Wire Deadline Propagation (1 day)
-**Status:** ⏳ PENDING
+**Status:** 🟡 PARTIAL (queen-rbee done, rbee-hive pending)
 
 **Steps:**
-- [ ] Add deadline-propagation dependency to queen-rbee
-- [ ] Add deadline-propagation dependency to rbee-hive
-- [ ] Add deadline headers to HTTP requests (queen-rbee → rbee-hive)
-- [ ] Add deadline headers to HTTP requests (rbee-hive → workers)
-- [ ] Implement timeout cancellation in inference chain
-- [ ] Add deadline tracking to worker registry
+- ✅ Add deadline-propagation dependency to queen-rbee (already exists)
+- ✅ Implement deadline helper functions (from_header, to_tokio_timeout, with_buffer)
+- ✅ Add deadline extraction and propagation to queen-rbee inference handler
+- ✅ Check deadline expiration before processing
+- ✅ Use deadline-based timeouts for worker requests
+- ⏳ Add deadline headers to rbee-hive → worker requests
+- ⏳ Implement timeout cancellation in rbee-hive
+- ⏳ Add deadline tracking to worker registry
 
 **Impact:** Timeout handling, better request cancellation
 
 ---
 
 ### Priority 3: Wire Auth to llm-worker-rbee (1 day)
-**Status:** ⏳ PENDING
+**Status:** ✅ ALREADY COMPLETE (TEAM-102)
 
 **Steps:**
-- [ ] Copy auth middleware from queen-rbee
-- [ ] Add to worker HTTP routes
-- [ ] Test with invalid tokens
-- [ ] Update worker startup to load API token
+- ✅ Auth middleware already implemented by TEAM-102
+- ✅ Already integrated into worker HTTP routes
+- ✅ Tests already present (4 test cases)
+- ✅ Worker startup already loads API token
 
-**Impact:** Complete authentication coverage (100%)
+**Impact:** Complete authentication coverage (100%) - ALREADY ACHIEVED
 
 ---
 
@@ -86,25 +90,44 @@
 
 ## 📝 Work Log
 
-### 2025-10-18 - TEAM-113
+### 2025-10-19 - TEAM-114
 
 **Completed:**
-- ✅ Added audit-logging dependency to queen-rbee
-- ✅ Added deadline-propagation dependency to queen-rbee
-- ✅ Verified rbee-hive already has audit-logging
+1. ✅ **Audit Logging (Priority 1)**
+   - Initialized AuditLogger in queen-rbee startup (disabled by default)
+   - Initialized AuditLogger in rbee-hive daemon startup (disabled by default)
+   - Added audit_logger to AppState in both services
+   - Added audit events to auth middleware (queen-rbee + rbee-hive)
+   - Logs AuthSuccess, AuthFailure with token fingerprints
+   - Zero overhead when disabled (home lab mode)
 
-**In Progress:**
-- 🟡 Wiring audit logger to queen-rbee startup
-- 🟡 Wiring audit logger to rbee-hive startup
+2. ✅ **Deadline Propagation (Priority 2 - Partial)**
+   - Implemented deadline helper functions in deadline-propagation crate
+   - Added from_header(), to_tokio_timeout(), with_buffer(), as_ms()
+   - Wired deadline propagation to queen-rbee /v1/inference endpoint
+   - Extracts X-Deadline header or creates default 60s deadline
+   - Checks deadline expiration before processing
+   - Propagates deadline to worker requests
+   - Uses deadline-based timeouts
+
+3. ✅ **Auth to llm-worker-rbee (Priority 3)**
+   - Verified already complete by TEAM-102
+   - Auth middleware fully implemented and tested
+   - 100% authentication coverage achieved
+
+**Compilation Status:**
+- ✅ queen-rbee: Compiles successfully
+- ✅ rbee-hive: Compiles successfully
+- ✅ deadline-propagation: Compiles successfully
 
 **Next Steps:**
-1. Initialize AuditLogger in queen-rbee main.rs
-2. Initialize AuditLogger in rbee-hive main.rs
-3. Add audit events to auth middleware
-4. Add audit events to worker lifecycle
+1. Add deadline propagation to rbee-hive → worker requests
+2. Implement worker restart policy (exponential backoff)
+3. Add restart metrics
+4. Run integration tests
 
 ---
 
-**Updated by:** TEAM-113  
-**Date:** 2025-10-18  
-**Status:** 🟡 IN PROGRESS
+**Updated by:** TEAM-114  
+**Date:** 2025-10-19  
+**Status:** 🟢 MAJOR PROGRESS - 60% complete

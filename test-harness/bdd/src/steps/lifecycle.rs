@@ -131,7 +131,7 @@ pub async fn then_if_responds_update_activity(world: &mut World) {
     // TEAM-064: Actually update last_activity in registry
     let registry = world.hive_registry();
     let workers = registry.list().await;
-    
+
     if let Some(worker) = workers.first() {
         // Update state to trigger last_activity update
         registry.update_state(&worker.id, WorkerState::Idle).await;
@@ -147,7 +147,7 @@ pub async fn then_if_no_response_mark_unhealthy(world: &mut World) {
     // (In production, we'd have an "unhealthy" state, but for now we remove)
     let registry = world.hive_registry();
     let workers = registry.list().await;
-    
+
     if let Some(worker) = workers.first() {
         registry.remove(&worker.id).await;
         tracing::info!("✅ Marked worker {} as unhealthy (removed from registry)", worker.id);
@@ -254,13 +254,13 @@ pub async fn then_hive_starts_daemon(world: &mut World) {
 #[then(expr = "rbee-hive spawns worker")]
 pub async fn then_hive_spawns_worker(world: &mut World) {
     use rbee_hive::registry::{WorkerInfo, WorkerState};
-    
+
     let worker_id = uuid::Uuid::new_v4().to_string();
     let port = world.next_worker_port;
     world.next_worker_port += 1;
-    
+
     let registry = world.hive_registry();
-    
+
     let worker = WorkerInfo {
         id: worker_id.clone(),
         url: format!("http://127.0.0.1:{}", port),
@@ -273,10 +273,10 @@ pub async fn then_hive_spawns_worker(world: &mut World) {
         slots_available: 1,
         failed_health_checks: 0,
         pid: Some(std::process::id()),
-        restart_count: 0, // TEAM-104: Added restart tracking
+        restart_count: 0,   // TEAM-104: Added restart tracking
         last_restart: None, // TEAM-104: Added restart tracking
     };
-    
+
     registry.register(worker).await;
     tracing::info!("✅ Worker spawned: {} on port {}", worker_id, port);
 }
@@ -315,11 +315,11 @@ pub async fn when_hive_sends_shutdown(world: &mut World) {
     let registry = world.hive_registry();
     let workers = registry.list().await;
     let worker_count = workers.len();
-    
+
     for worker in workers {
         tracing::info!("  Sending shutdown to worker: {}", worker.id);
     }
-    
+
     tracing::info!("✅ rbee-hive sends shutdown command to {} workers", worker_count);
 }
 
@@ -407,7 +407,7 @@ pub async fn when_start_queen_rbee(world: &mut World) {
     let child = tokio::process::Command::new("sleep")
         .arg("3600") // Mock process that stays alive
         .spawn();
-    
+
     match child {
         Ok(process) => {
             world.queen_rbee_process = Some(process);
@@ -428,7 +428,7 @@ pub async fn when_start_rbee_hive(world: &mut World) {
     let child = tokio::process::Command::new("sleep")
         .arg("3600") // Mock process that stays alive
         .spawn();
-    
+
     match child {
         Ok(process) => {
             world.rbee_hive_processes.push(process);
@@ -452,16 +452,18 @@ pub async fn then_process_running(world: &mut World, process_name: String) {
             }
         }
         "rbee-hive" => {
-            !world.rbee_hive_processes.is_empty() && 
-            world.rbee_hive_processes.iter_mut()
-                .any(|p| p.try_wait().ok().flatten().is_none())
+            !world.rbee_hive_processes.is_empty()
+                && world
+                    .rbee_hive_processes
+                    .iter_mut()
+                    .any(|p| p.try_wait().ok().flatten().is_none())
         }
         _ => {
             tracing::warn!("⚠️  Unknown process name: {}", process_name);
             false
         }
     };
-    
+
     if is_running {
         tracing::info!("✅ {} process is running NICE!", process_name);
     } else {
@@ -473,12 +475,12 @@ pub async fn then_process_running(world: &mut World, process_name: String) {
 #[then(expr = "port {int} is listening")]
 pub async fn then_port_listening(world: &mut World, port: u16) {
     // Attempt to connect to the port to verify it's listening
-    use tokio::net::TcpStream;
     use std::time::Duration;
-    
+    use tokio::net::TcpStream;
+
     let addr = format!("127.0.0.1:{}", port);
     let timeout = Duration::from_millis(100);
-    
+
     match tokio::time::timeout(timeout, TcpStream::connect(&addr)).await {
         Ok(Ok(_stream)) => {
             tracing::info!("✅ Port {} is listening NICE!", port);
@@ -505,10 +507,10 @@ pub async fn given_hive_with_workers(world: &mut World, count: u32) {
 #[when(expr = "rbee-hive receives SIGTERM")]
 pub async fn when_hive_receives_sigterm(world: &mut World) {
     use std::time::Instant;
-    
+
     tracing::info!("TEAM-105: rbee-hive receives SIGTERM - initiating shutdown");
     world.shutdown_start_time = Some(Instant::now());
-    
+
     // In real implementation, this would trigger the shutdown_all_workers() function
     // For BDD test, we simulate the shutdown sequence
 }
@@ -516,41 +518,54 @@ pub async fn when_hive_receives_sigterm(world: &mut World) {
 #[then(expr = "rbee-hive sends shutdown to all {int} workers concurrently")]
 pub async fn then_hive_sends_shutdown_concurrently(world: &mut World, count: u32) {
     tracing::info!("TEAM-105: Verifying parallel shutdown to {} workers", count);
-    
+
     // Verify that shutdown was initiated to all workers
-    assert_eq!(world.worker_count, Some(count), 
-        "Worker count mismatch: expected {}, got {:?}", count, world.worker_count);
-    
+    assert_eq!(
+        world.worker_count,
+        Some(count),
+        "Worker count mismatch: expected {}, got {:?}",
+        count,
+        world.worker_count
+    );
+
     tracing::info!("✅ TEAM-105: Parallel shutdown initiated to {} workers", count);
 }
 
 #[then(expr = "rbee-hive waits for all workers in parallel")]
 pub async fn then_hive_waits_parallel(world: &mut World) {
     tracing::info!("TEAM-105: Verifying parallel wait for all workers");
-    
+
     // In real implementation, this verifies tokio::spawn tasks are used
     // For BDD test, we verify the pattern was followed
-    
+
     tracing::info!("✅ TEAM-105: Parallel wait pattern verified");
 }
 
 #[then(regex = r"^shutdown completes faster than sequential \(< (\d+)s for (\d+) workers\)$")]
-pub async fn then_shutdown_faster_than_sequential(world: &mut World, max_seconds: u64, worker_count: u32) {
+pub async fn then_shutdown_faster_than_sequential(
+    world: &mut World,
+    max_seconds: u64,
+    worker_count: u32,
+) {
     if let Some(start_time) = world.shutdown_start_time {
         let elapsed = start_time.elapsed();
         let max_duration = std::time::Duration::from_secs(max_seconds);
-        
+
         tracing::info!(
             "TEAM-105: Shutdown duration: {:.2}s (max: {}s for {} workers)",
-            elapsed.as_secs_f64(), max_seconds, worker_count
+            elapsed.as_secs_f64(),
+            max_seconds,
+            worker_count
         );
-        
+
         assert!(
             elapsed < max_duration,
             "Shutdown took {:.2}s, expected < {}s for {} workers",
-            elapsed.as_secs_f64(), max_seconds, worker_count
+            elapsed.as_secs_f64(),
+            max_seconds,
+            worker_count
         );
-        
+
         tracing::info!("✅ TEAM-105: Parallel shutdown performance verified");
     } else {
         tracing::warn!("⚠️  TEAM-105: Shutdown start time not recorded");
@@ -572,17 +587,20 @@ pub async fn when_worker_does_not_respond(world: &mut World, count: u32) {
 #[then(expr = "rbee-hive waits maximum {int}s total")]
 pub async fn then_hive_waits_maximum_total(world: &mut World, max_seconds: u64) {
     tracing::info!("TEAM-105: Verifying maximum {}s total timeout", max_seconds);
-    
+
     if let Some(start_time) = world.shutdown_start_time {
         let elapsed = start_time.elapsed();
         let max_duration = std::time::Duration::from_secs(max_seconds);
-        
+
         // Simulate waiting up to max timeout
         if elapsed < max_duration {
             let remaining = max_duration - elapsed;
-            tracing::info!("TEAM-105: Simulating wait for remaining {:.2}s", remaining.as_secs_f64());
+            tracing::info!(
+                "TEAM-105: Simulating wait for remaining {:.2}s",
+                remaining.as_secs_f64()
+            );
         }
-        
+
         tracing::info!("✅ TEAM-105: Maximum {}s timeout enforced", max_seconds);
     }
 }
@@ -590,10 +608,13 @@ pub async fn then_hive_waits_maximum_total(world: &mut World, max_seconds: u64) 
 #[then(expr = "rbee-hive force-kills unresponsive worker at {int}s")]
 pub async fn then_hive_force_kills_at_timeout(world: &mut World, timeout_seconds: u64) {
     tracing::info!("TEAM-105: Verifying force-kill at {}s timeout", timeout_seconds);
-    
+
     if let Some(unresponsive) = world.unresponsive_workers {
         assert!(unresponsive > 0, "Expected unresponsive workers for force-kill test");
-        tracing::info!("✅ TEAM-105: Force-kill triggered for {} unresponsive worker(s)", unresponsive);
+        tracing::info!(
+            "✅ TEAM-105: Force-kill triggered for {} unresponsive worker(s)",
+            unresponsive
+        );
     } else {
         tracing::warn!("⚠️  TEAM-105: No unresponsive workers tracked");
     }
@@ -602,48 +623,52 @@ pub async fn then_hive_force_kills_at_timeout(world: &mut World, timeout_seconds
 #[then(expr = "rbee-hive exits after all workers terminated")]
 pub async fn then_hive_exits_after_workers(world: &mut World) {
     tracing::info!("TEAM-105: Verifying rbee-hive exits after all workers terminated");
-    
+
     // Verify all workers are accounted for (responsive + unresponsive = total)
     let responsive = world.responsive_workers.unwrap_or(0);
     let unresponsive = world.unresponsive_workers.unwrap_or(0);
     let total = world.worker_count.unwrap_or(0);
-    
+
     assert_eq!(
-        responsive + unresponsive, total,
+        responsive + unresponsive,
+        total,
         "Worker count mismatch: {} responsive + {} unresponsive != {} total",
-        responsive, unresponsive, total
+        responsive,
+        unresponsive,
+        total
     );
-    
+
     tracing::info!("✅ TEAM-105: All workers terminated, rbee-hive can exit");
 }
 
 #[then(expr = "rbee-hive logs {string}")]
 pub async fn then_hive_logs_message(world: &mut World, message: String) {
     tracing::info!("TEAM-105: Verifying log message: {}", message);
-    
+
     // In real implementation, this would check actual log output
     // For BDD test, we verify the message format is correct
-    
+
     if message.contains("Shutting down") && message.contains("workers") {
         if let Some(count) = world.worker_count {
             assert!(
                 message.contains(&count.to_string()),
                 "Log message should contain worker count {}: {}",
-                count, message
+                count,
+                message
             );
         }
     }
-    
+
     // Also handle progress messages (e.g., "1/4 workers stopped")
     if message.contains("/") && message.contains("workers") {
         tracing::info!("✅ TEAM-105: Progress log format verified: {}", message);
     }
-    
+
     // Also handle final shutdown messages
     if message.contains("All workers stopped") || message.contains("exiting") {
         tracing::info!("✅ TEAM-105: Final shutdown message verified: {}", message);
     }
-    
+
     tracing::info!("✅ TEAM-105: Log message verified: {}", message);
 }
 
@@ -654,14 +679,14 @@ pub async fn then_hive_logs_message(world: &mut World, message: String) {
 #[when(expr = "rbee-hive spawns a worker process")]
 pub async fn when_hive_spawns_worker_process(world: &mut World) {
     use rbee_hive::registry::{WorkerInfo, WorkerState};
-    
+
     let worker_id = uuid::Uuid::new_v4().to_string();
     let port = world.next_worker_port;
     world.next_worker_port += 1;
-    
+
     // TEAM-101: Store PID when spawning worker
     let pid = std::process::id(); // Mock PID for testing
-    
+
     let registry = world.hive_registry();
     let worker = WorkerInfo {
         id: worker_id.clone(),
@@ -678,11 +703,11 @@ pub async fn when_hive_spawns_worker_process(world: &mut World) {
         restart_count: 0,
         last_restart: None,
     };
-    
+
     registry.register(worker).await;
     world.last_worker_id = Some(worker_id.clone());
     world.last_worker_pid = Some(pid);
-    
+
     tracing::info!("✅ TEAM-101: Worker spawned with PID {}", pid);
 }
 
@@ -690,10 +715,10 @@ pub async fn when_hive_spawns_worker_process(world: &mut World) {
 pub async fn then_worker_pid_stored(world: &mut World) {
     let registry = world.hive_registry();
     let workers = registry.list().await;
-    
+
     assert!(!workers.is_empty(), "No workers in registry");
     let worker = &workers[0];
-    
+
     assert!(worker.pid.is_some(), "Worker PID not stored");
     tracing::info!("✅ TEAM-101: Worker PID stored: {:?}", worker.pid);
 }
@@ -702,10 +727,10 @@ pub async fn then_worker_pid_stored(world: &mut World) {
 pub async fn then_pid_greater_than_zero(world: &mut World) {
     let registry = world.hive_registry();
     let workers = registry.list().await;
-    
+
     assert!(!workers.is_empty(), "No workers in registry");
     let worker = &workers[0];
-    
+
     if let Some(pid) = worker.pid {
         assert!(pid > 0, "PID should be greater than 0");
         tracing::info!("✅ TEAM-101: PID {} is greater than 0", pid);
@@ -716,21 +741,21 @@ pub async fn then_pid_greater_than_zero(world: &mut World) {
 
 #[then(expr = "PID corresponds to running process")]
 pub async fn then_pid_corresponds_to_process(world: &mut World) {
-    use sysinfo::{System, Pid};
-    
+    use sysinfo::{Pid, System};
+
     let registry = world.hive_registry();
     let workers = registry.list().await;
-    
+
     assert!(!workers.is_empty(), "No workers in registry");
     let worker = &workers[0];
-    
+
     if let Some(pid) = worker.pid {
         let mut sys = System::new();
         sys.refresh_processes();
-        
+
         let pid_obj = Pid::from_u32(pid);
         let process_exists = sys.process(pid_obj).is_some();
-        
+
         assert!(process_exists, "PID {} does not correspond to running process", pid);
         tracing::info!("✅ TEAM-101: PID {} corresponds to running process", pid);
     } else {
@@ -749,7 +774,7 @@ pub async fn given_hive_spawned_worker_with_pid(world: &mut World) {
 pub async fn when_worker_transitions_loading_to_idle(world: &mut World) {
     let registry = world.hive_registry();
     let workers = registry.list().await;
-    
+
     if let Some(worker) = workers.first() {
         registry.update_state(&worker.id, WorkerState::Idle).await;
         tracing::info!("✅ TEAM-101: Worker transitioned from Loading to Idle");
@@ -760,10 +785,10 @@ pub async fn when_worker_transitions_loading_to_idle(world: &mut World) {
 pub async fn then_pid_remains_unchanged(world: &mut World) {
     let registry = world.hive_registry();
     let workers = registry.list().await;
-    
+
     assert!(!workers.is_empty(), "No workers in registry");
     let worker = &workers[0];
-    
+
     if let Some(current_pid) = worker.pid {
         if let Some(original_pid) = world.last_worker_pid {
             assert_eq!(current_pid, original_pid, "PID changed during lifecycle");
@@ -784,11 +809,11 @@ pub async fn then_pid_same_process(world: &mut World) {
 pub async fn when_hive_sends_shutdown_to_worker(world: &mut World) {
     let registry = world.hive_registry();
     let workers = registry.list().await;
-    
+
     for worker in workers {
         tracing::info!("TEAM-101: Sending shutdown to worker: {}", worker.id);
     }
-    
+
     world.shutdown_start_time = Some(std::time::Instant::now());
     tracing::info!("✅ TEAM-101: Shutdown command sent");
 }
@@ -805,7 +830,7 @@ pub async fn when_worker_no_response_timeout(world: &mut World, timeout_secs: u6
 pub async fn then_hive_force_kills_worker(world: &mut World) {
     let registry = world.hive_registry();
     let workers = registry.list().await;
-    
+
     if let Some(worker) = workers.first() {
         if let Some(pid) = worker.pid {
             // In real implementation, this would send SIGKILL
@@ -856,7 +881,7 @@ pub async fn when_worker_ignores_sigterm(world: &mut World, timeout_secs: u64) {
 pub async fn then_hive_sends_sigkill(world: &mut World) {
     let registry = world.hive_registry();
     let workers = registry.list().await;
-    
+
     if let Some(worker) = workers.first() {
         if let Some(pid) = worker.pid {
             tracing::info!("✅ TEAM-101: Sending SIGKILL to PID {}", pid);
@@ -874,7 +899,7 @@ pub async fn then_worker_terminated_forcefully(world: &mut World) {
 pub async fn then_hive_removes_worker(world: &mut World) {
     let registry = world.hive_registry();
     let workers = registry.list().await;
-    
+
     if let Some(worker) = workers.first() {
         registry.remove(&worker.id).await;
         tracing::info!("✅ TEAM-101: Worker removed from registry");
@@ -889,19 +914,19 @@ pub async fn when_hive_performs_health_check(world: &mut World) {
 
 #[then(expr = "rbee-hive verifies process exists via PID")]
 pub async fn then_hive_verifies_process_via_pid(world: &mut World) {
-    use sysinfo::{System, Pid};
-    
+    use sysinfo::{Pid, System};
+
     let registry = world.hive_registry();
     let workers = registry.list().await;
-    
+
     if let Some(worker) = workers.first() {
         if let Some(pid) = worker.pid {
             let mut sys = System::new();
             sys.refresh_processes();
-            
+
             let pid_obj = Pid::from_u32(pid);
             let exists = sys.process(pid_obj).is_some();
-            
+
             tracing::info!("✅ TEAM-101: Process existence verified via PID {}: {}", pid, exists);
         }
     }
@@ -926,7 +951,7 @@ pub async fn then_if_process_alive_http_dead_restart(world: &mut World) {
 pub async fn given_worker_in_loading_state(world: &mut World) {
     let registry = world.hive_registry();
     let workers = registry.list().await;
-    
+
     if let Some(worker) = workers.first() {
         registry.update_state(&worker.id, WorkerState::Loading).await;
         tracing::info!("TEAM-101: Worker in Loading state");
@@ -957,7 +982,7 @@ pub async fn then_hive_logs_timeout(world: &mut World) {
 pub async fn when_hive_removes_worker_from_registry(world: &mut World) {
     let registry = world.hive_registry();
     let workers = registry.list().await;
-    
+
     if let Some(worker) = workers.first() {
         let worker_id = worker.id.clone();
         registry.remove(&worker_id).await;
@@ -969,11 +994,13 @@ pub async fn when_hive_removes_worker_from_registry(world: &mut World) {
 pub async fn then_worker_pid_cleared(world: &mut World) {
     let registry = world.hive_registry();
     let workers = registry.list().await;
-    
+
     // Worker should be removed, so list should be empty
-    assert!(workers.is_empty() || workers.iter().all(|w| w.pid.is_none()), 
-        "Worker PID should be cleared");
-    
+    assert!(
+        workers.is_empty() || workers.iter().all(|w| w.pid.is_none()),
+        "Worker PID should be cleared"
+    );
+
     tracing::info!("✅ TEAM-101: Worker PID cleared from memory");
 }
 
@@ -1053,7 +1080,7 @@ pub async fn then_all_processes_terminate(world: &mut World, count: u32) {
 pub async fn when_hive_force_kills_worker(world: &mut World) {
     let registry = world.hive_registry();
     let workers = registry.list().await;
-    
+
     if let Some(worker) = workers.first() {
         if let Some(pid) = worker.pid {
             world.force_killed_pid = Some(pid);

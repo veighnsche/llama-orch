@@ -80,12 +80,13 @@ async fn main() -> Result<()> {
         callback_ready(
             &args.callback_url,
             &args.worker_id,
-            &args.model,        // model_ref
-            "cpu",              // backend
-            0,                  // device (CPU = 0)
+            &args.model, // model_ref
+            "cpu",       // backend
+            0,           // device (CPU = 0)
             backend.memory_bytes(),
-            args.port
-        ).await?;
+            args.port,
+        )
+        .await?;
 
         tracing::info!("Callback sent to pool-managerd");
     }
@@ -100,12 +101,11 @@ async fn main() -> Result<()> {
     let backend = Arc::new(Mutex::new(backend));
 
     // TEAM-102: Load API token for authentication
-    let expected_token = std::env::var("LLORCH_API_TOKEN")
-        .unwrap_or_else(|_| {
-            tracing::info!("⚠️  LLORCH_API_TOKEN not set - using dev mode (no auth)");
-            String::new()
-        });
-    
+    let expected_token = std::env::var("LLORCH_API_TOKEN").unwrap_or_else(|_| {
+        tracing::info!("⚠️  LLORCH_API_TOKEN not set - using dev mode (no auth)");
+        String::new()
+    });
+
     if !expected_token.is_empty() {
         tracing::info!("✅ API token loaded (authentication enabled)");
     }

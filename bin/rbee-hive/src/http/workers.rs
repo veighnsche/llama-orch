@@ -91,16 +91,16 @@ pub async fn handle_spawn_worker(
     Json(request): Json<SpawnWorkerRequest>,
 ) -> Result<Json<SpawnWorkerResponse>, (StatusCode, String)> {
     // TEAM-103: Validate inputs before processing
-    use input_validation::{validate_model_ref, validate_identifier};
-    
+    use input_validation::{validate_identifier, validate_model_ref};
+
     // Validate model reference
     validate_model_ref(&request.model_ref)
         .map_err(|e| (StatusCode::BAD_REQUEST, format!("Invalid model_ref: {}", e)))?;
-    
+
     // Validate backend identifier
     validate_identifier(&request.backend, 64)
         .map_err(|e| (StatusCode::BAD_REQUEST, format!("Invalid backend: {}", e)))?;
-    
+
     info!(
         model_ref = %request.model_ref,
         backend = %request.backend,
@@ -170,7 +170,7 @@ pub async fn handle_spawn_worker(
             w.url.split(':').last().and_then(|p| p.parse().ok())
         })
         .collect();
-    
+
     // Find first unused port starting from 8081
     while used_ports.contains(&port) {
         port += 1;
@@ -181,7 +181,7 @@ pub async fn handle_spawn_worker(
             ));
         }
     }
-    
+
     info!("🔍 Port allocation: {} workers registered, using port {}", workers.len(), port);
 
     // TEAM-027: Get hostname for URL
@@ -210,14 +210,14 @@ pub async fn handle_spawn_worker(
     // TEAM-029: Use model_path from catalog/provisioner instead of request.model_path
     // TEAM-035: Worker only accepts: --worker-id, --model, --port, --callback-url
     // TEAM-087: Enhanced spawn diagnostics
-    
+
     info!("🚀 Spawning worker process:");
     info!("   Binary: {:?}", worker_binary);
     info!("   Worker ID: {}", worker_id);
     info!("   Model: {}", model_path);
     info!("   Port: {}", port);
     info!("   Callback: {}", callback_url);
-    
+
     // TEAM-088: CRITICAL FIX - Inherit stdout/stderr so we can see worker narration!
     // Use RBEE_SILENT=1 to suppress logs if needed
     let (stdout_cfg, stderr_cfg) = if std::env::var("RBEE_SILENT").is_ok() {
@@ -225,7 +225,7 @@ pub async fn handle_spawn_worker(
     } else {
         (std::process::Stdio::inherit(), std::process::Stdio::inherit())
     };
-    
+
     let spawn_result = tokio::process::Command::new(&worker_binary)
         .arg("--worker-id")
         .arg(&worker_id)
@@ -249,7 +249,7 @@ pub async fn handle_spawn_worker(
         Ok(mut child) => {
             // TEAM-087: Check if process started successfully
             tokio::time::sleep(std::time::Duration::from_millis(100)).await;
-            
+
             if let Ok(Some(status)) = child.try_wait() {
                 // TEAM-088: Process exited immediately
                 // If stdout/stderr are inherited, we already saw the output
@@ -265,7 +265,7 @@ pub async fn handle_spawn_worker(
                 } else {
                     String::new()
                 };
-                
+
                 let stderr = if let Some(mut err) = child.stderr.take() {
                     use tokio::io::AsyncReadExt;
                     let mut buf = String::new();
@@ -277,18 +277,18 @@ pub async fn handle_spawn_worker(
                 } else {
                     String::new()
                 };
-                
+
                 error!("❌ Worker process exited immediately with status: {}", status);
-                
+
                 return Err((
                     StatusCode::INTERNAL_SERVER_ERROR,
                     format!("Worker process failed to start: exit status {}. Check logs above for details.", status)
                 ));
             }
-            
+
             // TEAM-101: Store PID for force-kill and process liveness checks
             let pid = child.id(); // Returns Option<u32> in newer Tokio
-            
+
             // Register worker in loading state
             let worker = WorkerInfo {
                 id: worker_id.clone(),
@@ -301,13 +301,13 @@ pub async fn handle_spawn_worker(
                 slots_total: 1,
                 slots_available: 0,
                 failed_health_checks: 0, // TEAM-096: Initialize counter
-                pid, // TEAM-101: Store PID for lifecycle management (Option<u32>)
-                restart_count: 0, // TEAM-103: Initialize restart counter
+                pid,                // TEAM-101: Store PID for lifecycle management (Option<u32>)
+                restart_count: 0,   // TEAM-103: Initialize restart counter
                 last_restart: None, // TEAM-103: No restart yet
             };
 
             state.registry.register(worker).await;
-            
+
             info!(
                 worker_id = %worker_id,
                 pid = pid,
@@ -326,7 +326,10 @@ pub async fn handle_spawn_worker(
             error!("❌ Failed to spawn worker process: {}", e);
             error!("   Binary path: {:?}", worker_binary);
             error!("   Does the binary exist? Check: ls -la {:?}", worker_binary);
-            Err((StatusCode::INTERNAL_SERVER_ERROR, format!("Failed to spawn worker: {}. Binary: {:?}", e, worker_binary)))
+            Err((
+                StatusCode::INTERNAL_SERVER_ERROR,
+                format!("Failed to spawn worker: {}. Binary: {:?}", e, worker_binary),
+            ))
         }
     }
 }
@@ -351,19 +354,19 @@ pub async fn handle_worker_ready(
 ) -> Result<Json<WorkerReadyResponse>, (StatusCode, String)> {
     // TEAM-103: Validate inputs
     use input_validation::{validate_identifier, validate_model_ref};
-    
+
     // Validate worker ID
     validate_identifier(&request.worker_id, 256)
         .map_err(|e| (StatusCode::BAD_REQUEST, format!("Invalid worker_id: {}", e)))?;
-    
+
     // Validate model reference
     validate_model_ref(&request.model_ref)
         .map_err(|e| (StatusCode::BAD_REQUEST, format!("Invalid model_ref: {}", e)))?;
-    
+
     // Validate backend identifier
     validate_identifier(&request.backend, 64)
         .map_err(|e| (StatusCode::BAD_REQUEST, format!("Invalid backend: {}", e)))?;
-    
+
     info!(
         worker_id = %request.worker_id,
         url = %request.url,

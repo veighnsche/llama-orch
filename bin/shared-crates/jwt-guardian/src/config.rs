@@ -64,11 +64,7 @@ impl ValidationConfig {
         let mut validation = jsonwebtoken::Validation::default();
 
         // Set algorithms
-        validation.algorithms = self
-            .algorithms
-            .iter()
-            .map(|a| a.to_jsonwebtoken())
-            .collect();
+        validation.algorithms = self.algorithms.iter().map(|a| a.to_jsonwebtoken()).collect();
 
         // Set issuer
         if let Some(ref issuer) = self.issuer {
@@ -117,9 +113,7 @@ mod tests {
 
     #[test]
     fn test_to_jsonwebtoken_validation() {
-        let config = ValidationConfig::default()
-            .with_issuer("llama-orch")
-            .with_audience("api");
+        let config = ValidationConfig::default().with_issuer("llama-orch").with_audience("api");
 
         let validation = config.to_jsonwebtoken_validation();
         assert_eq!(validation.leeway, 300);

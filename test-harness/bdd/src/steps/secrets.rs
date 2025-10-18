@@ -25,20 +25,20 @@ pub async fn given_token_file_exists(world: &mut World, path: String) {
 #[given(expr = "file permissions are {string}")]
 pub async fn given_file_permissions(world: &mut World, perms: String) {
     let path = world.secret_file_path.as_ref().expect("No secret file path");
-    
+
     // Parse octal permissions (e.g., "0600")
-    let mode = u32::from_str_radix(perms.trim_start_matches("0"), 8)
-        .expect("Invalid permission format");
-    
+    let mode =
+        u32::from_str_radix(perms.trim_start_matches("0"), 8).expect("Invalid permission format");
+
     // Create file if it doesn't exist
     if !std::path::Path::new(path).exists() {
         fs::write(path, "").expect("Failed to create file");
     }
-    
+
     // Set permissions
     let permissions = fs::Permissions::from_mode(mode);
     fs::set_permissions(path, permissions).expect("Failed to set permissions");
-    
+
     world.file_permissions = Some(perms);
 }
 

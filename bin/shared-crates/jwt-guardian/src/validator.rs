@@ -37,10 +37,7 @@ impl JwtValidator {
 
         let validation = config.to_jsonwebtoken_validation();
 
-        Ok(Self {
-            decoding_key,
-            validation,
-        })
+        Ok(Self { decoding_key, validation })
     }
 
     /// Validate token and extract claims

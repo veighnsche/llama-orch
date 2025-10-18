@@ -19,7 +19,9 @@
 //! - `SSE_IMPLEMENTATION_PLAN.md` Phase 2: Loading progress
 //! - `SSE_IMPLEMENTATION_PLAN.md` Phase 3: Inference streaming
 
-use crate::http::{backend::InferenceBackend, execute, health, loading, middleware::auth_middleware, ready};
+use crate::http::{
+    backend::InferenceBackend, execute, health, loading, middleware::auth_middleware, ready,
+};
 use axum::{
     middleware,
     routing::{get, post},

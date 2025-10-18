@@ -21,12 +21,12 @@ pub async fn when_hive_spawns_worker_process(world: &mut World) {
     let worker_id = uuid::Uuid::new_v4().to_string();
     let port = world.next_worker_port;
     world.next_worker_port += 1;
-    
+
     let registry = world.hive_registry();
-    
+
     // Use current process ID as mock PID for testing
     let mock_pid = std::process::id();
-    
+
     let worker = WorkerInfo {
         id: worker_id.clone(),
         url: format!("http://127.0.0.1:{}", port),
@@ -39,10 +39,10 @@ pub async fn when_hive_spawns_worker_process(world: &mut World) {
         slots_available: 1,
         failed_health_checks: 0,
         pid: Some(mock_pid),
-    restart_count: 0, // TEAM-104: Added restart tracking
-    last_restart: None, // TEAM-104: Added restart tracking
+        restart_count: 0,   // TEAM-104: Added restart tracking
+        last_restart: None, // TEAM-104: Added restart tracking
     };
-    
+
     registry.register(worker).await;
     world.last_worker_id = Some(worker_id.clone());
     tracing::info!("✅ Worker spawned with PID: {} (worker: {})", mock_pid, worker_id);
@@ -52,7 +52,7 @@ pub async fn when_hive_spawns_worker_process(world: &mut World) {
 pub async fn then_worker_pid_stored(world: &mut World) {
     let registry = world.hive_registry();
     let workers = registry.list().await;
-    
+
     if let Some(worker) = workers.first() {
         assert!(worker.pid.is_some(), "Worker PID should be stored");
         tracing::info!("✅ Worker PID is stored: {:?}", worker.pid);
@@ -65,7 +65,7 @@ pub async fn then_worker_pid_stored(world: &mut World) {
 pub async fn then_pid_greater_than_zero(world: &mut World) {
     let registry = world.hive_registry();
     let workers = registry.list().await;
-    
+
     if let Some(worker) = workers.first() {
         let pid = worker.pid.expect("PID should be set");
         assert!(pid > 0, "PID should be greater than 0");
@@ -77,18 +77,18 @@ pub async fn then_pid_greater_than_zero(world: &mut World) {
 pub async fn then_pid_corresponds_to_running_process(world: &mut World) {
     let registry = world.hive_registry();
     let workers = registry.list().await;
-    
+
     if let Some(worker) = workers.first() {
         let pid = worker.pid.expect("PID should be set");
-        
+
         // Check if process exists using sysinfo
-        use sysinfo::{System, Pid};
+        use sysinfo::{Pid, System};
         let mut sys = System::new_all();
         sys.refresh_processes();
-        
+
         let pid_obj = Pid::from_u32(pid);
         let process_exists = sys.process(pid_obj).is_some();
-        
+
         assert!(process_exists, "Process with PID {} should exist", pid);
         tracing::info!("✅ PID {} corresponds to running process", pid);
     }
@@ -104,7 +104,7 @@ pub async fn given_hive_spawned_worker_with_pid(world: &mut World) {
 pub async fn when_worker_transitions_loading_to_idle(world: &mut World) {
     let registry = world.hive_registry();
     let workers = registry.list().await;
-    
+
     if let Some(worker) = workers.first() {
         registry.update_state(&worker.id, WorkerState::Idle).await;
         tracing::info!("✅ Worker {} transitioned to Idle", worker.id);
@@ -115,7 +115,7 @@ pub async fn when_worker_transitions_loading_to_idle(world: &mut World) {
 pub async fn then_pid_remains_unchanged(world: &mut World) {
     let registry = world.hive_registry();
     let workers = registry.list().await;
-    
+
     if let Some(worker) = workers.first() {
         assert!(worker.pid.is_some(), "PID should still be set");
         tracing::info!("✅ PID remains unchanged: {:?}", worker.pid);
@@ -138,9 +138,9 @@ pub async fn given_hive_running_with_n_workers(world: &mut World, count: u32) {
         let worker_id = format!("worker-{}", i);
         let port = world.next_worker_port;
         world.next_worker_port += 1;
-        
+
         let registry = world.hive_registry();
-        
+
         let worker = WorkerInfo {
             id: worker_id.clone(),
             url: format!("http://127.0.0.1:{}", port),
@@ -153,13 +153,13 @@ pub async fn given_hive_running_with_n_workers(world: &mut World, count: u32) {
             slots_available: 1,
             failed_health_checks: 0,
             pid: Some(std::process::id() + i),
-            restart_count: 0, // TEAM-104: Added restart tracking
+            restart_count: 0,   // TEAM-104: Added restart tracking
             last_restart: None, // TEAM-104: Added restart tracking
         };
-        
+
         registry.register(worker).await;
     }
-    
+
     tracing::info!("✅ rbee-hive running with {} worker(s)", count);
 }
 
@@ -173,11 +173,11 @@ pub async fn when_worker_no_response_timeout(world: &mut World, _timeout: u64) {
 pub async fn then_hive_force_kills_using_pid(world: &mut World) {
     let registry = world.hive_registry();
     let workers = registry.list().await;
-    
+
     if let Some(worker) = workers.first() {
         let pid = worker.pid.expect("PID should be set");
         tracing::info!("✅ rbee-hive would force-kill worker using PID: {}", pid);
-        
+
         // In real implementation, would send SIGKILL to PID
         // For testing, we just verify PID is available
         assert!(pid > 0);
@@ -193,7 +193,7 @@ pub async fn then_worker_process_terminates(world: &mut World) {
 pub async fn then_hive_logs_force_kill_with_pid(world: &mut World) {
     let registry = world.hive_registry();
     let workers = registry.list().await;
-    
+
     if let Some(worker) = workers.first() {
         let pid = worker.pid.expect("PID should be set");
         tracing::info!("✅ Force-kill event logged for PID: {}", pid);
@@ -219,7 +219,7 @@ pub async fn when_worker_ignores_sigterm(world: &mut World, _timeout: u64) {
 pub async fn then_hive_sends_sigkill(world: &mut World) {
     let registry = world.hive_registry();
     let workers = registry.list().await;
-    
+
     if let Some(worker) = workers.first() {
         let pid = worker.pid.expect("PID should be set");
         tracing::info!("✅ rbee-hive sends SIGKILL to PID: {}", pid);
@@ -244,17 +244,17 @@ pub async fn when_hive_performs_health_check(world: &mut World) {
 pub async fn then_hive_verifies_process_via_pid(world: &mut World) {
     let registry = world.hive_registry();
     let workers = registry.list().await;
-    
+
     if let Some(worker) = workers.first() {
         let pid = worker.pid.expect("PID should be set");
-        
-        use sysinfo::{System, Pid};
+
+        use sysinfo::{Pid, System};
         let mut sys = System::new_all();
         sys.refresh_processes();
-        
+
         let pid_obj = Pid::from_u32(pid);
         let exists = sys.process(pid_obj).is_some();
-        
+
         tracing::info!("✅ Process verification via PID {}: exists={}", pid, exists);
     }
 }
@@ -282,7 +282,7 @@ pub async fn then_if_process_alive_http_dead_restart(world: &mut World) {
 pub async fn given_worker_in_loading_state(world: &mut World) {
     let registry = world.hive_registry();
     let workers = registry.list().await;
-    
+
     if let Some(worker) = workers.first() {
         registry.update_state(&worker.id, WorkerState::Loading).await;
         tracing::info!("✅ Worker {} set to Loading state", worker.id);
@@ -318,7 +318,7 @@ pub async fn when_hive_receives_sigterm(world: &mut World) {
 pub async fn then_hive_sends_shutdown_concurrently(world: &mut World, count: u32) {
     let registry = world.hive_registry();
     let workers = registry.list().await;
-    
+
     assert_eq!(workers.len(), count as usize, "Should have {} workers", count);
     tracing::info!("✅ rbee-hive sends shutdown to all {} workers concurrently", count);
 }

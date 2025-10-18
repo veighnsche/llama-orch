@@ -18,13 +18,13 @@ use cucumber::{given, then, when};
 pub async fn given_worker_ready_idle(world: &mut World) {
     // TEAM-076: Enhanced with error handling
     use rbee_hive::registry::WorkerState;
-    
+
     let registry = world.hive_registry();
     let workers = registry.list().await;
-    
+
     if !workers.is_empty() {
         let idle_count = workers.iter().filter(|w| w.state == WorkerState::Idle).count();
-        
+
         if idle_count > 0 {
             world.last_exit_code = Some(0);
             tracing::info!("✅ Found {} workers, {} idle", workers.len(), idle_count);
@@ -53,7 +53,7 @@ pub async fn given_worker_ready_idle(world: &mut World) {
 pub async fn when_send_inference_request(world: &mut World, step: &cucumber::gherkin::Step) {
     // TEAM-076: Enhanced with JSON validation and error handling
     let docstring = step.docstring.as_ref().expect("Expected a docstring");
-    
+
     // Validate JSON
     match serde_json::from_str::<serde_json::Value>(docstring.trim()) {
         Ok(request_json) => {
@@ -68,7 +68,7 @@ pub async fn when_send_inference_request(world: &mut World, step: &cucumber::ghe
                 tracing::error!("❌ Invalid request format: not a JSON object");
                 return;
             }
-            
+
             // Store request for verification
             world.last_http_request = Some(crate::steps::world::HttpRequest {
                 method: "POST".to_string(),
@@ -76,7 +76,7 @@ pub async fn when_send_inference_request(world: &mut World, step: &cucumber::ghe
                 headers: std::collections::HashMap::new(),
                 body: Some(docstring.trim().to_string()),
             });
-            
+
             world.last_exit_code = Some(0);
             tracing::info!("✅ Inference request prepared: {} chars", docstring.trim().len());
         }
@@ -102,7 +102,7 @@ pub async fn when_send_inference_request_simple(world: &mut World) {
         headers: std::collections::HashMap::new(),
         body: Some(r#"{"prompt":"test"}"#.to_string()),
     });
-    
+
     tracing::info!("✅ Simple inference request prepared");
 }
 
@@ -110,13 +110,13 @@ pub async fn when_send_inference_request_simple(world: &mut World) {
 #[then(expr = "the worker responds with SSE stream:")]
 pub async fn then_worker_responds_sse(world: &mut World, step: &cucumber::gherkin::Step) {
     let docstring = step.docstring.as_ref().expect("Expected a docstring");
-    
+
     // Parse expected SSE events from docstring
     let lines: Vec<&str> = docstring.trim().lines().collect();
     let event_count = lines.iter().filter(|l| l.starts_with("event:")).count();
-    
+
     tracing::info!("✅ Expected {} SSE events in response", event_count);
-    
+
     // Verify we have SSE events in World
     if !world.sse_events.is_empty() {
         tracing::info!("✅ Received {} SSE events", world.sse_events.len());
@@ -146,10 +146,10 @@ pub async fn then_stream_tokens_stdout(world: &mut World) {
 pub async fn then_worker_transitions(world: &mut World, from: String, through: String, to: String) {
     // TEAM-076: Enhanced state transition verification with error handling
     use rbee_hive::registry::WorkerState;
-    
+
     let registry = world.hive_registry();
     let workers = registry.list().await;
-    
+
     if workers.is_empty() {
         world.last_exit_code = Some(1);
         world.last_error = Some(crate::steps::world::ErrorResponse {
@@ -160,12 +160,13 @@ pub async fn then_worker_transitions(world: &mut World, from: String, through: S
         tracing::error!("❌ No workers for state transition verification");
         return;
     }
-    
+
     // Verify workers can be in these states
     let valid_states = vec!["loading", "idle", "busy"];
-    if !valid_states.contains(&from.as_str()) || 
-       !valid_states.contains(&through.as_str()) || 
-       !valid_states.contains(&to.as_str()) {
+    if !valid_states.contains(&from.as_str())
+        || !valid_states.contains(&through.as_str())
+        || !valid_states.contains(&to.as_str())
+    {
         world.last_exit_code = Some(1);
         world.last_error = Some(crate::steps::world::ErrorResponse {
             code: "INVALID_STATE_TRANSITION".to_string(),
@@ -175,7 +176,7 @@ pub async fn then_worker_transitions(world: &mut World, from: String, through: S
         tracing::error!("❌ Invalid state transition: {} → {} → {}", from, through, to);
         return;
     }
-    
+
     world.last_exit_code = Some(0);
     tracing::info!("✅ Worker state transitions: {} → {} → {}", from, through, to);
 }
@@ -184,11 +185,11 @@ pub async fn then_worker_transitions(world: &mut World, from: String, through: S
 #[then(expr = "the worker responds with:")]
 pub async fn then_worker_responds_with(world: &mut World, step: &cucumber::gherkin::Step) {
     let docstring = step.docstring.as_ref().expect("Expected a docstring");
-    
+
     // Parse expected response as JSON
-    let expected_json: serde_json::Value = serde_json::from_str(docstring.trim())
-        .expect("Expected valid JSON in docstring");
-    
+    let expected_json: serde_json::Value =
+        serde_json::from_str(docstring.trim()).expect("Expected valid JSON in docstring");
+
     // Verify response structure
     if let Some(response) = &world.last_http_response {
         tracing::info!("✅ Worker response received: {} chars", response.len());
@@ -202,7 +203,7 @@ pub async fn then_worker_responds_with(world: &mut World, step: &cucumber::gherk
 pub async fn then_retry_with_backoff(world: &mut World) {
     // Verify exponential backoff pattern: 1s, 2s, 4s, 8s
     let expected_delays = vec![1, 2, 4, 8];
-    
+
     tracing::info!("✅ Retry with exponential backoff: {:?} seconds", expected_delays);
 }
 
@@ -211,8 +212,12 @@ pub async fn then_retry_with_backoff(world: &mut World) {
 pub async fn then_retry_delay_second(world: &mut World, retry: u32, delay: u64) {
     // Verify exponential backoff: delay = 2^(retry-1)
     let expected_delay = 2u64.pow(retry - 1);
-    assert_eq!(delay, expected_delay, "Retry {} should have {} second delay", retry, expected_delay);
-    
+    assert_eq!(
+        delay, expected_delay,
+        "Retry {} should have {} second delay",
+        retry, expected_delay
+    );
+
     tracing::info!("✅ Retry {} has {} second delay", retry, delay);
 }
 
@@ -221,8 +226,12 @@ pub async fn then_retry_delay_second(world: &mut World, retry: u32, delay: u64) 
 pub async fn then_retry_delay_seconds(world: &mut World, retry: u32, delay: u64) {
     // Verify exponential backoff: delay = 2^(retry-1)
     let expected_delay = 2u64.pow(retry - 1);
-    assert_eq!(delay, expected_delay, "Retry {} should have {} seconds delay", retry, expected_delay);
-    
+    assert_eq!(
+        delay, expected_delay,
+        "Retry {} should have {} seconds delay",
+        retry, expected_delay
+    );
+
     tracing::info!("✅ Retry {} has {} seconds delay", retry, delay);
 }
 
@@ -230,9 +239,12 @@ pub async fn then_retry_delay_seconds(world: &mut World, retry: u32, delay: u64)
 #[then(expr = "if still busy after {int} retries, rbee-keeper aborts")]
 pub async fn then_if_busy_abort(world: &mut World, retries: u32) {
     // Verify retry count is reasonable
-    assert!(retries >= 1 && retries <= 10,
-        "Retry count should be between 1 and 10, got {}", retries);
-    
+    assert!(
+        retries >= 1 && retries <= 10,
+        "Retry count should be between 1 and 10, got {}",
+        retries
+    );
+
     // Set error state for abort
     world.last_exit_code = Some(1);
     world.last_error = Some(crate::steps::world::ErrorResponse {
@@ -243,29 +255,31 @@ pub async fn then_if_busy_abort(world: &mut World, retries: u32) {
             "reason": "worker_busy"
         })),
     });
-    
+
     tracing::info!("✅ Abort after {} retries (worker still busy)", retries);
 }
 
 // TEAM-069: Verify error suggestion NICE!
 #[then(expr = "the error suggests waiting or using a different node")]
 pub async fn then_suggest_wait_or_different_node(world: &mut World) {
-    let error = world.last_error.as_ref()
-        .expect("Expected error to be set");
-    
+    let error = world.last_error.as_ref().expect("Expected error to be set");
+
     // Verify error message contains helpful suggestions
     let message_lower = error.message.to_lowercase();
-    let has_wait_suggestion = message_lower.contains("wait") || 
-        message_lower.contains("retry") ||
-        message_lower.contains("later");
-    let has_node_suggestion = message_lower.contains("node") ||
-        message_lower.contains("worker") ||
-        message_lower.contains("different") ||
-        message_lower.contains("another");
-    
-    assert!(has_wait_suggestion || has_node_suggestion,
-        "Error should suggest waiting or using different node: {}", error.message);
-    
+    let has_wait_suggestion = message_lower.contains("wait")
+        || message_lower.contains("retry")
+        || message_lower.contains("later");
+    let has_node_suggestion = message_lower.contains("node")
+        || message_lower.contains("worker")
+        || message_lower.contains("different")
+        || message_lower.contains("another");
+
+    assert!(
+        has_wait_suggestion || has_node_suggestion,
+        "Error should suggest waiting or using different node: {}",
+        error.message
+    );
+
     tracing::info!("✅ Error suggests waiting or using different node");
 }
 
@@ -273,21 +287,18 @@ pub async fn then_suggest_wait_or_different_node(world: &mut World) {
 #[then(expr = "rbee-keeper retries with backoff")]
 pub async fn then_keeper_retries_with_backoff(world: &mut World) {
     use rbee_hive::registry::WorkerState;
-    
+
     let registry = world.hive_registry();
     let workers = registry.list().await;
-    
+
     // Verify workers exist for retry
     if !workers.is_empty() {
-        let busy_count = workers.iter()
-            .filter(|w| w.state == WorkerState::Busy)
-            .count();
-        tracing::info!("✅ Retry with backoff: {} workers, {} busy",
-            workers.len(), busy_count);
+        let busy_count = workers.iter().filter(|w| w.state == WorkerState::Busy).count();
+        tracing::info!("✅ Retry with backoff: {} workers, {} busy", workers.len(), busy_count);
     } else {
         tracing::warn!("⚠️  No workers to retry (test environment)");
     }
-    
+
     // Verify exponential backoff pattern would be used
     let expected_delays = vec![1, 2, 4, 8];
     tracing::info!("✅ Exponential backoff pattern: {:?} seconds", expected_delays);

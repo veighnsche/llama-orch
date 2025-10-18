@@ -26,7 +26,7 @@ pub async fn health_monitor_loop(registry: Arc<WorkerRegistry>) {
 
     loop {
         interval.tick().await;
-        
+
         let workers = registry.list().await;
         if workers.is_empty() {
             info!("🔍 Health monitor: No workers to check");
@@ -34,35 +34,36 @@ pub async fn health_monitor_loop(registry: Arc<WorkerRegistry>) {
         }
 
         info!("🔍 Health monitor: Checking {} workers", workers.len());
-        
+
         for worker in workers {
             // TEAM-101: Check for workers stuck in Loading state
             if worker.state == crate::registry::WorkerState::Loading {
-                let loading_duration = worker.last_activity.elapsed().unwrap_or(Duration::from_secs(0));
+                let loading_duration =
+                    worker.last_activity.elapsed().unwrap_or(Duration::from_secs(0));
                 if loading_duration > Duration::from_secs(30) {
                     error!(
                         worker_id = %worker.id,
                         duration_secs = loading_duration.as_secs(),
                         "TEAM-101: Worker stuck in Loading state, force-killing"
                     );
-                    
+
                     // Force-kill the worker
                     if let Some(pid) = worker.pid {
                         force_kill_worker(pid, &worker.id);
                     }
-                    
+
                     // Remove from registry
                     registry.remove(&worker.id).await;
                     continue;
                 }
             }
-            
+
             // TEAM-101: Process liveness check - verify process exists via PID
             if let Some(pid) = worker.pid {
-                use sysinfo::{System, Pid};
+                use sysinfo::{Pid, System};
                 let mut sys = System::new();
                 sys.refresh_processes();
-                
+
                 let pid_obj = Pid::from_u32(pid);
                 if sys.process(pid_obj).is_none() {
                     error!(
@@ -74,7 +75,7 @@ pub async fn health_monitor_loop(registry: Arc<WorkerRegistry>) {
                     continue;
                 }
             }
-            
+
             // Check worker health: GET {worker.url}/v1/health
             let client = reqwest::Client::new();
             match client
@@ -96,7 +97,8 @@ pub async fn health_monitor_loop(registry: Arc<WorkerRegistry>) {
                 }
                 Ok(response) => {
                     // TEAM-096: Increment fail counter and remove after 3 failures
-                    let fail_count = registry.increment_failed_health_checks(&worker.id).await.unwrap_or(0);
+                    let fail_count =
+                        registry.increment_failed_health_checks(&worker.id).await.unwrap_or(0);
                     error!(
                         worker_id = %worker.id,
                         url = %worker.url,
@@ -104,7 +106,7 @@ pub async fn health_monitor_loop(registry: Arc<WorkerRegistry>) {
                         failed_checks = fail_count,
                         "❌ Worker unhealthy"
                     );
-                    
+
                     if fail_count >= 3 {
                         error!(
                             worker_id = %worker.id,
@@ -116,7 +118,8 @@ pub async fn health_monitor_loop(registry: Arc<WorkerRegistry>) {
                 }
                 Err(e) => {
                     // TEAM-096: Increment fail counter and remove after 3 failures
-                    let fail_count = registry.increment_failed_health_checks(&worker.id).await.unwrap_or(0);
+                    let fail_count =
+                        registry.increment_failed_health_checks(&worker.id).await.unwrap_or(0);
                     error!(
                         worker_id = %worker.id,
                         url = %worker.url,
@@ -124,7 +127,7 @@ pub async fn health_monitor_loop(registry: Arc<WorkerRegistry>) {
                         failed_checks = fail_count,
                         "❌ Worker unreachable"
                     );
-                    
+
                     if fail_count >= 3 {
                         error!(
                             worker_id = %worker.id,
@@ -141,19 +144,15 @@ pub async fn health_monitor_loop(registry: Arc<WorkerRegistry>) {
 
 /// TEAM-101: Force-kill a worker process using its PID
 fn force_kill_worker(pid: u32, worker_id: &str) {
-    use sysinfo::{System, Pid, Signal};
-    
+    use sysinfo::{Pid, Signal, System};
+
     let mut sys = System::new();
     sys.refresh_processes();
-    
+
     let pid_obj = Pid::from_u32(pid);
     if let Some(process) = sys.process(pid_obj) {
-        info!(
-            worker_id = worker_id,
-            pid = pid,
-            "TEAM-101: Force-killing worker process"
-        );
-        
+        info!(worker_id = worker_id, pid = pid, "TEAM-101: Force-killing worker process");
+
         if process.kill_with(Signal::Kill).is_some() {
             info!(
                 worker_id = worker_id,
@@ -162,18 +161,10 @@ fn force_kill_worker(pid: u32, worker_id: &str) {
                 "Successfully force-killed worker"
             );
         } else {
-            error!(
-                worker_id = worker_id,
-                pid = pid,
-                "Failed to send SIGKILL to worker"
-            );
+            error!(worker_id = worker_id, pid = pid, "Failed to send SIGKILL to worker");
         }
     } else {
-        info!(
-            worker_id = worker_id,
-            pid = pid,
-            "Worker process already exited"
-        );
+        info!(worker_id = worker_id, pid = pid, "Worker process already exited");
     }
 }
 
@@ -203,7 +194,7 @@ fn force_kill_worker(pid: u32, worker_id: &str) {
 /// ```
 pub fn should_restart_worker(worker: &crate::registry::WorkerInfo) -> bool {
     const MAX_RESTARTS: u32 = 3;
-    
+
     // Check restart count - circuit breaker
     if worker.restart_count >= MAX_RESTARTS {
         warn!(
@@ -213,14 +204,12 @@ pub fn should_restart_worker(worker: &crate::registry::WorkerInfo) -> bool {
         );
         return false;
     }
-    
+
     // Check exponential backoff
     if let Some(last_restart) = worker.last_restart {
         let backoff_duration = Duration::from_secs(2u64.pow(worker.restart_count));
-        let elapsed = SystemTime::now()
-            .duration_since(last_restart)
-            .unwrap_or(Duration::ZERO);
-        
+        let elapsed = SystemTime::now().duration_since(last_restart).unwrap_or(Duration::ZERO);
+
         if elapsed < backoff_duration {
             info!(
                 worker_id = %worker.id,
@@ -231,7 +220,7 @@ pub fn should_restart_worker(worker: &crate::registry::WorkerInfo) -> bool {
             return false;
         }
     }
-    
+
     // Passed all checks - can restart
     info!(
         worker_id = %worker.id,
@@ -277,8 +266,8 @@ mod tests {
             slots_total: 1,
             slots_available: 1,
             failed_health_checks: 0,
-            pid: None, // TEAM-101: Added pid field
-            restart_count: 0, // TEAM-104: Added restart_count field
+            pid: None,          // TEAM-101: Added pid field
+            restart_count: 0,   // TEAM-104: Added restart_count field
             last_restart: None, // TEAM-104: Added last_restart field
         };
 

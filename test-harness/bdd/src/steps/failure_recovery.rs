@@ -5,19 +5,19 @@
 // ⚠️ CRITICAL: These steps MUST connect to real product code from /bin/
 // ⚠️ Test actual failover and recovery mechanisms
 
-use cucumber::{given, then, when};
 use crate::steps::world::World;
+use cucumber::{given, then, when};
 
 #[given(expr = "worker-001 is processing inference request {string}")]
 pub async fn given_worker_processing_request(world: &mut World, request_id: String) {
     // TEAM-081: Wire to real WorkerRegistry with busy state
     use queen_rbee::worker_registry::{WorkerInfo, WorkerState};
-    
+
     if world.queen_registry.is_none() {
         world.queen_registry = Some(crate::steps::world::DebugQueenRegistry::new());
     }
     let registry = world.queen_registry.as_ref().expect("Registry not initialized").inner();
-    
+
     let worker = WorkerInfo {
         id: "worker-001".to_string(),
         url: "http://localhost:8081".to_string(),
@@ -32,7 +32,7 @@ pub async fn given_worker_processing_request(world: &mut World, request_id: Stri
     };
     registry.register(worker).await;
     world.active_request_id = Some(request_id.clone());
-    
+
     tracing::info!("TEAM-081: Worker-001 processing request {}", request_id);
     world.last_action = Some(format!("processing_{}", request_id));
 }
@@ -80,12 +80,12 @@ pub async fn given_partial_file_exists(world: &mut World, path: String) {
 pub async fn given_workers_running(world: &mut World, count: usize) {
     // TEAM-081: Wire to real WorkerRegistry with multiple workers
     use queen_rbee::worker_registry::{WorkerInfo, WorkerState};
-    
+
     if world.queen_registry.is_none() {
         world.queen_registry = Some(crate::steps::world::DebugQueenRegistry::new());
     }
     let registry = world.queen_registry.as_ref().expect("Registry not initialized").inner();
-    
+
     for i in 0..count {
         let worker = WorkerInfo {
             id: format!("worker-{:03}", i + 1),
@@ -101,7 +101,7 @@ pub async fn given_workers_running(world: &mut World, count: usize) {
         };
         registry.register(worker).await;
     }
-    
+
     tracing::info!("TEAM-081: {} workers registered and running", count);
     world.last_action = Some(format!("workers_running_{}", count));
 }
@@ -110,12 +110,12 @@ pub async fn given_workers_running(world: &mut World, count: usize) {
 pub async fn given_requests_in_progress(world: &mut World, count: usize) {
     // TEAM-081: Wire to real WorkerRegistry with busy slots
     use queen_rbee::worker_registry::{WorkerInfo, WorkerState};
-    
+
     if world.queen_registry.is_none() {
         world.queen_registry = Some(crate::steps::world::DebugQueenRegistry::new());
     }
     let registry = world.queen_registry.as_ref().expect("Registry not initialized").inner();
-    
+
     let worker = WorkerInfo {
         id: "worker-001".to_string(),
         url: "http://localhost:8081".to_string(),
@@ -129,7 +129,7 @@ pub async fn given_requests_in_progress(world: &mut World, count: usize) {
         node_name: "test-node".to_string(),
     };
     registry.register(worker).await;
-    
+
     tracing::info!("TEAM-081: Worker has {} requests in progress", count);
     world.last_action = Some(format!("requests_in_progress_{}", count));
 }
@@ -217,10 +217,10 @@ pub async fn then_user_receives_result(world: &mut World) {
 pub async fn then_worker_removed(world: &mut World) {
     // TEAM-081: Verify worker cleanup in registry
     let registry = world.queen_registry.as_ref().expect("Registry not initialized").inner();
-    
+
     let worker = registry.get("worker-001").await;
     assert!(worker.is_none(), "Worker-001 should be removed from registry");
-    
+
     tracing::info!("TEAM-081: Verified worker-001 removed from registry");
 }
 
@@ -233,8 +233,10 @@ pub async fn then_detects_corruption(world: &mut World) {
     // - Originally in test-001.feature
     // - Migrated by TEAM-079 to 210-failure-recovery.feature
     // - Still active and needs real assertions
-    assert!(world.last_action.as_ref().map(|a| a.contains("catalog_corrupted")).unwrap_or(false),
-            "Catalog corruption should be detected");
+    assert!(
+        world.last_action.as_ref().map(|a| a.contains("catalog_corrupted")).unwrap_or(false),
+        "Catalog corruption should be detected"
+    );
     tracing::info!("TEAM-081: Catalog corruption detected");
 }
 
@@ -242,8 +244,11 @@ pub async fn then_detects_corruption(world: &mut World) {
 pub async fn then_creates_backup(world: &mut World, path: String) {
     // TEAM-081: Verify backup creation (Gap-F2)
     // Catalog backup is filesystem operation, not registry operation
-    assert!(path.contains(".backup") || path.contains(".corrupt"),
-            "Backup path should indicate backup file: {}", path);
+    assert!(
+        path.contains(".backup") || path.contains(".corrupt"),
+        "Backup path should indicate backup file: {}",
+        path
+    );
     tracing::info!("TEAM-081: Backup path verified: {}", path);
 }
 
@@ -291,8 +296,11 @@ pub async fn then_sends_header(world: &mut World, header: String) {
     // - Originally in test-001.feature
     // - Migrated by TEAM-079 to 210-failure-recovery.feature
     // - Still active and needs real assertions
-    assert!(header.contains("Range") || header.contains("Accept-Ranges"),
-            "Resume header should be Range-related: {}", header);
+    assert!(
+        header.contains("Range") || header.contains("Accept-Ranges"),
+        "Resume header should be Range-related: {}",
+        header
+    );
     tracing::info!("TEAM-081: Verified resume header: {}", header);
 }
 
@@ -300,7 +308,11 @@ pub async fn then_sends_header(world: &mut World, header: String) {
 pub async fn then_resumes_from(world: &mut World, percent: u32) {
     // TEAM-081: Verify resume point (Gap-F4)
     // Resume should start from where it left off
-    assert!(percent > 0 && percent < 100, "Resume percent should be between 0 and 100: {}", percent);
+    assert!(
+        percent > 0 && percent < 100,
+        "Resume percent should be between 0 and 100: {}",
+        percent
+    );
     tracing::info!("TEAM-081: Download resumed from {}%", percent);
 }
 

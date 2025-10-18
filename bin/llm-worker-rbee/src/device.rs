@@ -8,7 +8,7 @@
 //! Created by: TEAM-007
 //! Modified by: TEAM-018 (Removed Accelerate, added Metal)
 
-use crate::narration::{ACTOR_DEVICE_MANAGER, ACTION_DEVICE_INIT};
+use crate::narration::{ACTION_DEVICE_INIT, ACTOR_DEVICE_MANAGER};
 use candle_core::{Device, Result as CandleResult};
 use observability_narration_core::{narrate, NarrationFields};
 

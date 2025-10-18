@@ -50,17 +50,13 @@ impl QuantizedQwenModel {
             .or_else(|| content.metadata.get("llama.vocab_size"))
             .and_then(|v| v.to_u32().ok())
             .or_else(|| {
-                content
-                    .metadata
-                    .get("tokenizer.ggml.tokens")
-                    .and_then(|v| match v {
-                        candle_core::quantized::gguf_file::Value::Array(arr) => {
-                            Some(arr.len() as u32)
-                        }
-                        _ => None,
-                    })
+                content.metadata.get("tokenizer.ggml.tokens").and_then(|v| match v {
+                    candle_core::quantized::gguf_file::Value::Array(arr) => Some(arr.len() as u32),
+                    _ => None,
+                })
             })
-            .with_context(|| "Cannot determine vocab_size from GGUF metadata")? as usize;
+            .with_context(|| "Cannot determine vocab_size from GGUF metadata")?
+            as usize;
 
         let eos_token_id = content
             .metadata
@@ -87,17 +83,11 @@ impl QuantizedQwenModel {
             ..Default::default()
         });
 
-        Ok(Self {
-            model,
-            eos_token_id,
-            vocab_size,
-        })
+        Ok(Self { model, eos_token_id, vocab_size })
     }
 
     pub fn forward(&mut self, input_ids: &Tensor, position: usize) -> Result<Tensor> {
-        self.model
-            .forward(input_ids, position)
-            .map_err(|e| anyhow::anyhow!("{}", e))
+        self.model.forward(input_ids, position).map_err(|e| anyhow::anyhow!("{}", e))
     }
 
     pub fn eos_token_id(&self) -> u32 {

@@ -54,12 +54,11 @@ async fn main() -> Result<()> {
 
     // TEAM-102: Load API token for authentication
     // TODO: Replace with secrets-management file-based loading
-    let expected_token = std::env::var("LLORCH_API_TOKEN")
-        .unwrap_or_else(|_| {
-            info!("⚠️  LLORCH_API_TOKEN not set - using dev mode (no auth)");
-            String::new()
-        });
-    
+    let expected_token = std::env::var("LLORCH_API_TOKEN").unwrap_or_else(|_| {
+        info!("⚠️  LLORCH_API_TOKEN not set - using dev mode (no auth)");
+        String::new()
+    });
+
     if !expected_token.is_empty() {
         info!("✅ API token loaded (authentication enabled)");
     }
@@ -73,14 +72,12 @@ async fn main() -> Result<()> {
             "local" => {
                 let base_dir = std::env::var("LLORCH_AUDIT_DIR")
                     .unwrap_or_else(|_| "/var/log/llama-orch/audit".to_string());
-                Some(audit_logging::AuditMode::Local {
-                    base_dir: PathBuf::from(base_dir),
-                })
+                Some(audit_logging::AuditMode::Local { base_dir: PathBuf::from(base_dir) })
             }
             _ => None,
         })
         .unwrap_or(audit_logging::AuditMode::Disabled);
-    
+
     let audit_config = audit_logging::AuditConfig {
         mode: audit_mode,
         service_id: "queen-rbee".to_string(),
@@ -92,7 +89,7 @@ async fn main() -> Result<()> {
             critical_immediate: true, // Always flush security events immediately
         },
     };
-    
+
     let audit_logger = match audit_logging::AuditLogger::new(audit_config) {
         Ok(logger) => {
             info!("✅ Audit logging initialized (disabled for home lab mode)");
@@ -107,10 +104,12 @@ async fn main() -> Result<()> {
     // Create router with registries
     // TEAM-052: Updated to use refactored http module
     // TEAM-102: Added expected_token for authentication
+    // TEAM-114: Added audit_logger for security events
     let app = http::create_router(
-        Arc::clone(&beehive_registry), 
+        Arc::clone(&beehive_registry),
         Arc::new(worker_registry),
         expected_token,
+        audit_logger.clone(), // TEAM-114
     );
 
     // Start HTTP server
@@ -144,10 +143,10 @@ async fn main() -> Result<()> {
 /// Implements 30s timeout and audit logging
 async fn shutdown_all_hives(beehive_registry: Arc<beehive_registry::BeehiveRegistry>) {
     use std::time::Instant;
-    
+
     let shutdown_start = Instant::now();
     info!("TEAM-105: Starting cascading shutdown to all hives (30s timeout)");
-    
+
     let hives = match beehive_registry.list_nodes().await {
         Ok(nodes) => nodes,
         Err(e) => {
@@ -155,37 +154,39 @@ async fn shutdown_all_hives(beehive_registry: Arc<beehive_registry::BeehiveRegis
             return;
         }
     };
-    
+
     let total_hives = hives.len();
     info!("TEAM-105: Found {} hives to shutdown", total_hives);
-    
+
     if total_hives == 0 {
         info!("No hives registered - shutdown complete");
         return;
     }
-    
+
     // TEAM-105: Parallel shutdown of all hives with timeout
     let mut shutdown_tasks = Vec::new();
-    
+
     for hive in hives {
         let task = tokio::spawn(async move {
             info!("TEAM-105: Sending shutdown to hive: {}", hive.node_name);
-            
+
             // Find rbee-hive daemon PID and send SIGTERM
             let find_pid_cmd = "pgrep -f 'rbee-hive daemon'";
-            
+
             match ssh::execute_remote_command(
                 &hive.ssh_host,
                 hive.ssh_port,
                 &hive.ssh_user,
                 hive.ssh_key_path.as_deref(),
                 find_pid_cmd,
-            ).await {
+            )
+            .await
+            {
                 Ok((success, stdout, stderr)) => {
                     if success && !stdout.trim().is_empty() {
                         let pid = stdout.trim();
                         info!("TEAM-105: Found rbee-hive daemon PID {} on {}", pid, hive.node_name);
-                        
+
                         // Send SIGTERM to the daemon
                         let kill_cmd = format!("kill -TERM {}", pid);
                         match ssh::execute_remote_command(
@@ -194,23 +195,37 @@ async fn shutdown_all_hives(beehive_registry: Arc<beehive_registry::BeehiveRegis
                             &hive.ssh_user,
                             hive.ssh_key_path.as_deref(),
                             &kill_cmd,
-                        ).await {
+                        )
+                        .await
+                        {
                             Ok((kill_success, _, kill_stderr)) => {
                                 if kill_success {
-                                    info!("TEAM-105: Successfully sent SIGTERM to {} (PID: {})", hive.node_name, pid);
+                                    info!(
+                                        "TEAM-105: Successfully sent SIGTERM to {} (PID: {})",
+                                        hive.node_name, pid
+                                    );
                                     true
                                 } else {
-                                    error!("TEAM-105: Failed to send SIGTERM to {}: {}", hive.node_name, kill_stderr);
+                                    error!(
+                                        "TEAM-105: Failed to send SIGTERM to {}: {}",
+                                        hive.node_name, kill_stderr
+                                    );
                                     false
                                 }
                             }
                             Err(e) => {
-                                error!("TEAM-105: SSH kill command failed for {}: {}", hive.node_name, e);
+                                error!(
+                                    "TEAM-105: SSH kill command failed for {}: {}",
+                                    hive.node_name, e
+                                );
                                 false
                             }
                         }
                     } else {
-                        info!("TEAM-105: No rbee-hive daemon running on {} (stderr: {})", hive.node_name, stderr);
+                        info!(
+                            "TEAM-105: No rbee-hive daemon running on {} (stderr: {})",
+                            hive.node_name, stderr
+                        );
                         true // Not an error - daemon not running
                     }
                 }
@@ -220,30 +235,28 @@ async fn shutdown_all_hives(beehive_registry: Arc<beehive_registry::BeehiveRegis
                 }
             }
         });
-        
+
         shutdown_tasks.push(task);
     }
-    
+
     // TEAM-105: Wait for all shutdown tasks with 30s timeout
     let mut completed = 0;
     let mut success_count = 0;
     let mut failed_count = 0;
     let mut timeout_count = 0;
-    
+
     for task in shutdown_tasks {
         let elapsed = shutdown_start.elapsed();
         let remaining = std::time::Duration::from_secs(30).saturating_sub(elapsed);
-        
+
         if remaining.is_zero() {
             // TEAM-105: Timeout exceeded - abort remaining tasks
-            error!(
-                "TEAM-105: Hive shutdown timeout (30s) exceeded - aborting remaining hives"
-            );
+            error!("TEAM-105: Hive shutdown timeout (30s) exceeded - aborting remaining hives");
             timeout_count += 1;
             task.abort();
             continue;
         }
-        
+
         match tokio::time::timeout(remaining, task).await {
             Ok(Ok(success)) => {
                 completed += 1;
@@ -270,20 +283,17 @@ async fn shutdown_all_hives(beehive_registry: Arc<beehive_registry::BeehiveRegis
             }
         }
     }
-    
+
     let total_duration = shutdown_start.elapsed();
-    
+
     // TEAM-105: Audit logging for cascading shutdown completion
     info!(
         "TEAM-105: SHUTDOWN AUDIT - Total Hives: {}, Success: {}, Failed: {}, Timeout: {}, Duration: {:.2}s",
         total_hives, success_count, failed_count, timeout_count, total_duration.as_secs_f64()
     );
-    
+
     if timeout_count > 0 {
-        error!(
-            "TEAM-105: {} hives exceeded shutdown timeout",
-            timeout_count
-        );
+        error!("TEAM-105: {} hives exceeded shutdown timeout", timeout_count);
     }
 }
 
@@ -292,8 +302,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_args_parsing() {
-    }
+    fn test_args_parsing() {}
 
     #[test]
     fn test_args_defaults() {

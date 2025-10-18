@@ -103,7 +103,7 @@ mod tests {
     #[test]
     fn test_is_expired() {
         let mut claims = Claims::new("user-123");
-        
+
         // Not expired (future expiration)
         claims.exp = chrono::Utc::now().timestamp() + 600; // 10 minutes
         assert!(!claims.is_expired(0));

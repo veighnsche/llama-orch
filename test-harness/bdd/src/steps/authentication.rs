@@ -28,9 +28,10 @@ pub async fn given_expected_token(world: &mut World, token: String) {
 #[when(expr = "I send POST to {string} without Authorization header")]
 pub async fn when_post_without_auth(world: &mut World, endpoint: String) {
     let url = format!("{}{}", world.queen_url.as_ref().unwrap(), endpoint);
-    
+
     let client = reqwest::Client::new();
-    let response = client.post(&url)
+    let response = client
+        .post(&url)
         .json(&serde_json::json!({
             "model_ref": "hf:test/model",
             "backend": "cpu",
@@ -38,7 +39,7 @@ pub async fn when_post_without_auth(world: &mut World, endpoint: String) {
         }))
         .send()
         .await;
-    
+
     match response {
         Ok(resp) => {
             // TEAM-102: Clone headers before consuming resp with .text()
@@ -55,9 +56,10 @@ pub async fn when_post_without_auth(world: &mut World, endpoint: String) {
 #[when(expr = "I send POST to {string} with Authorization {string}")]
 pub async fn when_post_with_auth(world: &mut World, endpoint: String, auth_header: String) {
     let url = format!("{}{}", world.queen_url.as_ref().unwrap(), endpoint);
-    
+
     let client = reqwest::Client::new();
-    let response = client.post(&url)
+    let response = client
+        .post(&url)
         .header("Authorization", auth_header)
         .json(&serde_json::json!({
             "model_ref": "hf:test/model",
@@ -66,7 +68,7 @@ pub async fn when_post_with_auth(world: &mut World, endpoint: String, auth_heade
         }))
         .send()
         .await;
-    
+
     match response {
         Ok(resp) => {
             world.last_status_code = Some(resp.status().as_u16());
@@ -158,18 +160,21 @@ pub async fn when_send_n_requests_invalid(world: &mut World, count: usize, token
 pub async fn then_timing_variance_less_than(world: &mut World, max_variance: u32) {
     // TEAM-102: Calculate timing variance to detect timing attacks
     // auth-min uses timing_safe_eq() which should have < 10% variance
-    if let (Some(valid), Some(invalid)) = (&world.timing_measurements, &world.timing_measurements_invalid) {
+    if let (Some(valid), Some(invalid)) =
+        (&world.timing_measurements, &world.timing_measurements_invalid)
+    {
         let avg_valid = valid.iter().sum::<Duration>().as_nanos() as f64 / valid.len() as f64;
         let avg_invalid = invalid.iter().sum::<Duration>().as_nanos() as f64 / invalid.len() as f64;
-        
+
         let variance = ((avg_valid - avg_invalid).abs() / avg_valid.max(avg_invalid)) * 100.0;
-        
+
         assert!(
             variance < max_variance as f64,
             "Timing variance {:.2}% exceeds max {}%",
-            variance, max_variance
+            variance,
+            max_variance
         );
-        
+
         tracing::info!("✅ TEAM-102: Timing variance {:.2}% < {}%", variance, max_variance);
     }
 }
@@ -219,7 +224,7 @@ pub async fn when_start_queen(world: &mut World) {
     // TEAM-102: Start queen-rbee process
     // In production, this would spawn the actual binary
     // For BDD tests, we simulate the startup validation
-    
+
     // Check bind policy: public bind requires token
     if let Some(bind) = &world.bind_address {
         if bind.starts_with("0.0.0.0") && world.expected_token.is_none() {
@@ -231,7 +236,7 @@ pub async fn when_start_queen(world: &mut World) {
             return;
         }
     }
-    
+
     world.process_started = true;
     tracing::info!("✅ TEAM-102: Queen-rbee started successfully");
 }
@@ -245,7 +250,12 @@ pub async fn then_queen_fails_start(world: &mut World) {
 pub async fn then_displays_error(world: &mut World, error: String) {
     // TEAM-102: Verify error message displayed
     if let Some(err_msg) = &world.last_error_message {
-        assert!(err_msg.contains(&error), "Error message '{}' does not contain '{}'", err_msg, error);
+        assert!(
+            err_msg.contains(&error),
+            "Error message '{}' does not contain '{}'",
+            err_msg,
+            error
+        );
         tracing::info!("✅ TEAM-102: Error message verified: {}", error);
     } else {
         panic!("No error message found");
@@ -296,10 +306,8 @@ pub async fn when_request_queen_no_auth(world: &mut World) {
     // TEAM-102: Send request to queen-rbee without Authorization header
     if let Some(url) = &world.queen_url {
         let client = reqwest::Client::new();
-        let response = client.get(format!("{}/v1/workers", url))
-            .send()
-            .await;
-        
+        let response = client.get(format!("{}/v1/workers", url)).send().await;
+
         match response {
             Ok(resp) => {
                 world.last_status_code = Some(resp.status().as_u16());
@@ -316,10 +324,8 @@ pub async fn when_request_hive_no_auth(world: &mut World) {
     // TEAM-102: Send request to rbee-hive without Authorization header
     if let Some(url) = &world.hive_url {
         let client = reqwest::Client::new();
-        let response = client.get(format!("{}/v1/workers", url))
-            .send()
-            .await;
-        
+        let response = client.get(format!("{}/v1/workers", url)).send().await;
+
         match response {
             Ok(resp) => {
                 world.last_status_code = Some(resp.status().as_u16());
@@ -336,10 +342,8 @@ pub async fn when_request_worker_no_auth(world: &mut World) {
     // TEAM-102: Send request to llm-worker-rbee without Authorization header
     if let Some(url) = &world.worker_url {
         let client = reqwest::Client::new();
-        let response = client.get(format!("{}/health", url))
-            .send()
-            .await;
-        
+        let response = client.get(format!("{}/health", url)).send().await;
+
         match response {
             Ok(resp) => {
                 world.last_status_code = Some(resp.status().as_u16());
@@ -356,7 +360,7 @@ pub async fn when_get_without_auth(world: &mut World, endpoint: String) {
     let url = format!("{}{}", world.queen_url.as_ref().unwrap(), endpoint);
     let client = reqwest::Client::new();
     let response = client.get(&url).send().await;
-    
+
     match response {
         Ok(resp) => {
             world.last_status_code = Some(resp.status().as_u16());
@@ -372,7 +376,7 @@ pub async fn when_delete_without_auth(world: &mut World, endpoint: String) {
     let url = format!("{}{}", world.queen_url.as_ref().unwrap(), endpoint);
     let client = reqwest::Client::new();
     let response = client.delete(&url).send().await;
-    
+
     match response {
         Ok(resp) => {
             world.last_status_code = Some(resp.status().as_u16());
@@ -393,7 +397,8 @@ pub async fn when_request_with_auth(world: &mut World, auth: String) {
     // TEAM-102: Send request with Authorization header
     if let Some(url) = &world.queen_url {
         let client = reqwest::Client::new();
-        let response = client.post(format!("{}/v1/workers/spawn", url))
+        let response = client
+            .post(format!("{}/v1/workers/spawn", url))
             .header("Authorization", auth)
             .json(&serde_json::json!({
                 "model_ref": "hf:test/model",
@@ -402,7 +407,7 @@ pub async fn when_request_with_auth(world: &mut World, auth: String) {
             }))
             .send()
             .await;
-        
+
         match response {
             Ok(resp) => {
                 world.last_status_code = Some(resp.status().as_u16());
@@ -418,17 +423,18 @@ pub async fn when_request_with_auth(world: &mut World, auth: String) {
 pub async fn when_concurrent_valid(world: &mut World, count: usize) {
     // TEAM-102: Send concurrent requests with valid token
     use tokio::task::JoinSet;
-    
+
     let mut set = JoinSet::new();
     let url = world.queen_url.clone().unwrap();
     let token = world.expected_token.clone().unwrap();
-    
+
     for _ in 0..count {
         let url = url.clone();
         let token = token.clone();
         set.spawn(async move {
             let client = reqwest::Client::new();
-            client.get(format!("{}/v1/workers", url))
+            client
+                .get(format!("{}/v1/workers", url))
                 .header("Authorization", format!("Bearer {}", token))
                 .send()
                 .await
@@ -436,18 +442,16 @@ pub async fn when_concurrent_valid(world: &mut World, count: usize) {
                 .unwrap_or(500)
         });
     }
-    
+
     let mut results = Vec::new();
     while let Some(res) = set.join_next().await {
         if let Ok(status) = res {
             results.push(status);
         }
     }
-    
-    world.concurrent_results = results.into_iter()
-        .map(|s| Ok(s.to_string()))
-        .collect();
-    
+
+    world.concurrent_results = results.into_iter().map(|s| Ok(s.to_string())).collect();
+
     tracing::info!("✅ TEAM-102: Sent {} concurrent requests with valid token", count);
 }
 
@@ -455,15 +459,16 @@ pub async fn when_concurrent_valid(world: &mut World, count: usize) {
 pub async fn when_concurrent_invalid(world: &mut World, count: usize) {
     // TEAM-102: Send concurrent requests with invalid token
     use tokio::task::JoinSet;
-    
+
     let mut set = JoinSet::new();
     let url = world.queen_url.clone().unwrap();
-    
+
     for _ in 0..count {
         let url = url.clone();
         set.spawn(async move {
             let client = reqwest::Client::new();
-            client.get(format!("{}/v1/workers", url))
+            client
+                .get(format!("{}/v1/workers", url))
                 .header("Authorization", "Bearer invalid-token")
                 .send()
                 .await
@@ -471,26 +476,26 @@ pub async fn when_concurrent_invalid(world: &mut World, count: usize) {
                 .unwrap_or(500)
         });
     }
-    
+
     let mut results = Vec::new();
     while let Some(res) = set.join_next().await {
         if let Ok(status) = res {
             results.push(status);
         }
     }
-    
+
     // Append to existing results
-    world.concurrent_results.extend(
-        results.into_iter().map(|s| Ok(s.to_string()))
-    );
-    
+    world.concurrent_results.extend(results.into_iter().map(|s| Ok(s.to_string())));
+
     tracing::info!("✅ TEAM-102: Sent {} concurrent requests with invalid token", count);
 }
 
 #[then(expr = "all {int} valid requests return {int} or {int}")]
 pub async fn then_all_valid_return(world: &mut World, count: usize, code1: u16, code2: u16) {
     // TEAM-102: Verify all valid requests returned expected status codes
-    let valid_count = world.concurrent_results.iter()
+    let valid_count = world
+        .concurrent_results
+        .iter()
         .filter(|r| {
             if let Ok(s) = r {
                 let status: u16 = s.parse().unwrap_or(0);
@@ -500,7 +505,7 @@ pub async fn then_all_valid_return(world: &mut World, count: usize, code1: u16, 
             }
         })
         .count();
-    
+
     assert_eq!(valid_count, count, "Expected {} valid responses, got {}", count, valid_count);
     tracing::info!("✅ TEAM-102: All {} valid requests returned {} or {}", count, code1, code2);
 }
@@ -508,7 +513,9 @@ pub async fn then_all_valid_return(world: &mut World, count: usize, code1: u16, 
 #[then(expr = "all {int} invalid requests return {int}")]
 pub async fn then_all_invalid_return(world: &mut World, count: usize, code: u16) {
     // TEAM-102: Verify all invalid requests returned 401
-    let invalid_count = world.concurrent_results.iter()
+    let invalid_count = world
+        .concurrent_results
+        .iter()
         .filter(|r| {
             if let Ok(s) = r {
                 let status: u16 = s.parse().unwrap_or(0);
@@ -518,9 +525,14 @@ pub async fn then_all_invalid_return(world: &mut World, count: usize, code: u16)
             }
         })
         .count();
-    
+
     // Note: This counts from the total, so we need to check the last N results
-    assert!(invalid_count >= count, "Expected at least {} invalid responses (401), got {}", count, invalid_count);
+    assert!(
+        invalid_count >= count,
+        "Expected at least {} invalid responses (401), got {}",
+        count,
+        invalid_count
+    );
     tracing::info!("✅ TEAM-102: All {} invalid requests returned {}", count, code);
 }
 
@@ -549,7 +561,7 @@ pub async fn when_put_no_auth(world: &mut World, endpoint: String) {
     let url = format!("{}{}", world.queen_url.as_ref().unwrap(), endpoint);
     let client = reqwest::Client::new();
     let response = client.put(&url).send().await;
-    
+
     match response {
         Ok(resp) => {
             world.last_status_code = Some(resp.status().as_u16());
@@ -566,7 +578,7 @@ pub async fn when_patch_no_auth(world: &mut World, endpoint: String) {
     let url = format!("{}{}", world.queen_url.as_ref().unwrap(), endpoint);
     let client = reqwest::Client::new();
     let response = client.patch(&url).send().await;
-    
+
     match response {
         Ok(resp) => {
             world.last_status_code = Some(resp.status().as_u16());
@@ -582,8 +594,12 @@ pub async fn then_content_type(world: &mut World, content_type: String) {
     // TEAM-102: Verify response Content-Type header
     if let Some(headers) = &world.last_response_headers {
         if let Some(ct) = headers.get("content-type") {
-            assert!(ct.to_str().unwrap().contains(&content_type), 
-                "Expected Content-Type '{}', got '{}'", content_type, ct.to_str().unwrap());
+            assert!(
+                ct.to_str().unwrap().contains(&content_type),
+                "Expected Content-Type '{}', got '{}'",
+                content_type,
+                ct.to_str().unwrap()
+            );
             tracing::info!("✅ TEAM-102: Content-Type verified: {}", content_type);
         } else {
             panic!("No Content-Type header found");
@@ -596,13 +612,12 @@ pub async fn then_body_matches_schema(world: &mut World, schema: String) {
     // TEAM-102: Validate response body matches JSON schema
     if let Some(body) = &world.last_response_body {
         // Parse expected schema
-        let expected: serde_json::Value = serde_json::from_str(&schema)
-            .expect("Invalid schema JSON");
-        
+        let expected: serde_json::Value =
+            serde_json::from_str(&schema).expect("Invalid schema JSON");
+
         // Parse actual body
-        let actual: serde_json::Value = serde_json::from_str(body)
-            .expect("Invalid response JSON");
-        
+        let actual: serde_json::Value = serde_json::from_str(body).expect("Invalid response JSON");
+
         // Verify structure matches (simplified validation)
         assert!(actual.is_object(), "Response body is not a JSON object");
         tracing::info!("✅ TEAM-102: Response body matches schema");
@@ -624,7 +639,8 @@ pub async fn when_keeper_sends_request(world: &mut World, token: String) {
     // TEAM-102: Send inference request with authentication
     if let Some(url) = &world.queen_url {
         let client = reqwest::Client::new();
-        let response = client.post(format!("{}/v1/inference", url))
+        let response = client
+            .post(format!("{}/v1/inference", url))
             .header("Authorization", format!("Bearer {}", token))
             .json(&serde_json::json!({
                 "prompt": "Hello, world!",
@@ -632,7 +648,7 @@ pub async fn when_keeper_sends_request(world: &mut World, token: String) {
             }))
             .send()
             .await;
-        
+
         match response {
             Ok(resp) => {
                 world.last_status_code = Some(resp.status().as_u16());
@@ -681,32 +697,33 @@ pub async fn then_auth_logged(_world: &mut World) {
 pub async fn when_send_n_authenticated(world: &mut World, count: usize) {
     // TEAM-102: Send N authenticated requests for performance testing
     use tokio::task::JoinSet;
-    
+
     let mut set = JoinSet::new();
     let url = world.queen_url.clone().unwrap();
     let token = world.expected_token.clone().unwrap();
-    
+
     for _ in 0..count {
         let url = url.clone();
         let token = token.clone();
         set.spawn(async move {
             let client = reqwest::Client::new();
             let start = std::time::Instant::now();
-            let _response = client.get(format!("{}/v1/workers", url))
+            let _response = client
+                .get(format!("{}/v1/workers", url))
                 .header("Authorization", format!("Bearer {}", token))
                 .send()
                 .await;
             start.elapsed()
         });
     }
-    
+
     let mut timings = Vec::new();
     while let Some(res) = set.join_next().await {
         if let Ok(duration) = res {
             timings.push(duration);
         }
     }
-    
+
     world.timing_measurements = Some(timings);
     tracing::info!("✅ TEAM-102: Sent {} authenticated requests", count);
 }
@@ -716,13 +733,14 @@ pub async fn then_avg_overhead(world: &mut World, max_ms: u64) {
     // TEAM-102: Calculate and verify average auth overhead
     if let Some(timings) = &world.timing_measurements {
         let avg_ms = timings.iter().sum::<Duration>().as_millis() as f64 / timings.len() as f64;
-        
+
         assert!(
             avg_ms < max_ms as f64,
             "Average auth overhead {:.2}ms exceeds max {}ms",
-            avg_ms, max_ms
+            avg_ms,
+            max_ms
         );
-        
+
         tracing::info!("✅ TEAM-102: Average auth overhead {:.2}ms < {}ms", avg_ms, max_ms);
     }
 }
@@ -733,16 +751,12 @@ pub async fn then_p99_latency(world: &mut World, max_ms: u64) {
     if let Some(timings) = &world.timing_measurements {
         let mut sorted = timings.clone();
         sorted.sort();
-        
+
         let p99_index = (sorted.len() as f64 * 0.99) as usize;
         let p99_ms = sorted[p99_index].as_millis() as u64;
-        
-        assert!(
-            p99_ms < max_ms,
-            "P99 latency {}ms exceeds max {}ms",
-            p99_ms, max_ms
-        );
-        
+
+        assert!(p99_ms < max_ms, "P99 latency {}ms exceeds max {}ms", p99_ms, max_ms);
+
         tracing::info!("✅ TEAM-102: P99 latency {}ms < {}ms", p99_ms, max_ms);
     }
 }

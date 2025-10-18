@@ -21,10 +21,10 @@ use serde_json::json;
 use crate::http::routes::AppState;
 
 /// TEAM-102: Authentication middleware
-/// 
+///
 /// Validates Bearer tokens using timing-safe comparison.
 /// Logs authentication events with token fingerprints (never raw tokens).
-/// 
+///
 /// Returns 401 Unauthorized if:
 /// - No Authorization header
 /// - Invalid Bearer token format
@@ -35,16 +35,27 @@ pub async fn auth_middleware(
     next: Next,
 ) -> Result<Response, impl IntoResponse> {
     // TEAM-102: Parse Authorization header
-    let auth_header = req
-        .headers()
-        .get("authorization")
-        .and_then(|h| h.to_str().ok());
+    let auth_header = req.headers().get("authorization").and_then(|h| h.to_str().ok());
 
     // TEAM-102: Parse Bearer token (RFC 6750 compliant)
     let token = match parse_bearer(auth_header) {
         Some(t) => t,
         None => {
             tracing::warn!("auth failed: missing or invalid Authorization header");
+
+            // TEAM-114: Log auth failure event
+            if let Some(ref logger) = state.audit_logger {
+                use std::net::IpAddr;
+                logger.emit(audit_logging::AuditEvent::AuthFailure {
+                    timestamp: chrono::Utc::now(),
+                    attempted_user: None,
+                    reason: "Missing or invalid Authorization header".to_string(),
+                    ip: "0.0.0.0".parse::<IpAddr>().unwrap(), // TODO: Extract real IP from request
+                    path: req.uri().path().to_string(),
+                    service_id: "queen-rbee".to_string(),
+                });
+            }
+
             return Err((
                 StatusCode::UNAUTHORIZED,
                 Json(json!({
@@ -64,6 +75,20 @@ pub async fn auth_middleware(
             identity = %format!("token:{}", fp),
             "auth failed: invalid token"
         );
+
+        // TEAM-114: Log auth failure event
+        if let Some(ref logger) = state.audit_logger {
+            use std::net::IpAddr;
+            logger.emit(audit_logging::AuditEvent::AuthFailure {
+                timestamp: chrono::Utc::now(),
+                attempted_user: Some(format!("token:{}", fp)),
+                reason: "Invalid token".to_string(),
+                ip: "0.0.0.0".parse::<IpAddr>().unwrap(), // TODO: Extract real IP from request
+                path: req.uri().path().to_string(),
+                service_id: "queen-rbee".to_string(),
+            });
+        }
+
         return Err((
             StatusCode::UNAUTHORIZED,
             Json(json!({
@@ -79,12 +104,30 @@ pub async fn auth_middleware(
     let fp = token_fp6(&token);
     tracing::info!(identity = %format!("token:{}", fp), "authenticated");
 
+    // TEAM-114: Log auth success event
+    if let Some(ref logger) = state.audit_logger {
+        logger.emit(audit_logging::AuditEvent::AuthSuccess {
+            timestamp: chrono::Utc::now(),
+            actor: audit_logging::ActorInfo {
+                user_id: format!("token:{}", fp),
+                ip: None, // TODO: Extract IP from request
+                auth_method: audit_logging::AuthMethod::BearerToken,
+                session_id: None,
+            },
+            method: audit_logging::AuthMethod::BearerToken,
+            path: req.uri().path().to_string(),
+            service_id: "queen-rbee".to_string(),
+        });
+    }
+
     Ok(next.run(req).await)
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::beehive_registry::BeehiveRegistry;
+    use crate::worker_registry::WorkerRegistry;
     use axum::{
         body::Body,
         http::{Request, StatusCode},
@@ -98,10 +141,12 @@ mod tests {
         "OK"
     }
 
-    fn create_test_app(expected_token: String) -> Router {
+    async fn create_test_app(expected_token: String) -> Router {
         let state = AppState {
+            beehive_registry: Arc::new(BeehiveRegistry::new(None).await.unwrap()),
+            worker_registry: Arc::new(WorkerRegistry::new()),
             expected_token,
-            // ... other fields would be here in real app
+            audit_logger: None, // TEAM-114: Disabled for tests
         };
 
         Router::new()
@@ -112,7 +157,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_auth_success() {
-        let app = create_test_app("test-token-12345".to_string());
+        let app = create_test_app("test-token-12345".to_string()).await;
 
         let response = app
             .oneshot(
@@ -130,15 +175,10 @@ mod tests {
 
     #[tokio::test]
     async fn test_auth_missing_header() {
-        let app = create_test_app("test-token-12345".to_string());
+        let app = create_test_app("test-token-12345".to_string()).await;
 
         let response = app
-            .oneshot(
-                Request::builder()
-                    .uri("/test")
-                    .body(Body::empty())
-                    .unwrap(),
-            )
+            .oneshot(Request::builder().uri("/test").body(Body::empty()).unwrap())
             .await
             .unwrap();
 
@@ -147,7 +187,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_auth_invalid_token() {
-        let app = create_test_app("correct-token".to_string());
+        let app = create_test_app("correct-token".to_string()).await;
 
         let response = app
             .oneshot(
@@ -165,7 +205,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_auth_invalid_format() {
-        let app = create_test_app("test-token".to_string());
+        let app = create_test_app("test-token".to_string()).await;
 
         let response = app
             .oneshot(

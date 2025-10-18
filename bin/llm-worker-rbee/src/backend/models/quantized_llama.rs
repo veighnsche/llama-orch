@@ -66,19 +66,20 @@ impl QuantizedLlamaModel {
         });
 
         // Read GGUF content
-        let content = candle_core::quantized::gguf_file::Content::read(&mut file).with_context(|| {
-            // TEAM-088: Narrate GGUF parse failure
-            narrate(NarrationFields {
-                actor: "model-loader",
-                action: "gguf_parse_failed",
-                target: path.display().to_string(),
-                human: format!("Failed to parse GGUF content from {}", path.display()),
-                cute: Some("Uh oh! The GGUF file format looks wrong! 😟📄".to_string()),
-                error_kind: Some("gguf_parse_error".to_string()),
-                ..Default::default()
-            });
-            format!("Failed to read GGUF content from {path:?}")
-        })?;
+        let content =
+            candle_core::quantized::gguf_file::Content::read(&mut file).with_context(|| {
+                // TEAM-088: Narrate GGUF parse failure
+                narrate(NarrationFields {
+                    actor: "model-loader",
+                    action: "gguf_parse_failed",
+                    target: path.display().to_string(),
+                    human: format!("Failed to parse GGUF content from {}", path.display()),
+                    cute: Some("Uh oh! The GGUF file format looks wrong! 😟📄".to_string()),
+                    error_kind: Some("gguf_parse_error".to_string()),
+                    ..Default::default()
+                });
+                format!("Failed to read GGUF content from {path:?}")
+            })?;
 
         // TEAM-088: Narrate metadata inspection
         narrate(NarrationFields {
@@ -86,14 +87,17 @@ impl QuantizedLlamaModel {
             action: "gguf_inspect_metadata",
             target: path.display().to_string(),
             human: format!("Inspecting GGUF metadata ({} keys found)", content.metadata.len()),
-            cute: Some(format!("Found {} metadata keys! Let's see what's inside! 🔍", content.metadata.len())),
+            cute: Some(format!(
+                "Found {} metadata keys! Let's see what's inside! 🔍",
+                content.metadata.len()
+            )),
             ..Default::default()
         });
 
         // TEAM-088: List all available metadata keys for debugging
         let available_keys: Vec<String> = content.metadata.keys().map(|k| k.to_string()).collect();
         tracing::debug!(keys = ?available_keys, "Available GGUF metadata keys");
-        
+
         narrate(NarrationFields {
             actor: "model-loader",
             action: "gguf_metadata_keys",
@@ -177,7 +181,12 @@ impl QuantizedLlamaModel {
             actor: "model-loader",
             action: "gguf_metadata_loaded",
             target: path.display().to_string(),
-            human: format!("GGUF metadata: vocab={}, eos={}, tensors={}", vocab_size, eos_token_id, content.tensor_infos.len()),
+            human: format!(
+                "GGUF metadata: vocab={}, eos={}, tensors={}",
+                vocab_size,
+                eos_token_id,
+                content.tensor_infos.len()
+            ),
             cute: Some(format!("Found vocab_size={}! Metadata looks good! ✅", vocab_size)),
             ..Default::default()
         });

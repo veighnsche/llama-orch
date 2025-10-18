@@ -45,7 +45,7 @@ async fn list_workers() -> Result<()> {
     // TEAM-055: Add retry logic
     let mut last_error = None;
     let mut response = None;
-    
+
     for attempt in 0..3 {
         match client
             .get(format!("{}/v2/workers/list", queen_url))
@@ -62,7 +62,8 @@ async fn list_workers() -> Result<()> {
             }
             Err(e) if attempt < 2 => {
                 last_error = Some(e);
-                tokio::time::sleep(std::time::Duration::from_millis(100 * 2_u64.pow(attempt))).await;
+                tokio::time::sleep(std::time::Duration::from_millis(100 * 2_u64.pow(attempt)))
+                    .await;
                 continue;
             }
             Err(e) => {
@@ -128,7 +129,7 @@ async fn check_health(node: String) -> Result<()> {
     // TEAM-055: Add retry logic
     let mut last_error = None;
     let mut response = None;
-    
+
     for attempt in 0..3 {
         match client
             .get(format!("{}/v2/workers/health?node={}", queen_url, node))
@@ -145,7 +146,8 @@ async fn check_health(node: String) -> Result<()> {
             }
             Err(e) if attempt < 2 => {
                 last_error = Some(e);
-                tokio::time::sleep(std::time::Duration::from_millis(100 * 2_u64.pow(attempt))).await;
+                tokio::time::sleep(std::time::Duration::from_millis(100 * 2_u64.pow(attempt)))
+                    .await;
                 continue;
             }
             Err(e) => {
@@ -178,7 +180,10 @@ async fn check_health(node: String) -> Result<()> {
 
     for worker in health.workers {
         let ready_icon = if worker.ready { "✓".green() } else { "✗".red() };
-        println!("{} {} - {} (ready: {})", ready_icon, worker.worker_id, worker.state, worker.ready);
+        println!(
+            "{} {} - {} (ready: {})",
+            ready_icon, worker.worker_id, worker.state, worker.ready
+        );
     }
 
     Ok(())
@@ -194,7 +199,7 @@ async fn shutdown_worker(id: String) -> Result<()> {
 
     // TEAM-055: Add retry logic with exponential backoff
     let mut last_error = None;
-    
+
     for attempt in 0..3 {
         match client
             .post(format!("{}/v2/workers/shutdown", queen_url))
@@ -217,7 +222,8 @@ async fn shutdown_worker(id: String) -> Result<()> {
             Err(e) if attempt < 2 => {
                 tracing::warn!("⚠️ Attempt {} failed: {}, retrying...", attempt + 1, e);
                 last_error = Some(e);
-                tokio::time::sleep(std::time::Duration::from_millis(100 * 2_u64.pow(attempt))).await;
+                tokio::time::sleep(std::time::Duration::from_millis(100 * 2_u64.pow(attempt)))
+                    .await;
                 continue;
             }
             Err(e) => {

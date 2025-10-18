@@ -13,10 +13,10 @@
 
 use cucumber::World as _;
 use std::path::PathBuf;
-use std::time::Duration;
-use test_harness_bdd::steps::world::World;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
+use std::time::Duration;
+use test_harness_bdd::steps::world::World;
 
 #[tokio::test]
 async fn run_cucumber_tests() {
@@ -52,17 +52,17 @@ async fn run_cucumber_tests() {
     let timeout_flag_clone = timeout_flag.clone();
     let shutdown_flag = Arc::new(AtomicBool::new(false));
     let shutdown_flag_clone = shutdown_flag.clone();
-    
+
     // Spawn watchdog that kills hung scenarios
     tokio::spawn(async move {
         loop {
             tokio::time::sleep(Duration::from_secs(1)).await;
-            
+
             // Exit watchdog if tests completed
             if shutdown_flag_clone.load(Ordering::Relaxed) {
                 break;
             }
-            
+
             if timeout_flag_clone.load(Ordering::Relaxed) {
                 tracing::error!("❌ SCENARIO TIMEOUT DETECTED - KILLING PROCESSES");
                 cleanup_all_processes();
@@ -70,21 +70,21 @@ async fn run_cucumber_tests() {
             }
         }
     });
-    
+
     // Wrap entire test execution in timeout
     let result = tokio::time::timeout(
         Duration::from_secs(300), // 5 minutes for entire suite
-        run_tests(features, timeout_flag)
+        run_tests(features, timeout_flag),
     )
     .await;
-    
+
     // Signal watchdog to exit
     shutdown_flag.store(true, Ordering::Relaxed);
 
     // Explicit cleanup before exit
     test_harness_bdd::steps::global_hive::cleanup_global_hive();
     test_harness_bdd::steps::global_queen::cleanup_global_queen();
-    
+
     match result {
         Ok(Ok(())) => {
             tracing::info!("✅ All tests completed successfully");
@@ -101,7 +101,10 @@ async fn run_cucumber_tests() {
 }
 
 /// Run the actual test suite
-async fn run_tests(features: PathBuf, timeout_flag: Arc<AtomicBool>) -> Result<(), Box<dyn std::error::Error>> {
+async fn run_tests(
+    features: PathBuf,
+    timeout_flag: Arc<AtomicBool>,
+) -> Result<(), Box<dyn std::error::Error>> {
     // Start global queen-rbee instance before running tests
     test_harness_bdd::steps::global_queen::start_global_queen_rbee().await;
 
@@ -117,13 +120,16 @@ async fn run_tests(features: PathBuf, timeout_flag: Arc<AtomicBool>) -> Result<(
             Box::pin(async move {
                 tracing::info!("🎬 Starting scenario: {}", scenario.name);
                 world.start_time = Some(std::time::Instant::now());
-                
+
                 // Spawn timeout watchdog for this scenario
                 let scenario_name = scenario.name.clone();
                 let timeout_flag_clone = timeout_flag.clone();
                 tokio::spawn(async move {
                     tokio::time::sleep(Duration::from_secs(60)).await;
-                    tracing::error!("❌ SCENARIO TIMEOUT: '{}' exceeded 60 seconds!", scenario_name);
+                    tracing::error!(
+                        "❌ SCENARIO TIMEOUT: '{}' exceeded 60 seconds!",
+                        scenario_name
+                    );
                     timeout_flag_clone.store(true, Ordering::Relaxed);
                 });
             })
@@ -133,11 +139,19 @@ async fn run_tests(features: PathBuf, timeout_flag: Arc<AtomicBool>) -> Result<(
                 if let Some(w) = world {
                     if let Some(start) = w.start_time {
                         let elapsed = start.elapsed();
-                        tracing::info!("⏱️  Scenario '{}' completed in {:?}", scenario.name, elapsed);
-                        
+                        tracing::info!(
+                            "⏱️  Scenario '{}' completed in {:?}",
+                            scenario.name,
+                            elapsed
+                        );
+
                         // Warn if scenario took too long
                         if elapsed > Duration::from_secs(45) {
-                            tracing::warn!("⚠️  Scenario '{}' took longer than 45s: {:?}", scenario.name, elapsed);
+                            tracing::warn!(
+                                "⚠️  Scenario '{}' took longer than 45s: {:?}",
+                                scenario.name,
+                                elapsed
+                            );
                         }
                     }
                 }
@@ -145,7 +159,7 @@ async fn run_tests(features: PathBuf, timeout_flag: Arc<AtomicBool>) -> Result<(
         })
         .run(features)
         .await;
-    
+
     Ok(())
 }
 
@@ -153,20 +167,16 @@ async fn run_tests(features: PathBuf, timeout_flag: Arc<AtomicBool>) -> Result<(
 /// Called on panic or timeout
 fn cleanup_all_processes() {
     tracing::info!("🧹 Cleaning up all test processes...");
-    
+
     // Kill any remaining test processes by name
     let processes = ["bdd-runner", "mock-worker", "queen-rbee"];
-    
+
     for proc_name in &processes {
-        let _ = std::process::Command::new("pkill")
-            .arg("-9")
-            .arg("-f")
-            .arg(proc_name)
-            .output();
+        let _ = std::process::Command::new("pkill").arg("-9").arg("-f").arg(proc_name).output();
     }
-    
+
     // Give processes time to die
     std::thread::sleep(Duration::from_millis(500));
-    
+
     tracing::info!("✅ Cleanup complete");
 }

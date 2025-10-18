@@ -31,18 +31,18 @@
 //! # }
 //! ```
 
-mod error;
-mod validator;
 mod claims;
 mod config;
+mod error;
+mod validator;
 
 #[cfg(feature = "revocation")]
 mod revocation;
 
-pub use error::{JwtError, Result};
-pub use validator::JwtValidator;
 pub use claims::Claims;
 pub use config::ValidationConfig;
+pub use error::{JwtError, Result};
+pub use validator::JwtValidator;
 
 #[cfg(feature = "revocation")]
 pub use revocation::RevocationList;
@@ -72,13 +72,7 @@ mod tests {
 
     #[test]
     fn test_algorithm_conversion() {
-        assert_eq!(
-            Algorithm::RS256.to_jsonwebtoken(),
-            jsonwebtoken::Algorithm::RS256
-        );
-        assert_eq!(
-            Algorithm::ES256.to_jsonwebtoken(),
-            jsonwebtoken::Algorithm::ES256
-        );
+        assert_eq!(Algorithm::RS256.to_jsonwebtoken(), jsonwebtoken::Algorithm::RS256);
+        assert_eq!(Algorithm::ES256.to_jsonwebtoken(), jsonwebtoken::Algorithm::ES256);
     }
 }

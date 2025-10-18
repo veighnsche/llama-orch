@@ -22,8 +22,8 @@ pub struct AddNodeRequest {
     pub git_branch: String,
     pub install_path: String,
     // TEAM-052: Backend capabilities
-    pub backends: Option<String>,  // JSON array: ["cuda", "metal", "cpu"]
-    pub devices: Option<String>,   // JSON object: {"cuda": 2, "metal": 1, "cpu": 1}
+    pub backends: Option<String>, // JSON array: ["cuda", "metal", "cpu"]
+    pub devices: Option<String>,  // JSON object: {"cuda": 2, "metal": 1, "cpu": 1}
 }
 
 fn default_ssh_port() -> u16 {

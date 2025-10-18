@@ -10,7 +10,7 @@
 //! - M0-W-1320: Health endpoint returns 200 OK with {"status": "healthy"}
 
 use crate::http::backend::InferenceBackend;
-use crate::narration::{ACTOR_HTTP_SERVER, ACTION_HEALTH_CHECK};
+use crate::narration::{ACTION_HEALTH_CHECK, ACTOR_HTTP_SERVER};
 use axum::{extract::State, Json};
 use observability_narration_core::{narrate, NarrationFields};
 use serde::Serialize;

@@ -119,7 +119,7 @@ pub async fn handle_register_worker(
     Json(req): Json<RegisterWorkerRequest>,
 ) -> impl IntoResponse {
     use crate::worker_registry::WorkerInfo as RegistryWorkerInfo;
-    
+
     // Convert request to registry format
     let worker = RegistryWorkerInfo {
         id: req.worker_id.clone(),
@@ -127,18 +127,18 @@ pub async fn handle_register_worker(
         model_ref: req.model_ref.clone(),
         backend: req.backend.clone(),
         device: req.device,
-        state: WorkerState::Idle,  // Default to Idle on registration
+        state: WorkerState::Idle, // Default to Idle on registration
         slots_total: req.slots_total.unwrap_or(1),
         slots_available: req.slots_total.unwrap_or(1),
         vram_bytes: req.vram_bytes,
         node_name: req.node_name.clone(),
     };
-    
+
     // Register the worker
     state.worker_registry.register(worker).await;
-    
+
     tracing::info!("✅ Worker registered: {} from node {}", req.worker_id, req.node_name);
-    
+
     (
         StatusCode::OK,
         Json(RegisterWorkerResponse {

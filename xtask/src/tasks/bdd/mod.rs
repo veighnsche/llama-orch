@@ -8,25 +8,25 @@
 // - Auto-generated rerun commands
 // - Timestamped logs
 
-mod runner;
+mod files;
+mod live_filters;
 mod parser;
 mod reporter;
-mod files;
+mod runner;
 mod types;
-mod live_filters;
 
 // Test modules - Testing behavior, not coverage
 #[cfg(test)]
-mod parser_tests;
-#[cfg(test)]
-mod types_tests;
-#[cfg(test)]
 mod files_tests;
+#[cfg(test)]
+mod parser_tests;
 #[cfg(test)]
 mod reporter_tests;
 #[cfg(test)]
 mod runner_tests;
+#[cfg(test)]
+mod types_tests;
 
+pub use live_filters::{bdd_grep, bdd_head, bdd_tail};
 pub use runner::run_bdd_tests;
 pub use types::BddConfig;
-pub use live_filters::{bdd_tail, bdd_head, bdd_grep};
