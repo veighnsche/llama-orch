@@ -49,6 +49,14 @@ cargo xtask engine:status        # Check engine status
 cargo xtask engine:down          # Stop engines
 ```
 
+### BDD Test Tasks (NEW!)
+```bash
+cargo xtask bdd:test             # Run all BDD tests (live output)
+cargo xtask bdd:test --quiet     # Run quietly (summary only)
+cargo xtask bdd:test --tags @auth  # Run tests with specific tag
+cargo xtask bdd:test --feature lifecycle  # Run specific feature
+```
+
 ---
 
 ## 🔧 Common Workflows
@@ -73,6 +81,12 @@ cargo xtask regen
 
 ### Running Tests
 ```bash
+# Run BDD tests
+cargo xtask bdd:test
+
+# Run BDD tests with tag filter
+cargo xtask bdd:test --tags @p0
+
 # Run determinism tests
 cargo xtask ci:determinism
 
@@ -111,12 +125,21 @@ See `.archive/CLEANUP_PLAN.md` for details.
 
 ---
 
-## 🚀 Next Steps
+## 🚀 Recent Additions (TEAM-111)
 
-**Planned additions:**
-- `bdd:test` - Run BDD tests (port from bash)
-- `bdd:test-quiet` - Run BDD tests quietly
-- `bdd:test-tags` - Run BDD tests with tag filter
+**NEW: BDD Test Runner** ✅
+- `bdd:test` - Run BDD tests with live output
+- `--quiet` flag - Run quietly with spinner
+- `--tags` flag - Filter by tags
+- `--feature` flag - Run specific feature
+
+**Features:**
+- ✅ Live output streaming (default)
+- ✅ Quiet mode with progress spinner
+- ✅ Failure-focused reporting
+- ✅ Auto-generated rerun commands
+- ✅ Timestamped log files
+- ✅ Comprehensive error handling
 
 ---
 

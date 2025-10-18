@@ -22,6 +22,10 @@ fn main() -> Result<()> {
         Cmd::DocsIndex => tasks::ci::docs_index()?,
         Cmd::EngineStatus { config, pool } => tasks::engine::engine_status(config, pool)?,
         Cmd::EngineDown { config, pool } => tasks::engine::engine_down(config, pool)?,
+        Cmd::BddTest { tags, feature, quiet } => {
+            let config = tasks::bdd::BddConfig { tags, feature, quiet };
+            tasks::bdd::run_bdd_tests(config)?
+        }
     }
     Ok(())
 }

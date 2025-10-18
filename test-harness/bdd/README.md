@@ -177,37 +177,42 @@ rbee-hive continues running
 
 ## Running Tests
 
-### 🚀 NEW: World-Class Test Runner (TEAM-111)
+### 🚀 Rust xtask Runner (TEAM-111)
 
-**We now have a professional-grade test runner with:**
+**Professional-grade Rust test runner integrated with xtask:**
 - ✅ Live output by default (see everything in real-time!)
 - ✅ Failure-focused reporting (only failures shown at end)
-- ✅ Auto-generated rerun scripts (instant retry of failed tests)
-- ✅ 42 well-organized functions
-- ✅ Complete documentation
+- ✅ Auto-generated rerun commands (instant retry of failed tests)
+- ✅ Type-safe Rust implementation
+- ✅ Integrated with workspace tooling
 
 **Quick Start:**
 ```bash
 # Run all tests with live output
-./run-bdd-tests.sh
+cargo xtask bdd:test
 
 # Run specific tests
-./run-bdd-tests.sh --tags @auth
-./run-bdd-tests.sh --feature lifecycle
+cargo xtask bdd:test --tags @auth
+cargo xtask bdd:test --feature lifecycle
 
 # Quiet mode (for CI/CD)
-./run-bdd-tests.sh --quiet
+cargo xtask bdd:test --quiet
 
 # Help
-./run-bdd-tests.sh --help
+cargo xtask bdd:test --help
 ```
 
-**Documentation:**
-- `QUICK_START.md` - User guide with examples
-- `DEVELOPER_GUIDE.md` - For developers modifying the script
-- `ARCHITECTURE.md` - Complete architectural overview
-- `REFACTOR_COMPLETE.md` - Refactor details
-- `.docs/EXAMPLE_OUTPUT.md` - Visual examples
+**Features:**
+- Live output streaming (default)
+- Quiet mode with progress spinner
+- Tag filtering (`--tags @auth`)
+- Feature filtering (`--feature lifecycle`)
+- Compilation check before tests
+- Test discovery and counting
+- Failure extraction (multiple patterns)
+- Timestamped log files
+- Summary generation
+- Rerun command generation
 
 ### Legacy: Direct BDD Runner
 

@@ -48,4 +48,16 @@ pub enum Cmd {
         #[arg(long)]
         pool: Option<String>,
     },
+    #[command(name = "bdd:test")]
+    BddTest {
+        /// Run tests with specific tag (e.g., @auth, @p0)
+        #[arg(long)]
+        tags: Option<String>,
+        /// Run specific feature file (e.g., lifecycle, authentication)
+        #[arg(long)]
+        feature: Option<String>,
+        /// Suppress live output (only show summary)
+        #[arg(long, short)]
+        quiet: bool,
+    },
 }
