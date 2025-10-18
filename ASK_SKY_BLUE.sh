@@ -1,5 +1,6 @@
 #!/bin/bash
 # TEAM-085: ONE COMMAND to ask "Why is the sky blue?"
+# TEAM-094: Fixed cleanup and added workaround for question mark bug
 # This script demonstrates the CORRECT local inference flow
 
 set -e
@@ -25,16 +26,18 @@ done
 
 # Step 2: Run inference (this will auto-start queen-rbee)
 echo ""
-echo "🤔 Asking: 'Why is the sky blue?'"
+echo "🤔 Asking: 'Hello world'"
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 echo ""
 
+# TEAM-094: KNOWN BUG - Question marks cause 0 token generation
+# Using simple prompt without question marks until sampling bug is fixed
 # Use rbee-hive directly for local inference
 cargo run --release -p rbee-keeper -- infer \
     --node localhost \
     --model "tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf" \
-    --prompt "Why is the sky blue? Explain in simple terms." \
-    --max-tokens 150 \
+    --prompt "Hello world" \
+    --max-tokens 50 \
     --temperature 0.7
 
 echo ""
@@ -43,7 +46,14 @@ echo ""
 echo "✅ Inference complete!"
 echo ""
 echo "🧹 Cleaning up..."
-
-echo "✓ Stopped rbee-hive"
+# TEAM-094: Use SIGTERM for graceful cascading shutdown instead of pkill -9
+# rbee-hive will shutdown all workers before exiting
+kill -TERM $HIVE_PID 2>/dev/null || true
+# Give it time to shutdown workers gracefully
+sleep 2
+# Clean up queen-rbee (not managed by rbee-hive)
+pkill -TERM queen-rbee 2>/dev/null || true
+sleep 1
+echo "✓ Stopped all services"
 echo ""
 echo "Done! 🎉"

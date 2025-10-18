@@ -4,8 +4,9 @@
 //! Refactored by: TEAM-015 (split into focused modules)
 //! Modified by: TEAM-017 (added multi-model support with enum pattern)
 //! Modified by: TEAM-090 (added GGUF tokenizer extraction)
+//! Modified by: TEAM-095 (made gguf_tokenizer public for testing)
 
-mod gguf_tokenizer;
+pub mod gguf_tokenizer;
 mod inference;
 pub mod models;
 mod sampling;

@@ -17,14 +17,22 @@ use tracing::{error, info};
 /// # Behavior
 /// - Polls each worker's health endpoint every 30s
 /// - Logs health status
-/// - TODO: Mark workers as unhealthy on failure
+/// - TEAM-096: Fail-fast - removes workers after 3 failed health checks
 pub async fn health_monitor_loop(registry: Arc<WorkerRegistry>) {
     let mut interval = tokio::time::interval(Duration::from_secs(30));
 
     loop {
         interval.tick().await;
+        
+        let workers = registry.list().await;
+        if workers.is_empty() {
+            info!("🔍 Health monitor: No workers to check");
+            continue;
+        }
 
-        for worker in registry.list().await {
+        info!("🔍 Health monitor: Checking {} workers", workers.len());
+        
+        for worker in workers {
             // Check worker health: GET {worker.url}/v1/health
             let client = reqwest::Client::new();
             match client
@@ -34,25 +42,54 @@ pub async fn health_monitor_loop(registry: Arc<WorkerRegistry>) {
                 .await
             {
                 Ok(response) if response.status().is_success() => {
-                    info!(worker_id = %worker.id, url = %worker.url, "Worker healthy");
+                    info!(
+                        worker_id = %worker.id,
+                        url = %worker.url,
+                        state = ?worker.state,
+                        "✅ Worker healthy"
+                    );
+                    // Reset counter on success
+                    registry.update_state(&worker.id, worker.state).await;
                 }
                 Ok(response) => {
+                    // TEAM-096: Increment fail counter and remove after 3 failures
+                    let fail_count = registry.increment_failed_health_checks(&worker.id).await.unwrap_or(0);
                     error!(
                         worker_id = %worker.id,
                         url = %worker.url,
                         status = %response.status(),
-                        "Worker unhealthy"
+                        failed_checks = fail_count,
+                        "❌ Worker unhealthy"
                     );
-                    // TODO: Mark worker as unhealthy in registry
+                    
+                    if fail_count >= 3 {
+                        error!(
+                            worker_id = %worker.id,
+                            url = %worker.url,
+                            "🚨 FAIL-FAST: Removing worker after 3 failed health checks"
+                        );
+                        registry.remove(&worker.id).await;
+                    }
                 }
                 Err(e) => {
+                    // TEAM-096: Increment fail counter and remove after 3 failures
+                    let fail_count = registry.increment_failed_health_checks(&worker.id).await.unwrap_or(0);
                     error!(
                         worker_id = %worker.id,
                         url = %worker.url,
                         error = %e,
-                        "Worker unreachable"
+                        failed_checks = fail_count,
+                        "❌ Worker unreachable"
                     );
-                    // TODO: Mark worker as unhealthy in registry
+                    
+                    if fail_count >= 3 {
+                        error!(
+                            worker_id = %worker.id,
+                            url = %worker.url,
+                            "🚨 FAIL-FAST: Removing worker after 3 failed health checks"
+                        );
+                        registry.remove(&worker.id).await;
+                    }
                 }
             }
         }
@@ -94,6 +131,7 @@ mod tests {
             last_activity: SystemTime::now(),
             slots_total: 1,
             slots_available: 1,
+            failed_health_checks: 0,
         };
 
         registry.register(worker).await;

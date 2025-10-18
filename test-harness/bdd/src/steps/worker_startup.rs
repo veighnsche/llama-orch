@@ -360,6 +360,8 @@ pub async fn given_hive_spawns_worker_process(world: &mut World) {
         last_activity: std::time::SystemTime::now(),
         slots_total: 1,
         slots_available: 1,
+        failed_health_checks: 0,
+        pid: Some(std::process::id()),
     };
     
     registry.register(worker).await;

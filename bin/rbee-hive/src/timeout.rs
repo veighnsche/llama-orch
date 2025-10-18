@@ -99,6 +99,7 @@ mod tests {
             last_activity: SystemTime::now(),
             slots_total: 1,
             slots_available: 1,
+            failed_health_checks: 0,
         };
 
         registry.register(worker).await;

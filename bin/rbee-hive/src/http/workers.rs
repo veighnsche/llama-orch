@@ -141,11 +141,30 @@ pub async fn handle_spawn_worker(
     // TEAM-027: Generate worker ID
     let worker_id = format!("worker-{}", Uuid::new_v4());
 
-    // TEAM-027: Determine port (simple allocation: start at 8081)
-    // For MVP, use simple sequential allocation
-    // Production should use proper port allocation or OS-assigned ports
+    // TEAM-096: Determine port - find first available port
+    // Check existing workers to avoid address conflicts
     let workers = state.registry.list().await;
-    let port = 8081 + workers.len() as u16;
+    let mut port = 8081u16;
+    let used_ports: std::collections::HashSet<u16> = workers
+        .iter()
+        .filter_map(|w| {
+            // Extract port from URL like "http://127.0.0.1:8081"
+            w.url.split(':').last().and_then(|p| p.parse().ok())
+        })
+        .collect();
+    
+    // Find first unused port starting from 8081
+    while used_ports.contains(&port) {
+        port += 1;
+        if port > 9000 {
+            return Err((
+                StatusCode::INTERNAL_SERVER_ERROR,
+                "No available ports (8081-9000 all in use)".to_string(),
+            ));
+        }
+    }
+    
+    info!("🔍 Port allocation: {} workers registered, using port {}", workers.len(), port);
 
     // TEAM-027: Get hostname for URL
     // TEAM-035: For localhost testing, use 127.0.0.1 to avoid hostname resolution issues
@@ -260,6 +279,7 @@ pub async fn handle_spawn_worker(
                 last_activity: SystemTime::now(),
                 slots_total: 1,
                 slots_available: 0,
+                failed_health_checks: 0, // TEAM-096: Initialize counter
             };
 
             state.registry.register(worker).await;
@@ -416,6 +436,7 @@ mod tests {
             last_activity: SystemTime::now(),
             slots_total: 1,
             slots_available: 1,
+            failed_health_checks: 0,
         };
 
         let response = ListWorkersResponse { workers: vec![worker] };

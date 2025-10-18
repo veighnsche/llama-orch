@@ -32,6 +32,8 @@ pub async fn when_register_worker(world: &mut World) {
         slots_total: 1,
         slots_available: 1,
         last_activity: std::time::SystemTime::now(),
+        failed_health_checks: 0,
+        pid: None,
     };
     
     // Register worker via WorkerRegistry API

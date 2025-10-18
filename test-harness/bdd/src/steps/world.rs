@@ -10,6 +10,7 @@
 // ⚠️ ⚠️ ⚠️ END CRITICAL WARNING ⚠️ ⚠️ ⚠️
 //
 // Modified by: TEAM-064 (added explicit warning preservation notice)
+// Modified by: TEAM-099 (added chrono import for deadline propagation tests)
 
 use std::collections::HashMap;
 use std::path::PathBuf;
@@ -184,6 +185,9 @@ pub struct World {
     
     /// Next available port for workers
     pub next_worker_port: u16,
+    
+    /// Last worker ID (TEAM-098: For PID tracking tests)
+    pub last_worker_id: Option<String>,
 
     // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
     // Test Action Tracking (TEAM-078)
@@ -213,6 +217,207 @@ pub struct World {
     
     /// Active request ID for tracking
     pub active_request_id: Option<String>,
+    
+    // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    // P0 Security Testing (TEAM-097)
+    // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    /// Authentication enabled flag
+    pub auth_enabled: bool,
+    
+    /// Expected API token for auth tests
+    pub expected_token: Option<String>,
+    
+    /// Queen-rbee URL for auth tests
+    pub queen_url: Option<String>,
+    
+    /// rbee-hive URL for validation tests
+    pub hive_url: Option<String>,
+    
+    /// llm-worker-rbee URL for auth tests
+    pub worker_url: Option<String>,
+    
+    /// Last HTTP status code
+    pub last_status_code: Option<u16>,
+    
+    /// Last HTTP response body
+    pub last_response_body: Option<String>,
+    
+    /// Last HTTP response headers
+    pub last_response_headers: Option<reqwest::header::HeaderMap>,
+    
+    /// Last error message
+    pub last_error_message: Option<String>,
+    
+    /// Last request body
+    pub last_request_body: Option<String>,
+    
+    /// Timing measurements for auth tests
+    pub timing_measurements: Option<Vec<Duration>>,
+    
+    /// Timing measurements for invalid tokens
+    pub timing_measurements_invalid: Option<Vec<Duration>>,
+    
+    /// Bind address for queen-rbee
+    pub bind_address: Option<String>,
+    
+    /// Process started flag
+    pub process_started: bool,
+    
+    /// Queen token for multi-component tests
+    pub queen_token: Option<String>,
+    
+    /// Hive token for multi-component tests
+    pub hive_token: Option<String>,
+    
+    /// Secret file path for secrets tests
+    pub secret_file_path: Option<String>,
+    
+    /// File permissions for secrets tests
+    pub file_permissions: Option<String>,
+    
+    /// Last config for secrets tests
+    pub last_config: Option<String>,
+    
+    /// Systemd credential path
+    pub systemd_credential_path: Option<String>,
+    
+    /// Systemd credential name
+    pub systemd_credential_name: Option<String>,
+    
+    /// Hive token file path
+    pub hive_token_file: Option<String>,
+    
+    /// Worker token file path
+    pub worker_token_file: Option<String>,
+    
+    // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    // P1 Audit Logging (TEAM-099)
+    // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    /// Audit logging enabled flag
+    pub audit_enabled: bool,
+    
+    /// Audit log entries (JSON objects)
+    pub audit_log_entries: Vec<serde_json::Value>,
+    
+    /// Last audit entry hash
+    pub audit_last_hash: Option<String>,
+    
+    /// Audit log file path
+    pub audit_log_path: Option<PathBuf>,
+    
+    /// Tampered audit entry number
+    pub audit_tampered_entry: Option<usize>,
+    
+    /// Audit log rotation size in MB
+    pub audit_rotation_size_mb: Option<usize>,
+    
+    /// Current audit log size in MB
+    pub audit_current_size_mb: Option<usize>,
+    
+    /// Audit log rotated flag
+    pub audit_rotated: bool,
+    
+    /// Audit directory free space in MB
+    pub audit_free_space_mb: Option<usize>,
+    
+    /// Audit logs consumed space in MB
+    pub audit_consumed_mb: Option<usize>,
+    
+    /// Last warning message
+    pub last_warning: Option<String>,
+    
+    /// Process restarted flag
+    pub process_restarted: bool,
+    
+    /// Last model reference
+    pub last_model_ref: Option<String>,
+    
+    /// Last node name
+    pub last_node: Option<String>,
+    
+    // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    // P1 Deadline Propagation (TEAM-099)
+    // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    /// Request timeout in seconds
+    pub request_timeout_secs: Option<u64>,
+    
+    /// Request deadline timestamp
+    pub request_deadline: Option<chrono::DateTime<chrono::Utc>>,
+    
+    /// Queen-rbee received request flag
+    pub queen_received_request: bool,
+    
+    /// Queen-rbee calculated deadline
+    pub queen_deadline: Option<chrono::DateTime<chrono::Utc>>,
+    
+    /// Hive received deadline
+    pub hive_received_deadline: Option<chrono::DateTime<chrono::Utc>>,
+    
+    /// Worker received deadline
+    pub worker_received_deadline: Option<chrono::DateTime<chrono::Utc>>,
+    
+    /// Worker processing duration
+    pub worker_processing_duration: Option<Duration>,
+    
+    /// Deadline exceeded flag
+    pub deadline_exceeded: bool,
+    
+    /// Deadline exceeded at duration
+    pub deadline_exceeded_at: Option<Duration>,
+    
+    /// Queen cancelled request flag
+    pub queen_cancelled_request: bool,
+    
+    /// Hive received cancellation flag
+    pub hive_received_cancellation: bool,
+    
+    /// Worker received cancellation flag
+    pub worker_received_cancellation: bool,
+    
+    /// Worker stopped flag
+    pub worker_stopped: bool,
+    
+    /// Worker spawned flag
+    pub worker_spawned: bool,
+    
+    /// Hive received request flag
+    pub hive_received_request: bool,
+    
+    /// Worker received request flag
+    pub worker_received_request: bool,
+    
+    /// Last request headers
+    pub last_request_headers: HashMap<String, String>,
+    
+    /// Last response content type
+    pub last_response_content_type: Option<String>,
+    
+    /// Last error code
+    pub last_error_code: Option<String>,
+    
+    /// Worker processing flag
+    pub worker_processing: bool,
+    
+    /// Worker stopped token generation flag
+    pub worker_stopped_tokens: bool,
+    
+    /// Worker released GPU flag
+    pub worker_released_gpu: bool,
+    
+    /// Worker slot available flag
+    pub worker_slot_available: bool,
+    
+    /// Last worker event
+    pub last_worker_event: Option<String>,
+    
+    /// Malicious deadline attempt
+    pub malicious_deadline_attempt: Option<chrono::DateTime<chrono::Utc>>,
+    
+    /// Deadline extension rejected flag
+    pub deadline_extension_rejected: bool,
+    
+    /// Expected timeout in seconds
+    pub expected_timeout_secs: Option<u64>,
 }
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -335,6 +540,7 @@ impl Default for World {
             worker_processes: Vec::new(),
             hive_registry: Some(DebugWorkerRegistry::new()),
             next_worker_port: 8001,
+            last_worker_id: None, // TEAM-098: PID tracking tests
             last_action: None,
             
             // TEAM-085: Narration
@@ -344,6 +550,76 @@ impl Default for World {
             concurrent_results: Vec::new(), // TEAM-080: Concurrent operation results
             concurrent_handles: Vec::new(), // TEAM-081: Concurrent task handles
             active_request_id: None, // TEAM-081: Active request tracking
+            
+            // TEAM-097: P0 Security Testing
+            auth_enabled: false,
+            expected_token: None,
+            queen_url: None,
+            hive_url: None,
+            worker_url: None,
+            last_status_code: None,
+            last_response_body: None,
+            last_response_headers: None,
+            last_error_message: None,
+            last_request_body: None,
+            timing_measurements: None,
+            timing_measurements_invalid: None,
+            bind_address: None,
+            process_started: false,
+            queen_token: None,
+            hive_token: None,
+            secret_file_path: None,
+            file_permissions: None,
+            last_config: None,
+            systemd_credential_path: None,
+            systemd_credential_name: None,
+            hive_token_file: None,
+            worker_token_file: None,
+            
+            // TEAM-099: P1 Audit Logging
+            audit_enabled: false,
+            audit_log_entries: Vec::new(),
+            audit_last_hash: None,
+            audit_log_path: None,
+            audit_tampered_entry: None,
+            audit_rotation_size_mb: None,
+            audit_current_size_mb: None,
+            audit_rotated: false,
+            audit_free_space_mb: None,
+            audit_consumed_mb: None,
+            last_warning: None,
+            process_restarted: false,
+            last_model_ref: None,
+            last_node: None,
+            
+            // TEAM-099: P1 Deadline Propagation
+            request_timeout_secs: None,
+            request_deadline: None,
+            queen_received_request: false,
+            queen_deadline: None,
+            hive_received_deadline: None,
+            worker_received_deadline: None,
+            worker_processing_duration: None,
+            deadline_exceeded: false,
+            deadline_exceeded_at: None,
+            queen_cancelled_request: false,
+            hive_received_cancellation: false,
+            worker_received_cancellation: false,
+            worker_stopped: false,
+            worker_spawned: false,
+            hive_received_request: false,
+            worker_received_request: false,
+            last_request_headers: HashMap::new(),
+            last_response_content_type: None,
+            last_error_code: None,
+            worker_processing: false,
+            worker_stopped_tokens: false,
+            worker_released_gpu: false,
+            worker_slot_available: false,
+            last_worker_event: None,
+            malicious_deadline_attempt: None,
+            deadline_extension_rejected: false,
+            expected_timeout_secs: None,
         }
     }
 }

@@ -211,11 +211,16 @@ pub async fn handle(
                 }
 
                 // Parse and display token events
+                // TEAM-094: Filter by event type to only show actual tokens
                 if let Ok(token_event) = serde_json::from_str::<serde_json::Value>(json_str) {
-                    if let Some(token) = token_event.get("t").and_then(|t| t.as_str()) {
-                        print!("{}", token);
-                        std::io::stdout().flush()?;
+                    // Check if it's a token event
+                    if token_event.get("type").and_then(|t| t.as_str()) == Some("token") {
+                        if let Some(token) = token_event.get("t").and_then(|t| t.as_str()) {
+                            print!("{}", token);
+                            std::io::stdout().flush()?;
+                        }
                     }
+                    // Also handle other event types silently (narration, started, end)
                 }
             }
         }

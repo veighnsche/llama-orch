@@ -281,13 +281,37 @@ impl InferenceBackend for CandleInferenceBackend {
             let next_token =
                 logits_processor.sample(&logits).map_err(|e| format!("Sampling failed: {e}"))?;
 
+            // TEAM-095: Debug logging for zero-token bug
+            tracing::info!(
+                pos = pos,
+                next_token = next_token,
+                model_eos = self.model.eos_token_id(),
+                "Sampled token"
+            );
+
             // TEAM-017: Check for EOS - try tokenizer first (Candle-idiomatic), fallback to model
-            let is_eos = self
-                .tokenizer
-                .token_to_id("</s>").map_or_else(|| next_token == self.model.eos_token_id(), |eos_id| next_token == eos_id);
+            let tokenizer_eos_id = self.tokenizer.token_to_id("</s>");
+            let is_eos = tokenizer_eos_id.map_or_else(
+                || next_token == self.model.eos_token_id(),
+                |eos_id| next_token == eos_id
+            );
+
+            // TEAM-095: Debug EOS detection
+            tracing::info!(
+                pos = pos,
+                next_token = next_token,
+                tokenizer_eos = ?tokenizer_eos_id,
+                model_eos = self.model.eos_token_id(),
+                is_eos = is_eos,
+                "EOS check result"
+            );
 
             if is_eos {
-                tracing::debug!("EOS token generated");
+                tracing::warn!(
+                    pos = pos,
+                    next_token = next_token,
+                    "EOS token detected - stopping generation"
+                );
                 break;
             }
 

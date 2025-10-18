@@ -107,6 +107,8 @@ pub async fn given_worker_in_state(world: &mut World, state: String) {
             last_activity: std::time::SystemTime::now(),
             slots_total: 1,
             slots_available: 1,
+            failed_health_checks: 0,
+            pid: None,
         };
         
         let registry = world.hive_registry();
@@ -220,6 +222,8 @@ pub async fn given_worker_idle_for(world: &mut World, minutes: u64) {
             last_activity: idle_since,
             slots_total: 1,
             slots_available: 1,
+            failed_health_checks: 0,
+            pid: None,
         };
         
         let registry = world.hive_registry();

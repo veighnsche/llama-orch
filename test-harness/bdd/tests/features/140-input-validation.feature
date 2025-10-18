@@ -159,3 +159,218 @@ Feature: Input Validation
     And the error code is one of the defined error codes
     And the message is human-readable
     And the details provide actionable context
+
+  @p0 @validation @log-injection @security
+  Scenario: VAL-001 - Prevent log injection with newlines
+    Given queen-rbee is running at "http://localhost:8080"
+    When I send POST to "/v1/workers/spawn" with model_ref "hf:test\nINJECTED LOG LINE"
+    Then request is rejected with 400 Bad Request
+    And error message is "Invalid model reference: contains newline characters"
+    And log file does not contain "INJECTED LOG LINE" on separate line
+    And validation error explains expected format
+
+  @p0 @validation @log-injection @security
+  Scenario: VAL-002 - Prevent log injection with ANSI escape codes
+    Given queen-rbee is running at "http://localhost:8080"
+    When I send POST to "/v1/workers/spawn" with model_ref "hf:test\x1b[31mRED TEXT\x1b[0m"
+    Then request is rejected with 400 Bad Request
+    And error message is "Invalid model reference: contains ANSI escape codes"
+    And log file does not contain ANSI escape sequences
+
+  @p0 @validation @log-injection @security
+  Scenario: VAL-003 - Prevent log injection with null bytes
+    Given queen-rbee is running at "http://localhost:8080"
+    When I send POST to "/v1/workers/spawn" with model_ref "hf:test\x00injected"
+    Then request is rejected with 400 Bad Request
+    And error message is "Invalid model reference: contains null bytes"
+
+  @p0 @validation @path-traversal @security
+  Scenario: VAL-004 - Prevent path traversal (../../etc/passwd)
+    Given rbee-hive is running at "http://localhost:8081"
+    When I send request with model_path "../../etc/passwd"
+    Then request is rejected with 400 Bad Request
+    And error message is "Invalid path: path traversal detected"
+    And file system access is blocked
+
+  @p0 @validation @path-traversal @security
+  Scenario: VAL-005 - Prevent path traversal (absolute paths)
+    Given rbee-hive is running at "http://localhost:8081"
+    When I send request with model_path "/etc/passwd"
+    Then request is rejected with 400 Bad Request
+    And error message is "Invalid path: absolute paths not allowed"
+
+  @p0 @validation @path-traversal @security
+  Scenario: VAL-006 - Prevent path traversal (symlinks)
+    Given rbee-hive is running at "http://localhost:8081"
+    And symlink exists at "/tmp/llorch-test/evil-link" pointing to "/etc/passwd"
+    When I send request with model_path "/tmp/llorch-test/evil-link"
+    Then request is rejected with 400 Bad Request
+    And error message is "Invalid path: symlinks not allowed"
+    And symlink is not followed
+
+  @p0 @validation @command-injection @security
+  Scenario: VAL-007 - Prevent command injection (shell metacharacters)
+    Given rbee-hive is running at "http://localhost:8081"
+    When I send request with worker_id "worker-123; rm -rf /"
+    Then request is rejected with 400 Bad Request
+    And error message is "Invalid worker ID: contains shell metacharacters"
+    And no shell command is executed
+
+  @p0 @validation @command-injection @security
+  Scenario: VAL-008 - Prevent command injection (backticks)
+    Given rbee-hive is running at "http://localhost:8081"
+    When I send request with worker_id "worker-`whoami`"
+    Then request is rejected with 400 Bad Request
+    And error message is "Invalid worker ID: contains backticks"
+
+  @p0 @validation @command-injection @security
+  Scenario: VAL-009 - Prevent command injection (pipe characters)
+    Given rbee-hive is running at "http://localhost:8081"
+    When I send request with worker_id "worker-123 | cat /etc/passwd"
+    Then request is rejected with 400 Bad Request
+    And error message is "Invalid worker ID: contains pipe characters"
+
+  @p0 @validation @format @security
+  Scenario: VAL-010 - Validate model reference format (hf:org/repo)
+    Given queen-rbee is running at "http://localhost:8080"
+    When I send request with model_ref "hf:TheBloke/TinyLlama-1.1B-Chat-v1.0-GGUF"
+    Then request is accepted
+    When I send request with model_ref "invalid-format"
+    Then request is rejected with 400 Bad Request
+    And error message is "Invalid model reference format"
+
+  @p0 @validation @format @security
+  Scenario: VAL-011 - Validate model reference (no special chars)
+    Given queen-rbee is running at "http://localhost:8080"
+    When I send request with model_ref "hf:org/repo!@#$%"
+    Then request is rejected with 400 Bad Request
+    And error message is "Invalid model reference: contains special characters"
+
+  @p0 @validation @format
+  Scenario: VAL-012 - Validate worker ID format (alphanumeric + dash)
+    Given rbee-hive is running at "http://localhost:8081"
+    When I send request with worker_id "worker-123-abc"
+    Then request is accepted
+    When I send request with worker_id "worker_123_abc"
+    Then request is rejected with 400 Bad Request
+    And error message is "Invalid worker ID: only alphanumeric and dash allowed"
+
+  @p0 @validation @format
+  Scenario: VAL-013 - Validate worker ID length (max 64 chars)
+    Given rbee-hive is running at "http://localhost:8081"
+    When I send request with worker_id "worker-" repeated 20 times
+    Then request is rejected with 400 Bad Request
+    And error message is "Invalid worker ID: exceeds maximum length of 64 characters"
+
+  @p0 @validation @format
+  Scenario: VAL-014 - Validate backend name (cuda, metal, cpu only)
+    Given rbee-hive is running at "http://localhost:8081"
+    When I send request with backend "cuda"
+    Then request is accepted
+    When I send request with backend "metal"
+    Then request is accepted
+    When I send request with backend "cpu"
+    Then request is accepted
+    When I send request with backend "quantum"
+    Then request is rejected with 400 Bad Request
+    And error message is "Invalid backend: must be one of [cpu, cuda, metal]"
+
+  @p0 @validation @format
+  Scenario: VAL-015 - Validate device ID (non-negative integer)
+    Given rbee-hive is running at "http://localhost:8081"
+    When I send request with device "0"
+    Then request is accepted
+    When I send request with device "5"
+    Then request is accepted
+    When I send request with device "-1"
+    Then request is rejected with 400 Bad Request
+    And error message is "Invalid device ID: must be non-negative integer"
+
+  @p0 @validation @format
+  Scenario: VAL-016 - Validate port number (1024-65535)
+    Given queen-rbee config has port "8080"
+    Then queen-rbee starts successfully
+    Given queen-rbee config has port "80"
+    Then queen-rbee fails to start
+    And displays error: "Invalid port: must be between 1024 and 65535"
+    Given queen-rbee config has port "70000"
+    Then queen-rbee fails to start
+    And displays error: "Invalid port: must be between 1024 and 65535"
+
+  @p0 @validation @format
+  Scenario: VAL-017 - Validate node name (DNS-safe characters)
+    Given queen-rbee is running at "http://localhost:8080"
+    When I send request with node "workstation"
+    Then request is accepted
+    When I send request with node "workstation.home.arpa"
+    Then request is accepted
+    When I send request with node "work@station"
+    Then request is rejected with 400 Bad Request
+    And error message is "Invalid node name: must be DNS-safe"
+
+  @p0 @validation @sql-injection @security
+  Scenario: VAL-018 - Reject SQL injection attempts
+    Given model-catalog is running with SQLite database
+    When I send request with model_ref "hf:'; DROP TABLE models; --"
+    Then request is rejected with 400 Bad Request
+    And error message is "Invalid model reference format"
+    And SQL injection is prevented
+    And database tables are intact
+
+  @p0 @validation @xss @security
+  Scenario: VAL-019 - Reject XSS attempts
+    Given queen-rbee is running at "http://localhost:8080"
+    When I send request with model_ref "<script>alert('XSS')</script>"
+    Then request is rejected with 400 Bad Request
+    And error message is "Invalid model reference: contains HTML/script tags"
+    And response body does not contain script tags
+
+  @p0 @validation @fuzzing @security
+  Scenario: VAL-020 - Property-based testing (proptest fuzzing)
+    Given queen-rbee is running at "http://localhost:8080"
+    When I send 1000 requests with randomly generated inputs
+    Then no request causes panic or crash
+    And all invalid inputs are rejected with 400 Bad Request
+    And all valid inputs are accepted
+    And no memory leaks occur
+
+  @p0 @validation @unicode @security
+  Scenario: VAL-021 - Validate Unicode handling
+    Given queen-rbee is running at "http://localhost:8080"
+    When I send request with model_ref "hf:org/repo-émoji-🚀"
+    Then request is rejected with 400 Bad Request
+    And error message is "Invalid model reference: non-ASCII characters not allowed"
+
+  @p0 @validation @size-limits @security
+  Scenario: VAL-022 - Enforce request body size limits
+    Given queen-rbee is running at "http://localhost:8080"
+    When I send request with 10 MB body
+    Then request is rejected with 413 Payload Too Large
+    And error message is "Request body exceeds maximum size of 1 MB"
+
+  @p0 @validation @rate-limiting @security
+  Scenario: VAL-023 - Validate rate limiting on validation errors
+    Given queen-rbee is running at "http://localhost:8080"
+    When I send 100 invalid requests in 1 second
+    Then requests are rate-limited after 50 failures
+    And response status is 429 Too Many Requests
+    And error message is "Too many validation errors"
+
+  @p0 @validation @error-messages @security
+  Scenario: VAL-024 - Safe error messages (no payload echoed)
+    Given queen-rbee is running at "http://localhost:8080"
+    When I send request with malicious payload "<script>alert('XSS')</script>"
+    Then request is rejected with 400 Bad Request
+    And error message does not contain "<script>alert('XSS')</script>"
+    And error message is "Invalid model reference format"
+
+  @p0 @validation @comprehensive
+  Scenario: VAL-025 - Comprehensive validation on all endpoints
+    Given queen-rbee is running at "http://localhost:8080"
+    When I send malicious input to "/v1/workers/spawn"
+    Then input is validated and rejected
+    When I send malicious input to "/v1/workers/{id}"
+    Then input is validated and rejected
+    When I send malicious input to "/v1/inference"
+    Then input is validated and rejected
+    And all endpoints perform input validation

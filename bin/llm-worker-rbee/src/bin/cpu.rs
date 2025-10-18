@@ -71,11 +71,19 @@ async fn main() -> Result<()> {
     // ============================================================
     // STEP 3: Call back to pool-managerd (worker ready)
     // ============================================================
+    // TEAM-095: Fixed callback_ready signature to match TEAM-092 update
     if args.callback_url.contains("localhost:9999") {
         tracing::info!("Test mode: skipping pool manager callback");
     } else {
-        callback_ready(&args.callback_url, &args.worker_id, backend.memory_bytes(), args.port)
-            .await?;
+        callback_ready(
+            &args.callback_url,
+            &args.worker_id,
+            &args.model,        // model_ref
+            "cpu",              // backend
+            0,                  // device (CPU = 0)
+            backend.memory_bytes(),
+            args.port
+        ).await?;
 
         tracing::info!("Callback sent to pool-managerd");
     }

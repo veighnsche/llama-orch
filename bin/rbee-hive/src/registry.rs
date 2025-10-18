@@ -48,6 +48,12 @@ pub struct WorkerInfo {
     pub slots_total: u32,
     /// Available slots
     pub slots_available: u32,
+    /// Failed health checks counter (TEAM-096: For fail-fast protocol)
+    #[serde(default)]
+    pub failed_health_checks: u32,
+    /// Process ID (TEAM-098: For PID tracking and force-kill)
+    #[serde(default)]
+    pub pid: Option<u32>,
 }
 
 /// Worker registry - thread-safe in-memory storage
@@ -74,6 +80,20 @@ impl WorkerRegistry {
         if let Some(worker) = workers.get_mut(worker_id) {
             worker.state = state;
             worker.last_activity = SystemTime::now();
+            // TEAM-096: Reset health check counter on successful state update
+            worker.failed_health_checks = 0;
+        }
+    }
+
+    /// Increment failed health checks counter (TEAM-096: For fail-fast protocol)
+    /// Returns new count, or None if worker not found
+    pub async fn increment_failed_health_checks(&self, worker_id: &str) -> Option<u32> {
+        let mut workers = self.workers.write().await;
+        if let Some(worker) = workers.get_mut(worker_id) {
+            worker.failed_health_checks += 1;
+            Some(worker.failed_health_checks)
+        } else {
+            None
         }
     }
 
@@ -151,6 +171,8 @@ mod tests {
             last_activity: SystemTime::now(),
             slots_total: 1,
             slots_available: 1,
+            failed_health_checks: 0,
+            pid: None,
         };
 
         registry.register(worker.clone()).await;
@@ -174,6 +196,8 @@ mod tests {
             last_activity: SystemTime::now(),
             slots_total: 1,
             slots_available: 1,
+            failed_health_checks: 0,
+            pid: None,
         };
 
         registry.register(worker).await;
@@ -197,6 +221,8 @@ mod tests {
             last_activity: SystemTime::now(),
             slots_total: 1,
             slots_available: 1,
+            failed_health_checks: 0,
+            pid: None,
         };
 
         let worker2 = WorkerInfo {
@@ -209,6 +235,8 @@ mod tests {
             last_activity: SystemTime::now(),
             slots_total: 1,
             slots_available: 0,
+            failed_health_checks: 0,
+            pid: None,
         };
 
         registry.register(worker1).await;
@@ -241,6 +269,8 @@ mod tests {
             last_activity: SystemTime::now(),
             slots_total: 1,
             slots_available: 1,
+            failed_health_checks: 0,
+            pid: None,
         };
 
         let worker2 = WorkerInfo {
@@ -253,6 +283,8 @@ mod tests {
             last_activity: SystemTime::now(),
             slots_total: 1,
             slots_available: 1,
+            failed_health_checks: 0,
+            pid: None,
         };
 
         registry.register(worker1).await;
@@ -276,6 +308,8 @@ mod tests {
             last_activity: SystemTime::now(),
             slots_total: 1,
             slots_available: 1,
+            failed_health_checks: 0,
+            pid: None,
         };
 
         registry.register(worker).await;
@@ -309,6 +343,8 @@ mod tests {
             last_activity: SystemTime::now(),
             slots_total: 1,
             slots_available: 1,
+            failed_health_checks: 0,
+            pid: None,
         };
 
         let worker2 = WorkerInfo {
@@ -321,6 +357,8 @@ mod tests {
             last_activity: SystemTime::now(),
             slots_total: 1,
             slots_available: 0,
+            failed_health_checks: 0,
+            pid: None,
         };
 
         let worker3 = WorkerInfo {
@@ -333,6 +371,8 @@ mod tests {
             last_activity: SystemTime::now(),
             slots_total: 1,
             slots_available: 1,
+            failed_health_checks: 0,
+            pid: None,
         };
 
         registry.register(worker1).await;
@@ -358,6 +398,8 @@ mod tests {
             last_activity: SystemTime::now(),
             slots_total: 1,
             slots_available: 1,
+            failed_health_checks: 0,
+            pid: None,
         };
 
         registry.register(worker).await;
@@ -384,6 +426,8 @@ mod tests {
             last_activity: SystemTime::now(),
             slots_total: 1,
             slots_available: 1,
+            failed_health_checks: 0,
+            pid: None,
         };
 
         let worker2 = WorkerInfo {
@@ -396,6 +440,8 @@ mod tests {
             last_activity: SystemTime::now(),
             slots_total: 1,
             slots_available: 1,
+            failed_health_checks: 0,
+            pid: None,
         };
 
         registry.register(worker1).await;
@@ -452,6 +498,8 @@ mod tests {
             last_activity: SystemTime::now(),
             slots_total: 4,
             slots_available: 2,
+            failed_health_checks: 0,
+            pid: Some(12345),
         };
 
         let json = serde_json::to_value(&worker).unwrap();

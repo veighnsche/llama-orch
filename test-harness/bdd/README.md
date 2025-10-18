@@ -36,48 +36,60 @@ This directory contains Gherkin feature files that describe the behavior of the 
 ```
 test-harness/bdd/
 ├── README.md                    # This file
+├── src/
+│   └── steps/                   # Step definitions (Rust)
+│       ├── authentication.rs    # TEAM-097: Auth tests
+│       ├── secrets.rs           # TEAM-097: Secrets tests
+│       ├── validation.rs        # TEAM-097: Input validation tests
+│       └── ...                  # Other step modules
 └── tests/
-    └── features/
-        ├── test-001.feature     # Complete test suite (67 scenarios)
-        └── test-001-mvp.feature # MVP subset (27 scenarios)
+    └── features/                # Gherkin feature files
+        ├── 010-ssh-registry-management.feature
+        ├── 020-model-catalog.feature
+        ├── 030-model-provisioner.feature
+        ├── 100-worker-rbee-lifecycle.feature
+        ├── 110-rbee-hive-lifecycle.feature
+        ├── 120-queen-rbee-lifecycle.feature
+        ├── 130-inference-execution.feature
+        ├── 140-input-validation.feature  # Expanded by TEAM-097
+        ├── 200-concurrency-scenarios.feature
+        ├── 210-failure-recovery.feature
+        ├── 300-authentication.feature    # TEAM-097: NEW
+        ├── 310-secrets-management.feature # TEAM-097: NEW
+        └── 900-integration-e2e.feature
 ```
 
 ## Feature Files
 
-### test-001.feature (Complete Suite)
+### P0 Security Tests (TEAM-097)
 
-**Scenarios:** 67  
-**Coverage:** All behaviors from TEST-001 specification
+**300-authentication.feature** - 20 scenarios
+- API token validation (Bearer tokens)
+- Timing-safe comparison (< 10% variance)
+- Multi-component auth (queen, hive, worker)
+- Concurrent auth requests
+- Performance benchmarks (< 1ms overhead)
 
-**Organized into:**
-- Happy path flows (cold start, warm start)
-- Worker registry check (Phase 1)
-- Pool preflight (Phase 2)
-- Model provisioning (Phase 3)
-- Worker preflight (Phase 4)
-- Worker startup (Phase 5)
-- Worker registration (Phase 6)
-- Worker health check (Phase 7)
-- Inference execution (Phase 8)
-- Edge cases (EC1-EC10)
-- Rbee-hive lifecycle
-- Error response format
-- CLI commands
+**310-secrets-management.feature** - 17 scenarios
+- File-based credentials (0600 permissions)
+- Systemd credential support
+- Memory zeroization verification
+- HKDF-SHA256 key derivation
+- Hot reload with SIGHUP
 
-### test-001-mvp.feature (MVP Subset)
+**140-input-validation.feature** - 30+ scenarios (25 added by TEAM-097)
+- Log injection prevention
+- Path traversal prevention
+- Command injection prevention
+- SQL/XSS injection prevention
+- Property-based fuzzing tests
 
-**Scenarios:** 27  
-**Tags:** `@mvp`, `@critical`, `@edge-case`, `@lifecycle`
+### Core System Tests
 
-**Focus areas:**
-- Critical happy paths (MVP-001, MVP-002)
-- Essential model provisioning (MVP-003, MVP-004)
-- Worker lifecycle (MVP-005, MVP-006, MVP-007)
-- Rbee-hive daemon behavior (MVP-008, MVP-009)
-- **Lifecycle rules** (MVP-010 through MVP-013)
-- 10 critical edge cases (MVP-EC1 through MVP-EC10)
-- Error format validation
-- Success criteria validation
+**100-120 series:** Component lifecycle tests
+**130:** Inference execution
+**200-210:** Concurrency and failure recovery
+**900:** End-to-end integration
 
 ## Critical Lifecycle Rules
 
