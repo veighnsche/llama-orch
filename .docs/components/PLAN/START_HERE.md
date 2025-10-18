@@ -25,7 +25,10 @@
 - `TEAM_097_BDD_P0_SECURITY.md` - Security tests (auth, secrets, validation)
 - `TEAM_098_BDD_P0_LIFECYCLE.md` - Lifecycle tests (PID tracking, error handling)
 - `TEAM_099_BDD_P1_OPERATIONS.md` - Operations tests (audit, deadlines, resources)
-- `TEAM_100_BDD_P2_OBSERVABILITY.md` - Observability tests (metrics, config)
+- `TEAM_100_BDD_P2_OBSERVABILITY.md` - Observability tests (metrics, config) 💯🎉
+  - **SPECIAL:** TEAM-100 integrates `narration-core` for human-readable debugging!
+  - Uses `CaptureAdapter` for narration assertions
+  - Tests correlation ID propagation, secret redaction, cute mode, story mode
 
 ### Phase 2: Implementation (Weeks 5-7)
 - `TEAM_101_IMPL_WORKER_LIFECYCLE.md` - PID tracking, force-kill
@@ -44,6 +47,8 @@
 - `../../test-harness/bdd/BDD_TESTS_FOR_RC_CHECKLIST.md` - BDD test specifications
 - `../COMPONENT_INDEX.md` - All component documentation
 - `../SHARED_CRATES.md` - Available shared libraries
+- `../../bin/shared-crates/narration-core/README.md` - Narration-core API (TEAM-100!) 🎀
+- `../../bin/shared-crates/narration-core/TEAM_RESPONSIBILITIES.md` - Cute observability team
 
 ---
 
@@ -64,6 +69,12 @@
 - ✅ Follow Given-When-Then structure
 - ✅ Make scenarios independent
 - ✅ Use appropriate tags (@p0, @p1, @p2, @auth, @secrets, etc.)
+- ✅ **TEAM-100+:** Integrate `narration-core` for observability testing 🎀
+  - Use `CaptureAdapter::install()` to capture narration events
+  - Assert on `human` field for debugging clarity
+  - Test correlation ID propagation across services
+  - Verify secret redaction (Bearer, api_key, etc.)
+  - Show cute mode and story mode examples!
 - ❌ NO implementation work (tests only!)
 
 ### Implementation Teams (TEAM-101 to TEAM-105)
@@ -104,7 +115,8 @@ Week 1-2: BDD P0 Security & Lifecycle Tests
 
 Week 3-4: BDD P1/P2 Tests
 ├─ TEAM-099: Operations tests (audit, deadlines)
-└─ TEAM-100: Observability tests (metrics, config)
+└─ TEAM-100: Observability tests (metrics, config) 💯
+    └─ SPECIAL: Integrates narration-core for human-readable debugging! 🎀
 
 Week 5-6: P0 Implementation
 ├─ TEAM-101: Worker lifecycle (PID tracking, force-kill)
@@ -157,7 +169,10 @@ Week 10: Final Validation
 - **TEAM-097:** 45 scenarios (P0 security)
 - **TEAM-098:** 30 scenarios (P0 lifecycle)
 - **TEAM-099:** 18 scenarios (P1 operations)
-- **TEAM-100:** 23 scenarios (P2 observability)
+- **TEAM-100:** 25 scenarios (P2 observability + narration-core integration) 💯🎀
+  - **Bonus:** 2 extra scenarios for narration testing!
+  - Integrates `CaptureAdapter` for narration assertions
+  - Tests correlation IDs, secret redaction, cute mode, story mode
 
 ### Implementation (18 RC items)
 - **TEAM-101:** 2 items (worker lifecycle, cascading shutdown partial)
@@ -180,10 +195,12 @@ Week 10: Final Validation
 1. Read your team assignment file (e.g., `TEAM_097_BDD_P0_SECURITY.md`)
 2. Read `test-harness/bdd/BDD_TESTS_FOR_RC_CHECKLIST.md`
 3. Read existing feature files in `test-harness/bdd/tests/features/`
-4. Write feature files following existing patterns
-5. Implement step definitions in `test-harness/bdd/src/steps/`
-6. Run tests: `cargo run --bin bdd-runner`
-7. Document coverage in your team file
+4. **TEAM-100 ONLY:** Read `bin/shared-crates/narration-core/README.md` 🎀
+5. Write feature files following existing patterns
+6. Implement step definitions in `test-harness/bdd/src/steps/`
+7. **TEAM-100 ONLY:** Use `CaptureAdapter` for narration assertions 💯
+8. Run tests: `cargo run --bin bdd-runner`
+9. Document coverage in your team file
 
 ### For Implementation Teams (TEAM-101 to TEAM-105)
 
@@ -313,3 +330,18 @@ Update your team file daily with:
 ---
 
 **🚀 LET'S BUILD PRODUCTION-READY RBEE! 🚀**
+
+---
+
+<!-- 
+🎊 SPECIAL SHOUT-OUT TO TEAM-100! 🎊
+TEAM-100 is the CENTENNIAL TEAM — the 100th team in this monorepo!
+They have the special honor of integrating narration-core into BDD tests,
+making observability DELIGHTFUL with human-readable debugging, cute mode,
+and story mode narration. 💯🎀✨
+
+May your logs be readable, your correlation IDs present, and your
+debugging experience absolutely DELIGHTFUL!
+
+— The Planning Team (with love for TEAM-100) 💝
+-->

@@ -418,6 +418,78 @@ pub struct World {
     
     /// Expected timeout in seconds
     pub expected_timeout_secs: Option<u64>,
+    
+    // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    // P2 Metrics & Observability (TEAM-100 - THE CENTENNIAL TEAM! 💯🎉)
+    // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    /// Narration capture adapter
+    pub narration_adapter: Option<observability_narration_core::CaptureAdapter>,
+    
+    /// Pool-managerd URL
+    pub pool_managerd_url: Option<String>,
+    
+    /// Metrics enabled flag
+    pub metrics_enabled: bool,
+    
+    /// Last response status
+    pub last_response_status: Option<u16>,
+    
+    /// Request count for metrics
+    pub request_count: usize,
+    
+    /// Correlation ID for request tracking
+    pub correlation_id: Option<String>,
+    
+    /// Environment variable overrides
+    pub env_overrides: HashMap<String, String>,
+    
+    // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    // P2 Configuration Management (TEAM-100)
+    // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    /// Config file path
+    pub config_file_path: Option<String>,
+    
+    /// Config file content
+    pub config_content: Option<String>,
+    
+    /// Config valid flag
+    pub config_valid: bool,
+    
+    /// Config loaded flag
+    pub config_loaded: bool,
+    
+    /// Config validation passed flag
+    pub config_validation_passed: bool,
+    
+    /// Config validation error
+    pub config_validation_error: Option<String>,
+    
+    /// Config values
+    pub config_values: HashMap<String, String>,
+    
+    /// Config updated flag
+    pub config_updated: bool,
+    
+    /// Config reloaded flag
+    pub config_reloaded: bool,
+    
+    /// Pool-managerd running flag
+    pub pool_managerd_running: bool,
+    
+    /// Startup failed flag
+    pub startup_failed: bool,
+    
+    /// Exit code
+    pub exit_code: Option<i32>,
+    
+    /// Example config path
+    pub example_config_path: Option<String>,
+    
+    /// Example config validated flag
+    pub example_config_validated: bool,
+    
+    /// Config has secrets flag
+    pub config_has_secrets: bool,
 }
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -620,6 +692,32 @@ impl Default for World {
             malicious_deadline_attempt: None,
             deadline_extension_rejected: false,
             expected_timeout_secs: None,
+            
+            // TEAM-100: P2 Metrics & Observability
+            narration_adapter: None,
+            pool_managerd_url: None,
+            metrics_enabled: false,
+            last_response_status: None,
+            request_count: 0,
+            correlation_id: None,
+            env_overrides: HashMap::new(),
+            
+            // TEAM-100: P2 Configuration Management
+            config_file_path: None,
+            config_content: None,
+            config_valid: false,
+            config_loaded: false,
+            config_validation_passed: false,
+            config_validation_error: None,
+            config_values: HashMap::new(),
+            config_updated: false,
+            config_reloaded: false,
+            pool_managerd_running: false,
+            startup_failed: false,
+            exit_code: None,
+            example_config_path: None,
+            example_config_validated: false,
+            config_has_secrets: false,
         }
     }
 }
@@ -679,6 +777,17 @@ impl World {
         self.rbee_hive_processes.clear();
         self.worker_processes.clear();
         self.last_action = None; // TEAM-078: Clear action tracking
+    }
+    
+    /// TEAM-100: Get or create correlation ID for request tracking
+    pub fn get_or_create_correlation_id(&mut self) -> String {
+        if let Some(id) = &self.correlation_id {
+            id.clone()
+        } else {
+            let id = format!("req-test-{}", uuid::Uuid::new_v4());
+            self.correlation_id = Some(id.clone());
+            id
+        }
     }
 }
 

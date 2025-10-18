@@ -17,11 +17,14 @@
 // Modified by: TEAM-097 (added P0 security test modules: authentication, secrets, validation)
 // Modified by: TEAM-098 (added pid_tracking module for P0 lifecycle tests)
 // Modified by: TEAM-099 (added P1 operations test modules: audit_logging, deadline_propagation)
+// Modified by: TEAM-100 (added P2 observability test modules: metrics_observability, configuration_management) 💯🎉
 
 pub mod audit_logging; // TEAM-099: P1 audit logging tests (tamper-evident logs)
 pub mod authentication; // TEAM-097: P0 authentication tests (auth-min crate)
 pub mod background;
+pub mod configuration_management; // TEAM-100: P2 configuration management tests (TOML config, hot-reload) 🎀
 pub mod deadline_propagation; // TEAM-099: P1 deadline propagation tests (timeout handling)
+pub mod metrics_observability; // TEAM-100: P2 metrics & observability tests (Prometheus, narration-core) 💯
 pub mod pid_tracking; // TEAM-098: P0 PID tracking and force-kill tests
 pub mod beehive_registry;
 pub mod cli_commands;
