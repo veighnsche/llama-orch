@@ -45,10 +45,17 @@ pub struct DownloadModelResponse {
 /// 3. Register in catalog
 ///
 /// TEAM-034: Added SSE progress tracking
+/// TEAM-103: Added input validation
 pub async fn handle_download_model(
     State(state): State<AppState>,
     Json(request): Json<DownloadModelRequest>,
 ) -> Result<Json<DownloadModelResponse>, (StatusCode, String)> {
+    // TEAM-103: Validate model reference
+    use input_validation::validate_model_ref;
+    
+    validate_model_ref(&request.model_ref)
+        .map_err(|e| (StatusCode::BAD_REQUEST, format!("Invalid model_ref: {}", e)))?;
+    
     info!(model_ref = %request.model_ref, "Model download requested");
 
     // Parse model reference (format: "hf:TheBloke/TinyLlama-1.1B-Chat-v1.0-GGUF")

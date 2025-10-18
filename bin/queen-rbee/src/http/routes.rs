@@ -16,9 +16,10 @@
 //! Refactored by: TEAM-052
 
 use crate::beehive_registry::BeehiveRegistry;
-use crate::http::{beehives, health, inference, workers};
+use crate::http::{beehives, health, inference, middleware::auth_middleware, workers};
 use crate::worker_registry::WorkerRegistry;
 use axum::{
+    middleware,
     routing::{get, post},
     Router,
 };
@@ -29,6 +30,8 @@ use std::sync::Arc;
 pub struct AppState {
     pub beehive_registry: Arc<BeehiveRegistry>,
     pub worker_registry: Arc<WorkerRegistry>,
+    // TEAM-102: API token for authentication (loaded from file via secrets-management)
+    pub expected_token: String,
 }
 
 /// Create HTTP router with all endpoints
@@ -36,30 +39,45 @@ pub struct AppState {
 /// # Arguments
 /// * `beehive_registry` - Beehive registry (shared state)
 /// * `worker_registry` - Worker registry (shared state)
+/// * `expected_token` - API token for authentication (TEAM-102)
 ///
 /// # Returns
 /// Router with all endpoints configured
 pub fn create_router(
     beehive_registry: Arc<BeehiveRegistry>,
     worker_registry: Arc<WorkerRegistry>,
+    expected_token: String, // TEAM-102: API token for authentication
 ) -> Router {
-    let state = AppState { beehive_registry, worker_registry };
+    let state = AppState { 
+        beehive_registry, 
+        worker_registry,
+        expected_token, // TEAM-102
+    };
 
-    Router::new()
-        // Health endpoint
-        .route("/health", get(health::handle_health))
-        // Beehive registry endpoints
+    // TEAM-102: Split routes into public and protected
+    let public_routes = Router::new()
+        // Health endpoint (public - no auth required)
+        .route("/health", get(health::handle_health));
+
+    let protected_routes = Router::new()
+        // Beehive registry endpoints (protected)
         .route("/v2/registry/beehives/add", post(beehives::handle_add_node))
         .route("/v2/registry/beehives/list", get(beehives::handle_list_nodes))
         .route("/v2/registry/beehives/remove", post(beehives::handle_remove_node))
-        // Worker management endpoints
+        // Worker management endpoints (protected)
         .route("/v2/workers/list", get(workers::handle_list_workers))
         .route("/v2/workers/health", get(workers::handle_workers_health))
         .route("/v2/workers/shutdown", post(workers::handle_shutdown_worker))
         .route("/v2/workers/register", post(workers::handle_register_worker))  // TEAM-084: Worker registration
-        // Inference task endpoint
+        // Inference task endpoints (protected)
         .route("/v2/tasks", post(inference::handle_create_inference_task))
         .route("/v1/inference", post(inference::handle_inference_request))  // TEAM-084: Direct inference endpoint
+        // TEAM-102: Apply authentication middleware to all protected routes
+        .layer(middleware::from_fn_with_state(state.clone(), auth_middleware));
+
+    // TEAM-102: Merge public and protected routes
+    public_routes
+        .merge(protected_routes)
         .with_state(state)
 }
 
@@ -71,7 +89,8 @@ mod tests {
     async fn test_router_creation() {
         let beehive_registry = Arc::new(BeehiveRegistry::new(None).await.unwrap());
         let worker_registry = Arc::new(WorkerRegistry::new());
-        let _router = create_router(beehive_registry, worker_registry);
+        let expected_token = "test-token-12345".to_string(); // TEAM-102
+        let _router = create_router(beehive_registry, worker_registry, expected_token);
         // Router creation should not panic
     }
 }

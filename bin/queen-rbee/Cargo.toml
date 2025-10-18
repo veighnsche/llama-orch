@@ -58,6 +58,11 @@ uuid = { version = "1.0", features = ["v4", "serde"] }
 # Time handling
 chrono = { version = "0.4", features = ["serde"] }
 
+# TEAM-102: Security shared crates
+auth-min = { path = "../shared-crates/auth-min" }
+secrets-management = { path = "../shared-crates/secrets-management" }
+input-validation = { path = "../shared-crates/input-validation" }
+
 [dev-dependencies]
 tempfile = "3.0"
 wiremock = "0.6"

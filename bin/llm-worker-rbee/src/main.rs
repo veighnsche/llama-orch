@@ -247,11 +247,24 @@ async fn main() -> anyhow::Result<()> {
     // TEAM-017: Wrap backend in Mutex for stateful inference
     let backend = Arc::new(tokio::sync::Mutex::new(backend));
 
+    // TEAM-102: Load API token for authentication
+    // TODO: Replace with secrets-management file-based loading
+    let expected_token = std::env::var("LLORCH_API_TOKEN")
+        .unwrap_or_else(|_| {
+            tracing::info!("⚠️  LLORCH_API_TOKEN not set - using dev mode (no auth)");
+            String::new()
+        });
+    
+    if !expected_token.is_empty() {
+        tracing::info!("✅ API token loaded (authentication enabled)");
+    }
+
     // Create router with our backend (worker-http)
     // This wires up:
     // - GET /health -> backend.is_healthy()
     // - POST /execute -> backend.execute()
-    let router = create_router(backend);
+    // TEAM-102: Added expected_token for authentication
+    let router = create_router(backend, expected_token);
 
     // Start HTTP server (worker-http)
     let server = HttpServer::new(addr, router).await?;

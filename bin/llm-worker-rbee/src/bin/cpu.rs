@@ -97,7 +97,18 @@ async fn main() -> Result<()> {
     // TEAM-017: Wrap backend in Mutex for stateful inference
     let backend = Arc::new(Mutex::new(backend));
 
-    let router = create_router(backend);
+    // TEAM-102: Load API token for authentication
+    let expected_token = std::env::var("LLORCH_API_TOKEN")
+        .unwrap_or_else(|_| {
+            tracing::info!("⚠️  LLORCH_API_TOKEN not set - using dev mode (no auth)");
+            String::new()
+        });
+    
+    if !expected_token.is_empty() {
+        tracing::info!("✅ API token loaded (authentication enabled)");
+    }
+
+    let router = create_router(backend, expected_token);
     let server = HttpServer::new(addr, router).await?;
 
     tracing::info!("llorch-cpu-candled ready on port {}", args.port);

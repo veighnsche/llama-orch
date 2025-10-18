@@ -11,6 +11,7 @@
 //! Created by: TEAM-026
 
 pub mod health;
+pub mod middleware; // TEAM-102: Authentication middleware
 pub mod models;
 pub mod routes;
 pub mod server;

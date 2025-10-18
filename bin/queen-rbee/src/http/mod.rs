@@ -16,6 +16,7 @@
 pub mod beehives;
 pub mod health;
 pub mod inference;
+pub mod middleware; // TEAM-102: Authentication middleware
 pub mod routes;
 pub mod types;
 pub mod workers;

@@ -59,13 +59,27 @@ pub async fn handle(addr: String) -> Result<()> {
     let download_tracker = Arc::new(DownloadTracker::new());
     tracing::info!("Download tracker initialized");
 
+    // TEAM-102: Load API token for authentication
+    // TODO: Replace with secrets-management file-based loading
+    let expected_token = std::env::var("LLORCH_API_TOKEN")
+        .unwrap_or_else(|_| {
+            tracing::info!("⚠️  LLORCH_API_TOKEN not set - using dev mode (no auth)");
+            String::new()
+        });
+    
+    if !expected_token.is_empty() {
+        tracing::info!("✅ API token loaded (authentication enabled)");
+    }
+
     // Create router
+    // TEAM-102: Added expected_token for authentication
     let router = create_router(
         registry.clone(),
         model_catalog.clone(),
         provisioner.clone(),
         download_tracker.clone(),
         addr,
+        expected_token, // TEAM-102
     );
 
     // Create HTTP server

@@ -51,9 +51,26 @@ async fn main() -> Result<()> {
     let worker_registry = worker_registry::WorkerRegistry::new();
     info!("✅ Worker registry initialized (in-memory)");
 
+    // TEAM-102: Load API token for authentication
+    // TODO: Replace with secrets-management file-based loading
+    let expected_token = std::env::var("LLORCH_API_TOKEN")
+        .unwrap_or_else(|_| {
+            info!("⚠️  LLORCH_API_TOKEN not set - using dev mode (no auth)");
+            String::new()
+        });
+    
+    if !expected_token.is_empty() {
+        info!("✅ API token loaded (authentication enabled)");
+    }
+
     // Create router with registries
     // TEAM-052: Updated to use refactored http module
-    let app = http::create_router(Arc::new(beehive_registry), Arc::new(worker_registry));
+    // TEAM-102: Added expected_token for authentication
+    let app = http::create_router(
+        Arc::new(beehive_registry), 
+        Arc::new(worker_registry),
+        expected_token,
+    );
 
     // Start HTTP server
     let addr = format!("0.0.0.0:{}", args.port);

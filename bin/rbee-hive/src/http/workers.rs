@@ -79,10 +79,22 @@ pub struct ListWorkersResponse {
 ///
 /// Spawns a new worker process
 /// TEAM-029: Added model provisioning with catalog
+/// TEAM-103: Added input validation
 pub async fn handle_spawn_worker(
     State(state): State<AppState>,
     Json(request): Json<SpawnWorkerRequest>,
 ) -> Result<Json<SpawnWorkerResponse>, (StatusCode, String)> {
+    // TEAM-103: Validate inputs before processing
+    use input_validation::{validate_model_ref, validate_identifier};
+    
+    // Validate model reference
+    validate_model_ref(&request.model_ref)
+        .map_err(|e| (StatusCode::BAD_REQUEST, format!("Invalid model_ref: {}", e)))?;
+    
+    // Validate backend identifier
+    validate_identifier(&request.backend, 64)
+        .map_err(|e| (StatusCode::BAD_REQUEST, format!("Invalid backend: {}", e)))?;
+    
     info!(
         model_ref = %request.model_ref,
         backend = %request.backend,
@@ -284,6 +296,8 @@ pub async fn handle_spawn_worker(
                 slots_available: 0,
                 failed_health_checks: 0, // TEAM-096: Initialize counter
                 pid, // TEAM-101: Store PID for lifecycle management (Option<u32>)
+                restart_count: 0, // TEAM-103: Initialize restart counter
+                last_restart: None, // TEAM-103: No restart yet
             };
 
             state.registry.register(worker).await;
@@ -324,10 +338,26 @@ fn parse_model_ref(model_ref: &str) -> Result<(String, String), String> {
 /// Handle POST /v1/workers/ready
 ///
 /// Worker ready callback - worker reports it's ready to accept requests
+/// TEAM-103: Added input validation
 pub async fn handle_worker_ready(
     State(state): State<AppState>,
     Json(request): Json<WorkerReadyRequest>,
-) -> Json<WorkerReadyResponse> {
+) -> Result<Json<WorkerReadyResponse>, (StatusCode, String)> {
+    // TEAM-103: Validate inputs
+    use input_validation::{validate_identifier, validate_model_ref};
+    
+    // Validate worker ID
+    validate_identifier(&request.worker_id, 256)
+        .map_err(|e| (StatusCode::BAD_REQUEST, format!("Invalid worker_id: {}", e)))?;
+    
+    // Validate model reference
+    validate_model_ref(&request.model_ref)
+        .map_err(|e| (StatusCode::BAD_REQUEST, format!("Invalid model_ref: {}", e)))?;
+    
+    // Validate backend identifier
+    validate_identifier(&request.backend, 64)
+        .map_err(|e| (StatusCode::BAD_REQUEST, format!("Invalid backend: {}", e)))?;
+    
     info!(
         worker_id = %request.worker_id,
         url = %request.url,
@@ -337,7 +367,7 @@ pub async fn handle_worker_ready(
     // Update worker state to idle
     state.registry.update_state(&request.worker_id, WorkerState::Idle).await;
 
-    Json(WorkerReadyResponse { message: "Worker registered as ready".to_string() })
+    Ok(Json(WorkerReadyResponse { message: "Worker registered as ready".to_string() }))
 }
 
 /// Handle GET /v1/workers/list
@@ -447,7 +477,9 @@ mod tests {
             slots_total: 1,
             slots_available: 1,
             failed_health_checks: 0,
-            pid: None, // TEAM-101: Added pid field
+            pid: None,
+            restart_count: 0,
+            last_restart: None,
         };
 
         let response = ListWorkersResponse { workers: vec![worker] };

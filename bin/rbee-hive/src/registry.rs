@@ -54,6 +54,12 @@ pub struct WorkerInfo {
     /// Process ID (TEAM-098: For PID tracking and force-kill)
     #[serde(default)]
     pub pid: Option<u32>,
+    /// Restart count (TEAM-103: For restart policy tracking)
+    #[serde(default)]
+    pub restart_count: u32,
+    /// Last restart time (TEAM-103: For exponential backoff)
+    #[serde(default)]
+    pub last_restart: Option<SystemTime>,
 }
 
 /// Worker registry - thread-safe in-memory storage
@@ -173,6 +179,8 @@ mod tests {
             slots_available: 1,
             failed_health_checks: 0,
             pid: None,
+            restart_count: 0,
+            last_restart: None,
         };
 
         registry.register(worker.clone()).await;
@@ -198,6 +206,8 @@ mod tests {
             slots_available: 1,
             failed_health_checks: 0,
             pid: None,
+            restart_count: 0,
+            last_restart: None,
         };
 
         registry.register(worker).await;
@@ -223,6 +233,8 @@ mod tests {
             slots_available: 1,
             failed_health_checks: 0,
             pid: None,
+            restart_count: 0,
+            last_restart: None,
         };
 
         let worker2 = WorkerInfo {
@@ -237,6 +249,8 @@ mod tests {
             slots_available: 0,
             failed_health_checks: 0,
             pid: None,
+            restart_count: 0,
+            last_restart: None,
         };
 
         registry.register(worker1).await;
@@ -271,6 +285,8 @@ mod tests {
             slots_available: 1,
             failed_health_checks: 0,
             pid: None,
+            restart_count: 0,
+            last_restart: None,
         };
 
         let worker2 = WorkerInfo {
@@ -285,6 +301,8 @@ mod tests {
             slots_available: 1,
             failed_health_checks: 0,
             pid: None,
+            restart_count: 0,
+            last_restart: None,
         };
 
         registry.register(worker1).await;
@@ -310,6 +328,8 @@ mod tests {
             slots_available: 1,
             failed_health_checks: 0,
             pid: None,
+            restart_count: 0,
+            last_restart: None,
         };
 
         registry.register(worker).await;
@@ -345,6 +365,8 @@ mod tests {
             slots_available: 1,
             failed_health_checks: 0,
             pid: None,
+            restart_count: 0,
+            last_restart: None,
         };
 
         let worker2 = WorkerInfo {
@@ -359,6 +381,8 @@ mod tests {
             slots_available: 0,
             failed_health_checks: 0,
             pid: None,
+            restart_count: 0,
+            last_restart: None,
         };
 
         let worker3 = WorkerInfo {
@@ -373,6 +397,8 @@ mod tests {
             slots_available: 1,
             failed_health_checks: 0,
             pid: None,
+            restart_count: 0,
+            last_restart: None,
         };
 
         registry.register(worker1).await;
@@ -400,6 +426,8 @@ mod tests {
             slots_available: 1,
             failed_health_checks: 0,
             pid: None,
+            restart_count: 0,
+            last_restart: None,
         };
 
         registry.register(worker).await;
@@ -428,6 +456,8 @@ mod tests {
             slots_available: 1,
             failed_health_checks: 0,
             pid: None,
+            restart_count: 0,
+            last_restart: None,
         };
 
         let worker2 = WorkerInfo {
@@ -442,6 +472,8 @@ mod tests {
             slots_available: 1,
             failed_health_checks: 0,
             pid: None,
+            restart_count: 0,
+            last_restart: None,
         };
 
         registry.register(worker1).await;
@@ -500,6 +532,8 @@ mod tests {
             slots_available: 2,
             failed_health_checks: 0,
             pid: Some(12345),
+            restart_count: 0,
+            last_restart: None,
         };
 
         let json = serde_json::to_value(&worker).unwrap();

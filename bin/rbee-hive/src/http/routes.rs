@@ -13,10 +13,11 @@
 //! Created by: TEAM-026
 //! Modified by: TEAM-029, TEAM-030, TEAM-034
 
-use crate::http::{health, models, workers};
+use crate::http::{health, middleware::auth_middleware, models, workers};
 use crate::provisioner::ModelProvisioner;
 use crate::registry::WorkerRegistry;
 use axum::{
+    middleware,
     routing::{get, post},
     Router,
 };
@@ -28,6 +29,7 @@ use std::sync::Arc;
 /// TEAM-030: Worker registry is ephemeral, model catalog is persistent (SQLite)
 /// TEAM-034: Added download tracker for SSE streaming
 /// TEAM-091: Added server_addr for correct callback URL construction
+/// TEAM-102: Added expected_token for authentication
 #[derive(Clone)]
 pub struct AppState {
     pub registry: Arc<WorkerRegistry>,
@@ -35,6 +37,8 @@ pub struct AppState {
     pub provisioner: Arc<ModelProvisioner>,
     pub download_tracker: Arc<DownloadTracker>,
     pub server_addr: std::net::SocketAddr,
+    // TEAM-102: API token for authentication (loaded from file via secrets-management)
+    pub expected_token: String,
 }
 
 /// Create HTTP router with all endpoints
@@ -45,6 +49,7 @@ pub struct AppState {
 /// * `provisioner` - Model provisioner (shared state)
 /// * `download_tracker` - Download tracker (shared state)
 /// * `server_addr` - Server bind address for callback URL construction
+/// * `expected_token` - API token for authentication (TEAM-102)
 ///
 /// # Returns
 /// Router with all endpoints configured
@@ -54,19 +59,36 @@ pub fn create_router(
     provisioner: Arc<ModelProvisioner>,
     download_tracker: Arc<DownloadTracker>,
     server_addr: std::net::SocketAddr,
+    expected_token: String, // TEAM-102: API token for authentication
 ) -> Router {
-    let state = AppState { registry, model_catalog, provisioner, download_tracker, server_addr };
+    let state = AppState { 
+        registry, 
+        model_catalog, 
+        provisioner, 
+        download_tracker, 
+        server_addr,
+        expected_token, // TEAM-102
+    };
 
-    Router::new()
-        // Health endpoint
-        .route("/v1/health", get(health::handle_health))
-        // Worker management
+    // TEAM-102: Split routes into public and protected
+    let public_routes = Router::new()
+        // Health endpoint (public - no auth required)
+        .route("/v1/health", get(health::handle_health));
+
+    let protected_routes = Router::new()
+        // Worker management (protected)
         .route("/v1/workers/spawn", post(workers::handle_spawn_worker))
         .route("/v1/workers/ready", post(workers::handle_worker_ready))
         .route("/v1/workers/list", get(workers::handle_list_workers))
-        // Model management
+        // Model management (protected)
         .route("/v1/models/download", post(models::handle_download_model))
         .route("/v1/models/download/progress", get(models::handle_download_progress))
+        // TEAM-102: Apply authentication middleware to all protected routes
+        .layer(middleware::from_fn_with_state(state.clone(), auth_middleware));
+
+    // TEAM-102: Merge public and protected routes
+    public_routes
+        .merge(protected_routes)
         .with_state(state)
 }
 
@@ -86,7 +108,8 @@ mod tests {
         let provisioner = Arc::new(ModelProvisioner::new(PathBuf::from("/tmp")));
         let download_tracker = Arc::new(DownloadTracker::new());
         let addr: std::net::SocketAddr = "127.0.0.1:9200".parse().unwrap();
-        let _router = create_router(registry, catalog, provisioner, download_tracker, addr);
+        let expected_token = "test-token-12345".to_string(); // TEAM-102
+        let _router = create_router(registry, catalog, provisioner, download_tracker, addr, expected_token);
         // Router creation should not panic
     }
 }

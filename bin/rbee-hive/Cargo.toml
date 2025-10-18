@@ -47,3 +47,8 @@ reqwest = { workspace = true, features = ["json"] }
 # TEAM-034: SSE streaming support
 async-stream = "0.3"
 futures = { workspace = true }
+
+# TEAM-102: Security shared crates
+auth-min = { path = "../shared-crates/auth-min" }
+secrets-management = { path = "../shared-crates/secrets-management" }
+input-validation = { path = "../shared-crates/input-validation" }
