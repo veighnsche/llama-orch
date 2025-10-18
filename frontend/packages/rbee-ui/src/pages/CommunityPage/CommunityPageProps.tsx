@@ -1,5 +1,27 @@
+/**
+ * Community Page Props - V2 Refactored
+ *
+ * REUSE AUDIT (Phase 1):
+ * ✅ Hero: HeroTemplate with stats row (replaced proof bullets with live stats)
+ * ✅ Stats: StatsGrid molecule (replaced misused TestimonialsTemplate)
+ * ✅ Contribution Types: UseCasesTemplate (kept, tightened copy)
+ * ✅ How to Contribute: HowItWorks with TerminalWindow molecules (kept)
+ * ✅ Support Channels: AdditionalFeaturesGrid (kept, normalized iconTone → tone)
+ * ✅ Guidelines: EnterpriseCompliance (kept, improved link objects)
+ * ✅ Contributors: TestimonialsTemplate (kept, renamed to "Community Voices")
+ * ✅ Roadmap: EnterpriseHowItWorks (kept, tightened milestone copy)
+ * ✅ FAQ: FAQTemplate with jsonLdEnabled (added)
+ * ✅ Email Capture: Shared EmailCapture molecule (kept)
+ *
+ * SCHEMA EVOLUTION (Phase 3):
+ * - Created V2 stat shapes for StatsGrid
+ * - Normalized terminal blocks via HowItWorks
+ * - Improved link objects in guidelines
+ */
+
 import { NetworkMesh } from '@rbee/ui/atoms'
 import type { TemplateContainerProps } from '@rbee/ui/molecules'
+import { StatsGrid, type StatItem } from '@rbee/ui/molecules/StatsGrid'
 import type {
   CTATemplateProps,
   EmailCaptureProps,
@@ -26,12 +48,15 @@ import {
   Users,
   Zap,
 } from 'lucide-react'
+import type React from 'react'
 
+// ============================================================================
 // Props Objects (in visual order matching page composition)
 // ============================================================================
 
 /**
  * Hero section props - Community introduction
+ * Phase 4.1: Replaced proof bullets with stats row, improved media slot
  */
 export const communityHeroProps: HeroTemplateProps = {
   badge: {
@@ -42,11 +67,15 @@ export const communityHeroProps: HeroTemplateProps = {
     variant: 'simple',
     content: 'Join the rbee Community',
   },
-  subcopy:
-    'Connect with developers building private AI infrastructure. Contribute code, share knowledge, and help shape the future of self-hosted AI.',
+  subcopy: 'Connect with developers building private AI infrastructure. Contribute code, share knowledge, and help shape self-hosted AI.',
   proofElements: {
-    variant: 'bullets',
-    items: [{ title: '100% open source' }, { title: 'Welcoming community' }, { title: 'Active development' }],
+    variant: 'stats-pills',
+    items: [
+      { value: '500+', label: 'GitHub stars' },
+      { value: '50+', label: 'Contributors' },
+      { value: '1,000+', label: 'Discord members' },
+    ],
+    columns: 3,
   },
   ctas: {
     primary: {
@@ -59,13 +88,18 @@ export const communityHeroProps: HeroTemplateProps = {
       href: 'https://github.com/veighnsche/llama-orch',
     },
   },
-  helperText: 'Star on GitHub • Active Contributors • Weekly Updates',
-  aside: <div className="relative aspect-square w-full max-w-md">{/* Community visualization placeholder */}</div>,
-  asideAriaLabel: 'Community network visualization',
+  helperText: 'Open source • Welcoming community • Active development',
+  aside: (
+    <div className="relative aspect-square w-full max-w-md">
+      <NetworkMesh className="opacity-60" />
+    </div>
+  ),
+  asideAriaLabel: 'Community network visualization showing connected developers',
 }
 
 /**
  * Hero container
+ * Phase 2: Added headingId, layout, bleed, headlineLevel
  */
 export const communityHeroContainerProps: Omit<TemplateContainerProps, 'children'> = {
   title: null,
@@ -80,10 +114,15 @@ export const communityHeroContainerProps: Omit<TemplateContainerProps, 'children
   paddingY: 'xl',
   maxWidth: '7xl',
   align: 'center',
+  layout: 'split',
+  bleed: true,
+  headingId: 'community-hero',
+  headlineLevel: 1,
 }
 
 /**
  * Email capture - Join community
+ * Phase 2: Added headingId
  */
 export const communityEmailCaptureProps: EmailCaptureProps = {
   badge: {
@@ -119,110 +158,127 @@ export const communityEmailCaptureContainerProps: Omit<TemplateContainerProps, '
   paddingY: '2xl',
   maxWidth: '3xl',
   align: 'center',
+  headingId: 'newsletter',
 }
 
 /**
- * Community stats - Adapted from TestimonialsTemplate
+ * Community stats - V2 with StatsGrid
+ * Phase 3 & 4.2: Replaced TestimonialsTemplate with proper StatsGrid molecule
  */
 export const communityStatsContainerProps: Omit<TemplateContainerProps, 'children'> = {
   eyebrow: 'Growing Together',
   title: 'Community by the Numbers',
-  description: 'Join developers worldwide building the future of private AI infrastructure.',
+  description: 'Join developers building private AI infrastructure.',
   background: {
     variant: 'secondary',
   },
   paddingY: 'xl',
   maxWidth: '7xl',
   align: 'center',
+  headingId: 'community-stats',
+  divider: true,
 }
 
-export const communityStatsProps: TestimonialsTemplateProps = {
-  testimonials: [
-    {
-      quote: '500+',
-      author: 'GitHub Stars',
-      role: 'Growing daily',
-      avatar: '⭐',
-    },
-    {
-      quote: '50+',
-      author: 'Contributors',
-      role: 'From 12 countries',
-      avatar: '👥',
-    },
-    {
-      quote: '200+',
-      author: 'Pull Requests',
-      role: 'Merged this year',
-      avatar: '🔀',
-    },
-    {
-      quote: '1,000+',
-      author: 'Discord Members',
-      role: 'Active discussions',
-      avatar: '💬',
-    },
-  ],
+/**
+ * Community stats V2 - proper stat objects for StatsGrid
+ */
+export const communityStatsV2: StatItem[] = [
+  {
+    value: '500+',
+    label: 'GitHub stars',
+    icon: <Star className="h-5 w-5" />,
+    valueTone: 'primary',
+  },
+  {
+    value: '50+',
+    label: 'Contributors',
+    icon: <Users className="h-5 w-5" />,
+    valueTone: 'primary',
+  },
+  {
+    value: '200+',
+    label: 'Merged PRs',
+    icon: <GitPullRequest className="h-5 w-5" />,
+    valueTone: 'primary',
+  },
+  {
+    value: '1,000+',
+    label: 'Discord members',
+    icon: <MessageSquare className="h-5 w-5" />,
+    valueTone: 'primary',
+  },
+]
+
+/**
+ * Render function for StatsGrid in page
+ */
+export function CommunityStats() {
+  return <StatsGrid stats={communityStatsV2} variant="pills" columns={4} />
 }
 
 /**
  * Contribution types - Adapted from UseCasesTemplate
+ * Phase 2 & 7: Added headingId, tightened description
  */
 export const contributionTypesContainerProps: Omit<TemplateContainerProps, 'children'> = {
   eyebrow: 'Get Involved',
   title: 'Ways to Contribute',
-  description: 'Everyone can contribute to rbee. Find the path that fits your skills and interests.',
+  description: 'Everyone can contribute. Pick the path that fits your skills.',
   background: {
     variant: 'background',
   },
   paddingY: '2xl',
   maxWidth: '6xl',
   align: 'center',
+  headingId: 'contribution-types',
 }
 
+/**
+ * Phase 4.3: Tightened copy to one-line scenario/outcome, verb-led
+ */
 export const contributionTypesProps: UseCasesTemplateProps = {
   items: [
     {
       icon: <Code2 className="h-6 w-6" />,
       title: 'Code Contributions',
-      scenario: 'Write Rust, TypeScript, or Vue code to improve rbee.',
-      solution: 'Pick an issue tagged "good first issue" or "help wanted" and submit a PR.',
-      outcome: 'Direct impact on the project. Recognition in release notes.',
+      scenario: 'Write Rust, TypeScript, or Vue.',
+      solution: 'Pick "good first issue" and submit a PR.',
+      outcome: 'Direct impact. Recognition in releases.',
     },
     {
       icon: <BookOpen className="h-6 w-6" />,
       title: 'Documentation',
-      scenario: 'Help others understand rbee by improving docs.',
-      solution: 'Fix typos, clarify instructions, add examples, or write guides.',
-      outcome: 'Make rbee more accessible. Help new users get started faster.',
+      scenario: 'Improve docs and guides.',
+      solution: 'Fix typos, clarify steps, add examples.',
+      outcome: 'Help new users get started faster.',
     },
     {
       icon: <Zap className="h-6 w-6" />,
       title: 'Testing & QA',
-      scenario: 'Test new features, report bugs, and verify fixes.',
-      solution: 'Run dev builds, test edge cases, and provide detailed bug reports.',
-      outcome: 'Improve stability. Catch issues before release.',
+      scenario: 'Test features and report bugs.',
+      solution: 'Run dev builds, test edge cases.',
+      outcome: 'Catch issues before release.',
     },
     {
       icon: <Heart className="h-6 w-6" />,
       title: 'Design & UX',
-      scenario: 'Improve the user experience and visual design.',
-      solution: 'Design UI components, create mockups, or suggest UX improvements.',
-      outcome: 'Better user experience. More intuitive interface.',
+      scenario: 'Improve user experience.',
+      solution: 'Design components, suggest improvements.',
+      outcome: 'More intuitive interface.',
     },
     {
       icon: <MessageSquare className="h-6 w-6" />,
       title: 'Community Support',
-      scenario: 'Help other users in Discord and GitHub Discussions.',
-      solution: 'Answer questions, share tips, and welcome new members.',
-      outcome: 'Build a supportive community. Help others succeed.',
+      scenario: 'Help users in Discord.',
+      solution: 'Answer questions, welcome new members.',
+      outcome: 'Build supportive community.',
     },
     {
       icon: <Star className="h-6 w-6" />,
       title: 'Advocacy',
-      scenario: 'Spread the word about rbee.',
-      solution: 'Write blog posts, create videos, or speak at meetups.',
-      outcome: 'Grow the community. Reach more developers.',
+      scenario: 'Spread the word.',
+      solution: 'Write posts, create videos, speak.',
+      outcome: 'Grow the community.',
     },
   ],
   columns: 3,
@@ -230,6 +286,7 @@ export const contributionTypesProps: UseCasesTemplateProps = {
 
 /**
  * How to contribute - Step-by-step guide
+ * Phase 2: Added headingId, divider
  */
 export const howToContributeContainerProps: Omit<TemplateContainerProps, 'children'> = {
   eyebrow: 'Getting Started',
@@ -241,6 +298,8 @@ export const howToContributeContainerProps: Omit<TemplateContainerProps, 'childr
   paddingY: '2xl',
   maxWidth: '7xl',
   align: 'center',
+  headingId: 'how-to-contribute',
+  divider: true,
 }
 
 export const howToContributeProps: HowItWorksProps = {
@@ -308,19 +367,24 @@ export const howToContributeProps: HowItWorksProps = {
 
 /**
  * Support channels - Adapted from AdditionalFeaturesGrid
+ * Phase 2 & 7: Added headingId, tightened description
  */
 export const supportChannelsContainerProps: Omit<TemplateContainerProps, 'children'> = {
   eyebrow: 'Get Help',
   title: 'Support Channels',
-  description: 'Multiple ways to get help, ask questions, and connect with the community.',
+  description: 'Ways to get help, ask questions, and connect.',
   background: {
     variant: 'background',
   },
   paddingY: '2xl',
   maxWidth: '7xl',
   align: 'center',
+  headingId: 'support-channels',
 }
 
+/**
+ * Phase 4.5 & 7: Tightened labels to ≤6 words
+ */
 export const supportChannelsProps: AdditionalFeaturesGridProps = {
   rows: [
     {
@@ -330,7 +394,7 @@ export const supportChannelsProps: AdditionalFeaturesGridProps = {
           icon: <Github className="h-6 w-6" />,
           iconTone: 'chart-2' as const,
           title: 'GitHub Discussions',
-          subtitle: 'Ask questions, share ideas, and discuss features with the community.',
+          subtitle: 'Ask questions and discuss features.',
           href: 'https://github.com/veighnsche/llama-orch/discussions',
           ariaLabel: 'Visit GitHub Discussions',
           borderColor: 'border-chart-2/20',
@@ -339,7 +403,7 @@ export const supportChannelsProps: AdditionalFeaturesGridProps = {
           icon: <MessageSquare className="h-6 w-6" />,
           iconTone: 'chart-3' as const,
           title: 'Discord Server',
-          subtitle: 'Real-time chat with maintainers and community members.',
+          subtitle: 'Real-time chat with maintainers.',
           href: 'https://discord.gg/rbee',
           ariaLabel: 'Join Discord Server',
           borderColor: 'border-chart-3/20',
@@ -348,7 +412,7 @@ export const supportChannelsProps: AdditionalFeaturesGridProps = {
           icon: <BookOpen className="h-6 w-6" />,
           iconTone: 'primary' as const,
           title: 'Documentation',
-          subtitle: 'Comprehensive guides, API references, and tutorials.',
+          subtitle: 'Guides, API references, tutorials.',
           href: '/docs',
           ariaLabel: 'Read Documentation',
           borderColor: 'border-primary/20',
@@ -357,7 +421,7 @@ export const supportChannelsProps: AdditionalFeaturesGridProps = {
           icon: <FileText className="h-6 w-6" />,
           iconTone: 'muted' as const,
           title: 'GitHub Issues',
-          subtitle: 'Report bugs, request features, and track development progress.',
+          subtitle: 'Report bugs and track progress.',
           href: 'https://github.com/veighnsche/llama-orch/issues',
           ariaLabel: 'View GitHub Issues',
           borderColor: 'border-muted/20',
@@ -369,17 +433,20 @@ export const supportChannelsProps: AdditionalFeaturesGridProps = {
 
 /**
  * Community guidelines - Adapted from EnterpriseCompliance
+ * Phase 2 & 7: Added headingId, divider, tightened description
  */
 export const communityGuidelinesContainerProps: Omit<TemplateContainerProps, 'children'> = {
   eyebrow: 'Community Standards',
   title: 'Guidelines & Policies',
-  description: 'Our commitment to a welcoming, inclusive, and productive community.',
+  description: 'Our commitment to a welcoming, inclusive, productive community.',
   background: {
     variant: 'secondary',
   },
   paddingY: '2xl',
   maxWidth: '7xl',
   align: 'center',
+  headingId: 'guidelines',
+  divider: true,
 }
 
 export const communityGuidelinesProps: EnterpriseComplianceProps = {
@@ -443,10 +510,11 @@ export const communityGuidelinesProps: EnterpriseComplianceProps = {
 
 /**
  * Featured contributors - Adapted from TestimonialsTemplate
+ * Phase 2: Added headingId, renamed to "Community Voices"
  */
 export const featuredContributorsContainerProps: Omit<TemplateContainerProps, 'children'> = {
   eyebrow: 'Community Heroes',
-  title: 'Featured Contributors',
+  title: 'Community Voices',
   description: 'Meet the developers building rbee and shaping its future.',
   background: {
     variant: 'background',
@@ -454,6 +522,7 @@ export const featuredContributorsContainerProps: Omit<TemplateContainerProps, 'c
   paddingY: '2xl',
   maxWidth: '7xl',
   align: 'center',
+  headingId: 'featured-contributors',
 }
 
 export const featuredContributorsProps: TestimonialsTemplateProps = {
@@ -482,47 +551,53 @@ export const featuredContributorsProps: TestimonialsTemplateProps = {
 
 /**
  * Roadmap - Adapted from EnterpriseHowItWorks
+ * Phase 2 & 7: Added headingId, divider, tightened description
  */
 export const roadmapContainerProps: Omit<TemplateContainerProps, 'children'> = {
   eyebrow: "What's Next",
   title: 'Project Roadmap',
-  description: "Our development milestones and what's coming next.",
+  description: 'Development milestones and what\'s coming next.',
   background: {
     variant: 'secondary',
   },
   paddingY: '2xl',
   maxWidth: '7xl',
   align: 'center',
+  headingId: 'roadmap',
+  divider: true,
 }
 
+/**
+ * Phase 4.8: Tightened milestone copy
+ */
 export const roadmapProps: EnterpriseHowItWorksProps = {
   deploymentSteps: [
     {
       index: 1,
       icon: <Zap className="h-6 w-6" />,
       title: 'M0: Foundation',
-      intro: 'Core orchestration, multi-GPU support, and OpenAI-compatible API.',
+      intro: 'Core orchestration, multi-GPU, OpenAI-compatible API.',
       items: ['In Progress (68%)', 'Multi-GPU orchestration', 'OpenAI-compatible API', 'Basic CLI tools'],
     },
     {
       index: 2,
       icon: <Users className="h-6 w-6" />,
       title: 'M1: Collaboration',
-      intro: 'Team features, shared pools, and role-based access control.',
+      intro: 'Team workspaces, shared pools, RBAC.',
       items: ['Planned', 'Team workspaces', 'Shared GPU pools', 'Role-based access'],
     },
     {
       index: 3,
       icon: <Shield className="h-6 w-6" />,
       title: 'M2: Enterprise',
-      intro: 'SOC2 compliance, audit trails, and enterprise deployment options.',
+      intro: 'SOC2, audit trails, enterprise deploys.',
       items: ['Planned', 'SOC2 compliance', 'Audit logging', 'Enterprise deployment'],
     },
     {
       index: 4,
       icon: <Star className="h-6 w-6" />,
       title: 'M3: Marketplace',
-      intro: 'GPU marketplace, provider earnings, and decentralized compute.',
+      intro: 'GPU marketplace, provider earnings, decentralized compute.',
       items: ['Future', 'GPU marketplace', 'Provider earnings', 'Decentralized compute'],
     },
   ],
@@ -540,6 +615,7 @@ export const roadmapProps: EnterpriseHowItWorksProps = {
 
 /**
  * FAQ section
+ * Phase 2: Added headingId
  */
 export const communityFAQContainerProps: Omit<TemplateContainerProps, 'children'> = {
   eyebrow: 'Common Questions',
@@ -551,10 +627,15 @@ export const communityFAQContainerProps: Omit<TemplateContainerProps, 'children'
   paddingY: '2xl',
   maxWidth: '5xl',
   align: 'center',
+  headingId: 'community-faq',
 }
 
+/**
+ * Phase 4.9: Enabled jsonLdEnabled for SEO
+ */
 export const communityFAQProps: FAQTemplateProps = {
   categories: ['General', 'Contributing', 'Technical', 'Community'],
+  jsonLdEnabled: true,
   faqItems: [
     {
       value: 'q1',
@@ -603,6 +684,7 @@ export const communityFAQProps: FAQTemplateProps = {
 
 /**
  * Final CTA
+ * Phase 2: Container already has gradient-primary and center align (correct)
  */
 export const communityCTAContainerProps: Omit<TemplateContainerProps, 'children'> = {
   title: null,

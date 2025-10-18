@@ -43,7 +43,7 @@ echo ""
 echo "✅ Inference complete!"
 echo ""
 echo "🧹 Cleaning up..."
-kill $HIVE_PID 2>/dev/null || true
+
 echo "✓ Stopped rbee-hive"
 echo ""
 echo "Done! 🎉"

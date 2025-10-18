@@ -149,12 +149,9 @@ pub async fn handle_spawn_worker(
 
     // TEAM-027: Get hostname for URL
     // TEAM-035: For localhost testing, use 127.0.0.1 to avoid hostname resolution issues
-    let hostname = std::env::var("RBEE_WORKER_HOST").unwrap_or_else(|_| {
-        hostname::get()
-            .ok()
-            .and_then(|h| h.into_string().ok())
-            .unwrap_or_else(|| "127.0.0.1".to_string())
-    });
+    // TEAM-090: Default to 127.0.0.1 for local workers to avoid DNS resolution issues
+    // Use RBEE_WORKER_HOST env var to override for remote/distributed setups
+    let hostname = std::env::var("RBEE_WORKER_HOST").unwrap_or_else(|_| "127.0.0.1".to_string());
     let url = format!("http://{}:{}", hostname, port);
 
     // TEAM-027: Get worker binary path (same directory as rbee-hive)
@@ -168,7 +165,8 @@ pub async fn handle_spawn_worker(
 
     // TEAM-027: Callback URL (this server's address)
     // TEAM-035: For localhost testing, use 127.0.0.1
-    let callback_url = format!("http://{}:8080/v1/workers/ready", hostname);
+    // TEAM-091: Use actual server port from AppState instead of hardcoded 8080
+    let callback_url = format!("http://{}:{}/v1/workers/ready", hostname, state.server_addr.port());
 
     // Spawn worker process
     // Per test-001-mvp.md lines 136-143
@@ -196,6 +194,12 @@ pub async fn handle_spawn_worker(
         .arg(&worker_id)
         .arg("--model")
         .arg(&model_path) // TEAM-029: Use provisioned model path
+        .arg("--model-ref")
+        .arg(&request.model_ref) // TEAM-092: Pass model_ref for callback
+        .arg("--backend")
+        .arg(&request.backend) // TEAM-092: Pass backend for callback
+        .arg("--device")
+        .arg(request.device.to_string()) // TEAM-092: Pass device for callback
         .arg("--port")
         .arg(port.to_string())
         .arg("--callback-url")

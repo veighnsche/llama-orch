@@ -65,6 +65,7 @@ pub async fn handle(addr: String) -> Result<()> {
         model_catalog.clone(),
         provisioner.clone(),
         download_tracker.clone(),
+        addr,
     );
 
     // Create HTTP server

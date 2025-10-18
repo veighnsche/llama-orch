@@ -5,23 +5,36 @@ use anyhow::Result;
 use observability_narration_core::{narrate, NarrationFields};
 use serde::{Deserialize, Serialize};
 
+// TEAM-092: Match rbee-hive's WorkerReadyRequest structure
 #[derive(Serialize, Deserialize)]
 struct ReadyCallback {
     worker_id: String,
-    vram_bytes: u64,
-    uri: String,
+    url: String,
+    model_ref: String,
+    backend: String,
+    device: u32,
 }
 
 /// Call back to pool manager to report worker ready
+/// TEAM-092: Updated to match rbee-hive's WorkerReadyRequest structure
 pub async fn callback_ready(
     callback_url: &str,
     worker_id: &str,
+    model_ref: &str,
+    backend: &str,
+    device: u32,
     vram_bytes: u64,
     port: u16,
 ) -> Result<()> {
-    let uri = format!("http://localhost:{port}");
+    let url = format!("http://localhost:{port}");
 
-    let payload = ReadyCallback { worker_id: worker_id.to_string(), vram_bytes, uri };
+    let payload = ReadyCallback {
+        worker_id: worker_id.to_string(),
+        url,
+        model_ref: model_ref.to_string(),
+        backend: backend.to_string(),
+        device,
+    };
 
     tracing::info!(
         callback_url = %callback_url,

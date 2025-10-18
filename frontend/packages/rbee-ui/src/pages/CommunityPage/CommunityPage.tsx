@@ -24,8 +24,8 @@ import {
   communityGuidelinesProps,
   communityHeroContainerProps,
   communityHeroProps,
+  CommunityStats,
   communityStatsContainerProps,
-  communityStatsProps,
   contributionTypesContainerProps,
   contributionTypesProps,
   featuredContributorsContainerProps,
@@ -53,7 +53,7 @@ export default function CommunityPage() {
 
       {/* Community Stats */}
       <TemplateContainer {...communityStatsContainerProps}>
-        <TestimonialsTemplate {...communityStatsProps} />
+        <CommunityStats />
       </TemplateContainer>
 
       {/* Contribution Types */}

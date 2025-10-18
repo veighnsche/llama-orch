@@ -117,8 +117,14 @@ export function MatrixTable({ columns, rows, groups, caption, className }: Matri
   )
 
   return (
-    <Table className={className}>
+    <Table className={cn('table-fixed', className)}>
       <TableCaption className="sr-only">{caption || 'Feature comparison table'}</TableCaption>
+      <colgroup>
+        <col className="w-1/3" />
+        {columns.map((col) => (
+          <col key={col.key} />
+        ))}
+      </colgroup>
       <TableHeader>
         <TableRow className="border-b border-border/80">
           <TableHead className="p-3 text-left text-xs uppercase tracking-wide text-muted-foreground sticky left-0 z-10 bg-card">

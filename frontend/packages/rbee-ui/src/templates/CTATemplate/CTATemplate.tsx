@@ -108,7 +108,7 @@ export function CTATemplate({
     <section
       id={id}
       className={cn(
-        'bg-background py-24',
+        'py-24',
         emphasis === 'gradient' &&
           'relative isolate before:absolute before:inset-0 before:bg-[radial-gradient(70%_50%_at_50%_0%,theme(colors.primary/10),transparent_60%)] before:pointer-events-none',
         className,

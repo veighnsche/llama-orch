@@ -1,5 +1,5 @@
 import { TemplateContainer } from '@rbee/ui/molecules'
-import { communityStatsContainerProps, communityStatsProps } from '@rbee/ui/pages/CommunityPage'
+import { featuredContributorsContainerProps, featuredContributorsProps } from '@rbee/ui/pages/CommunityPage'
 import { educationTestimonialsContainerProps, educationTestimonialsData } from '@rbee/ui/pages/EducationPage'
 import { testimonialsTemplateContainerProps, testimonialsTemplateProps } from '@rbee/ui/pages/HomePage'
 import type { Meta, StoryObj } from '@storybook/react'
@@ -51,14 +51,17 @@ export const OnEducationTestimonials: Story = {
 }
 
 /**
- * TestimonialsTemplate as used on the Community page
- * - Community page usage
+ * OnCommunityTestimonials - featuredContributorsProps
+ * @tags community, testimonials
+ *
+ * - Community page usage (actual testimonials, not stats)
+ * - Note: Community stats now use StatsGrid molecule instead
  */
 export const OnCommunityTestimonials: Story = {
   render: (args) => (
-    <TemplateContainer {...communityStatsContainerProps}>
+    <TemplateContainer {...featuredContributorsContainerProps}>
       <TestimonialsTemplate {...args} />
     </TemplateContainer>
   ),
-  args: communityStatsProps,
+  args: featuredContributorsProps,
 }

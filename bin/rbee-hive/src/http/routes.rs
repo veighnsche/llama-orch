@@ -27,12 +27,14 @@ use std::sync::Arc;
 /// Shared application state
 /// TEAM-030: Worker registry is ephemeral, model catalog is persistent (SQLite)
 /// TEAM-034: Added download tracker for SSE streaming
+/// TEAM-091: Added server_addr for correct callback URL construction
 #[derive(Clone)]
 pub struct AppState {
     pub registry: Arc<WorkerRegistry>,
     pub model_catalog: Arc<ModelCatalog>,
     pub provisioner: Arc<ModelProvisioner>,
     pub download_tracker: Arc<DownloadTracker>,
+    pub server_addr: std::net::SocketAddr,
 }
 
 /// Create HTTP router with all endpoints
@@ -42,6 +44,7 @@ pub struct AppState {
 /// * `model_catalog` - Model catalog (shared state)
 /// * `provisioner` - Model provisioner (shared state)
 /// * `download_tracker` - Download tracker (shared state)
+/// * `server_addr` - Server bind address for callback URL construction
 ///
 /// # Returns
 /// Router with all endpoints configured
@@ -50,8 +53,9 @@ pub fn create_router(
     model_catalog: Arc<ModelCatalog>,
     provisioner: Arc<ModelProvisioner>,
     download_tracker: Arc<DownloadTracker>,
+    server_addr: std::net::SocketAddr,
 ) -> Router {
-    let state = AppState { registry, model_catalog, provisioner, download_tracker };
+    let state = AppState { registry, model_catalog, provisioner, download_tracker, server_addr };
 
     Router::new()
         // Health endpoint
@@ -81,7 +85,8 @@ mod tests {
         let catalog = Arc::new(ModelCatalog::new(":memory:".to_string()));
         let provisioner = Arc::new(ModelProvisioner::new(PathBuf::from("/tmp")));
         let download_tracker = Arc::new(DownloadTracker::new());
-        let _router = create_router(registry, catalog, provisioner, download_tracker);
+        let addr: std::net::SocketAddr = "127.0.0.1:9200".parse().unwrap();
+        let _router = create_router(registry, catalog, provisioner, download_tracker, addr);
         // Router creation should not panic
     }
 }

@@ -36,6 +36,18 @@ struct Args {
     #[arg(long)]
     model: String,
 
+    /// Model reference (e.g., "hf:tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf")
+    #[arg(long)]
+    model_ref: String,
+
+    /// Backend (e.g., "cpu", "cuda", "metal")
+    #[arg(long)]
+    backend: String,
+
+    /// Device ID
+    #[arg(long)]
+    device: u32,
+
     /// HTTP server port - assigned by pool-managerd
     #[arg(long)]
     port: u16,
@@ -212,8 +224,16 @@ async fn main() -> anyhow::Result<()> {
             ..Default::default()
         });
 
-        callback_ready(&args.callback_url, &args.worker_id, backend.memory_bytes(), args.port)
-            .await?;
+        callback_ready(
+            &args.callback_url,
+            &args.worker_id,
+            &args.model_ref,
+            &args.backend,
+            args.device,
+            backend.memory_bytes(),
+            args.port,
+        )
+        .await?;
 
         tracing::info!("Callback sent to pool-managerd");
     }

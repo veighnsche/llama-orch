@@ -266,15 +266,15 @@ export function Navigation() {
                             <li>
                               <NavigationMenuLink asChild>
                                 <Link
-                                  href="/industries/compliance"
+                                  href="/industries/legal"
                                   className="flex items-start gap-3 select-none rounded-md p-2.5 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground focus-visible:ring-2 focus-visible:ring-primary/40 focus-visible:ring-offset-2"
-                                  aria-current={pathname === '/industries/compliance' ? 'page' : undefined}
+                                  aria-current={pathname === '/industries/legal' ? 'page' : undefined}
                                 >
-                                  <Shield className="size-5 mt-0.5 shrink-0" />
+                                  <Scale className="size-5 mt-0.5 shrink-0" />
                                   <div>
-                                    <div className="text-sm font-medium leading-none mb-1">Compliance</div>
+                                    <div className="text-sm font-medium leading-none mb-1">Legal</div>
                                     <p className="text-[13px] leading-[1.2] text-muted-foreground">
-                                      EU-native data paths. Tamper-evident logs.
+                                      AI for law firms. Document review at scale.
                                     </p>
                                   </div>
                                 </Link>
@@ -369,12 +369,12 @@ export function Navigation() {
                             <li>
                               <NavigationMenuLink asChild>
                                 <Link
-                                  href="/legal"
+                                  href="/compliance"
                                   className="flex items-start gap-3 select-none rounded-md p-2.5 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground focus-visible:ring-2 focus-visible:ring-primary/40 focus-visible:ring-offset-2"
-                                  aria-current={pathname === '/legal' ? 'page' : undefined}
+                                  aria-current={pathname === '/compliance' ? 'page' : undefined}
                                 >
-                                  <Scale className="size-5 mt-0.5 shrink-0" />
-                                  <div className="text-sm font-medium leading-none">Legal</div>
+                                  <Shield className="size-5 mt-0.5 shrink-0" />
+                                  <div className="text-sm font-medium leading-none">Compliance</div>
                                 </Link>
                               </NavigationMenuLink>
                             </li>
@@ -580,13 +580,13 @@ export function Navigation() {
                             Research
                           </NavLink>
                           <NavLink
-                            href="/industries/compliance"
+                            href="/industries/legal"
                             variant="mobile"
                             onClick={() => setMobileMenuOpen(false)}
                             className="py-3 text-lg min-h-12 flex items-center"
-                            aria-current={pathname === '/industries/compliance' ? 'page' : undefined}
+                            aria-current={pathname === '/industries/legal' ? 'page' : undefined}
                           >
-                            Compliance
+                            Legal
                           </NavLink>
                           <NavLink
                             href="/industries/education"
@@ -632,13 +632,13 @@ export function Navigation() {
                             Security
                           </NavLink>
                           <NavLink
-                            href="/legal"
+                            href="/compliance"
                             variant="mobile"
                             onClick={() => setMobileMenuOpen(false)}
                             className="py-3 text-lg min-h-12 flex items-center"
-                            aria-current={pathname === '/legal' ? 'page' : undefined}
+                            aria-current={pathname === '/compliance' ? 'page' : undefined}
                           >
-                            Legal
+                            Compliance
                           </NavLink>
                         </AccordionContent>
                       </AccordionItem>

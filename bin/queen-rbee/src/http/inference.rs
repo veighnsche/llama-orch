@@ -164,7 +164,10 @@ pub async fn handle_create_inference_task(
     
     // Step 5: Execute inference and stream results
     info!("Executing inference on worker {}", worker.worker_id);
+    // TEAM-093: Add required job_id field for worker's ExecuteRequest
+    let job_id = format!("job-{}", uuid::Uuid::new_v4());
     let inference_request = serde_json::json!({
+        "job_id": job_id,
         "prompt": req.prompt,
         "max_tokens": req.max_tokens,
         "temperature": req.temperature,

@@ -51,7 +51,7 @@ export function UseCasesTemplate({ items, columns = 3, className }: UseCasesTemp
   return (
     <div className={className}>
       {/* Cards grid */}
-      <div className={cn('mx-auto grid max-w-6xl gap-6 animate-in fade-in-50 duration-400', gridCols)}>
+      <div className={cn('mx-auto grid gap-6 animate-in fade-in-50 duration-400', gridCols)}>
         {items.map((item, i) => {
           return (
             <UseCaseCard
