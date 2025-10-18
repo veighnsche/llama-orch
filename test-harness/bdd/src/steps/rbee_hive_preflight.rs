@@ -18,14 +18,8 @@ pub async fn given_rbee_hive_running(world: &mut World) {
     world.last_action = Some("rbee_hive_running".to_string());
 }
 
-// TEAM-085: Added missing step for resource management scenarios
-#[given(expr = "rbee-hive is running at {string}")]
-pub async fn given_rbee_hive_running_at_url(world: &mut World, url: String) {
-    // TEAM-085: Set rbee-hive URL for resource management tests
-    world.rbee_hive_url = Some(url.clone());
-    world.last_action = Some("rbee_hive_running".to_string());
-    tracing::info!("TEAM-085: rbee-hive is running at {}", url);
-}
+// TEAM-103: Removed duplicate step definition - use validation.rs::given_hive_running instead
+// This was causing ambiguous step match errors
 
 #[given(expr = "rbee-hive is running with version {string}")]
 pub async fn given_rbee_hive_version(world: &mut World, version: String) {

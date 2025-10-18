@@ -14,7 +14,7 @@ use std::time::{Duration, Instant};
 
 #[given(expr = "queen-rbee is running with auth enabled at {string}")]
 pub async fn given_queen_with_auth(world: &mut World, url: String) {
-    world.queen_url = Some(url.clone());
+    world.queen_rbee_url = Some(url.clone());
     world.auth_enabled = true;
     tracing::info!("Queen-rbee configured with auth at {}", url);
 }
@@ -182,10 +182,8 @@ pub async fn then_no_timing_sidechannel(_world: &mut World) {
     tracing::info!("✅ TEAM-102: No timing side-channel detected (CWE-208 protected)");
 }
 
-#[given(expr = "queen-rbee is running at {string}")]
-pub async fn given_queen_at_url(world: &mut World, url: String) {
-    world.queen_url = Some(url);
-}
+// TEAM-103: Removed duplicate step definition - use background.rs::given_queen_rbee_url instead
+// This was causing ambiguous step match errors
 
 #[given(expr = "queen-rbee has no API token configured")]
 pub async fn given_no_token(world: &mut World) {
