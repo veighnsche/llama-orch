@@ -10,6 +10,8 @@ mod tests {
             tags: None,
             feature: None,
             quiet: false,
+            really_quiet: false,
+            show_quiet_warning: false,
         };
         let timestamp = "20251018_220000";
         
@@ -26,6 +28,8 @@ mod tests {
             tags: None,
             feature: None,
             quiet: true,
+            really_quiet: false,
+            show_quiet_warning: false,
         };
         let timestamp = "20251018_220000";
         
@@ -40,6 +44,8 @@ mod tests {
             tags: None,
             feature: None,
             quiet: false,
+            really_quiet: false,
+            show_quiet_warning: false,
         };
         let timestamp = "20251018_220000";
         
@@ -54,6 +60,8 @@ mod tests {
             tags: Some("@auth".to_string()),
             feature: None,
             quiet: false,
+            really_quiet: false,
+            show_quiet_warning: false,
         };
         let timestamp = "20251018_220000";
         
@@ -68,6 +76,8 @@ mod tests {
             tags: None,
             feature: Some("lifecycle".to_string()),
             quiet: false,
+            really_quiet: false,
+            show_quiet_warning: false,
         };
         let timestamp = "20251018_220000";
         
@@ -82,6 +92,8 @@ mod tests {
             tags: Some("@p0".to_string()),
             feature: Some("authentication".to_string()),
             quiet: false,
+            really_quiet: false,
+            show_quiet_warning: false,
         };
         let timestamp = "20251018_220000";
         
@@ -225,6 +237,8 @@ mod tests {
             tags: Some("@auth & @p0".to_string()),
             feature: Some("lifecycle/startup".to_string()),
             quiet: false,
+            really_quiet: false,
+            show_quiet_warning: false,
         };
         let timestamp = "2025-10-18_22:00:00";
         
@@ -239,6 +253,8 @@ mod tests {
             tags: Some("@🚀".to_string()),
             feature: Some("lifecycle_✨".to_string()),
             quiet: false,
+            really_quiet: false,
+            show_quiet_warning: false,
         };
         let timestamp = "20251018_220000";
         
@@ -253,6 +269,8 @@ mod tests {
             tags: None,
             feature: None,
             quiet: false,
+            really_quiet: false,
+            show_quiet_warning: false,
         };
         let timestamp = "";
         
@@ -267,6 +285,8 @@ mod tests {
             tags: Some("@auth @p0 @critical @integration @smoke @regression".to_string()),
             feature: Some("very_long_feature_name_that_might_wrap_in_terminal".to_string()),
             quiet: false,
+            really_quiet: false,
+            show_quiet_warning: false,
         };
         let timestamp = "20251018_220000";
         

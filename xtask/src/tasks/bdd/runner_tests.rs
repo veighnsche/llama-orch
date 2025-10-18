@@ -16,6 +16,8 @@ mod tests {
             tags: Some("@auth".to_string()),
             feature: Some("lifecycle".to_string()),
             quiet: false,
+            really_quiet: false,
+            show_quiet_warning: false,
         };
         
         // Behavior: Config should store values correctly
@@ -30,6 +32,8 @@ mod tests {
             tags: None,
             feature: None,
             quiet: true,
+            really_quiet: false,
+            show_quiet_warning: false,
         };
         
         // Behavior: Config should handle no filters
@@ -45,6 +49,8 @@ mod tests {
             tags: None,
             feature: None,
             quiet: false,
+            really_quiet: false,
+            show_quiet_warning: false,
         };
         
         let cmd = "cargo test --test cucumber".to_string();
@@ -60,6 +66,8 @@ mod tests {
             tags: Some("@auth".to_string()),
             feature: None,
             quiet: false,
+            really_quiet: false,
+            show_quiet_warning: false,
         };
         
         let mut cmd = "cargo test --test cucumber".to_string();
@@ -78,6 +86,8 @@ mod tests {
             tags: None,
             feature: Some("lifecycle".to_string()),
             quiet: false,
+            really_quiet: false,
+            show_quiet_warning: false,
         };
         
         let mut cmd = "cargo test --test cucumber".to_string();
@@ -96,6 +106,8 @@ mod tests {
             tags: Some("@p0".to_string()),
             feature: Some("authentication".to_string()),
             quiet: false,
+            really_quiet: false,
+            show_quiet_warning: false,
         };
         
         let mut cmd = "cargo test --test cucumber".to_string();
@@ -191,6 +203,8 @@ mod tests {
             tags: Some("@auth & @p0".to_string()),
             feature: Some("lifecycle/startup".to_string()),
             quiet: false,
+            really_quiet: false,
+            show_quiet_warning: false,
         };
         
         let mut cmd = "cargo test --test cucumber".to_string();
@@ -208,6 +222,8 @@ mod tests {
             tags: Some("@auth @p0 @critical".to_string()),
             feature: None,
             quiet: false,
+            really_quiet: false,
+            show_quiet_warning: false,
         };
         
         let mut cmd = "cargo test --test cucumber".to_string();
@@ -225,6 +241,8 @@ mod tests {
             tags: Some("@test".to_string()),
             feature: Some("feature".to_string()),
             quiet: true,
+            really_quiet: false,
+            show_quiet_warning: false,
         };
         
         let config2 = config1.clone();
@@ -290,6 +308,8 @@ mod tests {
             tags: Some("@test".to_string()),
             feature: None,
             quiet: false,
+            really_quiet: false,
+            show_quiet_warning: false,
         };
         
         // Behavior: Should be debuggable
@@ -303,6 +323,8 @@ mod tests {
             tags: Some("".to_string()),
             feature: Some("".to_string()),
             quiet: false,
+            really_quiet: false,
+            show_quiet_warning: false,
         };
         
         // Behavior: Should handle empty strings (though not recommended)

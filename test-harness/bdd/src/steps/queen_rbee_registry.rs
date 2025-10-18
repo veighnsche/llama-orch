@@ -22,6 +22,28 @@ struct WorkerRegistry {
     workers: HashMap<String, WorkerInfo>,
 }
 
+// TEAM-112: Thread-local storage for registry persistence across steps
+use std::cell::RefCell;
+thread_local! {
+    static REGISTRY: RefCell<WorkerRegistry> = RefCell::new(WorkerRegistry::new());
+}
+
+fn get_registry() -> WorkerRegistry {
+    REGISTRY.with(|r| {
+        let registry = r.borrow();
+        WorkerRegistry {
+            workers: registry.workers.clone(),
+        }
+    })
+}
+
+fn with_registry_mut<F, R>(f: F) -> R
+where
+    F: FnOnce(&mut WorkerRegistry) -> R,
+{
+    REGISTRY.with(|r| f(&mut r.borrow_mut()))
+}
+
 impl WorkerRegistry {
     fn new() -> Self {
         Self {
@@ -49,8 +71,8 @@ impl WorkerRegistry {
 #[given(expr = "queen-rbee has no workers registered")]
 pub async fn given_no_workers_registered(world: &mut World) {
     // TEAM-079: Clear worker registry
-    let mut registry = WorkerRegistry::new();
-    registry.clear();
+    // TEAM-112: Store registry in World using a thread-local or static
+    with_registry_mut(|registry| registry.clear());
     
     tracing::info!("TEAM-079: queen-rbee registry cleared");
     world.last_action = Some("no_workers".to_string());
@@ -59,44 +81,45 @@ pub async fn given_no_workers_registered(world: &mut World) {
 #[given(expr = "queen-rbee has workers:")]
 pub async fn given_queen_has_workers(world: &mut World, step: &cucumber::gherkin::Step) {
     // TEAM-079: Populate registry with test workers
-    let mut registry = WorkerRegistry::new();
-    registry.clear();
-    
-    if let Some(table) = step.table.as_ref() {
-        for row in table.rows.iter().skip(1) {
-            let worker_id = row[0].clone();
-            let url = row[1].clone();
-            let capabilities = row[2].split(',').map(|s| s.trim().to_string()).collect();
-            let last_heartbeat = row[3].parse::<i64>().unwrap_or(0);
-            
-            let worker = WorkerInfo {
-                id: worker_id,
-                url,
-                capabilities,
-                last_heartbeat,
-            };
-            
-            registry.register(worker);
+    // TEAM-112: Store registry in thread-local so it persists across steps
+    with_registry_mut(|registry| {
+        registry.clear();
+        
+        if let Some(table) = step.table.as_ref() {
+            for row in table.rows.iter().skip(1) {
+                let worker_id = row[0].clone();
+                let url = row[1].clone();
+                let capabilities = row[2].split(',').map(|s| s.trim().to_string()).collect();
+                let last_heartbeat = row[3].parse::<i64>().unwrap_or(0);
+                
+                let worker = WorkerInfo {
+                    id: worker_id,
+                    url,
+                    capabilities,
+                    last_heartbeat,
+                };
+                
+                registry.register(worker);
+            }
         }
-    }
+    });
     
-    tracing::info!("TEAM-079: queen-rbee registry populated");
-    world.last_action = Some("workers_populated".to_string());
+    let count = get_registry().list().len();
+    tracing::info!("TEAM-079: queen-rbee registry populated with {} workers", count);
+    world.last_action = Some(format!("workers_populated_{}", count));
 }
 
 #[given(expr = "queen-rbee has worker {string} registered")]
 pub async fn given_worker_registered(world: &mut World, worker_id: String) {
-    // TEAM-079: Register specific worker
-    let mut registry = WorkerRegistry::new();
-    
+    // TEAM-079: Register a single worker
+    // TEAM-112: Use thread-local registry
     let worker = WorkerInfo {
         id: worker_id.clone(),
-        url: format!("http://localhost:808{}", worker_id.chars().last().unwrap_or('1')),
-        capabilities: vec!["cuda".to_string()],
-        last_heartbeat: 1000,
+        url: "http://localhost:8081".to_string(),
+        capabilities: vec!["cuda:0".to_string()],
+        last_heartbeat: 0,
     };
-    
-    registry.register(worker);
+    with_registry_mut(|registry| registry.register(worker));
     
     tracing::info!("TEAM-079: Worker {} registered", worker_id);
     world.last_action = Some(format!("worker_registered_{}", worker_id));
@@ -110,18 +133,16 @@ pub async fn given_current_time(world: &mut World, timestamp: i64) {
 }
 
 #[when(expr = "rbee-hive reports worker {string} with capabilities {string}")]
-pub async fn when_rbee_hive_reports_worker(world: &mut World, worker_id: String, capabilities: String) {
-    // TEAM-079: Register worker via API
-    let mut registry = WorkerRegistry::new();
-    
+pub async fn when_report_worker(world: &mut World, worker_id: String, capabilities: String) {
+    // TEAM-079: Report worker to registry
+    // TEAM-112: Use thread-local registry
     let worker = WorkerInfo {
         id: worker_id.clone(),
         url: "http://localhost:8081".to_string(),
-        capabilities: capabilities.split(',').map(|s| s.trim().to_string()).collect(),
-        last_heartbeat: 1000,
+        capabilities: vec![capabilities.clone()],
+        last_heartbeat: 0,
     };
-    
-    registry.register(worker);
+    with_registry_mut(|registry| registry.register(worker));
     
     tracing::info!("TEAM-079: Worker {} reported with capabilities {}", worker_id, capabilities);
     world.last_action = Some(format!("report_worker_{}_{}", worker_id, capabilities));
@@ -130,11 +151,12 @@ pub async fn when_rbee_hive_reports_worker(world: &mut World, worker_id: String,
 #[when(expr = "rbee-keeper queries all workers")]
 pub async fn when_query_all_workers(world: &mut World) {
     // TEAM-079: Query all workers
-    let registry = WorkerRegistry::new();
-    let workers = registry.list();
+    // TEAM-112: Use thread-local registry
+    let workers = get_registry().list();
+    let worker_count = workers.len();
     
-    tracing::info!("TEAM-079: Queried {} workers", workers.len());
-    world.last_action = Some(format!("query_all_workers_{}", workers.len()));
+    tracing::info!("TEAM-079: Queried {} workers", worker_count);
+    world.last_action = Some(format!("query_all_workers_{}", worker_count));
 }
 
 #[when(expr = "rbee-keeper queries workers with capability {string}")]
@@ -154,8 +176,8 @@ pub async fn when_update_worker_state(world: &mut World, state: String) {
 #[when(expr = "rbee-hive removes worker {string}")]
 pub async fn when_remove_worker(world: &mut World, worker_id: String) {
     // TEAM-079: Remove worker from registry
-    let mut registry = WorkerRegistry::new();
-    let removed = registry.remove(&worker_id);
+    // TEAM-112: Use thread-local registry
+    let removed = with_registry_mut(|registry| registry.remove(&worker_id));
     
     tracing::info!("TEAM-079: Worker {} removed: {}", worker_id, removed);
     world.last_action = Some(format!("remove_worker_{}_{}", worker_id, removed));
@@ -263,7 +285,12 @@ pub async fn then_receives_delete(world: &mut World) {
 #[then(expr = "queen-rbee removes the worker from registry")]
 pub async fn then_removes_from_registry(world: &mut World) {
     // TEAM-079: Verify worker was removed
-    assert!(world.last_action.as_ref().unwrap().contains("_true"));
+    // TEAM-112: Fixed assertion - check for remove_worker action with true result
+    assert!(
+        world.last_action.as_ref().unwrap().starts_with("remove_worker_") 
+        && world.last_action.as_ref().unwrap().ends_with("_true"),
+        "Expected worker removal action, got: {:?}", world.last_action
+    );
     tracing::info!("TEAM-079: Worker removed from registry");
 }
 

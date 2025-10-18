@@ -8,6 +8,8 @@ pub struct BddConfig {
     pub tags: Option<String>,
     pub feature: Option<String>,
     pub quiet: bool,
+    pub really_quiet: bool,
+    pub show_quiet_warning: bool,
 }
 
 /// Test execution results

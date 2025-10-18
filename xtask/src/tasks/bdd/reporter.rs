@@ -148,3 +148,28 @@ pub fn print_final_banner(success: bool) {
         println!("{}", format!("╚{}╝", separator).red());
     }
 }
+
+pub fn print_quiet_warning() {
+    println!();
+    let separator = "━".repeat(64);
+    println!("{}", separator.yellow());
+    println!("{}", "⚠️  WARNING: --quiet flag is deprecated!".yellow().bold());
+    println!("{}", separator.yellow());
+    println!();
+    println!("{}", "The --quiet flag has been disabled because you need to see the console".yellow());
+    println!("{}", "output during debugging. Live output helps you:".yellow());
+    println!();
+    println!("  {} See failures in real-time", "•".yellow());
+    println!("  {} Understand what's happening", "•".yellow());
+    println!("  {} Debug faster", "•".yellow());
+    println!("  {} Catch hangs and timeouts", "•".yellow());
+    println!();
+    println!("{}", "To actually suppress output (for CI/CD):".cyan());
+    println!("  {}", "cargo xtask bdd:test --really-quiet".green());
+    println!();
+    println!("{}", "To remove this warning:".cyan());
+    println!("  {}", "cargo xtask bdd:test  # Just omit --quiet".green());
+    println!();
+    println!("{}", separator.yellow());
+    println!();
+}

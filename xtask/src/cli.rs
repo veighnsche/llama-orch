@@ -56,8 +56,11 @@ pub enum Cmd {
         /// Run specific feature file (e.g., lifecycle, authentication)
         #[arg(long)]
         feature: Option<String>,
-        /// Suppress live output (only show summary)
+        /// DEPRECATED: Use --really-quiet instead. This flag now shows a warning.
         #[arg(long, short)]
         quiet: bool,
+        /// Actually suppress live output (only show summary). Use this for CI/CD.
+        #[arg(long)]
+        really_quiet: bool,
     },
 }

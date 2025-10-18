@@ -72,6 +72,11 @@ pub fn run_bdd_tests(config: BddConfig) -> Result<()> {
     // Final banner
     reporter::print_final_banner(results.exit_code == 0);
     
+    // Show quiet warning if needed
+    if config.show_quiet_warning {
+        reporter::print_quiet_warning();
+    }
+    
     std::process::exit(results.exit_code)
 }
 

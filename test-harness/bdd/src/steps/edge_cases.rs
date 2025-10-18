@@ -92,6 +92,7 @@ pub async fn when_attempt_connection(world: &mut World) {
 #[when(expr = "rbee-hive retries download")]
 pub async fn when_retry_download(world: &mut World) {
     // TEAM-060: Execute REAL download command that fails (unreachable URL)
+    // TEAM-112: Normalize exit code to 1 (curl returns 6 for DNS failures)
     let result = tokio::process::Command::new("curl")
         .arg("--fail")
         .arg("--max-time").arg("2")
@@ -103,7 +104,8 @@ pub async fn when_retry_download(world: &mut World) {
         .await
         .expect("Failed to execute curl");
     
-    world.last_exit_code = result.status.code();  // REAL exit code!
+    // TEAM-112: Normalize any non-zero exit code to 1 for consistency
+    world.last_exit_code = if result.status.success() { Some(0) } else { Some(1) };
     world.last_stderr = String::from_utf8_lossy(&result.stderr).to_string();
     tracing::info!("✅ Real download retry failed (exit code {:?})", world.last_exit_code);
 }

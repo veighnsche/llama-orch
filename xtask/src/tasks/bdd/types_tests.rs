@@ -70,6 +70,8 @@ mod tests {
             tags: Some("@auth".to_string()),
             feature: Some("lifecycle".to_string()),
             quiet: true,
+            really_quiet: false,
+            show_quiet_warning: false,
         };
         
         assert_eq!(config.tags, Some("@auth".to_string()));
@@ -83,6 +85,8 @@ mod tests {
             tags: None,
             feature: None,
             quiet: false,
+            really_quiet: false,
+            show_quiet_warning: false,
         };
         
         assert!(config.tags.is_none());
@@ -143,6 +147,8 @@ mod tests {
             tags: Some("@p0".to_string()),
             feature: None,
             quiet: false,
+            really_quiet: false,
+            show_quiet_warning: false,
         };
         
         let config2 = config1.clone();
