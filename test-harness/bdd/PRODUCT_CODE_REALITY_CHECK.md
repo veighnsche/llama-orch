@@ -62,7 +62,7 @@
 
 **Location:** `bin/shared-crates/input-validation/src/`
 
-**Status:** ⚠️ **LIBRARY EXISTS BUT NOT USED IN QUEEN-RBEE**
+**Status:** ⚠️ **LIBRARY EXISTS BUT NOT USED WHERE TESTS EXPECT IT**
 
 **What Exists:**
 - ✅ `validate_identifier()` - Validates IDs (shard_id, task_id, pool_id)
@@ -77,22 +77,34 @@
 - ✅ **rbee-hive** - Uses validation in:
   - `workers.rs` (lines 94-102, 353-365)
   - `models.rs` (lines 60-63)
-- ❌ **queen-rbee** - Does NOT use validation anywhere
+- ❌ **queen-rbee** - Does NOT use validation (but has it as dependency)
+- ❌ **rbee-keeper** - Does NOT use validation (NOT even a dependency!)
+
+**What Tests Expect:**
+Looking at `140-input-validation.feature`:
+- Line 30: "Then **rbee-keeper** validates model reference format"
+- Line 55: "Then **rbee-keeper** validates backend name"
+- Line 80: "Then **rbee-hive** validates device number"
 
 **Evidence:**
 ```bash
-# Searching queen-rbee for validation usage
-grep -r "validate_" bin/queen-rbee/src/http/
+# rbee-keeper does NOT have input-validation dependency
+cat bin/rbee-keeper/Cargo.toml | grep input-validation
+# Result: No matches
+
+# rbee-keeper does NOT call validate_* functions
+grep -r "validate_" bin/rbee-keeper/src/
 # Result: No matches found
 
-# Searching rbee-hive for validation usage  
+# rbee-hive DOES use validation
 grep -r "validate_" bin/rbee-hive/src/http/
 # Result: Multiple matches in workers.rs and models.rs
 ```
 
 **Verdict:** 
-- Tests for rbee-hive validation SHOULD PASS (it's implemented)
-- Tests for queen-rbee validation WILL FAIL (not implemented)
+- ❌ Tests expecting **rbee-keeper** validation WILL FAIL (not implemented)
+- ✅ Tests expecting **rbee-hive** validation SHOULD PASS (implemented)
+- ❌ Tests expecting **queen-rbee** validation WILL FAIL (not implemented)
 
 ---
 
@@ -160,35 +172,43 @@ secrets-management/src/
 
 ## Why Tests Are Failing
 
-### Category 1: Missing Input Validation in queen-rbee
+### Category 1: Missing Input Validation in rbee-keeper
 
-**Tests Affected:** ~15 validation tests in `140-input-validation.feature`
+**Tests Affected:** ~10 validation tests in `140-input-validation.feature`
 
 **Problem:** 
 - Library exists: ✅
-- Dependency declared: ✅
+- Dependency declared in rbee-keeper: ❌
 - Actually used: ❌
 
 **Example Test:**
 ```gherkin
-When I send invalid model reference "../../etc/passwd"
-Then queen-rbee returns 400 Bad Request
-And error message contains "Invalid model_ref"
+Scenario: EH-015a - Invalid model reference format
+  When I run:
+    """
+    rbee-keeper infer \
+      --node workstation \
+      --model invalid-format \
+      --prompt "test"
+    """
+  Then rbee-keeper validates model reference format
+  And validation fails
 ```
 
 **Current Behavior:** 
-- queen-rbee accepts the invalid input
-- No validation occurs
-- Test expects 400, gets 200 or other status
+- rbee-keeper does NOT validate inputs
+- Passes invalid data to queen-rbee
+- Test expects validation error from rbee-keeper, doesn't get it
 
 **Fix Required:**
-Add validation to queen-rbee endpoints:
+1. Add input-validation to rbee-keeper/Cargo.toml
+2. Add validation in CLI commands:
 ```rust
-// In bin/queen-rbee/src/http/inference.rs
+// In bin/rbee-keeper/src/commands/infer.rs
 use input_validation::validate_model_ref;
 
-validate_model_ref(&request.model_ref)
-    .map_err(|e| (StatusCode::BAD_REQUEST, format!("Invalid model_ref: {}", e)))?;
+validate_model_ref(&args.model)
+    .map_err(|e| anyhow::anyhow!("Invalid model reference format: {}", e))?;
 ```
 
 ---
@@ -238,10 +258,11 @@ Build the features (v2.0 work)
 
 ### For TEAM-113: Quick Wins
 
-1. **Add Input Validation to queen-rbee** (~2 hours)
+1. **Add Input Validation to rbee-keeper** (~3 hours)
+   - Add input-validation dependency to Cargo.toml
+   - Add validation in commands/infer.rs, commands/setup.rs
    - Copy pattern from rbee-hive/src/http/workers.rs
-   - Add to inference.rs, beehives.rs, workers.rs
-   - **Impact:** Fix ~15 validation tests
+   - **Impact:** Fix ~10 validation tests
 
 2. **Implement More Missing Steps** (~4 hours)
    - Follow TEAM-112's pattern
@@ -254,10 +275,10 @@ Build the features (v2.0 work)
 
 ### For Product Team: Medium-Term
 
-4. **Wire Up Existing Libraries** (~1 day)
+4. **Add Input Validation to queen-rbee** (~2 hours)
    - queen-rbee has input-validation dependency but doesn't use it
-   - Add validation calls to all HTTP endpoints
-   - **Impact:** Fix all validation tests
+   - Add validation calls to HTTP endpoints
+   - **Impact:** Fix ~5 additional validation tests
 
 5. **Add Rate Limiting** (~2 days)
    - Implement rate limiting middleware
@@ -280,7 +301,8 @@ Build the features (v2.0 work)
 | Authentication | ✅ Implemented & Active | 0 (should pass) |
 | Input Validation Library | ✅ Implemented | 0 (library works) |
 | Input Validation Usage (rbee-hive) | ✅ Implemented | 0 (should pass) |
-| Input Validation Usage (queen-rbee) | ❌ Not Wired Up | ~15 (will fail) |
+| Input Validation Usage (rbee-keeper) | ❌ Not Wired Up | ~10 (will fail) |
+| Input Validation Usage (queen-rbee) | ❌ Not Wired Up | ~5 (will fail) |
 | Secrets Management | ✅ Implemented | 0 (should pass) |
 | HTTP Endpoints | ✅ Implemented | 0 (should pass) |
 | Model Catalog | ✅ Implemented | 0 (should pass) |
@@ -299,12 +321,14 @@ Build the features (v2.0 work)
 - ❌ **Advanced features are 0% done** - Multi-hive, network partitions, etc.
 
 **Why Tests Fail:**
-1. **20% - Missing wiring** (input validation in queen-rbee)
+1. **20% - Missing wiring** (input validation in rbee-keeper and queen-rbee)
 2. **30% - Missing step implementations** (Rust step functions)
 3. **50% - Unimplemented features** (v2.0 work)
 
 **Quick Win Opportunity:**
-Adding input validation to queen-rbee would fix ~15 tests with minimal effort. The library is already there, just needs to be called!
+Adding input validation to rbee-keeper would fix ~10 tests with minimal effort. The library exists, just needs to be added as a dependency and called!
 
 **Bottom Line:**
 The person who said "everything is implemented" was **technically correct** about the libraries existing, but **practically wrong** about them being fully wired up and used. It's like having all the parts of a car but not all of them are bolted together yet.
+
+**CORRECTION:** My initial analysis was wrong - I said queen-rbee wasn't using validation, but the tests actually expect **rbee-keeper** (the CLI) to do the validation, not queen-rbee. rbee-keeper doesn't even have input-validation as a dependency!
