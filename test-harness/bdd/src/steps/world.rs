@@ -714,6 +714,27 @@ pub struct World {
 
     /// Worker processing inference flag
     pub worker_processing_inference: bool,
+
+    // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    // TEAM-127: CLI Commands Testing
+    // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    /// Config files created during tests
+    pub config_files: Vec<String>,
+
+    /// Environment variables set during tests
+    pub env_vars: HashMap<String, String>,
+
+    /// Remote node for SSH commands
+    pub remote_node: Option<String>,
+
+    /// Remote command executed flag
+    pub remote_command_executed: bool,
+
+    /// SSH connections: node -> connected
+    pub ssh_connections: HashMap<String, bool>,
+
+    /// Installation path for binaries
+    pub install_path: Option<String>,
 }
 
 // TEAM-101: Manual Debug implementation to handle CaptureAdapter which doesn't implement Debug
@@ -1060,6 +1081,14 @@ impl Default for World {
             warning_messages: Vec::new(),
             pool_managerd_has_gpu: false,
             worker_processing_inference: false,
+
+            // TEAM-127: CLI Commands Testing
+            config_files: Vec::new(),
+            env_vars: HashMap::new(),
+            remote_node: None,
+            remote_command_executed: false,
+            ssh_connections: HashMap::new(),
+            install_path: None,
         }
     }
 }
