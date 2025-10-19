@@ -356,3 +356,56 @@ pub async fn then_validation_fails(world: &mut World) {
     world.validation_passed = false;
     tracing::info!("✅ Validation failed as expected");
 }
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// TEAM-119: Missing Steps (Batch 2)
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+// Step 19: Device VRAM free
+#[given(expr = "device {int} has {int}GB VRAM free")]
+pub async fn given_device_vram_free(world: &mut World, device: u32, vram_gb: u64) {
+    world.gpu_vram_free.insert(device, vram_gb * 1024 * 1024 * 1024);
+    tracing::info!("✅ Device {} has {}GB VRAM free", device, vram_gb);
+}
+
+// Step 20: Preflight RAM available
+#[given(expr = "preflight starts with {int}GB RAM available")]
+pub async fn given_preflight_ram(world: &mut World, ram_gb: u64) {
+    world.system_ram_available = Some(ram_gb * 1024 * 1024 * 1024);
+    tracing::info!("✅ Preflight: {}GB RAM available", ram_gb);
+}
+
+// Step 21: GPU temperature
+#[given(expr = "GPU temperature is {int}°C")]
+pub async fn given_gpu_temperature(world: &mut World, temp: i32) {
+    world.gpu_temperature = Some(temp);
+    tracing::info!("✅ GPU temperature: {}°C", temp);
+}
+
+// Step 22: System CPU cores
+#[given(expr = "system has {int} CPU cores")]
+pub async fn given_cpu_cores(world: &mut World, cores: usize) {
+    world.cpu_cores = Some(cores);
+    tracing::info!("✅ System has {} CPU cores", cores);
+}
+
+// Step 23: GPU total VRAM
+#[given(expr = "GPU has {int}GB total VRAM")]
+pub async fn given_gpu_total_vram(world: &mut World, vram_gb: u64) {
+    world.gpu_vram_total = Some(vram_gb * 1024 * 1024 * 1024);
+    tracing::info!("✅ GPU has {}GB total VRAM", vram_gb);
+}
+
+// Step 24: System bandwidth limit
+#[given(expr = "system bandwidth limit is {int} MB/s")]
+pub async fn given_bandwidth_limit(world: &mut World, mbps: u64) {
+    world.bandwidth_limit = Some(mbps * 1024 * 1024);
+    tracing::info!("✅ Bandwidth limit: {} MB/s", mbps);
+}
+
+// Step 25: Disk I/O capacity
+#[given(expr = "disk I/O is at {int}% capacity")]
+pub async fn given_disk_io_capacity(world: &mut World, percent: u8) {
+    world.disk_io_percent = Some(percent);
+    tracing::info!("✅ Disk I/O at {}% capacity", percent);
+}

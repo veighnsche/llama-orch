@@ -76,8 +76,9 @@ pub async fn given_hive_running(world: &mut World, url: String) {
 }
 
 #[when(expr = "I send request with model_path {string}")]
-pub async fn when_request_with_path(world: &mut World, path: String) {
-    let url = format!("{}/v1/workers/spawn", world.hive_url.as_ref().unwrap());
+pub async fn when_request_with_path(world: &mut World, path: String) -> Result<(), String> {
+    let hive_url = world.hive_url.as_ref().ok_or("hive_url not set")?;
+    let url = format!("{}/v1/workers/spawn", hive_url);
 
     let client = reqwest::Client::new();
     let response = client
@@ -119,8 +120,9 @@ pub async fn then_symlink_not_followed(_world: &mut World) {
 }
 
 #[when(expr = "I send request with worker_id {string}")]
-pub async fn when_request_with_worker_id(world: &mut World, worker_id: String) {
-    let url = format!("{}/v1/workers/{}", world.hive_url.as_ref().unwrap(), worker_id);
+pub async fn when_request_with_worker_id(world: &mut World, worker_id: String) -> Result<(), String> {
+    let hive_url = world.hive_url.as_ref().ok_or("hive_url not set")?;
+    let url = format!("{}/v1/workers/{}", hive_url, worker_id);
 
     let client = reqwest::Client::new();
     let response = client.get(&url).send().await;
@@ -154,8 +156,9 @@ pub async fn then_request_accepted(world: &mut World) {
 }
 
 #[when(expr = "I send request with backend {string}")]
-pub async fn when_request_with_backend(world: &mut World, backend: String) {
-    let url = format!("{}/v1/workers/spawn", world.hive_url.as_ref().unwrap());
+pub async fn when_request_with_backend(world: &mut World, backend: String) -> Result<(), String> {
+    let hive_url = world.hive_url.as_ref().ok_or("hive_url not set")?;
+    let url = format!("{}/v1/workers/spawn", hive_url);
 
     let client = reqwest::Client::new();
     let response = client
@@ -179,8 +182,9 @@ pub async fn when_request_with_backend(world: &mut World, backend: String) {
 }
 
 #[when(expr = "I send request with device {string}")]
-pub async fn when_request_with_device(world: &mut World, device: String) {
-    let url = format!("{}/v1/workers/spawn", world.hive_url.as_ref().unwrap());
+pub async fn when_request_with_device(world: &mut World, device: String) -> Result<(), String> {
+    let hive_url = world.hive_url.as_ref().ok_or("hive_url not set")?;
+    let url = format!("{}/v1/workers/spawn", hive_url);
 
     let client = reqwest::Client::new();
     let response = client
@@ -205,8 +209,9 @@ pub async fn when_request_with_device(world: &mut World, device: String) {
 }
 
 #[when(expr = "I send request with node {string}")]
-pub async fn when_request_with_node(world: &mut World, node: String) {
-    let url = format!("{}/v1/workers/spawn", world.queen_url.as_ref().unwrap());
+pub async fn when_request_with_node(world: &mut World, node: String) -> Result<(), String> {
+    let queen_url = world.queen_url.as_ref().ok_or("queen_url not set")?;
+    let url = format!("{}/v1/workers/spawn", queen_url);
 
     let client = reqwest::Client::new();
     let response = client
@@ -285,8 +290,9 @@ pub async fn then_no_memory_leaks(_world: &mut World) {
 }
 
 #[when(expr = "I send request with {int} MB body")]
-pub async fn when_send_large_body(world: &mut World, size_mb: usize) {
-    let url = format!("{}/v1/workers/spawn", world.queen_url.as_ref().unwrap());
+pub async fn when_send_large_body(world: &mut World, size_mb: usize) -> Result<(), String> {
+    let queen_url = world.queen_url.as_ref().ok_or("queen_url not set")?;
+    let url = format!("{}/v1/workers/spawn", queen_url);
 
     // Create large payload
     let large_body = "x".repeat(size_mb * 1024 * 1024);
@@ -339,8 +345,9 @@ pub async fn then_error_not_contains(world: &mut World, text: String) {
 }
 
 #[when(expr = "I send malicious input to {string}")]
-pub async fn when_send_malicious_to_endpoint(world: &mut World, endpoint: String) {
-    let url = format!("{}{}", world.queen_url.as_ref().unwrap(), endpoint);
+pub async fn when_send_malicious_to_endpoint(world: &mut World, endpoint: String) -> Result<(), String> {
+    let queen_url = world.queen_url.as_ref().ok_or("queen_url not set")?;
+    let url = format!("{}{}", queen_url, endpoint);
 
     let client = reqwest::Client::new();
     let response = client

@@ -338,3 +338,42 @@ pub async fn given_file_empty(world: &mut World) {
     let path = world.secret_file_path.as_ref().expect("No secret file path");
     fs::write(path, "").expect("Failed to create empty file");
 }
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// TEAM-119: Missing Steps (Batch 2)
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+// Step 29: File permissions world-readable
+#[given(expr = "file permissions are {string} (world-readable)")]
+pub async fn given_file_permissions_world_readable(world: &mut World, perms: String) {
+    world.file_permissions = Some(perms.clone());
+    world.file_readable_by_world = true;
+    tracing::info!("✅ File permissions set to {} (world-readable)", perms);
+}
+
+// Step 30: File permissions group-readable
+#[given(expr = "file permissions are {string} (group-readable)")]
+pub async fn given_file_permissions_group_readable(world: &mut World, perms: String) {
+    world.file_permissions = Some(perms.clone());
+    world.file_readable_by_group = true;
+    tracing::info!("✅ File permissions set to {} (group-readable)", perms);
+}
+
+// Step 31: Systemd credential exists
+#[given(expr = "systemd credential exists at {string}")]
+pub async fn given_systemd_credential_exists(world: &mut World, path: String) -> Result<(), String> {
+    use std::path::Path;
+    
+    let path_obj = Path::new(&path);
+    if let Some(parent) = path_obj.parent() {
+        fs::create_dir_all(parent)
+            .map_err(|e| format!("Failed to create systemd credential dir: {}", e))?;
+    }
+    
+    fs::write(&path, "test-token-12345")
+        .map_err(|e| format!("Failed to write credential: {}", e))?;
+    
+    world.systemd_credential_path = Some(path.clone());
+    tracing::info!("✅ systemd credential created at {}", path);
+    Ok(())
+}

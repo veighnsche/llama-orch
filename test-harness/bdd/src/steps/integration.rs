@@ -456,3 +456,22 @@ pub async fn then_client_receives_tokens_in_order(world: &mut World) {
 
     tracing::info!("✅ Client receives all {} tokens in order", world.tokens_generated.len());
 }
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// TEAM-120: Missing Steps (Batch 3) - Steps 53-54
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+// Step 53: pool-managerd is running
+#[given(expr = "pool-managerd is running")]
+pub async fn given_pool_managerd_running(world: &mut World) {
+    world.pool_managerd_running = true;
+    tracing::info!("✅ pool-managerd is running");
+}
+
+// Step 54: pool-managerd is running with GPU workers
+#[given(expr = "pool-managerd is running with GPU workers")]
+pub async fn given_pool_managerd_gpu(world: &mut World) {
+    world.pool_managerd_running = true;
+    world.pool_managerd_has_gpu = true;
+    tracing::info!("✅ pool-managerd running with GPU workers");
+}

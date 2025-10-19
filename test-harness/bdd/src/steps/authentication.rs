@@ -773,3 +773,65 @@ pub async fn then_request_accepted(world: &mut World) {
     assert!(status >= 200 && status < 300, "Request not accepted, status: {}", status);
     tracing::info!("✅ Request accepted (status {})", status);
 }
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// TEAM-119: Missing Steps (Batch 2)
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+// Step 26: POST without Authorization header
+#[when(expr = "I send POST to {string} without Authorization header")]
+pub async fn when_post_without_auth_header(world: &mut World, path: String) -> Result<(), String> {
+    let url = format!("{}{}", world.base_url.as_ref().unwrap_or(&"http://localhost:8080".to_string()), path);
+    
+    let client = reqwest::Client::new();
+    let response = client.post(&url)
+        .send()
+        .await
+        .map_err(|e| format!("Request failed: {}", e))?;
+    
+    world.last_response_status = Some(response.status().as_u16());
+    tracing::info!("✅ POST {} without auth: status {}", path, response.status());
+    Ok(())
+}
+
+// Step 27: GET without Authorization header
+#[when(expr = "I send GET to {string} without Authorization header")]
+pub async fn when_get_without_auth_header(world: &mut World, path: String) -> Result<(), String> {
+    let url = format!("{}{}", world.base_url.as_ref().unwrap_or(&"http://localhost:8080".to_string()), path);
+    
+    let client = reqwest::Client::new();
+    let response = client.get(&url)
+        .send()
+        .await
+        .map_err(|e| format!("Request failed: {}", e))?;
+    
+    world.last_response_status = Some(response.status().as_u16());
+    tracing::info!("✅ GET {} without auth: status {}", path, response.status());
+    Ok(())
+}
+
+// Step 28: Send N authenticated requests
+#[when(expr = "I send {int} authenticated requests")]
+pub async fn when_send_n_authenticated_requests(world: &mut World, count: usize) -> Result<(), String> {
+    let url = format!("{}/health", world.base_url.as_ref().unwrap_or(&"http://localhost:8080".to_string()));
+    let token = world.api_token.as_ref().ok_or("No API token set")?;
+    
+    let client = reqwest::Client::new();
+    let mut success_count = 0;
+    
+    for _ in 0..count {
+        let response = client.get(&url)
+            .header("Authorization", format!("Bearer {}", token))
+            .send()
+            .await
+            .map_err(|e| format!("Request failed: {}", e))?;
+        
+        if response.status().is_success() {
+            success_count += 1;
+        }
+    }
+    
+    world.request_count = success_count;
+    tracing::info!("✅ Sent {} authenticated requests, {} succeeded", count, success_count);
+    Ok(())
+}
