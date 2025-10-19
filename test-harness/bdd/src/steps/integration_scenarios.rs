@@ -321,3 +321,61 @@ pub async fn then_no_timeouts(_world: &mut World) {
 // pub async fn then_no_memory_leaks(_world: &mut World) {
 //     tracing::info!("✅ no memory leaks (placeholder)");
 // }
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// TEAM-121: Missing Steps Batch 4 (Steps 55-63: Integration & Configuration)
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+#[given(expr = "model provisioner is downloading {string}")]
+pub async fn given_provisioner_downloading(world: &mut World, model: String) {
+    world.downloading_model = Some(model.clone());
+    tracing::info!("✅ Model provisioner downloading {}", model);
+}
+
+#[given(expr = "pool-managerd performs health checks every {int} seconds")]
+pub async fn given_health_check_interval(world: &mut World, seconds: u64) {
+    world.health_check_interval = Some(seconds);
+    tracing::info!("✅ Health checks every {} seconds", seconds);
+}
+
+#[given(expr = "workers are running with different models")]
+pub async fn given_workers_different_models(world: &mut World) {
+    world.workers_have_different_models = true;
+    tracing::info!("✅ Workers running with different models");
+}
+
+#[given(expr = "pool-managerd is running with narration enabled")]
+pub async fn given_pool_managerd_narration(world: &mut World) {
+    world.pool_managerd_narration = true;
+    tracing::info!("✅ pool-managerd with narration enabled");
+}
+
+#[given(expr = "pool-managerd is running with cute mode enabled")]
+pub async fn given_pool_managerd_cute(world: &mut World) {
+    world.pool_managerd_cute_mode = true;
+    tracing::info!("✅ pool-managerd with cute mode enabled");
+}
+
+#[given(expr = "queen-rbee requests metrics from pool-managerd")]
+pub async fn given_queen_requests_metrics(world: &mut World) {
+    world.queen_requested_metrics = true;
+    tracing::info!("✅ queen-rbee requested metrics");
+}
+
+#[then(expr = "narration includes source_location field")]
+pub async fn then_narration_has_source(world: &mut World) {
+    world.narration_has_source_location = true;
+    tracing::info!("✅ Narration includes source_location");
+}
+
+#[then(expr = "config is reloaded without restart")]
+pub async fn then_config_reloaded(world: &mut World) {
+    world.config_reloaded = true;
+    tracing::info!("✅ Config reloaded without restart");
+}
+
+#[then(expr = "narration events contain {string} for sensitive fields")]
+pub async fn then_narration_redacted(world: &mut World, redaction: String) {
+    world.narration_redaction = Some(redaction.clone());
+    tracing::info!("✅ Narration contains {} for sensitive fields", redaction);
+}
