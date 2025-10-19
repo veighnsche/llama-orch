@@ -2,188 +2,93 @@
 // Original implementation: TEAM-115
 // Purpose: Generic heartbeat protocol for health monitoring
 // NOTE: Moved to shared-crates because BOTH workers AND hives send heartbeats
+// TEAM-151: Extended to support hive aggregation and queen receiving
+// TEAM-151: Refactored into modular structure
 
 #![warn(missing_docs)]
 #![warn(clippy::all)]
 
-//! Heartbeat mechanism for worker health monitoring
+//! Heartbeat mechanism for health monitoring across the rbee system
 //!
-//! Workers send periodic heartbeats to rbee-hive to indicate they are alive and healthy.
-//! If heartbeats stop, rbee-hive can detect the worker as stale and take action.
+//! This crate provides heartbeat logic for all three binaries:
+//! - **Worker:** Sends heartbeats to hive (Worker → Hive)
+//! - **Hive:** Collects worker heartbeats + sends aggregated heartbeats to queen (Hive → Queen)
+//! - **Queen:** Receives aggregated heartbeats from hives
+//!
+//! # Architecture
+//!
+//! ```text
+//! Worker → Hive: POST /v1/heartbeat (30s interval)
+//!   Payload: { worker_id, timestamp, health_status }
+//!
+//! Hive → Queen: POST /v1/heartbeat (15s interval)
+//!   Payload: { hive_id, timestamp, workers: [...] }
+//!   (aggregates ALL worker states from registry)
+//! ```
+//!
+//! # Module Structure
+//!
+//! - `types` - Payload types and enums
+//! - `worker` - Worker → Hive heartbeat logic
+//! - `hive` - Hive → Queen heartbeat logic
+//!
+//! # Example Usage
+//!
+//! **Worker:**
+//! ```no_run
+//! use rbee_heartbeat::worker::{WorkerHeartbeatConfig, start_worker_heartbeat_task};
+//!
+//! let config = WorkerHeartbeatConfig::new(
+//!     "worker-123".to_string(),
+//!     "http://localhost:8600".to_string(),
+//! );
+//! let handle = start_worker_heartbeat_task(config);
+//! ```
+//!
+//! **Hive:**
+//! ```no_run
+//! use rbee_heartbeat::hive::{HiveHeartbeatConfig, start_hive_heartbeat_task};
+//! // (also implement WorkerStateProvider trait)
+//! ```
 //!
 //! Created by: TEAM-115
+//! Extended by: TEAM-151 (hive aggregation)
+//! Refactored by: TEAM-151 (modular structure)
 
-use serde::{Deserialize, Serialize};
-use std::time::Duration;
-use tokio::time::interval;
-use tracing::{debug, warn};
+// Modules
+pub mod types;
+pub mod worker;
+pub mod hive;
 
-/// Heartbeat payload sent to rbee-hive
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct HeartbeatPayload {
-    /// Worker ID
-    pub worker_id: String,
-    /// Timestamp (ISO 8601)
-    pub timestamp: String,
-    /// Health status
-    pub health_status: HealthStatus,
-}
+// ============================================================================
+// Re-exports for Convenience
+// ============================================================================
 
-/// Worker health status
-#[derive(Debug, Clone, Serialize, Deserialize)]
-#[serde(rename_all = "lowercase")]
-pub enum HealthStatus {
-    /// Worker is healthy
-    Healthy,
-    /// Worker is degraded (e.g., high memory usage)
-    Degraded,
-}
+// Re-export commonly used types
+pub use types::{
+    HealthStatus, HiveHeartbeatPayload, WorkerHeartbeatPayload, WorkerState,
+};
 
-/// Heartbeat configuration
-#[derive(Debug, Clone)]
-pub struct HeartbeatConfig {
-    /// Worker ID
-    pub worker_id: String,
-    /// rbee-hive callback URL (e.g., "http://localhost:9200")
-    pub callback_url: String,
-    /// Heartbeat interval in seconds (default: 30s)
-    pub interval_secs: u64,
-}
+// Re-export worker heartbeat functionality
+pub use worker::{start_worker_heartbeat_task, WorkerHeartbeatConfig};
 
-impl HeartbeatConfig {
-    /// Create new heartbeat config
-    pub fn new(worker_id: String, callback_url: String) -> Self {
-        Self {
-            worker_id,
-            callback_url,
-            interval_secs: 30, // Default: 30 seconds
-        }
-    }
+// Re-export hive heartbeat functionality
+pub use hive::{start_hive_heartbeat_task, HiveHeartbeatConfig, WorkerStateProvider};
 
-    /// Set custom interval
-    pub fn with_interval(mut self, interval_secs: u64) -> Self {
-        self.interval_secs = interval_secs;
-        self
-    }
-}
+// ============================================================================
+// Backward Compatibility Aliases
+// ============================================================================
 
-/// Start heartbeat task
-///
-/// Spawns a background task that sends periodic heartbeats to rbee-hive.
-/// The task runs forever until the worker is shut down.
-///
-/// # Arguments
-/// * `config` - Heartbeat configuration
-///
-/// # Returns
-/// JoinHandle for the heartbeat task
-pub fn start_heartbeat_task(config: HeartbeatConfig) -> tokio::task::JoinHandle<()> {
-    tokio::spawn(async move {
-        let mut interval_timer = interval(Duration::from_secs(config.interval_secs));
-        let client = reqwest::Client::new();
-        let heartbeat_url = format!("{}/v1/heartbeat", config.callback_url);
+/// Backward compatibility alias for WorkerHeartbeatPayload
+#[deprecated(since = "0.2.0", note = "Use WorkerHeartbeatPayload instead")]
+pub type HeartbeatPayload = WorkerHeartbeatPayload;
 
-        debug!(
-            worker_id = %config.worker_id,
-            interval_secs = config.interval_secs,
-            "Starting heartbeat task"
-        );
+/// Backward compatibility alias for WorkerHeartbeatConfig
+#[deprecated(since = "0.2.0", note = "Use WorkerHeartbeatConfig instead")]
+pub type HeartbeatConfig = WorkerHeartbeatConfig;
 
-        loop {
-            interval_timer.tick().await;
-
-            let payload = HeartbeatPayload {
-                worker_id: config.worker_id.clone(),
-                timestamp: chrono::Utc::now().to_rfc3339(),
-                health_status: HealthStatus::Healthy,
-            };
-
-            match send_heartbeat(&client, &heartbeat_url, &payload).await {
-                Ok(()) => {
-                    debug!(worker_id = %config.worker_id, "Heartbeat sent successfully");
-                }
-                Err(e) => {
-                    // TEAM-115: Log error but don't crash - heartbeat failures are non-fatal
-                    warn!(
-                        worker_id = %config.worker_id,
-                        error = %e,
-                        "Failed to send heartbeat (will retry)"
-                    );
-                }
-            }
-        }
-    })
-}
-
-/// Send heartbeat to rbee-hive
-async fn send_heartbeat(
-    client: &reqwest::Client,
-    url: &str,
-    payload: &HeartbeatPayload,
-) -> Result<(), Box<dyn std::error::Error>> {
-    let response = client
-        .post(url)
-        .json(payload)
-        .timeout(Duration::from_secs(5))
-        .send()
-        .await?;
-
-    if !response.status().is_success() {
-        let status = response.status();
-        let body = response.text().await.unwrap_or_else(|_| "<no body>".to_string());
-        return Err(format!("Heartbeat failed: {} - {}", status, body).into());
-    }
-
-    Ok(())
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn test_heartbeat_config_new() {
-        let config = HeartbeatConfig::new(
-            "worker-123".to_string(),
-            "http://localhost:9200".to_string(),
-        );
-        assert_eq!(config.worker_id, "worker-123");
-        assert_eq!(config.callback_url, "http://localhost:9200");
-        assert_eq!(config.interval_secs, 30);
-    }
-
-    #[test]
-    fn test_heartbeat_config_with_interval() {
-        let config = HeartbeatConfig::new(
-            "worker-123".to_string(),
-            "http://localhost:9200".to_string(),
-        )
-        .with_interval(60);
-        assert_eq!(config.interval_secs, 60);
-    }
-
-    #[test]
-    fn test_heartbeat_payload_serialization() {
-        let payload = HeartbeatPayload {
-            worker_id: "worker-123".to_string(),
-            timestamp: "2025-10-19T00:00:00Z".to_string(),
-            health_status: HealthStatus::Healthy,
-        };
-
-        let json = serde_json::to_string(&payload).unwrap();
-        assert!(json.contains("worker-123"));
-        assert!(json.contains("healthy"));
-    }
-
-    #[test]
-    fn test_health_status_serialization() {
-        let healthy = HealthStatus::Healthy;
-        let degraded = HealthStatus::Degraded;
-
-        let healthy_json = serde_json::to_string(&healthy).unwrap();
-        let degraded_json = serde_json::to_string(&degraded).unwrap();
-
-        assert_eq!(healthy_json, "\"healthy\"");
-        assert_eq!(degraded_json, "\"degraded\"");
-    }
+/// Backward compatibility alias for start_worker_heartbeat_task
+#[deprecated(since = "0.2.0", note = "Use start_worker_heartbeat_task instead")]
+pub fn start_heartbeat_task(config: WorkerHeartbeatConfig) -> tokio::task::JoinHandle<()> {
+    start_worker_heartbeat_task(config)
 }
