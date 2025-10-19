@@ -145,12 +145,6 @@ pub async fn then_client_receives_tokens(world: &mut World) {
     tracing::info!("✅ client received tokens");
 }
 
-#[then("worker returns to idle state")]
-pub async fn then_worker_returns_idle(_world: &mut World) {
-    // This would require querying worker state
-    tracing::info!("✅ worker returned to idle (assumed)");
-}
-
 #[then(regex = r"^request completes in under (\\d+) seconds$")]
 pub async fn then_request_completes_in_time(world: &mut World, seconds: u64) {
     let start = world.request_start_time.expect("No start time");
@@ -251,12 +245,6 @@ pub async fn then_response_includes_correlation_id(world: &mut World) {
 }
 
 // FULL-003: Worker registration and discovery
-
-#[given("no workers are registered")]
-pub async fn given_no_workers_registered(world: &mut World) {
-    world.registered_workers.clear();
-    tracing::info!("✅ no workers registered");
-}
 
 #[when("mock-worker starts and sends ready callback")]
 pub async fn when_worker_sends_ready(world: &mut World) {
@@ -365,11 +353,6 @@ pub async fn then_hive_signals_shutdown(_world: &mut World) {
 #[then("worker completes gracefully")]
 pub async fn then_worker_completes_gracefully(_world: &mut World) {
     tracing::info!("✅ worker completes gracefully (placeholder)");
-}
-
-#[then("rbee-hive exits cleanly")]
-pub async fn then_hive_exits_cleanly(_world: &mut World) {
-    tracing::info!("✅ rbee-hive exits cleanly (placeholder)");
 }
 
 #[then("queen-rbee exits cleanly")]

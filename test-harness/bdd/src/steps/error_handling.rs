@@ -130,25 +130,6 @@ pub async fn then_queen_attempts_ssh_with_timeout(world: &mut World, timeout: u1
 }
 
 // TEAM-062: Verify SSH connection timeout occurred
-#[then(expr = "the SSH connection fails with timeout")]
-pub async fn then_ssh_connection_fails_timeout(world: &mut World) {
-    use crate::steps::error_helpers::*;
-
-    // Verify error was recorded
-    verify_error_occurred(world).expect("Expected SSH timeout error but none occurred");
-
-    // Verify error code is SSH_TIMEOUT
-    verify_error_code(world, "SSH_TIMEOUT").expect("Expected SSH_TIMEOUT error code");
-
-    // Verify error message mentions timeout
-    verify_error_message_contains(world, "timeout").expect("Error message should mention timeout");
-
-    // Verify exit code is 255 (SSH failure)
-    verify_exit_code(world, 255).expect("SSH timeout should exit with code 255");
-
-    tracing::debug!("✅ SSH connection timeout verified");
-}
-
 #[then(expr = "queen-rbee retries {int} times with exponential backoff")]
 pub async fn then_queen_retries_with_backoff(_world: &mut World, _attempts: u8) {
     tracing::debug!("Retrying with exponential backoff");
@@ -897,11 +878,6 @@ pub async fn given_inference_streaming(_world: &mut World) {
     tracing::debug!("Inference is streaming");
 }
 
-#[when(expr = "worker process crashes unexpectedly")]
-pub async fn when_worker_crashes(_world: &mut World) {
-    tracing::debug!("Worker crashed");
-}
-
 #[then(expr = "rbee-keeper detects SSE stream closed")]
 pub async fn then_detects_stream_closed(_world: &mut World) {
     tracing::debug!("SSE stream closed");
@@ -910,11 +886,6 @@ pub async fn then_detects_stream_closed(_world: &mut World) {
 #[then(expr = "rbee-keeper saves partial results")]
 pub async fn then_saves_partial_results(_world: &mut World) {
     tracing::debug!("Saved partial results");
-}
-
-#[then(expr = "rbee-hive removes worker from registry")]
-pub async fn then_removes_worker_from_registry(_world: &mut World) {
-    tracing::debug!("Removed worker from registry");
 }
 
 #[given(expr = "inference has started")]
@@ -961,29 +932,9 @@ pub async fn then_displays_partial_results(_world: &mut World) {
 // EH-014: Graceful Shutdown Errors
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-#[given(expr = "rbee-hive is running with {int} worker")]
-pub async fn given_rbee_hive_with_workers(_world: &mut World, _count: u8) {
-    tracing::debug!("rbee-hive running with {} worker(s)", _count);
-}
-
-#[when(expr = "rbee-hive sends shutdown command to worker")]
-pub async fn when_sends_shutdown(_world: &mut World) {
-    tracing::debug!("Sending shutdown command");
-}
-
-#[when(expr = "worker does not respond within {int}s")]
-pub async fn when_worker_no_response(_world: &mut World, _timeout: u16) {
-    tracing::debug!("Worker not responding within {}s", _timeout);
-}
-
 #[then(expr = "rbee-hive force-kills worker process")]
 pub async fn then_force_kills_worker(_world: &mut World) {
     tracing::debug!("Force-killing worker");
-}
-
-#[then(expr = "rbee-hive logs force-kill event")]
-pub async fn then_logs_force_kill(_world: &mut World) {
-    tracing::debug!("Logged force-kill event");
 }
 
 #[given(expr = "worker is processing inference request")]
@@ -1066,11 +1017,6 @@ pub async fn when_sends_with_auth(_world: &mut World, _auth: String) {
 #[given(expr = "inference is in progress")]
 pub async fn given_inference_in_progress(_world: &mut World) {
     tracing::debug!("Inference in progress");
-}
-
-#[when(expr = "the user presses Ctrl+C")]
-pub async fn when_user_presses_ctrl_c(_world: &mut World) {
-    tracing::debug!("User pressed Ctrl+C");
 }
 
 #[then(expr = "rbee-keeper waits for acknowledgment with timeout {int}s")]

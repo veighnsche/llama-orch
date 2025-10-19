@@ -115,12 +115,6 @@ pub async fn given_worker_with_model_and_state(
     tracing::info!("✅ Registered worker {} in BOTH World AND registry", worker_id);
 }
 
-#[given(expr = "the worker is healthy")]
-pub async fn given_worker_healthy(world: &mut World) {
-    // Mark worker as healthy (implementation detail)
-    tracing::debug!("Worker marked as healthy");
-}
-
 #[when(expr = "queen-rbee queries {string}")]
 pub async fn when_query_url(world: &mut World, url: String) {
     // TEAM-058: Implemented HTTP query per TEAM-057 TODO
@@ -282,11 +276,6 @@ pub async fn then_latency_under(world: &mut World, seconds: u64) {
     } else {
         tracing::warn!("⚠️ No start time recorded, skipping latency check");
     }
-}
-
-#[then(expr = "rbee-keeper queries the worker registry")]
-pub async fn then_keeper_queries_registry(world: &mut World) {
-    tracing::debug!("rbee-keeper should query worker registry");
 }
 
 #[then(regex = r"^rbee-keeper skips to Phase 8 \(inference execution\)$")]

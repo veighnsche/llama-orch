@@ -180,12 +180,6 @@ pub async fn when_error_loading(_world: &mut World) {
     tracing::info!("Triggering secret loading error");
 }
 
-#[then(expr = "error message does not contain {string}")]
-pub async fn then_error_not_contains(world: &mut World, text: String) {
-    // TODO: Verify error message
-    tracing::info!("Verifying error does NOT contain: {}", text);
-}
-
 #[then(expr = "error message contains {string}")]
 pub async fn then_error_contains(world: &mut World, text: String) {
     // TODO: Verify error message
@@ -214,12 +208,6 @@ pub async fn when_send_incorrect_token(world: &mut World, count: usize) {
 pub async fn then_variance_less_than(world: &mut World, max_variance: u32) {
     // TODO: Calculate variance
     tracing::info!("Verifying variance < {}%", max_variance);
-}
-
-#[then(expr = "no timing side-channel is detectable")]
-pub async fn then_no_sidechannel(_world: &mut World) {
-    // TODO: Verify no timing attack
-    tracing::info!("Verified no timing side-channel");
 }
 
 #[given(expr = "queen-rbee is running with API token {string}")]

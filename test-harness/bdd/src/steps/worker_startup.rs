@@ -348,34 +348,3 @@ pub async fn when_attempt_spawn_worker(world: &mut World) {
     world.last_exit_code = Some(1); // Will fail in error scenarios
     tracing::info!("✅ Attempting to spawn worker");
 }
-
-#[given(expr = "rbee-hive spawns worker process")]
-pub async fn given_hive_spawns_worker_process(world: &mut World) {
-    use rbee_hive::registry::{WorkerInfo, WorkerState};
-
-    let worker_id = uuid::Uuid::new_v4().to_string();
-    let port = world.next_worker_port;
-    world.next_worker_port += 1;
-
-    let registry = world.hive_registry();
-
-    let worker = WorkerInfo {
-        id: worker_id.clone(),
-        url: format!("http://127.0.0.1:{}", port),
-        model_ref: "test-model".to_string(),
-        backend: "cpu".to_string(),
-        device: 0,
-        state: WorkerState::Idle,
-        last_activity: std::time::SystemTime::now(),
-        slots_total: 1,
-        slots_available: 1,
-        failed_health_checks: 0,
-        pid: None,
-        restart_count: 0,
-        last_restart: None,
-        last_heartbeat: None,
-    };
-
-    registry.register(worker).await;
-    tracing::info!("✅ rbee-hive spawned worker process: {}", worker_id);
-}

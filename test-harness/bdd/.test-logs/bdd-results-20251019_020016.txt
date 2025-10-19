@@ -1,0 +1,12 @@
+BDD Test Results
+================================
+
+Command: cargo test --test cucumber
+Status: PASSED
+
+Summary:
+  Passed:  69
+  Failed:  1
+  Skipped: 0
+
+Full log: /home/vince/Projects/llama-orch/test-harness/bdd/.test-logs/bdd-test-20251019_020016.log

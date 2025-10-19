@@ -109,25 +109,6 @@ pub async fn given_model_size(world: &mut World, size: u64) {
 }
 
 // TEAM-068: Call ModelProvisioner.find_local_model()
-#[when(expr = "rbee-hive checks the model catalog")]
-pub async fn when_check_model_catalog(world: &mut World) {
-    let base_dir = std::env::var("LLORCH_MODELS_DIR")
-        .unwrap_or_else(|_| "/tmp/llorch-test-models".to_string());
-    let provisioner = ModelProvisioner::new(PathBuf::from(&base_dir));
-
-    // Check for any models in the catalog
-    for (model_ref, _entry) in &world.model_catalog {
-        let found = provisioner.find_local_model(model_ref);
-        if found.is_some() {
-            tracing::info!("✅ Model '{}' found in catalog", model_ref);
-        } else {
-            tracing::info!("ℹ️  Model '{}' not found in catalog", model_ref);
-        }
-    }
-}
-
-// TEAM-068: Trigger download via API
-// TEAM-074: Added proper error handling
 #[when(expr = "rbee-hive initiates download from Hugging Face")]
 pub async fn when_initiate_download(world: &mut World) {
     use rbee_hive::download_tracker::DownloadTracker;
@@ -239,37 +220,6 @@ pub async fn _when_register_model_in_catalog_removed(world: &mut World) {
 }
 
 // TEAM-068: Verify ModelProvisioner result
-#[then(expr = "the query returns local_path {string}")]
-pub async fn then_query_returns_path(world: &mut World, path: String) {
-    let base_dir = std::env::var("LLORCH_MODELS_DIR")
-        .unwrap_or_else(|_| "/tmp/llorch-test-models".to_string());
-    let provisioner = ModelProvisioner::new(PathBuf::from(&base_dir));
-
-    // Try to find any model in catalog
-    let mut found_any = false;
-    for (model_ref, entry) in &world.model_catalog {
-        if let Some(found_path) = provisioner.find_local_model(model_ref) {
-            assert_eq!(found_path, entry.local_path, "Path mismatch for model '{}'", model_ref);
-            found_any = true;
-            tracing::info!("✅ Query returned path: {:?}", found_path);
-        }
-    }
-
-    if !found_any {
-        tracing::warn!("⚠️  No models found in catalog (test environment)");
-    }
-}
-
-// TEAM-068: Verify no download triggered
-#[then(expr = "rbee-hive skips model download")]
-pub async fn then_skip_download(world: &mut World) {
-    // In a real implementation, we'd check DownloadTracker
-    // For now, verify model exists in catalog
-    assert!(!world.model_catalog.is_empty(), "Expected models in catalog");
-    tracing::info!("✅ Model download skipped (model already in catalog)");
-}
-
-// TEAM-068: Check workflow state
 #[then(expr = "rbee-hive proceeds to worker preflight")]
 pub async fn then_proceed_to_worker_preflight(world: &mut World) {
     // Verify no errors occurred
@@ -487,60 +437,3 @@ pub async fn then_display_error(world: &mut World) {
 }
 
 // TEAM-069: Verify SQLite INSERT statement NICE!
-#[then(expr = "the SQLite INSERT statement is:")]
-pub async fn then_sqlite_insert(world: &mut World, step: &cucumber::gherkin::Step) {
-    let docstring = step.docstring.as_ref().expect("Expected a docstring");
-    let sql = docstring.trim();
-
-    // Verify SQL statement structure
-    assert!(sql.to_uppercase().contains("INSERT INTO"), "Statement should be an INSERT INTO");
-    assert!(
-        sql.to_lowercase().contains("model") || sql.to_lowercase().contains("catalog"),
-        "Statement should reference model or catalog table"
-    );
-
-    // Verify required fields are present
-    let sql_lower = sql.to_lowercase();
-    assert!(
-        sql_lower.contains("provider") || sql_lower.contains("reference"),
-        "Statement should include model identifiers"
-    );
-
-    tracing::info!("✅ SQLite INSERT statement verified: {} chars", sql.len());
-}
-
-// TEAM-069: Verify catalog query returns model NICE!
-#[then(expr = "the catalog query now returns the model")]
-pub async fn then_catalog_returns_model(world: &mut World) {
-    let base_dir = std::env::var("LLORCH_MODELS_DIR")
-        .unwrap_or_else(|_| "/tmp/llorch-test-models".to_string());
-    let provisioner = ModelProvisioner::new(PathBuf::from(&base_dir));
-
-    // Verify at least one model is in catalog
-    assert!(
-        !world.model_catalog.is_empty(),
-        "Model catalog should have entries after registration"
-    );
-
-    // Try to find models via provisioner
-    let mut found_count = 0;
-    for (model_ref, entry) in &world.model_catalog {
-        if let Some(found_path) = provisioner.find_local_model(model_ref) {
-            assert_eq!(
-                found_path, entry.local_path,
-                "Catalog should return correct path for model '{}'",
-                model_ref
-            );
-            found_count += 1;
-        }
-    }
-
-    if found_count > 0 {
-        tracing::info!("✅ Catalog query returns {} model(s)", found_count);
-    } else {
-        tracing::warn!(
-            "⚠️  No models found via provisioner (test environment), but {} in World catalog",
-            world.model_catalog.len()
-        );
-    }
-}
