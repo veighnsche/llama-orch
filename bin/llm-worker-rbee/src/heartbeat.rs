@@ -8,7 +8,7 @@
 use serde::{Deserialize, Serialize};
 use std::time::Duration;
 use tokio::time::interval;
-use tracing::{debug, error, warn};
+use tracing::{debug, warn};
 
 /// Heartbeat payload sent to rbee-hive
 #[derive(Debug, Clone, Serialize, Deserialize)]

@@ -26,6 +26,14 @@ pub enum WorkerError {
 
     #[error("Internal error: {0}")]
     Internal(String),
+
+    /// TEAM-130: Insufficient resources (RAM, CPU, etc.)
+    #[error("Insufficient resources: {0}")]
+    InsufficientResources(String),
+
+    /// TEAM-130: Insufficient VRAM for model
+    #[error("Insufficient VRAM: {0}")]
+    InsufficientVram(String),
 }
 
 impl WorkerError {
@@ -37,12 +45,17 @@ impl WorkerError {
             Self::Timeout => "INFERENCE_TIMEOUT",
             Self::Unhealthy(_) => "WORKER_UNHEALTHY",
             Self::Internal(_) => "INTERNAL",
+            Self::InsufficientResources(_) => "INSUFFICIENT_RESOURCES",
+            Self::InsufficientVram(_) => "INSUFFICIENT_VRAM",
         }
     }
 
     /// Check if error is retriable by orchestrator
     pub fn is_retriable(&self) -> bool {
-        matches!(self, Self::Cuda(_) | Self::Timeout | Self::Internal(_))
+        matches!(
+            self,
+            Self::Cuda(_) | Self::Timeout | Self::Internal(_) | Self::InsufficientResources(_) | Self::InsufficientVram(_)
+        )
     }
 
     /// Get HTTP status code
@@ -53,6 +66,8 @@ impl WorkerError {
             Self::Timeout => StatusCode::REQUEST_TIMEOUT,
             Self::Unhealthy(_) => StatusCode::SERVICE_UNAVAILABLE,
             Self::Internal(_) => StatusCode::INTERNAL_SERVER_ERROR,
+            Self::InsufficientResources(_) => StatusCode::SERVICE_UNAVAILABLE,
+            Self::InsufficientVram(_) => StatusCode::SERVICE_UNAVAILABLE,
         }
     }
 }
@@ -171,6 +186,9 @@ mod tests {
         assert_eq!(WorkerError::Timeout.code(), "INFERENCE_TIMEOUT");
         assert_eq!(WorkerError::Unhealthy("".to_string()).code(), "WORKER_UNHEALTHY");
         assert_eq!(WorkerError::Internal("".to_string()).code(), "INTERNAL");
+        // TEAM-130: New resource error codes
+        assert_eq!(WorkerError::InsufficientResources("".to_string()).code(), "INSUFFICIENT_RESOURCES");
+        assert_eq!(WorkerError::InsufficientVram("".to_string()).code(), "INSUFFICIENT_VRAM");
     }
 
     #[tokio::test]
@@ -246,6 +264,70 @@ mod tests {
 
         let internal_err = WorkerError::Internal("crash".to_string());
         assert_eq!(internal_err.to_string(), "Internal error: crash");
+
+        // TEAM-130: New resource error messages
+        let resources_err = WorkerError::InsufficientResources("not enough RAM".to_string());
+        assert_eq!(resources_err.to_string(), "Insufficient resources: not enough RAM");
+
+        let vram_err = WorkerError::InsufficientVram("need 8GB, have 2GB".to_string());
+        assert_eq!(vram_err.to_string(), "Insufficient VRAM: need 8GB, have 2GB");
+    }
+
+    // TEAM-130: Tests for new resource error types
+    #[test]
+    fn test_insufficient_resources_error() {
+        let err = WorkerError::InsufficientResources("not enough RAM".to_string());
+        assert_eq!(err.code(), "INSUFFICIENT_RESOURCES");
+        assert!(err.is_retriable());
+        assert_eq!(err.status_code(), StatusCode::SERVICE_UNAVAILABLE);
+        assert!(err.to_string().contains("Insufficient resources"));
+        assert!(err.to_string().contains("not enough RAM"));
+    }
+
+    #[test]
+    fn test_insufficient_vram_error() {
+        let err = WorkerError::InsufficientVram("need 8GB, have 2GB".to_string());
+        assert_eq!(err.code(), "INSUFFICIENT_VRAM");
+        assert!(err.is_retriable());
+        assert_eq!(err.status_code(), StatusCode::SERVICE_UNAVAILABLE);
+        assert!(err.to_string().contains("Insufficient VRAM"));
+        assert!(err.to_string().contains("need 8GB, have 2GB"));
+    }
+
+    #[tokio::test]
+    async fn test_into_response_insufficient_vram() {
+        let err = WorkerError::InsufficientVram("required: 8GB, available: 2GB".to_string());
+        let response = err.into_response();
+
+        assert_eq!(response.status(), StatusCode::SERVICE_UNAVAILABLE);
+
+        let body_bytes = axum::body::to_bytes(response.into_body(), usize::MAX)
+            .await
+            .expect("Failed to read response body");
+        let body_str = std::str::from_utf8(&body_bytes).expect("Invalid UTF-8");
+        let json: serde_json::Value = serde_json::from_str(body_str).expect("Invalid JSON");
+
+        assert_eq!(json["code"], "INSUFFICIENT_VRAM");
+        assert!(json["message"].as_str().unwrap().contains("required: 8GB"));
+        assert_eq!(json["retriable"], true);
+    }
+
+    #[tokio::test]
+    async fn test_into_response_insufficient_resources() {
+        let err = WorkerError::InsufficientResources("RAM exhausted".to_string());
+        let response = err.into_response();
+
+        assert_eq!(response.status(), StatusCode::SERVICE_UNAVAILABLE);
+
+        let body_bytes = axum::body::to_bytes(response.into_body(), usize::MAX)
+            .await
+            .expect("Failed to read response body");
+        let body_str = std::str::from_utf8(&body_bytes).expect("Invalid UTF-8");
+        let json: serde_json::Value = serde_json::from_str(body_str).expect("Invalid JSON");
+
+        assert_eq!(json["code"], "INSUFFICIENT_RESOURCES");
+        assert!(json["message"].as_str().unwrap().contains("RAM exhausted"));
+        assert_eq!(json["retriable"], true);
     }
 }
 

@@ -105,7 +105,7 @@ mod tests {
             .await;
 
         let callback_url = format!("{}/ready", mock_server.uri());
-        let result = callback_ready(&callback_url, "worker-1", 8_000_000_000, 8080).await;
+        let result = callback_ready(&callback_url, "worker-1", "meta-llama/Llama-2-7b", "cuda", 0, 8_000_000_000, 8080).await;
 
         assert!(result.is_ok());
     }
@@ -121,7 +121,7 @@ mod tests {
             .await;
 
         let callback_url = format!("{}/ready", mock_server.uri());
-        let result = callback_ready(&callback_url, "worker-1", 8_000_000_000, 8080).await;
+        let result = callback_ready(&callback_url, "worker-1", "meta-llama/Llama-2-7b", "cuda", 0, 8_000_000_000, 8080).await;
 
         assert!(result.is_err());
         let err_msg = result.unwrap_err().to_string();
@@ -133,7 +133,7 @@ mod tests {
     async fn test_callback_ready_network_error() {
         // Use invalid URL to trigger network error
         let callback_url = "http://localhost:1/invalid";
-        let result = callback_ready(callback_url, "worker-1", 8_000_000_000, 8080).await;
+        let result = callback_ready(callback_url, "worker-1", "meta-llama/Llama-2-7b", "cuda", 0, 8_000_000_000, 8080).await;
 
         assert!(result.is_err());
     }
@@ -144,8 +144,10 @@ mod tests {
 
         let expected_payload = serde_json::json!({
             "worker_id": "worker-123",
-            "vram_bytes": 16_000_000_000u64,
-            "uri": "http://localhost:9090"
+            "url": "http://localhost:9090",
+            "model_ref": "meta-llama/Llama-2-13b",
+            "backend": "cuda",
+            "device": 0
         });
 
         Mock::given(method("POST"))
@@ -156,7 +158,7 @@ mod tests {
             .await;
 
         let callback_url = format!("{}/ready", mock_server.uri());
-        let result = callback_ready(&callback_url, "worker-123", 16_000_000_000, 9090).await;
+        let result = callback_ready(&callback_url, "worker-123", "meta-llama/Llama-2-13b", "cuda", 0, 16_000_000_000, 9090).await;
 
         assert!(result.is_ok());
     }
@@ -174,13 +176,13 @@ mod tests {
         let callback_url = format!("{}/ready", mock_server.uri());
 
         // Test various port numbers
-        let result1 = callback_ready(&callback_url, "worker-1", 8_000_000_000, 8080).await;
+        let result1 = callback_ready(&callback_url, "worker-1", "meta-llama/Llama-2-7b", "cuda", 0, 8_000_000_000, 8080).await;
         assert!(result1.is_ok());
 
-        let result2 = callback_ready(&callback_url, "worker-2", 8_000_000_000, 3000).await;
+        let result2 = callback_ready(&callback_url, "worker-2", "meta-llama/Llama-2-7b", "cuda", 0, 8_000_000_000, 3000).await;
         assert!(result2.is_ok());
 
-        let result3 = callback_ready(&callback_url, "worker-3", 8_000_000_000, 65535).await;
+        let result3 = callback_ready(&callback_url, "worker-3", "meta-llama/Llama-2-7b", "cuda", 0, 8_000_000_000, 65535).await;
         assert!(result3.is_ok());
     }
 
@@ -197,19 +199,19 @@ mod tests {
         let callback_url = format!("{}/ready", mock_server.uri());
 
         // 8GB
-        let result1 = callback_ready(&callback_url, "worker-1", 8_000_000_000, 8080).await;
+        let result1 = callback_ready(&callback_url, "worker-1", "meta-llama/Llama-2-7b", "cuda", 0, 8_000_000_000, 8080).await;
         assert!(result1.is_ok());
 
         // 16GB
-        let result2 = callback_ready(&callback_url, "worker-2", 16_000_000_000, 8080).await;
+        let result2 = callback_ready(&callback_url, "worker-2", "meta-llama/Llama-2-13b", "cuda", 0, 16_000_000_000, 8080).await;
         assert!(result2.is_ok());
 
         // 24GB
-        let result3 = callback_ready(&callback_url, "worker-3", 24_000_000_000, 8080).await;
+        let result3 = callback_ready(&callback_url, "worker-3", "meta-llama/Llama-2-70b", "cuda", 0, 24_000_000_000, 8080).await;
         assert!(result3.is_ok());
 
         // 80GB
-        let result4 = callback_ready(&callback_url, "worker-4", 80_000_000_000, 8080).await;
+        let result4 = callback_ready(&callback_url, "worker-4", "meta-llama/Llama-2-70b", "cuda", 0, 80_000_000_000, 8080).await;
         assert!(result4.is_ok());
     }
 
@@ -226,13 +228,16 @@ mod tests {
         let callback_url = format!("{}/ready", mock_server.uri());
 
         // Simple ID
-        let result1 = callback_ready(&callback_url, "worker-1", 8_000_000_000, 8080).await;
+        let result1 = callback_ready(&callback_url, "worker-1", "meta-llama/Llama-2-7b", "cuda", 0, 8_000_000_000, 8080).await;
         assert!(result1.is_ok());
 
         // UUID-like ID
         let result2 = callback_ready(
             &callback_url,
             "550e8400-e29b-41d4-a716-446655440000",
+            "meta-llama/Llama-2-7b",
+            "cuda",
+            0,
             8_000_000_000,
             8080,
         )
@@ -240,7 +245,7 @@ mod tests {
         assert!(result2.is_ok());
 
         // Complex ID
-        let result3 = callback_ready(&callback_url, "gpu-0-replica-2", 8_000_000_000, 8080).await;
+        let result3 = callback_ready(&callback_url, "gpu-0-replica-2", "meta-llama/Llama-2-7b", "cuda", 0, 8_000_000_000, 8080).await;
         assert!(result3.is_ok());
     }
 
@@ -256,7 +261,7 @@ mod tests {
             .await;
 
         let callback_url = format!("{}/ready", mock_server.uri());
-        let result = callback_ready(&callback_url, "worker-1", 8_000_000_000, 8080).await;
+        let result = callback_ready(&callback_url, "worker-1", "meta-llama/Llama-2-7b", "cuda", 0, 8_000_000_000, 8080).await;
 
         assert!(result.is_ok());
     }
@@ -272,7 +277,7 @@ mod tests {
             .await;
 
         let callback_url = format!("{}/ready", mock_server.uri());
-        let result = callback_ready(&callback_url, "worker-1", 8_000_000_000, 8080).await;
+        let result = callback_ready(&callback_url, "worker-1", "meta-llama/Llama-2-7b", "cuda", 0, 8_000_000_000, 8080).await;
 
         // Should fail on first attempt (no built-in retry)
         assert!(result.is_err());
@@ -282,25 +287,29 @@ mod tests {
     fn test_ready_callback_serialization() {
         let callback = ReadyCallback {
             worker_id: "worker-1".to_string(),
-            vram_bytes: 8_000_000_000,
-            uri: "http://localhost:8080".to_string(),
+            url: "http://localhost:8080".to_string(),
+            model_ref: "meta-llama/Llama-2-7b".to_string(),
+            backend: "cuda".to_string(),
+            device: 0,
         };
 
         let json = serde_json::to_string(&callback).unwrap();
         assert!(json.contains("worker-1"));
-        assert!(json.contains("8000000000"));
         assert!(json.contains("http://localhost:8080"));
+        assert!(json.contains("meta-llama/Llama-2-7b"));
     }
 
     #[test]
     fn test_ready_callback_deserialization() {
         let json =
-            r#"{"worker_id":"worker-1","vram_bytes":8000000000,"uri":"http://localhost:8080"}"#;
+            r#"{"worker_id":"worker-1","url":"http://localhost:8080","model_ref":"meta-llama/Llama-2-7b","backend":"cuda","device":0}"#;
         let callback: ReadyCallback = serde_json::from_str(json).unwrap();
 
         assert_eq!(callback.worker_id, "worker-1");
-        assert_eq!(callback.vram_bytes, 8_000_000_000);
-        assert_eq!(callback.uri, "http://localhost:8080");
+        assert_eq!(callback.url, "http://localhost:8080");
+        assert_eq!(callback.model_ref, "meta-llama/Llama-2-7b");
+        assert_eq!(callback.backend, "cuda");
+        assert_eq!(callback.device, 0);
     }
 }
 
