@@ -35,6 +35,7 @@ chrono = { workspace = true }  # TEAM-099: Deadline propagation timestamp handli
 sysinfo = "0.30"  # TEAM-101: Process liveness checks via PID
 serial_test = "3.0"  # TEAM-101: Serial test execution for configuration tests
 shellexpand = "3.1"  # TEAM-102: Path expansion for tilde and environment variables
+rand = "0.8"  # TEAM-125: Random fuzzing inputs for validation tests
 
 # TEAM-063: Real product dependencies for integration testing
 rbee-hive = { path = "../../bin/rbee-hive" }
