@@ -413,10 +413,12 @@ pub async fn handle_worker_ready(
         // Send async callback to queen-rbee (don't block on response)
         let queen_url_clone = queen_url.clone();
         let worker_id_clone = request.worker_id.clone();
+        let auth_token = state.expected_token.clone(); // TEAM-124: Include auth token
         tokio::spawn(async move {
             let client = reqwest::Client::new();
             match client
                 .post(format!("{}/v2/workers/ready", queen_url_clone))
+                .header("Authorization", format!("Bearer {}", auth_token)) // TEAM-124: Auth required
                 .json(&callback_payload)
                 .timeout(std::time::Duration::from_secs(5))
                 .send()

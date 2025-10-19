@@ -305,14 +305,21 @@ If `QUEEN_CALLBACK_URL` is not set, rbee-hive works standalone:
 ## 🐛 KNOWN ISSUES
 
 ### Issue 1: Missing Authentication Token in Callback
-**Status:** ⚠️ TODO
+**Status:** ✅ FIXED
 
-**Problem:** rbee-hive callback doesn't include Bearer token
+**Problem:** rbee-hive callback didn't include Bearer token
 
-**Fix Required:**
-1. Pass API token to rbee-hive via environment variable
-2. Include token in callback request header
-3. Handle 401 Unauthorized responses
+**Fix Applied:**
+```rust
+let auth_token = state.expected_token.clone();
+client
+    .post(format!("{}/v2/workers/ready", queen_url_clone))
+    .header("Authorization", format!("Bearer {}", auth_token))
+    .json(&callback_payload)
+    .send()
+```
+
+**Result:** Callbacks now include authentication token from rbee-hive's AppState
 
 ### Issue 2: Callback URL Not Validated
 **Status:** ⚠️ TODO

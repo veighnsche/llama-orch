@@ -123,3 +123,6 @@ __pycache__
 # Turborepo
 .turbo
 .turbo/
+
+# BDD progress tracking (TEAM-124)
+.bdd-progress.json

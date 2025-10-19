@@ -36,3 +36,9 @@ pub use duplicate_checker::check_duplicate_steps;
 
 mod duplicate_fixer;
 pub use duplicate_fixer::fix_all_duplicates;
+
+mod analyzer;
+pub use analyzer::{
+    analyze_bdd_steps, compare_progress, print_file_stubs, print_json_report,
+    print_markdown_report, print_text_report, AnalysisResults,
+};

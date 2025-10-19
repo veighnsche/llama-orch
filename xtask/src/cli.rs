@@ -90,4 +90,31 @@ pub enum Cmd {
     BddCheckDuplicates,
     #[command(name = "bdd:fix-duplicates")]
     BddFixDuplicates,
+    #[command(name = "bdd:analyze")]
+    BddAnalyze {
+        /// Show detailed file-by-file breakdown
+        #[arg(long)]
+        detailed: bool,
+        /// Show only files with stubs
+        #[arg(long)]
+        stubs_only: bool,
+        /// Output format (text, json, markdown)
+        #[arg(long, default_value = "text")]
+        format: String,
+    },
+    #[command(name = "bdd:progress")]
+    BddProgress {
+        /// Compare with previous run (requires .bdd-progress.json)
+        #[arg(long)]
+        compare: bool,
+    },
+    #[command(name = "bdd:stubs")]
+    BddStubs {
+        /// Show stubs for specific file
+        #[arg(long)]
+        file: Option<String>,
+        /// Minimum stub count to show (default: 1)
+        #[arg(long, default_value = "1")]
+        min_stubs: usize,
+    },
 }
