@@ -75,6 +75,7 @@ struct MockHiveServer {
     handle: Option<thread::JoinHandle<()>>,
     port: u16,
     state: MockHiveState,
+    shutdown_tx: Option<std::sync::mpsc::Sender<()>>,
 }
 
 impl MockHiveServer {
@@ -86,54 +87,74 @@ impl MockHiveServer {
         let listener = TcpListener::bind(format!("127.0.0.1:{}", port))
             .with_context(|| format!("Failed to bind to port {}", port))?;
         
+        // Set non-blocking so we can check shutdown signal
+        listener.set_nonblocking(true)
+            .context("Failed to set listener to non-blocking")?;
+        
         println!("✓ Mock hive server started on port {}", port);
 
         let state = MockHiveState::new();
         let state_clone = state.clone();
+        
+        // Create shutdown channel
+        let (shutdown_tx, shutdown_rx) = std::sync::mpsc::channel();
 
         // Spawn server thread
         let handle = thread::spawn(move || {
-            for stream in listener.incoming() {
-                if let Ok(mut stream) = stream {
-                    let state = state_clone.clone();
-                    
-                    // Read HTTP request
-                    let mut buffer = [0; 4096];
-                    if let Ok(n) = stream.read(&mut buffer) {
-                        let request = String::from_utf8_lossy(&buffer[..n]);
+            loop {
+                // Check for shutdown signal
+                if shutdown_rx.try_recv().is_ok() {
+                    break;
+                }
+                
+                // Try to accept connection (non-blocking)
+                match listener.accept() {
+                    Ok((mut stream, _)) => {
+                        let state = state_clone.clone();
                         
-                        // Parse request - heartbeat sends to /v1/heartbeat
-                        if request.contains("POST /v1/heartbeat") {
-                            // Find JSON body
-                            if let Some(body_start) = request.find("\r\n\r\n") {
-                                let body = &request[body_start + 4..];
-                                
-                                // Try to parse JSON
-                                if let Ok(payload) = serde_json::from_str::<HeartbeatPayload>(body) {
-                                    let count = state.heartbeat_count() + 1;
-                                    let timestamp = chrono::Local::now().format("%H:%M:%S");
+                        // Read HTTP request
+                        let mut buffer = [0; 4096];
+                        if let Ok(n) = stream.read(&mut buffer) {
+                            let request = String::from_utf8_lossy(&buffer[..n]);
+                            
+                            // Parse request - heartbeat sends to /v1/heartbeat
+                            if request.contains("POST /v1/heartbeat") {
+                                // Find JSON body
+                                if let Some(body_start) = request.find("\r\n\r\n") {
+                                    let body = &request[body_start + 4..];
                                     
-                                    eprintln!("[{}] ✅ Heartbeat #{} from worker: {}", 
-                                        timestamp, count, payload.worker_id);
-                                    eprintln!("           Health: {} at {}", payload.health_status, payload.timestamp);
-                                    
-                                    state.add_heartbeat(payload);
-                                    
-                                    // Send 200 OK response
-                                    let response = "HTTP/1.1 200 OK\r\nContent-Type: application/json\r\n\r\n{\"status\":\"ok\"}";
-                                    let _ = stream.write_all(response.as_bytes());
-                                } else {
-                                    // Bad request
-                                    let response = "HTTP/1.1 400 Bad Request\r\n\r\n";
-                                    let _ = stream.write_all(response.as_bytes());
+                                    // Try to parse JSON
+                                    if let Ok(payload) = serde_json::from_str::<HeartbeatPayload>(body) {
+                                        let count = state.heartbeat_count() + 1;
+                                        let timestamp = chrono::Local::now().format("%H:%M:%S");
+                                        
+                                        eprintln!("[{}] ✅ Heartbeat #{} from worker: {}", 
+                                            timestamp, count, payload.worker_id);
+                                        eprintln!("           Health: {} at {}", payload.health_status, payload.timestamp);
+                                        
+                                        state.add_heartbeat(payload);
+                                        
+                                        // Send 200 OK response
+                                        let response = "HTTP/1.1 200 OK\r\nContent-Type: application/json\r\n\r\n{\"status\":\"ok\"}";
+                                        let _ = stream.write_all(response.as_bytes());
+                                    } else {
+                                        // Bad request
+                                        let response = "HTTP/1.1 400 Bad Request\r\n\r\n";
+                                        let _ = stream.write_all(response.as_bytes());
+                                    }
                                 }
+                            } else {
+                                // 404 for other paths
+                                let response = "HTTP/1.1 404 Not Found\r\n\r\n";
+                                let _ = stream.write_all(response.as_bytes());
                             }
-                        } else {
-                            // 404 for other paths
-                            let response = "HTTP/1.1 404 Not Found\r\n\r\n";
-                            let _ = stream.write_all(response.as_bytes());
                         }
                     }
+                    Err(ref e) if e.kind() == std::io::ErrorKind::WouldBlock => {
+                        // No connection available, sleep briefly
+                        thread::sleep(Duration::from_millis(10));
+                    }
+                    Err(_) => break,
                 }
             }
         });
@@ -142,6 +163,7 @@ impl MockHiveServer {
             handle: Some(handle),
             port,
             state,
+            shutdown_tx: Some(shutdown_tx),
         })
     }
 
@@ -168,11 +190,14 @@ impl MockHiveServer {
 
 impl Drop for MockHiveServer {
     fn drop(&mut self) {
-        // Server thread will exit when listener is dropped
+        // Send shutdown signal
+        if let Some(tx) = self.shutdown_tx.take() {
+            let _ = tx.send(());
+        }
+        
+        // Wait for thread to finish
         if let Some(handle) = self.handle.take() {
-            // Give it a moment to finish
-            thread::sleep(Duration::from_millis(100));
-            // Thread will terminate when TcpListener goes out of scope
+            let _ = handle.join();
         }
     }
 }

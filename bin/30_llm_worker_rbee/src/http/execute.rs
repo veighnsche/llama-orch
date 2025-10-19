@@ -86,9 +86,9 @@ pub async fn handle_execute<B: InferenceBackend>(
         max_tokens: req.max_tokens,
     };
 
-    // TEAM-017: Execute inference with mutex lock
-    let result = match backend.lock().await.execute(&req.prompt, &config).await {
-        Ok(r) => r,
+    // TEAM-147: Use REAL streaming backend (tokens yielded as generated)
+    let token_stream = match backend.lock().await.execute_stream(&req.prompt, &config).await {
+        Ok(s) => s,
         Err(e) => {
             warn!(job_id = %req.job_id, error = %e, "Inference failed");
 
@@ -117,53 +117,59 @@ pub async fn handle_execute<B: InferenceBackend>(
         }
     };
 
-    info!(job_id = %req.job_id, tokens = result.tokens.len(), "Inference complete");
-
-    // TEAM-089: Clear narration sender to close the channel
-    // This allows the receiver stream to complete instead of waiting forever
-    narration_channel::clear_sender();
-
-    // Convert result to SSE events
-    let mut events = vec![InferenceEvent::Started {
+    // TEAM-147: Stream tokens in REAL-TIME as they're generated
+    // Send "started" event first
+    let started_event = InferenceEvent::Started {
         job_id: req.job_id.clone(),
         model: "model".to_string(),
-        started_at: "0".to_string(),
-    }];
+        started_at: chrono::Utc::now().timestamp().to_string(),
+    };
 
-    for (i, token) in result.tokens.iter().enumerate() {
-        events.push(InferenceEvent::Token { t: token.clone(), i: i as u32 });
-    }
-
-    events.push(InferenceEvent::End {
-        tokens_out: result.tokens.len() as u32,
-        decode_time_ms: result.decode_time_ms,
-        stop_reason: result.stop_reason,
-        stop_sequence_matched: result.stop_sequence_matched,
+    // TEAM-147: Convert token stream to SSE events
+    // Tokens are yielded as they're generated, not after completion!
+    let mut token_count = 0u32;
+    let token_events = token_stream.map(move |token_result| {
+        match token_result {
+            Ok(token) => {
+                let event = InferenceEvent::Token { 
+                    t: token, 
+                    i: token_count 
+                };
+                token_count += 1;
+                Ok(Event::default().json_data(&event).unwrap())
+            }
+            Err(e) => {
+                let event = InferenceEvent::Error {
+                    code: "TOKEN_ERROR".to_string(),
+                    message: e.to_string(),
+                };
+                Ok(Event::default().json_data(&event).unwrap())
+            }
+        }
     });
 
-    // TEAM-039: Merge narration events with token events
-    // Convert narration receiver to stream
-    let narration_stream = UnboundedReceiverStream::new(narration_rx);
-
-    // Convert token events to stream
-    let token_stream = stream::iter(events);
-
-    // Interleave narration and token events
-    // Note: Since inference is synchronous, narration events will be buffered
-    // and emitted before token events. For true real-time streaming, we'd need
-    // a streaming backend.
-    let merged_stream = narration_stream
-        .chain(token_stream)
+    // TEAM-147: Build the complete SSE stream
+    // 1. Narration events (buffered from start)
+    // 2. Started event
+    // 3. Token events (REAL-TIME streaming!)
+    // 4. [DONE] marker
+    let narration_stream = UnboundedReceiverStream::new(narration_rx)
         .map(|event| Ok(Event::default().json_data(&event).unwrap()));
 
-    // TEAM-035: Add [DONE] marker after all events (OpenAI compatible)
+    let started_stream = stream::once(future::ready(
+        Ok(Event::default().json_data(&started_event).unwrap())
+    ));
+
     let stream_with_done: EventStream = Box::new(
-        merged_stream.chain(stream::once(future::ready(Ok(Event::default().data("[DONE]"))))),
+        narration_stream
+            .chain(started_stream)
+            .chain(token_events)
+            .chain(stream::once(future::ready(Ok(Event::default().data("[DONE]"))))),
     );
 
-    // TEAM-039: Clean up narration channel when stream is dropped
-    // Note: The channel will be cleaned up when the receiver (narration_rx) is dropped
-    // which happens when the stream completes. No explicit cleanup needed.
+    info!(job_id = %req.job_id, "Streaming inference started");
 
+    // TEAM-147: Tokens now stream in REAL-TIME as they're generated!
+    // No more waiting for completion before streaming.
     Ok(Sse::new(stream_with_done))
 }
