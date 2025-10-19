@@ -186,7 +186,8 @@ impl RbeeHttpClient {
 1. **hive-core** (100 LOC) - Has WorkerInfo but never used (use rbee-types instead)
 2. **secrets-management** - Declared in llm-worker but 0 uses
 3. **audit-logging** - Internal tests only
-4. **jwt-guardian**, **model-catalog**, **gpu-info** - Created but not integrated
+4. **jwt-guardian**, **model-catalog** - Created but not integrated
+5. **gpu-info** - DEPRECATED (2025-10-19): Moved to `rbee-hive-crates/device-detection` (hive-specific, not shared)
 
 **Impact:**
 - **LOC Cleanup:** ~100 LOC (hive-core deletion)
@@ -470,7 +471,8 @@ impl RbeeHttpClient {
 - hive-core: 100 LOC, 0 uses (has duplicate WorkerInfo!)
 - secrets-management: Declared but 0 uses
 - audit-logging: Internal tests only
-- 4 more crates: Created but not integrated
+- gpu-info: DEPRECATED - Only rbee-hive uses it (moved to `rbee-hive-crates/device-detection`)
+- 3 more crates: Created but not integrated
 
 **Solution:** Delete/merge unused crates
 

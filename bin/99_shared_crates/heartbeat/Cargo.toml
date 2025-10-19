@@ -1,0 +1,18 @@
+# TEAM-135: Created by TEAM-135 (scaffolding)
+# NOTE: Moved to shared-crates because BOTH workers AND hives send heartbeats
+
+[package]
+name = "rbee-heartbeat"
+version = "0.1.0"
+edition = "2021"
+license = "GPL-3.0-or-later"
+
+[lib]
+name = "rbee_heartbeat"
+path = "src/lib.rs"
+
+[dependencies]
+# Add dependencies as needed
+
+[dev-dependencies]
+# Add dev dependencies as needed

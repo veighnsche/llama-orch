@@ -1,0 +1,20 @@
+# TEAM-135: Created by TEAM-135 (scaffolding)
+
+[package]
+name = "queen-rbee-hive-lifecycle"
+version = "0.1.0"
+edition = "2021"
+license = "GPL-3.0-or-later"
+
+[lib]
+name = "queen_rbee_hive_lifecycle"
+path = "src/lib.rs"
+
+[dependencies]
+# Shared lifecycle management
+daemon-lifecycle = { path = "../../99_shared_crates/daemon-lifecycle" }
+
+# Add other dependencies as needed
+
+[dev-dependencies]
+# Add dev dependencies as needed

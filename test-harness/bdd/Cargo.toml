@@ -38,17 +38,17 @@ shellexpand = "3.1"  # TEAM-102: Path expansion for tilde and environment variab
 rand = "0.8"  # TEAM-125: Random fuzzing inputs for validation tests
 
 # TEAM-063: Real product dependencies for integration testing
-rbee-hive = { path = "../../bin/rbee-hive" }
-llm-worker-rbee = { path = "../../bin/llm-worker-rbee" }
-hive-core = { path = "../../bin/shared-crates/hive-core" }
+rbee-hive = { path = "../../bin/20_rbee_hive" }
+llm-worker-rbee = { path = "../../bin/30_llm_worker_rbee" }
+rbee-types = { path = "../../bin/99_shared_crates/rbee-types" }
 # TEAM-079: Added model-catalog for testing
 # TEAM-086: Fixed path - model-catalog moved to shared-crates
-model-catalog = { path = "../../bin/shared-crates/model-catalog" }
+model-catalog = { path = "../../bin/99_shared_crates/model-catalog" }
 # TEAM-085: Narration verification
-observability-narration-core = { path = "../../bin/shared-crates/narration-core", features = ["test-support"] }
+observability-narration-core = { path = "../../bin/99_shared_crates/narration-core", features = ["test-support"] }
 # TEAM-079: queen-rbee temporarily disabled due to SQLite version conflict
 # TEAM-080: Re-enabled after upgrading queen-rbee rusqlite to 0.32 (libsqlite3-sys 0.28)
-queen-rbee = { path = "../../bin/queen-rbee" }
+queen-rbee = { path = "../../bin/10_queen_rbee" }
 
 [dev-dependencies]
 insta = { workspace = true }

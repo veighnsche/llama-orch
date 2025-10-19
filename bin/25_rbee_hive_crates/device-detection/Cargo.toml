@@ -1,0 +1,27 @@
+# TEAM-135: Created by TEAM-135 (scaffolding)
+# NOTE: Implementation migrated from shared-crates/gpu-info (2025-10-19)
+
+[package]
+name = "rbee-hive-device-detection"
+version = "0.1.0"
+edition = "2021"
+license = "GPL-3.0-or-later"
+
+[lib]
+name = "rbee_hive_device_detection"
+path = "src/lib.rs"
+
+[features]
+default = []
+cuda-runtime = []  # Enable CUDA runtime API detection (requires CUDA)
+
+[dependencies]
+thiserror = "1.0"
+tracing = "0.1"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1.0"
+which = "7.0"
+
+[dev-dependencies]
+tempfile = "3.8"
+proptest = "1.0"

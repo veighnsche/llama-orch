@@ -8,93 +8,92 @@ members = [
     # MAIN SERVICES — Core Binaries (TEAM-135: New crate-based architecture)
     # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
     
-    "bin/rbee-keeper",            # CLI tool for managing rbee infrastructure
-    "bin/rbee-keeper/bdd",        # BDD integration tests
-    "bin/queen-rbee",             # Daemon for managing rbee-hive instances
-    "bin/queen-rbee/bdd",         # BDD integration tests
-    "bin/rbee-hive",              # Daemon for managing LLM worker instances (NO CLI!)
-    "bin/rbee-hive/bdd",          # BDD integration tests
-    "bin/llm-worker-rbee",        # LLM inference worker daemon
-    "bin/llm-worker-rbee/bdd",    # BDD integration tests
+    "bin/00_rbee_keeper",         # CLI tool for managing rbee infrastructure
+    "bin/00_rbee_keeper/bdd",     # BDD integration tests
+    "bin/10_queen_rbee",          # Daemon for managing rbee-hive instances
+    "bin/10_queen_rbee/bdd",      # BDD integration tests
+    "bin/20_rbee_hive",           # Daemon for managing LLM worker instances
+    "bin/20_rbee_hive/bdd",       # BDD integration tests
+    "bin/30_llm_worker_rbee",     # LLM inference worker daemon
+    "bin/30_llm_worker_rbee/bdd", # BDD integration tests
 
     # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
     # BINARY-SPECIFIC CRATES (TEAM-135: New architecture)
     # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
     
     # rbee-keeper crates
-    "bin/rbee-keeper-crates/config",
-    "bin/rbee-keeper-crates/config/bdd",
-    "bin/rbee-keeper-crates/cli",
-    "bin/rbee-keeper-crates/cli/bdd",
-    "bin/rbee-keeper-crates/commands",
-    "bin/rbee-keeper-crates/commands/bdd",
+    "bin/05_rbee_keeper_crates/config",
+    "bin/05_rbee_keeper_crates/config/bdd",
+    "bin/05_rbee_keeper_crates/cli",
+    "bin/05_rbee_keeper_crates/cli/bdd",
+    "bin/05_rbee_keeper_crates/commands",
+    "bin/05_rbee_keeper_crates/commands/bdd",
+    "bin/05_rbee_keeper_crates/queen-lifecycle",
+    "bin/05_rbee_keeper_crates/queen-lifecycle/bdd",
     
     # queen-rbee crates
-    "bin/queen-rbee-crates/ssh-client",
-    "bin/queen-rbee-crates/ssh-client/bdd",
-    "bin/queen-rbee-crates/hive-registry",
-    "bin/queen-rbee-crates/hive-registry/bdd",
-    "bin/queen-rbee-crates/worker-registry",
-    "bin/queen-rbee-crates/worker-registry/bdd",
-    "bin/queen-rbee-crates/hive-lifecycle",
-    "bin/queen-rbee-crates/hive-lifecycle/bdd",
-    "bin/queen-rbee-crates/http-server",
-    "bin/queen-rbee-crates/http-server/bdd",
-    "bin/queen-rbee-crates/preflight",
-    "bin/queen-rbee-crates/preflight/bdd",
+    "bin/15_queen_rbee_crates/ssh-client",
+    "bin/15_queen_rbee_crates/ssh-client/bdd",
+    "bin/15_queen_rbee_crates/hive-registry",
+    "bin/15_queen_rbee_crates/hive-registry/bdd",
+    "bin/15_queen_rbee_crates/worker-registry",
+    "bin/15_queen_rbee_crates/worker-registry/bdd",
+    "bin/15_queen_rbee_crates/hive-lifecycle",
+    "bin/15_queen_rbee_crates/hive-lifecycle/bdd",
+    "bin/15_queen_rbee_crates/http-server",
+    "bin/15_queen_rbee_crates/http-server/bdd",
+    "bin/15_queen_rbee_crates/preflight",
+    "bin/15_queen_rbee_crates/preflight/bdd",
     
     # rbee-hive crates (NO CLI!)
-    "bin/rbee-hive-crates/worker-lifecycle",
-    "bin/rbee-hive-crates/worker-lifecycle/bdd",
-    "bin/rbee-hive-crates/worker-registry",
-    "bin/rbee-hive-crates/worker-registry/bdd",
-    "bin/rbee-hive-crates/model-catalog",
-    "bin/rbee-hive-crates/model-catalog/bdd",
-    "bin/rbee-hive-crates/model-provisioner",
-    "bin/rbee-hive-crates/model-provisioner/bdd",
-    "bin/rbee-hive-crates/monitor",
-    "bin/rbee-hive-crates/monitor/bdd",
-    "bin/rbee-hive-crates/http-server",
-    "bin/rbee-hive-crates/http-server/bdd",
-    "bin/rbee-hive-crates/download-tracker",
-    "bin/rbee-hive-crates/download-tracker/bdd",
-    "bin/rbee-hive-crates/device-detection",
-    "bin/rbee-hive-crates/device-detection/bdd",
+    "bin/25_rbee_hive_crates/worker-lifecycle",
+    "bin/25_rbee_hive_crates/worker-lifecycle/bdd",
+    "bin/25_rbee_hive_crates/worker-registry",
+    "bin/25_rbee_hive_crates/worker-registry/bdd",
+    "bin/25_rbee_hive_crates/model-catalog",
+    "bin/25_rbee_hive_crates/model-catalog/bdd",
+    "bin/25_rbee_hive_crates/model-provisioner",
+    "bin/25_rbee_hive_crates/model-provisioner/bdd",
+    "bin/25_rbee_hive_crates/monitor",
+    "bin/25_rbee_hive_crates/monitor/bdd",
+    "bin/25_rbee_hive_crates/http-server",
+    "bin/25_rbee_hive_crates/http-server/bdd",
+    "bin/25_rbee_hive_crates/download-tracker",
+    "bin/25_rbee_hive_crates/download-tracker/bdd",
+    "bin/25_rbee_hive_crates/device-detection",
+    "bin/25_rbee_hive_crates/device-detection/bdd",
     
     # worker-rbee crates
-    "bin/worker-rbee-crates/http-server",
-    "bin/worker-rbee-crates/http-server/bdd",
-    "bin/worker-rbee-crates/heartbeat",
-    "bin/worker-rbee-crates/heartbeat/bdd",
+    "bin/39_worker_rbee_crates/http-server",
+    "bin/39_worker_rbee_crates/http-server/bdd",
 
     # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
     # SHARED CRATES — Cross-Service Utilities (TEAM-135: Added new shared crates)
     # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
     
     # TEAM-135: New shared crates for consolidation
-    "bin/shared-crates/daemon-lifecycle",
-    "bin/shared-crates/daemon-lifecycle/bdd",
-    "bin/shared-crates/rbee-http-client",
-    "bin/shared-crates/rbee-http-client/bdd",
-    "bin/shared-crates/rbee-types",
-    "bin/shared-crates/rbee-types/bdd",
+    "bin/99_shared_crates/daemon-lifecycle",
+    "bin/99_shared_crates/daemon-lifecycle/bdd",
+    "bin/99_shared_crates/rbee-http-client",
+    "bin/99_shared_crates/rbee-http-client/bdd",
+    "bin/99_shared_crates/rbee-types",
+    "bin/99_shared_crates/rbee-types/bdd",
+    "bin/99_shared_crates/heartbeat",           # MOVED from worker-rbee-crates (used by workers AND hives)
     
     # Existing shared crates
-    "bin/shared-crates/audit-logging",
-    "bin/shared-crates/audit-logging/bdd",
-    "bin/shared-crates/auth-min",
-    "bin/shared-crates/deadline-propagation",
-    "bin/shared-crates/gpu-info",
-    "bin/shared-crates/input-validation",
-    "bin/shared-crates/input-validation/bdd",
-    "bin/shared-crates/jwt-guardian",
-    "bin/shared-crates/narration-core",
-    "bin/shared-crates/narration-core/bdd",
-    "bin/shared-crates/narration-macros",
-    "bin/shared-crates/hive-core",
-    "bin/shared-crates/secrets-management",
-    "bin/shared-crates/secrets-management/bdd",
-    "bin/shared-crates/model-catalog",
+    "bin/99_shared_crates/audit-logging",
+    "bin/99_shared_crates/audit-logging/bdd",
+    "bin/99_shared_crates/auth-min",
+    "bin/99_shared_crates/deadline-propagation",
+    "bin/99_shared_crates/input-validation",
+    "bin/99_shared_crates/input-validation/bdd",
+    "bin/99_shared_crates/jwt-guardian",
+    "bin/99_shared_crates/narration-core",
+    "bin/99_shared_crates/narration-core/bdd",
+    "bin/99_shared_crates/narration-macros",
+    "bin/99_shared_crates/secrets-management",
+    "bin/99_shared_crates/secrets-management/bdd",
+    "bin/99_shared_crates/model-catalog",
 
     # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
     # CONSUMER LIBRARIES — External SDKs
