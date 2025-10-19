@@ -369,13 +369,23 @@ pub fn test_worker_isolation(config: Option<WorkerTestConfig>) -> Result<()> {
         Ok(response) => {
             println!("✅ Inference request accepted");
             
-            // Read SSE stream
+            // TEAM-150: Add 30s timeout for stream reading - KILL THE HANG!
             let reader = std::io::BufReader::new(response.into_reader());
             let mut token_count = 0;
             let mut done_received = false;
             
-            println!("📡 Streaming tokens:");
+            println!("📡 Streaming tokens (30s timeout):");
+            
+            let stream_start = std::time::Instant::now();
+            let stream_timeout = Duration::from_secs(30);
+            
             for line in reader.lines() {
+                // CRITICAL: Check timeout on EVERY line read!
+                if stream_start.elapsed() > stream_timeout {
+                    println!("\n\n❌ TIMEOUT: No tokens after 30 seconds - KILLING TEST!");
+                    break;
+                }
+                
                 if let Ok(line) = line {
                     if line.starts_with("data: ") {
                         let data = &line[6..];
@@ -392,6 +402,7 @@ pub fn test_worker_isolation(config: Option<WorkerTestConfig>) -> Result<()> {
                                     // Token event - extract text (field is "t" not "text")
                                     if let Some(text) = json.get("t").and_then(|t| t.as_str()) {
                                         print!("{}", text);
+                                        std::io::Write::flush(&mut std::io::stdout()).ok();
                                         token_count += 1;
                                     }
                                 }

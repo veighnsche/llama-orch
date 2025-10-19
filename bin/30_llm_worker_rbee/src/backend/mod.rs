@@ -13,5 +13,8 @@ mod inference;
 pub mod models;
 mod sampling;
 mod tokenizer_loader;
+// TEAM-149: Real-time streaming modules
+pub mod request_queue;
+pub mod generation_engine;
 
 pub use inference::CandleInferenceBackend;

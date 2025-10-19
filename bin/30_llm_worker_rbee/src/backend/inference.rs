@@ -30,10 +30,11 @@ use tokenizers::Tokenizer;
 /// instead of building layers from scratch.
 /// TEAM-015: Refactored into focused modules
 /// TEAM-017: Changed to enum pattern for Candle idiomaticity
+/// TEAM-149: Made fields pub(crate) for generation_engine access
 pub struct CandleInferenceBackend {
-    model: Model,
-    tokenizer: Tokenizer,
-    device: Device,
+    pub(crate) model: Model,
+    pub(crate) tokenizer: Tokenizer,
+    pub(crate) device: Device,
     model_size_bytes: u64,
 }
 
@@ -395,30 +396,6 @@ impl InferenceBackend for CandleInferenceBackend {
 
         Ok(InferenceResult::max_tokens(generated_text, generated_tokens, config.seed, duration_ms))
     }
-
-    /// TEAM-148: Execute inference with REAL streaming (tokens yielded as generated)
-    ///
-    /// For now, this uses the blocking execute() and streams the result.
-    /// True async streaming requires refactoring the model to be Send or using spawn_local.
-    async fn execute_stream(
-        &mut self,
-        prompt: &str,
-        config: &SamplingConfig,
-    ) -> Result<
-        std::pin::Pin<Box<dyn futures::Stream<Item = Result<String, Box<dyn std::error::Error + Send + Sync>>> + Send>>,
-        Box<dyn std::error::Error + Send + Sync>,
-    > {
-        // TEAM-148: For now, fall back to execute() and stream the tokens
-        // This still blocks but at least returns quickly once done
-        let result = self.execute(prompt, config).await?;
-        let tokens = result.tokens;
-        
-        // TEAM-148: Return stream of tokens
-        Ok(Box::pin(futures::stream::iter(
-            tokens.into_iter().map(Ok),
-        )))
-    }
-
 
     /// Cancel inference (not implemented for single-threaded)
     async fn cancel(&self, _job_id: &str) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {

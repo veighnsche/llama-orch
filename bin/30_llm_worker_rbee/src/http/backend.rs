@@ -12,8 +12,6 @@
 use crate::common::{InferenceResult, SamplingConfig};
 use crate::http::loading::LoadingEvent;
 use async_trait::async_trait;
-use futures::Stream;
-use std::pin::Pin;
 use std::sync::Arc;
 use tokio::sync::{broadcast, Mutex};
 
@@ -30,34 +28,13 @@ pub trait InferenceBackend: Send + Sync {
     /// Returns the complete inference result including tokens and stop reason.
     /// TEAM-017: Changed to &mut self for stateful model backends
     /// 
-    /// NOTE: This is the OLD blocking API - use execute_stream for real-time streaming
+    /// TEAM-149: This is now ONLY used for non-streaming requests (if any).
+    /// Real-time streaming uses the generation engine + request queue pattern.
     async fn execute(
         &mut self,
         prompt: &str,
         config: &SamplingConfig,
     ) -> Result<InferenceResult, Box<dyn std::error::Error + Send + Sync>>;
-
-    /// TEAM-147: Execute inference with REAL streaming (tokens yielded as generated)
-    ///
-    /// Returns a stream that yields tokens as they're generated, not after completion.
-    /// Each item is a Result<String, Error> where String is the token text.
-    ///
-    /// Default implementation falls back to execute() and streams pre-computed tokens.
-    async fn execute_stream(
-        &mut self,
-        prompt: &str,
-        config: &SamplingConfig,
-    ) -> Result<
-        Pin<Box<dyn Stream<Item = Result<String, Box<dyn std::error::Error + Send + Sync>>> + Send>>,
-        Box<dyn std::error::Error + Send + Sync>,
-    > {
-        // Default: Fall back to blocking execute and stream the result
-        let result = self.execute(prompt, config).await?;
-        let tokens = result.tokens;
-        Ok(Box::pin(futures::stream::iter(
-            tokens.into_iter().map(Ok),
-        )))
-    }
 
     /// Cancel an in-flight inference by job ID
     ///

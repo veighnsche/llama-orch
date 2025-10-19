@@ -14,7 +14,7 @@
 
 use clap::Parser;
 use llm_worker_rbee::{
-    backend::CandleInferenceBackend,
+    backend::{CandleInferenceBackend, generation_engine::GenerationEngine, request_queue::RequestQueue},
     create_router,
     narration::{
         ACTION_MODEL_LOAD, ACTION_STARTUP, ACTOR_LLM_WORKER_RBEE,
@@ -24,7 +24,7 @@ use llm_worker_rbee::{
 };
 use observability_narration_core::{narrate, NarrationFields};
 use std::net::SocketAddr;
-use std::sync::Arc;
+use std::sync::{Arc, Mutex};
 
 /// CLI arguments for worker daemon
 ///
@@ -186,7 +186,31 @@ async fn main() -> anyhow::Result<()> {
     };
 
     // ============================================================
-    // STEP 2: Start heartbeat task
+    // STEP 2: Create request queue and start generation engine
+    // ============================================================
+    // TEAM-149: Real-time streaming architecture
+    // - Request queue decouples HTTP from generation
+    // - Generation engine runs in spawn_blocking
+    // - Tokens flow through channels to SSE streams
+    tracing::info!("Creating request queue and generation engine");
+    
+    // Wrap backend in Arc<Mutex> for sharing between engine and warmup
+    let backend = Arc::new(Mutex::new(backend));
+    
+    // Create request queue
+    let (request_queue, request_rx) = RequestQueue::new();
+    let request_queue = Arc::new(request_queue);
+    
+    // Start generation engine in background
+    let generation_engine = GenerationEngine::new(
+        Arc::clone(&backend),
+        request_rx,
+    );
+    generation_engine.start();
+    tracing::info!("Generation engine started");
+
+    // ============================================================
+    // STEP 3: Start heartbeat task
     // ============================================================
     // Send periodic heartbeats to rbee-hive to indicate worker is alive
     tracing::info!("Starting heartbeat task");
@@ -199,12 +223,9 @@ async fn main() -> anyhow::Result<()> {
     tracing::info!("Heartbeat task started (30s interval)");
 
     // ============================================================
-    // STEP 3: Start HTTP server (runs forever)
+    // STEP 4: Start HTTP server (runs forever)
     // ============================================================
     tracing::info!("Worker ready, starting HTTP server");
-
-    // TEAM-017: Wrap backend in Mutex for stateful inference
-    let backend = Arc::new(tokio::sync::Mutex::new(backend));
 
     // Security: Enforce proper auth based on mode
     let (addr, expected_token) = if args.local_mode {
@@ -226,12 +247,11 @@ async fn main() -> anyhow::Result<()> {
         (SocketAddr::from(([0, 0, 0, 0], args.port)), token)
     };
 
-    // Create router with our backend (worker-http)
-    // This wires up:
-    // - GET /health -> backend.is_healthy()
-    // - POST /execute -> backend.execute()
+    // TEAM-149: Create router with request queue (not backend directly)
+    // HTTP handlers add requests to queue and return immediately
+    // Generation happens in spawn_blocking, tokens stream in real-time
     // TEAM-102: Added expected_token for authentication
-    let router = create_router(backend, expected_token);
+    let router = create_router(request_queue, expected_token);
 
     // Start HTTP server (worker-http)
     let server = HttpServer::new(addr, router).await?;

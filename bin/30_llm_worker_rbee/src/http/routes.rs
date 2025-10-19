@@ -2,11 +2,12 @@
 //!
 //! Modified by: TEAM-017 (updated to use Mutex-wrapped backend)
 //! Modified by: TEAM-035 (added loading progress, renamed inference endpoint)
+//! Modified by: TEAM-149 (real-time streaming with request queue)
 //!
 //! # Endpoints
 //! - `GET /health` - Health check endpoint
 //! - `GET /v1/ready` - Worker readiness check - TEAM-045
-//! - `POST /v1/inference` - Execute inference request (SSE) - TEAM-035
+//! - `POST /v1/inference` - Execute inference request (SSE) - TEAM-035, TEAM-149
 //! - `GET /v1/loading/progress` - Model loading progress (SSE) - TEAM-035
 //!
 //! # Middleware
@@ -18,23 +19,23 @@
 //! - WORK-3040: Correlation ID middleware
 //! - `SSE_IMPLEMENTATION_PLAN.md` Phase 2: Loading progress
 //! - `SSE_IMPLEMENTATION_PLAN.md` Phase 3: Inference streaming
+//! - `STREAMING_REFACTOR_PLAN.md`: Real-time token streaming
 
-use crate::http::{
-    backend::InferenceBackend, execute, health, loading, middleware::auth_middleware, ready,
-};
+use crate::backend::request_queue::RequestQueue;
+use crate::http::{execute, middleware::auth_middleware};
 use axum::{
     middleware,
     routing::{get, post},
-    Router,
+    Json, Router,
 };
 use observability_narration_core::axum::correlation_middleware;
+use serde::Serialize;
 use std::sync::Arc;
-use tokio::sync::Mutex;
 
 /// Create HTTP router with all endpoints and middleware
 ///
 /// # Arguments
-/// * `backend` - Platform-specific inference backend (Mutex-wrapped)
+/// * `queue` - Request queue for inference requests (TEAM-149)
 /// * `expected_token` - API token for authentication (TEAM-102)
 ///
 /// # Returns
@@ -44,19 +45,31 @@ use tokio::sync::Mutex;
 /// TEAM-035: Added /v1/loading/progress and renamed /execute to /v1/inference
 /// TEAM-045: Added /v1/ready endpoint
 /// TEAM-102: Added authentication middleware with `expected_token`
-pub fn create_router<B: InferenceBackend + 'static>(
-    backend: Arc<Mutex<B>>,
-    expected_token: String, // TEAM-102: API token for authentication
+/// TEAM-149: Changed to accept RequestQueue instead of backend
+pub fn create_router(
+    queue: Arc<RequestQueue>,
+    expected_token: String,
 ) -> Router {
-    // Health endpoint (public - no auth required)
+    // TEAM-149: Simple health endpoint (public, no auth)
+    // Returns basic status without backend access
+    #[derive(Serialize)]
+    struct HealthResponse {
+        status: String,
+    }
+    
+    async fn handle_health() -> Json<HealthResponse> {
+        Json(HealthResponse {
+            status: "healthy".to_string(),
+        })
+    }
+    
+    // Public routes (no auth)
     let public_routes = Router::new()
-        .route("/health", get(health::handle_health::<B>));
-
-    // Worker endpoints
+        .route("/health", get(handle_health));
+    
+    // Worker routes (protected)
     let worker_routes = Router::new()
-        .route("/v1/ready", get(ready::handle_ready::<B>))
-        .route("/v1/inference", post(execute::handle_execute::<B>))
-        .route("/v1/loading/progress", get(loading::handle_loading_progress::<B>));
+        .route("/v1/inference", post(execute::handle_execute));
 
     // Apply auth middleware if token is provided (network mode)
     // Empty token = local mode (no auth, but main.rs ensures 127.0.0.1 binding)
@@ -67,11 +80,11 @@ pub fn create_router<B: InferenceBackend + 'static>(
         worker_routes.layer(middleware::from_fn_with_state(auth_state, auth_middleware))
     };
 
-    // Merge public and protected routes, apply correlation middleware to all
+    // Merge public and protected routes, apply correlation middleware
     public_routes
         .merge(protected_routes)
         .layer(middleware::from_fn(correlation_middleware))
-        .with_state(backend)
+        .with_state(queue)
 }
 
 #[cfg(test)]
