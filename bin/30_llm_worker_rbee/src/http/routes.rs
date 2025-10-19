@@ -48,23 +48,26 @@ pub fn create_router<B: InferenceBackend + 'static>(
     backend: Arc<Mutex<B>>,
     expected_token: String, // TEAM-102: API token for authentication
 ) -> Router {
-    // TEAM-102: Create auth state for authentication middleware
-    let auth_state = Arc::new(crate::http::middleware::AuthState { expected_token });
-
-    // TEAM-102: Split routes into public and protected
+    // Health endpoint (public - no auth required)
     let public_routes = Router::new()
-        // Health endpoint (public - no auth required)
         .route("/health", get(health::handle_health::<B>));
 
-    let protected_routes = Router::new()
-        // Worker endpoints (protected)
+    // Worker endpoints
+    let worker_routes = Router::new()
         .route("/v1/ready", get(ready::handle_ready::<B>))
         .route("/v1/inference", post(execute::handle_execute::<B>))
-        .route("/v1/loading/progress", get(loading::handle_loading_progress::<B>))
-        // TEAM-102: Apply authentication middleware to all protected routes
-        .layer(middleware::from_fn_with_state(auth_state, auth_middleware));
+        .route("/v1/loading/progress", get(loading::handle_loading_progress::<B>));
 
-    // TEAM-102: Merge public and protected routes, apply correlation middleware to all
+    // Apply auth middleware if token is provided (network mode)
+    // Empty token = local mode (no auth, but main.rs ensures 127.0.0.1 binding)
+    let protected_routes = if expected_token.is_empty() {
+        worker_routes
+    } else {
+        let auth_state = Arc::new(crate::http::middleware::AuthState { expected_token });
+        worker_routes.layer(middleware::from_fn_with_state(auth_state, auth_middleware))
+    };
+
+    // Merge public and protected routes, apply correlation middleware to all
     public_routes
         .merge(protected_routes)
         .layer(middleware::from_fn(correlation_middleware))

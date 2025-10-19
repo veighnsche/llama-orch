@@ -11,7 +11,7 @@
 use anyhow::Result;
 use clap::Parser;
 use llm_worker_rbee::device::{init_cpu_device, verify_device};
-use llm_worker_rbee::{backend::CandleInferenceBackend, callback_ready, create_router, HttpServer};
+use llm_worker_rbee::{backend::CandleInferenceBackend, create_router, HttpServer};
 use std::net::SocketAddr;
 use std::sync::Arc;
 use tokio::sync::Mutex;
@@ -33,9 +33,9 @@ struct Args {
     #[arg(long)]
     port: u16,
 
-    /// Pool manager callback URL - where to report ready status
+    /// Hive URL - where to send heartbeats
     #[arg(long)]
-    callback_url: String,
+    hive_url: String,
 }
 
 #[tokio::main(flavor = "current_thread")]
@@ -71,25 +71,16 @@ async fn main() -> Result<()> {
     tracing::info!("Model loaded successfully");
 
     // ============================================================
-    // STEP 3: Call back to pool-managerd (worker ready)
+    // STEP 3: Start heartbeat task
     // ============================================================
-    // TEAM-095: Fixed callback_ready signature to match TEAM-092 update
-    if args.callback_url.contains("localhost:9999") {
-        tracing::info!("Test mode: skipping pool manager callback");
-    } else {
-        callback_ready(
-            &args.callback_url,
-            &args.worker_id,
-            &args.model, // model_ref
-            "cpu",       // backend
-            0,           // device (CPU = 0)
-            backend.memory_bytes(),
-            args.port,
-        )
-        .await?;
-
-        tracing::info!("Callback sent to pool-managerd");
-    }
+    tracing::info!("Starting heartbeat task");
+    
+    let heartbeat_config = llm_worker_rbee::heartbeat::HeartbeatConfig::new(
+        args.worker_id.clone(),
+        args.hive_url.clone(),
+    );
+    let _heartbeat_handle = llm_worker_rbee::heartbeat::start_heartbeat_task(heartbeat_config);
+    tracing::info!("Heartbeat task started (30s interval)");
 
     // ============================================================
     // STEP 4: Start HTTP server (runs forever)

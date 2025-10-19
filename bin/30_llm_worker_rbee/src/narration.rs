@@ -75,9 +75,6 @@ pub const ACTION_TOKEN_GENERATE: &str = "token_generate";
 /// Cache reset
 pub const ACTION_CACHE_RESET: &str = "cache_reset";
 
-/// Pool manager callback
-pub const ACTION_CALLBACK_READY: &str = "callback_ready";
-
 /// Error occurred
 pub const ACTION_ERROR: &str = "error";
 
@@ -101,12 +98,6 @@ pub const ACTION_GGUF_VOCAB_SIZE_DERIVED: &str = "gguf_vocab_size_derived"; // T
 pub const ACTION_GGUF_LOAD_WEIGHTS: &str = "gguf_load_weights";
 pub const ACTION_GGUF_WEIGHTS_FAILED: &str = "gguf_weights_failed";
 pub const ACTION_GGUF_LOAD_COMPLETE: &str = "gguf_load_complete";
-
-/// Callback error
-pub const ACTION_CALLBACK_ERROR: &str = "callback_error";
-
-/// Test mode
-pub const ACTION_TEST_MODE: &str = "test_mode";
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 // TEAM-039: Dual-output narration wrapper

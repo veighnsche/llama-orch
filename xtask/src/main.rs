@@ -50,6 +50,29 @@ fn main() -> Result<()> {
         }
         Cmd::BddProgress { compare } => handle_bdd_progress(compare)?,
         Cmd::BddStubs { file, min_stubs } => handle_bdd_stubs(file, min_stubs)?,
+        Cmd::WorkerTest {
+            worker_id,
+            model,
+            backend,
+            device,
+            port,
+            hive_port,
+            timeout,
+        } => {
+            let mut config = tasks::worker::WorkerTestConfig::default();
+            if let Some(id) = worker_id {
+                config.worker_id = id;
+            }
+            if let Some(path) = model {
+                config.model_path = path;
+            }
+            config.backend = backend;
+            config.device = device;
+            config.port = port;
+            config.hive_port = hive_port;
+            config.timeout_secs = timeout;
+            tasks::worker::test_worker_isolation(Some(config))?
+        }
     }
     Ok(())
 }

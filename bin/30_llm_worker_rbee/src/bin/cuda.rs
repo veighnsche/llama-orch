@@ -12,7 +12,7 @@
 use anyhow::Result;
 use clap::Parser;
 use llm_worker_rbee::device::{init_cuda_device, verify_device};
-use llm_worker_rbee::{backend::CandleInferenceBackend, callback_ready, create_router, HttpServer};
+use llm_worker_rbee::{backend::CandleInferenceBackend, create_router, HttpServer};
 use std::net::SocketAddr;
 use std::sync::Arc;
 use tokio::sync::Mutex;
@@ -34,9 +34,9 @@ struct Args {
     #[arg(long)]
     port: u16,
 
-    /// Pool manager callback URL - where to report ready status
+    /// Hive URL - where to send heartbeats
     #[arg(long)]
-    callback_url: String,
+    hive_url: String,
 
     /// CUDA device ID (default: 0)
     #[arg(long, default_value = "0")]
@@ -84,16 +84,16 @@ async fn main() -> Result<()> {
     tracing::info!("GPU warmup complete - ready for inference");
 
     // ============================================================
-    // STEP 3: Call back to pool-managerd (worker ready)
+    // STEP 3: Start heartbeat task
     // ============================================================
-    if args.callback_url.contains("localhost:9999") {
-        tracing::info!("Test mode: skipping pool manager callback");
-    } else {
-        callback_ready(&args.callback_url, &args.worker_id, backend.memory_bytes(), args.port)
-            .await?;
-
-        tracing::info!("Callback sent to pool-managerd");
-    }
+    tracing::info!("Starting heartbeat task");
+    
+    let heartbeat_config = llm_worker_rbee::heartbeat::HeartbeatConfig::new(
+        args.worker_id.clone(),
+        args.hive_url.clone(),
+    );
+    let _heartbeat_handle = llm_worker_rbee::heartbeat::start_heartbeat_task(heartbeat_config);
+    tracing::info!("Heartbeat task started (30s interval)");
 
     // ============================================================
     // STEP 4: Start HTTP server (runs forever)

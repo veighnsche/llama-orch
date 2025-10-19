@@ -117,4 +117,28 @@ pub enum Cmd {
         #[arg(long, default_value = "1")]
         min_stubs: usize,
     },
+    #[command(name = "worker:test")]
+    WorkerTest {
+        /// Worker ID (default: auto-generated UUID)
+        #[arg(long)]
+        worker_id: Option<String>,
+        /// Model path (default: ../../.test-models/tinyllama/tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf)
+        #[arg(long)]
+        model: Option<PathBuf>,
+        /// Backend (cpu, cuda, metal)
+        #[arg(long, default_value = "cpu")]
+        backend: String,
+        /// Device ID
+        #[arg(long, default_value = "0")]
+        device: u32,
+        /// Worker port
+        #[arg(long, default_value = "18081")]
+        port: u16,
+        /// Mock hive port
+        #[arg(long, default_value = "19200")]
+        hive_port: u16,
+        /// Timeout in seconds
+        #[arg(long, default_value = "30")]
+        timeout: u64,
+    },
 }

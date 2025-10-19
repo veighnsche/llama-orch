@@ -72,7 +72,7 @@ cargo build --release --features metal --bin llorch-metal-candled
   --worker-id test-worker-001 \
   --model /path/to/llama-2-7b/ \
   --port 8080 \
-  --callback-url http://localhost:9999 \
+  --hive-url http://localhost:8600 \
   --metal-device 0
 ```
 
@@ -80,25 +80,23 @@ cargo build --release --features metal --bin llorch-metal-candled
 
 | Argument | Required | Default | Description |
 |----------|----------|---------|-------------|
-| `--worker-id` | ✅ | - | Worker UUID (assigned by pool-managerd) |
+| `--worker-id` | ✅ | - | Worker UUID (assigned by rbee-hive) |
 | `--model` | ✅ | - | Path to model directory (GGUF or SafeTensors) |
 | `--port` | ✅ | - | HTTP server port |
-| `--callback-url` | ✅ | - | Pool manager callback URL |
+| `--hive-url` | ✅ | - | Hive URL for heartbeats |
 | `--metal-device` | ❌ | 0 | Metal device ID (usually 0) |
 
 ### Test Mode
 
-To run without pool-managerd callback:
+To run standalone:
 
 ```bash
 ./target/release/llorch-metal-candled \
   --worker-id test-worker \
   --model /path/to/model/ \
   --port 8080 \
-  --callback-url http://localhost:9999
+  --hive-url http://localhost:8600
 ```
-
-The worker will skip the callback if URL contains `localhost:9999`.
 
 ---
 
@@ -218,7 +216,7 @@ RUST_LOG=debug ./target/release/llorch-metal-candled \
   --worker-id test \
   --model /path/to/model \
   --port 8080 \
-  --callback-url http://localhost:9999
+  --hive-url http://localhost:8600
 ```
 
 ---

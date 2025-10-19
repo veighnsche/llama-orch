@@ -15,9 +15,9 @@
 use clap::Parser;
 use llm_worker_rbee::{
     backend::CandleInferenceBackend,
-    callback_ready, create_router,
+    create_router,
     narration::{
-        ACTION_CALLBACK_READY, ACTION_MODEL_LOAD, ACTION_STARTUP, ACTOR_LLM_WORKER_RBEE,
+        ACTION_MODEL_LOAD, ACTION_STARTUP, ACTOR_LLM_WORKER_RBEE,
         ACTOR_MODEL_LOADER,
     },
     HttpServer,
@@ -58,9 +58,13 @@ struct Args {
     #[arg(long)]
     port: u16,
 
-    /// Pool manager callback URL - where to report ready status
+    /// Hive URL - where to send heartbeats
     #[arg(long)]
-    callback_url: String,
+    hive_url: String,
+    
+    /// Local development mode (no auth, binds to 127.0.0.1 only)
+    #[arg(long, default_value = "false")]
+    local_mode: bool,
 }
 
 /// Main entry point
@@ -74,8 +78,8 @@ struct Args {
 /// Flow:
 /// 1. Parse args (from pool-managerd)
 /// 2. Load model to memory
-/// 3. Call back to pool-managerd (worker ready)
-/// 4. Start HTTP server
+/// 3. Start HTTP server
+/// 4. Start heartbeat task
 /// 5. Run forever (until killed by pool-managerd)
 #[tokio::main(flavor = "current_thread")] // CRITICAL: Single-threaded!
 async fn main() -> anyhow::Result<()> {
@@ -177,104 +181,50 @@ async fn main() -> anyhow::Result<()> {
                 "Model loading failed"
             );
 
-            // TEAM-088: Try to callback to rbee-hive with error state
-            if !args.callback_url.contains("localhost:9999") {
-                narrate(NarrationFields {
-                    actor: ACTOR_LLM_WORKER_RBEE,
-                    action: "callback_error",
-                    target: args.callback_url.clone(),
-                    human: "Reporting error to pool-managerd".to_string(),
-                    cute: Some("Telling pool-managerd we couldn't start 😢".to_string()),
-                    worker_id: Some(args.worker_id.clone()),
-                    ..Default::default()
-                });
-
-                // TODO: Implement error callback to rbee-hive
-                // For now, just log the intent
-                tracing::warn!("Worker failed to load model, should callback error to rbee-hive");
-            }
-
             return Err(e);
         }
     };
 
     // ============================================================
-    // STEP 2: Call back to pool-managerd (worker ready)
+    // STEP 2: Start heartbeat task
     // ============================================================
-    // This tells pool-managerd:
-    // - Worker is ready to accept requests
-    // - Worker is listening on args.port
-    // - Worker has loaded X bytes of memory
-    // - Worker type and capabilities
-    if args.callback_url.contains("localhost:9999") {
-        tracing::info!("Test mode: skipping pool manager callback");
-
-        narrate(NarrationFields {
-            actor: ACTOR_LLM_WORKER_RBEE,
-            action: "test_mode",
-            target: "callback".to_string(),
-            human: "Test mode: skipping callback to pool-managerd".to_string(),
-            cute: Some("Running in test mode! No callback needed! 🧪".to_string()),
-            worker_id: Some(args.worker_id.clone()),
-            ..Default::default()
-        });
-    } else {
-        narrate(NarrationFields {
-            actor: ACTOR_LLM_WORKER_RBEE,
-            action: ACTION_CALLBACK_READY,
-            target: args.callback_url.clone(),
-            human: format!("Reporting ready to pool-managerd at {}", args.callback_url),
-            cute: Some("Waving hello to pool-managerd: 'I'm ready to work!' 👋".to_string()),
-            story: Some(format!(
-                "\"I'm ready!\" announced worker-{}. \"Great!\" replied pool-managerd.",
-                args.worker_id
-            )),
-            worker_id: Some(args.worker_id.clone()),
-            ..Default::default()
-        });
-
-        callback_ready(
-            &args.callback_url,
-            &args.worker_id,
-            &args.model_ref,
-            &args.backend,
-            args.device,
-            backend.memory_bytes(),
-            args.port,
-        )
-        .await?;
-
-        tracing::info!("Callback sent to pool-managerd");
-
-        // TEAM-115: Start heartbeat task
-        // Send periodic heartbeats to rbee-hive to indicate worker is alive
-        let heartbeat_config = llm_worker_rbee::heartbeat::HeartbeatConfig::new(
-            args.worker_id.clone(),
-            args.callback_url.clone(),
-        );
-        let _heartbeat_handle = llm_worker_rbee::heartbeat::start_heartbeat_task(heartbeat_config);
-        tracing::info!("Heartbeat task started (30s interval)");
-    }
+    // Send periodic heartbeats to rbee-hive to indicate worker is alive
+    tracing::info!("Starting heartbeat task");
+    
+    let heartbeat_config = llm_worker_rbee::heartbeat::HeartbeatConfig::new(
+        args.worker_id.clone(),
+        args.hive_url.clone(),
+    );
+    let _heartbeat_handle = llm_worker_rbee::heartbeat::start_heartbeat_task(heartbeat_config);
+    tracing::info!("Heartbeat task started (30s interval)");
 
     // ============================================================
     // STEP 3: Start HTTP server (runs forever)
     // ============================================================
     tracing::info!("Worker ready, starting HTTP server");
 
-    let addr = SocketAddr::from(([0, 0, 0, 0], args.port));
     // TEAM-017: Wrap backend in Mutex for stateful inference
     let backend = Arc::new(tokio::sync::Mutex::new(backend));
 
-    // TEAM-102: Load API token for authentication
-    // TODO: Replace with secrets-management file-based loading
-    let expected_token = std::env::var("LLORCH_API_TOKEN").unwrap_or_else(|_| {
-        tracing::info!("⚠️  LLORCH_API_TOKEN not set - using dev mode (no auth)");
-        String::new()
-    });
-
-    if !expected_token.is_empty() {
-        tracing::info!("✅ API token loaded (authentication enabled)");
-    }
+    // Security: Enforce proper auth based on mode
+    let (addr, expected_token) = if args.local_mode {
+        // LOCAL MODE: No auth, localhost only
+        let token = std::env::var("LLORCH_API_TOKEN").unwrap_or_default();
+        if !token.is_empty() {
+            anyhow::bail!("--local-mode cannot use LLORCH_API_TOKEN (conflicting config)");
+        }
+        tracing::warn!("🏠 Local mode: No authentication, binding to 127.0.0.1 only");
+        (SocketAddr::from(([127, 0, 0, 1], args.port)), String::new())
+    } else {
+        // NETWORK MODE: Auth required
+        let token = std::env::var("LLORCH_API_TOKEN")
+            .map_err(|_| anyhow::anyhow!("Network mode requires LLORCH_API_TOKEN (use --local-mode for dev)"))?;
+        if token.is_empty() {
+            anyhow::bail!("LLORCH_API_TOKEN cannot be empty in network mode");
+        }
+        tracing::info!("🌐 Network mode: Authentication enabled, binding to 0.0.0.0");
+        (SocketAddr::from(([0, 0, 0, 0], args.port)), token)
+    };
 
     // Create router with our backend (worker-http)
     // This wires up:
