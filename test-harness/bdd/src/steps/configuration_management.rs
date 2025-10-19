@@ -118,10 +118,38 @@ async fn example_config_files_exist(world: &mut World, path: String) {
 
 #[given("a config file with sensitive fields:")]
 pub async fn config_with_sensitive_fields(world: &mut World, step: &cucumber::gherkin::Step) {
-    // TEAM-100: Set config with secrets
+    // TEAM-129: Implement real sensitive field detection with comprehensive patterns
     if let Some(docstring) = &step.docstring {
         world.config_content = Some(docstring.to_string());
-        world.config_has_secrets = true;
+        
+        // Detect sensitive fields (api_token, password, secret, key, etc.)
+        let content_lower = docstring.to_lowercase();
+        let has_secrets = content_lower.contains("api_token") 
+            || content_lower.contains("password")
+            || content_lower.contains("secret")
+            || content_lower.contains("_key")
+            || content_lower.contains("token")
+            || content_lower.contains("private_key")
+            || content_lower.contains("auth")
+            || content_lower.contains("credential");
+        
+        world.config_has_secrets = has_secrets;
+        
+        // Count sensitive fields for verification
+        let sensitive_count = docstring.lines()
+            .filter(|line| {
+                let lower = line.to_lowercase();
+                lower.contains("api_token") || lower.contains("password") 
+                    || lower.contains("secret") || lower.contains("_key")
+                    || lower.contains("token") || lower.contains("private_key")
+                    || lower.contains("auth") || lower.contains("credential")
+            })
+            .count();
+        
+        tracing::info!("✅ TEAM-129: Config file with {} sensitive fields loaded (has_secrets: {})", 
+            sensitive_count, has_secrets);
+    } else {
+        tracing::warn!("⚠️ TEAM-129: No docstring provided for config with sensitive fields");
     }
 }
 

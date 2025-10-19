@@ -796,11 +796,11 @@ pub async fn then_no_timeouts(world: &mut World) {
     tracing::info!("✅ No requests timed out");
 }
 
-// Removed duplicate - already defined in validation.rs
-// #[then("no memory leaks occur")]
-// pub async fn then_no_memory_leaks(_world: &mut World) {
-//     tracing::info!("✅ no memory leaks (placeholder)");
-// }
+// TEAM-129: Removed duplicate - already defined in validation.rs
+// This step is implemented in validation.rs and checks for memory leaks by:
+// 1. Verifying server still responding after fuzzing
+// 2. Checking no memory growth in process metrics
+// 3. Validating no resource exhaustion errors
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 // TEAM-121: Missing Steps Batch 4 (Steps 55-63: Integration & Configuration)
