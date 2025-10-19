@@ -20,11 +20,11 @@ impl BddWorld {
 
     /// Check if last validation succeeded
     pub fn last_succeeded(&self) -> bool {
-        matches\!(self.last_result, Some(Ok(())))
+        matches!(self.last_result, Some(Ok(())))
     }
 
     /// Check if last validation failed
     pub fn last_failed(&self) -> bool {
-        matches\!(self.last_result, Some(Err(_)))
+        matches!(self.last_result, Some(Err(_)))
     }
 }

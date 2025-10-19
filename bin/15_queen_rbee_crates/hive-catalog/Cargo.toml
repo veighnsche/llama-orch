@@ -1,0 +1,24 @@
+# TEAM-135: Created for happy flow requirements
+
+[package]
+name = "queen-rbee-hive-catalog"
+version = "0.1.0"
+edition = "2021"
+license = "GPL-3.0-or-later"
+
+[lib]
+name = "queen_rbee_hive_catalog"
+path = "src/lib.rs"
+
+[dependencies]
+tokio = { workspace = true }
+sqlx = { version = "0.8", features = ["runtime-tokio-rustls", "sqlite"] }
+serde = { workspace = true }
+serde_json = { workspace = true }
+anyhow = { workspace = true }
+thiserror = { workspace = true }
+tracing = { workspace = true }
+rbee-types = { path = "../../99_shared_crates/rbee-types" }
+
+[dev-dependencies]
+tempfile = "3.0"

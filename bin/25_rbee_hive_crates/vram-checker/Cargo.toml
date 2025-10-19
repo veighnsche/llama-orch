@@ -1,0 +1,22 @@
+# TEAM-135: Created for happy flow requirements
+
+[package]
+name = "rbee-hive-vram-checker"
+version = "0.1.0"
+edition = "2021"
+license = "GPL-3.0-or-later"
+
+[lib]
+name = "rbee_hive_vram_checker"
+path = "src/lib.rs"
+
+[dependencies]
+tokio = { workspace = true }
+sysinfo = { workspace = true }
+anyhow = { workspace = true }
+thiserror = { workspace = true }
+tracing = { workspace = true }
+rbee-hive-device-detection = { path = "../device-detection" }
+
+[dev-dependencies]
+# Add dev dependencies as needed

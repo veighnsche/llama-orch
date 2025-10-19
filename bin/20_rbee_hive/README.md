@@ -9,6 +9,20 @@ rbee-hive is a daemon that manages multiple LLM worker instances on a single mac
 
 **CRITICAL:** This is a DAEMON ONLY binary. NO CLI functionality!
 
+## Binary Structure
+
+```
+bin/20_rbee_hive/
+├── src/
+│   ├── main.rs          (Entry point - daemon args only)
+│   ├── http_server.rs   (HTTP routes & API - IN BINARY)
+│   └── lib.rs           (Re-exports from crates)
+└── Cargo.toml
+```
+
+**IMPORTANT:** HTTP server entry point is implemented DIRECTLY in the binary,
+not as a separate crate.
+
 ## Dependencies
 
 - rbee-hive-crates/worker-lifecycle
@@ -16,9 +30,10 @@ rbee-hive is a daemon that manages multiple LLM worker instances on a single mac
 - rbee-hive-crates/model-catalog
 - rbee-hive-crates/model-provisioner
 - rbee-hive-crates/monitor
-- rbee-hive-crates/http-server
 - rbee-hive-crates/download-tracker
 - rbee-hive-crates/device-detection
+- rbee-hive-crates/vram-checker
+- rbee-hive-crates/worker-catalog
 
 ## Usage
 

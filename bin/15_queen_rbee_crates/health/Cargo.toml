@@ -1,0 +1,21 @@
+# TEAM-135: Created for happy flow requirements
+
+[package]
+name = "queen-rbee-health"
+version = "0.1.0"
+edition = "2021"
+license = "GPL-3.0-or-later"
+
+[lib]
+name = "queen_rbee_health"
+path = "src/lib.rs"
+
+[dependencies]
+tokio = { workspace = true }
+axum = { workspace = true }
+anyhow = { workspace = true }
+thiserror = { workspace = true }
+tracing = { workspace = true }
+
+[dev-dependencies]
+# Add dev dependencies as needed

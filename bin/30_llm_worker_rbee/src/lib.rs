@@ -1,14 +1,34 @@
-// TEAM-135: Created by TEAM-135 (scaffolding)
-// Purpose: llm-worker-rbee library code
-// Status: STUB - Awaiting implementation
+// TEAM-109: Audited 2025-10-18 - ✅ CLEAN - Module structure
 
-#![warn(missing_docs)]
-#![warn(clippy::all)]
-
-//! llm-worker-rbee library
+//! llm-worker-rbee - Candle-based Llama-2 inference library
 //!
-//! Core library code for llm-worker-rbee
+//! TEAM-009 rewrite: Uses `candle-transformers::models::llama::Llama` directly
+//! instead of custom layer implementations.
+//!
+//! Architecture:
+//! - `SafeTensors` model loading via `VarBuilder`
+//! - `HuggingFace` tokenizers integration
+//! - Multi-backend support (CPU, CUDA, Accelerate)
+//! - Worker integration via `InferenceBackend` trait
+//!
+//! Created by: TEAM-000 (Foundation)
+//! Modified by: TEAM-010 (Removed all deprecated modules)
+//! Modified by: TEAM-014 (Added `token_output_stream` module)
+//! Modified by: TEAM-015 (Integrated worker-common and worker-http)
+//! Modified by: TEAM-088 (added comprehensive error narration)
+//! Modified by: TEAM-115 (added heartbeat mechanism)
 
 pub mod backend;
+pub mod common;
+pub mod device;
+pub mod error;
+pub mod heartbeat; // TEAM-115: Heartbeat mechanism
+pub mod http;
+pub mod narration;
+pub mod token_output_stream;
 
-// TODO: Implement library functionality
+// Re-export commonly used types
+pub use backend::CandleInferenceBackend;
+pub use common::{callback_ready, InferenceResult, SamplingConfig, StopReason, WorkerError};
+pub use error::LlorchError;
+pub use http::{create_router, HttpServer, InferenceBackend};

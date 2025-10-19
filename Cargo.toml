@@ -24,12 +24,11 @@ members = [
     # rbee-keeper crates
     "bin/05_rbee_keeper_crates/config",
     "bin/05_rbee_keeper_crates/config/bdd",
-    "bin/05_rbee_keeper_crates/cli",
-    "bin/05_rbee_keeper_crates/cli/bdd",
     "bin/05_rbee_keeper_crates/commands",
     "bin/05_rbee_keeper_crates/commands/bdd",
     "bin/05_rbee_keeper_crates/queen-lifecycle",
     "bin/05_rbee_keeper_crates/queen-lifecycle/bdd",
+    "bin/05_rbee_keeper_crates/polling",
     
     # queen-rbee crates
     "bin/15_queen_rbee_crates/ssh-client",
@@ -40,10 +39,11 @@ members = [
     "bin/15_queen_rbee_crates/worker-registry/bdd",
     "bin/15_queen_rbee_crates/hive-lifecycle",
     "bin/15_queen_rbee_crates/hive-lifecycle/bdd",
-    "bin/15_queen_rbee_crates/http-server",
-    "bin/15_queen_rbee_crates/http-server/bdd",
     "bin/15_queen_rbee_crates/preflight",
     "bin/15_queen_rbee_crates/preflight/bdd",
+    "bin/15_queen_rbee_crates/health",
+    "bin/15_queen_rbee_crates/hive-catalog",
+    "bin/15_queen_rbee_crates/scheduler",
     
     # rbee-hive crates (NO CLI!)
     "bin/25_rbee_hive_crates/worker-lifecycle",
@@ -56,16 +56,13 @@ members = [
     "bin/25_rbee_hive_crates/model-provisioner/bdd",
     "bin/25_rbee_hive_crates/monitor",
     "bin/25_rbee_hive_crates/monitor/bdd",
-    "bin/25_rbee_hive_crates/http-server",
-    "bin/25_rbee_hive_crates/http-server/bdd",
     "bin/25_rbee_hive_crates/download-tracker",
     "bin/25_rbee_hive_crates/download-tracker/bdd",
     "bin/25_rbee_hive_crates/device-detection",
     "bin/25_rbee_hive_crates/device-detection/bdd",
+    "bin/25_rbee_hive_crates/vram-checker",
+    "bin/25_rbee_hive_crates/worker-catalog",
     
-    # worker-rbee crates
-    "bin/39_worker_rbee_crates/http-server",
-    "bin/39_worker_rbee_crates/http-server/bdd",
 
     # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
     # SHARED CRATES — Cross-Service Utilities (TEAM-135: Added new shared crates)
@@ -94,6 +91,7 @@ members = [
     "bin/99_shared_crates/secrets-management",
     "bin/99_shared_crates/secrets-management/bdd",
     "bin/99_shared_crates/model-catalog",
+    "bin/99_shared_crates/sse-relay",
 
     # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
     # CONSUMER LIBRARIES — External SDKs

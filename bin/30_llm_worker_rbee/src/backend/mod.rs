@@ -1,15 +1,17 @@
-// TEAM-135: Created by TEAM-135 (scaffolding)
-// Purpose: Backend module for LLM inference (STAYS IN BINARY!)
-// Status: STUB - Awaiting implementation
+// TEAM-109: Audited 2025-10-18 - ✅ CLEAN - Backend module structure
 
-//! Backend module
+//! Inference backend implementation
 //!
-//! LLM-specific inference backend (stays in binary, not extracted to crate)
+//! Created by: TEAM-000
+//! Refactored by: TEAM-015 (split into focused modules)
+//! Modified by: TEAM-017 (added multi-model support with enum pattern)
+//! Modified by: TEAM-090 (added GGUF tokenizer extraction)
+//! Modified by: TEAM-095 (made `gguf_tokenizer` public for testing)
 
-pub mod inference;
-pub mod sampling;
-pub mod tokenizer_loader;
 pub mod gguf_tokenizer;
+mod inference;
 pub mod models;
+mod sampling;
+mod tokenizer_loader;
 
-// TODO: Implement backend functionality
+pub use inference::CandleInferenceBackend;

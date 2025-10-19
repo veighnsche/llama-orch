@@ -1,11 +1,11 @@
-# llm-worker-rbee-bdd
+# rbee-hive-bdd
 
 **Status:** 🚧 STUB (Created by TEAM-135)  
-**Purpose:** BDD integration test harness for llm-worker-rbee binary
+**Purpose:** BDD integration test harness for rbee-hive binary
 
 ## Overview
 
-Behavior-Driven Development integration test harness for the llm-worker-rbee binary.
+Behavior-Driven Development integration test harness for the rbee-hive binary.
 Tests the binary as a whole, including CLI/daemon behavior and integration with other components.
 
 ## Running Tests
@@ -27,7 +27,7 @@ LLORCH_BDD_FEATURE_PATH=tests/features/example.feature cargo run --bin bdd-runne
 
 ## Test Scope
 
-Integration tests for llm-worker-rbee:
+Integration tests for rbee-hive:
 - Binary startup and shutdown
 - CLI command execution
 - Daemon behavior

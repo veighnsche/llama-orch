@@ -1,0 +1,21 @@
+# TEAM-135: Created for happy flow requirements
+
+[package]
+name = "queen-rbee-scheduler"
+version = "0.1.0"
+edition = "2021"
+license = "GPL-3.0-or-later"
+
+[lib]
+name = "queen_rbee_scheduler"
+path = "src/lib.rs"
+
+[dependencies]
+tokio = { workspace = true }
+anyhow = { workspace = true }
+thiserror = { workspace = true }
+tracing = { workspace = true }
+rbee-types = { path = "../../99_shared_crates/rbee-types" }
+
+[dev-dependencies]
+# Add dev dependencies as needed

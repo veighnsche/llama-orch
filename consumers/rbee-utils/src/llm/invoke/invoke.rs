@@ -1,5 +1,5 @@
 // Placeholder module for applet llm/invoke.
-use llama_orch_sdk::client::OrchestratorClient;
+use rbee_sdk::client::OrchestratorClient;
 use serde::{Deserialize, Serialize};
 
 use crate::model::define::ModelRef;
