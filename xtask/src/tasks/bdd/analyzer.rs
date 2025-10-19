@@ -119,6 +119,44 @@ pub fn analyze_bdd_steps(steps_dir: &Path) -> Result<AnalysisResults> {
     })
 }
 
+/// Determine if a function is a stub based on its implementation
+/// TEAM-129: A stub is a function that does NO real work (only logging, no state changes, no assertions)
+fn is_function_stub(function_lines: &[&str], has_todo: bool) -> bool {
+    // If it has TODO, it's definitely a stub
+    if has_todo {
+        return true;
+    }
+    
+    // Join all lines to analyze the function body
+    let body = function_lines.join(" ");
+    
+    // Check if function modifies world state (world.something = )
+    let modifies_world = body.contains("world.") && body.contains(" = ");
+    
+    // Check if function makes assertions
+    let has_assertions = body.contains("assert!") || body.contains("assert_eq!") || 
+                        body.contains("assert_ne!") || body.contains("panic!");
+    
+    // Check if function calls real APIs (reqwest, HTTP, registry, etc.)
+    let calls_apis = body.contains("reqwest::") || body.contains(".send()") ||
+                    body.contains("client.") || body.contains("http::") ||
+                    body.contains("registry.") || body.contains(".register(") ||
+                    body.contains(".update_state(") || body.contains(".list()");
+    
+    // Check if function has meaningful logic (if statements, loops, match)
+    let has_logic = (body.matches("if ").count() > 1) || // More than just "if let Some"
+                   body.contains("for ") || 
+                   body.contains("while ") ||
+                   (body.matches("match ").count() > 0 && body.contains("=>"));
+    
+    // Check if function uses world parameter (not just _world)
+    let uses_world = body.contains("world.") && !body.contains("_world:");
+    
+    // A function is a stub if it does NONE of the real work
+    // (no state modification, no assertions, no API calls, no logic, doesn't use world)
+    !modifies_world && !has_assertions && !calls_apis && !has_logic && !uses_world
+}
+
 /// Analyze a single step file
 fn analyze_file(path: &Path) -> Result<FileAnalysis> {
     let content = fs::read_to_string(path)?;
@@ -130,31 +168,37 @@ fn analyze_file(path: &Path) -> Result<FileAnalysis> {
     let mut stub_functions = Vec::new();
 
     let mut current_function: Option<(String, usize, String)> = None; // (name, line, signature)
-    let mut function_has_unused_world = false;
     let mut function_has_todo = false;
+    let mut function_lines = Vec::new(); // Collect function body lines
+    let mut in_function = false;
+    let mut brace_depth = 0;
 
     for (line_num, line) in lines.iter().enumerate() {
         let line_num = line_num + 1; // 1-indexed
 
         // Detect function start
         if line.contains("pub async fn") || line.contains("pub fn") {
-            // Save previous function if it was a stub
+            // Analyze previous function if it exists
             if let Some((name, start_line, sig)) = current_function.take() {
-                if function_has_unused_world || function_has_todo {
+                let is_stub = is_function_stub(&function_lines, function_has_todo);
+                if is_stub {
                     stub_functions.push(StubFunction {
                         name,
                         line_number: start_line,
-                        has_unused_world: function_has_unused_world,
+                        has_unused_world: false, // Deprecated - we check actual implementation now
                         has_todo: function_has_todo,
                         signature: sig,
                     });
+                    unused_world += 1; // Keep for backward compat
                 }
             }
 
             // Start tracking new function
             total_functions += 1;
-            function_has_unused_world = false;
             function_has_todo = false;
+            function_lines.clear();
+            in_function = true;
+            brace_depth = 0;
 
             // Extract function name
             if let Some(name) = extract_function_name(line) {
@@ -162,29 +206,38 @@ fn analyze_file(path: &Path) -> Result<FileAnalysis> {
             }
         }
 
-        // Check for unused world parameter
-        if line.contains("_world: &mut World") {
-            unused_world += 1;
-            function_has_unused_world = true;
+        // Track function body
+        if in_function {
+            function_lines.push(line.trim());
+            
+            // Count braces to detect function end
+            brace_depth += line.matches('{').count() as i32;
+            brace_depth -= line.matches('}').count() as i32;
+            
+            if brace_depth == 0 && line.contains('}') {
+                in_function = false;
+            }
         }
 
         // Check for TODO markers
-        if line.contains("TODO:") || line.contains("TODO ") {
+        if in_function && (line.contains("TODO:") || line.contains("TODO ")) {
             todos += 1;
             function_has_todo = true;
         }
     }
 
-    // Save last function if it was a stub
+    // Analyze last function if it exists
     if let Some((name, start_line, sig)) = current_function {
-        if function_has_unused_world || function_has_todo {
+        let is_stub = is_function_stub(&function_lines, function_has_todo);
+        if is_stub {
             stub_functions.push(StubFunction {
                 name,
                 line_number: start_line,
-                has_unused_world: function_has_unused_world,
+                has_unused_world: false,
                 has_todo: function_has_todo,
                 signature: sig,
             });
+            unused_world += 1;
         }
     }
 

@@ -712,6 +712,21 @@ pub struct World {
     /// pool-managerd has GPU workers flag
     pub pool_managerd_has_gpu: bool,
 
+    // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    // TEAM-129: Error Handling Fields
+    // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    /// Code analyzed flag (for unwrap detection)
+    pub code_analyzed: bool,
+
+    /// Number of unwrap() calls found in production code
+    pub unwrap_calls_found: usize,
+
+    /// Code scan completed flag
+    pub code_scan_completed: bool,
+
+    /// Error occurred flag
+    pub error_occurred: bool,
+
     /// Worker processing inference flag
     pub worker_processing_inference: bool,
 
@@ -735,6 +750,66 @@ pub struct World {
 
     /// Installation path for binaries
     pub install_path: Option<String>,
+
+    // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    // TEAM-129: Lifecycle Management Fields
+    // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    /// rbee-hive daemon running flag
+    pub hive_daemon_running: bool,
+
+    /// rbee-hive port
+    pub hive_port: Option<u16>,
+
+    /// rbee-hive persistent daemon flag
+    pub hive_persistent: bool,
+
+    /// rbee-keeper spawn configured flag
+    pub keeper_spawn_configured: bool,
+
+    /// rbee-hive already running flag
+    pub hive_already_running: bool,
+
+    /// rbee-hive manually started flag
+    pub hive_manually_started: bool,
+
+    /// Spawned by rbee-keeper flag
+    pub spawned_by_keeper: bool,
+
+    /// Worker ready flag
+    pub worker_ready: bool,
+
+    /// Elapsed seconds
+    pub elapsed_seconds: Option<u64>,
+
+    /// Idle minutes
+    pub idle_minutes: Option<u64>,
+
+    /// No requests received flag
+    pub no_requests_received: bool,
+
+    /// SIGTERM sent flag
+    pub sigterm_sent: bool,
+
+    /// Inference completed flag
+    pub inference_completed: bool,
+
+    /// Inference started flag
+    pub inference_started: bool,
+
+    /// rbee-hive exited flag
+    pub hive_exited: bool,
+
+    /// Idle timeout minutes
+    pub idle_timeout_minutes: Option<u64>,
+
+    /// Worker timeout reached flag
+    pub worker_timeout_reached: bool,
+
+    /// rbee-hive accepting requests flag
+    pub hive_accepting_requests: bool,
+
+    /// Worker running flag
+    pub worker_running: bool,
 }
 
 // TEAM-101: Manual Debug implementation to handle CaptureAdapter which doesn't implement Debug
@@ -1082,6 +1157,12 @@ impl Default for World {
             pool_managerd_has_gpu: false,
             worker_processing_inference: false,
 
+            // TEAM-129: Error Handling Fields
+            code_analyzed: false,
+            unwrap_calls_found: 0,
+            code_scan_completed: false,
+            error_occurred: false,
+
             // TEAM-127: CLI Commands Testing
             config_files: Vec::new(),
             env_vars: HashMap::new(),
@@ -1089,6 +1170,27 @@ impl Default for World {
             remote_command_executed: false,
             ssh_connections: HashMap::new(),
             install_path: None,
+
+            // TEAM-129: Lifecycle Management Fields
+            hive_daemon_running: false,
+            hive_port: None,
+            hive_persistent: false,
+            keeper_spawn_configured: false,
+            hive_already_running: false,
+            hive_manually_started: false,
+            spawned_by_keeper: false,
+            worker_ready: false,
+            elapsed_seconds: None,
+            idle_minutes: None,
+            no_requests_received: false,
+            sigterm_sent: false,
+            inference_completed: false,
+            inference_started: false,
+            hive_exited: false,
+            idle_timeout_minutes: None,
+            worker_timeout_reached: false,
+            hive_accepting_requests: false,
+            worker_running: false,
         }
     }
 }
