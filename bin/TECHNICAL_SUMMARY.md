@@ -1,8 +1,9 @@
 # rbee Project Technical Summary
 
 **Generated:** 2025-10-19  
+**Updated:** 2025-10-19 (Post-restructure)  
 **Purpose:** Comprehensive technical overview of all crates in the `bin/` directory  
-**Status:** ✅ Current (based on actual folder structure)
+**Status:** ✅ Current (based on actual folder structure after restructure)
 
 ---
 
@@ -52,11 +53,16 @@
 ### Statistics
 
 - **Main Binaries:** 4
-- **Binary-Specific Crates:** 19
-- **Shared Crates:** 19
-- **Total Crates:** 42 (excluding BDD test crates)
+- **Binary-Specific Crates:** 21 (was 19, +3 new, -1 removed directory)
+- **Shared Crates:** 20 (was 19, +1 new)
+- **Total Crates:** 41 (excluding BDD test crates)
 - **License:** GPL-3.0-or-later
 - **Rust Edition:** 2021
+
+**Recent Changes (2025-10-19):**
+- ✅ Removed 4 entry point crates (CLI, HTTP servers) → moved to binaries
+- ✅ Added 7 new crates for happy flow implementation
+- ✅ Net change: +3 crates (38 → 41)
 
 ---
 
@@ -67,9 +73,12 @@
 Each binary follows a strict pattern:
 - **`main.rs`**: Entry point ONLY (12-50 LOC)
 - **`lib.rs`**: Re-exports from crates (10-80 LOC)
+- **Entry points IN binary**: CLI parsing and HTTP servers implemented directly in binary (not separate crates)
 - **Exception**: `llm-worker-rbee` contains `src/backend/` for LLM-specific inference logic
 
-**Why?** Prevents AI drift and enforces clear boundaries. Adding functionality requires explicitly creating a new crate, making violations obvious.
+**Why?** Prevents AI drift and enforces clear boundaries. Entry points are tightly coupled to binaries. Adding business logic requires explicitly creating a new crate, making violations obvious.
+
+**Recent Change:** Removed separate CLI and HTTP server crates. These are now implemented directly in each binary's `src/` directory.
 
 ### 2. Three-Tier Crate Organization
 
@@ -104,7 +113,8 @@ Shared functionality is consolidated into shared crates. Binary-specific crates 
 ```
 00_rbee_keeper/
 ├─ src/
-│  ├─ main.rs          # Entry point + CLI parsing (clap)
+│  ├─ main.rs          # Entry point + CLI parsing (clap) - IN BINARY
+│  ├─ cli.rs           # CLI parsing & routing - IN BINARY
 │  └─ lib.rs           # Re-exports from crates
 ├─ bdd/                # BDD integration tests
 └─ Cargo.toml
@@ -114,6 +124,7 @@ Shared functionality is consolidated into shared crates. Binary-specific crates 
 - CLI commands: `infer`, `setup`, `workers`, `logs`, `install`
 - Manages queen-rbee lifecycle
 - User-friendly interface to the rbee system
+- **Entry point in binary** (not separate crate)
 
 **Dependencies:** See [rbee-keeper crates](#rbee-keeper-crates-05_rbee_keeper_crates)
 
@@ -130,6 +141,7 @@ Shared functionality is consolidated into shared crates. Binary-specific crates 
 10_queen_rbee/
 ├─ src/
 │  ├─ main.rs          # Entry point + daemon startup
+│  ├─ http_server.rs   # HTTP routes & API - IN BINARY
 │  └─ lib.rs           # Re-exports from crates
 ├─ bdd/                # BDD integration tests
 └─ Cargo.toml
@@ -138,9 +150,10 @@ Shared functionality is consolidated into shared crates. Binary-specific crates 
 **Key Features:**
 - Manages multiple rbee-hive instances (local or remote)
 - SSH support for remote hive lifecycle management
-- HTTP API for hive operations
+- HTTP API for hive operations (implemented in binary)
 - Worker registry for routing
 - Health monitoring and preflight checks
+- **HTTP server in binary** (not separate crate)
 
 **Critical Design:** ONLY queen-rbee has SSH access (for remote hive management)
 
@@ -159,6 +172,7 @@ Shared functionality is consolidated into shared crates. Binary-specific crates 
 20_rbee_hive/
 ├─ src/
 │  ├─ main.rs          # Entry point + daemon args (--port, --config)
+│  ├─ http_server.rs   # HTTP routes & API - IN BINARY
 │  └─ lib.rs           # Re-exports from crates
 ├─ bdd/                # BDD integration tests
 └─ Cargo.toml
@@ -170,7 +184,8 @@ Shared functionality is consolidated into shared crates. Binary-specific crates 
 - Device detection (GPU/CPU)
 - Download tracking for models
 - Worker registry for local workers
-- HTTP API for operations
+- HTTP API for operations (implemented in binary)
+- **HTTP server in binary** (not separate crate)
 
 **Critical Design:** NO CLI commands (daemon only), NO SSH (managed by queen-rbee)
 
@@ -189,6 +204,7 @@ Shared functionality is consolidated into shared crates. Binary-specific crates 
 30_llm_worker_rbee/
 ├─ src/
 │  ├─ main.rs          # Entry point + worker startup
+│  ├─ http_server.rs   # HTTP routes & API - IN BINARY
 │  ├─ lib.rs           # Re-exports from crates
 │  ├─ bin/
 │  │  ├─ cpu.rs        # CPU variant
@@ -213,12 +229,13 @@ Shared functionality is consolidated into shared crates. Binary-specific crates 
 - Multiple backend support (CPU, CUDA, Metal)
 - Model-specific implementations (Llama, Mistral, Phi, Qwen)
 - Tokenization and sampling
-- HTTP API for inference requests
+- HTTP API for inference requests (implemented in binary)
 - Heartbeat to rbee-hive
+- **HTTP server in binary** (not separate crate)
 
 **Critical Design:** Contains `src/backend/` for LLM-specific logic (exception to minimal binary rule)
 
-**Dependencies:** See [worker-rbee crates](#worker-rbee-crates-39_worker_rbee_crates)
+**Note:** No separate `39_worker_rbee_crates/` directory - all logic in binary or shared crates
 
 ---
 
@@ -228,15 +245,7 @@ Shared functionality is consolidated into shared crates. Binary-specific crates 
 
 Binary-specific crates for `rbee-keeper`:
 
-#### 1. cli/
-**Package:** `rbee-keeper-cli`  
-**Purpose:** CLI argument parsing and command dispatch  
-**Key Features:**
-- Clap-based CLI structure
-- Command definitions
-- Help text and validation
-
-#### 2. commands/
+#### 1. commands/
 **Package:** `rbee-keeper-commands`  
 **Purpose:** Implementation of CLI commands  
 **Key Features:**
@@ -246,7 +255,7 @@ Binary-specific crates for `rbee-keeper`:
 - `logs` - View logs (HTTP-based, NO SSH)
 - `install` - Install rbee components
 
-#### 3. config/
+#### 2. config/
 **Package:** `rbee-keeper-config`  
 **Purpose:** Configuration management  
 **Key Features:**
@@ -254,7 +263,7 @@ Binary-specific crates for `rbee-keeper`:
 - Environment variable handling
 - Validation
 
-#### 4. queen-lifecycle/
+#### 3. queen-lifecycle/
 **Package:** `rbee-keeper-queen-lifecycle`  
 **Purpose:** Managing queen-rbee daemon lifecycle  
 **Key Features:**
@@ -262,13 +271,51 @@ Binary-specific crates for `rbee-keeper`:
 - Health checks
 - Process management
 
+#### 4. polling/ ✅ NEW
+**Package:** `rbee-keeper-polling`  
+**Purpose:** Health polling for queen-rbee  
+**Key Features:**
+- Poll queen-rbee health endpoint until ready
+- Configurable retry logic (interval, max attempts, timeout)
+- Exponential backoff support
+**Dependencies:** tokio, reqwest, rbee-http-client
+
 ---
 
 ### queen-rbee Crates (15_queen_rbee_crates)
 
 Binary-specific crates for `queen-rbee`:
 
-#### 1. ssh-client/
+#### 1. health/ ✅ NEW
+**Package:** `queen-rbee-health`  
+**Purpose:** Health check endpoint  
+**Key Features:**
+- Health check endpoint (`/health`)
+- Readiness check (HTTP server started)
+- Liveness check (system operational)
+**Dependencies:** tokio, axum
+
+#### 2. hive-catalog/ ✅ NEW
+**Package:** `queen-rbee-hive-catalog`  
+**Purpose:** Persistent hive storage (SQLite)  
+**Key Features:**
+- SQLite-based persistent storage of hives
+- Track hive capabilities (CPU, GPUs, VRAM)
+- Track hive status (online, offline, degraded)
+- Query hives by capability
+**Dependencies:** tokio, sqlx, serde, rbee-types
+
+#### 3. scheduler/ ✅ NEW
+**Package:** `queen-rbee-scheduler`  
+**Purpose:** Device selection & scheduling  
+**Key Features:**
+- Device selection based on capabilities
+- Basic scheduler: pick strongest GPU
+- Advanced scheduler: load balancing, VRAM availability
+- Pluggable scheduler interface
+**Dependencies:** tokio, rbee-types
+
+#### 4. ssh-client/
 **Package:** `queen-rbee-ssh-client`  
 **Purpose:** SSH client for remote hive management  
 **Key Features:**
@@ -277,7 +324,7 @@ Binary-specific crates for `queen-rbee`:
 - Detached process spawning
 - **CRITICAL:** ONLY queen-rbee uses SSH!
 
-#### 2. hive-lifecycle/
+#### 5. hive-lifecycle/
 **Package:** `queen-rbee-hive-lifecycle`  
 **Purpose:** Managing rbee-hive daemon lifecycle  
 **Key Features:**
@@ -286,7 +333,7 @@ Binary-specific crates for `queen-rbee`:
 - Health monitoring
 - Graceful shutdown
 
-#### 3. hive-registry/
+#### 6. hive-registry/
 **Package:** `queen-rbee-hive-registry`  
 **Purpose:** Registry of managed hives  
 **Key Features:**
@@ -294,7 +341,7 @@ Binary-specific crates for `queen-rbee`:
 - Routing information
 - Capacity planning
 
-#### 4. worker-registry/
+#### 7. worker-registry/
 **Package:** `queen-rbee-worker-registry`  
 **Purpose:** Registry of workers across all hives (routing context)  
 **Key Features:**
@@ -302,6 +349,15 @@ Binary-specific crates for `queen-rbee`:
 - Load balancing data
 - Routing decisions
 - **Note:** Different from rbee-hive's worker-registry (different context)
+
+#### 8. preflight/
+**Package:** `queen-rbee-preflight`  
+**Purpose:** Preflight checks before operations  
+**Key Features:**
+- System validation
+- Dependency checks
+- Configuration validation
+- Network connectivity checks
 
 #### 5. http-server/
 **Package:** `queen-rbee-http-server`  
@@ -395,22 +451,33 @@ Binary-specific crates for `rbee-hive`:
 - CPU capabilities
 - VRAM/RAM detection
 
+#### 9. vram-checker/ ✅ NEW
+**Package:** `rbee-hive-vram-checker`  
+**Purpose:** VRAM admission control  
+**Key Features:**
+- Check available VRAM on specific GPU
+- Account for already-loaded models
+- Admission control for new models
+- Support for CUDA, Metal, CPU fallback
+**Dependencies:** tokio, sysinfo, rbee-hive-device-detection
+
+#### 10. worker-catalog/ ✅ NEW
+**Package:** `rbee-hive-worker-catalog`  
+**Purpose:** Persistent worker storage (SQLite)  
+**Key Features:**
+- SQLite-based persistent storage of worker binaries
+- Track worker versions and capabilities
+- Track worker binary paths on disk
+- Support for multiple worker types (CPU, CUDA, Metal)
+**Dependencies:** tokio, sqlx, serde
+
+**Note:** HTTP server removed - now implemented directly in `rbee-hive` binary
+
 ---
 
 ### worker-rbee Crates (39_worker_rbee_crates)
 
-Binary-specific crates for `llm-worker-rbee`:
-
-#### 1. http-server/
-**Package:** `worker-rbee-http-server`  
-**Purpose:** HTTP API server for inference  
-**Key Features:**
-- Inference endpoints
-- Request validation
-- Response formatting
-- Health checks
-
-**Note:** Only 1 binary-specific crate for worker (inference logic is in binary's `src/backend/`)
+**Note:** This directory has been **removed**. The `llm-worker-rbee` binary now implements its HTTP server directly in the binary (`src/http_server.rs`), and inference logic remains in `src/backend/`. No separate binary-specific crates needed.
 
 ---
 
@@ -544,6 +611,17 @@ System-wide crates used by 2+ binaries:
 #### 14. model-catalog/
 **Status:** ⚠️ MISPLACED (should be in rbee-hive-crates)  
 **Action:** Remove (duplicate of rbee-hive-model-catalog)
+
+#### 15. sse-relay/ ✅ NEW
+**Package:** `sse-relay`  
+**Used By:** All 4 binaries  
+**Purpose:** SSE streaming and relay utilities  
+**Key Features:**
+- SSE (Server-Sent Events) client and server utilities
+- Multi-hop SSE relay (hive → queen → keeper → stdout)
+- Narration message formatting
+- Stream multiplexing
+**Dependencies:** tokio, tokio-stream, axum, futures, serde
 
 ---
 
@@ -790,9 +868,9 @@ pub struct WorkerInfo {
 | Binary | Binary-Specific Crates | Uses Shared Crates |
 |--------|------------------------|-------------------|
 | rbee-keeper | 4 | ~10 |
-| queen-rbee | 6 | ~12 |
-| rbee-hive | 8 | ~10 |
-| llm-worker-rbee | 1 | ~8 |
+| queen-rbee | 8 | ~12 |
+| rbee-hive | 10 | ~10 |
+| llm-worker-rbee | 0 | ~8 |
 
 ### Shared Crate Usage
 

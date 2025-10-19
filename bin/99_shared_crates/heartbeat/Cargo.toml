@@ -12,7 +12,11 @@ name = "rbee_heartbeat"
 path = "src/lib.rs"
 
 [dependencies]
-# Add dependencies as needed
+tokio = { version = "1", features = ["time", "macros"] }
+reqwest = { version = "0.12", features = ["json"] }
+serde = { version = "1", features = ["derive"] }
+chrono = "0.4"
+tracing = "0.1"
 
 [dev-dependencies]
-# Add dev dependencies as needed
+serde_json = "1"

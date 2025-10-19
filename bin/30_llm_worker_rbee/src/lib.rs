@@ -22,7 +22,6 @@ pub mod backend;
 pub mod common;
 pub mod device;
 pub mod error;
-pub mod heartbeat; // TEAM-115: Heartbeat mechanism
 pub mod http;
 pub mod narration;
 pub mod token_output_stream;
@@ -32,3 +31,6 @@ pub use backend::CandleInferenceBackend;
 pub use common::{callback_ready, InferenceResult, SamplingConfig, StopReason, WorkerError};
 pub use error::LlorchError;
 pub use http::{create_router, HttpServer, InferenceBackend};
+
+// TEAM-135: Re-export heartbeat from shared crate (migrated from local module)
+pub use rbee_heartbeat as heartbeat;

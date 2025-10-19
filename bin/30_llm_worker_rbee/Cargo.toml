@@ -201,6 +201,9 @@ auth-min = { path = "../99_shared_crates/auth-min" }
 secrets-management = { path = "../99_shared_crates/secrets-management" }
 input-validation = { path = "../99_shared_crates/input-validation" }
 
+# TEAM-135: Heartbeat shared crate
+rbee-heartbeat = { path = "../99_shared_crates/heartbeat" }
+
 [dev-dependencies]
 # Testing utilities
 approx = "0.5"
