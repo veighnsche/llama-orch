@@ -1,0 +1,72 @@
+[package]
+name = "queen-rbee"
+version = "0.1.0"
+edition = "2021"
+license = "GPL-3.0-or-later"
+
+# Orchestrator daemon (HTTP server)
+# Binary name: `queen-rbee`
+# Purpose: Job scheduling, admission control, worker registry, SSE relay
+# Protocol: HTTP (listens on port 8080)
+# Milestone: M1+
+
+[lib]
+name = "queen_rbee"
+path = "src/lib.rs"
+
+[[bin]]
+name = "queen-rbee"
+path = "src/main.rs"
+
+[dependencies]
+# HTTP server
+axum = "0.8"
+tower = "0.5"
+tower-http = { version = "0.6", features = ["trace", "cors"] }
+
+# Async runtime
+tokio = { version = "1", features = ["rt-multi-thread", "macros", "sync", "time", "signal", "fs", "process"] }
+futures = "0.3"
+
+# HTTP client (for calling workers)
+reqwest = { version = "0.12", features = ["json", "stream"] }
+
+# TEAM-043: Re-added SQLite for beehive registry persistence
+# TEAM-079: Aligned version with rbee-hive to avoid conflicts
+# TEAM-080: Upgraded to 0.32 to use libsqlite3-sys 0.28 (matches model-catalog/sqlx)
+rusqlite = { version = "0.32", features = ["bundled"] }
+dirs = "5.0"
+
+# Serialization
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+
+# CLI
+clap = { version = "4.5", features = ["derive"] }
+
+# Error handling
+anyhow = "1.0"
+thiserror = "1.0"
+
+# Logging
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["json", "env-filter"] }
+
+# UUID generation
+uuid = { version = "1.0", features = ["v4", "serde"] }
+
+# Time handling
+chrono = { version = "0.4", features = ["serde"] }
+
+# TEAM-102: Security shared crates
+auth-min = { path = "../shared-crates/auth-min" }
+secrets-management = { path = "../shared-crates/secrets-management" }
+input-validation = { path = "../shared-crates/input-validation" }
+
+# TEAM-113: Observability shared crates (Week 2)
+audit-logging = { path = "../shared-crates/audit-logging" }
+deadline-propagation = { path = "../shared-crates/deadline-propagation" }
+
+[dev-dependencies]
+tempfile = "3.0"
+wiremock = "0.6"

@@ -1,0 +1,32 @@
+//! Pool Control CLI - Local pool management
+//!
+//! TEAM-024 CLARIFICATION:
+//! This is `rbee-hive` - the LOCAL pool management CLI
+//! It runs ON the pool machine (mac.home.arpa, workstation.home.arpa, etc.)
+//! Called by `llorch` (remote CLI) via SSH
+//!
+//! Binary: `rbee-hive` (this file)
+//! Purpose: Local pool operations (models, workers, status)
+//! Location: Runs on pool machines
+//!
+//! Created by: TEAM-022
+//! Modified by: TEAM-027, TEAM-029, TEAM-032
+
+mod cli;
+mod commands;
+mod http;
+mod metrics; // TEAM-104: Prometheus metrics
+mod monitor;
+mod restart; // TEAM-114: Worker restart policy
+mod shutdown; // TEAM-116: Graceful shutdown with force-kill
+mod timeout;
+
+// TEAM-032: Use library modules for testing
+use anyhow::Result;
+use rbee_hive::{provisioner, registry};
+
+#[tokio::main]
+async fn main() -> Result<()> {
+    let cli = cli::Cli::parse_args();
+    cli::handle_command(cli).await
+}

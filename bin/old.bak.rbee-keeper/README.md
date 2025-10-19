@@ -1,0 +1,129 @@
+# rbee-keeper
+
+**Created by:** TEAM-022  
+**Binary:** `rbee`  
+**Status:** Active (CP1 complete)
+
+Orchestrator control CLI - Remote pool control via SSH.
+
+## Overview
+
+`rbee-keeper` provides command-line tools for controlling pools remotely via SSH. It wraps `rbee-hive` commands and executes them on remote hosts.
+
+## Installation
+
+```bash
+cargo build --release -p rbee-keeper
+```
+
+Binary will be at: `target/release/rbee`
+
+## Commands
+
+### Remote Model Management
+
+```bash
+# Show catalog on remote pool
+rbee pool models catalog --host mac.home.arpa
+
+# Register model on remote pool
+rbee pool models register qwen-0.5b \
+    --host mac.home.arpa \
+    --name "Qwen2.5 0.5B Instruct" \
+    --repo "Qwen/Qwen2.5-0.5B-Instruct" \
+    --architecture qwen
+
+# Download model on remote pool (CP3)
+rbee pool models download qwen-0.5b --host mac.home.arpa
+```
+
+### Remote Worker Management (CP3)
+
+```bash
+# Spawn worker on remote pool
+rbee pool worker spawn metal \
+    --model tinyllama \
+    --host mac.home.arpa \
+    --gpu 0
+
+# List workers on remote pool
+rbee pool worker list --host mac.home.arpa
+
+# Stop worker on remote pool
+rbee pool worker stop worker-metal-0 --host mac.home.arpa
+```
+
+### Git Operations
+
+```bash
+# Pull latest changes on remote pool
+rbee pool git pull --host mac.home.arpa
+
+# Show git status on remote pool
+rbee pool git status --host mac.home.arpa
+
+# Build rbee-hive on remote pool
+rbee pool git build --host mac.home.arpa
+```
+
+### Pool Status
+
+```bash
+# Show status of remote pool
+rbee pool status --host mac.home.arpa
+```
+
+## SSH Requirements
+
+- SSH access to all pool hosts
+- SSH keys configured (no password prompts)
+- `rbee-hive` binary built on remote hosts
+- Repository cloned at `~/Projects/llama-orch` on remote hosts
+
+## Architecture
+
+```
+rbee (on blep)
+    ↓ SSH
+rbee-hive (on mac/workstation)
+    ↓ spawn
+llm-worker-rbee (worker)
+```
+
+**Control Plane:** SSH  
+**Data Plane:** HTTP (workers)
+
+## Example Workflow
+
+```bash
+# 1. Update git on remote pool
+rbee pool git pull --host mac.home.arpa
+
+# 2. Build rbee-hive on remote
+rbee pool git build --host mac.home.arpa
+
+# 3. Register model
+rbee pool models register tinyllama \
+    --host mac.home.arpa \
+    --name "TinyLlama 1.1B Chat" \
+    --repo "TinyLlama/TinyLlama-1.1B-Chat-v1.0" \
+    --architecture llama
+
+# 4. Download model (CP3)
+rbee pool models download tinyllama --host mac.home.arpa
+
+# 5. Spawn worker (CP3)
+rbee pool worker spawn metal \
+    --model tinyllama \
+    --host mac.home.arpa
+```
+
+## Implementation Status
+
+- ✅ CP1: SSH wrapper, basic commands
+- 🚧 CP2: Remote catalog management
+- 🚧 CP3: Remote model downloads, worker spawning
+
+## License
+
+GPL-3.0-or-later
