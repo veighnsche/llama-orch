@@ -582,6 +582,138 @@ pub struct World {
 
     /// rbee-keeper configuration
     pub keeper_config: Option<String>,
+
+    // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    // TEAM-119: Missing Step Fields (Batch 2)
+    // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    /// GPU VRAM free per device: device_id -> bytes
+    pub gpu_vram_free: HashMap<u32, u64>,
+
+    /// System RAM available in bytes
+    pub system_ram_available: Option<u64>,
+
+    /// GPU temperature in Celsius
+    pub gpu_temperature: Option<i32>,
+
+    /// CPU cores count
+    pub cpu_cores: Option<usize>,
+
+    /// GPU total VRAM in bytes
+    pub gpu_vram_total: Option<u64>,
+
+    /// Bandwidth limit in bytes per second
+    pub bandwidth_limit: Option<u64>,
+
+    /// Disk I/O capacity percentage
+    pub disk_io_percent: Option<u8>,
+
+    /// Base URL for requests
+    pub base_url: Option<String>,
+
+    /// API token for authentication
+    pub api_token: Option<String>,
+
+    /// File readable by world flag
+    pub file_readable_by_world: bool,
+
+    /// File readable by group flag
+    pub file_readable_by_group: bool,
+
+    /// Queen started with config flag
+    pub queen_started_with_config: bool,
+
+    /// Queen request count
+    pub queen_request_count: Option<usize>,
+
+    /// Log messages
+    pub log_messages: Vec<String>,
+
+    /// File content checked flag
+    pub file_content_checked: bool,
+
+    // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    // TEAM-121: Missing Step Fields (Batch 4)
+    // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    /// Model being downloaded by provisioner
+    pub downloading_model: Option<String>,
+
+    /// Health check interval in seconds
+    pub health_check_interval: Option<u64>,
+
+    /// Workers have different models flag
+    pub workers_have_different_models: bool,
+
+    /// pool-managerd narration enabled
+    pub pool_managerd_narration: bool,
+
+    /// pool-managerd cute mode enabled
+    pub pool_managerd_cute_mode: bool,
+
+    /// queen-rbee requested metrics flag
+    pub queen_requested_metrics: bool,
+
+    /// Narration has source_location field
+    pub narration_has_source_location: bool,
+
+    /// Narration redaction string
+    pub narration_redaction: Option<String>,
+
+    /// Worker state (idle, busy, etc.)
+    pub worker_state: Option<String>,
+
+    /// Registry database available flag
+    pub registry_available: bool,
+
+    /// Crash detected flag
+    pub crash_detected: bool,
+
+    /// Concurrent registrations count
+    pub concurrent_registrations: Option<usize>,
+
+    /// Concurrent requests count
+    pub concurrent_requests: Option<usize>,
+
+    /// queen-rbee restarted flag
+    pub queen_restarted: bool,
+
+    /// rbee-hive restarted flag
+    pub hive_restarted: bool,
+
+    /// Inference duration in minutes
+    pub inference_duration: Option<u64>,
+
+    // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    // TEAM-120: Missing Step Fields (Batch 3)
+    // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    /// Queen-rbee started flag
+    pub queen_started: bool,
+
+    /// Unwrap search performed flag
+    pub unwrap_search_performed: bool,
+
+    /// rbee-hive crashed flag
+    pub hive_crashed: bool,
+
+    /// Log has correlation_id flag
+    pub log_has_correlation_id: bool,
+
+    /// Audit has token fingerprint flag
+    pub audit_has_token_fingerprint: bool,
+
+    /// Hash chain valid flag
+    pub hash_chain_valid: bool,
+
+    /// Audit fields list
+    pub audit_fields: Vec<String>,
+
+    /// Warning messages list
+    pub warning_messages: Vec<String>,
+
+    /// pool-managerd has GPU workers flag
+    pub pool_managerd_has_gpu: bool,
+
+    /// Worker processing inference flag
+    pub worker_processing_inference: bool,
 }
 
 // TEAM-101: Manual Debug implementation to handle CaptureAdapter which doesn't implement Debug
@@ -881,7 +1013,81 @@ impl Default for World {
             worker_accepting_requests: true,
             backup_path: None,
             keeper_config: None,
+
+            // TEAM-119: Missing Step Fields (Batch 2)
+            gpu_vram_free: HashMap::new(),
+            system_ram_available: None,
+            gpu_temperature: None,
+            cpu_cores: None,
+            gpu_vram_total: None,
+            bandwidth_limit: None,
+            disk_io_percent: None,
+            base_url: None,
+            api_token: None,
+            file_readable_by_world: false,
+            file_readable_by_group: false,
+            queen_started_with_config: false,
+            queen_request_count: None,
+            log_messages: Vec::new(),
+            file_content_checked: false,
+
+            // TEAM-121: Missing Step Fields (Batch 4)
+            downloading_model: None,
+            health_check_interval: None,
+            workers_have_different_models: false,
+            pool_managerd_narration: false,
+            pool_managerd_cute_mode: false,
+            queen_requested_metrics: false,
+            narration_has_source_location: false,
+            narration_redaction: None,
+            worker_state: None,
+            registry_available: true,
+            crash_detected: false,
+            concurrent_registrations: None,
+            concurrent_requests: None,
+            queen_restarted: false,
+            hive_restarted: false,
+            inference_duration: None,
+
+            // TEAM-120: Missing Step Fields (Batch 3)
+            queen_started: false,
+            unwrap_search_performed: false,
+            hive_crashed: false,
+            log_has_correlation_id: false,
+            audit_has_token_fingerprint: false,
+            hash_chain_valid: false,
+            audit_fields: Vec::new(),
+            warning_messages: Vec::new(),
+            pool_managerd_has_gpu: false,
+            worker_processing_inference: false,
         }
+    }
+}
+
+impl World {
+    /// TEAM-121: Check if a service is available
+    pub async fn check_service_available(&self, url: &str) -> bool {
+        let client = reqwest::Client::builder()
+            .timeout(std::time::Duration::from_secs(2))
+            .build()
+            .unwrap();
+        
+        match client.get(url).send().await {
+            Ok(response) => response.status().is_success(),
+            Err(_) => false,
+        }
+    }
+    
+    /// TEAM-121: Skip test if services not available
+    pub async fn require_services(&self) -> Result<(), String> {
+        let queen_available = self.check_service_available("http://localhost:8080/health").await;
+        let hive_available = self.check_service_available("http://localhost:8081/health").await;
+        
+        if !queen_available || !hive_available {
+            return Err("Services not available - skipping integration test".to_string());
+        }
+        
+        Ok(())
     }
 }
 

@@ -113,7 +113,7 @@ mod tests {
         let results = TestResults { passed: 10, failed: 0, skipped: 0, exit_code: 0 };
 
         // Behavior: Should display success message
-        super::super::reporter::print_test_summary(&results);
+        super::super::reporter::print_test_summary(&results, std::time::Duration::from_secs(10));
         // Should execute without panic
     }
 
@@ -122,7 +122,7 @@ mod tests {
         let results = TestResults { passed: 8, failed: 2, skipped: 0, exit_code: 1 };
 
         // Behavior: Should display failure message
-        super::super::reporter::print_test_summary(&results);
+        super::super::reporter::print_test_summary(&results, std::time::Duration::from_secs(15));
         // Should execute without panic
     }
 
@@ -131,7 +131,7 @@ mod tests {
         let results = TestResults { passed: 5, failed: 1, skipped: 3, exit_code: 1 };
 
         // Behavior: Should display all counts including skipped
-        super::super::reporter::print_test_summary(&results);
+        super::super::reporter::print_test_summary(&results, std::time::Duration::from_secs(20));
         // Should execute without panic
     }
 
@@ -140,7 +140,7 @@ mod tests {
         let results = TestResults { passed: 0, failed: 0, skipped: 0, exit_code: 0 };
 
         // Behavior: Should handle zero tests gracefully
-        super::super::reporter::print_test_summary(&results);
+        super::super::reporter::print_test_summary(&results, std::time::Duration::from_secs(0));
         // Should execute without panic
     }
 
@@ -149,7 +149,7 @@ mod tests {
         let results = TestResults { passed: 999, failed: 123, skipped: 456, exit_code: 1 };
 
         // Behavior: Should handle large numbers
-        super::super::reporter::print_test_summary(&results);
+        super::super::reporter::print_test_summary(&results, std::time::Duration::from_secs(300));
         // Should execute without panic
     }
 

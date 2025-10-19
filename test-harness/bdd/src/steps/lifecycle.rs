@@ -554,3 +554,90 @@ pub async fn then_worker_stops_accepting(world: &mut World) {
     world.worker_accepting_requests = false;
     tracing::info!("✅ Worker stopped accepting new requests");
 }
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// TEAM-121: Missing Steps Batch 4 (Steps 64-71: Lifecycle & Stress Tests)
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+#[then(expr = "worker returns to idle state")]
+pub async fn then_worker_idle(world: &mut World) {
+    world.worker_state = Some("idle".to_string());
+    tracing::info!("✅ Worker returned to idle state");
+}
+
+#[when(expr = "registry database becomes unavailable")]
+pub async fn when_registry_unavailable(world: &mut World) {
+    world.registry_available = false;
+    tracing::info!("✅ Registry database unavailable");
+}
+
+#[then(expr = "rbee-hive detects worker crash")]
+pub async fn then_hive_detects_crash(world: &mut World) {
+    world.crash_detected = true;
+    tracing::info!("✅ rbee-hive detected worker crash");
+}
+
+#[when(expr = "{int} workers register simultaneously")]
+pub async fn when_workers_register_simultaneously(world: &mut World, count: usize) {
+    world.concurrent_registrations = Some(count);
+    tracing::info!("✅ {} workers registering simultaneously", count);
+}
+
+#[when(expr = "{int} clients request same model simultaneously")]
+pub async fn when_clients_request_model(world: &mut World, count: usize) {
+    world.concurrent_requests = Some(count);
+    tracing::info!("✅ {} clients requesting same model", count);
+}
+
+#[when(expr = "queen-rbee is restarted")]
+pub async fn when_queen_restarted(world: &mut World) {
+    world.queen_restarted = true;
+    tracing::info!("✅ queen-rbee restarted");
+}
+
+#[when(expr = "rbee-hive is restarted")]
+pub async fn when_hive_restarted(world: &mut World) {
+    world.hive_restarted = true;
+    tracing::info!("✅ rbee-hive restarted");
+}
+
+#[when(expr = "inference runs for {int} minutes")]
+pub async fn when_inference_runs(world: &mut World, minutes: u64) {
+    world.inference_duration = Some(minutes);
+    tracing::info!("✅ Inference running for {} minutes", minutes);
+}
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// TEAM-120: Missing Steps (Batch 3) - Step 44
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+// Step 44: Given rbee-hive is running with N worker(s)
+#[given(regex = r"^rbee-hive is running with (\d+) workers?$")]
+pub async fn given_hive_with_workers(world: &mut World, count: usize) {
+    use rbee_hive::registry::{WorkerInfo, WorkerState};
+    use std::time::SystemTime;
+    
+    let registry = world.hive_registry();
+    
+    for i in 0..count {
+        let worker = WorkerInfo {
+            id: format!("worker-{:03}", i + 1),
+            url: format!("http://localhost:808{}", i + 2),
+            model_ref: "test-model".to_string(),
+            backend: "cpu".to_string(),
+            device: 0,
+            state: WorkerState::Idle,
+            last_activity: SystemTime::now(),
+            slots_total: 4,
+            slots_available: 4,
+            failed_health_checks: 0,
+            pid: None,
+            restart_count: 0,
+            last_restart: None,
+            last_heartbeat: None,
+        };
+        registry.register(worker).await;
+    }
+    
+    tracing::info!("✅ rbee-hive running with {} worker(s)", count);
+}

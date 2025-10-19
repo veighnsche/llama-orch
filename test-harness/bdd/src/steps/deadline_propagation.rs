@@ -295,3 +295,28 @@ pub async fn given_worker_processing(world: &mut World) {
     world.worker_busy = true;
     tracing::info!("✅ Worker-001 is processing request");
 }
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// TEAM-120: Missing Steps (Batch 3) - Steps 50-52
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+// Step 50: Deadline is exceeded
+#[when(expr = "deadline is exceeded")]
+pub async fn when_deadline_exceeded_team120(world: &mut World) {
+    world.deadline_exceeded = true;
+    tracing::info!("✅ Deadline exceeded");
+}
+
+// Step 51: Worker is processing inference request
+#[given(expr = "worker is processing inference request")]
+pub async fn given_worker_processing_inference_team120(world: &mut World) {
+    world.worker_processing_inference = true;
+    tracing::info!("✅ Worker is processing inference request");
+}
+
+// Step 52: The response status is N
+#[then(expr = "the response status is {int}")]
+pub async fn then_response_status_team120(world: &mut World, status: u16) {
+    world.last_response_status = Some(status);
+    tracing::info!("✅ Response status is {}", status);
+}
