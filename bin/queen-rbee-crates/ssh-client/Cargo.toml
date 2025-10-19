@@ -1,0 +1,17 @@
+# TEAM-135: Created by TEAM-135 (scaffolding)
+
+[package]
+name = "queen-rbee-ssh-client"
+version = "0.1.0"
+edition = "2021"
+license = "GPL-3.0-or-later"
+
+[lib]
+name = "queen_rbee_ssh_client"
+path = "src/lib.rs"
+
+[dependencies]
+# Add dependencies as needed (likely ssh2, tokio)
+
+[dev-dependencies]
+# Add dev dependencies as needed

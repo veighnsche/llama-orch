@@ -1,0 +1,17 @@
+# TEAM-135: Created by TEAM-135 (scaffolding)
+
+[package]
+name = "rbee-hive-model-provisioner"
+version = "0.1.0"
+edition = "2021"
+license = "GPL-3.0-or-later"
+
+[lib]
+name = "rbee_hive_model_provisioner"
+path = "src/lib.rs"
+
+[dependencies]
+# Add dependencies as needed
+
+[dev-dependencies]
+# Add dev dependencies as needed

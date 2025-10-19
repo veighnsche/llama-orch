@@ -1,0 +1,33 @@
+# TEAM-135: Created by TEAM-135 (scaffolding)
+
+[package]
+name = "llm-worker-rbee"
+version = "0.1.0"
+edition = "2021"
+license = "GPL-3.0-or-later"
+
+[[bin]]
+name = "llm-worker-rbee"
+path = "src/main.rs"
+
+[[bin]]
+name = "llm-worker-rbee-cpu"
+path = "src/bin/cpu.rs"
+
+[[bin]]
+name = "llm-worker-rbee-cuda"
+path = "src/bin/cuda.rs"
+
+[[bin]]
+name = "llm-worker-rbee-metal"
+path = "src/bin/metal.rs"
+
+[lib]
+name = "llm_worker_rbee"
+path = "src/lib.rs"
+
+[dependencies]
+tokio = { workspace = true }
+
+[dev-dependencies]
+# Add dev dependencies as needed
