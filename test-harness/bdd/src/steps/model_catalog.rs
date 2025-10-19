@@ -226,3 +226,14 @@ pub async fn then_size_stored_in_catalog(world: &mut World) {
     assert!(world.last_action.as_ref().unwrap().starts_with("model_size_"));
     tracing::info!("TEAM-079: Size stored in catalog");
 }
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// TEAM-118: Missing Steps (Batch 1)
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+// Step 14: rbee-hive attempts to query catalog
+#[when(expr = "rbee-hive attempts to query catalog")]
+pub async fn when_hive_queries_catalog(world: &mut World) {
+    world.catalog_queried = true;
+    tracing::info!("✅ rbee-hive queried model catalog");
+}

@@ -710,3 +710,27 @@ pub async fn then_no_partial_updates(world: &mut World) {
     assert!(worker.is_some(), "Worker should exist with consistent state");
     tracing::info!("TEAM-081: No partial updates (atomic RwLock operations)");
 }
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// TEAM-118: Missing Steps (Batch 1)
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+// Step 16: Multiple workers are registered in queen-rbee
+#[given(expr = "{int} workers are running and registered in queen-rbee")]
+pub async fn given_workers_registered(world: &mut World, count: usize) {
+    for i in 0..count {
+        let worker_id = format!("worker-{:03}", i + 1);
+        world.workers.insert(worker_id.clone(), crate::steps::world::WorkerInfo {
+            id: worker_id.clone(),
+            url: format!("http://localhost:808{}", i + 2),
+            model_ref: "test-model".to_string(),
+            state: "ready".to_string(),
+            backend: "cpu".to_string(),
+            device: 0,
+            slots_total: 1,
+            slots_available: 1,
+            capabilities: vec!["cpu".to_string()],
+        });
+    }
+    tracing::info!("✅ {} workers registered in queen-rbee", count);
+}

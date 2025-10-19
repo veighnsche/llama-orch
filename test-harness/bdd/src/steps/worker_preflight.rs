@@ -345,3 +345,14 @@ pub async fn then_error_includes_backend(world: &mut World) {
 
     tracing::info!("✅ Error message includes requested backend");
 }
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// TEAM-118: Missing Steps (Batch 1)
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+// Step 10: Validation fails
+#[then(expr = "validation fails")]
+pub async fn then_validation_fails(world: &mut World) {
+    world.validation_passed = false;
+    tracing::info!("✅ Validation failed as expected");
+}

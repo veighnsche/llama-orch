@@ -279,6 +279,7 @@ pub async fn when_timeout_check_runs(world: &mut World) {
                         device: worker.device,
                         slots_total: worker.slots_total,
                         slots_available: worker.slots_available,
+                        capabilities: Vec::new(), // TEAM-118: Added missing field
                     },
                 );
                 tracing::info!(

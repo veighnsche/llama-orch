@@ -81,3 +81,14 @@ pub async fn given_beehive_registry_path(world: &mut World, path: String) {
     world.registry_db_path = Some(expanded_path.clone());
     tracing::info!("✅ Test setup: rbee-hive registry path set to: {}", expanded_path);
 }
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// TEAM-118: Missing Steps (Batch 1)
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+// Step 7: queen-rbee is already running as daemon
+#[given(expr = "queen-rbee is already running as daemon at {string}")]
+pub async fn given_queen_running_at(world: &mut World, url: String) {
+    world.queen_url = Some(url.clone());
+    tracing::info!("✅ queen-rbee running at {}", url);
+}

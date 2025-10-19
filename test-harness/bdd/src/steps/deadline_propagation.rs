@@ -284,3 +284,14 @@ pub async fn then_request_times_out_after(world: &mut World, timeout_secs: u64) 
     world.expected_timeout_secs = Some(timeout_secs);
     tracing::info!("Request will timeout after {}s if not complete", timeout_secs);
 }
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// TEAM-118: Missing Steps (Batch 1)
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+// Step 15: Worker is processing request
+#[given(expr = "worker-001 is processing request")]
+pub async fn given_worker_processing(world: &mut World) {
+    world.worker_busy = true;
+    tracing::info!("✅ Worker-001 is processing request");
+}

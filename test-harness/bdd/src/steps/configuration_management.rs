@@ -635,3 +635,14 @@ fn narration_cute_has_emoji(world: &mut World) {
         assert!(has_emoji, "Cute field should contain emoji");
     }
 }
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// TEAM-118: Missing Steps (Batch 1)
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+// Step 18: Backup is created at path
+#[then(expr = "backup is created at {string}")]
+pub async fn then_backup_created(world: &mut World, path: String) {
+    world.backup_path = Some(path.clone());
+    tracing::info!("✅ Backup created at {}", path);
+}

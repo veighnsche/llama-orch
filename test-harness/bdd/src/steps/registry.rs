@@ -43,6 +43,7 @@ pub async fn given_worker_registered_table(world: &mut World, step: &cucumber::g
         device: 0,
         slots_total: 1,
         slots_available: 1,
+        capabilities: Vec::new(), // TEAM-118: Added missing field
     };
 
     for row in table.rows.iter().skip(1) {
@@ -83,6 +84,7 @@ pub async fn given_worker_with_model_and_state(
         device: 1,
         slots_total: 1,
         slots_available,
+        capabilities: Vec::new(), // TEAM-118: Added missing field
     };
     world.workers.insert(worker_id.clone(), world_worker);
 

@@ -761,3 +761,15 @@ pub async fn then_no_degradation(_world: &mut World) {
     // In production, this would compare first vs last N requests
     tracing::info!("✅ TEAM-102: No performance degradation detected");
 }
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// TEAM-118: Missing Steps (Batch 1)
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+// Step 11: Request is accepted
+#[then(expr = "request is accepted")]
+pub async fn then_request_accepted(world: &mut World) {
+    let status = world.last_response_status.unwrap_or(500);
+    assert!(status >= 200 && status < 300, "Request not accepted, status: {}", status);
+    tracing::info!("✅ Request accepted (status {})", status);
+}

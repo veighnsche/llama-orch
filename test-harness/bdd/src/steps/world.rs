@@ -546,6 +546,42 @@ pub struct World {
 
     /// Worker response time in seconds
     pub worker_response_time: Option<u64>,
+
+    // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    // TEAM-118: Missing Step Fields (Batch 1)
+    // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    /// SSH connection timeout in seconds
+    pub ssh_timeout: Option<u64>,
+
+    /// Worker PIDs: worker_id -> PID
+    pub worker_pids: HashMap<String, u32>,
+
+    /// Worker slots configuration
+    pub worker_slots: Option<usize>,
+
+    /// Validation passed flag
+    pub validation_passed: bool,
+
+    /// Target node for requests
+    pub target_node: Option<String>,
+
+    /// Worker heartbeat T0 timestamp
+    pub worker_heartbeat_t0: Option<std::time::SystemTime>,
+
+    /// Catalog queried flag
+    pub catalog_queried: bool,
+
+    /// Worker busy flag
+    pub worker_busy: bool,
+
+    /// Worker accepting requests flag
+    pub worker_accepting_requests: bool,
+
+    /// Backup path
+    pub backup_path: Option<String>,
+
+    /// rbee-keeper configuration
+    pub keeper_config: Option<String>,
 }
 
 // TEAM-101: Manual Debug implementation to handle CaptureAdapter which doesn't implement Debug
@@ -597,6 +633,24 @@ pub struct WorkerInfo {
     pub device: u32,
     pub slots_total: u32,
     pub slots_available: u32,
+    // TEAM-118: Added for capabilities tracking
+    pub capabilities: Vec<String>,
+}
+
+impl Default for WorkerInfo {
+    fn default() -> Self {
+        Self {
+            id: String::new(),
+            url: String::new(),
+            model_ref: String::new(),
+            state: "idle".to_string(),
+            backend: "cpu".to_string(),
+            device: 0,
+            slots_total: 1,
+            slots_available: 1,
+            capabilities: Vec::new(),
+        }
+    }
 }
 
 #[derive(Debug, Clone)]
@@ -814,6 +868,19 @@ impl Default for World {
             registered_workers: Vec::new(),
             auth_required: false,
             auth_token: None,
+
+            // TEAM-118: Missing Step Fields (Batch 1)
+            ssh_timeout: None,
+            worker_pids: HashMap::new(),
+            worker_slots: None,
+            validation_passed: false,
+            target_node: None,
+            worker_heartbeat_t0: None,
+            catalog_queried: false,
+            worker_busy: false,
+            worker_accepting_requests: true,
+            backup_path: None,
+            keeper_config: None,
         }
     }
 }

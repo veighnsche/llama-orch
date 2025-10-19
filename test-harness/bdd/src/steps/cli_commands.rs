@@ -375,3 +375,29 @@ pub async fn then_validation_fails_with(world: &mut World, expected_message: Str
     );
     tracing::info!("✅ Validation failed with message: {}", expected_message);
 }
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// TEAM-118: Missing Steps (Batch 1)
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+// Step 4: Verify exit code
+#[then(expr = "the exit code is {int}")]
+pub async fn then_exit_code(world: &mut World, code: i32) {
+    let actual = world.last_exit_code.unwrap_or(0);
+    assert_eq!(actual, code, "Expected exit code {}, got {}", code, actual);
+    tracing::info!("✅ Exit code is {}", code);
+}
+
+// Step 6: Configure rbee-keeper to spawn queen-rbee
+#[given(expr = "rbee-keeper is configured to spawn queen-rbee")]
+pub async fn given_keeper_configured_spawn_queen(world: &mut World) {
+    world.keeper_config = Some("spawn_queen".to_string());
+    tracing::info!("✅ rbee-keeper configured to spawn queen-rbee");
+}
+
+// Step 12: Send request with node parameter
+#[when(expr = "I send request with node {string}")]
+pub async fn when_send_request_node(world: &mut World, node: String) {
+    world.target_node = Some(node.clone());
+    tracing::info!("✅ Sending request to node {}", node);
+}

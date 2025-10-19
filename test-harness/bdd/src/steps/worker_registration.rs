@@ -11,7 +11,7 @@
 // Modified by: TEAM-064 (added explicit warning preservation notice)
 
 use crate::steps::world::World;
-use cucumber::{then, when};
+use cucumber::{given, then, when};
 
 // TEAM-069: Call WorkerRegistry.register() NICE!
 #[when(expr = "rbee-hive registers the worker")]
@@ -79,4 +79,71 @@ pub async fn then_hashmap_updated(world: &mut World, step: &cucumber::gherkin::S
 #[then(regex = r"^the registration is ephemeral \(lost on rbee-hive restart\)$")]
 pub async fn then_registration_ephemeral(_world: &mut World) {
     tracing::debug!("Registration is ephemeral");
+}
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// TEAM-118: Missing Steps (Batch 1)
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+// Step 2: rbee-hive reports worker with capabilities
+#[when(expr = "rbee-hive reports worker {string} with capabilities {string}")]
+pub async fn when_hive_reports_worker(world: &mut World, worker_id: String, capabilities: String) {
+    // Parse capabilities array format: ["cuda:0", "cpu"]
+    let caps: Vec<String> = capabilities
+        .trim_matches(|c| c == '[' || c == ']')
+        .split(',')
+        .map(|s| s.trim().trim_matches('"').to_string())
+        .filter(|s| !s.is_empty())
+        .collect();
+    
+    world.workers.insert(worker_id.clone(), crate::steps::world::WorkerInfo {
+        id: worker_id.clone(),
+        url: format!("http://localhost:8082"),
+        model_ref: "test-model".to_string(),
+        state: "ready".to_string(),
+        backend: "cuda".to_string(),
+        device: 0,
+        slots_total: 1,
+        slots_available: 1,
+        capabilities: caps.clone(),
+    });
+    
+    tracing::info!("✅ Worker {} reported with capabilities: {:?}", worker_id, caps);
+}
+
+// Step 3: Verify response contains N workers
+#[then(expr = "the response contains {int} worker(s)")]
+pub async fn then_response_contains_workers(world: &mut World, count: usize) {
+    let actual_count = world.workers.len();
+    assert_eq!(actual_count, count, "Expected {} workers, found {}", count, actual_count);
+    tracing::info!("✅ Response contains {} worker(s)", count);
+}
+
+// Step 9: Configure worker with N slots
+#[given(expr = "worker has {int} slots total")]
+pub async fn given_worker_slots(world: &mut World, slots: usize) {
+    world.worker_slots = Some(slots);
+    tracing::info!("✅ Worker configured with {} slots", slots);
+}
+
+// Step 13: Register worker-001 with heartbeat T0
+#[given(expr = "worker-001 is registered in queen-rbee with last_heartbeat=T0")]
+pub async fn given_worker_registered_heartbeat(world: &mut World) {
+    use std::time::SystemTime;
+    
+    let worker_id = "worker-001".to_string();
+    world.workers.insert(worker_id.clone(), crate::steps::world::WorkerInfo {
+        id: worker_id.clone(),
+        url: "http://localhost:8082".to_string(),
+        model_ref: "test-model".to_string(),
+        state: "ready".to_string(),
+        backend: "cpu".to_string(),
+        device: 0,
+        slots_total: 1,
+        slots_available: 1,
+        capabilities: vec!["cpu".to_string()],
+    });
+    world.worker_heartbeat_t0 = Some(SystemTime::now());
+    
+    tracing::info!("✅ Worker-001 registered with heartbeat T0");
 }

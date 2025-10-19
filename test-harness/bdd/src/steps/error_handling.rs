@@ -68,8 +68,12 @@ pub async fn given_rbee_hive_binary_not_found(world: &mut World) {
 }
 
 // TEAM-062: Actually attempt SSH connection with timeout
+// TEAM-118: Updated to store timeout in world state
 #[then(expr = "queen-rbee attempts SSH connection with {int}s timeout")]
 pub async fn then_queen_attempts_ssh_with_timeout(world: &mut World, timeout: u16) {
+    // TEAM-118: Store SSH timeout in world state
+    world.ssh_timeout = Some(timeout as u64);
+    
     let node = world.beehive_nodes.get("workstation").expect("Node 'workstation' not in registry");
 
     let start = std::time::Instant::now();
@@ -380,6 +384,7 @@ pub async fn when_queen_queries_registry(world: &mut World) {
                         device: worker.device,
                         slots_total: worker.slots_total,
                         slots_available: worker.slots_available,
+                        capabilities: Vec::new(), // TEAM-118: Added missing field
                     },
                 );
             }

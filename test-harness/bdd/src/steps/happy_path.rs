@@ -423,6 +423,7 @@ pub async fn then_worker_ready_callback(world: &mut World, url: String) {
             device: worker.device,
             slots_total: worker.slots_total,
             slots_available: worker.slots_available,
+            capabilities: Vec::new(), // TEAM-118: Added missing field
         },
     );
 
