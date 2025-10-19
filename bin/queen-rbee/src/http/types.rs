@@ -82,6 +82,21 @@ pub struct RegisterWorkerResponse {
     pub worker_id: String,
 }
 
+// TEAM-124: Worker ready notification from rbee-hive
+#[derive(Debug, Deserialize)]
+pub struct WorkerReadyNotification {
+    pub worker_id: String,
+    pub url: String,
+    pub model_ref: String,
+    pub backend: String,
+}
+
+#[derive(Debug, Serialize)]
+pub struct WorkerReadyResponse {
+    pub success: bool,
+    pub message: String,
+}
+
 #[derive(Debug, Serialize)]
 pub struct WorkerInfo {
     pub worker_id: String,

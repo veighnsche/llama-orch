@@ -395,6 +395,59 @@ pub async fn handle_worker_ready(
     // Update worker state to idle
     state.registry.update_state(&request.worker_id, WorkerState::Idle).await;
 
+    // TEAM-124: Notify queen-rbee that worker is ready (if callback URL configured)
+    if let Some(ref queen_url) = state.queen_callback_url {
+        let callback_payload = serde_json::json!({
+            "worker_id": request.worker_id,
+            "url": request.url,
+            "model_ref": request.model_ref,
+            "backend": request.backend,
+        });
+
+        info!(
+            worker_id = %request.worker_id,
+            queen_url = %queen_url,
+            "Notifying queen-rbee of worker ready"
+        );
+
+        // Send async callback to queen-rbee (don't block on response)
+        let queen_url_clone = queen_url.clone();
+        let worker_id_clone = request.worker_id.clone();
+        tokio::spawn(async move {
+            let client = reqwest::Client::new();
+            match client
+                .post(format!("{}/v2/workers/ready", queen_url_clone))
+                .json(&callback_payload)
+                .timeout(std::time::Duration::from_secs(5))
+                .send()
+                .await
+            {
+                Ok(resp) if resp.status().is_success() => {
+                    info!(
+                        worker_id = %worker_id_clone,
+                        "✅ Queen-rbee notified successfully"
+                    );
+                }
+                Ok(resp) => {
+                    error!(
+                        worker_id = %worker_id_clone,
+                        status = %resp.status(),
+                        "⚠️  Queen-rbee callback failed with HTTP {}",
+                        resp.status()
+                    );
+                }
+                Err(e) => {
+                    error!(
+                        worker_id = %worker_id_clone,
+                        error = %e,
+                        "❌ Failed to notify queen-rbee: {}",
+                        e
+                    );
+                }
+            }
+        });
+    }
+
     Ok(Json(WorkerReadyResponse { message: "Worker registered as ready".to_string() }))
 }
 

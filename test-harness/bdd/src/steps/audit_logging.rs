@@ -586,8 +586,4 @@ pub async fn then_entry_has_field_team120(world: &mut World, field: String) {
 
 // Step 49: queen-rbee logs warning
 // Note: This is a duplicate of an existing step, but keeping for completeness
-#[then(expr = "queen-rbee logs warning {string}")]
-pub async fn then_queen_logs_warning_team120(world: &mut World, message: String) {
-    world.warning_messages.push(message.clone());
-    tracing::info!("✅ queen-rbee logged warning: {}", message);
-}
+// TEAM-123: REMOVED DUPLICATE - Keep audit_logging.rs:385

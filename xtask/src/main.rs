@@ -43,6 +43,8 @@ fn main() -> Result<()> {
         Cmd::BddTail { lines } => tasks::bdd::bdd_tail(lines)?,
         Cmd::BddHead { lines } => tasks::bdd::bdd_head(lines)?,
         Cmd::BddGrep { pattern, ignore_case } => tasks::bdd::bdd_grep(pattern, ignore_case)?,
+        Cmd::BddCheckDuplicates => tasks::bdd::check_duplicate_steps()?,
+        Cmd::BddFixDuplicates => tasks::bdd::fix_all_duplicates()?,
     }
     Ok(())
 }

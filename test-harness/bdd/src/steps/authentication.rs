@@ -25,7 +25,7 @@ pub async fn given_expected_token(world: &mut World, token: String) {
     tracing::info!("Expected token configured");
 }
 
-#[when(expr = "I send POST to {string} without Authorization header")]
+// TEAM-123: REMOVED DUPLICATE - Keep authentication.rs:782
 pub async fn when_post_without_auth(world: &mut World, endpoint: String) {
     let url = format!("{}{}", world.queen_url.as_ref().unwrap(), endpoint);
 
@@ -120,12 +120,7 @@ pub async fn then_log_contains_fingerprint(world: &mut World, token: String) {
     tracing::info!("✅ TEAM-102: Verified log contains fingerprint (not raw token)");
 }
 
-#[then(expr = "log contains {string}")]
-pub async fn then_log_contains(world: &mut World, message: String) {
-    // TEAM-102: Verify log contains message
-    // In production, this would check actual log files or tracing subscriber
-    tracing::info!("✅ TEAM-102: Verified log contains '{}'", message);
-}
+// TEAM-123: REMOVED DUPLICATE - Keep configuration_management.rs:669
 
 #[when(expr = "request body is:")]
 pub async fn when_request_body_is(world: &mut World, body: String) {
@@ -349,21 +344,7 @@ pub async fn when_request_worker_no_auth(world: &mut World) {
     }
 }
 
-#[when(expr = "I send GET to {string} without Authorization header")]
-pub async fn when_get_without_auth(world: &mut World, endpoint: String) {
-    let url = format!("{}{}", world.queen_url.as_ref().unwrap(), endpoint);
-    let client = reqwest::Client::new();
-    let response = client.get(&url).send().await;
-
-    match response {
-        Ok(resp) => {
-            world.last_status_code = Some(resp.status().as_u16());
-        }
-        Err(e) => {
-            world.last_error_message = Some(e.to_string());
-        }
-    }
-}
+// TEAM-123: REMOVED DUPLICATE - real implementation at line 792 (when_get_without_auth_header)
 
 #[when(expr = "I send DELETE to {string} without Authorization header")]
 pub async fn when_delete_without_auth(world: &mut World, endpoint: String) {
@@ -545,8 +526,8 @@ pub async fn then_responses_within(world: &mut World, seconds: u64) {
 }
 
 #[when(expr = "I send GET to {string} without Authorization")]
-pub async fn when_get_no_auth(world: &mut World, endpoint: String) {
-    when_get_without_auth(world, endpoint).await;
+pub async fn when_get_no_auth(world: &mut World, endpoint: String) -> Result<(), String> {
+    when_get_without_auth_header(world, endpoint).await
 }
 
 #[when(expr = "I send PUT to {string} without Authorization")]
@@ -687,7 +668,7 @@ pub async fn then_auth_logged(_world: &mut World) {
     tracing::info!("✅ TEAM-102: All auth events logged with fingerprints");
 }
 
-#[when(expr = "I send {int} authenticated requests")]
+// TEAM-123: REMOVED DUPLICATE - Keep authentication.rs:814
 pub async fn when_send_n_authenticated(world: &mut World, count: usize) {
     // TEAM-102: Send N authenticated requests for performance testing
     use tokio::task::JoinSet;
@@ -766,13 +747,7 @@ pub async fn then_no_degradation(_world: &mut World) {
 // TEAM-118: Missing Steps (Batch 1)
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-// Step 11: Request is accepted
-#[then(expr = "request is accepted")]
-pub async fn then_request_accepted(world: &mut World) {
-    let status = world.last_response_status.unwrap_or(500);
-    assert!(status >= 200 && status < 300, "Request not accepted, status: {}", status);
-    tracing::info!("✅ Request accepted (status {})", status);
-}
+// TEAM-123: REMOVED DUPLICATE - real implementation in validation.rs:156
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 // TEAM-119: Missing Steps (Batch 2)

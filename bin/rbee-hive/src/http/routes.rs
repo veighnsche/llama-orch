@@ -31,6 +31,7 @@ use std::sync::Arc;
 /// TEAM-091: Added server_addr for correct callback URL construction
 /// TEAM-102: Added expected_token for authentication
 /// TEAM-114: Added audit_logger for security audit trail
+/// TEAM-124: Added queen_callback_url for worker ready notifications
 #[derive(Clone)]
 pub struct AppState {
     pub registry: Arc<WorkerRegistry>,
@@ -42,6 +43,8 @@ pub struct AppState {
     pub expected_token: String,
     // TEAM-114: Audit logger for security events (disabled by default for home lab mode)
     pub audit_logger: Option<Arc<audit_logging::AuditLogger>>,
+    // TEAM-124: Queen-rbee callback URL for worker ready notifications (optional for standalone mode)
+    pub queen_callback_url: Option<String>,
 }
 
 /// Create HTTP router with all endpoints
@@ -54,6 +57,7 @@ pub struct AppState {
 /// * `server_addr` - Server bind address for callback URL construction
 /// * `expected_token` - API token for authentication (TEAM-102)
 /// * `audit_logger` - Audit logger for security events (TEAM-114)
+/// * `queen_callback_url` - Queen-rbee callback URL for worker ready notifications (TEAM-124)
 ///
 /// # Returns
 /// Router with all endpoints configured
@@ -65,6 +69,7 @@ pub fn create_router(
     server_addr: std::net::SocketAddr,
     expected_token: String, // TEAM-102: API token for authentication
     audit_logger: Option<Arc<audit_logging::AuditLogger>>, // TEAM-114: Audit logging
+    queen_callback_url: Option<String>, // TEAM-124: Queen-rbee callback URL
 ) -> Router {
     let state = AppState {
         registry,
@@ -74,6 +79,7 @@ pub fn create_router(
         server_addr,
         expected_token, // TEAM-102
         audit_logger,   // TEAM-114
+        queen_callback_url, // TEAM-124
     };
 
     // TEAM-102: Split routes into public and protected
@@ -123,6 +129,7 @@ mod tests {
         let addr: std::net::SocketAddr = "127.0.0.1:9200".parse().unwrap();
         let expected_token = "test-token-12345".to_string(); // TEAM-102
         let audit_logger = None; // TEAM-114: Disabled for tests
+        let queen_callback_url = None; // TEAM-124: No callback in tests
         let _router = create_router(
             registry,
             catalog,
@@ -131,6 +138,7 @@ mod tests {
             addr,
             expected_token,
             audit_logger,
+            queen_callback_url,
         );
         // Router creation should not panic
     }

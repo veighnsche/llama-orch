@@ -113,6 +113,8 @@ pub async fn handle(addr: String) -> Result<()> {
     // Create router
     // TEAM-102: Added expected_token for authentication
     // TEAM-114: Added audit_logger for security events
+    // TEAM-124: Added queen_callback_url for worker ready notifications
+    let queen_callback_url = std::env::var("QUEEN_CALLBACK_URL").ok();
     let router = create_router(
         registry.clone(),
         model_catalog.clone(),
@@ -121,6 +123,7 @@ pub async fn handle(addr: String) -> Result<()> {
         addr,
         expected_token,       // TEAM-102
         audit_logger.clone(), // TEAM-114
+        queen_callback_url,   // TEAM-124
     );
 
     // Create HTTP server

@@ -101,6 +101,17 @@ async fn handle_add_node(
     // TEAM-113: Validate node name before sending to queen-rbee
     validate_identifier(&name, 64).map_err(|e| anyhow::anyhow!("Invalid node name: {}", e))?;
 
+    // TEAM-123: Validate SSH key path exists before sending to queen-rbee
+    if let Some(ref key_path) = ssh_key {
+        if !std::path::Path::new(key_path).exists() {
+            eprintln!("{} {} Error: SSH key not found", "[rbee-keeper]".cyan(), "❌".red());
+            eprintln!("  Path: {}", key_path);
+            eprintln!();
+            eprintln!("Check the key path and try again.");
+            anyhow::bail!("SSH key not found: {}", key_path);
+        }
+    }
+
     println!("{} Adding node '{}' to registry...", "[queen-rbee]".cyan(), name);
 
     let client = reqwest::Client::new();

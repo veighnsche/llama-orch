@@ -86,4 +86,8 @@ pub enum Cmd {
         #[arg(short, long)]
         ignore_case: bool,
     },
+    #[command(name = "bdd:check-duplicates")]
+    BddCheckDuplicates,
+    #[command(name = "bdd:fix-duplicates")]
+    BddFixDuplicates,
 }

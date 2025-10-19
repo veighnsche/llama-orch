@@ -308,11 +308,7 @@ pub async fn when_deadline_exceeded_team120(world: &mut World) {
 }
 
 // Step 51: Worker is processing inference request
-#[given(expr = "worker is processing inference request")]
-pub async fn given_worker_processing_inference_team120(world: &mut World) {
-    world.worker_processing_inference = true;
-    tracing::info!("✅ Worker is processing inference request");
-}
+// TEAM-123: REMOVED DUPLICATE - Keep error_handling.rs:961
 
 // Step 52: The response status is N
 #[then(expr = "the response status is {int}")]

@@ -15,7 +15,7 @@ use rbee_hive::registry::{WorkerInfo, WorkerState};
 // TEAM-098: PID Tracking Steps
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-#[when(expr = "rbee-hive spawns a worker process")]
+// TEAM-123: REMOVED DUPLICATE - Keep lifecycle.rs:540
 pub async fn when_hive_spawns_worker_process(world: &mut World) {
     // Spawn worker with PID tracking
     let worker_id = uuid::Uuid::new_v4().to_string();

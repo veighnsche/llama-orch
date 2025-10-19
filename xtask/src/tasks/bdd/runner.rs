@@ -305,6 +305,10 @@ fn execute_tests_live(cmd: &mut Command, paths: &OutputPaths) -> Result<TestResu
         }
     });
 
+    // TEAM-123: Wait for process to complete FIRST, then join threads
+    // This prevents deadlock - the process can exit, closing pipes, which allows threads to finish
+    let status = child.wait()?;
+
     // Wait for both threads to finish - handle panics gracefully
     if let Err(e) = stdout_handle.join() {
         eprintln!("Warning: stdout reader thread panicked: {:?}", e);
@@ -312,9 +316,6 @@ fn execute_tests_live(cmd: &mut Command, paths: &OutputPaths) -> Result<TestResu
     if let Err(e) = stderr_handle.join() {
         eprintln!("Warning: stderr reader thread panicked: {:?}", e);
     }
-
-    // Wait for process to complete
-    let status = child.wait()?;
 
     // Get captured output - handle poisoned mutex
     let output_str = match output_content.lock() {

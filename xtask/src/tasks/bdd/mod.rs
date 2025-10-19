@@ -30,3 +30,9 @@ mod types_tests;
 pub use live_filters::{bdd_grep, bdd_head, bdd_tail};
 pub use runner::run_bdd_tests;
 pub use types::BddConfig;
+
+mod duplicate_checker;
+pub use duplicate_checker::check_duplicate_steps;
+
+mod duplicate_fixer;
+pub use duplicate_fixer::fix_all_duplicates;

@@ -86,7 +86,7 @@ pub async fn then_registration_ephemeral(_world: &mut World) {
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 // Step 2: rbee-hive reports worker with capabilities
-#[when(expr = "rbee-hive reports worker {string} with capabilities {string}")]
+// TEAM-123: REMOVED DUPLICATE - Keep queen_rbee_registry.rs:126
 pub async fn when_hive_reports_worker(world: &mut World, worker_id: String, capabilities: String) {
     // Parse capabilities array format: ["cuda:0", "cpu"]
     let caps: Vec<String> = capabilities
@@ -112,12 +112,7 @@ pub async fn when_hive_reports_worker(world: &mut World, worker_id: String, capa
 }
 
 // Step 3: Verify response contains N workers
-#[then(expr = "the response contains {int} worker(s)")]
-pub async fn then_response_contains_workers(world: &mut World, count: usize) {
-    let actual_count = world.workers.len();
-    assert_eq!(actual_count, count, "Expected {} workers, found {}", count, actual_count);
-    tracing::info!("✅ Response contains {} worker(s)", count);
-}
+// TEAM-123: REMOVED DUPLICATE - Keep queen_rbee_registry.rs:237
 
 // Step 9: Configure worker with N slots
 #[given(expr = "worker has {int} slots total")]

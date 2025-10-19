@@ -94,9 +94,11 @@ pub async fn when_request_with_path(world: &mut World, path: String) -> Result<(
         Ok(resp) => {
             world.last_status_code = Some(resp.status().as_u16());
             world.last_response_body = resp.text().await.ok();
+            Ok(())
         }
         Err(e) => {
             world.last_error_message = Some(e.to_string());
+            Ok(())
         }
     }
 }
@@ -131,9 +133,11 @@ pub async fn when_request_with_worker_id(world: &mut World, worker_id: String) -
         Ok(resp) => {
             world.last_status_code = Some(resp.status().as_u16());
             world.last_response_body = resp.text().await.ok();
+            Ok(())
         }
         Err(e) => {
             world.last_error_message = Some(e.to_string());
+            Ok(())
         }
     }
 }
@@ -174,9 +178,11 @@ pub async fn when_request_with_backend(world: &mut World, backend: String) -> Re
         Ok(resp) => {
             world.last_status_code = Some(resp.status().as_u16());
             world.last_response_body = resp.text().await.ok();
+            Ok(())
         }
         Err(e) => {
             world.last_error_message = Some(e.to_string());
+            Ok(())
         }
     }
 }
@@ -201,9 +207,11 @@ pub async fn when_request_with_device(world: &mut World, device: String) -> Resu
         Ok(resp) => {
             world.last_status_code = Some(resp.status().as_u16());
             world.last_response_body = resp.text().await.ok();
+            Ok(())
         }
         Err(e) => {
             world.last_error_message = Some(e.to_string());
+            Ok(())
         }
     }
 }
@@ -228,9 +236,11 @@ pub async fn when_request_with_node(world: &mut World, node: String) -> Result<(
         Ok(resp) => {
             world.last_status_code = Some(resp.status().as_u16());
             world.last_response_body = resp.text().await.ok();
+            Ok(())
         }
         Err(e) => {
             world.last_error_message = Some(e.to_string());
+            Ok(())
         }
     }
 }
@@ -304,9 +314,11 @@ pub async fn when_send_large_body(world: &mut World, size_mb: usize) -> Result<(
         Ok(resp) => {
             world.last_status_code = Some(resp.status().as_u16());
             world.last_response_body = resp.text().await.ok();
+            Ok(())
         }
         Err(e) => {
             world.last_error_message = Some(e.to_string());
+            Ok(())
         }
     }
 }
@@ -362,9 +374,11 @@ pub async fn when_send_malicious_to_endpoint(world: &mut World, endpoint: String
         Ok(resp) => {
             world.last_status_code = Some(resp.status().as_u16());
             world.last_response_body = resp.text().await.ok();
+            Ok(())
         }
         Err(e) => {
             world.last_error_message = Some(e.to_string());
+            Ok(())
         }
     }
 }

@@ -4,6 +4,7 @@
 //! - GET /v2/workers/list - List all workers
 //! - GET /v2/workers/health - Get worker health status
 //! - POST /v2/workers/shutdown - Shutdown a worker
+//! - POST /v2/workers/ready - Worker ready notification (TEAM-124)
 //!
 //! Created by: TEAM-046
 //! Refactored by: TEAM-052
@@ -14,12 +15,13 @@ use axum::{
     response::IntoResponse,
 };
 use std::collections::HashMap;
-use tracing::error;
+use tracing::{error, info};
 
 use crate::http::routes::AppState;
 use crate::http::types::{
     RegisterWorkerRequest, RegisterWorkerResponse, ShutdownWorkerRequest, ShutdownWorkerResponse,
-    WorkerHealthInfo, WorkerInfo, WorkersHealthResponse, WorkersListResponse,
+    WorkerHealthInfo, WorkerInfo, WorkerReadyNotification, WorkerReadyResponse,
+    WorkersHealthResponse, WorkersListResponse,
 };
 use crate::worker_registry::{WorkerInfoExtended, WorkerState};
 
@@ -147,4 +149,51 @@ pub async fn handle_register_worker(
             worker_id: req.worker_id,
         }),
     )
+}
+
+/// Handle POST /v2/workers/ready
+///
+/// Receive worker ready notification from rbee-hive
+/// Created by: TEAM-124
+pub async fn handle_worker_ready(
+    State(state): State<AppState>,
+    Json(notification): Json<WorkerReadyNotification>,
+) -> impl IntoResponse {
+    info!(
+        worker_id = %notification.worker_id,
+        url = %notification.url,
+        model_ref = %notification.model_ref,
+        "✅ Worker ready notification received from rbee-hive"
+    );
+
+    // Update worker state to idle (ready to accept requests)
+    match state.worker_registry.update_worker_state(&notification.worker_id, WorkerState::Idle).await {
+        Ok(_) => {
+            info!(
+                worker_id = %notification.worker_id,
+                "Worker state updated to Idle"
+            );
+            (
+                StatusCode::OK,
+                Json(WorkerReadyResponse {
+                    success: true,
+                    message: format!("Worker '{}' marked as ready", notification.worker_id),
+                }),
+            )
+        }
+        Err(e) => {
+            error!(
+                worker_id = %notification.worker_id,
+                error = %e,
+                "Failed to update worker state"
+            );
+            (
+                StatusCode::INTERNAL_SERVER_ERROR,
+                Json(WorkerReadyResponse {
+                    success: false,
+                    message: format!("Failed to update worker state: {}", e),
+                }),
+            )
+        }
+    }
 }

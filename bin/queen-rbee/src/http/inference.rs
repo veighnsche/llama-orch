@@ -296,11 +296,15 @@ async fn ensure_local_rbee_hive_running() -> anyhow::Result<String> {
         (std::process::Stdio::inherit(), std::process::Stdio::inherit())
     };
 
+    // TEAM-124: Pass queen-rbee callback URL to rbee-hive for worker ready notifications
+    let queen_callback_url = "http://127.0.0.1:8080"; // Queen-rbee's address
+
     let mut child = tokio::process::Command::new(&rbee_hive_binary)
         .arg("daemon")
         .arg("--addr")
         .arg("127.0.0.1:9200") // TEAM-085: Different port from queen-rbee (8080)
         .env("RBEE_WORKER_HOST", "127.0.0.1")
+        .env("QUEEN_CALLBACK_URL", queen_callback_url) // TEAM-124: Worker ready callback URL
         .stdout(stdout_cfg)
         .stderr(stderr_cfg)
         .spawn()?;
@@ -342,9 +346,15 @@ async fn ensure_local_rbee_hive_running() -> anyhow::Result<String> {
 
 /// TEAM-047: Establish rbee-hive connection via SSH
 async fn establish_rbee_hive_connection(node: &BeehiveNode) -> anyhow::Result<String> {
+    // TEAM-124: Get queen-rbee's public address for callback
+    // TODO: Make this configurable via environment variable or config file
+    let queen_callback_url = std::env::var("QUEEN_PUBLIC_URL")
+        .unwrap_or_else(|_| "http://127.0.0.1:8080".to_string());
+
     // Execute remote command to start rbee-hive daemon
     let start_command = format!(
-        "{}/rbee-hive daemon --addr 0.0.0.0:8080 > /tmp/rbee-hive.log 2>&1 &",
+        "QUEEN_CALLBACK_URL={} {}/rbee-hive daemon --addr 0.0.0.0:8080 > /tmp/rbee-hive.log 2>&1 &",
+        queen_callback_url,
         node.install_path
     );
 
@@ -423,19 +433,26 @@ async fn wait_for_rbee_hive_ready(url: &str) -> anyhow::Result<()> {
 /// TEAM-047: Wait for worker to be ready
 /// TEAM-087: Enhanced timeout diagnostics
 async fn wait_for_worker_ready(worker_url: &str) -> anyhow::Result<()> {
+    // TEAM-124: Reduced timeout from 300s to 30s since we now have callback notifications
+    // The callback should notify us immediately when worker is ready
+    // This polling is now just a fallback safety mechanism
     let client = reqwest::Client::new();
     let start = std::time::Instant::now();
-    let timeout = std::time::Duration::from_secs(300); // 5 minutes
+    let timeout = std::time::Duration::from_secs(30); // Reduced from 5 minutes to 30 seconds
     let mut attempt = 0;
     #[allow(unused_assignments)]
     let mut last_error: Option<String> = None;
+
+    info!(
+        "⏳ Waiting for worker ready (with callback notification support, 30s timeout)..."
+    );
 
     loop {
         attempt += 1;
         let elapsed = start.elapsed();
 
-        // Log progress every 10 seconds
-        if attempt % 5 == 0 {
+        // Log progress every 5 seconds (more frequent due to shorter timeout)
+        if attempt % 3 == 0 {
             info!(
                 "Waiting for worker ready... attempt {} ({:.1}s elapsed)",
                 attempt,
@@ -479,7 +496,7 @@ async fn wait_for_worker_ready(worker_url: &str) -> anyhow::Result<()> {
             }
             Err(e) => {
                 last_error = Some(format!("Connection error: {}", e));
-                if attempt <= 3 || attempt % 10 == 0 {
+                if attempt <= 3 || attempt % 5 == 0 {
                     error!("Worker connection error (attempt {}): {}", attempt, e);
                 }
             }
@@ -490,7 +507,7 @@ async fn wait_for_worker_ready(worker_url: &str) -> anyhow::Result<()> {
                 "Worker ready timeout after {:.1}s ({} attempts). Last error: {}. \
                  Worker URL: {}. Possible causes: (1) Model download failed, \
                  (2) Worker crashed during startup, (3) Worker binary missing dependencies, \
-                 (4) Callback URL unreachable",
+                 (4) Callback notification failed (check rbee-hive logs)",
                 elapsed.as_secs_f32(),
                 attempt,
                 last_error.unwrap_or_else(|| "No response".to_string()),

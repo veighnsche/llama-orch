@@ -48,12 +48,7 @@ pub async fn given_file_contains(world: &mut World, content: String) {
     fs::write(path, content).expect("Failed to write file");
 }
 
-#[when(expr = "queen-rbee starts with config:")]
-pub async fn when_queen_starts_with_config(world: &mut World, config: String) {
-    // TODO: Parse config and start queen-rbee
-    world.last_config = Some(config);
-    tracing::info!("Starting queen-rbee with config");
-}
+// TEAM-123: REMOVED DUPLICATE - Keep configuration_management.rs:655
 
 #[then(expr = "queen-rbee starts successfully")]
 pub async fn then_queen_starts_successfully(world: &mut World) {
@@ -79,14 +74,7 @@ pub async fn then_log_not_contains(world: &mut World, text: String) {
     tracing::info!("Verifying log does NOT contain: {}", text);
 }
 
-#[given(expr = "systemd credential exists at {string}")]
-pub async fn given_systemd_credential(world: &mut World, path: String) {
-    // Create systemd credential directory and file
-    if let Some(parent) = std::path::Path::new(&path).parent() {
-        fs::create_dir_all(parent).expect("Failed to create systemd credential dir");
-    }
-    world.systemd_credential_path = Some(path);
-}
+// TEAM-123: REMOVED DUPLICATE - real implementation at line 358 (given_systemd_credential_exists)
 
 #[when(expr = "queen-rbee starts with systemd credential {string}")]
 pub async fn when_queen_starts_systemd(world: &mut World, cred_name: String) {

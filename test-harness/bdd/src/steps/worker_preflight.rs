@@ -351,7 +351,7 @@ pub async fn then_error_includes_backend(world: &mut World) {
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 // Step 10: Validation fails
-#[then(expr = "validation fails")]
+// TEAM-123: REMOVED DUPLICATE - real implementation in error_handling.rs:745
 pub async fn then_validation_fails(world: &mut World) {
     world.validation_passed = false;
     tracing::info!("✅ Validation failed as expected");

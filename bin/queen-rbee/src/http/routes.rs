@@ -75,6 +75,7 @@ pub fn create_router(
         .route("/v2/workers/health", get(workers::handle_workers_health))
         .route("/v2/workers/shutdown", post(workers::handle_shutdown_worker))
         .route("/v2/workers/register", post(workers::handle_register_worker)) // TEAM-084: Worker registration
+        .route("/v2/workers/ready", post(workers::handle_worker_ready)) // TEAM-124: Worker ready notification
         // Inference task endpoints (protected)
         .route("/v2/tasks", post(inference::handle_create_inference_task))
         .route("/v1/inference", post(inference::handle_inference_request)) // TEAM-084: Direct inference endpoint

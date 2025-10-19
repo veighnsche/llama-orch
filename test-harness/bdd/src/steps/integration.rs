@@ -287,7 +287,7 @@ pub async fn then_tokens_streamed_to_client(world: &mut World) {
     }
 }
 
-#[then(expr = "worker returns to idle state")]
+// TEAM-123: REMOVED DUPLICATE - Keep lifecycle.rs:562
 pub async fn then_worker_returns_to_idle(world: &mut World) {
     // TEAM-083: Verify worker transitioned back to idle
     use queen_rbee::worker_registry::WorkerState;

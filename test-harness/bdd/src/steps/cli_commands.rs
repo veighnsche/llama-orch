@@ -380,13 +380,8 @@ pub async fn then_validation_fails_with(world: &mut World, expected_message: Str
 // TEAM-118: Missing Steps (Batch 1)
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-// Step 4: Verify exit code
-#[then(expr = "the exit code is {int}")]
-pub async fn then_exit_code(world: &mut World, code: i32) {
-    let actual = world.last_exit_code.unwrap_or(0);
-    assert_eq!(actual, code, "Expected exit code {}, got {}", code, actual);
-    tracing::info!("✅ Exit code is {}", code);
-}
+// TEAM-123: REMOVED DUPLICATE - this step is already defined at line 261 as then_exit_code_is
+// Duplicate step definitions cause cucumber to hang!
 
 // Step 6: Configure rbee-keeper to spawn queen-rbee
 #[given(expr = "rbee-keeper is configured to spawn queen-rbee")]
@@ -395,9 +390,4 @@ pub async fn given_keeper_configured_spawn_queen(world: &mut World) {
     tracing::info!("✅ rbee-keeper configured to spawn queen-rbee");
 }
 
-// Step 12: Send request with node parameter
-#[when(expr = "I send request with node {string}")]
-pub async fn when_send_request_node(world: &mut World, node: String) {
-    world.target_node = Some(node.clone());
-    tracing::info!("✅ Sending request to node {}", node);
-}
+// TEAM-123: REMOVED DUPLICATE - real implementation in validation.rs:219

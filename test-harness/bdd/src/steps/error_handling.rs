@@ -520,18 +520,7 @@ pub async fn then_worker_exits_error(world: &mut World) {
     tracing::info!("✅ Worker error exit captured, exit code set to 1");
 }
 
-// TEAM-074: Worker crash detection with proper error state
-#[then(expr = "rbee-hive detects worker crash")]
-pub async fn then_detects_worker_crash(world: &mut World) {
-    // TEAM-074: Capture crash detection state
-    world.last_exit_code = Some(1);
-    world.last_error = Some(crate::steps::world::ErrorResponse {
-        code: "WORKER_CRASH_DETECTED".to_string(),
-        message: "rbee-hive detected worker crash".to_string(),
-        details: None,
-    });
-    tracing::info!("✅ Worker crash detected, error state captured");
-}
+// TEAM-123: REMOVED DUPLICATE - real implementation in lifecycle.rs:574
 
 #[given(expr = "CUDA device {int} has {int} MB VRAM")]
 pub async fn given_cuda_device_vram(_world: &mut World, device: u8, vram_mb: u32) {
@@ -720,9 +709,25 @@ pub async fn given_no_cuda(_world: &mut World, _node: String) {
 // EH-011: Configuration Errors
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
+// TEAM-123: Implement real validation check - verify command failed with SSH key error
 #[then(expr = "rbee-keeper validates SSH key path before sending to queen-rbee")]
-pub async fn then_validates_ssh_key(_world: &mut World) {
+pub async fn then_validates_ssh_key(world: &mut World) {
     tracing::debug!("Validating SSH key path");
+    // TEAM-123: Check that the command output contains SSH key validation error
+    // This verifies that rbee-keeper validated the key BEFORE attempting to connect
+    let stderr = &world.last_stderr;
+    let stdout = &world.last_stdout;
+    let combined = format!("{}{}", stderr, stdout);
+    
+    // TEAM-123: If the error message contains "SSH key", validation happened
+    // If it contains "Connection" or "timeout", validation was skipped (bad!)
+    if combined.contains("SSH key") || combined.contains("key not found") {
+        tracing::info!("✅ SSH key validation occurred (found key-related error)");
+    } else if combined.contains("Connection") || combined.contains("timeout") {
+        panic!("❌ SSH key validation was SKIPPED - rbee-keeper tried to connect without validating key first!");
+    } else {
+        tracing::warn!("⚠️  Cannot determine if SSH key validation occurred from output");
+    }
 }
 
 // TEAM-074: Validation failure with proper error handling
@@ -1419,13 +1424,7 @@ pub async fn then_circuit_breaker_opens(world: &mut World, failures: u8) {
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 // Step 34: Error message does not contain text
-#[then(expr = "error message does not contain {string}")]
-pub async fn then_error_message_not_contains(world: &mut World, text: String) {
-    let empty = String::new();
-    let error_msg = world.last_error_message.as_ref().unwrap_or(&empty);
-    assert!(!error_msg.contains(&text), "Error message should not contain '{}'", text);
-    tracing::info!("✅ Error message does not contain '{}'", text);
-}
+// TEAM-123: REMOVED DUPLICATE - Keep validation.rs:353
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 // TEAM-120: Missing Steps (Batch 3) - Steps 37-43
@@ -1445,12 +1444,7 @@ pub async fn when_searching_unwrap(world: &mut World) {
     tracing::info!("✅ Searched for unwrap() calls");
 }
 
-// Step 39: rbee-hive continues running (does NOT crash)
-#[then(expr = "rbee-hive continues running (does NOT crash)")]
-pub async fn then_hive_not_crash(world: &mut World) {
-    world.hive_crashed = false;
-    tracing::info!("✅ rbee-hive continues running");
-}
+// TEAM-123: REMOVED DUPLICATE - real implementation in errors.rs:113
 
 // Step 40: Error message does NOT contain password
 #[then(expr = "error message does NOT contain password")]
