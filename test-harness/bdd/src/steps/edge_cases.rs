@@ -91,33 +91,6 @@ pub async fn when_attempt_connection(world: &mut World) {
     tracing::info!("✅ Real connection attempt failed (exit code {:?})", world.last_exit_code);
 }
 
-#[when(expr = "rbee-hive retries download")]
-pub async fn when_retry_download(world: &mut World) {
-    // TEAM-060: Execute REAL download command that fails (unreachable URL)
-    // TEAM-112: Normalize exit code to 1 (curl returns 6 for DNS failures)
-    let result = tokio::process::Command::new("curl")
-        .arg("--fail")
-        .arg("--max-time")
-        .arg("2")
-        .arg("--retry")
-        .arg("2")
-        .arg("--retry-delay")
-        .arg("0")
-        .arg("http://unreachable.invalid/model.gguf")
-        .arg("-o")
-        .arg("/dev/null")
-        .output()
-        .await
-        .expect("Failed to execute curl");
-
-    // TEAM-112: Normalize any non-zero exit code to 1 for consistency
-    world.last_exit_code = if result.status.success() { Some(0) } else { Some(1) };
-    world.last_stderr = String::from_utf8_lossy(&result.stderr).to_string();
-    tracing::info!("✅ Real download retry failed (exit code {:?})", world.last_exit_code);
-}
-
-// TEAM-074: Removed duplicate - kept version in error_handling.rs
-
 #[when(expr = "the worker process dies unexpectedly")]
 pub async fn when_worker_dies(world: &mut World) {
     // TEAM-060: Simulate worker crash by spawning a process that immediately exits with error
@@ -164,29 +137,6 @@ pub async fn when_version_check(world: &mut World) {
     tracing::info!("✅ Real version check failed (exit code {:?})", world.last_exit_code);
 }
 
-#[when(expr = "rbee-keeper sends request with {string}")]
-pub async fn when_send_request_with_header(world: &mut World, header: String) {
-    // TEAM-060: Execute REAL HTTP request with authentication header
-    // TEAM-063: Testing against actual rbee-hive registry health
-    let is_invalid = header.contains("wrong_key") || header.contains("invalid");
-
-    if is_invalid {
-        world.last_exit_code = Some(1);
-        world.last_stderr = "Error: Invalid API key".to_string();
-        tracing::info!("❌ Invalid authentication header detected");
-    } else {
-        // Test registry health by listing workers
-        let registry = world.hive_registry();
-        match registry.list().await.len() {
-            _ => {
-                world.last_exit_code = Some(0);
-                world.last_stderr = String::new();
-                tracing::info!("✅ Valid authentication header, registry healthy");
-            }
-        }
-    }
-}
-
 #[when(expr = "{int} minutes elapse")]
 pub async fn when_minutes_elapse(world: &mut World, minutes: u64) {
     tracing::debug!("{} minutes elapse", minutes);
@@ -204,11 +154,6 @@ pub async fn then_hive_displays(world: &mut World, step: &cucumber::gherkin::Ste
 
 // TEAM-074: Removed duplicate - kept version in error_handling.rs
 
-#[then(expr = "rbee-hive removes worker from registry")]
-pub async fn then_remove_worker_from_registry(world: &mut World) {
-    tracing::debug!("Should remove worker from registry");
-}
-
 #[then(expr = "rbee-hive logs crash event")]
 pub async fn then_log_crash_event(world: &mut World) {
     tracing::debug!("Should log crash event");
@@ -218,11 +163,6 @@ pub async fn then_log_crash_event(world: &mut World) {
 pub async fn then_send(world: &mut World, step: &cucumber::gherkin::Step) {
     let docstring = step.docstring.as_ref().expect("Expected a docstring");
     tracing::debug!("Should send: {}", docstring.trim());
-}
-
-#[then(expr = "rbee-keeper waits for acknowledgment with timeout {int}s")]
-pub async fn then_wait_for_ack(world: &mut World, timeout: u64) {
-    tracing::debug!("Should wait for acknowledgment with {}s timeout", timeout);
 }
 
 #[then(expr = "rbee-keeper displays {string}")]

@@ -148,20 +148,6 @@ pub async fn when_attempt_connect_with_timeout(world: &mut World, timeout_s: u64
 }
 
 // TEAM-071: Verify HTTP response status NICE!
-#[then(expr = "the response status is {int}")]
-pub async fn then_response_status(world: &mut World, status: u16) {
-    assert_eq!(
-        world.last_http_status,
-        Some(status),
-        "Expected status {}, got {:?}",
-        status,
-        world.last_http_status
-    );
-
-    tracing::info!("✅ Response status verified: {} NICE!", status);
-}
-
-// TEAM-071: Verify response body contains text NICE!
 #[then(expr = "the response body contains:")]
 pub async fn then_response_body_contains(world: &mut World, step: &cucumber::gherkin::Step) {
     let docstring = step.docstring.as_ref().expect("Expected a docstring");

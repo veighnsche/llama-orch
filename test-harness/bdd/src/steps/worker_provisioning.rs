@@ -61,13 +61,6 @@ pub async fn when_query_workers_by_features(world: &mut World, features: String)
     world.last_action = Some(format!("query_features_{}", features));
 }
 
-#[when(expr = "rbee-hive attempts to spawn worker")]
-pub async fn when_attempt_spawn_worker(world: &mut World) {
-    // TEAM-078: Trigger worker spawn flow
-    tracing::info!("TEAM-078: Attempting to spawn worker");
-    world.last_action = Some("spawn_worker".to_string());
-}
-
 #[when(expr = "cargo build fails with compilation error")]
 pub async fn when_cargo_build_fails(world: &mut World) {
     // TEAM-078: Simulate cargo build failure

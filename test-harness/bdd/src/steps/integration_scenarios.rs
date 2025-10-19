@@ -232,11 +232,6 @@ pub async fn then_worker_oom_loading(_world: &mut World) {
     tracing::info!("✅ worker OOM during loading (placeholder)");
 }
 
-#[then("rbee-hive detects worker crash")]
-pub async fn then_hive_detects_crash(_world: &mut World) {
-    tracing::info!("✅ hive detects crash (placeholder)");
-}
-
 #[then("error is reported to client")]
 pub async fn then_error_reported(_world: &mut World) {
     tracing::info!("✅ error reported (placeholder)");

@@ -203,12 +203,6 @@ pub async fn when_request_from_localhost(_world: &mut World) {
     tracing::info!("TEAM-102: Request from localhost (loopback bind policy)");
 }
 
-#[then(expr = "log contains {string}")]
-pub async fn then_log_dev_mode(world: &mut World, message: String) {
-    // TODO: Verify log message
-    tracing::info!("Verifying log: {}", message);
-}
-
 #[given(expr = "queen-rbee config has bind address {string}")]
 pub async fn given_bind_address(world: &mut World, bind: String) {
     world.bind_address = Some(bind);

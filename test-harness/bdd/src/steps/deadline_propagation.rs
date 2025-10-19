@@ -183,12 +183,6 @@ pub async fn then_response_status_timeout(world: &mut World, status_code: u16) {
     assert_eq!(status_code, 408, "Expected 408 Request Timeout");
 }
 
-#[then(expr = "response Content-Type is {string}")]
-pub async fn then_response_content_type(world: &mut World, content_type: String) {
-    world.last_response_content_type = Some(content_type);
-    tracing::info!("Response Content-Type verified");
-}
-
 #[then(expr = "response body contains error_code {string}")]
 pub async fn then_response_body_contains_error_code(world: &mut World, error_code: String) {
     world.last_error_code = Some(error_code.clone());
@@ -204,12 +198,6 @@ pub async fn then_response_body_contains_message(world: &mut World, message: Str
 #[then(expr = "response body includes original deadline timestamp")]
 pub async fn then_response_includes_deadline_timestamp(_world: &mut World) {
     tracing::info!("Response includes original deadline timestamp");
-}
-
-#[given(expr = "worker is processing inference request")]
-pub async fn given_worker_processing(world: &mut World) {
-    world.worker_processing = true;
-    tracing::info!("Worker is processing inference request");
 }
 
 #[given(expr = "request has deadline in {int}s")]
@@ -262,12 +250,6 @@ pub async fn then_queen_uses_original_timeout(world: &mut World, timeout_secs: u
     let expected_deadline = chrono::Utc::now() + chrono::Duration::seconds(timeout_secs as i64);
     world.queen_deadline = Some(expected_deadline);
     tracing::info!("Queen-rbee using original timeout {}s", timeout_secs);
-}
-
-#[then(expr = "queen-rbee logs warning {string}")]
-pub async fn then_queen_logs_warning_deadline(world: &mut World, message: String) {
-    world.last_warning = Some(message.clone());
-    tracing::warn!("Queen-rbee warning: {}", message);
 }
 
 #[given(expr = "rbee-keeper sends inference request without timeout")]
