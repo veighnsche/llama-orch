@@ -205,6 +205,24 @@ pub async fn handle_spawn_worker(
     // TEAM-091: Use actual server port from AppState instead of hardcoded 8080
     let callback_url = format!("http://{}:{}/v1/workers/ready", hostname, state.server_addr.port());
 
+    // TEAM-115: Check memory availability before spawning worker
+    use crate::resources::{check_memory_available, MemoryLimits};
+    let memory_limits = MemoryLimits::default();
+    // Estimate: 4GB per worker (conservative estimate for LLM)
+    let estimated_memory = 4 * 1024 * 1024 * 1024;
+    
+    if let Err(e) = check_memory_available(estimated_memory, &memory_limits) {
+        error!(
+            worker_id = %worker_id,
+            error = %e,
+            "TEAM-115: Insufficient memory to spawn worker"
+        );
+        return Err((
+            StatusCode::INSUFFICIENT_STORAGE,
+            format!("Insufficient memory: {}", e),
+        ));
+    }
+
     // Spawn worker process
     // Per test-001-mvp.md lines 136-143
     // TEAM-029: Use model_path from catalog/provisioner instead of request.model_path
@@ -304,6 +322,7 @@ pub async fn handle_spawn_worker(
                 pid,                // TEAM-101: Store PID for lifecycle management (Option<u32>)
                 restart_count: 0,   // TEAM-103: Initialize restart counter
                 last_restart: None, // TEAM-103: No restart yet
+                last_heartbeat: None, // TEAM-115: No heartbeat yet
             };
 
             state.registry.register(worker).await;
@@ -489,6 +508,7 @@ mod tests {
             pid: None,
             restart_count: 0,
             last_restart: None,
+            last_heartbeat: None,
         };
 
         let response = ListWorkersResponse { workers: vec![worker] };

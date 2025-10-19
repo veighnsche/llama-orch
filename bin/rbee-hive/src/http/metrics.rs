@@ -24,6 +24,7 @@ pub async fn handle_metrics(State(state): State<AppState>) -> Result<String, (St
     // Update metrics from current state
     rbee_hive::metrics::update_worker_metrics(state.registry.clone()).await;
     rbee_hive::metrics::update_download_metrics(state.download_tracker.clone()).await;
+    rbee_hive::metrics::update_resource_metrics(); // TEAM-115: Update resource metrics
 
     // Render metrics
     rbee_hive::metrics::render_metrics().map_err(|e| {
@@ -57,6 +58,7 @@ mod tests {
             download_tracker,
             server_addr: addr,
             expected_token,
+            audit_logger: None, // TEAM-115: Added for test
         };
 
         let result = handle_metrics(State(state)).await;

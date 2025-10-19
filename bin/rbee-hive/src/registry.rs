@@ -62,6 +62,9 @@ pub struct WorkerInfo {
     /// Last restart time (TEAM-103: For exponential backoff)
     #[serde(default)]
     pub last_restart: Option<SystemTime>,
+    /// Last heartbeat timestamp (TEAM-115: For stale worker detection)
+    #[serde(default)]
+    pub last_heartbeat: Option<SystemTime>,
 }
 
 /// Worker registry - thread-safe in-memory storage
@@ -102,6 +105,18 @@ impl WorkerRegistry {
             Some(worker.failed_health_checks)
         } else {
             None
+        }
+    }
+
+    /// Update worker's last heartbeat timestamp (TEAM-115: For stale worker detection)
+    /// Returns true if worker was found and updated, false otherwise
+    pub async fn update_heartbeat(&self, worker_id: &str) -> bool {
+        let mut workers = self.workers.write().await;
+        if let Some(worker) = workers.get_mut(worker_id) {
+            worker.last_heartbeat = Some(SystemTime::now());
+            true
+        } else {
+            false
         }
     }
 
@@ -246,6 +261,7 @@ mod tests {
             pid: None,
             restart_count: 0,
             last_restart: None,
+            last_heartbeat: None,
         };
 
         registry.register(worker.clone()).await;
@@ -273,6 +289,7 @@ mod tests {
             pid: None,
             restart_count: 0,
             last_restart: None,
+            last_heartbeat: None,
         };
 
         registry.register(worker).await;
@@ -300,6 +317,7 @@ mod tests {
             pid: None,
             restart_count: 0,
             last_restart: None,
+            last_heartbeat: None,
         };
 
         let worker2 = WorkerInfo {
@@ -316,6 +334,7 @@ mod tests {
             pid: None,
             restart_count: 0,
             last_restart: None,
+            last_heartbeat: None,
         };
 
         registry.register(worker1).await;
@@ -352,6 +371,7 @@ mod tests {
             pid: None,
             restart_count: 0,
             last_restart: None,
+            last_heartbeat: None,
         };
 
         let worker2 = WorkerInfo {
@@ -368,6 +388,7 @@ mod tests {
             pid: None,
             restart_count: 0,
             last_restart: None,
+            last_heartbeat: None,
         };
 
         registry.register(worker1).await;
@@ -395,6 +416,7 @@ mod tests {
             pid: None,
             restart_count: 0,
             last_restart: None,
+            last_heartbeat: None,
         };
 
         registry.register(worker).await;
@@ -432,6 +454,7 @@ mod tests {
             pid: None,
             restart_count: 0,
             last_restart: None,
+            last_heartbeat: None,
         };
 
         let worker2 = WorkerInfo {
@@ -448,6 +471,7 @@ mod tests {
             pid: None,
             restart_count: 0,
             last_restart: None,
+            last_heartbeat: None,
         };
 
         let worker3 = WorkerInfo {
@@ -464,6 +488,7 @@ mod tests {
             pid: None,
             restart_count: 0,
             last_restart: None,
+            last_heartbeat: None,
         };
 
         registry.register(worker1).await;
@@ -493,6 +518,7 @@ mod tests {
             pid: None,
             restart_count: 0,
             last_restart: None,
+            last_heartbeat: None,
         };
 
         registry.register(worker).await;
@@ -523,6 +549,7 @@ mod tests {
             pid: None,
             restart_count: 0,
             last_restart: None,
+            last_heartbeat: None,
         };
 
         let worker2 = WorkerInfo {
@@ -539,6 +566,7 @@ mod tests {
             pid: None,
             restart_count: 0,
             last_restart: None,
+            last_heartbeat: None,
         };
 
         registry.register(worker1).await;
@@ -599,6 +627,7 @@ mod tests {
             pid: Some(12345),
             restart_count: 0,
             last_restart: None,
+            last_heartbeat: None,
         };
 
         let json = serde_json::to_value(&worker).unwrap();

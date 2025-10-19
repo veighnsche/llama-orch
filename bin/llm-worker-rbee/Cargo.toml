@@ -193,6 +193,7 @@ tracing-subscriber = { version = "0.3", features = ["json", "env-filter"] }
 clap = { version = "4", features = ["derive"] }
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
+chrono = "0.4"  # TEAM-115: For heartbeat timestamps
 # TEAM-014: Removed rand = "0.8" (no longer needed, using Candle's LogitsProcessor)
 
 # TEAM-102: Security shared crates

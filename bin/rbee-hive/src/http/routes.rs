@@ -13,7 +13,7 @@
 //! Created by: TEAM-026
 //! Modified by: TEAM-029, TEAM-030, TEAM-034
 
-use crate::http::{health, metrics, middleware::auth_middleware, models, workers}; // TEAM-104: Added metrics
+use crate::http::{health, heartbeat, metrics, middleware::auth_middleware, models, workers}; // TEAM-104: Added metrics, TEAM-115: Added heartbeat
 use crate::provisioner::ModelProvisioner;
 use crate::registry::WorkerRegistry;
 use axum::{
@@ -93,6 +93,8 @@ pub fn create_router(
         .route("/v1/workers/spawn", post(workers::handle_spawn_worker))
         .route("/v1/workers/ready", post(workers::handle_worker_ready))
         .route("/v1/workers/list", get(workers::handle_list_workers))
+        // TEAM-115: Heartbeat endpoint (protected)
+        .route("/v1/heartbeat", post(heartbeat::handle_heartbeat))
         // Model management (protected)
         .route("/v1/models/download", post(models::handle_download_model))
         .route("/v1/models/download/progress", get(models::handle_download_progress))

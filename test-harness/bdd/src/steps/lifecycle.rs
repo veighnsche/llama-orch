@@ -275,6 +275,7 @@ pub async fn then_hive_spawns_worker(world: &mut World) {
         pid: Some(std::process::id()),
         restart_count: 0,   // TEAM-104: Added restart tracking
         last_restart: None, // TEAM-104: Added restart tracking
+        last_heartbeat: None,
     };
 
     registry.register(worker).await;
@@ -702,6 +703,7 @@ pub async fn when_hive_spawns_worker_process(world: &mut World) {
         pid: Some(pid), // TEAM-101: Store PID
         restart_count: 0,
         last_restart: None,
+        last_heartbeat: None,
     };
 
     registry.register(worker).await;

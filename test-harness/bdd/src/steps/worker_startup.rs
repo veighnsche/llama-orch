@@ -365,14 +365,15 @@ pub async fn given_hive_spawns_worker_process(world: &mut World) {
         model_ref: "test-model".to_string(),
         backend: "cpu".to_string(),
         device: 0,
-        state: WorkerState::Loading,
+        state: WorkerState::Idle,
         last_activity: std::time::SystemTime::now(),
         slots_total: 1,
         slots_available: 1,
         failed_health_checks: 0,
-        pid: Some(std::process::id()),
-        restart_count: 0,   // TEAM-104: Added restart tracking
-        last_restart: None, // TEAM-104: Added restart tracking
+        pid: None,
+        restart_count: 0,
+        last_restart: None,
+        last_heartbeat: None,
     };
 
     registry.register(worker).await;

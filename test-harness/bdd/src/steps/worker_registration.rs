@@ -36,6 +36,7 @@ pub async fn when_register_worker(world: &mut World) {
         pid: None,
         restart_count: 0,   // TEAM-104: Added restart tracking
         last_restart: None, // TEAM-104: Added restart tracking
+        last_heartbeat: None,
     };
 
     // Register worker via WorkerRegistry API

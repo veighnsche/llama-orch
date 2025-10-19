@@ -15,11 +15,14 @@
 //! Modified by: TEAM-010 (Removed all deprecated modules)
 //! Modified by: TEAM-014 (Added `token_output_stream` module)
 //! Modified by: TEAM-015 (Integrated worker-common and worker-http)
+//! Modified by: TEAM-088 (added comprehensive error narration)
+//! Modified by: TEAM-115 (added heartbeat mechanism)
 
 pub mod backend;
 pub mod common;
 pub mod device;
 pub mod error;
+pub mod heartbeat; // TEAM-115: Heartbeat mechanism
 pub mod http;
 pub mod narration;
 pub mod token_output_stream;

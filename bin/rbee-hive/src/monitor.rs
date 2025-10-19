@@ -36,6 +36,27 @@ pub async fn health_monitor_loop(registry: Arc<WorkerRegistry>) {
         info!("🔍 Health monitor: Checking {} workers", workers.len());
 
         for worker in workers {
+            // TEAM-115: Check for stale workers (no heartbeat in 60 seconds)
+            if let Some(last_heartbeat) = worker.last_heartbeat {
+                let heartbeat_age = last_heartbeat.elapsed().unwrap_or(Duration::from_secs(0));
+                if heartbeat_age > Duration::from_secs(60) {
+                    warn!(
+                        worker_id = %worker.id,
+                        heartbeat_age_secs = heartbeat_age.as_secs(),
+                        "⚠️  TEAM-115: Worker is stale (no heartbeat in 60s), removing from registry"
+                    );
+                    
+                    // Force-kill the stale worker if we have PID
+                    if let Some(pid) = worker.pid {
+                        force_kill_worker(pid, &worker.id);
+                    }
+                    
+                    // Remove from registry
+                    registry.remove(&worker.id).await;
+                    continue;
+                }
+            }
+
             // TEAM-101: Check for workers stuck in Loading state
             if worker.state == crate::registry::WorkerState::Loading {
                 let loading_duration =
@@ -269,6 +290,7 @@ mod tests {
             pid: None,          // TEAM-101: Added pid field
             restart_count: 0,   // TEAM-104: Added restart_count field
             last_restart: None, // TEAM-104: Added last_restart field
+            last_heartbeat: None, // TEAM-115: Added last_heartbeat field
         };
 
         registry.register(worker).await;

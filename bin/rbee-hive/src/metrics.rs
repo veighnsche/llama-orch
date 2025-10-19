@@ -37,10 +37,10 @@ use prometheus::{
 use std::sync::Arc;
 
 lazy_static! {
-    /// Total workers by state
+    /// Total workers by state (TEAM-115: Added backend and device labels)
     pub static ref WORKERS_BY_STATE: GaugeVec = register_gauge_vec!(
         opts!("rbee_hive_workers_total", "Total workers by state"),
-        &["state"]
+        &["state", "backend", "device"]
     )
     .expect("Failed to register workers_by_state metric");
 
@@ -94,6 +94,62 @@ lazy_static! {
         )
     )
     .expect("Failed to register circuit_breaker_activations_total metric");
+
+    /// TEAM-115: Memory metrics
+    pub static ref MEMORY_AVAILABLE_BYTES: IntGauge = register_int_gauge!(
+        opts!("rbee_hive_memory_available_bytes", "Available system memory in bytes")
+    )
+    .expect("Failed to register memory_available_bytes metric");
+
+    pub static ref MEMORY_TOTAL_BYTES: IntGauge = register_int_gauge!(
+        opts!("rbee_hive_memory_total_bytes", "Total system memory in bytes")
+    )
+    .expect("Failed to register memory_total_bytes metric");
+
+    /// TEAM-115: Disk metrics
+    pub static ref DISK_AVAILABLE_BYTES: IntGauge = register_int_gauge!(
+        opts!("rbee_hive_disk_available_bytes", "Available disk space in bytes")
+    )
+    .expect("Failed to register disk_available_bytes metric");
+
+    pub static ref DISK_TOTAL_BYTES: IntGauge = register_int_gauge!(
+        opts!("rbee_hive_disk_total_bytes", "Total disk space in bytes")
+    )
+    .expect("Failed to register disk_total_bytes metric");
+
+    /// TEAM-115: Worker spawn failures due to resource limits
+    pub static ref WORKER_SPAWN_RESOURCE_FAILURES_TOTAL: IntCounter = register_int_counter!(
+        opts!(
+            "rbee_hive_worker_spawn_resource_failures_total",
+            "Total worker spawn failures due to insufficient resources"
+        )
+    )
+    .expect("Failed to register worker_spawn_resource_failures_total metric");
+
+    /// TEAM-116: Shutdown metrics
+    pub static ref SHUTDOWN_DURATION_SECONDS: prometheus::Histogram = prometheus::register_histogram!(
+        prometheus::histogram_opts!(
+            "rbee_hive_shutdown_duration_seconds",
+            "Duration of graceful shutdown in seconds"
+        )
+    )
+    .expect("Failed to register shutdown_duration_seconds metric");
+
+    pub static ref WORKERS_GRACEFUL_SHUTDOWN_TOTAL: IntCounter = register_int_counter!(
+        opts!(
+            "rbee_hive_workers_graceful_shutdown_total",
+            "Total workers that shutdown gracefully"
+        )
+    )
+    .expect("Failed to register workers_graceful_shutdown_total metric");
+
+    pub static ref WORKERS_FORCE_KILLED_TOTAL: IntCounter = register_int_counter!(
+        opts!(
+            "rbee_hive_workers_force_killed_total",
+            "Total workers that were force-killed"
+        )
+    )
+    .expect("Failed to register workers_force_killed_total metric");
 }
 
 /// Update worker metrics from registry state
@@ -105,22 +161,26 @@ pub async fn update_worker_metrics(registry: Arc<crate::registry::WorkerRegistry
 
     let workers = registry.list().await;
 
-    // Reset state counters
-    WORKERS_BY_STATE.with_label_values(&["idle"]).set(0.0);
-    WORKERS_BY_STATE.with_label_values(&["busy"]).set(0.0);
-    WORKERS_BY_STATE.with_label_values(&["loading"]).set(0.0);
-
+    // TEAM-115: Reset all label combinations (we'll only set the ones that exist)
+    // Note: In production, we should track which label combinations exist to avoid cardinality explosion
+    
     let mut failed_health_count = 0;
     let mut total_restart_count = 0;
 
-    // Count workers by state
+    // Count workers by state, backend, and device
     for worker in workers {
         let state_label = match worker.state {
             WorkerState::Idle => "idle",
             WorkerState::Busy => "busy",
             WorkerState::Loading => "loading",
         };
-        WORKERS_BY_STATE.with_label_values(&[state_label]).inc();
+        let backend_label = worker.backend.as_str();
+        let device_label = worker.device.to_string();
+        
+        // TEAM-115: Set metric with backend and device labels
+        WORKERS_BY_STATE
+            .with_label_values(&[state_label, backend_label, &device_label])
+            .inc();
 
         if worker.failed_health_checks > 0 {
             failed_health_count += 1;
@@ -144,6 +204,20 @@ pub async fn update_worker_metrics(registry: Arc<crate::registry::WorkerRegistry
 pub async fn update_download_metrics<T>(_download_tracker: Arc<T>) {
     // TEAM-104: Placeholder - download metrics are updated directly in endpoints
     // via DOWNLOADS_ACTIVE.inc() / DOWNLOADS_ACTIVE.dec()
+}
+
+/// Update resource metrics (memory, disk)
+///
+/// TEAM-115: Updates system resource metrics for monitoring
+pub fn update_resource_metrics() {
+    use crate::resources::get_resource_info;
+    
+    if let Ok(info) = get_resource_info() {
+        MEMORY_TOTAL_BYTES.set(info.memory_total_bytes as i64);
+        MEMORY_AVAILABLE_BYTES.set(info.memory_available_bytes as i64);
+        DISK_TOTAL_BYTES.set(info.disk_total_bytes as i64);
+        DISK_AVAILABLE_BYTES.set(info.disk_available_bytes as i64);
+    }
 }
 
 /// Render metrics in Prometheus text format

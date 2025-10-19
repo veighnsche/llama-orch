@@ -344,6 +344,7 @@ pub async fn then_spawn_worker(world: &mut World, binary: String, port: u16) {
         pid: None,               // TEAM-104: Added missing field
         restart_count: 0,        // TEAM-104: Added restart tracking
         last_restart: None,      // TEAM-104: Added restart tracking
+        last_heartbeat: None,    // TEAM-115: Added heartbeat tracking
     };
 
     registry.register(worker).await;
@@ -374,6 +375,7 @@ pub async fn then_spawn_worker_cuda(world: &mut World, binary: String, port: u16
         pid: None,               // TEAM-104: Added missing field
         restart_count: 0,        // TEAM-104: Added restart tracking
         last_restart: None,      // TEAM-104: Added restart tracking
+        last_heartbeat: None,
     };
 
     registry.register(worker).await;

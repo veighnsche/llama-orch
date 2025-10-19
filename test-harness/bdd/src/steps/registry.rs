@@ -108,6 +108,7 @@ pub async fn given_worker_with_model_and_state(
         pid: None,
         restart_count: 0,   // TEAM-104: Added restart tracking
         last_restart: None, // TEAM-104: Added restart tracking
+        last_heartbeat: None,
     };
     registry.register(hive_worker).await;
 

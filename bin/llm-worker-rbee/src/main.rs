@@ -245,6 +245,15 @@ async fn main() -> anyhow::Result<()> {
         .await?;
 
         tracing::info!("Callback sent to pool-managerd");
+
+        // TEAM-115: Start heartbeat task
+        // Send periodic heartbeats to rbee-hive to indicate worker is alive
+        let heartbeat_config = llm_worker_rbee::heartbeat::HeartbeatConfig::new(
+            args.worker_id.clone(),
+            args.callback_url.clone(),
+        );
+        let _heartbeat_handle = llm_worker_rbee::heartbeat::start_heartbeat_task(heartbeat_config);
+        tracing::info!("Heartbeat task started (30s interval)");
     }
 
     // ============================================================
