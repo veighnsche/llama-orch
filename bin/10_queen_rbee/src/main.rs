@@ -15,8 +15,10 @@ mod http;
 use anyhow::Result;
 use axum::routing::{get, post};
 use clap::Parser;
-use observability_narration_core::{narrate, Narration};
+use job_registry::JobRegistry;
+use observability_narration_core::Narration;
 use std::net::SocketAddr;
+use std::sync::Arc;
 
 // Actor and action constants
 const ACTOR_QUEEN_RBEE: &str = "queen-rbee";
@@ -47,46 +49,56 @@ struct Args {
 async fn main() -> Result<()> {
     let args = Args::parse();
 
-    narrate!(
-        Narration::new(ACTOR_QUEEN_RBEE, ACTION_START, &args.port.to_string())
-            .human(format!("Queen-rbee starting on port {}", args.port))
-    );
+    Narration::new(ACTOR_QUEEN_RBEE, ACTION_START, &args.port.to_string())
+        .human(format!("Queen-rbee starting on port {}", args.port))
+        .emit();
 
-    // TODO: Initialize registries when migrated
+    // TEAM-155: Initialize job registry for dual-call pattern
+    // Generic over String for now (will stream text tokens)
+    let job_registry: Arc<JobRegistry<String>> = Arc::new(JobRegistry::new());
+
+    // TODO: Initialize other registries when migrated
     // - beehive_registry (SQLite catalog + RAM registry)
     // - worker_registry (RAM)
     // - Load config from args.config
 
-    let app = create_router();
+    let app = create_router(job_registry);
     let addr = SocketAddr::from(([127, 0, 0, 1], args.port));
 
-    narrate!(
-        Narration::new(ACTOR_QUEEN_RBEE, ACTION_LISTEN, &addr.to_string())
-            .human(format!("Listening on http://{}", addr))
-    );
+    Narration::new(ACTOR_QUEEN_RBEE, ACTION_LISTEN, &addr.to_string())
+        .human(format!("Listening on http://{}", addr))
+        .emit();
 
-    narrate!(
-        Narration::new(ACTOR_QUEEN_RBEE, ACTION_READY, "http-server")
-            .human("Ready to accept connections")
-    );
+    Narration::new(ACTOR_QUEEN_RBEE, ACTION_READY, "http-server")
+        .human("Ready to accept connections")
+        .emit();
 
     let listener = tokio::net::TcpListener::bind(addr).await?;
     axum::serve(listener, app).await.map_err(|e| {
-        narrate!(
-            Narration::new(ACTOR_QUEEN_RBEE, ACTION_ERROR, "http-server")
-                .human(format!("Server error: {}", e))
-                .error_kind("server_failed")
-        );
+        Narration::new(ACTOR_QUEEN_RBEE, ACTION_ERROR, "http-server")
+            .human(format!("Server error: {}", e))
+            .error_kind("server_failed")
+            .emit();
         anyhow::anyhow!("Server failed: {}", e)
     })
 }
 
 /// Create HTTP router
 ///
-/// Currently health and shutdown endpoints are active.
+/// TEAM-155: Added job endpoints for dual-call pattern
+/// Currently health, shutdown, and job endpoints are active.
 /// TODO: Uncomment http::routes::create_router() when registries are migrated
-fn create_router() -> axum::Router {
+fn create_router(job_registry: Arc<JobRegistry<String>>) -> axum::Router {
+    // TEAM-155: Create job state for endpoints
+    let job_state = http::jobs::QueenJobState {
+        registry: job_registry,
+    };
+
     axum::Router::new()
         .route("/health", get(http::health::handle_health))
         .route("/shutdown", post(http::shutdown::handle_shutdown))
+        // TEAM-155: Job endpoints (dual-call pattern)
+        .route("/jobs", post(http::jobs::handle_create_job))
+        .route("/jobs/{job_id}/stream", get(http::jobs::handle_stream_job))
+        .with_state(job_state)
 }

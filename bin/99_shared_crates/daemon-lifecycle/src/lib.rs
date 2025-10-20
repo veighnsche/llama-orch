@@ -13,7 +13,7 @@
 //! All observability is handled through narration-core (no tracing).
 
 use anyhow::{Context, Result};
-use observability_narration_core::{narrate, Narration};
+use observability_narration_core::Narration;
 use std::path::{Path, PathBuf};
 use std::process::Stdio;
 use tokio::process::{Child, Command};
@@ -48,10 +48,9 @@ impl DaemonManager {
     /// - Binary not found
     /// - Failed to spawn process
     pub async fn spawn(&self) -> Result<Child> {
-        narrate!(
-            Narration::new(ACTOR_DAEMON_LIFECYCLE, ACTION_SPAWN, &self.binary_path.display().to_string())
-                .human(format!("Spawning daemon: {} with args: {:?}", self.binary_path.display(), self.args))
-        );
+        Narration::new(ACTOR_DAEMON_LIFECYCLE, ACTION_SPAWN, &self.binary_path.display().to_string())
+            .human(format!("Spawning daemon: {} with args: {:?}", self.binary_path.display(), self.args))
+            .emit();
 
         let child = Command::new(&self.binary_path)
             .args(&self.args)
@@ -64,10 +63,9 @@ impl DaemonManager {
             ))?;
 
         let pid_str = child.id().map(|p| p.to_string()).unwrap_or_else(|| "unknown".to_string());
-        narrate!(
-            Narration::new(ACTOR_DAEMON_LIFECYCLE, ACTION_SPAWN, &pid_str)
-                .human(format!("Daemon spawned with PID: {}", pid_str))
-        );
+        Narration::new(ACTOR_DAEMON_LIFECYCLE, ACTION_SPAWN, &pid_str)
+            .human(format!("Daemon spawned with PID: {}", pid_str))
+            .emit();
         Ok(child)
     }
 
@@ -86,28 +84,25 @@ impl DaemonManager {
         // Try debug first (development mode)
         let debug_path = PathBuf::from("target/debug").join(name);
         if debug_path.exists() {
-            narrate!(
-                Narration::new(ACTOR_DAEMON_LIFECYCLE, ACTION_FIND_BINARY, name)
-                    .human(format!("Found binary at: {}", debug_path.display()))
-            );
+            Narration::new(ACTOR_DAEMON_LIFECYCLE, ACTION_FIND_BINARY, name)
+                .human(format!("Found binary at: {}", debug_path.display()))
+                .emit();
             return Ok(debug_path);
         }
 
         // Try release
         let release_path = PathBuf::from("target/release").join(name);
         if release_path.exists() {
-            narrate!(
-                Narration::new(ACTOR_DAEMON_LIFECYCLE, ACTION_FIND_BINARY, name)
-                    .human(format!("Found binary at: {}", release_path.display()))
-            );
+            Narration::new(ACTOR_DAEMON_LIFECYCLE, ACTION_FIND_BINARY, name)
+                .human(format!("Found binary at: {}", release_path.display()))
+                .emit();
             return Ok(release_path);
         }
 
-        narrate!(
-            Narration::new(ACTOR_DAEMON_LIFECYCLE, ACTION_FIND_BINARY, name)
-                .human(format!("Binary '{}' not found in target/debug or target/release", name))
-                .error_kind("binary_not_found")
-        );
+        Narration::new(ACTOR_DAEMON_LIFECYCLE, ACTION_FIND_BINARY, name)
+            .human(format!("Binary '{}' not found in target/debug or target/release", name))
+            .error_kind("binary_not_found")
+            .emit();
         anyhow::bail!(
             "Binary '{}' not found in target/debug or target/release",
             name

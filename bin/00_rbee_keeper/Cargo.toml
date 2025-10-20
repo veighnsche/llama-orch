@@ -19,10 +19,18 @@ clap = { version = "4", features = ["derive"] }
 tokio = { version = "1", features = ["full"] }
 
 # HTTP client (for health checks)
-reqwest = { version = "0.11", features = ["json"] }
+reqwest = { version = "0.11", features = ["json", "stream"] }
+
+# TEAM-155: SSE streaming dependencies
+futures = "0.3"
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
 
 # Error handling
 anyhow = "1.0"
+
+# TEAM-155: Narration for observability
+observability-narration-core = { path = "../99_shared_crates/narration-core" }
 
 # TEAM-152: Queen lifecycle management
 rbee-keeper-queen-lifecycle = { path = "../05_rbee_keeper_crates/queen-lifecycle" }

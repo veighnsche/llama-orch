@@ -25,6 +25,9 @@ pub mod health;
 pub mod shutdown;
 pub mod types; // Only for HealthResponse
 
+// TEAM-155: Job submission and streaming endpoints
+pub mod jobs;
+
 // TODO: Uncomment when registries are migrated
 // pub mod beehives;
 // pub mod inference;
