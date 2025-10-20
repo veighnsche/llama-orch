@@ -17,6 +17,7 @@ use anyhow::{Context, Result};
 use daemon_lifecycle::DaemonManager;
 use observability_narration_core::Narration;
 use std::time::Duration;
+use timeout_enforcer::TimeoutEnforcer;
 use tokio::time::sleep;
 
 // Re-export daemon-lifecycle for convenience
@@ -134,7 +135,17 @@ impl QueenHandle {
 /// # Returns
 /// * `Ok(QueenHandle)` - Handle to queen (tracks if we started it for cleanup)
 /// * `Err` - Failed to start queen or timeout waiting for health
+///
+/// TEAM-163: Added 30-second total timeout with visual countdown
 pub async fn ensure_queen_running(base_url: &str) -> Result<QueenHandle> {
+    // TEAM-163: Use TimeoutEnforcer for hard timeout with visual countdown
+    TimeoutEnforcer::new(Duration::from_secs(30))
+        .with_label("Starting queen-rbee")
+        .enforce(ensure_queen_running_inner(base_url))
+        .await
+}
+
+async fn ensure_queen_running_inner(base_url: &str) -> Result<QueenHandle> {
     let start_time = std::time::Instant::now();
 
     // Step 1: Check if queen is already running

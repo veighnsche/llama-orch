@@ -385,8 +385,11 @@ async fn handle_command(cli: Cli) -> Result<()> {
                     Ok(())
                 }
                 QueenAction::Stop => {
+                    // TEAM-163: Added 30-second timeout for shutdown request
                     println!("👑 Stopping queen-rbee...");
-                    let client = reqwest::Client::new();
+                    let client = reqwest::Client::builder()
+                        .timeout(tokio::time::Duration::from_secs(30))
+                        .build()?;
                     let response = client.post("http://localhost:8500/shutdown").send().await;
                     
                     match response {
@@ -439,8 +442,11 @@ async fn handle_command(cli: Cli) -> Result<()> {
                     Ok(())
                 }
                 HiveAction::Stop => {
+                    // TEAM-163: Added 30-second timeout for shutdown request
                     println!("🐝 Stopping rbee-hive on localhost...");
-                    let client = reqwest::Client::new();
+                    let client = reqwest::Client::builder()
+                        .timeout(tokio::time::Duration::from_secs(30))
+                        .build()?;
                     let response = client.post("http://localhost:8600/shutdown").send().await;
                     
                     match response {

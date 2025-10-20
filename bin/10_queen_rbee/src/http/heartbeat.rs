@@ -10,7 +10,8 @@
 
 use axum::{extract::State, http::StatusCode, Json};
 use queen_rbee_hive_catalog::HiveCatalog;
-use rbee_heartbeat::{HeartbeatAcknowledgement, HiveHeartbeatPayload};
+use rbee_heartbeat::HiveHeartbeatPayload;
+use rbee_heartbeat::queen_receiver::HeartbeatAcknowledgement;  // TEAM-161: Use correct type from queen_receiver
 use std::sync::Arc;
 
 use crate::http::device_detector::HttpDeviceDetector;

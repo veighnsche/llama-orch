@@ -116,7 +116,12 @@ fn create_router(
         http::jobs::QueenJobState { registry: job_registry, hive_catalog: hive_catalog.clone() };
 
     // TEAM-158: Create heartbeat state
-    let heartbeat_state = http::heartbeat::HeartbeatState { hive_catalog: hive_catalog.clone() };
+    // TEAM-161: Add device detector for first heartbeat flow
+    let device_detector = Arc::new(http::device_detector::HttpDeviceDetector::new());
+    let heartbeat_state = http::heartbeat::HeartbeatState {
+        hive_catalog: hive_catalog.clone(),
+        device_detector,
+    };
 
     // TEAM-160: Add hive endpoint state
     let add_hive_state = hive_catalog;

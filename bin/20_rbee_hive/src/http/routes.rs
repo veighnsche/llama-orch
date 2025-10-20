@@ -32,6 +32,12 @@ use std::sync::Arc;
 /// TEAM-102: Added expected_token for authentication
 /// TEAM-114: Added audit_logger for security audit trail
 /// TEAM-124: Added queen_callback_url for worker ready notifications
+///
+/// ⚠️ NOTE FOR E2E TESTING (TEAM-161+):
+/// This AppState includes features beyond E2E scope (model downloads, worker spawning).
+/// For E2E tests, you only need: heartbeat, device detection, shutdown.
+/// Don't implement provisioner/download_tracker just because they're in this struct.
+/// Use stub implementations or check if the E2E endpoints actually require them.
 #[derive(Clone)]
 pub struct AppState {
     pub registry: Arc<WorkerRegistry>,

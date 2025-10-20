@@ -17,6 +17,9 @@ daemon-lifecycle = { path = "../../99_shared_crates/daemon-lifecycle" }
 # Narration for observability
 observability-narration-core = { path = "../../99_shared_crates/narration-core" }
 
+# TEAM-163: Hard timeout enforcement
+timeout-enforcer = { path = "../../99_shared_crates/timeout-enforcer" }
+
 # Async runtime
 tokio = { version = "1", features = ["time"] }
 
