@@ -13,6 +13,7 @@
 //! ```
 
 use crate::NarrationFields;
+use serde_json::Value;
 
 /// Builder for constructing narration events with a fluent API.
 ///
@@ -210,6 +211,31 @@ impl Narration {
         self
     }
 
+    /// Format JSON as a CLI table and append to human message.
+    ///
+    /// The human/cute/story message becomes the title, and the table is appended below.
+    ///
+    /// - Arrays of objects → table with columns
+    /// - Single objects → key-value table
+    /// - Other values → pretty JSON
+    ///
+    /// # Example
+    /// ```rust,ignore
+    /// let json = serde_json::json!([{"id": "w1", "status": "ready"}]);
+    /// Narration::new("rbee-keeper", "list", "workers")
+    ///     .human("Workers:")
+    ///     .table(&json)
+    ///     .emit();
+    /// ```
+    pub fn table(mut self, json: &serde_json::Value) -> Self {
+        let table_content = format_json_as_table(json);
+        if !self.fields.human.is_empty() {
+            self.fields.human.push_str("\n\n");
+        }
+        self.fields.human.push_str(&table_content);
+        self
+    }
+
     /// Emit the narration at INFO level with auto-injection.
     ///
     /// Automatically injects service identity and timestamp.
@@ -251,6 +277,112 @@ impl Narration {
     #[cfg(feature = "trace-enabled")]
     pub fn emit_trace(self) {
         crate::narrate_trace(self.fields)
+    }
+}
+
+// ============================================================================
+// Table Formatting
+// ============================================================================
+
+/// Format JSON as a CLI table.
+fn format_json_as_table(json: &Value) -> String {
+    match json {
+        Value::Array(items) if !items.is_empty() => {
+            // Check if all items are objects
+            if items.iter().all(|v| v.is_object()) {
+                format_array_table(items)
+            } else {
+                serde_json::to_string_pretty(json).unwrap_or_default()
+            }
+        }
+        Value::Object(map) => format_object_table(map),
+        _ => serde_json::to_string_pretty(json).unwrap_or_default(),
+    }
+}
+
+/// Format array of objects as table with columns.
+fn format_array_table(items: &[Value]) -> String {
+    if items.is_empty() {
+        return String::from("(empty)");
+    }
+
+    // Collect all unique keys across all objects
+    let mut keys = std::collections::BTreeSet::new();
+    for item in items {
+        if let Value::Object(map) = item {
+            keys.extend(map.keys().cloned());
+        }
+    }
+    let keys: Vec<String> = keys.into_iter().collect();
+
+    // Calculate column widths
+    let mut widths: Vec<usize> = keys.iter().map(|k| k.len()).collect();
+    for item in items {
+        if let Value::Object(map) = item {
+            for (i, key) in keys.iter().enumerate() {
+                if let Some(val) = map.get(key) {
+                    let val_str = format_value_compact(val);
+                    widths[i] = widths[i].max(val_str.len());
+                }
+            }
+        }
+    }
+
+    // Build header
+    let mut output = String::new();
+    let header: Vec<String> = keys
+        .iter()
+        .enumerate()
+        .map(|(i, k)| format!("{:width$}", k, width = widths[i]))
+        .collect();
+    output.push_str(&header.join(" │ "));
+    output.push('\n');
+    
+    // Separator
+    let sep: Vec<String> = widths.iter().map(|w| "─".repeat(*w)).collect();
+    output.push_str(&sep.join("─┼─"));
+    output.push('\n');
+
+    // Data rows
+    for item in items {
+        if let Value::Object(map) = item {
+            let row: Vec<String> = keys
+                .iter()
+                .enumerate()
+                .map(|(i, k)| {
+                    let val = map
+                        .get(k)
+                        .map(|v| format_value_compact(v))
+                        .unwrap_or_else(|| String::from("-"));
+                    format!("{:width$}", val, width = widths[i])
+                })
+                .collect();
+            output.push_str(&row.join(" │ "));
+            output.push('\n');
+        }
+    }
+
+    output
+}
+
+/// Format single object as key-value table.
+fn format_object_table(map: &serde_json::Map<String, Value>) -> String {
+    let mut rows = Vec::new();
+    for (key, value) in map {
+        rows.push(format!("{:20} │ {}", key, format_value_compact(value)));
+    }
+    rows.join("\n")
+}
+
+/// Format a JSON value compactly for table display.
+fn format_value_compact(value: &Value) -> String {
+    match value {
+        Value::Null => String::from("null"),
+        Value::Bool(b) => b.to_string(),
+        Value::Number(n) => n.to_string(),
+        Value::String(s) => s.clone(),
+        Value::Array(arr) => format!("[{}]", arr.len()),
+        Value::Object(obj) => format!("{{{}}}" , obj.len()),
     }
 }
 

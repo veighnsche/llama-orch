@@ -29,22 +29,12 @@
 //! rbee-keeper infer "hello" --model HF:author/minillama
 //! ```
 
-mod health_check;
+mod actions;
 
+use actions::*;
 use anyhow::Result;
 use clap::{Parser, Subcommand};
 use observability_narration_core::Narration;
-
-// TEAM-164: Actor constants for narration
-const ACTOR_RBEE_KEEPER: &str = "🧑‍🌾 rbee-keeper";
-const ACTION_QUEEN_START: &str = "queen_start";
-const ACTION_QUEEN_STOP: &str = "queen_stop";
-const ACTION_HIVE_START: &str = "hive_start";
-const ACTION_HIVE_STOP: &str = "hive_stop";
-const ACTION_INFER: &str = "infer";
-const ACTION_ADD_HIVE: &str = "add_hive";
-const ACTION_HEALTH_CHECK: &str = "health_check";
-const ACTION_STREAM: &str = "stream_sse";
 
 #[derive(Parser)]
 #[command(name = "rbee")]
@@ -164,17 +154,17 @@ macro_rules! queen_req {
     (GET $client:expr, $url:expr => $action:expr, $context:expr, $msg:expr) => {{
         let res = $client.get($url).send().await?;
         let json: serde_json::Value = res.json().await?;
-        Narration::new(ACTOR_RBEE_KEEPER, $action, $context).human($msg).emit();
+        Narration::new(ACTOR_RBEE_KEEPER, $action, $context).human($msg).table(&json).emit();
     }};
     (POST $client:expr, $url:expr => $action:expr, $context:expr, $msg:expr) => {{
         let res = $client.post($url).send().await?;
         let json: serde_json::Value = res.json().await?;
-        Narration::new(ACTOR_RBEE_KEEPER, $action, $context).human($msg).emit();
+        Narration::new(ACTOR_RBEE_KEEPER, $action, $context).human($msg).table(&json).emit();
     }};
     (POST $client:expr, $url:expr, $body:expr => $action:expr, $context:expr, $msg:expr) => {{
         let res = $client.post($url).json(&$body).send().await?;
         let json: serde_json::Value = res.json().await?;
-        Narration::new(ACTOR_RBEE_KEEPER, $action, $context).human($msg).emit();
+        Narration::new(ACTOR_RBEE_KEEPER, $action, $context).human($msg).table(&json).emit();
     }};
     (PUT $client:expr, $url:expr => $action:expr, $context:expr, $msg:expr) => {{
         $client.put($url).send().await?;
@@ -246,20 +236,20 @@ async fn handle_command(cli: Cli) -> Result<()> {
                     queen_req!(POST client, format!("{}/v1/hive/stop", queen_url) => ACTION_HIVE_STOP, "stopped", "✅ Hive stopped")
                 }
                 HiveAction::List => {
-                    queen_req!(GET client, format!("{}/v1/hives", queen_url) => "hive_list", "success", serde_json::to_string_pretty(&serde_json::json!({}))?)
+                    queen_req!(GET client, format!("{}/v1/hives", queen_url) => ACTION_HIVE_LIST, "success", serde_json::to_string_pretty(&serde_json::json!({}))?)
                 }
                 HiveAction::Get { ref id } => {
-                    queen_req!(GET client, format!("{}/v1/hives/{}", queen_url, id) => "hive_get", id, serde_json::to_string_pretty(&serde_json::json!({}))?)
+                    queen_req!(GET client, format!("{}/v1/hives/{}", queen_url, id) => ACTION_HIVE_GET, id, serde_json::to_string_pretty(&serde_json::json!({}))?)
                 }
                 HiveAction::Create { ref host, port } => {
                     let body = serde_json::json!({ "host": host, "port": port });
-                    queen_req!(POST client, format!("{}/v1/hives", queen_url), body => "hive_create", host, "✅ Hive created")
+                    queen_req!(POST client, format!("{}/v1/hives", queen_url), body => ACTION_HIVE_CREATE, host, "✅ Hive created")
                 }
                 HiveAction::Update { ref id } => {
-                    queen_req!(PUT client, format!("{}/v1/hives/{}", queen_url, id) => "hive_update", id, format!("✅ Hive {} updated", id))
+                    queen_req!(PUT client, format!("{}/v1/hives/{}", queen_url, id) => ACTION_HIVE_UPDATE, id, format!("✅ Hive {} updated", id))
                 }
                 HiveAction::Delete { ref id } => {
-                    queen_req!(DELETE client, format!("{}/v1/hives/{}", queen_url, id) => "hive_delete", id, format!("✅ Hive {} deleted", id))
+                    queen_req!(DELETE client, format!("{}/v1/hives/{}", queen_url, id) => ACTION_HIVE_DELETE, id, format!("✅ Hive {} deleted", id))
                 }
             }
         }),
@@ -269,16 +259,16 @@ async fn handle_command(cli: Cli) -> Result<()> {
                 WorkerAction::Spawn { ref model, ref backend, device } => {
                     let body =
                         serde_json::json!({ "model": model, "backend": backend, "device": device });
-                    queen_req!(POST client, format!("{}/v1/workers/spawn", queen_url), body => "worker_spawn", model, "✅ Worker spawned")
+                    queen_req!(POST client, format!("{}/v1/workers/spawn", queen_url), body => ACTION_WORKER_SPAWN, model, "✅ Worker spawned")
                 }
                 WorkerAction::List => {
-                    queen_req!(GET client, format!("{}/v1/workers", queen_url) => "worker_list", "success", "Workers listed")
+                    queen_req!(GET client, format!("{}/v1/workers", queen_url) => ACTION_WORKER_LIST, "success", "Workers listed")
                 }
                 WorkerAction::Get { ref id } => {
-                    queen_req!(GET client, format!("{}/v1/workers/{}", queen_url, id) => "worker_get", id, "Worker details")
+                    queen_req!(GET client, format!("{}/v1/workers/{}", queen_url, id) => ACTION_WORKER_GET, id, "Worker details")
                 }
                 WorkerAction::Delete { ref id } => {
-                    queen_req!(DELETE client, format!("{}/v1/workers/{}", queen_url, id) => "worker_delete", id, format!("✅ Worker {} deleted", id))
+                    queen_req!(DELETE client, format!("{}/v1/workers/{}", queen_url, id) => ACTION_WORKER_DELETE, id, format!("✅ Worker {} deleted", id))
                 }
             }
         }),
@@ -287,16 +277,16 @@ async fn handle_command(cli: Cli) -> Result<()> {
             match action {
                 ModelAction::Download { ref model } => {
                     let body = serde_json::json!({ "model": model });
-                    queen_req!(POST client, format!("{}/v1/models/download", queen_url), body => "model_download", model, "✅ Model download started")
+                    queen_req!(POST client, format!("{}/v1/models/download", queen_url), body => ACTION_MODEL_DOWNLOAD, model, "✅ Model download started")
                 }
                 ModelAction::List => {
-                    queen_req!(GET client, format!("{}/v1/models", queen_url) => "model_list", "success", "Models listed")
+                    queen_req!(GET client, format!("{}/v1/models", queen_url) => ACTION_MODEL_LIST, "success", "Models listed")
                 }
                 ModelAction::Get { ref id } => {
-                    queen_req!(GET client, format!("{}/v1/models/{}", queen_url, id) => "model_get", id, "Model details")
+                    queen_req!(GET client, format!("{}/v1/models/{}", queen_url, id) => ACTION_MODEL_GET, id, "Model details")
                 }
                 ModelAction::Delete { ref id } => {
-                    queen_req!(DELETE client, format!("{}/v1/models/{}", queen_url, id) => "model_delete", id, format!("✅ Model {} deleted", id))
+                    queen_req!(DELETE client, format!("{}/v1/models/{}", queen_url, id) => ACTION_MODEL_DELETE, id, format!("✅ Model {} deleted", id))
                 }
             }
         }),
