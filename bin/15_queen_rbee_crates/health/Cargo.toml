@@ -11,11 +11,12 @@ name = "queen_rbee_health"
 path = "src/lib.rs"
 
 [dependencies]
-tokio = { workspace = true }
+# HTTP framework
 axum = { workspace = true }
-anyhow = { workspace = true }
-thiserror = { workspace = true }
-tracing = { workspace = true }
+
+# Serialization
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
 
 [dev-dependencies]
 # Add dev dependencies as needed

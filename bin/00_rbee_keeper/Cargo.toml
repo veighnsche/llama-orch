@@ -1,4 +1,5 @@
 # TEAM-135: Created by TEAM-135 (scaffolding)
+# TEAM-151: Updated with CLI dependencies for migration
 
 [package]
 name = "rbee-keeper"
@@ -10,12 +11,18 @@ license = "GPL-3.0-or-later"
 name = "rbee-keeper"
 path = "src/main.rs"
 
-[lib]
-name = "rbee_keeper"
-path = "src/lib.rs"
-
 [dependencies]
-# Add dependencies as needed
+# CLI parsing
+clap = { version = "4", features = ["derive"] }
+
+# Async runtime
+tokio = { version = "1", features = ["full"] }
+
+# Error handling
+anyhow = "1.0"
+
+# TODO: Add when commands crate is ready
+# rbee-keeper-commands = { path = "../05_rbee_keeper_crates/commands" }
 
 [dev-dependencies]
 # Add dev dependencies as needed
