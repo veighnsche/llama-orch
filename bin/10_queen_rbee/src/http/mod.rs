@@ -22,6 +22,7 @@
 
 // TEAM-151: Only health endpoint active for now
 pub mod health;
+pub mod shutdown;
 pub mod types; // Only for HealthResponse
 
 // TODO: Uncomment when registries are migrated

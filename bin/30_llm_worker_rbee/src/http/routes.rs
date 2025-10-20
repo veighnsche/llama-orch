@@ -3,11 +3,13 @@
 //! Modified by: TEAM-017 (updated to use Mutex-wrapped backend)
 //! Modified by: TEAM-035 (added loading progress, renamed inference endpoint)
 //! Modified by: TEAM-149 (real-time streaming with request queue)
+//! Modified by: TEAM-154 (dual-call pattern with job registry)
 //!
 //! # Endpoints
 //! - `GET /health` - Health check endpoint
 //! - `GET /v1/ready` - Worker readiness check - TEAM-045
-//! - `POST /v1/inference` - Execute inference request (SSE) - TEAM-035, TEAM-149
+//! - `POST /v1/inference` - Create inference job (JSON) - TEAM-154
+//! - `GET /v1/inference/{job_id}/stream` - Stream job results (SSE) - TEAM-154
 //! - `GET /v1/loading/progress` - Model loading progress (SSE) - TEAM-035
 //!
 //! # Middleware
@@ -21,8 +23,9 @@
 //! - `SSE_IMPLEMENTATION_PLAN.md` Phase 3: Inference streaming
 //! - `STREAMING_REFACTOR_PLAN.md`: Real-time token streaming
 
-use crate::backend::request_queue::RequestQueue;
-use crate::http::{execute, middleware::auth_middleware};
+use crate::backend::request_queue::{RequestQueue, TokenResponse};
+use crate::http::{execute, middleware::auth_middleware, stream};
+use job_registry::JobRegistry;
 use axum::{
     middleware,
     routing::{get, post},
@@ -32,10 +35,21 @@ use observability_narration_core::axum::correlation_middleware;
 use serde::Serialize;
 use std::sync::Arc;
 
+/// Shared state for worker routes
+///
+/// TEAM-154: Combines queue and registry for dual-call pattern
+/// Registry is generic over TokenResponse type
+#[derive(Clone)]
+pub struct WorkerState {
+    pub queue: Arc<RequestQueue>,
+    pub registry: Arc<JobRegistry<TokenResponse>>,
+}
+
 /// Create HTTP router with all endpoints and middleware
 ///
 /// # Arguments
 /// * `queue` - Request queue for inference requests (TEAM-149)
+/// * `registry` - Job registry for dual-call pattern (TEAM-154)
 /// * `expected_token` - API token for authentication (TEAM-102)
 ///
 /// # Returns
@@ -46,8 +60,10 @@ use std::sync::Arc;
 /// TEAM-045: Added /v1/ready endpoint
 /// TEAM-102: Added authentication middleware with `expected_token`
 /// TEAM-149: Changed to accept RequestQueue instead of backend
+/// TEAM-154: Added JobRegistry for dual-call pattern
 pub fn create_router(
     queue: Arc<RequestQueue>,
+    registry: Arc<JobRegistry<TokenResponse>>,
     expected_token: String,
 ) -> Router {
     // TEAM-149: Simple health endpoint (public, no auth)
@@ -67,9 +83,15 @@ pub fn create_router(
     let public_routes = Router::new()
         .route("/health", get(handle_health));
     
+    // TEAM-154: Create shared state for worker routes
+    let worker_state = WorkerState { queue, registry };
+
     // Worker routes (protected)
+    // TEAM-154: Dual-call pattern - POST creates job, GET streams results
     let worker_routes = Router::new()
-        .route("/v1/inference", post(execute::handle_execute));
+        .route("/v1/inference", post(execute::handle_create_job))
+        .route("/v1/inference/{job_id}/stream", get(stream::handle_stream_job))
+        .with_state(worker_state);
 
     // Apply auth middleware if token is provided (network mode)
     // Empty token = local mode (no auth, but main.rs ensures 127.0.0.1 binding)
@@ -80,11 +102,11 @@ pub fn create_router(
         worker_routes.layer(middleware::from_fn_with_state(auth_state, auth_middleware))
     };
 
-    // Merge public and protected routes, apply correlation middleware
-    public_routes
+    // TEAM-154: Merge public and protected routes, apply correlation middleware
+    Router::new()
+        .merge(public_routes)
         .merge(protected_routes)
         .layer(middleware::from_fn(correlation_middleware))
-        .with_state(queue)
 }
 
 #[cfg(test)]

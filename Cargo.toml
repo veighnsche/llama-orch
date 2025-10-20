@@ -76,6 +76,7 @@ members = [
     "bin/99_shared_crates/rbee-types",
     "bin/99_shared_crates/rbee-types/bdd",
     "bin/99_shared_crates/heartbeat",           # MOVED from worker-rbee-crates (used by workers AND hives)
+    "bin/99_shared_crates/job-registry",        # TEAM-154: Dual-call pattern job tracking (worker/queen/hive)
     
     # Existing shared crates
     "bin/99_shared_crates/audit-logging",

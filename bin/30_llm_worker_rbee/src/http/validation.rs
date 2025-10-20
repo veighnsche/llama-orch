@@ -14,11 +14,10 @@ use axum::{
 use serde::{Deserialize, Serialize};
 
 /// Execute request parameters
+///
+/// TEAM-154: Removed job_id field - server generates it in dual-call pattern
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct ExecuteRequest {
-    /// Job ID (must be non-empty)
-    pub job_id: String,
-
     /// Prompt text (1-32768 characters)
     pub prompt: String,
 
@@ -112,6 +111,22 @@ impl IntoResponse for ValidationErrorResponse {
     }
 }
 
+impl ValidationErrorResponse {
+    /// Create a single error response
+    ///
+    /// TEAM-154: Helper for simple error cases
+    pub fn single_error(field: &str, message: &str) -> Self {
+        Self {
+            errors: vec![FieldError {
+                field: field.to_string(),
+                constraint: "validation_failed".to_string(),
+                message: message.to_string(),
+                value: None,
+            }],
+        }
+    }
+}
+
 impl ExecuteRequest {
     /// Validate request parameters (returns first error only)
     ///
@@ -121,7 +136,6 @@ impl ExecuteRequest {
     /// For collecting all errors, use `validate_all()`.
     ///
     /// # Validation Rules
-    /// - `job_id`: Must be non-empty
     /// - `prompt`: Must be 1-32768 characters
     /// - `max_tokens`: Must be 1-2048
     /// - `temperature`: Must be 0.0-2.0 (inclusive)
@@ -132,14 +146,6 @@ impl ExecuteRequest {
     /// - `stop`: Max 4 sequences, each max 100 chars
     /// - `min_p`: Must be 0.0-1.0 (inclusive)
     pub fn validate(&self) -> Result<(), ValidationError> {
-        // Validate job_id
-        if self.job_id.is_empty() {
-            return Err(ValidationError {
-                field: "job_id".to_string(),
-                message: "must not be empty".to_string(),
-            });
-        }
-
         // Validate prompt length
         let prompt_len = self.prompt.chars().count();
         if prompt_len == 0 {
@@ -267,16 +273,6 @@ impl ExecuteRequest {
     /// Same as `validate()`, but collects all errors before returning.
     pub fn validate_all(&self) -> Result<(), ValidationErrorResponse> {
         let mut errors = Vec::new();
-
-        // Validate job_id
-        if self.job_id.is_empty() {
-            errors.push(FieldError {
-                field: "job_id".to_string(),
-                constraint: "non_empty".to_string(),
-                message: "job_id must not be empty".to_string(),
-                value: Some(self.job_id.clone()),
-            });
-        }
 
         // Validate prompt length
         let prompt_len = self.prompt.chars().count();
@@ -436,7 +432,6 @@ mod tests {
 
     fn valid_request() -> ExecuteRequest {
         ExecuteRequest {
-            job_id: "test-job-123".to_string(),
             prompt: "Hello, world!".to_string(),
             max_tokens: 100,
             temperature: 0.7,
@@ -453,16 +448,6 @@ mod tests {
     fn test_valid_request() {
         let req = valid_request();
         assert!(req.validate().is_ok());
-    }
-
-    #[test]
-    fn test_empty_job_id() {
-        let mut req = valid_request();
-        req.job_id = "".to_string();
-
-        let err = req.validate().unwrap_err();
-        assert_eq!(err.field, "job_id");
-        assert!(err.message.contains("empty"));
     }
 
     #[test]
@@ -587,7 +572,6 @@ mod tests {
     #[test]
     fn test_validate_all_collects_multiple_errors() {
         let req = ExecuteRequest {
-            job_id: "".to_string(), // Invalid: empty
             prompt: "".to_string(), // Invalid: empty
             max_tokens: 0,          // Invalid: too small
             temperature: 3.0,       // Invalid: too high
@@ -603,11 +587,10 @@ mod tests {
         assert!(result.is_err());
 
         let err = result.unwrap_err();
-        assert_eq!(err.errors.len(), 4); // All 4 errors collected
+        assert_eq!(err.errors.len(), 3); // All 3 errors collected
 
         // Verify each error is present
         let fields: Vec<_> = err.errors.iter().map(|e| e.field.as_str()).collect();
-        assert!(fields.contains(&"job_id"));
         assert!(fields.contains(&"prompt"));
         assert!(fields.contains(&"max_tokens"));
         assert!(fields.contains(&"temperature"));
@@ -830,7 +813,6 @@ mod tests {
     fn test_backward_compatibility_old_request_format() {
         // Old request format (Sprint 3) should still work
         let json = r#"{
-            "job_id": "test-job",
             "prompt": "Hello",
             "max_tokens": 100,
             "temperature": 0.7,
@@ -851,7 +833,6 @@ mod tests {
     #[test]
     fn test_new_request_format_with_all_parameters() {
         let json = r#"{
-            "job_id": "test-job",
             "prompt": "Hello",
             "max_tokens": 100,
             "temperature": 0.7,
@@ -876,7 +857,6 @@ mod tests {
     #[test]
     fn test_validate_all_collects_advanced_parameter_errors() {
         let req = ExecuteRequest {
-            job_id: "test".to_string(),
             prompt: "Hello".to_string(),
             max_tokens: 100,
             temperature: 0.7,

@@ -194,6 +194,7 @@ clap = { version = "4", features = ["derive"] }
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 chrono = "0.4"  # TEAM-115: For heartbeat timestamps
+uuid = { version = "1.0", features = ["v4"] }  # TEAM-154: For job_id generation
 # TEAM-014: Removed rand = "0.8" (no longer needed, using Candle's LogitsProcessor)
 
 # TEAM-102: Security shared crates
@@ -203,6 +204,9 @@ input-validation = { path = "../99_shared_crates/input-validation" }
 
 # TEAM-135: Heartbeat shared crate
 rbee-heartbeat = { path = "../99_shared_crates/heartbeat" }
+
+# TEAM-154: Job registry shared crate (dual-call pattern)
+job-registry = { path = "../99_shared_crates/job-registry" }
 
 [dev-dependencies]
 # Testing utilities

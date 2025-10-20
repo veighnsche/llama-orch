@@ -57,6 +57,30 @@ pub mod unicode;
 pub use auto::{current_timestamp_ms, narrate_auto, narrate_full, service_identity};
 pub use builder::Narration;
 pub use capture::{CaptureAdapter, CapturedNarration};
+
+/// Macro to emit narration with automatic caller crate provenance.
+///
+/// This macro captures the caller's crate name and version at compile time,
+/// providing accurate provenance information for debugging.
+///
+/// # Example
+/// ```rust,ignore
+/// use observability_narration_core::narrate;
+///
+/// narrate!(
+///     Narration::new("rbee-keeper", "start", "queen")
+///         .human("Starting queen-rbee")
+/// );
+/// ```
+#[macro_export]
+macro_rules! narrate {
+    ($narration:expr) => {{
+        $narration.emit_with_provenance(
+            env!("CARGO_PKG_NAME"),
+            env!("CARGO_PKG_VERSION")
+        )
+    }};
+}
 pub use correlation::{
     from_header as correlation_from_header, generate_correlation_id,
     propagate as correlation_propagate, validate_correlation_id,
@@ -305,6 +329,8 @@ macro_rules! emit_event {
 
 /// Emit a narration event at a specific level.
 /// Implements ORCH-3300, ORCH-3301, ORCH-3303.
+///
+/// TEAM-153: Outputs to both tracing (if configured) AND stderr for guaranteed visibility
 pub fn narrate_at_level(fields: NarrationFields, level: NarrationLevel) {
     let Some(tracing_level) = level.to_tracing_level() else {
         return; // MUTE - no output
@@ -319,7 +345,13 @@ pub fn narrate_at_level(fields: NarrationFields, level: NarrationLevel) {
     // Apply redaction to story text if present
     let story = fields.story.as_ref().map(|s| redact_secrets(s, RedactionPolicy::default()));
 
-    // Emit structured event at appropriate level using macro
+    // TEAM-153: Always output to stderr for guaranteed shell visibility
+    // This works whether or not tracing subscriber is initialized
+    // Show provenance (which binary/crate emitted this)
+    let provenance = fields.emitted_by.as_deref().unwrap_or("unknown");
+    eprintln!("({}) {}", provenance, human);
+
+    // Emit structured event at appropriate level using macro (for tracing subscribers if configured)
     match tracing_level {
         Level::TRACE => emit_event!(Level::TRACE, fields, human, cute, story),
         Level::DEBUG => emit_event!(Level::DEBUG, fields, human, cute, story),

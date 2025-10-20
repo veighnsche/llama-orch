@@ -14,7 +14,17 @@ path = "src/lib.rs"
 # Shared lifecycle management
 daemon-lifecycle = { path = "../../99_shared_crates/daemon-lifecycle" }
 
-# Add other dependencies as needed
+# Narration for observability
+observability-narration-core = { path = "../../99_shared_crates/narration-core" }
+
+# Async runtime
+tokio = { version = "1", features = ["time"] }
+
+# HTTP client for health checks
+reqwest = { version = "0.11", features = ["json"] }
+
+# Error handling
+anyhow = "1.0"
 
 [dev-dependencies]
-# Add dev dependencies as needed
+tokio = { version = "1", features = ["full"] }

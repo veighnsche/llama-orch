@@ -18,6 +18,7 @@
 //!
 //! Integrated by: TEAM-015 (from worker-http crate)
 //! Modified by: TEAM-035 (added loading progress)
+//! Modified by: TEAM-154 (added stream endpoint for dual-call pattern)
 
 pub mod backend;
 pub mod execute;
@@ -29,6 +30,7 @@ pub mod ready; // TEAM-045: Worker readiness endpoint
 pub mod routes;
 pub mod server;
 pub mod sse;
+pub mod stream; // TEAM-154: Stream endpoint for dual-call pattern
 pub mod validation;
 
 // Re-export commonly used types

@@ -24,6 +24,9 @@ reqwest = { version = "0.11", features = ["json"] }
 # Error handling
 anyhow = "1.0"
 
+# TEAM-152: Queen lifecycle management
+rbee-keeper-queen-lifecycle = { path = "../05_rbee_keeper_crates/queen-lifecycle" }
+
 # TODO: Add when commands crate is ready
 # rbee-keeper-commands = { path = "../05_rbee_keeper_crates/commands" }
 

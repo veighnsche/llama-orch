@@ -283,8 +283,11 @@ async fn main() -> Result<()> {
 async fn handle_command(cli: Cli) -> Result<()> {
     match cli.command {
         Commands::Infer { model, prompt, max_tokens, temperature, node, backend, device } => {
-            // TODO: Call rbee-keeper-commands::infer::handle()
-            println!("TODO: Implement infer command");
+            // TEAM-153: Ensure queen is running and get handle for cleanup
+            let queen_handle = rbee_keeper_queen_lifecycle::ensure_queen_running("http://localhost:8500").await?;
+            
+            // TODO: Submit inference job to queen
+            println!("TODO: Implement infer command (submit job to queen)");
             println!("  Model: {}", model);
             println!("  Prompt: {}", prompt);
             println!("  Max tokens: {}", max_tokens);
@@ -298,6 +301,10 @@ async fn handle_command(cli: Cli) -> Result<()> {
             if let Some(d) = device {
                 println!("  Device: {}", d);
             }
+            
+            // TEAM-153: Cleanup - shutdown queen ONLY if we started it
+            queen_handle.shutdown().await?;
+            
             Ok(())
         }
         

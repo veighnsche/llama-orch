@@ -1,0 +1,16 @@
+[package]
+name = "job-registry"
+version = "0.1.0"
+edition = "2021"
+authors = ["TEAM-154"]
+description = "Shared job registry for dual-call inference pattern across worker, queen, and hive"
+license = "GPL-3.0-or-later"
+
+[dependencies]
+# Core dependencies
+tokio = { version = "1", features = ["sync"] }
+uuid = { version = "1.0", features = ["v4"] }
+chrono = "0.4"
+
+[dev-dependencies]
+tokio = { version = "1", features = ["rt", "macros"] }

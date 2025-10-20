@@ -213,8 +213,22 @@ impl Narration {
     /// Emit the narration at INFO level with auto-injection.
     ///
     /// Automatically injects service identity and timestamp.
+    /// 
+    /// Note: Use the `narrate!` macro instead to capture caller's crate name.
     pub fn emit(self) {
         crate::narrate_auto(self.fields)
+    }
+    
+    /// Emit with explicit provenance (internal use by macro)
+    #[doc(hidden)]
+    pub fn emit_with_provenance(mut self, crate_name: &str, crate_version: &str) {
+        if self.fields.emitted_by.is_none() {
+            self.fields.emitted_by = Some(format!("{}@{}", crate_name, crate_version));
+        }
+        if self.fields.emitted_at_ms.is_none() {
+            self.fields.emitted_at_ms = Some(crate::auto::current_timestamp_ms());
+        }
+        crate::narrate(self.fields)
     }
 
     /// Emit the narration at WARN level with auto-injection.

@@ -350,26 +350,53 @@ pub fn test_worker_isolation(config: Option<WorkerTestConfig>) -> Result<()> {
     }
     println!("✅ Worker is ready (heartbeat received)");
 
-    // Step 7: Test inference with SSE streaming
-    println!("\n🤔 Testing inference with SSE streaming...");
+    // Step 7: Test inference with dual-call pattern
+    println!("\n🤔 Testing inference with dual-call pattern...");
     
+    // Step 7a: POST to create job
     let inference_url = format!("http://127.0.0.1:{}/v1/inference", config.port);
     let payload = serde_json::json!({
-        "job_id": "test-job-001",
+        // NO job_id - server generates it
         "prompt": "The capital of France is",
         "max_tokens": 50,
         "temperature": 0.7
     });
 
-    match ureq::post(&inference_url)
+    let create_response = match ureq::post(&inference_url)
         .set("Content-Type", "application/json")
-        // No Authorization header needed in local mode
         .send_json(&payload)
     {
+        Ok(response) => response,
+        Err(e) => {
+            println!("❌ Job creation failed: {}", e);
+            return Ok(());
+        }
+    };
+
+    #[derive(serde::Deserialize)]
+    struct CreateJobResponse {
+        job_id: String,
+        sse_url: String,
+    }
+
+    let job_response: CreateJobResponse = match create_response.into_json() {
+        Ok(resp) => resp,
+        Err(e) => {
+            println!("❌ Failed to parse job response: {}", e);
+            return Ok(());
+        }
+    };
+
+    println!("✅ Job created: {}", job_response.job_id);
+    println!("📡 SSE URL: {}", job_response.sse_url);
+
+    // Step 7b: GET to stream results
+    let stream_url = format!("http://127.0.0.1:{}{}", config.port, job_response.sse_url);
+
+    match ureq::get(&stream_url).call() {
         Ok(response) => {
-            println!("✅ Inference request accepted");
+            println!("✅ SSE connection established");
             
-            // TEAM-150: Add 30s timeout for stream reading - KILL THE HANG!
             let reader = std::io::BufReader::new(response.into_reader());
             let mut token_count = 0;
             let mut done_received = false;
@@ -412,19 +439,20 @@ pub fn test_worker_isolation(config: Option<WorkerTestConfig>) -> Result<()> {
                 }
             }
             
+            
             println!("\n\n📊 Inference Test Results");
             println!("==================================");
             println!("Tokens received: {}", token_count);
             println!("[DONE] signal: {}", if done_received { "✅" } else { "❌" });
             
             if token_count > 0 && done_received {
-                println!("\n✅ INFERENCE TEST PASSED!");
+                println!("\n✅ DUAL-CALL PATTERN TEST PASSED!");
             } else {
-                println!("\n❌ INFERENCE TEST FAILED!");
+                println!("\n❌ DUAL-CALL PATTERN TEST FAILED!");
             }
         }
         Err(e) => {
-            println!("❌ Inference request failed: {}", e);
+            println!("❌ SSE connection failed: {}", e);
         }
     }
 

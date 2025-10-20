@@ -13,8 +13,9 @@
 //! Modified by: TEAM-088 (added comprehensive error narration)
 
 use clap::Parser;
+use job_registry::JobRegistry;
 use llm_worker_rbee::{
-    backend::{CandleInferenceBackend, generation_engine::GenerationEngine, request_queue::RequestQueue},
+    backend::{CandleInferenceBackend, generation_engine::GenerationEngine, request_queue::{RequestQueue, TokenResponse}},
     create_router,
     narration::{
         ACTION_MODEL_LOAD, ACTION_STARTUP, ACTOR_LLM_WORKER_RBEE,
@@ -192,7 +193,8 @@ async fn main() -> anyhow::Result<()> {
     // - Request queue decouples HTTP from generation
     // - Generation engine runs in spawn_blocking
     // - Tokens flow through channels to SSE streams
-    tracing::info!("Creating request queue and generation engine");
+    // TEAM-154: Added job registry for dual-call pattern
+    tracing::info!("Creating request queue, job registry, and generation engine");
     
     // Wrap backend in Arc<Mutex> for sharing between engine and warmup
     let backend = Arc::new(Mutex::new(backend));
@@ -200,6 +202,10 @@ async fn main() -> anyhow::Result<()> {
     // Create request queue
     let (request_queue, request_rx) = RequestQueue::new();
     let request_queue = Arc::new(request_queue);
+    
+    // TEAM-154: Create job registry for dual-call pattern
+    // Generic over TokenResponse type from request_queue
+    let job_registry: Arc<JobRegistry<TokenResponse>> = Arc::new(JobRegistry::new());
     
     // Start generation engine in background
     let generation_engine = GenerationEngine::new(
@@ -215,11 +221,11 @@ async fn main() -> anyhow::Result<()> {
     // Send periodic heartbeats to rbee-hive to indicate worker is alive
     tracing::info!("Starting heartbeat task");
     
-    let heartbeat_config = llm_worker_rbee::heartbeat::HeartbeatConfig::new(
+    let heartbeat_config = llm_worker_rbee::heartbeat::WorkerHeartbeatConfig::new(
         args.worker_id.clone(),
         args.hive_url.clone(),
     );
-    let _heartbeat_handle = llm_worker_rbee::heartbeat::start_heartbeat_task(heartbeat_config);
+    let _heartbeat_handle = llm_worker_rbee::heartbeat::start_worker_heartbeat_task(heartbeat_config);
     tracing::info!("Heartbeat task started (30s interval)");
 
     // ============================================================
@@ -251,7 +257,8 @@ async fn main() -> anyhow::Result<()> {
     // HTTP handlers add requests to queue and return immediately
     // Generation happens in spawn_blocking, tokens stream in real-time
     // TEAM-102: Added expected_token for authentication
-    let router = create_router(request_queue, expected_token);
+    // TEAM-154: Added job_registry for dual-call pattern
+    let router = create_router(request_queue, job_registry, expected_token);
 
     // Start HTTP server (worker-http)
     let server = HttpServer::new(addr, router).await?;
