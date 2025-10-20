@@ -16,26 +16,25 @@ path = "src/main.rs"
 axum = { workspace = true }
 tokio = { workspace = true, features = ["full"] }
 
-# Serialization (for http/types.rs)
+# CLI
+clap = { version = "4", features = ["derive"] }
+
+# Serialization
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 
-# CLI parsing
-clap = { version = "4", features = ["derive"] }
-
-# Narration for observability
-observability-narration-core = { path = "../99_shared_crates/narration-core" }
-
-# TEAM-155: Job registry for dual-call pattern
-job-registry = { path = "../99_shared_crates/job-registry" }
-
-# TEAM-155: SSE streaming dependencies
+# Time and streaming
+chrono = { version = "0.4", features = ["serde"] }
 futures = "0.3"
 async-stream = "0.3"
-chrono = { version = "0.4", features = ["serde"] }
 
 # Error handling
 anyhow = "1.0"
+
+# Internal dependencies
+job-registry = { path = "../99_shared_crates/job-registry" }
+observability-narration-core = { path = "../99_shared_crates/narration-core" }
+queen-rbee-hive-catalog = { path = "../15_queen_rbee_crates/hive-catalog" }
 
 # TODO: Add when registries are migrated
 # beehive_registry (for http/routes.rs, http/beehives.rs, etc.)

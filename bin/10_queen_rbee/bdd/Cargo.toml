@@ -15,7 +15,9 @@ anyhow = { workspace = true }
 cucumber = { version = "0.20", features = ["macros"] }
 tokio = { version = "1", features = ["macros", "rt-multi-thread"] }
 futures = { workspace = true }
+tempfile = "3.0"
 queen-rbee = { path = ".." }
+queen-rbee-hive-catalog = { path = "../../15_queen_rbee_crates/hive-catalog" }
 
 [[bin]]
 name = "bdd-runner"

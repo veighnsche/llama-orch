@@ -17,7 +17,9 @@ use axum::routing::{get, post};
 use clap::Parser;
 use job_registry::JobRegistry;
 use observability_narration_core::Narration;
+use queen_rbee_hive_catalog::HiveCatalog;
 use std::net::SocketAddr;
+use std::path::PathBuf;
 use std::sync::Arc;
 
 // Actor and action constants
@@ -54,6 +56,25 @@ async fn main() -> Result<()> {
         .human(format!("Queen-rbee starting on port {}", args.port))
         .emit();
 
+    // TEAM-156: Initialize hive catalog
+    let catalog_path = args
+        .database
+        .map(PathBuf::from)
+        .unwrap_or_else(|| PathBuf::from("queen-hive-catalog.db"));
+
+    let hive_catalog = Arc::new(
+        HiveCatalog::new(&catalog_path)
+            .await
+            .map_err(|e| anyhow::anyhow!("Failed to initialize hive catalog: {}", e))?,
+    );
+
+    Narration::new(ACTOR_QUEEN_RBEE, ACTION_START, &catalog_path.display().to_string())
+        .human(format!(
+            "Initialized hive catalog at {}",
+            catalog_path.display()
+        ))
+        .emit();
+
     // TEAM-155: Initialize job registry for dual-call pattern
     // Generic over String for now (will stream text tokens)
     let job_registry: Arc<JobRegistry<String>> = Arc::new(JobRegistry::new());
@@ -63,7 +84,7 @@ async fn main() -> Result<()> {
     // - worker_registry (RAM)
     // - Load config from args.config
 
-    let app = create_router(job_registry);
+    let app = create_router(job_registry, hive_catalog);
     let addr = SocketAddr::from(([127, 0, 0, 1], args.port));
 
     Narration::new(ACTOR_QUEEN_RBEE, ACTION_LISTEN, &addr.to_string())
@@ -87,12 +108,17 @@ async fn main() -> Result<()> {
 /// Create HTTP router
 ///
 /// TEAM-155: Added job endpoints for dual-call pattern
+/// TEAM-156: Added hive catalog to state
 /// Currently health, shutdown, and job endpoints are active.
 /// TODO: Uncomment http::routes::create_router() when registries are migrated
-fn create_router(job_registry: Arc<JobRegistry<String>>) -> axum::Router {
-    // TEAM-155: Create job state for endpoints
+fn create_router(
+    job_registry: Arc<JobRegistry<String>>,
+    hive_catalog: Arc<HiveCatalog>,
+) -> axum::Router {
+    // TEAM-156: Create job state for endpoints with hive catalog
     let job_state = http::jobs::QueenJobState {
         registry: job_registry,
+        hive_catalog,
     };
 
     axum::Router::new()

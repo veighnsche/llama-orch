@@ -18,6 +18,7 @@ serde_json = { workspace = true }
 anyhow = { workspace = true }
 thiserror = { workspace = true }
 tracing = { workspace = true }
+chrono = { workspace = true }
 rbee-types = { path = "../../99_shared_crates/rbee-types" }
 
 [dev-dependencies]

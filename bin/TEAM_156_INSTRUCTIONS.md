@@ -47,7 +47,7 @@ narration (queen bee -> sse -> bee keeper -> stdout): No hives found.
 
 ### 1. Hive Catalog Crate (SQLite)
 
-**Location:** `bin/99_shared_crates/hive-catalog/`
+**Location:** `bin/99_shared_crates/hive-catalog/` NO - bin/15_queen_rbee_crates/hive-catalog - It's not shared.
 
 **Purpose:** Persistent storage for registered hives
 
@@ -99,7 +99,7 @@ pub enum HiveStatus {
 
 **Actor constant:**
 ```rust
-const ACTOR_HIVE_CATALOG: &str = "⚙️ hive-catalog";
+const ACTOR_HIVE_CATALOG: &str = "(crown emoji here) queen bee / ⚙️ hive-catalog";
 ```
 
 ---
@@ -295,7 +295,7 @@ Feature: Hive Catalog Management
 
 ## 🎓 Tips
 
-1. **Start with the crate** - Build hive-catalog first, test it standalone
+1. **Start with the crate** - Build hive-catalog first, test it standalone -- alread exists at the 15_queen_rbee_crates/hive-catalog
 2. **Keep it simple** - Just list_hives() for now, don't over-engineer
 3. **Use rusqlite** - It's already in the workspace
 4. **Follow job-registry pattern** - Similar structure, different domain

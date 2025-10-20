@@ -14,12 +14,15 @@ use axum::{
     response::{sse::Event, Sse},
     Json,
 };
+use chrono;
 use futures::stream::{self, Stream, StreamExt};
 use job_registry::{JobRegistry, JobState as RegistryJobState};
 use observability_narration_core::Narration;
+use queen_rbee_hive_catalog::{HiveCatalog, HiveRecord, HiveStatus};
 use serde::{Deserialize, Serialize};
 use std::convert::Infallible;
 use std::sync::Arc;
+use tokio::process::Command;
 
 // TEAM-155: Actor and action constants for narration
 const ACTOR_QUEEN_HTTP: &str = "👑 queen-http";
@@ -50,15 +53,18 @@ pub struct JobResponse {
 /// Shared state for job endpoints
 ///
 /// TEAM-155: Generic over token type (queen will use String for now)
+/// TEAM-156: Added hive catalog for checking available hives
 /// Named QueenJobState to avoid conflict with job_registry::JobState
 #[derive(Clone)]
 pub struct QueenJobState {
     pub registry: Arc<JobRegistry<String>>,
+    pub hive_catalog: Arc<HiveCatalog>,
 }
 
 /// POST /jobs - Create a new job
 ///
 /// TEAM-155: Mirrors worker-rbee pattern
+/// TEAM-156: Added hive catalog checking and "no hives found" narration
 /// - Server generates job_id (client doesn't provide it)
 /// - Returns JSON with job_id and sse_url
 /// - Client then calls GET /jobs/{job_id}/stream for SSE
@@ -73,9 +79,99 @@ pub async fn handle_create_job(
         .human(format!("Job {} created for model {}", job_id, req.model))
         .emit();
 
-    // TEAM-155: TODO - Queue job for processing
-    // For now, just create the job and return the URL
-    // Later: Send to hive, get worker, forward request
+    // TEAM-156: Check hive catalog for available hives
+    let hive_catalog = state.hive_catalog.clone();
+    let hives = hive_catalog
+        .list_hives()
+        .await
+        .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
+
+    if hives.is_empty() {
+        // TEAM-156: No hives found - send narration via SSE
+        let (tx, rx) = tokio::sync::mpsc::unbounded_channel();
+        state.registry.set_token_receiver(&job_id, rx);
+
+        Narration::new(ACTOR_QUEEN_HTTP, ACTION_JOB_CREATE, &job_id)
+            .human("No hives found in catalog")
+            .emit();
+
+        // TEAM-156: Send "no hives found" message to SSE stream
+        if tx.send("No hives found.".to_string()).is_err() {
+            // Receiver dropped, but that's okay
+        }
+
+        // TEAM-157: Add local PC to hive catalog
+        let now_ms = chrono::Utc::now().timestamp_millis();
+        let localhost_record = HiveRecord {
+            id: "localhost".to_string(),
+            host: "127.0.0.1".to_string(),
+            port: 8600,
+            ssh_host: None,
+            ssh_port: None,
+            ssh_user: None,
+            status: HiveStatus::Unknown,
+            last_heartbeat_ms: None,
+            created_at_ms: now_ms,
+            updated_at_ms: now_ms,
+        };
+
+        hive_catalog
+            .add_hive(localhost_record)
+            .await
+            .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
+
+        Narration::new(ACTOR_QUEEN_HTTP, ACTION_JOB_CREATE, &job_id)
+            .human("Adding local pc to hive catalog")
+            .emit();
+
+        // TEAM-157: Send narration to SSE stream
+        if tx.send("Adding local pc to hive catalog.".to_string()).is_err() {
+            // Receiver dropped, but that's okay
+        }
+
+        // TEAM-157: Start rbee-hive locally on port 8600
+        // HARDCODED LOCATION OF RBEE HIVE BINARY FOR NOW!
+        let hive_binary = std::env::current_exe()
+            .ok()
+            .and_then(|p| p.parent().map(|p| p.join("rbee-hive")))
+            .unwrap_or_else(|| std::path::PathBuf::from("./target/debug/rbee-hive"));
+
+        Narration::new(ACTOR_QUEEN_HTTP, ACTION_JOB_CREATE, "localhost")
+            .human("Waking up the bee hive at localhost")
+            .emit();
+
+        // TEAM-157: Send narration to SSE stream
+        if tx.send("Waking up the bee hive at localhost.".to_string()).is_err() {
+            // Receiver dropped, but that's okay
+        }
+
+        // TEAM-157: Spawn rbee-hive subprocess
+        let _hive_process = Command::new(&hive_binary)
+            .arg("--port")
+            .arg("8600")
+            .spawn()
+            .map_err(|e| {
+                Narration::new(ACTOR_QUEEN_HTTP, ACTION_ERROR, "localhost")
+                    .human(format!("Failed to start rbee-hive: {}", e))
+                    .error_kind("hive_spawn_failed")
+                    .emit();
+                (StatusCode::INTERNAL_SERVER_ERROR, format!("Failed to start rbee-hive: {}", e))
+            })?;
+
+        Narration::new(ACTOR_QUEEN_HTTP, ACTION_JOB_CREATE, "localhost")
+            .human("Rbee-hive started, waiting for heartbeat")
+            .emit();
+
+        // TEAM-157: Send narration to SSE stream
+        if tx.send("Rbee-hive started, waiting for heartbeat.".to_string()).is_err() {
+            // Receiver dropped, but that's okay
+        }
+
+        // TEAM-157: TODO TEAM-158: Implement heartbeat listener endpoint
+        // The hive will automatically send heartbeats to queen
+        // For now, just close the stream
+        drop(tx);
+    }
 
     // TEAM-155: Return job_id and SSE URL
     let sse_url = format!("/jobs/{}/stream", job_id);
