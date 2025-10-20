@@ -41,3 +41,7 @@ pub use types::{GpuDevice, GpuInfo};
 
 // Convenience functions
 pub use detection::{assert_gpu_available, get_device_info, gpu_count, has_gpu};
+
+// TEAM-159: System information detection
+mod system;
+pub use system::{get_cpu_cores, get_system_ram_gb};

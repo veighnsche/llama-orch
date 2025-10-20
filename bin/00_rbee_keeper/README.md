@@ -1,31 +1,46 @@
 # rbee-keeper
 
-**Status:** 🚧 MIGRATION TARGET (TEAM-135)  
-**Purpose:** Thin CLI user interface to queen-rbee orchestrator  
-**Binary Name:** `rbee`  
-**Source:** `bin/old.rbee-keeper/` (~1,252 LOC)
+**Status:** ✅ IMPLEMENTED (TEAM-158)  
+**Purpose:** Thin HTTP client for queen-rbee  
+**Binary Name:** `rbee-keeper`  
+**LOC:** ~450 lines (main.rs + health_check.rs)
 
 ---
 
-## 🎯 CORE PRINCIPLE
+## 🎯 CRITICAL ARCHITECTURE PRINCIPLE
 
-**rbee-keeper is the USER INTERFACE to queen-rbee**
+# ⚠️ rbee-keeper is a THIN HTTP CLIENT ⚠️
+
+**DO NOT OVER-ENGINEER THIS BINARY!**
 
 ```
 User → rbee-keeper (CLI) → queen-rbee (HTTP API) → Everything else
 ```
 
-**This binary is a THIN CLIENT that:**
-- ✅ Parses CLI arguments
-- ✅ Starts/stops queen-rbee daemon as needed
-- ✅ Submits requests to queen-rbee HTTP API
-- ✅ Displays results to the user
+## What rbee-keeper IS:
+- ✅ A simple HTTP client that talks to queen-rbee
+- ✅ CLI argument parser (clap)
+- ✅ Queen lifecycle manager (auto-start if needed)
+- ✅ SSE stream consumer (prints events to stdout)
+- ✅ ~450 lines of code total
 
-**This binary does NOT:**
-- ❌ Use SSH (only queen-rbee uses SSH)
-- ❌ Communicate directly with hives (only queen-rbee does)
-- ❌ Make orchestration decisions (only queen-rbee does)
-- ❌ Run as a daemon (CLI tool only)
+## What rbee-keeper is NOT:
+- ❌ A complex application with business logic
+- ❌ A daemon that runs in the background
+- ❌ An SSH client (only queen-rbee uses SSH)
+- ❌ An orchestrator (only queen-rbee orchestrates)
+- ❌ Something that needs separate "command" modules
+
+## Implementation:
+**ALL logic is in `src/main.rs`** - No separate command files needed!
+
+Each command is just:
+1. Ensure queen is running
+2. Make HTTP request
+3. Display response
+4. Cleanup
+
+That's it. Don't make it more complicated.
 
 ---
 

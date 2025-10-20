@@ -52,6 +52,10 @@ rand = "0.8"
 async-stream = "0.3"
 futures = { workspace = true }
 
+# TEAM-159: Heartbeat consolidation
+rbee-heartbeat = { path = "../99_shared_crates/heartbeat" }
+async-trait = "0.1"
+
 # TEAM-102: Security shared crates
 auth-min = { path = "../shared-crates/auth-min" }
 secrets-management = { path = "../shared-crates/secrets-management" }

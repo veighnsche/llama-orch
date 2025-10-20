@@ -79,8 +79,10 @@ pub struct GpuInfo {
 pub async fn handle_devices(State(state): State<AppState>) -> Json<DevicesResponse> {
     info!("Device detection requested");
 
-    // TODO: Use rbee-hive-device-detection crate for real hardware detection
-    // For now, return mock data for development
+    // TEAM-159: Use device-detection crate for ALL detection logic
+    use rbee_hive_device_detection::{
+        detect_backends, detect_gpus, get_cpu_cores, get_system_ram_gb, Backend,
+    };
     
     // Get model count from catalog
     let models_count = state
@@ -94,30 +96,37 @@ pub async fn handle_devices(State(state): State<AppState>) -> Json<DevicesRespon
     let workers = state.registry.list().await;
     let workers_count = workers.len();
 
-    // Mock CPU info (TODO: Replace with real detection)
+    // TEAM-159: Detect backends (CUDA, Metal, CPU)
+    let backend_caps = detect_backends();
+    
+    // TEAM-159: Detect GPUs using device-detection crate
+    let gpu_info = detect_gpus();
+    
+    // TEAM-159: Build CPU info using device-detection crate
     let cpu = CpuInfo {
-        cores: num_cpus::get() as u32,
-        ram_gb: 32, // TODO: Get real RAM size
+        cores: get_cpu_cores(),
+        ram_gb: get_system_ram_gb(),
     };
 
-    // Mock GPU info (TODO: Replace with real detection from device-detection crate)
-    let gpus = vec![
-        // GpuInfo {
-        //     id: "gpu0".to_string(),
-        //     name: "RTX 3060".to_string(),
-        //     vram_gb: 12,
-        // },
-        // GpuInfo {
-        //     id: "gpu1".to_string(),
-        //     name: "RTX 3090".to_string(),
-        //     vram_gb: 24,
-        // },
-    ];
+    // TEAM-159: Build GPU list from detected devices
+    let gpus: Vec<GpuInfo> = gpu_info
+        .devices
+        .iter()
+        .map(|gpu| {
+            GpuInfo {
+                id: format!("gpu{}", gpu.index),
+                name: gpu.name.clone(),
+                vram_gb: gpu.vram_total_gb() as u32,
+            }
+        })
+        .collect();
 
     info!(
         cpu_cores = cpu.cores,
         ram_gb = cpu.ram_gb,
         gpus = gpus.len(),
+        has_cuda = backend_caps.has_backend(Backend::Cuda),
+        has_metal = backend_caps.has_backend(Backend::Metal),
         models = models_count,
         workers = workers_count,
         "Device detection complete"

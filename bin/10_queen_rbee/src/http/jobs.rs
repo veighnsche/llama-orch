@@ -111,6 +111,7 @@ pub async fn handle_create_job(
             ssh_user: None,
             status: HiveStatus::Unknown,
             last_heartbeat_ms: None,
+            devices: None, // TEAM-159: Will be populated on first heartbeat
             created_at_ms: now_ms,
             updated_at_ms: now_ms,
         };

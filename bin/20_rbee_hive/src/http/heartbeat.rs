@@ -13,22 +13,18 @@
 //!
 //! Created by: TEAM-115
 //! Modified by: TEAM-151 (removed immediate relay, using periodic task instead)
+//! Modified by: TEAM-159 (consolidated logic into shared crate)
 
 use axum::{extract::State, http::StatusCode, Json};
-use serde::{Deserialize, Serialize};
-use tracing::{debug, warn};
+use tracing::debug;
 
 use crate::http::routes::AppState;
 
 // Re-export types from shared heartbeat crate for consistency
 pub use rbee_heartbeat::{HealthStatus, WorkerHeartbeatPayload as HeartbeatRequest};
 
-/// Heartbeat response
-#[derive(Debug, Serialize)]
-pub struct HeartbeatResponse {
-    /// Success message
-    pub message: String,
-}
+// TEAM-159: Re-export response type from shared crate
+pub use rbee_heartbeat::HeartbeatResponse;
 
 /// Handle POST /v1/heartbeat
 ///
@@ -47,6 +43,8 @@ pub struct HeartbeatResponse {
 /// - Worker → Hive: POST /v1/heartbeat (this endpoint)
 /// - Hive updates registry
 /// - Hive → Queen: Periodic task aggregates ALL workers (see shared heartbeat crate)
+///
+/// TEAM-159: Now uses shared heartbeat logic from rbee-heartbeat crate
 pub async fn handle_heartbeat(
     State(state): State<AppState>,
     Json(payload): Json<HeartbeatRequest>,
@@ -57,32 +55,16 @@ pub async fn handle_heartbeat(
         "Received worker heartbeat"
     );
 
-    // Update worker's last_heartbeat timestamp in registry
-    let updated = state.registry.update_heartbeat(&payload.worker_id).await;
-
-    if !updated {
-        warn!(worker_id = %payload.worker_id, "Heartbeat from unknown worker");
-        return Err((
-            StatusCode::NOT_FOUND,
-            format!("Worker {} not found in registry", payload.worker_id),
-        ));
-    }
-
-    debug!(
-        worker_id = %payload.worker_id,
-        "Worker heartbeat processed - registry updated"
-    );
-
-    // NOTE: Relay to queen is handled by periodic hive heartbeat task
-    // (see shared heartbeat crate: start_hive_heartbeat_task)
-    // This collects ALL worker states and sends aggregated heartbeat to queen every 15s
-
-    Ok((
-        StatusCode::OK,
-        Json(HeartbeatResponse {
-            message: "Heartbeat received".to_string(),
-        }),
-    ))
+    // TEAM-159: Use shared heartbeat handler
+    rbee_heartbeat::handle_worker_heartbeat(state.registry, payload)
+        .await
+        .map(|resp| (StatusCode::OK, Json(resp)))
+        .map_err(|e| match e {
+            rbee_heartbeat::hive_receiver::HeartbeatError::WorkerNotFound(id) => {
+                (StatusCode::NOT_FOUND, format!("Worker {} not found in registry", id))
+            }
+            _ => (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()),
+        })
 }
 
 #[cfg(test)]

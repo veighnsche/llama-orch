@@ -35,8 +35,5 @@ observability-narration-core = { path = "../99_shared_crates/narration-core" }
 # TEAM-152: Queen lifecycle management
 rbee-keeper-queen-lifecycle = { path = "../05_rbee_keeper_crates/queen-lifecycle" }
 
-# TODO: Add when commands crate is ready
-# rbee-keeper-commands = { path = "../05_rbee_keeper_crates/commands" }
-
 [dev-dependencies]
 # Add dev dependencies as needed

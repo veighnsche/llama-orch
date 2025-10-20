@@ -1,10 +1,28 @@
-//! rbee-keeper - CLI for managing rbee infrastructure
+//! rbee-keeper - Thin HTTP client for queen-rbee
 //!
 //! TEAM-151: Migrated CLI from old.rbee-keeper to numbered architecture
-//! TEAM-151: Added health_check module for queen health probing
-//! TEAM-151: Added test-health command for debugging
+//! TEAM-158: Cleaned up over-engineering - rbee-keeper is just a thin HTTP client!
 //!
-//! This binary contains only CLI parsing; all command logic is in rbee-keeper-commands crate
+//! # CRITICAL ARCHITECTURE PRINCIPLE
+//!
+//! **rbee-keeper is a THIN HTTP CLIENT that talks to queen-rbee.**
+//!
+//! ```
+//! User → rbee-keeper (CLI) → queen-rbee (HTTP API) → Everything else
+//! ```
+//!
+//! ## What rbee-keeper does:
+//! 1. Parse CLI arguments
+//! 2. Ensure queen-rbee is running (auto-start if needed)
+//! 3. Make HTTP request to queen-rbee
+//! 4. Display response to user
+//! 5. Cleanup (shutdown queen if we started it)
+//!
+//! ## What rbee-keeper does NOT do:
+//! - ❌ Complex business logic (that's queen-rbee's job)
+//! - ❌ SSH to remote nodes (that's queen-rbee's job)
+//! - ❌ Orchestration decisions (that's queen-rbee's job)
+//! - ❌ Run as a daemon (CLI tool only)
 //!
 //! Entry point for the happy flow:
 //! ```bash
@@ -278,28 +296,46 @@ async fn main() -> Result<()> {
 
 async fn handle_command(cli: Cli) -> Result<()> {
     match cli.command {
-        Commands::Infer { model, prompt, max_tokens, temperature, node, backend, device } => {
-            // TEAM-153: Ensure queen is running and get handle for cleanup
+        Commands::Infer { model, prompt, max_tokens, temperature, node: _, backend: _, device: _ } => {
+            // TEAM-158: rbee-keeper is a thin HTTP client!
+            // Step 1: Ensure queen is running (auto-start if needed)
             let queen_handle =
                 rbee_keeper_queen_lifecycle::ensure_queen_running("http://localhost:8500").await?;
 
-            // TODO: Submit inference job to queen
-            println!("TODO: Implement infer command (submit job to queen)");
-            println!("  Model: {}", model);
-            println!("  Prompt: {}", prompt);
-            println!("  Max tokens: {}", max_tokens);
-            println!("  Temperature: {}", temperature);
-            if let Some(n) = node {
-                println!("  Node: {}", n);
-            }
-            if let Some(b) = backend {
-                println!("  Backend: {}", b);
-            }
-            if let Some(d) = device {
-                println!("  Device: {}", d);
+            // Step 2: Submit job to queen via HTTP POST
+            let client = reqwest::Client::new();
+            let job_request = serde_json::json!({
+                "model": model,
+                "prompt": prompt,
+                "max_tokens": max_tokens,
+                "temperature": temperature,
+            });
+
+            let response = client
+                .post(format!("{}/jobs", queen_handle.base_url()))
+                .json(&job_request)
+                .send()
+                .await?;
+
+            if !response.status().is_success() {
+                let error = response.text().await?;
+                anyhow::bail!("Failed to submit job: {}", error);
             }
 
-            // TEAM-153: Cleanup - shutdown queen ONLY if we started it
+            let job_response: serde_json::Value = response.json().await?;
+            let job_id = job_response["job_id"]
+                .as_str()
+                .ok_or_else(|| anyhow::anyhow!("No job_id in response"))?;
+            let sse_url = job_response["sse_url"]
+                .as_str()
+                .ok_or_else(|| anyhow::anyhow!("No sse_url in response"))?;
+
+            println!("✅ Job submitted: {}", job_id);
+
+            // Step 3: Stream SSE events to stdout
+            stream_sse_to_stdout(&format!("{}{}", queen_handle.base_url(), sse_url)).await?;
+
+            // Step 4: Cleanup - shutdown queen ONLY if we started it
             queen_handle.shutdown().await?;
 
             Ok(())
@@ -372,4 +408,49 @@ async fn handle_command(cli: Cli) -> Result<()> {
             }
         }
     }
+}
+
+// ============================================================================
+// HTTP Client Helpers
+// ============================================================================
+// TEAM-158: Simple HTTP helpers - rbee-keeper is just a thin HTTP client!
+
+/// Stream SSE events from queen-rbee to stdout
+///
+/// This is the "keeper → queen → SSE" part of the happy flow (lines 23-24)
+async fn stream_sse_to_stdout(sse_url: &str) -> Result<()> {
+    use futures::StreamExt;
+
+    let client = reqwest::Client::new();
+    let response = client.get(sse_url).send().await?;
+
+    if !response.status().is_success() {
+        let error = response.text().await?;
+        anyhow::bail!("Failed to connect to SSE stream: {}", error);
+    }
+
+    println!("📡 Streaming events from queen-rbee...\n");
+
+    let mut stream = response.bytes_stream();
+
+    while let Some(chunk) = stream.next().await {
+        let chunk = chunk?;
+        let text = String::from_utf8_lossy(&chunk);
+
+        // Print each SSE event to stdout
+        for line in text.lines() {
+            if line.starts_with("data: ") {
+                let data = &line[6..]; // Remove "data: " prefix
+                println!("{}", data);
+
+                // Check for [DONE] marker
+                if data.contains("[DONE]") {
+                    println!("\n✅ Stream complete");
+                    return Ok(());
+                }
+            }
+        }
+    }
+
+    Ok(())
 }

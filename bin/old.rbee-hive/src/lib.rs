@@ -13,6 +13,7 @@ pub mod download_tracker;
 pub mod metrics; // TEAM-104: Prometheus metrics
 pub mod provisioner;
 pub mod registry;
+pub mod registry_heartbeat_trait; // TEAM-159: WorkerRegistry trait impl for rbee-heartbeat
 pub mod resources; // TEAM-115: Resource monitoring and limits
 pub mod worker_provisioner;
 

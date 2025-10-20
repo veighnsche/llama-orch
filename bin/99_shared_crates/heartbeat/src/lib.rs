@@ -57,9 +57,12 @@
 
 // Modules
 pub mod hive;
+pub mod hive_receiver;  // TEAM-159: Hive worker heartbeat receiver
 pub mod queen;
+pub mod queen_receiver;  // TEAM-159: Queen hive heartbeat receiver
+pub mod traits;  // TEAM-159: Trait abstractions for receivers
 pub mod types;
-pub mod worker; // TEAM-158: Queen heartbeat receiver
+pub mod worker;
 
 // ============================================================================
 // Re-exports for Convenience
@@ -76,3 +79,13 @@ pub use hive::{start_hive_heartbeat_task, HiveHeartbeatConfig, WorkerStateProvid
 
 // TEAM-158: Re-export queen heartbeat functionality
 pub use queen::{HeartbeatAcknowledgement, HeartbeatHandler};
+
+// TEAM-159: Re-export receiver functionality
+pub use hive_receiver::{handle_worker_heartbeat, HeartbeatResponse};
+pub use queen_receiver::handle_hive_heartbeat;
+
+// TEAM-159: Re-export traits
+pub use traits::{
+    CatalogError, CpuDevice, DeviceBackend, DeviceCapabilities, DeviceDetector, DeviceResponse,
+    GpuDevice, HiveCatalog, HiveRecord, HiveStatus, WorkerRegistry,
+};

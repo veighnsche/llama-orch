@@ -8,6 +8,7 @@ use rbee_heartbeat::HiveHeartbeatPayload;
 use std::path::PathBuf;
 use std::sync::Arc;
 use tempfile::TempDir;
+use wiremock::MockServer;
 
 #[derive(World)]
 #[derive(Default)]
@@ -25,8 +26,10 @@ pub struct BddWorld {
     pub hive_catalog: Option<Arc<HiveCatalog>>,
     pub current_hive_id: Option<String>,
     pub heartbeat_payload: Option<HiveHeartbeatPayload>,
-    // TODO: Add integration test state fields here
-    // e.g., HTTP client, process handles, temp directories
+    
+    // TEAM-159: Mock HTTP server for device detection tests
+    #[world(skip)] // MockServer doesn't implement Debug
+    pub mock_server: Option<MockServer>,
 }
 
 // TEAM-158: Manual Debug impl since HiveCatalog doesn't implement Debug
@@ -40,6 +43,7 @@ impl std::fmt::Debug for BddWorld {
             .field("hive_catalog", &self.hive_catalog.as_ref().map(|_| "<HiveCatalog>"))
             .field("current_hive_id", &self.current_hive_id)
             .field("heartbeat_payload", &self.heartbeat_payload)
+            .field("mock_server", &self.mock_server.as_ref().map(|_| "<MockServer>"))
             .finish()
     }
 }

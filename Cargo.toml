@@ -24,8 +24,7 @@ members = [
     # rbee-keeper crates
     "bin/05_rbee_keeper_crates/config",
     "bin/05_rbee_keeper_crates/config/bdd",
-    "bin/05_rbee_keeper_crates/commands",
-    "bin/05_rbee_keeper_crates/commands/bdd",
+    # TEAM-158: Deleted commands crate - over-engineered, see commands/DELETED_WHY.md
     "bin/05_rbee_keeper_crates/queen-lifecycle",
     "bin/05_rbee_keeper_crates/queen-lifecycle/bdd",
     "bin/05_rbee_keeper_crates/polling",

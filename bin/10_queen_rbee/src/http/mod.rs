@@ -31,6 +31,9 @@ pub mod jobs;
 // TEAM-158: Heartbeat endpoint for hive health monitoring
 pub mod heartbeat;
 
+// TEAM-159: Device detector for heartbeat flow
+pub mod device_detector;
+
 // TODO: Uncomment when registries are migrated
 // pub mod beehives;
 // pub mod inference;

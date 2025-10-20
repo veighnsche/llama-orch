@@ -19,6 +19,8 @@ async fn hive_catalog_is_empty(world: &mut BddWorld) {
     let hives = catalog.list_hives().await.expect("Failed to list hives");
     assert_eq!(hives.len(), 0, "Catalog should be empty");
 
+    // TEAM-159: Store catalog in world for heartbeat tests
+    world.hive_catalog = Some(std::sync::Arc::new(catalog));
     world.temp_dir = Some(temp_dir);
     world.catalog_path = Some(db_path);
 }

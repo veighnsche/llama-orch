@@ -20,6 +20,8 @@ thiserror = { workspace = true }
 tracing = { workspace = true }
 chrono = { workspace = true }
 rbee-types = { path = "../../99_shared_crates/rbee-types" }
+rbee-heartbeat = { path = "../../99_shared_crates/heartbeat" }  # TEAM-159: For trait impl
+async-trait = "0.1"  # TEAM-159: For async trait methods
 
 [dev-dependencies]
 tempfile = "3.0"

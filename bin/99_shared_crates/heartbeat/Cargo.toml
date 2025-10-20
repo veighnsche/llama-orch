@@ -15,8 +15,12 @@ path = "src/lib.rs"
 tokio = { version = "1", features = ["time", "macros"] }
 reqwest = { version = "0.12", features = ["json"] }
 serde = { version = "1", features = ["derive"] }
+serde_json = "1.0"  # TEAM-159: For JSON parsing in receivers
 chrono = "0.4"
 tracing = "0.1"
+thiserror = "1.0"  # TEAM-159: For error types in traits
+async-trait = "0.1"  # TEAM-159: For async trait methods
+observability-narration-core = { path = "../narration-core" }  # TEAM-159: For narration in queen receiver
 
 [dev-dependencies]
 serde_json = "1"
