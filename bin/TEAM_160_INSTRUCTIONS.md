@@ -6,9 +6,36 @@
 
 ---
 
+## ⚠️ CRITICAL WARNING: Don't Be Stupid About Orchestration
+
+**READ THIS BEFORE YOU START:**
+
+If your test manually spawns rbee-hive, **you're testing the WRONG thing**.
+
+The whole point of queen-rbee is **ORCHESTRATION**. Queen is supposed to:
+1. Accept "add localhost to catalog" command
+2. **SPAWN rbee-hive daemon** (via SSH or local process)
+3. Wait for first heartbeat
+4. Do device detection
+
+If the **test harness** spawns rbee-hive instead of queen, then:
+- ❌ Your test passes
+- ❌ Production fails because queen doesn't know how to spawn hives
+- ❌ You wasted everyone's time testing HTTP endpoints, not orchestration
+
+**Ask yourself:** If the test spawns the hive, how do we know queen can?
+
+**What's the point of an orchestrator that doesn't orchestrate?**
+
+The `spawn_rbee_hive()` function in `integration_steps.rs` is marked with warnings.
+It should only exist temporarily until queen has orchestration logic. Once queen
+can spawn hives, **DELETE that function** and test that queen does it.
+
+---
+
 ## Mission
 
-Implement **REAL integration tests** that spawn actual daemons and test the complete first heartbeat flow.
+Implement **REAL integration tests** that verify **QUEEN spawns rbee-hive** and handles the first heartbeat flow.
 
 **What you're testing:**
 1. Queen-rbee daemon starts

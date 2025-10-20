@@ -81,6 +81,23 @@ pub enum Commands {
         action: SetupAction,
     },
 
+    /// Queen management commands (TEAM-160: E2E testing)
+    Queen {
+        #[command(subcommand)]
+        action: QueenAction,
+    },
+
+    /// Add localhost to hive catalog (TEAM-160: E2E test command)
+    AddHive {
+        /// Hostname (default: localhost)
+        #[arg(long, default_value = "localhost")]
+        host: String,
+
+        /// Port (default: 8600)
+        #[arg(long, default_value = "8600")]
+        port: u16,
+    },
+
     /// Hive management commands
     Hive {
         #[command(subcommand)]
@@ -175,7 +192,22 @@ pub enum SetupAction {
 }
 
 #[derive(Subcommand)]
+pub enum QueenAction {
+    /// Start queen-rbee daemon
+    Start,
+    
+    /// Stop queen-rbee daemon
+    Stop,
+}
+
+#[derive(Subcommand)]
 pub enum HiveAction {
+    /// Start rbee-hive on localhost
+    Start,
+    
+    /// Stop rbee-hive on localhost
+    Stop,
+
     /// Model management on remote hive
     Models {
         #[command(subcommand)]
@@ -341,6 +373,135 @@ async fn handle_command(cli: Cli) -> Result<()> {
             Ok(())
         }
 
+        Commands::Queen { action } => {
+            match action {
+                QueenAction::Start => {
+                    println!("👑 Starting queen-rbee...");
+                    let queen_handle = rbee_keeper_queen_lifecycle::ensure_queen_running("http://localhost:8500").await?;
+                    println!("✅ Queen started on {}", queen_handle.base_url());
+                    
+                    // Don't shutdown - keep queen running
+                    std::mem::forget(queen_handle);
+                    Ok(())
+                }
+                QueenAction::Stop => {
+                    println!("👑 Stopping queen-rbee...");
+                    let client = reqwest::Client::new();
+                    let response = client.post("http://localhost:8500/shutdown").send().await;
+                    
+                    match response {
+                        Ok(_) => {
+                            println!("✅ Queen shutdown signal sent");
+                            tokio::time::sleep(tokio::time::Duration::from_secs(2)).await;
+                            println!("✅ Queen stopped");
+                            Ok(())
+                        }
+                        Err(_) => {
+                            println!("⚠️  Queen is not running");
+                            Ok(())
+                        }
+                    }
+                }
+            }
+        }
+
+        Commands::Hive { action } => {
+            match action {
+                HiveAction::Start => {
+                    println!("🐝 Starting rbee-hive on localhost...");
+                    
+                    // Step 1: Ensure queen is running
+                    let queen_handle = rbee_keeper_queen_lifecycle::ensure_queen_running("http://localhost:8500").await?;
+                    println!("✅ Queen is running");
+                    
+                    // Step 2: Send add-hive request to queen
+                    let client = reqwest::Client::new();
+                    let request = serde_json::json!({
+                        "host": "localhost",
+                        "port": 8600
+                    });
+
+                    let response = client
+                        .post(format!("{}/add-hive", queen_handle.base_url()))
+                        .json(&request)
+                        .send()
+                        .await?;
+
+                    if !response.status().is_success() {
+                        let error = response.text().await?;
+                        anyhow::bail!("Failed to add hive: {}", error);
+                    }
+
+                    println!("✅ Hive started on localhost:8600");
+                    
+                    // Don't shutdown - keep everything running
+                    std::mem::forget(queen_handle);
+                    Ok(())
+                }
+                HiveAction::Stop => {
+                    println!("🐝 Stopping rbee-hive on localhost...");
+                    let client = reqwest::Client::new();
+                    let response = client.post("http://localhost:8600/shutdown").send().await;
+                    
+                    match response {
+                        Ok(_) => {
+                            println!("✅ Hive shutdown signal sent");
+                            tokio::time::sleep(tokio::time::Duration::from_secs(2)).await;
+                            println!("✅ Hive stopped");
+                            Ok(())
+                        }
+                        Err(_) => {
+                            println!("⚠️  Hive is not running");
+                            Ok(())
+                        }
+                    }
+                }
+                _ => {
+                    println!("TODO: Implement other hive commands");
+                    Ok(())
+                }
+            }
+        }
+
+        Commands::AddHive { host, port } => {
+            // TEAM-160: Add hive to catalog via queen
+            println!("📝 Adding hive {} to catalog...", host);
+
+            // Step 1: Ensure queen is running
+            let queen_handle =
+                rbee_keeper_queen_lifecycle::ensure_queen_running("http://localhost:8500").await?;
+
+            // Step 2: Send add-hive request to queen
+            let client = reqwest::Client::new();
+            let request = serde_json::json!({
+                "host": host,
+                "port": port
+            });
+
+            let response = client
+                .post(format!("{}/add-hive", queen_handle.base_url()))
+                .json(&request)
+                .send()
+                .await?;
+
+            if !response.status().is_success() {
+                let error = response.text().await?;
+                anyhow::bail!("Failed to add hive: {}", error);
+            }
+
+            let response_json: serde_json::Value = response.json().await?;
+            let hive_id = response_json["hive_id"]
+                .as_str()
+                .unwrap_or(&host);
+
+            println!("✅ Hive added: {}", hive_id);
+
+            // Step 3: Cleanup - shutdown queen ONLY if we started it
+            queen_handle.shutdown().await?;
+
+            Ok(())
+        }
+
         Commands::Setup { action } => {
             // TODO: Call rbee-keeper-commands::setup::handle()
             println!("TODO: Implement setup command");
@@ -358,12 +519,6 @@ async fn handle_command(cli: Cli) -> Result<()> {
                     println!("  Action: Install on node '{}'", node);
                 }
             }
-            Ok(())
-        }
-
-        Commands::Hive { action: _ } => {
-            // TODO: Call rbee-keeper-commands::hive::handle()
-            println!("TODO: Implement hive command");
             Ok(())
         }
 

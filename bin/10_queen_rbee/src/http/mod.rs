@@ -34,6 +34,9 @@ pub mod heartbeat;
 // TEAM-159: Device detector for heartbeat flow
 pub mod device_detector;
 
+// TEAM-160: Add hive endpoint for E2E testing
+pub mod add_hive;
+
 // TODO: Uncomment when registries are migrated
 // pub mod beehives;
 // pub mod inference;

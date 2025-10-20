@@ -24,9 +24,26 @@ use input_validation::validate_identifier;
 /// Handle POST /v2/registry/beehives/add
 ///
 /// Validates SSH connection and adds node to registry
+///
+/// ⚠️ CRITICAL TODO: This endpoint should SPAWN rbee-hive on the target node!
+///
+/// Currently this just adds the node to the catalog and hopes rbee-hive is already running.
+/// That's NOT orchestration - that's just a registry.
+///
+/// What should happen:
+/// 1. Validate SSH connection ✅ (we do this)
+/// 2. Add node to catalog ✅ (we do this)
+/// 3. **SSH to node and spawn rbee-hive daemon** ❌ (WE DON'T DO THIS!)
+/// 4. Wait for first heartbeat
+/// 5. Trigger device detection
+///
+/// If you're manually starting rbee-hive on nodes, ask yourself:
+/// "What's the point of having an orchestrator if it doesn't orchestrate?"
+///
+/// The integration tests will fail until this is implemented properly.
 pub async fn handle_add_node(
     State(state): State<AppState>,
-    Json(req): Json<AddNodeRequest>,
+    Json(req): Json(AddNodeRequest>,
 ) -> impl IntoResponse {
     // TEAM-113: Validate node name before processing
     if let Err(e) = validate_identifier(&req.node_name, 64) {

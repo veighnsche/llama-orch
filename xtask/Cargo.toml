@@ -30,6 +30,9 @@ indicatif = "0.17"
 # Worker isolation testing
 uuid = { version = "1", features = ["v4"] }
 ureq = { version = "2.9", features = ["json"] }
+# TEAM-160: E2E integration testing
+tokio = { workspace = true, features = ["full"] }
+reqwest = { workspace = true, features = ["json"] }
 
 [dev-dependencies]
 tempfile = "3.8"

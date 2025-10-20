@@ -6,6 +6,7 @@ use cucumber::World;
 use queen_rbee_hive_catalog::HiveCatalog;
 use rbee_heartbeat::HiveHeartbeatPayload;
 use std::path::PathBuf;
+use std::process::Child;
 use std::sync::Arc;
 use tempfile::TempDir;
 use wiremock::MockServer;
@@ -30,6 +31,14 @@ pub struct BddWorld {
     // TEAM-159: Mock HTTP server for device detection tests
     #[world(skip)] // MockServer doesn't implement Debug
     pub mock_server: Option<MockServer>,
+    
+    // TEAM-160: Process handles for integration tests
+    #[world(skip)] // Child doesn't implement Debug
+    pub queen_process: Option<Child>,
+    #[world(skip)] // Child doesn't implement Debug
+    pub hive_process: Option<Child>,
+    pub queen_port: Option<u16>,
+    pub hive_port: Option<u16>,
 }
 
 // TEAM-158: Manual Debug impl since HiveCatalog doesn't implement Debug
@@ -44,7 +53,25 @@ impl std::fmt::Debug for BddWorld {
             .field("current_hive_id", &self.current_hive_id)
             .field("heartbeat_payload", &self.heartbeat_payload)
             .field("mock_server", &self.mock_server.as_ref().map(|_| "<MockServer>"))
+            .field("queen_process", &self.queen_process.as_ref().map(|_| "<Child>"))
+            .field("hive_process", &self.hive_process.as_ref().map(|_| "<Child>"))
+            .field("queen_port", &self.queen_port)
+            .field("hive_port", &self.hive_port)
             .finish()
+    }
+}
+
+// TEAM-160: Cleanup spawned processes on drop
+impl Drop for BddWorld {
+    fn drop(&mut self) {
+        if let Some(mut process) = self.queen_process.take() {
+            let _ = process.kill();
+            let _ = process.wait();
+        }
+        if let Some(mut process) = self.hive_process.take() {
+            let _ = process.kill();
+            let _ = process.wait();
+        }
     }
 }
 

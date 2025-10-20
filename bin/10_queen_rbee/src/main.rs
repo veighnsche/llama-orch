@@ -116,7 +116,10 @@ fn create_router(
         http::jobs::QueenJobState { registry: job_registry, hive_catalog: hive_catalog.clone() };
 
     // TEAM-158: Create heartbeat state
-    let heartbeat_state = http::heartbeat::HeartbeatState { hive_catalog };
+    let heartbeat_state = http::heartbeat::HeartbeatState { hive_catalog: hive_catalog.clone() };
+
+    // TEAM-160: Add hive endpoint state
+    let add_hive_state = hive_catalog;
 
     axum::Router::new()
         .route("/health", get(http::health::handle_health))
@@ -128,4 +131,7 @@ fn create_router(
         // TEAM-158: Heartbeat endpoint
         .route("/heartbeat", post(http::heartbeat::handle_heartbeat))
         .with_state(heartbeat_state)
+        // TEAM-160: Add hive endpoint for E2E testing
+        .route("/add-hive", post(http::add_hive::handle_add_hive))
+        .with_state(add_hive_state)
 }

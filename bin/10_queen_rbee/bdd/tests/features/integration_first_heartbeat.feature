@@ -1,14 +1,27 @@
 # Created by: TEAM-159
 # REAL integration test - spawns actual daemons and tests first heartbeat flow
 #
-# This tests the ACTUAL flow:
+# ⚠️ CRITICAL WARNING TO FUTURE DEVELOPERS:
+#
+# This test MUST verify that QUEEN SPAWNS THE HIVE, not the test harness!
+#
+# If your test manually spawns rbee-hive, you're NOT testing orchestration.
+# You're just testing HTTP endpoints, which means production will fail when
+# queen tries to spawn hives and doesn't know how.
+#
+# The whole point of queen-rbee is ORCHESTRATION. If it can't spawn hives,
+# what's the point of having an orchestrator?
+#
+# CORRECT FLOW:
 # 1. Queen-rbee starts
-# 2. Queen adds localhost to hive catalog
-# 3. Queen spawns rbee-hive daemon (or we spawn it manually)
+# 2. Test adds localhost to hive catalog via queen's API
+# 3. QUEEN spawns rbee-hive daemon (via SSH or local process)
 # 4. rbee-hive sends first heartbeat to queen
 # 5. Queen triggers device detection
 # 6. Queen stores device capabilities
 # 7. Queen updates hive status to Online
+#
+# If step 3 says "test harness spawns rbee-hive", DELETE IT and fix queen.
 
 Feature: Integration Test - First Heartbeat from Real rbee-hive
   As a system integrator
