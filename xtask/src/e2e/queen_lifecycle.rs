@@ -22,32 +22,28 @@ pub async fn test_queen_lifecycle() -> Result<()> {
 
     // Step 1: rbee queen start
     println!("📝 Running: rbee queen start\n");
-    
+
     // TEAM-164: Use .spawn() instead of .output() to show live narration
-    let mut child = Command::new("target/debug/rbee-keeper")
-        .args(["queen", "start"])
-        .spawn()?;
+    let mut child = Command::new("target/debug/rbee-keeper").args(["queen", "start"]).spawn()?;
 
     let status = child.wait()?;
     if !status.success() {
         anyhow::bail!("rbee queen start failed with exit code: {:?}", status.code());
     }
-    
+
     println!();
 
     // Step 2: rbee queen stop
     println!("📝 Running: rbee queen stop\n");
-    
+
     // TEAM-164: Use .spawn() instead of .output() to show live narration
-    let mut child = Command::new("target/debug/rbee-keeper")
-        .args(["queen", "stop"])
-        .spawn()?;
+    let mut child = Command::new("target/debug/rbee-keeper").args(["queen", "stop"]).spawn()?;
 
     let status = child.wait()?;
     if !status.success() {
         anyhow::bail!("rbee queen stop failed with exit code: {:?}", status.code());
     }
-    
+
     println!();
 
     println!("✅ E2E Test PASSED: Queen Lifecycle");

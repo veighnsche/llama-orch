@@ -12,7 +12,7 @@
 
 // TEAM-164: Migrated endpoints to dedicated modules/files
 mod health;
-mod heartbeat;  // TEAM-164: Binary-specific heartbeat logic
+mod heartbeat; // TEAM-164: Binary-specific heartbeat logic
 mod http;
 
 use anyhow::Result;
@@ -116,16 +116,12 @@ fn create_router(
     hive_catalog: Arc<HiveCatalog>,
 ) -> axum::Router {
     // TEAM-164: Create states for HTTP endpoints
-    let job_state = http::SchedulerState {
-        registry: job_registry,
-        hive_catalog: hive_catalog.clone(),
-    };
+    let job_state =
+        http::SchedulerState { registry: job_registry, hive_catalog: hive_catalog.clone() };
 
     let device_detector = Arc::new(http::HttpDeviceDetector::new());
-    let heartbeat_state = http::HeartbeatState {
-        hive_catalog: hive_catalog.clone(),
-        device_detector,
-    };
+    let heartbeat_state =
+        http::HeartbeatState { hive_catalog: hive_catalog.clone(), device_detector };
 
     let hive_start_state = hive_catalog;
 

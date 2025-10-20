@@ -130,8 +130,11 @@ pub trait HiveCatalog: Send + Sync {
     ) -> Result<(), CatalogError>;
 
     /// Update hive status
-    async fn update_hive_status(&self, hive_id: &str, status: HiveStatus)
-        -> Result<(), CatalogError>;
+    async fn update_hive_status(
+        &self,
+        hive_id: &str,
+        status: HiveStatus,
+    ) -> Result<(), CatalogError>;
 }
 
 // ============================================================================
@@ -206,7 +209,7 @@ pub trait DeviceDetector: Send + Sync {
 pub trait Narrator: Send + Sync {
     /// Emit a narration event
     fn emit(&self, actor: &str, action: &str, target: &str, message: &str);
-    
+
     /// Emit an error narration event
     fn emit_error(&self, actor: &str, action: &str, target: &str, message: &str, error_kind: &str);
 }

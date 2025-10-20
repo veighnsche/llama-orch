@@ -112,7 +112,7 @@ pub async fn orchestrate_job(
         Narration::new(ACTOR_SCHEDULER, ACTION_ORCHESTRATE, &job_id)
             .human("No hives found in catalog")
             .emit();
-        
+
         let _ = tx.send("No hives found.".to_string());
         let _ = tx.send("[DONE]".to_string());
     } else {
@@ -125,10 +125,7 @@ pub async fn orchestrate_job(
     }
 
     let sse_url = format!("/jobs/{}/stream", &job_id);
-    
+
     // Return structured response (Command Pattern)
-    Ok(JobResponse {
-        job_id,
-        sse_url,
-    })
+    Ok(JobResponse { job_id, sse_url })
 }

@@ -24,7 +24,7 @@ pub enum HeartbeatError {
     /// Worker not found in registry
     #[error("Worker not found: {0}")]
     WorkerNotFound(String),
-    
+
     /// Other error
     #[error("{0}")]
     Other(String),
@@ -46,7 +46,7 @@ pub enum HeartbeatError {
 /// ```no_run
 /// use rbee_heartbeat::hive_receiver::handle_worker_heartbeat;
 /// use rbee_heartbeat::types::WorkerHeartbeatPayload;
-/// 
+///
 /// # async fn example(registry: std::sync::Arc<impl rbee_heartbeat::traits::WorkerRegistry>) {
 /// let payload = WorkerHeartbeatPayload {
 ///     worker_id: "worker-123".to_string(),
@@ -87,9 +87,7 @@ where
     // (see hive.rs: start_hive_heartbeat_task)
     // This collects ALL worker states and sends aggregated heartbeat to queen every 15s
 
-    Ok(HeartbeatResponse {
-        message: "Heartbeat received".to_string(),
-    })
+    Ok(HeartbeatResponse { message: "Heartbeat received".to_string() })
 }
 
 #[cfg(test)]
@@ -106,9 +104,7 @@ mod tests {
 
     impl MockRegistry {
         fn new() -> Self {
-            Self {
-                workers: Mutex::new(vec![]),
-            }
+            Self { workers: Mutex::new(vec![]) }
         }
 
         fn add_worker(&self, worker_id: String) {

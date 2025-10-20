@@ -106,8 +106,12 @@ impl DeviceCapabilities {
     pub fn gpu_count(&self, backend: DeviceBackend) -> usize {
         match backend {
             DeviceBackend::Cpu => 0,
-            DeviceBackend::Cuda => self.gpus.iter().filter(|g| g.backend == DeviceBackend::Cuda).count(),
-            DeviceBackend::Metal => self.gpus.iter().filter(|g| g.backend == DeviceBackend::Metal).count(),
+            DeviceBackend::Cuda => {
+                self.gpus.iter().filter(|g| g.backend == DeviceBackend::Cuda).count()
+            }
+            DeviceBackend::Metal => {
+                self.gpus.iter().filter(|g| g.backend == DeviceBackend::Metal).count()
+            }
         }
     }
 
@@ -119,7 +123,8 @@ impl DeviceCapabilities {
 
     /// Convert to JSON for storage
     pub fn to_json(&self) -> Result<String> {
-        serde_json::to_string(self).map_err(|e| anyhow::anyhow!("Failed to serialize devices: {}", e))
+        serde_json::to_string(self)
+            .map_err(|e| anyhow::anyhow!("Failed to serialize devices: {}", e))
     }
 
     /// Parse from JSON

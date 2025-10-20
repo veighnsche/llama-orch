@@ -93,9 +93,7 @@ where
         .unwrap_or_else(|_| chrono::Utc::now().timestamp_millis());
 
     // Update heartbeat in catalog
-    catalog
-        .update_heartbeat(&payload.hive_id, timestamp_ms)
-        .await?;
+    catalog.update_heartbeat(&payload.hive_id, timestamp_ms).await?;
 
     // Check if this is first heartbeat (ONLY narrate on first heartbeat)
     let hive = catalog
@@ -106,51 +104,38 @@ where
     // If first heartbeat (status is Unknown), trigger device detection
     if matches!(hive.status, HiveStatus::Unknown) {
         Narration::new(ACTOR_QUEEN_HEARTBEAT, ACTION_HEARTBEAT, &payload.hive_id)
-            .human(format!(
-                "First heartbeat from {}. Checking capabilities...",
-                payload.hive_id
-            ))
+            .human(format!("First heartbeat from {}. Checking capabilities...", payload.hive_id))
             .emit();
 
         // Request device detection from hive
         let hive_url = format!("http://{}:{}", hive.host, hive.port);
 
-        Narration::new(
-            ACTOR_QUEEN_HEARTBEAT,
-            ACTION_DEVICE_DETECTION,
-            &payload.hive_id,
-        )
-        .human(format!(
-            "Unknown capabilities of beehive {}. Asking the beehive to detect devices",
-            payload.hive_id
-        ))
-        .emit();
+        Narration::new(ACTOR_QUEEN_HEARTBEAT, ACTION_DEVICE_DETECTION, &payload.hive_id)
+            .human(format!(
+                "Unknown capabilities of beehive {}. Asking the beehive to detect devices",
+                payload.hive_id
+            ))
+            .emit();
 
-        let devices = device_detector
-            .detect_devices(&hive_url)
-            .await
-            .map_err(|e| {
-                Narration::new(ACTOR_QUEEN_HEARTBEAT, ACTION_ERROR, &payload.hive_id)
-                    .human(format!("Failed to request device detection: {}", e))
-                    .error_kind("device_detection_failed")
-                    .emit();
-                HeartbeatError::DeviceDetection(e.to_string())
-            })?;
+        let devices = device_detector.detect_devices(&hive_url).await.map_err(|e| {
+            Narration::new(ACTOR_QUEEN_HEARTBEAT, ACTION_ERROR, &payload.hive_id)
+                .human(format!("Failed to request device detection: {}", e))
+                .error_kind("device_detection_failed")
+                .emit();
+            HeartbeatError::DeviceDetection(e.to_string())
+        })?;
 
         // Convert DeviceResponse to DeviceCapabilities
         let device_caps = convert_device_response(devices.clone());
 
         // Store devices in hive catalog
-        catalog
-            .update_devices(&payload.hive_id, device_caps)
-            .await
-            .map_err(|e| {
-                Narration::new(ACTOR_QUEEN_HEARTBEAT, ACTION_ERROR, &payload.hive_id)
-                    .human(format!("Failed to store device capabilities: {}", e))
-                    .error_kind("device_storage_failed")
-                    .emit();
-                e
-            })?;
+        catalog.update_devices(&payload.hive_id, device_caps).await.map_err(|e| {
+            Narration::new(ACTOR_QUEEN_HEARTBEAT, ACTION_ERROR, &payload.hive_id)
+                .human(format!("Failed to store device capabilities: {}", e))
+                .error_kind("device_storage_failed")
+                .emit();
+            e
+        })?;
 
         // Build device summary for narration
         let gpu_summary = if devices.gpus.is_empty() {
@@ -181,24 +166,17 @@ where
         .emit();
 
         // Update hive status to Online
-        catalog
-            .update_hive_status(&payload.hive_id, HiveStatus::Online)
-            .await
-            .map_err(|e| {
-                Narration::new(ACTOR_QUEEN_HEARTBEAT, ACTION_ERROR, &payload.hive_id)
-                    .human(format!("Failed to update hive status: {}", e))
-                    .error_kind("status_update_failed")
-                    .emit();
-                e
-            })?;
+        catalog.update_hive_status(&payload.hive_id, HiveStatus::Online).await.map_err(|e| {
+            Narration::new(ACTOR_QUEEN_HEARTBEAT, ACTION_ERROR, &payload.hive_id)
+                .human(format!("Failed to update hive status: {}", e))
+                .error_kind("status_update_failed")
+                .emit();
+            e
+        })?;
 
-        Narration::new(
-            ACTOR_QUEEN_HEARTBEAT,
-            ACTION_DEVICE_DETECTION,
-            &payload.hive_id,
-        )
-        .human(format!("Hive {} is now online", payload.hive_id))
-        .emit();
+        Narration::new(ACTOR_QUEEN_HEARTBEAT, ACTION_DEVICE_DETECTION, &payload.hive_id)
+            .human(format!("Hive {} is now online", payload.hive_id))
+            .emit();
     }
 
     Ok(HeartbeatAcknowledgement::success())
@@ -207,10 +185,7 @@ where
 /// Convert DeviceResponse to DeviceCapabilities
 fn convert_device_response(response: DeviceResponse) -> DeviceCapabilities {
     let mut caps = DeviceCapabilities {
-        cpu: Some(CpuDevice {
-            cores: response.cpu.cores,
-            ram_gb: response.cpu.ram_gb,
-        }),
+        cpu: Some(CpuDevice { cores: response.cpu.cores, ram_gb: response.cpu.ram_gb }),
         gpus: vec![],
     };
 
@@ -218,11 +193,8 @@ fn convert_device_response(response: DeviceResponse) -> DeviceCapabilities {
     // If we have GPUs, determine if they're CUDA or Metal
     // For now, assume CUDA on Linux/Windows, Metal on macOS
     for gpu in &response.gpus {
-        let backend = if cfg!(target_os = "macos") {
-            DeviceBackend::Metal
-        } else {
-            DeviceBackend::Cuda
-        };
+        let backend =
+            if cfg!(target_os = "macos") { DeviceBackend::Metal } else { DeviceBackend::Cuda };
 
         caps.gpus.push(GpuDevice {
             index: gpu.id.trim_start_matches("gpu").parse().unwrap_or(0),
@@ -250,9 +222,7 @@ mod tests {
 
     impl MockCatalog {
         fn new() -> Self {
-            Self {
-                hives: Mutex::new(vec![]),
-            }
+            Self { hives: Mutex::new(vec![]) }
         }
 
         fn add_hive(&self, hive: HiveRecord) {
@@ -317,10 +287,7 @@ mod tests {
     impl DeviceDetector for MockDetector {
         async fn detect_devices(&self, _hive_url: &str) -> Result<DeviceResponse, DetectionError> {
             Ok(DeviceResponse {
-                cpu: CpuInfo {
-                    cores: 8,
-                    ram_gb: 32,
-                },
+                cpu: CpuInfo { cores: 8, ram_gb: 32 },
                 gpus: vec![GpuInfo {
                     id: "gpu0".to_string(),
                     name: "RTX 3060".to_string(),

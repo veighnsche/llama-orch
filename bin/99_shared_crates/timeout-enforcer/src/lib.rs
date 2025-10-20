@@ -78,11 +78,7 @@ impl TimeoutEnforcer {
     /// let enforcer = TimeoutEnforcer::new(Duration::from_secs(30));
     /// ```
     pub fn new(duration: Duration) -> Self {
-        Self {
-            duration,
-            label: None,
-            show_countdown: true,
-        }
+        Self { duration, label: None, show_countdown: true }
     }
 
     /// Set a label for the operation (shown in countdown)
@@ -149,7 +145,7 @@ impl TimeoutEnforcer {
         // This fixes hangs when running via Command::output() which captures stderr to a pipe
         let is_tty = atty::is(atty::Stream::Stderr);
         let should_show_countdown = self.show_countdown && is_tty;
-        
+
         if should_show_countdown {
             self.enforce_with_countdown(future).await
         } else {
@@ -163,15 +159,11 @@ impl TimeoutEnforcer {
         F: Future<Output = Result<T>>,
     {
         let label = self.label.as_deref().unwrap_or("Operation");
-        
+
         match timeout(self.duration, future).await {
             Ok(result) => result,
             Err(_) => {
-                anyhow::bail!(
-                    "{} timed out after {} seconds",
-                    label,
-                    self.duration.as_secs()
-                )
+                anyhow::bail!("{} timed out after {} seconds", label, self.duration.as_secs())
             }
         }
     }
@@ -197,7 +189,7 @@ impl TimeoutEnforcer {
                 ticker.tick().await;
                 elapsed += 1;
                 let remaining = total_secs.saturating_sub(elapsed);
-                
+
                 if remaining == 0 {
                     break;
                 }
@@ -278,10 +270,8 @@ mod tests {
             anyhow::bail!("operation failed")
         }
 
-        let result = TimeoutEnforcer::new(Duration::from_secs(1))
-            .silent()
-            .enforce(failing_op())
-            .await;
+        let result =
+            TimeoutEnforcer::new(Duration::from_secs(1)).silent().enforce(failing_op()).await;
 
         assert!(result.is_err());
         let err_msg = result.unwrap_err().to_string();

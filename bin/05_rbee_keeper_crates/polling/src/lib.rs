@@ -30,15 +30,15 @@ pub async fn wait_for_queen_health(
 ) -> Result<()> {
     let max_attempts = max_attempts.unwrap_or(20);
     let interval = Duration::from_millis(interval_ms.unwrap_or(500));
-    
+
     info!("⏳ Waiting for queen-rbee health on port {}...", port);
-    
+
     let client = reqwest::Client::new();
     let health_url = format!("http://localhost:{}/health", port);
-    
+
     for attempt in 1..=max_attempts {
         debug!("Health check attempt {}/{}", attempt, max_attempts);
-        
+
         match client.get(&health_url).send().await {
             Ok(response) if response.status().is_success() => {
                 info!("✅ Queen healthy after {} attempts", attempt);
@@ -51,12 +51,12 @@ pub async fn wait_for_queen_health(
                 debug!("Health check failed: {}", e);
             }
         }
-        
+
         if attempt < max_attempts {
             sleep(interval).await;
         }
     }
-    
+
     anyhow::bail!(
         "Queen failed to become healthy after {} attempts ({}s timeout)",
         max_attempts,

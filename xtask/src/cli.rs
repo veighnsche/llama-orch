@@ -144,11 +144,11 @@ pub enum Cmd {
     /// TEAM-160: E2E test - Queen lifecycle (start/stop)
     #[command(name = "e2e:queen")]
     E2eQueen,
-    
+
     /// TEAM-160: E2E test - Hive lifecycle (start/stop)
     #[command(name = "e2e:hive")]
     E2eHive,
-    
+
     /// TEAM-160: E2E test - Cascade shutdown (queen → hive)
     #[command(name = "e2e:cascade")]
     E2eCascade,

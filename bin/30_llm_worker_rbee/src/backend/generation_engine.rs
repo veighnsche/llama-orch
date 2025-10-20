@@ -57,7 +57,9 @@ impl GenerationEngine {
 
             loop {
                 // Wait for next request (blocking is OK here, we're in spawn_blocking)
-                let request = if let Some(req) = rt.block_on(self.request_rx.recv()) { req } else {
+                let request = if let Some(req) = rt.block_on(self.request_rx.recv()) {
+                    req
+                } else {
                     tracing::info!("Request channel closed, stopping generation engine");
                     break;
                 };

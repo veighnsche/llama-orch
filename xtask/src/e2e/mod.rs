@@ -8,10 +8,10 @@
 //! - Hive lifecycle (start/stop)
 //! - Cascading shutdown
 
-pub mod queen_lifecycle;
-pub mod hive_lifecycle;
 pub mod cascade_shutdown;
+pub mod hive_lifecycle;
+pub mod queen_lifecycle;
 
-pub use queen_lifecycle::test_queen_lifecycle;
-pub use hive_lifecycle::test_hive_lifecycle;
 pub use cascade_shutdown::test_cascade_shutdown;
+pub use hive_lifecycle::test_hive_lifecycle;
+pub use queen_lifecycle::test_queen_lifecycle;

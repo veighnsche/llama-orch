@@ -67,15 +67,9 @@ fn main() -> Result<()> {
             tasks::worker::test_worker_isolation(Some(config))?
         }
         // TEAM-160: End-to-end integration tests
-        Cmd::E2eQueen => {
-            tokio::runtime::Runtime::new()?.block_on(e2e::test_queen_lifecycle())?
-        }
-        Cmd::E2eHive => {
-            tokio::runtime::Runtime::new()?.block_on(e2e::test_hive_lifecycle())?
-        }
-        Cmd::E2eCascade => {
-            tokio::runtime::Runtime::new()?.block_on(e2e::test_cascade_shutdown())?
-        }
+        Cmd::E2eQueen => tokio::runtime::Runtime::new()?.block_on(e2e::test_queen_lifecycle())?,
+        Cmd::E2eHive => tokio::runtime::Runtime::new()?.block_on(e2e::test_hive_lifecycle())?,
+        Cmd::E2eCascade => tokio::runtime::Runtime::new()?.block_on(e2e::test_cascade_shutdown())?,
     }
     Ok(())
 }

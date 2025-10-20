@@ -46,7 +46,6 @@ use queen_rbee_hive_catalog::{HiveCatalog, HiveRecord, HiveStatus};
 use std::process::{Command, Stdio};
 use std::sync::Arc;
 
-
 // Actor and action constants
 const ACTOR_HIVE_LIFECYCLE: &str = "🐝 hive-lifecycle";
 const ACTION_START: &str = "hive_start";
@@ -113,10 +112,10 @@ pub async fn execute_hive_start(
     // For now: Always spawn on localhost:8600
     // Future: Check available nodes, pick best one, use SSH if remote
     // ============================================================
-    
+
     let host = "localhost".to_string();
     let port = 8600u16;
-    
+
     Narration::new(ACTOR_HIVE_LIFECYCLE, ACTION_ORCHESTRATE, &format!("{}:{}", host, port))
         .human(format!("🐝 Orchestrating: spawn hive on {}:{}", host, port))
         .emit();
@@ -136,10 +135,9 @@ pub async fn execute_hive_start(
         created_at_ms: now_ms,
         updated_at_ms: now_ms,
     };
-    
-    catalog.add_hive(hive).await
-        .context("Failed to add hive to catalog")?;
-    
+
+    catalog.add_hive(hive).await.context("Failed to add hive to catalog")?;
+
     Narration::new(ACTOR_HIVE_LIFECYCLE, ACTION_START, &host)
         .human(format!("🐝 Hive {} added to catalog", host))
         .emit();
@@ -148,18 +146,14 @@ pub async fn execute_hive_start(
     spawn_hive(port, &request.queen_url).await?;
 
     let hive_url = format!("http://{}:{}", host, port);
-    
+
     Narration::new(ACTOR_HIVE_LIFECYCLE, ACTION_START, &hive_url)
         .human(format!("✅ Hive spawn initiated: {} (will send heartbeat when ready)", hive_url))
         .emit();
 
     // Return structured response (Command Pattern)
     // NOTE: Hive is NOT necessarily running yet - it will send heartbeat when ready
-    Ok(HiveStartResponse {
-        hive_url,
-        hive_id: host,
-        port,
-    })
+    Ok(HiveStartResponse { hive_url, hive_id: host, port })
 }
 
 /// Spawn a hive process (internal helper)

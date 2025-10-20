@@ -25,32 +25,28 @@ pub async fn test_cascade_shutdown() -> Result<()> {
 
     // Step 1: rbee hive start (starts queen + hive)
     println!("📝 Running: rbee hive start\n");
-    
+
     // TEAM-164: Use .spawn() instead of .output() to show live narration
-    let mut child = Command::new("target/debug/rbee-keeper")
-        .args(["hive", "start"])
-        .spawn()?;
+    let mut child = Command::new("target/debug/rbee-keeper").args(["hive", "start"]).spawn()?;
 
     let status = child.wait()?;
     if !status.success() {
         anyhow::bail!("rbee hive start failed with exit code: {:?}", status.code());
     }
-    
+
     println!();
 
     // Step 5: Stop queen (should cascade to hive)
     println!("📝 Running: rbee queen stop (should cascade to hive)\n");
-    
+
     // TEAM-164: Use .spawn() instead of .output() to show live narration
-    let mut child = Command::new("target/debug/rbee-keeper")
-        .args(["queen", "stop"])
-        .spawn()?;
+    let mut child = Command::new("target/debug/rbee-keeper").args(["queen", "stop"]).spawn()?;
 
     let status = child.wait()?;
     if !status.success() {
         anyhow::bail!("rbee queen stop failed with exit code: {:?}", status.code());
     }
-    
+
     println!();
 
     println!("⚠️  E2E Test PASSED: Cascade Shutdown");

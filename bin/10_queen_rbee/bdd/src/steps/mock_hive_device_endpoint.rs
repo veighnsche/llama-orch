@@ -40,16 +40,8 @@ impl MockDeviceResponse {
             cpu_cores: 8,
             cpu_ram_gb: 32,
             gpus: vec![
-                MockGpu {
-                    id: "gpu0".to_string(),
-                    name: "RTX 3060".to_string(),
-                    vram_gb: 12,
-                },
-                MockGpu {
-                    id: "gpu1".to_string(),
-                    name: "RTX 3090".to_string(),
-                    vram_gb: 24,
-                },
+                MockGpu { id: "gpu0".to_string(), name: "RTX 3060".to_string(), vram_gb: 12 },
+                MockGpu { id: "gpu1".to_string(), name: "RTX 3090".to_string(), vram_gb: 24 },
             ],
             models: 0,
             workers: 0,
@@ -58,24 +50,12 @@ impl MockDeviceResponse {
 
     /// Create a CPU-only mock response
     pub fn cpu_only() -> Self {
-        Self {
-            cpu_cores: 4,
-            cpu_ram_gb: 16,
-            gpus: vec![],
-            models: 0,
-            workers: 0,
-        }
+        Self { cpu_cores: 4, cpu_ram_gb: 16, gpus: vec![], models: 0, workers: 0 }
     }
 
     /// Create a custom mock response
     pub fn new(cpu_cores: u32, cpu_ram_gb: u32) -> Self {
-        Self {
-            cpu_cores,
-            cpu_ram_gb,
-            gpus: vec![],
-            models: 0,
-            workers: 0,
-        }
+        Self { cpu_cores, cpu_ram_gb, gpus: vec![], models: 0, workers: 0 }
     }
 
     /// Add a GPU
@@ -126,10 +106,7 @@ pub struct MockHiveDeviceDetector {
 
 impl MockHiveDeviceDetector {
     pub fn new(base_url: &str) -> Self {
-        Self {
-            base_url: base_url.to_string(),
-            client: reqwest::Client::new(),
-        }
+        Self { base_url: base_url.to_string(), client: reqwest::Client::new() }
     }
 }
 
@@ -139,7 +116,7 @@ impl DeviceDetector for MockHiveDeviceDetector {
         // Use the mock rbee-hive URL instead of the provided hive_url
         // In real code, this would call http://real-hive:8600/v1/devices
         let url = format!("{}/v1/devices", self.base_url);
-        
+
         self.client
             .get(&url)
             .send()

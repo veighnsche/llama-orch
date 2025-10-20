@@ -29,10 +29,7 @@ const HIVES_TABLE_SCHEMA: &str = r#"
 ///
 /// TEAM-158: Creates all required tables if they don't exist
 pub async fn initialize_schema(pool: &SqlitePool) -> Result<()> {
-    sqlx::query(HIVES_TABLE_SCHEMA)
-        .execute(pool)
-        .await
-        .context("Failed to create hives table")?;
+    sqlx::query(HIVES_TABLE_SCHEMA).execute(pool).await.context("Failed to create hives table")?;
 
     Ok(())
 }

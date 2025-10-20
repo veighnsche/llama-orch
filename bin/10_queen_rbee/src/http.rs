@@ -27,7 +27,7 @@ use axum::{
 use futures::stream::{self, Stream};
 use job_registry::JobRegistry;
 use observability_narration_core::Narration;
-use queen_rbee_hive_catalog::{HiveCatalog};
+use queen_rbee_hive_catalog::HiveCatalog;
 use queen_rbee_hive_lifecycle;
 use queen_rbee_scheduler;
 use rbee_heartbeat::traits::{DetectionError, DeviceDetector, DeviceResponse};
@@ -47,7 +47,7 @@ const ACTION_JOB_STREAM: &str = "job_stream";
 //
 // This function uses:
 // - axum::extract::State     ← HTTP framework dependency
-// - axum::http::StatusCode   ← HTTP framework dependency  
+// - axum::http::StatusCode   ← HTTP framework dependency
 // - axum::Json               ← HTTP framework dependency
 // - Result<(StatusCode, Json<T>), (StatusCode, String)> ← HTTP-specific return type
 //
@@ -80,21 +80,21 @@ pub async fn handle_hive_start(
     let request = queen_rbee_hive_lifecycle::HiveStartRequest {
         queen_url: "http://localhost:8500".to_string(),
     };
-    
+
     // Call pure business logic from crate (no HTTP dependencies)
-    let response = queen_rbee_hive_lifecycle::execute_hive_start(
-        Arc::clone(&catalog),
-        request
-    )
-    .await
-    .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
+    let response = queen_rbee_hive_lifecycle::execute_hive_start(Arc::clone(&catalog), request)
+        .await
+        .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
 
     // Convert domain response to HTTP response
-    Ok((StatusCode::OK, Json(HiveStartResponse {
-        hive_url: response.hive_url,
-        hive_id: response.hive_id,
-        port: response.port,
-    })))
+    Ok((
+        StatusCode::OK,
+        Json(HiveStartResponse {
+            hive_url: response.hive_url,
+            hive_id: response.hive_id,
+            port: response.port,
+        }),
+    ))
 }
 
 // ============================================================================
@@ -152,19 +152,13 @@ pub async fn handle_create_job(
     };
 
     // Call pure business logic from crate (no HTTP dependencies)
-    let response = queen_rbee_scheduler::orchestrate_job(
-        state.registry,
-        state.hive_catalog,
-        request
-    )
-    .await
-    .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
+    let response =
+        queen_rbee_scheduler::orchestrate_job(state.registry, state.hive_catalog, request)
+            .await
+            .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
 
     // Convert domain response to HTTP response
-    Ok(Json(HttpJobResponse {
-        job_id: response.job_id,
-        sse_url: response.sse_url,
-    }))
+    Ok(Json(HttpJobResponse { job_id: response.job_id, sse_url: response.sse_url }))
 }
 
 // ============================================================================
@@ -192,7 +186,7 @@ pub async fn handle_stream_job(
         .emit();
 
     let receiver = registry.take_token_receiver(&job_id);
-    
+
     let stream = stream::unfold(receiver, |mut rx_opt| async move {
         match rx_opt {
             Some(mut rx) => match rx.recv().await {
@@ -243,18 +237,12 @@ pub async fn handle_heartbeat(
     Json(payload): Json<HiveHeartbeatPayload>,
 ) -> Result<Json<HttpHeartbeatAcknowledgement>, (StatusCode, String)> {
     // Call binary-specific heartbeat logic
-    let response = crate::heartbeat::handle_hive_heartbeat(
-        state.hive_catalog,
-        payload,
-        state.device_detector,
-    )
-    .await
-    .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
+    let response =
+        crate::heartbeat::handle_hive_heartbeat(state.hive_catalog, payload, state.device_detector)
+            .await
+            .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
 
-    Ok(Json(HttpHeartbeatAcknowledgement {
-        status: response.status,
-        message: response.message,
-    }))
+    Ok(Json(HttpHeartbeatAcknowledgement { status: response.status, message: response.message }))
 }
 
 // ============================================================================
@@ -292,9 +280,7 @@ pub struct HttpDeviceDetector {
 
 impl HttpDeviceDetector {
     pub fn new() -> Self {
-        Self {
-            client: reqwest::Client::new(),
-        }
+        Self { client: reqwest::Client::new() }
     }
 }
 
@@ -308,7 +294,7 @@ impl Default for HttpDeviceDetector {
 impl DeviceDetector for HttpDeviceDetector {
     async fn detect_devices(&self, hive_url: &str) -> Result<DeviceResponse, DetectionError> {
         let url = format!("{}/v1/devices", hive_url);
-        
+
         self.client
             .get(&url)
             .send()

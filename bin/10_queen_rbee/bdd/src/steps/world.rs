@@ -11,8 +11,7 @@ use std::sync::Arc;
 use tempfile::TempDir;
 use wiremock::MockServer;
 
-#[derive(World)]
-#[derive(Default)]
+#[derive(World, Default)]
 pub struct BddWorld {
     /// Last validation result
     pub last_result: Option<Result<(), String>>,
@@ -27,11 +26,11 @@ pub struct BddWorld {
     pub hive_catalog: Option<Arc<HiveCatalog>>,
     pub current_hive_id: Option<String>,
     pub heartbeat_payload: Option<HiveHeartbeatPayload>,
-    
+
     // TEAM-159: Mock HTTP server for device detection tests
     #[world(skip)] // MockServer doesn't implement Debug
     pub mock_server: Option<MockServer>,
-    
+
     // TEAM-160: Process handles for integration tests
     #[world(skip)] // Child doesn't implement Debug
     pub queen_process: Option<Child>,
@@ -74,7 +73,6 @@ impl Drop for BddWorld {
         }
     }
 }
-
 
 impl BddWorld {
     /// Store validation result

@@ -15,7 +15,7 @@
 use anyhow::Result;
 use observability_narration_core::Narration;
 use queen_rbee_hive_catalog::HiveCatalog;
-use rbee_heartbeat::traits::{DeviceDetector};
+use rbee_heartbeat::traits::DeviceDetector;
 use rbee_heartbeat::HiveHeartbeatPayload;
 use std::sync::Arc;
 
@@ -52,7 +52,9 @@ pub async fn handle_hive_heartbeat<D: DeviceDetector>(
     //     .emit();
 
     // Get hive from catalog
-    let hive = catalog.get_hive(&payload.hive_id).await?
+    let hive = catalog
+        .get_hive(&payload.hive_id)
+        .await?
         .ok_or_else(|| anyhow::anyhow!("Hive {} not found", payload.hive_id))?;
 
     // Check if this is first heartbeat
@@ -60,12 +62,15 @@ pub async fn handle_hive_heartbeat<D: DeviceDetector>(
 
     if is_first_heartbeat {
         Narration::new(ACTOR_QUEEN_HEARTBEAT, ACTION_FIRST_HEARTBEAT, &payload.hive_id)
-            .human(format!("First heartbeat from hive {} - triggering device detection", payload.hive_id))
+            .human(format!(
+                "First heartbeat from hive {} - triggering device detection",
+                payload.hive_id
+            ))
             .emit();
 
         // Trigger device detection
         let hive_url = format!("http://{}:{}", hive.host, hive.port);
-        
+
         Narration::new(ACTOR_QUEEN_HEARTBEAT, ACTION_DEVICE_DETECTION, &hive_url)
             .human(format!("Detecting devices at {}", hive_url))
             .emit();
@@ -78,17 +83,22 @@ pub async fn handle_hive_heartbeat<D: DeviceDetector>(
                         cores: devices.cpu.cores,
                         ram_gb: devices.cpu.ram_gb,
                     }),
-                    gpus: devices.gpus.into_iter().enumerate().map(|(idx, gpu)| queen_rbee_hive_catalog::GpuDevice {
-                        index: idx as u32,
-                        name: gpu.name,
-                        vram_gb: gpu.vram_gb,
-                        backend: queen_rbee_hive_catalog::DeviceBackend::Cuda, // TODO: Get from device response
-                    }).collect(),
+                    gpus: devices
+                        .gpus
+                        .into_iter()
+                        .enumerate()
+                        .map(|(idx, gpu)| queen_rbee_hive_catalog::GpuDevice {
+                            index: idx as u32,
+                            name: gpu.name,
+                            vram_gb: gpu.vram_gb,
+                            backend: queen_rbee_hive_catalog::DeviceBackend::Cuda, // TODO: Get from device response
+                        })
+                        .collect(),
                 };
-                
+
                 // Update catalog with devices
                 catalog.update_devices(&payload.hive_id, device_caps).await?;
-                
+
                 Narration::new(ACTOR_QUEEN_HEARTBEAT, ACTION_DEVICE_DETECTION, "success")
                     .human(format!("Device detection complete for hive {}", payload.hive_id))
                     .emit();
@@ -102,14 +112,16 @@ pub async fn handle_hive_heartbeat<D: DeviceDetector>(
         }
 
         // Update hive status to Online
-        catalog.update_hive_status(&payload.hive_id, queen_rbee_hive_catalog::HiveStatus::Online).await?;
+        catalog
+            .update_hive_status(&payload.hive_id, queen_rbee_hive_catalog::HiveStatus::Online)
+            .await?;
     }
 
     // Update heartbeat timestamp
     let timestamp_ms = chrono::DateTime::parse_from_rfc3339(&payload.timestamp)
         .map(|dt| dt.timestamp_millis())
         .unwrap_or_else(|_| chrono::Utc::now().timestamp_millis());
-    
+
     catalog.update_heartbeat(&payload.hive_id, timestamp_ms).await?;
 
     Ok(HeartbeatAcknowledgement {

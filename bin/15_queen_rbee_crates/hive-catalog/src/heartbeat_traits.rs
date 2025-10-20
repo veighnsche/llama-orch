@@ -44,10 +44,7 @@ fn convert_hive_to_trait(hive: HiveRecord) -> TraitHiveRecord {
         status: convert_status_to_trait(hive.status),
         last_heartbeat_ms: hive.last_heartbeat_ms,
         devices: hive.devices.map(|d| TraitDeviceCapabilities {
-            cpu: d.cpu.map(|cpu| TraitCpuDevice {
-                cores: cpu.cores,
-                ram_gb: cpu.ram_gb,
-            }),
+            cpu: d.cpu.map(|cpu| TraitCpuDevice { cores: cpu.cores, ram_gb: cpu.ram_gb }),
             gpus: d
                 .gpus
                 .into_iter()
@@ -69,10 +66,7 @@ fn convert_hive_to_trait(hive: HiveRecord) -> TraitHiveRecord {
 /// Convert trait DeviceCapabilities to local DeviceCapabilities
 fn convert_devices_from_trait(devices: TraitDeviceCapabilities) -> crate::DeviceCapabilities {
     crate::DeviceCapabilities {
-        cpu: devices.cpu.map(|cpu| crate::CpuDevice {
-            cores: cpu.cores,
-            ram_gb: cpu.ram_gb,
-        }),
+        cpu: devices.cpu.map(|cpu| crate::CpuDevice { cores: cpu.cores, ram_gb: cpu.ram_gb }),
         gpus: devices
             .gpus
             .into_iter()

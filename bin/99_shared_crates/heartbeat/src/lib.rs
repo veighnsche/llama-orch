@@ -79,10 +79,10 @@
 
 // Modules
 pub mod hive;
-pub mod hive_receiver;  // TEAM-159: Hive worker heartbeat receiver
+pub mod hive_receiver; // TEAM-159: Hive worker heartbeat receiver
 pub mod queen;
-pub mod queen_receiver;  // TEAM-159: Queen hive heartbeat receiver
-pub mod traits;  // TEAM-159: Trait abstractions for receivers
+pub mod queen_receiver; // TEAM-159: Queen hive heartbeat receiver
+pub mod traits; // TEAM-159: Trait abstractions for receivers
 pub mod types;
 pub mod worker;
 
@@ -134,20 +134,16 @@ pub async fn http_handle_heartbeat<D: DeviceDetector + Send + Sync + 'static>(
     State(state): State<HeartbeatState<D>>,
     Json(payload): Json<HiveHeartbeatPayload>,
 ) -> Result<Json<queen_receiver::HeartbeatAcknowledgement>, (StatusCode, String)> {
-    handle_hive_heartbeat(
-        state.hive_catalog,
-        payload,
-        state.device_detector,
-    )
-    .await
-    .map(Json)
-    .map_err(|e| match e {
-        queen_receiver::HeartbeatError::HiveNotFound(id) => {
-            (StatusCode::NOT_FOUND, format!("Hive {} not found", id))
-        }
-        queen_receiver::HeartbeatError::DeviceDetection(msg) => {
-            (StatusCode::INTERNAL_SERVER_ERROR, format!("Device detection failed: {}", msg))
-        }
-        _ => (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()),
-    })
+    handle_hive_heartbeat(state.hive_catalog, payload, state.device_detector)
+        .await
+        .map(Json)
+        .map_err(|e| match e {
+            queen_receiver::HeartbeatError::HiveNotFound(id) => {
+                (StatusCode::NOT_FOUND, format!("Hive {} not found", id))
+            }
+            queen_receiver::HeartbeatError::DeviceDetection(msg) => {
+                (StatusCode::INTERNAL_SERVER_ERROR, format!("Device detection failed: {}", msg))
+            }
+            _ => (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()),
+        })
 }

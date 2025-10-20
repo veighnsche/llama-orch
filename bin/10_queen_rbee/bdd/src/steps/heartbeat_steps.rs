@@ -70,33 +70,33 @@ async fn given_no_previous_heartbeat(world: &mut BddWorld, hive_id: String) {
 #[when(expr = "the hive {string} sends its first heartbeat")]
 async fn when_hive_sends_first_heartbeat(world: &mut BddWorld, hive_id: String) {
     // TEAM-159: Call actual HTTP handler with device detection
-    use crate::steps::mock_hive_device_endpoint::{start_mock_hive_device_endpoint, MockDeviceResponse};
-    
+    use crate::steps::mock_hive_device_endpoint::{
+        start_mock_hive_device_endpoint, MockDeviceResponse,
+    };
+
     // Start mock rbee-hive /v1/devices endpoint
     let mock_response = MockDeviceResponse::default_response();
     let mock_server = start_mock_hive_device_endpoint(mock_response).await;
     world.mock_server = Some(mock_server);
-    
+
     // Create heartbeat payload
     let payload = HiveHeartbeatPayload {
         hive_id: hive_id.clone(),
         timestamp: chrono::Utc::now().to_rfc3339(),
         workers: vec![],
     };
-    
+
     // Call shared heartbeat handler (which includes device detection)
     let catalog = world.hive_catalog.as_ref().expect("No catalog");
-    let device_detector = Arc::new(crate::steps::mock_hive_device_endpoint::MockHiveDeviceDetector::new(
-        &world.mock_server.as_ref().unwrap().uri(),
-    ));
-    
-    let result = rbee_heartbeat::handle_hive_heartbeat(
-        catalog.clone(),
-        payload.clone(),
-        device_detector,
-    )
-    .await;
-    
+    let device_detector =
+        Arc::new(crate::steps::mock_hive_device_endpoint::MockHiveDeviceDetector::new(
+            &world.mock_server.as_ref().unwrap().uri(),
+        ));
+
+    let result =
+        rbee_heartbeat::handle_hive_heartbeat(catalog.clone(), payload.clone(), device_detector)
+            .await;
+
     // Store result
     world.last_result = Some(result.map(|_| ()).map_err(|e| e.to_string()));
     world.heartbeat_payload = Some(payload);
@@ -112,27 +112,24 @@ async fn when_hive_sends_heartbeat(world: &mut BddWorld, hive_id: String) {
 async fn when_unknown_hive_sends_heartbeat(world: &mut BddWorld, hive_id: String) {
     // TEAM-159: Try to send heartbeat for non-existent hive via HTTP handler
     let catalog = world.hive_catalog.as_ref().expect("No catalog");
-    
+
     // Create payload
     let payload = HiveHeartbeatPayload {
         hive_id: hive_id.clone(),
         timestamp: chrono::Utc::now().to_rfc3339(),
         workers: vec![],
     };
-    
+
     // Use a dummy device detector (won't be called for unknown hive)
-    let device_detector = Arc::new(crate::steps::mock_hive_device_endpoint::MockHiveDeviceDetector::new(
-        "http://localhost:9999",
-    ));
-    
+    let device_detector =
+        Arc::new(crate::steps::mock_hive_device_endpoint::MockHiveDeviceDetector::new(
+            "http://localhost:9999",
+        ));
+
     // Call shared heartbeat handler
-    let result = rbee_heartbeat::handle_hive_heartbeat(
-        catalog.clone(),
-        payload,
-        device_detector,
-    )
-    .await;
-    
+    let result =
+        rbee_heartbeat::handle_hive_heartbeat(catalog.clone(), payload, device_detector).await;
+
     // Store result (should be error)
     world.last_result = Some(result.map(|_| ()).map_err(|e| e.to_string()));
 }
