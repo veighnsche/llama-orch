@@ -27,7 +27,7 @@ use axum::{
 use futures::stream::{self, Stream};
 use job_registry::JobRegistry;
 use observability_narration_core::Narration;
-use queen_rbee_hive_catalog::{HiveCatalog, HiveRecord, HiveStatus};
+use queen_rbee_hive_catalog::{HiveCatalog};
 use queen_rbee_hive_lifecycle;
 use queen_rbee_scheduler;
 use rbee_heartbeat::traits::{DetectionError, DeviceDetector, DeviceResponse};

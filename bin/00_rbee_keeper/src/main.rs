@@ -47,7 +47,7 @@ const ACTION_HEALTH_CHECK: &str = "health_check";
 const ACTION_STREAM: &str = "stream_sse";
 
 #[derive(Parser)]
-#[command(name = "rbee-keeper")]
+#[command(name = "rbee")]
 #[command(about = "rbee infrastructure management CLI", version)]
 #[command(long_about = "CLI tool for managing queen-rbee, hives, workers, and inference")]
 pub struct Cli {
