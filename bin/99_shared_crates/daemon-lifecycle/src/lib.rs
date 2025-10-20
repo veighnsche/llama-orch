@@ -8,9 +8,24 @@
 
 //! daemon-lifecycle
 //!
+//! **Category:** Utility
+//! **Pattern:** Function-based
+//! **Standard:** See `/bin/CRATE_INTERFACE_STANDARD.md`
+//!
 //! Shared daemon lifecycle management functionality for managing daemon processes
 //! across rbee-keeper, queen-rbee, and rbee-hive binaries.
 //! All observability is handled through narration-core (no tracing).
+//!
+//! # Interface
+//!
+//! ## Utility Functions
+//! ```rust
+//! // Spawn a daemon process
+//! pub async fn spawn(&self) -> Result<Child>
+//!
+//! // Find binary in standard locations
+//! pub fn find_binary(name: &str) -> Result<PathBuf>
+//! ```
 
 use anyhow::{Context, Result};
 use observability_narration_core::Narration;

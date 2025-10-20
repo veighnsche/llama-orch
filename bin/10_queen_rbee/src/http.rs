@@ -31,7 +31,7 @@ use queen_rbee_hive_catalog::{HiveCatalog, HiveRecord, HiveStatus};
 use queen_rbee_hive_lifecycle;
 use queen_rbee_scheduler;
 use rbee_heartbeat::traits::{DetectionError, DeviceDetector, DeviceResponse};
-use rbee_heartbeat::{queen_receiver::HeartbeatAcknowledgement, HiveHeartbeatPayload};
+use rbee_heartbeat::HiveHeartbeatPayload;
 use serde::{Deserialize, Serialize};
 use std::convert::Infallible;
 use std::sync::Arc;
@@ -63,29 +63,37 @@ const ACTION_JOB_STREAM: &str = "job_stream";
 #[derive(Debug, Serialize)]
 pub struct HiveStartResponse {
     pub hive_url: String,
-    pub status: String,
+    pub hive_id: String,
+    pub port: u16,
 }
 
 pub type HiveStartState = Arc<HiveCatalog>;
 
 /// POST /hive/start - Start a hive
 ///
-/// TEAM-164: Thin HTTP wrapper around hive-lifecycle::ensure_hive_running()
+/// TEAM-164: Thin HTTP wrapper around hive-lifecycle::execute_hive_start()
+/// Follows Command Pattern (see CRATE_INTERFACE_STANDARD.md)
 pub async fn handle_hive_start(
     State(catalog): State<HiveStartState>,
 ) -> Result<(StatusCode, Json<HiveStartResponse>), (StatusCode, String)> {
+    // Create domain request
+    let request = queen_rbee_hive_lifecycle::HiveStartRequest {
+        queen_url: "http://localhost:8500".to_string(),
+    };
+    
     // Call pure business logic from crate (no HTTP dependencies)
-    let hive_url = queen_rbee_hive_lifecycle::ensure_hive_running(
+    let response = queen_rbee_hive_lifecycle::execute_hive_start(
         Arc::clone(&catalog),
-        "http://localhost:8500"
+        request
     )
     .await
     .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
 
-    // HTTP-specific response construction
+    // Convert domain response to HTTP response
     Ok((StatusCode::OK, Json(HiveStartResponse {
-        hive_url,
-        status: "started".to_string(),
+        hive_url: response.hive_url,
+        hive_id: response.hive_id,
+        port: response.port,
     })))
 }
 
@@ -130,11 +138,12 @@ pub struct SchedulerState {
 /// POST /jobs - Create a new job
 ///
 /// TEAM-164: Thin HTTP wrapper around scheduler::orchestrate_job()
+/// Follows Command Pattern (see CRATE_INTERFACE_STANDARD.md)
 pub async fn handle_create_job(
     State(state): State<SchedulerState>,
     Json(req): Json<HttpJobRequest>,
 ) -> Result<Json<HttpJobResponse>, (StatusCode, String)> {
-    // Convert HTTP request to pure business logic type
+    // Convert HTTP request to domain request
     let request = queen_rbee_scheduler::JobRequest {
         model: req.model,
         prompt: req.prompt,
@@ -151,7 +160,7 @@ pub async fn handle_create_job(
     .await
     .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
 
-    // Convert pure business logic response to HTTP response
+    // Convert domain response to HTTP response
     Ok(Json(HttpJobResponse {
         job_id: response.job_id,
         sse_url: response.sse_url,
@@ -222,28 +231,30 @@ pub struct HeartbeatState {
     pub device_detector: Arc<HttpDeviceDetector>,
 }
 
+#[derive(Serialize)]
+pub struct HttpHeartbeatAcknowledgement {
+    pub status: String,
+    pub message: String,
+}
+
 /// POST /heartbeat - Handle hive heartbeat
 pub async fn handle_heartbeat(
     State(state): State<HeartbeatState>,
     Json(payload): Json<HiveHeartbeatPayload>,
-) -> Result<Json<HeartbeatAcknowledgement>, (StatusCode, String)> {
-    // Call pure business logic from crate (no HTTP dependencies)
-    rbee_heartbeat::handle_hive_heartbeat(
+) -> Result<Json<HttpHeartbeatAcknowledgement>, (StatusCode, String)> {
+    // Call binary-specific heartbeat logic
+    let response = crate::heartbeat::handle_hive_heartbeat(
         state.hive_catalog,
         payload,
         state.device_detector,
     )
     .await
-    .map(Json)
-    .map_err(|e| match e {
-        rbee_heartbeat::queen_receiver::HeartbeatError::HiveNotFound(id) => {
-            (StatusCode::NOT_FOUND, format!("Hive {} not found", id))
-        }
-        rbee_heartbeat::queen_receiver::HeartbeatError::DeviceDetection(msg) => {
-            (StatusCode::INTERNAL_SERVER_ERROR, format!("Device detection failed: {}", msg))
-        }
-        _ => (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()),
-    })
+    .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
+
+    Ok(Json(HttpHeartbeatAcknowledgement {
+        status: response.status,
+        message: response.message,
+    }))
 }
 
 // ============================================================================

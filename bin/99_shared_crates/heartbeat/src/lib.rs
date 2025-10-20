@@ -10,10 +10,32 @@
 
 //! Heartbeat mechanism for health monitoring across the rbee system
 //!
+//! **Category:** Protocol
+//! **Pattern:** Command Pattern with Traits
+//! **Standard:** See `/bin/CRATE_INTERFACE_STANDARD.md`
+//!
 //! This crate provides heartbeat logic for all three binaries:
 //! - **Worker:** Sends heartbeats to hive (Worker → Hive)
 //! - **Hive:** Collects worker heartbeats + sends aggregated heartbeats to queen (Hive → Queen)
 //! - **Queen:** Receives aggregated heartbeats from hives
+//!
+//! # Interface
+//!
+//! ## Entrypoints
+//! ```rust
+//! // Queen receives hive heartbeats
+//! pub async fn handle_hive_heartbeat<C, D>(
+//!     catalog: Arc<C>,
+//!     payload: HiveHeartbeatPayload,
+//!     device_detector: Arc<D>,
+//! ) -> Result<HeartbeatAcknowledgement, HeartbeatError>
+//!
+//! // Hive receives worker heartbeats
+//! pub async fn handle_worker_heartbeat<R>(
+//!     registry: Arc<R>,
+//!     payload: WorkerHeartbeatPayload,
+//! ) -> Result<HeartbeatResponse, HeartbeatError>
+//! ```
 //!
 //! # Architecture
 //!

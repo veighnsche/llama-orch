@@ -1,9 +1,38 @@
-//! Shared job registry for dual-call inference pattern
+//! Shared job registry for managing inference job state
 //!
-//! Created by: TEAM-154 (extracted from worker, shared across worker/queen/hive)
+//! **Category:** State Management
+//! **Pattern:** Registry Pattern
+//! **Standard:** See `/bin/CRATE_INTERFACE_STANDARD.md`
 //!
-//! This crate provides a generic job registry that tracks inference jobs
-//! between the POST (create) and GET (stream) calls in the dual-call pattern.
+//! TEAM-154: Created by TEAM-154
+//! TEAM-154 FIX: Fixed dual-call pattern by storing receiver instead of sender
+//!
+//! This crate provides in-memory job state management for the dual-call pattern:
+//! 1. POST creates job, returns job_id + sse_url
+//! 2. GET streams results via SSE
+//!
+//! # Interface
+//!
+//! ## Registry Operations
+//! ```rust
+//! // CREATE
+//! pub fn create_job(&self) -> String
+//!
+//! // READ
+//! pub fn has_job(&self, id: &str) -> bool
+//! pub fn get_job_state(&self, id: &str) -> Option<JobState>
+//!
+//! // UPDATE
+//! pub fn update_state(&self, id: &str, state: JobState)
+//! pub fn set_token_receiver(&self, id: &str, receiver: TokenReceiver<T>)
+//!
+//! // DELETE
+//! pub fn remove_job(&self, id: &str) -> Option<Job<T>>
+//!
+//! // UTILITY
+//! pub fn job_count(&self) -> usize
+//! pub fn job_ids(&self) -> Vec<String>
+//! ```
 //!
 //! # Pattern
 //!

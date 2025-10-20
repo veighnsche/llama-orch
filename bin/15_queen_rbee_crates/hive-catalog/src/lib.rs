@@ -1,10 +1,36 @@
 //! Hive catalog for queen-rbee
 //!
-//! Created by: TEAM-156
-//! Refactored by: TEAM-158 - Split into maintainable modules
+//! **Category:** Data Management
+//! **Pattern:** CRUD Pattern
+//! **Standard:** See `/bin/CRATE_INTERFACE_STANDARD.md`
 //!
-//! This crate provides SQLite-based persistent storage for hive information,
-//! including capabilities, devices, and status.
+//! TEAM-156: Created by TEAM-156
+//! TEAM-158: Refactored to CRUD pattern
+//!
+//! This crate provides persistent storage for hive metadata using SQLite.
+//! It follows a standard CRUD (Create, Read, Update, Delete) pattern for
+//! maintainability and consistency.
+//!
+//! # Interface
+//!
+//! ## CRUD Operations
+//! ```rust
+//! // CREATE
+//! pub async fn add_hive(&self, hive: HiveRecord) -> Result<()>
+//!
+//! // READ
+//! pub async fn get_hive(&self, id: &str) -> Result<Option<HiveRecord>>
+//! pub async fn list_hives(&self) -> Result<Vec<HiveRecord>>
+//!
+//! // UPDATE
+//! pub async fn update_hive(&self, hive: HiveRecord) -> Result<()>
+//! pub async fn update_hive_status(&self, id: &str, status: HiveStatus) -> Result<>()
+//! pub async fn update_heartbeat(&self, id: &str, timestamp_ms: i64) -> Result<>()
+//! pub async fn update_devices(&self, id: &str, devices: DeviceCapabilities) -> Result<>()
+//!
+//! // DELETE
+//! pub async fn remove_hive(&self, id: &str) -> Result<()>
+//! ```
 //!
 //! # Usage
 //!

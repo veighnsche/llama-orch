@@ -12,6 +12,7 @@
 
 // TEAM-164: Migrated endpoints to dedicated modules/files
 mod health;
+mod heartbeat;  // TEAM-164: Binary-specific heartbeat logic
 mod http;
 
 use anyhow::Result;
