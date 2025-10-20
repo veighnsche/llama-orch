@@ -15,8 +15,11 @@ path = "src/lib.rs"
 [dependencies]
 tracing = { workspace = true }
 serde = { workspace = true, features = ["derive"] }
+serde_json = { workspace = true }
 regex = { workspace = true }
 uuid = { workspace = true }
+tokio = { workspace = true, features = ["sync"] }
+once_cell = "1.19"
 opentelemetry = { version = "0.21", optional = true }
 axum = { workspace = true, optional = true }
 

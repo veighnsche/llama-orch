@@ -51,6 +51,7 @@ pub mod correlation;
 pub mod http;
 pub mod otel;
 mod redaction;
+pub mod sse_sink;
 pub mod trace;
 pub mod unicode;
 
@@ -346,6 +347,11 @@ pub fn narrate_at_level(fields: NarrationFields, level: NarrationLevel) {
     // This works whether or not tracing subscriber is initialized
     // TEAM-155: Multi-line format for readability - [actor] on first line, message indented
     eprintln!("[{}]\n  {}", fields.actor, human);
+
+    // TEAM-164: Send to SSE subscribers if enabled (for distributed narration)
+    if sse_sink::is_enabled() {
+        sse_sink::send(&fields);
+    }
 
     // Emit structured event at appropriate level using macro (for tracing subscribers if configured)
     match tracing_level {

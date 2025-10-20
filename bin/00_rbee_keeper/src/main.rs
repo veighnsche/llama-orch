@@ -30,8 +30,14 @@
 //! ```
 
 mod actions;
+mod config;
+mod job_client;
+mod narration_stream;
 
 use actions::*;
+use config::Config;
+use job_client::submit_and_stream_job;
+use narration_stream::stream_narration_to_stdout;
 use anyhow::Result;
 use clap::{Parser, Subcommand};
 use observability_narration_core::Narration;
@@ -61,20 +67,20 @@ pub enum Commands {
 
     /// Worker management
     Worker {
+        /// Hive ID to operate on (defaults to localhost)
+        #[arg(long, default_value = "localhost")]
+        hive_id: String,
         #[command(subcommand)]
         action: WorkerAction,
     },
 
     /// Model management
     Model {
+        /// Hive ID to operate on (defaults to localhost)
+        #[arg(long, default_value = "localhost")]
+        hive_id: String,
         #[command(subcommand)]
         action: ModelAction,
-    },
-
-    /// Job management
-    Job {
-        #[command(subcommand)]
-        action: JobAction,
     },
 
     /// Run inference
@@ -97,8 +103,12 @@ pub enum QueenAction {
 
 #[derive(Subcommand)]
 pub enum HiveAction {
-    Start,
-    Stop,
+    Start {
+        id: String,
+    },
+    Stop {
+        id: String,
+    },
     List,
     Get {
         id: String,
@@ -144,46 +154,7 @@ pub enum ModelAction {
     Delete { id: String },
 }
 
-#[derive(Subcommand)]
-pub enum JobAction {
-    Stream { id: String },
-}
 
-// Macro to reduce HTTP + Narration boilerplate
-macro_rules! queen_req {
-    (GET $client:expr, $url:expr => $action:expr, $context:expr, $msg:expr) => {{
-        let res = $client.get($url).send().await?;
-        let json: serde_json::Value = res.json().await?;
-        Narration::new(ACTOR_RBEE_KEEPER, $action, $context).human($msg).table(&json).emit();
-    }};
-    (POST $client:expr, $url:expr => $action:expr, $context:expr, $msg:expr) => {{
-        let res = $client.post($url).send().await?;
-        let json: serde_json::Value = res.json().await?;
-        Narration::new(ACTOR_RBEE_KEEPER, $action, $context).human($msg).table(&json).emit();
-    }};
-    (POST $client:expr, $url:expr, $body:expr => $action:expr, $context:expr, $msg:expr) => {{
-        let res = $client.post($url).json(&$body).send().await?;
-        let json: serde_json::Value = res.json().await?;
-        Narration::new(ACTOR_RBEE_KEEPER, $action, $context).human($msg).table(&json).emit();
-    }};
-    (PUT $client:expr, $url:expr => $action:expr, $context:expr, $msg:expr) => {{
-        $client.put($url).send().await?;
-        Narration::new(ACTOR_RBEE_KEEPER, $action, $context).human($msg).emit();
-    }};
-    (DELETE $client:expr, $url:expr => $action:expr, $context:expr, $msg:expr) => {{
-        $client.delete($url).send().await?;
-        Narration::new(ACTOR_RBEE_KEEPER, $action, $context).human($msg).emit();
-    }};
-}
-
-macro_rules! with_queen {
-    ($queen_url:expr, $client:expr, $action:block) => {{
-        let queen_handle = rbee_keeper_queen_lifecycle::ensure_queen_running($queen_url).await?;
-        $action
-        std::mem::forget(queen_handle);
-        Ok(())
-    }};
-}
 
 #[tokio::main]
 async fn main() -> Result<()> {
@@ -192,14 +163,15 @@ async fn main() -> Result<()> {
 }
 
 async fn handle_command(cli: Cli) -> Result<()> {
-    let queen_url = "http://localhost:8500";
+    let config = Config::load()?;
+    let queen_url = config.queen_url();
     let client = reqwest::Client::new();
 
     match cli.command {
         Commands::Queen { action } => match action {
             QueenAction::Start => {
                 let queen_handle =
-                    rbee_keeper_queen_lifecycle::ensure_queen_running(queen_url).await?;
+                    rbee_keeper_queen_lifecycle::ensure_queen_running(&queen_url).await?;
                 Narration::new(ACTOR_RBEE_KEEPER, ACTION_QUEEN_START, queen_handle.base_url())
                     .human(format!("✅ Queen started on {}", queen_handle.base_url()))
                     .emit();
@@ -227,148 +199,101 @@ async fn handle_command(cli: Cli) -> Result<()> {
             }
         },
 
-        Commands::Hive { action } => with_queen!(queen_url, client, {
-            match action {
-                HiveAction::Start => {
-                    queen_req!(POST client, format!("{}/v1/hive/start", queen_url) => ACTION_HIVE_START, "started", "✅ Hive started")
-                }
-                HiveAction::Stop => {
-                    queen_req!(POST client, format!("{}/v1/hive/stop", queen_url) => ACTION_HIVE_STOP, "stopped", "✅ Hive stopped")
-                }
-                HiveAction::List => {
-                    queen_req!(GET client, format!("{}/v1/hives", queen_url) => ACTION_HIVE_LIST, "success", serde_json::to_string_pretty(&serde_json::json!({}))?)
-                }
-                HiveAction::Get { ref id } => {
-                    queen_req!(GET client, format!("{}/v1/hives/{}", queen_url, id) => ACTION_HIVE_GET, id, serde_json::to_string_pretty(&serde_json::json!({}))?)
-                }
-                HiveAction::Create { ref host, port } => {
-                    let body = serde_json::json!({ "host": host, "port": port });
-                    queen_req!(POST client, format!("{}/v1/hives", queen_url), body => ACTION_HIVE_CREATE, host, "✅ Hive created")
-                }
-                HiveAction::Update { ref id } => {
-                    queen_req!(PUT client, format!("{}/v1/hives/{}", queen_url, id) => ACTION_HIVE_UPDATE, id, format!("✅ Hive {} updated", id))
-                }
-                HiveAction::Delete { ref id } => {
-                    queen_req!(DELETE client, format!("{}/v1/hives/{}", queen_url, id) => ACTION_HIVE_DELETE, id, format!("✅ Hive {} deleted", id))
-                }
-            }
-        }),
+        Commands::Hive { action } => {
+            let job_payload = match action {
+                HiveAction::Start { ref id } => serde_json::json!({
+                    "operation": "hive_start",
+                    "hive_id": id
+                }),
+                HiveAction::Stop { ref id } => serde_json::json!({
+                    "operation": "hive_stop",
+                    "hive_id": id
+                }),
+                HiveAction::List => serde_json::json!({
+                    "operation": "hive_list"
+                }),
+                HiveAction::Get { ref id } => serde_json::json!({
+                    "operation": "hive_get",
+                    "id": id
+                }),
+                HiveAction::Create { ref host, port } => serde_json::json!({
+                    "operation": "hive_create",
+                    "host": host,
+                    "port": port
+                }),
+                HiveAction::Update { ref id } => serde_json::json!({
+                    "operation": "hive_update",
+                    "id": id
+                }),
+                HiveAction::Delete { ref id } => serde_json::json!({
+                    "operation": "hive_delete",
+                    "id": id
+                }),
+            };
+            submit_and_stream_job(&client, &queen_url, job_payload).await
+        },
 
-        Commands::Worker { action } => with_queen!(queen_url, client, {
-            match action {
-                WorkerAction::Spawn { ref model, ref backend, device } => {
-                    let body =
-                        serde_json::json!({ "model": model, "backend": backend, "device": device });
-                    queen_req!(POST client, format!("{}/v1/workers/spawn", queen_url), body => ACTION_WORKER_SPAWN, model, "✅ Worker spawned")
-                }
-                WorkerAction::List => {
-                    queen_req!(GET client, format!("{}/v1/workers", queen_url) => ACTION_WORKER_LIST, "success", "Workers listed")
-                }
-                WorkerAction::Get { ref id } => {
-                    queen_req!(GET client, format!("{}/v1/workers/{}", queen_url, id) => ACTION_WORKER_GET, id, "Worker details")
-                }
-                WorkerAction::Delete { ref id } => {
-                    queen_req!(DELETE client, format!("{}/v1/workers/{}", queen_url, id) => ACTION_WORKER_DELETE, id, format!("✅ Worker {} deleted", id))
-                }
-            }
-        }),
+        Commands::Worker { hive_id, action } => {
+            let job_payload = match action {
+                WorkerAction::Spawn { ref model, ref backend, device } => serde_json::json!({
+                    "operation": "worker_spawn",
+                    "hive_id": hive_id,
+                    "model": model,
+                    "backend": backend,
+                    "device": device
+                }),
+                WorkerAction::List => serde_json::json!({
+                    "operation": "worker_list",
+                    "hive_id": hive_id
+                }),
+                WorkerAction::Get { ref id } => serde_json::json!({
+                    "operation": "worker_get",
+                    "hive_id": hive_id,
+                    "id": id
+                }),
+                WorkerAction::Delete { ref id } => serde_json::json!({
+                    "operation": "worker_delete",
+                    "hive_id": hive_id,
+                    "id": id
+                }),
+            };
+            submit_and_stream_job(&client, &queen_url, job_payload).await
+        },
 
-        Commands::Model { action } => with_queen!(queen_url, client, {
-            match action {
-                ModelAction::Download { ref model } => {
-                    let body = serde_json::json!({ "model": model });
-                    queen_req!(POST client, format!("{}/v1/models/download", queen_url), body => ACTION_MODEL_DOWNLOAD, model, "✅ Model download started")
-                }
-                ModelAction::List => {
-                    queen_req!(GET client, format!("{}/v1/models", queen_url) => ACTION_MODEL_LIST, "success", "Models listed")
-                }
-                ModelAction::Get { ref id } => {
-                    queen_req!(GET client, format!("{}/v1/models/{}", queen_url, id) => ACTION_MODEL_GET, id, "Model details")
-                }
-                ModelAction::Delete { ref id } => {
-                    queen_req!(DELETE client, format!("{}/v1/models/{}", queen_url, id) => ACTION_MODEL_DELETE, id, format!("✅ Model {} deleted", id))
-                }
-            }
-        }),
-
-        Commands::Job { action } => {
-            let queen_handle = rbee_keeper_queen_lifecycle::ensure_queen_running(queen_url).await?;
-            match action {
-                JobAction::Stream { id } => {
-                    stream_sse_to_stdout(&format!("{}/v1/jobs/{}/stream", queen_url, id)).await?;
-                }
-            }
-            std::mem::forget(queen_handle);
-            Ok(())
-        }
+        Commands::Model { hive_id, action } => {
+            let job_payload = match action {
+                ModelAction::Download { ref model } => serde_json::json!({
+                    "operation": "model_download",
+                    "hive_id": hive_id,
+                    "model": model
+                }),
+                ModelAction::List => serde_json::json!({
+                    "operation": "model_list",
+                    "hive_id": hive_id
+                }),
+                ModelAction::Get { ref id } => serde_json::json!({
+                    "operation": "model_get",
+                    "hive_id": hive_id,
+                    "id": id
+                }),
+                ModelAction::Delete { ref id } => serde_json::json!({
+                    "operation": "model_delete",
+                    "hive_id": hive_id,
+                    "id": id
+                }),
+            };
+            submit_and_stream_job(&client, &queen_url, job_payload).await
+        },
 
         Commands::Infer { ref model, ref prompt, max_tokens, temperature } => {
-            let queen_handle = rbee_keeper_queen_lifecycle::ensure_queen_running(queen_url).await?;
-            let body = serde_json::json!({
+            let job_payload = serde_json::json!({
+                "operation": "infer",
                 "model": model,
                 "prompt": prompt,
                 "max_tokens": max_tokens,
                 "temperature": temperature,
             });
-            let res = client.post(format!("{}/v1/jobs", queen_url)).json(&body).send().await?;
-            let json: serde_json::Value = res.json().await?;
-            let job_id = json["job_id"].as_str().ok_or_else(|| anyhow::anyhow!("No job_id"))?;
-            let sse_url = json["sse_url"].as_str().ok_or_else(|| anyhow::anyhow!("No sse_url"))?;
-            Narration::new(ACTOR_RBEE_KEEPER, ACTION_INFER, job_id)
-                .human(format!("✅ Job {}", job_id))
-                .emit();
-            stream_sse_to_stdout(&format!("{}{}", queen_url, sse_url)).await?;
-            queen_handle.shutdown().await?;
-            Ok(())
+            submit_and_stream_job(&client, &queen_url, job_payload).await
         }
     }
-}
-
-// ============================================================================
-// HTTP Client Helpers
-// ============================================================================
-// TEAM-158: Simple HTTP helpers - rbee-keeper is just a thin HTTP client!
-
-/// Stream SSE events from queen-rbee to stdout
-///
-/// This is the "keeper → queen → SSE" part of the happy flow (lines 23-24)
-async fn stream_sse_to_stdout(sse_url: &str) -> Result<()> {
-    use futures::StreamExt;
-
-    let client = reqwest::Client::new();
-    let response = client.get(sse_url).send().await?;
-
-    if !response.status().is_success() {
-        let error = response.text().await?;
-        anyhow::bail!("Failed to connect to SSE stream: {}", error);
-    }
-
-    Narration::new(ACTOR_RBEE_KEEPER, ACTION_STREAM, sse_url)
-        .human("📡 Streaming events from queen-rbee...")
-        .emit();
-
-    let mut stream = response.bytes_stream();
-
-    while let Some(chunk) = stream.next().await {
-        let chunk = chunk?;
-        let text = String::from_utf8_lossy(&chunk);
-
-        // Print each SSE event to stdout
-        for line in text.lines() {
-            if line.starts_with("data: ") {
-                let data = &line[6..]; // Remove "data: " prefix
-                Narration::new(ACTOR_RBEE_KEEPER, ACTION_STREAM, "token").human(data).emit();
-
-                // Check for [DONE] marker
-                if data.contains("[DONE]") {
-                    Narration::new(ACTOR_RBEE_KEEPER, ACTION_STREAM, "complete")
-                        .human("✅ Stream complete")
-                        .emit();
-                    return Ok(());
-                }
-            }
-        }
-    }
-
-    Ok(())
 }

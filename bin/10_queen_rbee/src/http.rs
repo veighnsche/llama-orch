@@ -17,6 +17,8 @@
 //!
 //! This keeps crates clean and reusable in non-HTTP contexts.
 
+pub mod narration_stream;
+
 use async_trait::async_trait;
 use axum::{
     extract::{Path, State},

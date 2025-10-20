@@ -56,6 +56,9 @@ struct Args {
 async fn main() -> Result<()> {
     let args = Args::parse();
 
+    // TEAM-164: Initialize SSE sink for distributed narration
+    observability_narration_core::sse_sink::init(1000);
+
     Narration::new(ACTOR_QUEEN_RBEE, ACTION_START, &args.port.to_string())
         .human(format!("Queen-rbee starting on port {}", args.port))
         .emit();
@@ -128,6 +131,7 @@ fn create_router(
     axum::Router::new()
         .route("/health", get(health::handle_health))
         .route("/shutdown", post(handle_shutdown))
+        .route("/narration/stream", get(http::narration_stream::handle_narration_stream))
         .route("/jobs", post(http::handle_create_job))
         .with_state(job_state.clone())
         .route("/jobs/{job_id}/stream", get(http::handle_stream_job))
