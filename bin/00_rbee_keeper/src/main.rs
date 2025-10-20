@@ -31,8 +31,20 @@
 
 mod health_check;
 
-use anyhow::Result;
-use clap::{Parser, Subcommand};
+use anyhow::{Context, Result};
+use clap::{Parser, Subcommand, ValueEnum};
+use observability_narration_core::Narration;
+
+// TEAM-164: Actor constants for narration
+const ACTOR_RBEE_KEEPER: &str = "🧑‍🌾 rbee-keeper";
+const ACTION_QUEEN_START: &str = "queen_start";
+const ACTION_QUEEN_STOP: &str = "queen_stop";
+const ACTION_HIVE_START: &str = "hive_start";
+const ACTION_HIVE_STOP: &str = "hive_stop";
+const ACTION_INFER: &str = "infer";
+const ACTION_ADD_HIVE: &str = "add_hive";
+const ACTION_HEALTH_CHECK: &str = "health_check";
+const ACTION_STREAM: &str = "stream_sse";
 
 #[derive(Parser)]
 #[command(name = "rbee-keeper")]
@@ -376,9 +388,15 @@ async fn handle_command(cli: Cli) -> Result<()> {
         Commands::Queen { action } => {
             match action {
                 QueenAction::Start => {
-                    println!("👑 Starting queen-rbee...");
+                    Narration::new(ACTOR_RBEE_KEEPER, ACTION_QUEEN_START, "localhost:8500")
+                        .human("👑 Starting queen-rbee")
+                        .emit();
+                    
                     let queen_handle = rbee_keeper_queen_lifecycle::ensure_queen_running("http://localhost:8500").await?;
-                    println!("✅ Queen started on {}", queen_handle.base_url());
+                    
+                    Narration::new(ACTOR_RBEE_KEEPER, ACTION_QUEEN_START, queen_handle.base_url())
+                        .human(format!("✅ Queen started on {}", queen_handle.base_url()))
+                        .emit();
                     
                     // Don't shutdown - keep queen running
                     std::mem::forget(queen_handle);
@@ -386,7 +404,9 @@ async fn handle_command(cli: Cli) -> Result<()> {
                 }
                 QueenAction::Stop => {
                     // TEAM-163: Added 30-second timeout for shutdown request
-                    println!("👑 Stopping queen-rbee...");
+                    Narration::new(ACTOR_RBEE_KEEPER, ACTION_QUEEN_STOP, "localhost:8500")
+                        .human("👑 Stopping queen-rbee")
+                        .emit();
                     let client = reqwest::Client::builder()
                         .timeout(tokio::time::Duration::from_secs(30))
                         .build()?;
@@ -394,13 +414,19 @@ async fn handle_command(cli: Cli) -> Result<()> {
                     
                     match response {
                         Ok(_) => {
-                            println!("✅ Queen shutdown signal sent");
+                            Narration::new(ACTOR_RBEE_KEEPER, ACTION_QUEEN_STOP, "signal_sent")
+                                .human("✅ Queen shutdown signal sent")
+                                .emit();
                             tokio::time::sleep(tokio::time::Duration::from_secs(2)).await;
-                            println!("✅ Queen stopped");
+                            Narration::new(ACTOR_RBEE_KEEPER, ACTION_QUEEN_STOP, "stopped")
+                                .human("✅ Queen stopped")
+                                .emit();
                             Ok(())
                         }
                         Err(_) => {
-                            println!("⚠️  Queen is not running");
+                            Narration::new(ACTOR_RBEE_KEEPER, ACTION_QUEEN_STOP, "not_running")
+                                .human("⚠️  Queen is not running")
+                                .emit();
                             Ok(())
                         }
                     }
@@ -411,31 +437,52 @@ async fn handle_command(cli: Cli) -> Result<()> {
         Commands::Hive { action } => {
             match action {
                 HiveAction::Start => {
-                    println!("🐝 Starting rbee-hive on localhost...");
+                    // ============================================================
+                    // ⚠️  WARNING: rbee-keeper is a THIN HTTP CLIENT ONLY!
+                    // ============================================================
+                    // rbee-keeper should NOT:
+                    // - ❌ Know what host/port the hive uses
+                    // - ❌ Build JSON requests with orchestration details
+                    // - ❌ Make orchestration decisions
+                    //
+                    // rbee-keeper ONLY:
+                    // - ✅ Ensure queen is running
+                    // - ✅ Send simple HTTP request to queen
+                    // - ✅ Display response to user
+                    //
+                    // QUEEN decides:
+                    // - Where to spawn the hive (localhost vs remote)
+                    // - What port to use
+                    // - How to spawn it (SSH vs local)
+                    // ============================================================
+                    
+                    Narration::new(ACTOR_RBEE_KEEPER, ACTION_HIVE_START, "request")
+                        .human("🐝 Requesting hive start from queen")
+                        .emit();
                     
                     // Step 1: Ensure queen is running
                     let queen_handle = rbee_keeper_queen_lifecycle::ensure_queen_running("http://localhost:8500").await?;
-                    println!("✅ Queen is running");
                     
-                    // Step 2: Send add-hive request to queen
+                    // Step 2: Send hive start request to queen (NO orchestration details!)
                     let client = reqwest::Client::new();
-                    let request = serde_json::json!({
-                        "host": "localhost",
-                        "port": 8600
-                    });
-
                     let response = client
-                        .post(format!("{}/add-hive", queen_handle.base_url()))
-                        .json(&request)
+                        .post(format!("{}/hive/start", queen_handle.base_url()))
                         .send()
                         .await?;
 
                     if !response.status().is_success() {
                         let error = response.text().await?;
-                        anyhow::bail!("Failed to add hive: {}", error);
+                        anyhow::bail!("Failed to start hive: {}", error);
                     }
 
-                    println!("✅ Hive started on localhost:8600");
+                    let response_json: serde_json::Value = response.json().await?;
+                    let hive_url = response_json["hive_url"]
+                        .as_str()
+                        .unwrap_or("unknown");
+
+                    Narration::new(ACTOR_RBEE_KEEPER, ACTION_HIVE_START, hive_url)
+                        .human(format!("✅ Hive started: {}", hive_url))
+                        .emit();
                     
                     // Don't shutdown - keep everything running
                     std::mem::forget(queen_handle);
@@ -443,7 +490,9 @@ async fn handle_command(cli: Cli) -> Result<()> {
                 }
                 HiveAction::Stop => {
                     // TEAM-163: Added 30-second timeout for shutdown request
-                    println!("🐝 Stopping rbee-hive on localhost...");
+                    Narration::new(ACTOR_RBEE_KEEPER, ACTION_HIVE_STOP, "localhost:8600")
+                        .human("🐝 Stopping rbee-hive on localhost")
+                        .emit();
                     let client = reqwest::Client::builder()
                         .timeout(tokio::time::Duration::from_secs(30))
                         .build()?;
@@ -451,13 +500,19 @@ async fn handle_command(cli: Cli) -> Result<()> {
                     
                     match response {
                         Ok(_) => {
-                            println!("✅ Hive shutdown signal sent");
+                            Narration::new(ACTOR_RBEE_KEEPER, ACTION_HIVE_STOP, "signal_sent")
+                                .human("✅ Hive shutdown signal sent")
+                                .emit();
                             tokio::time::sleep(tokio::time::Duration::from_secs(2)).await;
-                            println!("✅ Hive stopped");
+                            Narration::new(ACTOR_RBEE_KEEPER, ACTION_HIVE_STOP, "stopped")
+                                .human("✅ Hive stopped")
+                                .emit();
                             Ok(())
                         }
                         Err(_) => {
-                            println!("⚠️  Hive is not running");
+                            Narration::new(ACTOR_RBEE_KEEPER, ACTION_HIVE_STOP, "not_running")
+                                .human("⚠️  Hive is not running")
+                                .emit();
                             Ok(())
                         }
                     }

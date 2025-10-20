@@ -89,3 +89,43 @@ pub use traits::{
     CatalogError, CpuDevice, DeviceBackend, DeviceCapabilities, DeviceDetector, DeviceResponse,
     GpuDevice, HiveCatalog, HiveRecord, HiveStatus, WorkerRegistry,
 };
+
+// ============================================================================
+// HTTP ENDPOINT WRAPPER (optional feature)
+// ============================================================================
+
+#[cfg(feature = "http")]
+use axum::{extract::State, http::StatusCode, Json};
+
+#[cfg(feature = "http")]
+#[derive(Clone)]
+pub struct HeartbeatState<D: DeviceDetector> {
+    pub hive_catalog: std::sync::Arc<dyn HiveCatalog>,
+    pub device_detector: std::sync::Arc<D>,
+}
+
+/// POST /heartbeat - HTTP endpoint handler
+///
+/// TEAM-164: Thin HTTP wrapper around handle_hive_heartbeat()
+#[cfg(feature = "http")]
+pub async fn http_handle_heartbeat<D: DeviceDetector + Send + Sync + 'static>(
+    State(state): State<HeartbeatState<D>>,
+    Json(payload): Json<HiveHeartbeatPayload>,
+) -> Result<Json<queen_receiver::HeartbeatAcknowledgement>, (StatusCode, String)> {
+    handle_hive_heartbeat(
+        state.hive_catalog,
+        payload,
+        state.device_detector,
+    )
+    .await
+    .map(Json)
+    .map_err(|e| match e {
+        queen_receiver::HeartbeatError::HiveNotFound(id) => {
+            (StatusCode::NOT_FOUND, format!("Hive {} not found", id))
+        }
+        queen_receiver::HeartbeatError::DeviceDetection(msg) => {
+            (StatusCode::INTERNAL_SERVER_ERROR, format!("Device detection failed: {}", msg))
+        }
+        _ => (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()),
+    })
+}

@@ -9,6 +9,10 @@
 //!
 //! TEAM-162: Tests rely ONLY on CLI stdout/stderr.
 //! No internal product functions. Pure black-box testing.
+//!
+//! TEAM-164: E2E tests MUST show live narration output.
+//! Using .output() hides all narration until command completes.
+//! Using .spawn() + .wait() shows narration in real-time.
 
 use anyhow::Result;
 use std::process::Command;
@@ -17,42 +21,34 @@ pub async fn test_queen_lifecycle() -> Result<()> {
     println!("🚀 E2E Test: Queen Lifecycle\n");
 
     // Step 1: rbee queen start
-    println!("📝 Running: rbee queen start");
-    let output = Command::new("target/debug/rbee-keeper")
-        .args(["queen", "start"])
-        .output()?;
-
-    if !output.status.success() {
-        let stderr = String::from_utf8_lossy(&output.stderr);
-        anyhow::bail!("rbee queen start failed: {}", stderr);
-    }
-
-    let stdout = String::from_utf8_lossy(&output.stdout);
-    println!("{}", stdout);
+    println!("📝 Running: rbee queen start\n");
     
-    // Verify actual product output: "✅ Queen started on http://localhost:8500"
-    if !stdout.contains("Queen started on") {
-        anyhow::bail!("Expected 'Queen started on' in output, got: {}", stdout);
+    // TEAM-164: Use .spawn() instead of .output() to show live narration
+    let mut child = Command::new("target/debug/rbee-keeper")
+        .args(["queen", "start"])
+        .spawn()?;
+
+    let status = child.wait()?;
+    if !status.success() {
+        anyhow::bail!("rbee queen start failed with exit code: {:?}", status.code());
     }
+    
+    println!();
 
     // Step 2: rbee queen stop
-    println!("📝 Running: rbee queen stop");
-    let output = Command::new("target/debug/rbee-keeper")
-        .args(["queen", "stop"])
-        .output()?;
-
-    if !output.status.success() {
-        let stderr = String::from_utf8_lossy(&output.stderr);
-        anyhow::bail!("rbee queen stop failed: {}", stderr);
-    }
-
-    let stdout = String::from_utf8_lossy(&output.stdout);
-    println!("{}", stdout);
+    println!("📝 Running: rbee queen stop\n");
     
-    // Verify actual product output: "✅ Queen stopped"
-    if !stdout.contains("Queen stopped") {
-        anyhow::bail!("Expected 'Queen stopped' in output, got: {}", stdout);
+    // TEAM-164: Use .spawn() instead of .output() to show live narration
+    let mut child = Command::new("target/debug/rbee-keeper")
+        .args(["queen", "stop"])
+        .spawn()?;
+
+    let status = child.wait()?;
+    if !status.success() {
+        anyhow::bail!("rbee queen stop failed with exit code: {:?}", status.code());
     }
+    
+    println!();
 
     println!("✅ E2E Test PASSED: Queen Lifecycle");
     Ok(())

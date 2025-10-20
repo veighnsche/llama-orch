@@ -61,10 +61,43 @@ impl DaemonManager {
         ))
         .emit();
 
+        // ============================================================
+        // BUG FIX: TEAM-164 | Daemon holds parent's pipes open
+        // ============================================================
+        // SUSPICION:
+        // - E2E test hangs when using Command::output() to run rbee-keeper
+        // - Direct command execution works fine
+        //
+        // INVESTIGATION:
+        // - Tested with timeout - confirmed hang at Command::output()
+        // - Tested with file redirection - works (exits immediately)
+        // - Tested with pipes - hangs (never completes)
+        // - Added TTY detection to timeout-enforcer - didn't fix it
+        // - Checked daemon-lifecycle spawn code - FOUND IT!
+        //
+        // ROOT CAUSE:
+        // - Daemon spawned with Stdio::inherit() inherits parent's file descriptors
+        // - When parent runs via Command::output(), stdout/stderr are PIPES
+        // - Daemon holds pipes open even after parent exits
+        // - Command::output() waits for ALL pipe readers to close
+        // - Result: infinite hang
+        //
+        // FIX:
+        // - Use Stdio::null() for daemon stdout/stderr
+        // - Daemon no longer holds parent's pipes
+        // - Parent can exit immediately
+        // - Command::output() completes as expected
+        //
+        // TESTING:
+        // - cargo xtask e2e:queen (was hanging, now passes)
+        // - Direct: target/debug/rbee-keeper queen start (still works)
+        // - With output capture: works (no more hang)
+        // ============================================================
+
         let child = Command::new(&self.binary_path)
             .args(&self.args)
-            .stdout(Stdio::inherit())
-            .stderr(Stdio::inherit())
+            .stdout(Stdio::null()) // TEAM-164: Don't inherit parent's stdout pipe
+            .stderr(Stdio::null()) // TEAM-164: Don't inherit parent's stderr pipe
             .spawn()
             .context(format!("Failed to spawn daemon: {}", self.binary_path.display()))?;
 

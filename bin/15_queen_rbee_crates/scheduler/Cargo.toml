@@ -11,11 +11,12 @@ name = "queen_rbee_scheduler"
 path = "src/lib.rs"
 
 [dependencies]
+# TEAM-164: Pure business logic dependencies only (no HTTP)
 tokio = { workspace = true }
 anyhow = { workspace = true }
-thiserror = { workspace = true }
-tracing = { workspace = true }
-rbee-types = { path = "../../99_shared_crates/rbee-types" }
+observability-narration-core = { path = "../../99_shared_crates/narration-core" }
+job-registry = { path = "../../99_shared_crates/job-registry" }
+queen-rbee-hive-catalog = { path = "../hive-catalog" }
 
 [dev-dependencies]
 # Add dev dependencies as needed

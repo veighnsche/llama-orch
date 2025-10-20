@@ -10,6 +10,8 @@
 //! "The queen bee wakes up and immediately starts the http server."
 //! Port 8500 (default) - rbee-keeper checks GET /health to see if queen is running
 
+// TEAM-164: Migrated endpoints to dedicated modules/files
+mod health;
 mod http;
 
 use anyhow::Result;
@@ -29,6 +31,7 @@ const ACTION_START: &str = "start";
 const ACTION_LISTEN: &str = "listen";
 const ACTION_READY: &str = "ready";
 const ACTION_ERROR: &str = "error";
+const ACTION_SHUTDOWN: &str = "shutdown";
 
 #[derive(Parser, Debug)]
 #[command(name = "queen-rbee")]
@@ -111,32 +114,41 @@ fn create_router(
     job_registry: Arc<JobRegistry<String>>,
     hive_catalog: Arc<HiveCatalog>,
 ) -> axum::Router {
-    // TEAM-156: Create job state for endpoints with hive catalog
-    let job_state =
-        http::jobs::QueenJobState { registry: job_registry, hive_catalog: hive_catalog.clone() };
+    // TEAM-164: Create states for HTTP endpoints
+    let job_state = http::SchedulerState {
+        registry: job_registry,
+        hive_catalog: hive_catalog.clone(),
+    };
 
-    // TEAM-158: Create heartbeat state
-    // TEAM-161: Add device detector for first heartbeat flow
-    let device_detector = Arc::new(http::device_detector::HttpDeviceDetector::new());
-    let heartbeat_state = http::heartbeat::HeartbeatState {
+    let device_detector = Arc::new(http::HttpDeviceDetector::new());
+    let heartbeat_state = http::HeartbeatState {
         hive_catalog: hive_catalog.clone(),
         device_detector,
     };
 
-    // TEAM-160: Add hive endpoint state
-    let add_hive_state = hive_catalog;
+    let hive_start_state = hive_catalog;
 
     axum::Router::new()
-        .route("/health", get(http::health::handle_health))
-        .route("/shutdown", post(http::shutdown::handle_shutdown))
-        // TEAM-155: Job endpoints (dual-call pattern)
-        .route("/jobs", post(http::jobs::handle_create_job))
-        .route("/jobs/{job_id}/stream", get(http::jobs::handle_stream_job))
-        .with_state(job_state)
-        // TEAM-158: Heartbeat endpoint
-        .route("/heartbeat", post(http::heartbeat::handle_heartbeat))
+        .route("/health", get(health::handle_health))
+        .route("/shutdown", post(handle_shutdown))
+        .route("/jobs", post(http::handle_create_job))
+        .with_state(job_state.clone())
+        .route("/jobs/{job_id}/stream", get(http::handle_stream_job))
+        .with_state(job_state.registry)
+        .route("/heartbeat", post(http::handle_heartbeat))
         .with_state(heartbeat_state)
-        // TEAM-160: Add hive endpoint for E2E testing
-        .route("/add-hive", post(http::add_hive::handle_add_hive))
-        .with_state(add_hive_state)
+        .route("/hive/start", post(http::handle_hive_start))
+        .with_state(hive_start_state)
+}
+
+/// POST /shutdown - Graceful shutdown
+///
+/// TEAM-153: Created by TEAM-153
+/// TEAM-164: Migrated from http.rs to main.rs
+use axum::http::StatusCode;
+async fn handle_shutdown() -> StatusCode {
+    Narration::new(ACTOR_QUEEN_RBEE, ACTION_SHUTDOWN, "http-server")
+        .human("Received shutdown request, exiting gracefully")
+        .emit();
+    std::process::exit(0);
 }

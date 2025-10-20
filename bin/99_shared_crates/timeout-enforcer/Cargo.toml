@@ -10,6 +10,7 @@ edition = "2021"
 [dependencies]
 tokio = { version = "1.41", features = ["time", "macros", "rt"] }
 anyhow = "1.0"
+atty = "0.2" # TEAM-164: TTY detection to auto-disable countdown when stderr is captured
 
 [dev-dependencies]
 tokio = { version = "1.41", features = ["full"] }

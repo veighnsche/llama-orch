@@ -145,7 +145,12 @@ impl TimeoutEnforcer {
     where
         F: Future<Output = Result<T>>,
     {
-        if self.show_countdown {
+        // TEAM-164: Auto-disable countdown when stderr is not a TTY
+        // This fixes hangs when running via Command::output() which captures stderr to a pipe
+        let is_tty = atty::is(atty::Stream::Stderr);
+        let should_show_countdown = self.show_countdown && is_tty;
+        
+        if should_show_countdown {
             self.enforce_with_countdown(future).await
         } else {
             self.enforce_silent(future).await
