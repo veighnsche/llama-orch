@@ -74,21 +74,3 @@ pub use worker::{start_worker_heartbeat_task, WorkerHeartbeatConfig};
 
 // Re-export hive heartbeat functionality
 pub use hive::{start_hive_heartbeat_task, HiveHeartbeatConfig, WorkerStateProvider};
-
-// ============================================================================
-// Backward Compatibility Aliases
-// ============================================================================
-
-/// Backward compatibility alias for WorkerHeartbeatPayload
-#[deprecated(since = "0.2.0", note = "Use WorkerHeartbeatPayload instead")]
-pub type HeartbeatPayload = WorkerHeartbeatPayload;
-
-/// Backward compatibility alias for WorkerHeartbeatConfig
-#[deprecated(since = "0.2.0", note = "Use WorkerHeartbeatConfig instead")]
-pub type HeartbeatConfig = WorkerHeartbeatConfig;
-
-/// Backward compatibility alias for start_worker_heartbeat_task
-#[deprecated(since = "0.2.0", note = "Use start_worker_heartbeat_task instead")]
-pub fn start_heartbeat_task(config: WorkerHeartbeatConfig) -> tokio::task::JoinHandle<()> {
-    start_worker_heartbeat_task(config)
-}
