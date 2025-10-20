@@ -347,9 +347,8 @@ pub fn narrate_at_level(fields: NarrationFields, level: NarrationLevel) {
 
     // TEAM-153: Always output to stderr for guaranteed shell visibility
     // This works whether or not tracing subscriber is initialized
-    // Show provenance (which binary/crate emitted this)
-    let provenance = fields.emitted_by.as_deref().unwrap_or("unknown");
-    eprintln!("({}) {}", provenance, human);
+    // TEAM-155: Multi-line format for readability - [actor] on first line, message indented
+    eprintln!("[{}]\n  {}", fields.actor, human);
 
     // Emit structured event at appropriate level using macro (for tracing subscribers if configured)
     match tracing_level {

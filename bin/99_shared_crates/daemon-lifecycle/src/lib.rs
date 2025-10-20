@@ -19,7 +19,8 @@ use std::process::Stdio;
 use tokio::process::{Child, Command};
 
 // Actor and action constants
-const ACTOR_DAEMON_LIFECYCLE: &str = "daemon-lifecycle";
+// TEAM-155: Added emoji prefix for visual identification
+const ACTOR_DAEMON_LIFECYCLE: &str = "⚙️ daemon-lifecycle";
 const ACTION_SPAWN: &str = "spawn";
 const ACTION_FIND_BINARY: &str = "find_binary";
 

@@ -23,7 +23,8 @@ use tokio::time::sleep;
 pub use daemon_lifecycle;
 
 // Actor and action constants
-const ACTOR_RBEE_KEEPER: &str = "rbee-keeper";
+// TEAM-155: Actor shows parent binary / subcrate for accurate provenance
+const ACTOR_QUEEN_LIFECYCLE: &str = "🧑‍🌾 rbee-keeper / ⚙️ queen-lifecycle";
 const ACTION_QUEEN_CHECK: &str = "queen_check";
 const ACTION_QUEEN_START: &str = "queen_start";
 const ACTION_QUEEN_POLL: &str = "queen_poll";
@@ -82,13 +83,13 @@ impl QueenHandle {
     /// * `Err` - Failed to shutdown queen that we started
     pub async fn shutdown(self) -> Result<()> {
         if !self.started_by_us {
-            Narration::new(ACTOR_RBEE_KEEPER, ACTION_QUEEN_SHUTDOWN, &self.base_url)
+            Narration::new(ACTOR_QUEEN_LIFECYCLE, ACTION_QUEEN_SHUTDOWN, &self.base_url)
                 .human("Queen was already running, not shutting down")
                 .emit();
             return Ok(());
         }
         
-        Narration::new(ACTOR_RBEE_KEEPER, ACTION_QUEEN_SHUTDOWN, &self.base_url)
+        Narration::new(ACTOR_QUEEN_LIFECYCLE, ACTION_QUEEN_SHUTDOWN, &self.base_url)
             .human(format!("Shutting down queen (PID: {:?})", self.pid))
             .emit();
         
@@ -100,7 +101,7 @@ impl QueenHandle {
         
         match client.post(&shutdown_url).send().await {
             Ok(_) => {
-                Narration::new(ACTOR_RBEE_KEEPER, ACTION_QUEEN_SHUTDOWN, &self.base_url)
+                Narration::new(ACTOR_QUEEN_LIFECYCLE, ACTION_QUEEN_SHUTDOWN, &self.base_url)
                     .human("Queen shutdown via HTTP")
                     .emit();
                 return Ok(());
@@ -108,7 +109,7 @@ impl QueenHandle {
             Err(_) => {
                 // HTTP failed, try SIGTERM
                 if let Some(pid) = self.pid {
-                    Narration::new(ACTOR_RBEE_KEEPER, ACTION_QUEEN_SHUTDOWN, &pid.to_string())
+                    Narration::new(ACTOR_QUEEN_LIFECYCLE, ACTION_QUEEN_SHUTDOWN, &pid.to_string())
                         .human(format!("HTTP shutdown failed, sending SIGTERM to PID {}", pid))
                         .emit();
                     
@@ -117,7 +118,7 @@ impl QueenHandle {
                         .arg(pid.to_string())
                         .output();
                     
-                    Narration::new(ACTOR_RBEE_KEEPER, ACTION_QUEEN_SHUTDOWN, &pid.to_string())
+                    Narration::new(ACTOR_QUEEN_LIFECYCLE, ACTION_QUEEN_SHUTDOWN, &pid.to_string())
                         .human("Sent SIGTERM to queen")
                         .emit();
                 }
@@ -150,14 +151,14 @@ pub async fn ensure_queen_running(base_url: &str) -> Result<QueenHandle> {
     
     // Step 1: Check if queen is already running
     if is_queen_healthy(base_url).await? {
-        Narration::new(ACTOR_RBEE_KEEPER, ACTION_QUEEN_CHECK, base_url)
+        Narration::new(ACTOR_QUEEN_LIFECYCLE, ACTION_QUEEN_CHECK, base_url)
             .human("Queen is already running and healthy")
             .emit();
         return Ok(QueenHandle::already_running(base_url.to_string()));
     }
 
     // Step 2: Queen is not running, start it
-    Narration::new(ACTOR_RBEE_KEEPER, ACTION_QUEEN_START, "queen-rbee")
+    Narration::new(ACTOR_QUEEN_LIFECYCLE, ACTION_QUEEN_START, "queen-rbee")
         .human("⚠️  Queen is asleep, waking queen")
         .emit();
 
@@ -165,7 +166,7 @@ pub async fn ensure_queen_running(base_url: &str) -> Result<QueenHandle> {
     let queen_binary = DaemonManager::find_in_target("queen-rbee")
         .context("Failed to find queen-rbee binary in target directory")?;
 
-    Narration::new(ACTOR_RBEE_KEEPER, ACTION_QUEEN_START, &queen_binary.display().to_string())
+    Narration::new(ACTOR_QUEEN_LIFECYCLE, ACTION_QUEEN_START, &queen_binary.display().to_string())
         .human(format!("Found queen-rbee binary at {}", queen_binary.display()))
         .emit();
 
@@ -177,7 +178,7 @@ pub async fn ensure_queen_running(base_url: &str) -> Result<QueenHandle> {
         .context("Failed to spawn queen-rbee process")?;
 
     let pid_target = _child.id().map(|p| p.to_string()).unwrap_or_else(|| "unknown".to_string());
-    Narration::new(ACTOR_RBEE_KEEPER, ACTION_QUEEN_START, &pid_target)
+    Narration::new(ACTOR_QUEEN_LIFECYCLE, ACTION_QUEEN_START, &pid_target)
         .human("Queen-rbee process spawned, waiting for health check")
         .emit();
 
@@ -188,7 +189,7 @@ pub async fn ensure_queen_running(base_url: &str) -> Result<QueenHandle> {
     // Step 6: Success!
     let elapsed_ms = start_time.elapsed().as_millis() as u64;
     let pid = _child.id();
-    Narration::new(ACTOR_RBEE_KEEPER, ACTION_QUEEN_READY, "queen-rbee")
+    Narration::new(ACTOR_QUEEN_LIFECYCLE, ACTION_QUEEN_READY, "queen-rbee")
         .human("✅ Queen is awake and healthy")
         .duration_ms(elapsed_ms)
         .emit();
@@ -253,7 +254,7 @@ async fn poll_until_healthy(base_url: &str, timeout: Duration) -> Result<()> {
         
         // Check if we've exceeded timeout
         if start.elapsed() >= timeout {
-            Narration::new(ACTOR_RBEE_KEEPER, ACTION_QUEEN_START, "timeout")
+            Narration::new(ACTOR_QUEEN_LIFECYCLE, ACTION_QUEEN_START, "timeout")
                 .human(format!("Queen failed to become healthy within {} seconds", timeout.as_secs()))
                 .error_kind("startup_timeout")
                 .emit();
@@ -263,18 +264,18 @@ async fn poll_until_healthy(base_url: &str, timeout: Duration) -> Result<()> {
         // Try health check
         match is_queen_healthy(base_url).await {
             Ok(true) => {
-                Narration::new(ACTOR_RBEE_KEEPER, ACTION_QUEEN_POLL, "health")
+                Narration::new(ACTOR_QUEEN_LIFECYCLE, ACTION_QUEEN_POLL, "health")
                     .human(format!("Queen health check succeeded after {:?}", start.elapsed()))
                     .emit();
                 return Ok(());
             }
             Ok(false) => {
-                Narration::new(ACTOR_RBEE_KEEPER, ACTION_QUEEN_POLL, "health")
+                Narration::new(ACTOR_QUEEN_LIFECYCLE, ACTION_QUEEN_POLL, "health")
                     .human(format!("Polling queen health (attempt {}, delay {}ms)", attempt, delay.as_millis()))
                     .emit();
             }
             Err(e) => {
-                Narration::new(ACTOR_RBEE_KEEPER, ACTION_QUEEN_POLL, "health")
+                Narration::new(ACTOR_QUEEN_LIFECYCLE, ACTION_QUEEN_POLL, "health")
                     .human(format!("Queen health check failed: {}", e))
                     .error_kind("health_check_failed")
                     .emit();

@@ -15,22 +15,23 @@
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 /// Main worker daemon
-pub const ACTOR_LLM_WORKER_RBEE: &str = "llm-worker-rbee";
+// TEAM-155: Added emoji prefix for visual identification
+pub const ACTOR_LLM_WORKER_RBEE: &str = "🐝 llm-worker-rbee";
 
 /// Inference backend (Candle)
-pub const ACTOR_CANDLE_BACKEND: &str = "candle-backend";
+pub const ACTOR_CANDLE_BACKEND: &str = "🐝 candle-backend";
 
 /// HTTP server
-pub const ACTOR_HTTP_SERVER: &str = "http-server";
+pub const ACTOR_HTTP_SERVER: &str = "🐝 http-server";
 
 /// Device initialization
-pub const ACTOR_DEVICE_MANAGER: &str = "device-manager";
+pub const ACTOR_DEVICE_MANAGER: &str = "🐝 device-manager";
 
 /// Model loading
-pub const ACTOR_MODEL_LOADER: &str = "model-loader";
+pub const ACTOR_MODEL_LOADER: &str = "🐝 model-loader";
 
 /// Tokenization
-pub const ACTOR_TOKENIZER: &str = "tokenizer";
+pub const ACTOR_TOKENIZER: &str = "🐝 tokenizer";
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 // ACTIONS — What's happening

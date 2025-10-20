@@ -22,7 +22,7 @@ use std::convert::Infallible;
 use std::sync::Arc;
 
 // TEAM-155: Actor and action constants for narration
-const ACTOR_QUEEN_HTTP: &str = "queen-http";
+const ACTOR_QUEEN_HTTP: &str = "👑 queen-http";
 const ACTION_JOB_CREATE: &str = "job_create";
 const ACTION_JOB_STREAM: &str = "job_stream";
 const ACTION_ERROR: &str = "error";

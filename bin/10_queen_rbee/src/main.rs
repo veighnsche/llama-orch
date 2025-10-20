@@ -21,7 +21,8 @@ use std::net::SocketAddr;
 use std::sync::Arc;
 
 // Actor and action constants
-const ACTOR_QUEEN_RBEE: &str = "queen-rbee";
+// TEAM-155: Added emoji prefix for visual identification
+const ACTOR_QUEEN_RBEE: &str = "👑 queen-rbee";
 const ACTION_START: &str = "start";
 const ACTION_LISTEN: &str = "listen";
 const ACTION_READY: &str = "ready";
