@@ -1,12 +1,17 @@
 //! rbee-keeper - CLI for managing rbee infrastructure
 //!
-//! TEAM-151: Migrated from old.rbee-keeper to numbered architecture
+//! TEAM-151: Migrated CLI from old.rbee-keeper to numbered architecture
+//! TEAM-151: Added health_check module for queen health probing
+//! TEAM-151: Added test-health command for debugging
+//!
 //! This binary contains only CLI parsing; all command logic is in rbee-keeper-commands crate
 //!
 //! Entry point for the happy flow:
 //! ```bash
 //! rbee-keeper infer "hello" --model HF:author/minillama
 //! ```
+
+mod health_check;
 
 use anyhow::Result;
 use clap::{Parser, Subcommand};
@@ -86,6 +91,13 @@ pub enum Commands {
         /// Install to system paths (requires sudo)
         #[arg(long)]
         system: bool,
+    },
+
+    /// Test queen-rbee health check (for debugging)
+    TestHealth {
+        /// Queen URL (default: http://localhost:8500)
+        #[arg(long, default_value = "http://localhost:8500")]
+        queen_url: String,
     },
 }
 
@@ -334,6 +346,26 @@ async fn handle_command(cli: Cli) -> Result<()> {
             println!("TODO: Implement install command");
             println!("  System: {}", system);
             Ok(())
+        }
+
+        Commands::TestHealth { queen_url } => {
+            println!("🔍 Testing queen-rbee health at {}", queen_url);
+            
+            match health_check::is_queen_healthy(&queen_url).await {
+                Ok(true) => {
+                    println!("✅ queen-rbee is running and healthy");
+                    Ok(())
+                }
+                Ok(false) => {
+                    println!("❌ queen-rbee is not running (connection refused)");
+                    println!("   Start queen with: queen-rbee --port 8500");
+                    Ok(())
+                }
+                Err(e) => {
+                    println!("⚠️  Health check error: {}", e);
+                    Err(e)
+                }
+            }
         }
     }
 }

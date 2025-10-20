@@ -1,15 +1,48 @@
-// TEAM-135: Created by TEAM-135 (BDD scaffolding)
-//\! BDD World for rbee-keeper integration tests
+// Created by: TEAM-135 (BDD scaffolding)
+// Updated by: TEAM-151 (2025-10-20) - Added health check state
+//! BDD World for rbee-keeper integration tests
 
 use cucumber::World;
+use std::process::Child;
 
-#[derive(Debug, Default, World)]
+#[derive(Debug, World)]
 pub struct BddWorld {
     /// Last validation result
     pub last_result: Option<Result<(), String>>,
     
-    // TODO: Add integration test state fields here
-    // e.g., HTTP client, process handles, temp directories
+    /// Queen URL for health checks
+    pub queen_url: String,
+    
+    /// Queen process handle (if started by test)
+    pub queen_process: Option<Child>,
+    
+    /// Health check result
+    pub health_check_result: Option<Result<bool, String>>,
+    
+    /// Expected message for validation
+    pub expected_message: Option<String>,
+}
+
+impl Default for BddWorld {
+    fn default() -> Self {
+        Self {
+            last_result: None,
+            queen_url: "http://localhost:8500".to_string(),
+            queen_process: None,
+            health_check_result: None,
+            expected_message: None,
+        }
+    }
+}
+
+impl Drop for BddWorld {
+    fn drop(&mut self) {
+        // Clean up: kill queen process if we started it
+        if let Some(mut child) = self.queen_process.take() {
+            let _ = child.kill();
+            let _ = child.wait();
+        }
+    }
 }
 
 impl BddWorld {

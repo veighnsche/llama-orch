@@ -1,6 +1,8 @@
 //! Health check functionality for queen-rbee
 //!
-//! TEAM-151: Migrated from old.queen-rbee/src/http/health.rs
+//! Created by: TEAM-043
+//! Refactored by: TEAM-052
+//! Migrated by: TEAM-151 (2025-10-20)
 //!
 //! This crate provides the health check endpoint for queen-rbee.
 //! Used by rbee-keeper to check if queen is running before sending commands.

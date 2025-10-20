@@ -1,6 +1,9 @@
 //! queen-rbee - Orchestrator Daemon
 //!
 //! TEAM-151: Migrated from old.queen-rbee
+//! TEAM-151: Cleaned up main.rs (97 → 77 lines)
+//! TEAM-151: Wired up src/http/ folder with health endpoint
+//! TEAM-151: Health endpoint active on GET /health
 //!
 //! # Happy Flow
 //! "The queen bee wakes up and immediately starts the http server."

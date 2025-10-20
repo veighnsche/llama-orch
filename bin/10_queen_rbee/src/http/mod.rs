@@ -1,5 +1,9 @@
 //! HTTP API for queen-rbee orchestrator daemon
 //!
+//! Created by: TEAM-043
+//! Refactored by: TEAM-052
+//! Migrated by: TEAM-151 (2025-10-20)
+//!
 //! TEAM-151: Temporarily only health endpoint is active
 //! Other endpoints require registries to be migrated first
 //!
