@@ -29,15 +29,13 @@
 //! rbee-keeper infer "hello" --model HF:author/minillama
 //! ```
 
-mod actions;
 mod config;
 mod job_client;
-mod narration_stream;
+mod operations;
 
-use actions::*;
 use config::Config;
 use job_client::submit_and_stream_job;
-use narration_stream::stream_narration_to_stdout;
+use operations::*;
 use anyhow::Result;
 use clap::{Parser, Subcommand};
 use observability_narration_core::Narration;
@@ -85,13 +83,35 @@ pub enum Commands {
 
     /// Run inference
     Infer {
+        /// Hive ID to run inference on
+        #[arg(long, default_value = "localhost")]
+        hive_id: String,
+        /// Model identifier
         #[arg(long)]
         model: String,
+        /// Input prompt
         prompt: String,
+        /// Maximum tokens to generate
         #[arg(long, default_value = "20")]
         max_tokens: u32,
+        /// Sampling temperature
         #[arg(long, default_value = "0.7")]
         temperature: f32,
+        /// Nucleus sampling (top_p)
+        #[arg(long)]
+        top_p: Option<f32>,
+        /// Top-k sampling
+        #[arg(long)]
+        top_k: Option<u32>,
+        /// Device type: cpu, cuda, or metal (filters compatible workers)
+        #[arg(long)]
+        device: Option<String>,
+        /// Specific worker ID to use
+        #[arg(long)]
+        worker_id: Option<String>,
+        /// Stream tokens as generated
+        #[arg(long, default_value = "true")]
+        stream: bool,
     },
 }
 
@@ -130,11 +150,14 @@ pub enum HiveAction {
 #[derive(Subcommand)]
 pub enum WorkerAction {
     Spawn {
+        /// Model identifier
         #[arg(long)]
         model: String,
+        /// Worker type: cpu, cuda, or metal
         #[arg(long)]
-        backend: String,
-        #[arg(long)]
+        worker: String,
+        /// Device ID (GPU index for cuda/metal, ignored for cpu)
+        #[arg(long, default_value = "0")]
         device: u32,
     },
     List,
@@ -202,31 +225,31 @@ async fn handle_command(cli: Cli) -> Result<()> {
         Commands::Hive { action } => {
             let job_payload = match action {
                 HiveAction::Start { ref id } => serde_json::json!({
-                    "operation": "hive_start",
+                    "operation": OP_HIVE_START,
                     "hive_id": id
                 }),
                 HiveAction::Stop { ref id } => serde_json::json!({
-                    "operation": "hive_stop",
+                    "operation": OP_HIVE_STOP,
                     "hive_id": id
                 }),
                 HiveAction::List => serde_json::json!({
-                    "operation": "hive_list"
+                    "operation": OP_HIVE_LIST
                 }),
                 HiveAction::Get { ref id } => serde_json::json!({
-                    "operation": "hive_get",
+                    "operation": OP_HIVE_GET,
                     "id": id
                 }),
                 HiveAction::Create { ref host, port } => serde_json::json!({
-                    "operation": "hive_create",
+                    "operation": OP_HIVE_CREATE,
                     "host": host,
                     "port": port
                 }),
                 HiveAction::Update { ref id } => serde_json::json!({
-                    "operation": "hive_update",
+                    "operation": OP_HIVE_UPDATE,
                     "id": id
                 }),
                 HiveAction::Delete { ref id } => serde_json::json!({
-                    "operation": "hive_delete",
+                    "operation": OP_HIVE_DELETE,
                     "id": id
                 }),
             };
@@ -235,24 +258,24 @@ async fn handle_command(cli: Cli) -> Result<()> {
 
         Commands::Worker { hive_id, action } => {
             let job_payload = match action {
-                WorkerAction::Spawn { ref model, ref backend, device } => serde_json::json!({
-                    "operation": "worker_spawn",
+                WorkerAction::Spawn { ref model, ref worker, device } => serde_json::json!({
+                    "operation": OP_WORKER_SPAWN,
                     "hive_id": hive_id,
                     "model": model,
-                    "backend": backend,
+                    "worker": worker,
                     "device": device
                 }),
                 WorkerAction::List => serde_json::json!({
-                    "operation": "worker_list",
+                    "operation": OP_WORKER_LIST,
                     "hive_id": hive_id
                 }),
                 WorkerAction::Get { ref id } => serde_json::json!({
-                    "operation": "worker_get",
+                    "operation": OP_WORKER_GET,
                     "hive_id": hive_id,
                     "id": id
                 }),
                 WorkerAction::Delete { ref id } => serde_json::json!({
-                    "operation": "worker_delete",
+                    "operation": OP_WORKER_DELETE,
                     "hive_id": hive_id,
                     "id": id
                 }),
@@ -263,21 +286,21 @@ async fn handle_command(cli: Cli) -> Result<()> {
         Commands::Model { hive_id, action } => {
             let job_payload = match action {
                 ModelAction::Download { ref model } => serde_json::json!({
-                    "operation": "model_download",
+                    "operation": OP_MODEL_DOWNLOAD,
                     "hive_id": hive_id,
                     "model": model
                 }),
                 ModelAction::List => serde_json::json!({
-                    "operation": "model_list",
+                    "operation": OP_MODEL_LIST,
                     "hive_id": hive_id
                 }),
                 ModelAction::Get { ref id } => serde_json::json!({
-                    "operation": "model_get",
+                    "operation": OP_MODEL_GET,
                     "hive_id": hive_id,
                     "id": id
                 }),
                 ModelAction::Delete { ref id } => serde_json::json!({
-                    "operation": "model_delete",
+                    "operation": OP_MODEL_DELETE,
                     "hive_id": hive_id,
                     "id": id
                 }),
@@ -285,14 +308,42 @@ async fn handle_command(cli: Cli) -> Result<()> {
             submit_and_stream_job(&client, &queen_url, job_payload).await
         },
 
-        Commands::Infer { ref model, ref prompt, max_tokens, temperature } => {
-            let job_payload = serde_json::json!({
-                "operation": "infer",
+        Commands::Infer { 
+            ref hive_id,
+            ref model, 
+            ref prompt, 
+            max_tokens, 
+            temperature,
+            top_p,
+            top_k,
+            ref device,
+            ref worker_id,
+            stream,
+        } => {
+            let mut job_payload = serde_json::json!({
+                "operation": OP_INFER,
+                "hive_id": hive_id,
                 "model": model,
                 "prompt": prompt,
                 "max_tokens": max_tokens,
                 "temperature": temperature,
+                "stream": stream,
             });
+            
+            // Add optional parameters if provided
+            if let Some(tp) = top_p {
+                job_payload["top_p"] = serde_json::json!(tp);
+            }
+            if let Some(tk) = top_k {
+                job_payload["top_k"] = serde_json::json!(tk);
+            }
+            if let Some(ref dev) = device {
+                job_payload["device"] = serde_json::json!(dev);
+            }
+            if let Some(ref wid) = worker_id {
+                job_payload["worker_id"] = serde_json::json!(wid);
+            }
+            
             submit_and_stream_job(&client, &queen_url, job_payload).await
         }
     }

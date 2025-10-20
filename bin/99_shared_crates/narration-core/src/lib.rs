@@ -248,6 +248,12 @@ pub struct NarrationFields {
     pub pool_id: Option<String>,
     pub replica_id: Option<String>,
     pub worker_id: Option<String>,
+    pub hive_id: Option<String>,
+    
+    // Operation context (for job-based systems)
+    /// The specific operation being performed (e.g., "worker_spawn", "infer", "model_download")
+    /// Unlike action (which is static), this can be dynamic and operation-specific
+    pub operation: Option<String>,
 
     // Contextual fields (ORCH-3304)
     pub error_kind: Option<String>,
@@ -302,6 +308,8 @@ macro_rules! emit_event {
             pool_id = $fields.pool_id.as_deref(),
             replica_id = $fields.replica_id.as_deref(),
             worker_id = $fields.worker_id.as_deref(),
+            hive_id = $fields.hive_id.as_deref(),
+            operation = $fields.operation.as_deref(),
             error_kind = $fields.error_kind.as_deref(),
             retry_after_ms = $fields.retry_after_ms,
             backoff_ms = $fields.backoff_ms,

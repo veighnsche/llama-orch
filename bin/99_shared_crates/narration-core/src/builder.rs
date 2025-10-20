@@ -114,6 +114,19 @@ impl Narration {
         self
     }
 
+    /// Set the hive ID.
+    pub fn hive_id(mut self, id: impl Into<String>) -> Self {
+        self.fields.hive_id = Some(id.into());
+        self
+    }
+
+    /// Set the operation name (e.g., "worker_spawn", "infer", "model_download").
+    /// This is for dynamic operation names in job-based systems.
+    pub fn operation(mut self, op: impl Into<String>) -> Self {
+        self.fields.operation = Some(op.into());
+        self
+    }
+
     /// Set the cute narration message (requires `cute-mode` feature).
     #[cfg(feature = "cute-mode")]
     pub fn cute(mut self, msg: impl Into<String>) -> Self {
