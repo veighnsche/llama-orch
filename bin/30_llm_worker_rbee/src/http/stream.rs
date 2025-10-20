@@ -1,10 +1,10 @@
-//! GET /v1/inference/{job_id}/stream - Stream job results via SSE
+//! GET /`v1/inference/{job_id}/stream` - Stream job results via SSE
 //!
 //! Created by: TEAM-154 (dual-call pattern implementation)
 //!
 //! This endpoint implements the second half of the dual-call pattern:
-//! 1. POST /v1/inference creates job and returns job_id + sse_url
-//! 2. GET /v1/inference/{job_id}/stream streams results via SSE (this file)
+//! 1. POST /v1/inference creates job and returns `job_id` + `sse_url`
+//! 2. GET /`v1/inference/{job_id}/stream` streams results via SSE (this file)
 
 use crate::http::routes::WorkerState;
 use crate::http::sse::InferenceEvent;
@@ -21,7 +21,7 @@ use tracing::{info, warn};
 
 type EventStream = Box<dyn Stream<Item = Result<Event, Infallible>> + Send + Unpin>;
 
-/// Handle GET /v1/inference/{job_id}/stream
+/// Handle GET /`v1/inference/{job_id}/stream`
 ///
 /// TEAM-154: New endpoint for dual-call pattern
 /// - Retrieves job from registry
@@ -41,14 +41,14 @@ pub async fn handle_stream_job(
             actor: ACTOR_HTTP_SERVER,
             action: ACTION_ERROR,
             target: job_id.clone(),
-            human: format!("Job {} not found", job_id),
-            cute: Some(format!("Can't find job {}! 😟", job_id)),
+            human: format!("Job {job_id} not found"),
+            cute: Some(format!("Can't find job {job_id}! 😟")),
             error_kind: Some("job_not_found".to_string()),
             job_id: Some(job_id.clone()),
             ..Default::default()
         });
 
-        return Err((axum::http::StatusCode::NOT_FOUND, format!("Job {} not found", job_id)));
+        return Err((axum::http::StatusCode::NOT_FOUND, format!("Job {job_id} not found")));
     }
 
     // Check job state
@@ -59,8 +59,8 @@ pub async fn handle_stream_job(
             actor: ACTOR_HTTP_SERVER,
             action: ACTION_ERROR,
             target: job_id.clone(),
-            human: format!("Job {} failed: {}", job_id, error),
-            cute: Some(format!("Job {} failed! 😟", job_id)),
+            human: format!("Job {job_id} failed: {error}"),
+            cute: Some(format!("Job {job_id} failed! 😟")),
             error_kind: Some("job_failed".to_string()),
             job_id: Some(job_id.clone()),
             ..Default::default()
@@ -68,7 +68,7 @@ pub async fn handle_stream_job(
 
         return Err((
             axum::http::StatusCode::INTERNAL_SERVER_ERROR,
-            format!("Job {} failed: {}", job_id, error),
+            format!("Job {job_id} failed: {error}"),
         ));
     }
 
@@ -81,8 +81,8 @@ pub async fn handle_stream_job(
             actor: ACTOR_HTTP_SERVER,
             action: ACTION_ERROR,
             target: job_id.clone(),
-            human: format!("Job {} has no token receiver", job_id),
-            cute: Some(format!("Job {} isn't ready yet! 😟", job_id)),
+            human: format!("Job {job_id} has no token receiver"),
+            cute: Some(format!("Job {job_id} isn't ready yet! 😟")),
             error_kind: Some("no_token_receiver".to_string()),
             job_id: Some(job_id.clone()),
             ..Default::default()
@@ -90,7 +90,7 @@ pub async fn handle_stream_job(
 
         (
             axum::http::StatusCode::INTERNAL_SERVER_ERROR,
-            format!("Job {} has no token receiver", job_id),
+            format!("Job {job_id} has no token receiver"),
         )
     })?;
 
@@ -98,8 +98,8 @@ pub async fn handle_stream_job(
         actor: ACTOR_HTTP_SERVER,
         action: "stream_started",
         target: job_id.clone(),
-        human: format!("SSE stream started for job {}", job_id),
-        cute: Some(format!("Streaming job {} now! 📡", job_id)),
+        human: format!("SSE stream started for job {job_id}"),
+        cute: Some(format!("Streaming job {job_id} now! 📡")),
         job_id: Some(job_id.clone()),
         ..Default::default()
     });

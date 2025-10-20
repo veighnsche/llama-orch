@@ -10,6 +10,7 @@ use std::sync::Arc;
 use tempfile::TempDir;
 
 #[derive(World)]
+#[derive(Default)]
 pub struct BddWorld {
     /// Last validation result
     pub last_result: Option<Result<(), String>>,
@@ -43,19 +44,6 @@ impl std::fmt::Debug for BddWorld {
     }
 }
 
-impl Default for BddWorld {
-    fn default() -> Self {
-        Self {
-            last_result: None,
-            temp_dir: None,
-            catalog_path: None,
-            hive_count: 0,
-            hive_catalog: None,
-            current_hive_id: None,
-            heartbeat_payload: None,
-        }
-    }
-}
 
 impl BddWorld {
     /// Store validation result

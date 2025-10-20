@@ -15,7 +15,7 @@ use serde::{Deserialize, Serialize};
 
 /// Execute request parameters
 ///
-/// TEAM-154: Removed job_id field - server generates it in dual-call pattern
+/// TEAM-154: Removed `job_id` field - server generates it in dual-call pattern
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct ExecuteRequest {
     /// Prompt text (1-32768 characters)

@@ -1,8 +1,8 @@
 // TEAM-149: Created for real-time streaming implementation
-//! Generation engine that processes requests in spawn_blocking
+//! Generation engine that processes requests in `spawn_blocking`
 //!
 //! This module implements the generation loop pattern from candle-vllm:
-//! - Runs in spawn_blocking to avoid blocking async runtime
+//! - Runs in `spawn_blocking` to avoid blocking async runtime
 //! - Processes requests sequentially from the queue
 //! - Sends tokens through channels as they're generated
 //! - Locks backend only for the duration of one request
@@ -20,7 +20,7 @@ use tokio::sync::mpsc;
 
 /// Generation engine that processes inference requests
 ///
-/// This runs in a spawn_blocking task to avoid blocking the async runtime.
+/// This runs in a `spawn_blocking` task to avoid blocking the async runtime.
 /// It pulls requests from the queue and generates tokens one by one,
 /// sending them through channels to the HTTP handlers.
 pub struct GenerationEngine {
@@ -46,7 +46,7 @@ impl GenerationEngine {
     /// This spawns a blocking task that processes requests sequentially.
     /// The task runs until the request channel is closed.
     ///
-    /// CRITICAL: This uses spawn_blocking to move CPU-intensive work
+    /// CRITICAL: This uses `spawn_blocking` to move CPU-intensive work
     /// off the async runtime, preventing it from blocking HTTP handlers.
     pub fn start(mut self) {
         tokio::task::spawn_blocking(move || {
@@ -57,12 +57,9 @@ impl GenerationEngine {
 
             loop {
                 // Wait for next request (blocking is OK here, we're in spawn_blocking)
-                let request = match rt.block_on(self.request_rx.recv()) {
-                    Some(req) => req,
-                    None => {
-                        tracing::info!("Request channel closed, stopping generation engine");
-                        break;
-                    }
+                let request = if let Some(req) = rt.block_on(self.request_rx.recv()) { req } else {
+                    tracing::info!("Request channel closed, stopping generation engine");
+                    break;
                 };
 
                 tracing::info!(
@@ -108,7 +105,7 @@ impl GenerationEngine {
     /// 2. Resets the KV cache
     /// 3. Generates tokens one by one
     /// 4. Sends each token immediately through the channel
-    /// 5. Stops on EOS or max_tokens
+    /// 5. Stops on EOS or `max_tokens`
     ///
     /// CRITICAL: Tokens are sent as soon as they're decoded, not batched!
     fn generate_streaming(

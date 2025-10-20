@@ -38,7 +38,7 @@ use std::sync::Arc;
 /// Shared state for worker routes
 ///
 /// TEAM-154: Combines queue and registry for dual-call pattern
-/// Registry is generic over TokenResponse type
+/// Registry is generic over `TokenResponse` type
 #[derive(Clone)]
 pub struct WorkerState {
     pub queue: Arc<RequestQueue>,
@@ -59,8 +59,8 @@ pub struct WorkerState {
 /// TEAM-035: Added /v1/loading/progress and renamed /execute to /v1/inference
 /// TEAM-045: Added /v1/ready endpoint
 /// TEAM-102: Added authentication middleware with `expected_token`
-/// TEAM-149: Changed to accept RequestQueue instead of backend
-/// TEAM-154: Added JobRegistry for dual-call pattern
+/// TEAM-149: Changed to accept `RequestQueue` instead of backend
+/// TEAM-154: Added `JobRegistry` for dual-call pattern
 pub fn create_router(
     queue: Arc<RequestQueue>,
     registry: Arc<JobRegistry<TokenResponse>>,

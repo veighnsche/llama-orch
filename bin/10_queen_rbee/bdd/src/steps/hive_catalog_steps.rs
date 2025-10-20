@@ -4,7 +4,6 @@
 
 use cucumber::{given, then, when};
 use queen_rbee_hive_catalog::HiveCatalog;
-use std::path::PathBuf;
 use tempfile::TempDir;
 
 use super::world::BddWorld;

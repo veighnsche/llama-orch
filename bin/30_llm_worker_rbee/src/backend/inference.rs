@@ -30,7 +30,7 @@ use tokenizers::Tokenizer;
 /// instead of building layers from scratch.
 /// TEAM-015: Refactored into focused modules
 /// TEAM-017: Changed to enum pattern for Candle idiomaticity
-/// TEAM-149: Made fields pub(crate) for generation_engine access
+/// TEAM-149: Made fields pub(crate) for `generation_engine` access
 pub struct CandleInferenceBackend {
     pub(crate) model: Model,
     pub(crate) tokenizer: Tokenizer,

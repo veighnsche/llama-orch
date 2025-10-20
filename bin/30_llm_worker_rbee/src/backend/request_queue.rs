@@ -14,13 +14,13 @@ use tokio::sync::mpsc;
 /// A generation request from an HTTP handler
 #[derive(Debug)]
 pub struct GenerationRequest {
-    /// Unique request ID (job_id from HTTP request)
+    /// Unique request ID (`job_id` from HTTP request)
     pub request_id: String,
 
     /// Input prompt to generate from
     pub prompt: String,
 
-    /// Sampling configuration (temperature, top_p, etc.)
+    /// Sampling configuration (temperature, `top_p`, etc.)
     pub config: SamplingConfig,
 
     /// Channel to send token responses back to HTTP handler
@@ -65,7 +65,7 @@ impl RequestQueue {
     pub fn add_request(&self, request: GenerationRequest) -> Result<(), String> {
         self.tx
             .send(request)
-            .map_err(|e| format!("Queue send failed (generation engine stopped): {}", e))
+            .map_err(|e| format!("Queue send failed (generation engine stopped): {e}"))
     }
 }
 

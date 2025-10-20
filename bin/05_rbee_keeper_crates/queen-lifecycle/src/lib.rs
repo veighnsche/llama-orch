@@ -99,14 +99,14 @@ impl QueenHandle {
             Err(_) => {
                 // HTTP failed, try SIGTERM
                 if let Some(pid) = self.pid {
-                    Narration::new(ACTOR_QUEEN_LIFECYCLE, ACTION_QUEEN_SHUTDOWN, &pid.to_string())
+                    Narration::new(ACTOR_QUEEN_LIFECYCLE, ACTION_QUEEN_SHUTDOWN, pid.to_string())
                         .human(format!("HTTP shutdown failed, sending SIGTERM to PID {}", pid))
                         .emit();
 
                     // Use kill command (cross-platform via nix crate would be better, but this works)
                     let _ = std::process::Command::new("kill").arg(pid.to_string()).output();
 
-                    Narration::new(ACTOR_QUEEN_LIFECYCLE, ACTION_QUEEN_SHUTDOWN, &pid.to_string())
+                    Narration::new(ACTOR_QUEEN_LIFECYCLE, ACTION_QUEEN_SHUTDOWN, pid.to_string())
                         .human("Sent SIGTERM to queen")
                         .emit();
                 }
@@ -154,7 +154,7 @@ pub async fn ensure_queen_running(base_url: &str) -> Result<QueenHandle> {
     let queen_binary = DaemonManager::find_in_target("queen-rbee")
         .context("Failed to find queen-rbee binary in target directory")?;
 
-    Narration::new(ACTOR_QUEEN_LIFECYCLE, ACTION_QUEEN_START, &queen_binary.display().to_string())
+    Narration::new(ACTOR_QUEEN_LIFECYCLE, ACTION_QUEEN_START, queen_binary.display().to_string())
         .human(format!("Found queen-rbee binary at {}", queen_binary.display()))
         .emit();
 

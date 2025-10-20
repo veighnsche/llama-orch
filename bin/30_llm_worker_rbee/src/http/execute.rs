@@ -4,7 +4,7 @@
 //! Modified by: TEAM-035 (renamed to /v1/inference, added [DONE] marker)
 //! Modified by: TEAM-039 (added narration channel for real-time user visibility)
 //! Modified by: TEAM-149 (real-time streaming with request queue)
-//! Modified by: TEAM-150 (fixed streaming hang - removed blocking narration_stream)
+//! Modified by: TEAM-150 (fixed streaming hang - removed blocking `narration_stream`)
 //! Modified by: TEAM-154 (dual-call pattern - POST returns JSON, not SSE)
 
 use crate::backend::request_queue::GenerationRequest;
@@ -26,12 +26,12 @@ pub struct CreateJobResponse {
     pub sse_url: String,
 }
 
-/// Handle POST /v1/inference - Create job and return job_id + sse_url
+/// Handle POST /v1/inference - Create job and return `job_id` + `sse_url`
 ///
 /// TEAM-154: Changed from direct SSE to dual-call pattern
-/// - Server generates job_id (client doesn't provide it)
-/// - Returns JSON with job_id and sse_url
-/// - Client then calls GET /v1/inference/{job_id}/stream for SSE
+/// - Server generates `job_id` (client doesn't provide it)
+/// - Returns JSON with `job_id` and `sse_url`
+/// - Client then calls GET /`v1/inference/{job_id}/stream` for SSE
 ///
 /// TEAM-017: Updated to use Mutex-wrapped backend for &mut self
 /// TEAM-035: Added [DONE] marker for `OpenAI` compatibility
@@ -67,8 +67,8 @@ pub async fn handle_create_job(
         actor: ACTOR_HTTP_SERVER,
         action: ACTION_EXECUTE_REQUEST,
         target: job_id.clone(),
-        human: format!("Inference job {} created and validated", job_id),
-        cute: Some(format!("Job {} looks good, let's go! ✅", job_id)),
+        human: format!("Inference job {job_id} created and validated"),
+        cute: Some(format!("Job {job_id} looks good, let's go! ✅")),
         job_id: Some(job_id.clone()),
         ..Default::default()
     });
@@ -108,8 +108,8 @@ pub async fn handle_create_job(
             actor: ACTOR_HTTP_SERVER,
             action: ACTION_ERROR,
             target: job_id.clone(),
-            human: format!("Failed to queue request for job {}: {}", job_id, e),
-            cute: Some(format!("Oh no! Couldn't queue job {}: {} 😟", job_id, e)),
+            human: format!("Failed to queue request for job {job_id}: {e}"),
+            cute: Some(format!("Oh no! Couldn't queue job {job_id}: {e} 😟")),
             error_kind: Some("queue_failed".to_string()),
             job_id: Some(job_id.clone()),
             ..Default::default()
@@ -120,7 +120,7 @@ pub async fn handle_create_job(
 
     // TEAM-154: Return job_id and sse_url (JSON response, not SSE!)
     // Client will then call GET /v1/inference/{job_id}/stream for SSE
-    let sse_url = format!("/v1/inference/{}/stream", job_id);
+    let sse_url = format!("/v1/inference/{job_id}/stream");
 
     info!(job_id = %job_id, sse_url = %sse_url, "Job created, returning SSE URL");
 
@@ -128,8 +128,8 @@ pub async fn handle_create_job(
         actor: ACTOR_HTTP_SERVER,
         action: "job_created",
         target: job_id.clone(),
-        human: format!("Job {} created, SSE URL: {}", job_id, sse_url),
-        cute: Some(format!("Job {} is ready! Stream at {} 🎉", job_id, sse_url)),
+        human: format!("Job {job_id} created, SSE URL: {sse_url}"),
+        cute: Some(format!("Job {job_id} is ready! Stream at {sse_url} 🎉")),
         job_id: Some(job_id.clone()),
         ..Default::default()
     });

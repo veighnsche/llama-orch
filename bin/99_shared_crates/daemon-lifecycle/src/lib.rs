@@ -52,7 +52,7 @@ impl DaemonManager {
         Narration::new(
             ACTOR_DAEMON_LIFECYCLE,
             ACTION_SPAWN,
-            &self.binary_path.display().to_string(),
+            self.binary_path.display().to_string(),
         )
         .human(format!(
             "Spawning daemon: {} with args: {:?}",
