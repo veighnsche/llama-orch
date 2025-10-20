@@ -21,14 +21,6 @@ members = [
     # BINARY-SPECIFIC CRATES (TEAM-135: New architecture)
     # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
     
-    # rbee-keeper crates
-    "bin/05_rbee_keeper_crates/config",
-    "bin/05_rbee_keeper_crates/config/bdd",
-    # TEAM-158: Deleted commands crate - over-engineered, see commands/DELETED_WHY.md
-    "bin/05_rbee_keeper_crates/queen-lifecycle",
-    "bin/05_rbee_keeper_crates/queen-lifecycle/bdd",
-    "bin/05_rbee_keeper_crates/polling",
-    
     # queen-rbee crates
     "bin/15_queen_rbee_crates/ssh-client",
     "bin/15_queen_rbee_crates/ssh-client/bdd",

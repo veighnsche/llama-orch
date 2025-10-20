@@ -32,10 +32,12 @@
 mod config;
 mod job_client;
 mod operations;
+mod queen_lifecycle;
 
 use config::Config;
 use job_client::submit_and_stream_job;
 use operations::*;
+use queen_lifecycle::ensure_queen_running;
 use anyhow::Result;
 use clap::{Parser, Subcommand};
 use observability_narration_core::Narration;
@@ -193,8 +195,7 @@ async fn handle_command(cli: Cli) -> Result<()> {
     match cli.command {
         Commands::Queen { action } => match action {
             QueenAction::Start => {
-                let queen_handle =
-                    rbee_keeper_queen_lifecycle::ensure_queen_running(&queen_url).await?;
+                let queen_handle = ensure_queen_running(&queen_url).await?;
                 Narration::new(ACTOR_RBEE_KEEPER, ACTION_QUEEN_START, queen_handle.base_url())
                     .human(format!("✅ Queen started on {}", queen_handle.base_url()))
                     .emit();

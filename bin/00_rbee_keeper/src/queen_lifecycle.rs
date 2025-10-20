@@ -1,16 +1,8 @@
-// TEAM-135: Created by TEAM-135 (scaffolding)
-// TEAM-152: Implemented ensure_queen_running with auto-start and health polling
-// TEAM-152: Replaced all tracing with inline narration for observability
-// Purpose: Queen-rbee lifecycle management for rbee-keeper
-
-#![warn(missing_docs)]
-#![warn(clippy::all)]
-
-//! rbee-keeper-queen-lifecycle
+//! Queen-rbee lifecycle management
 //!
 //! Manages the lifecycle of queen-rbee daemon from rbee-keeper CLI.
 //!
-//! This crate uses the shared `daemon-lifecycle` crate for common lifecycle operations.
+//! This module uses the shared `daemon-lifecycle` crate for common lifecycle operations.
 //! All observability is handled through narration-core (no tracing).
 
 use anyhow::{Context, Result};
@@ -20,17 +12,16 @@ use std::time::Duration;
 use timeout_enforcer::TimeoutEnforcer;
 use tokio::time::sleep;
 
-// Re-export daemon-lifecycle for convenience
-pub use daemon_lifecycle;
+use crate::operations::{ACTION_QUEEN_START, ACTION_QUEEN_STOP};
 
-// Actor and action constants
+// Actor constant
 // TEAM-155: Actor shows parent binary / subcrate for accurate provenance
 const ACTOR_QUEEN_LIFECYCLE: &str = "🧑‍🌾 rbee-keeper / ⚙️ queen-lifecycle";
+
+// Internal lifecycle actions (not exposed in operations.rs)
 const ACTION_QUEEN_CHECK: &str = "queen_check";
-const ACTION_QUEEN_START: &str = "queen_start";
 const ACTION_QUEEN_POLL: &str = "queen_poll";
 const ACTION_QUEEN_READY: &str = "queen_ready";
-const ACTION_QUEEN_SHUTDOWN: &str = "queen_shutdown";
 
 /// Handle to the queen-rbee process
 ///
@@ -69,51 +60,17 @@ impl QueenHandle {
         &self.base_url
     }
 
-    /// Shutdown the queen (only if we started it)
+    /// Keep the queen alive (no shutdown after task)
+    ///
+    /// Queen stays running for future tasks. After 5 minutes of inactivity,
+    /// the hive will automatically purge workers (handled by rbee-hive).
     ///
     /// # Returns
-    /// * `Ok(())` - Queen shutdown successfully or we didn't start it
-    /// * `Err` - Failed to shutdown queen that we started
+    /// * `Ok(())` - Always succeeds (queen stays alive)
     pub async fn shutdown(self) -> Result<()> {
-        if !self.started_by_us {
-            Narration::new(ACTOR_QUEEN_LIFECYCLE, ACTION_QUEEN_SHUTDOWN, &self.base_url)
-                .human("Queen was already running, not shutting down")
-                .emit();
-            return Ok(());
-        }
-
-        Narration::new(ACTOR_QUEEN_LIFECYCLE, ACTION_QUEEN_SHUTDOWN, &self.base_url)
-            .human(format!("Shutting down queen (PID: {:?})", self.pid))
+        Narration::new(ACTOR_QUEEN_LIFECYCLE, ACTION_QUEEN_STOP, &self.base_url)
+            .human("Task complete, keeping queen alive for future tasks")
             .emit();
-
-        // Try graceful shutdown via HTTP first
-        let shutdown_url = format!("{}/shutdown", self.base_url);
-        let client = reqwest::Client::builder().timeout(Duration::from_secs(2)).build()?;
-
-        match client.post(&shutdown_url).send().await {
-            Ok(_) => {
-                Narration::new(ACTOR_QUEEN_LIFECYCLE, ACTION_QUEEN_SHUTDOWN, &self.base_url)
-                    .human("Queen shutdown via HTTP")
-                    .emit();
-                return Ok(());
-            }
-            Err(_) => {
-                // HTTP failed, try SIGTERM
-                if let Some(pid) = self.pid {
-                    Narration::new(ACTOR_QUEEN_LIFECYCLE, ACTION_QUEEN_SHUTDOWN, pid.to_string())
-                        .human(format!("HTTP shutdown failed, sending SIGTERM to PID {}", pid))
-                        .emit();
-
-                    // Use kill command (cross-platform via nix crate would be better, but this works)
-                    let _ = std::process::Command::new("kill").arg(pid.to_string()).output();
-
-                    Narration::new(ACTOR_QUEEN_LIFECYCLE, ACTION_QUEEN_SHUTDOWN, pid.to_string())
-                        .human("Sent SIGTERM to queen")
-                        .emit();
-                }
-            }
-        }
-
         Ok(())
     }
 }

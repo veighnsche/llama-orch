@@ -36,8 +36,9 @@ anyhow = "1.0"
 # TEAM-155: Narration for observability
 observability-narration-core = { path = "../99_shared_crates/narration-core" }
 
-# TEAM-152: Queen lifecycle management
-rbee-keeper-queen-lifecycle = { path = "../05_rbee_keeper_crates/queen-lifecycle" }
+# TEAM-152: Queen lifecycle management (consolidated)
+daemon-lifecycle = { path = "../99_shared_crates/daemon-lifecycle" }
+timeout-enforcer = { path = "../99_shared_crates/timeout-enforcer" }
 
 [dev-dependencies]
 # Add dev dependencies as needed

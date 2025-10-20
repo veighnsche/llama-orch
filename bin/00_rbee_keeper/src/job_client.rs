@@ -11,6 +11,7 @@ use futures::StreamExt;
 use observability_narration_core::Narration;
 
 use crate::operations::{ACTOR_RBEE_KEEPER, ACTION_JOB_SUBMIT, ACTION_JOB_STREAM, ACTION_JOB_COMPLETE};
+use crate::queen_lifecycle::ensure_queen_running;
 
 /// Submit a job to queen-rbee and stream its narration output.
 ///
@@ -25,7 +26,7 @@ pub async fn submit_and_stream_job(
     job_payload: serde_json::Value,
 ) -> Result<()> {
     // Ensure queen is running
-    let queen_handle = rbee_keeper_queen_lifecycle::ensure_queen_running(queen_url).await?;
+    let queen_handle = ensure_queen_running(queen_url).await?;
     
     // Submit job to queen
     let res = client.post(format!("{}/v1/jobs", queen_url)).json(&job_payload).send().await?;
