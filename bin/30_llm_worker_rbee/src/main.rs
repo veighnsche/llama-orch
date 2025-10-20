@@ -15,12 +15,13 @@
 use clap::Parser;
 use job_registry::JobRegistry;
 use llm_worker_rbee::{
-    backend::{CandleInferenceBackend, generation_engine::GenerationEngine, request_queue::{RequestQueue, TokenResponse}},
-    create_router,
-    narration::{
-        ACTION_MODEL_LOAD, ACTION_STARTUP, ACTOR_LLM_WORKER_RBEE,
-        ACTOR_MODEL_LOADER,
+    backend::{
+        generation_engine::GenerationEngine,
+        request_queue::{RequestQueue, TokenResponse},
+        CandleInferenceBackend,
     },
+    create_router,
+    narration::{ACTION_MODEL_LOAD, ACTION_STARTUP, ACTOR_LLM_WORKER_RBEE, ACTOR_MODEL_LOADER},
     HttpServer,
 };
 use observability_narration_core::{narrate, NarrationFields};
@@ -62,7 +63,7 @@ struct Args {
     /// Hive URL - where to send heartbeats
     #[arg(long)]
     hive_url: String,
-    
+
     /// Local development mode (no auth, binds to 127.0.0.1 only)
     #[arg(long, default_value = "false")]
     local_mode: bool,
@@ -195,23 +196,20 @@ async fn main() -> anyhow::Result<()> {
     // - Tokens flow through channels to SSE streams
     // TEAM-154: Added job registry for dual-call pattern
     tracing::info!("Creating request queue, job registry, and generation engine");
-    
+
     // Wrap backend in Arc<Mutex> for sharing between engine and warmup
     let backend = Arc::new(Mutex::new(backend));
-    
+
     // Create request queue
     let (request_queue, request_rx) = RequestQueue::new();
     let request_queue = Arc::new(request_queue);
-    
+
     // TEAM-154: Create job registry for dual-call pattern
     // Generic over TokenResponse type from request_queue
     let job_registry: Arc<JobRegistry<TokenResponse>> = Arc::new(JobRegistry::new());
-    
+
     // Start generation engine in background
-    let generation_engine = GenerationEngine::new(
-        Arc::clone(&backend),
-        request_rx,
-    );
+    let generation_engine = GenerationEngine::new(Arc::clone(&backend), request_rx);
     generation_engine.start();
     tracing::info!("Generation engine started");
 
@@ -220,12 +218,13 @@ async fn main() -> anyhow::Result<()> {
     // ============================================================
     // Send periodic heartbeats to rbee-hive to indicate worker is alive
     tracing::info!("Starting heartbeat task");
-    
+
     let heartbeat_config = llm_worker_rbee::heartbeat::WorkerHeartbeatConfig::new(
         args.worker_id.clone(),
         args.hive_url.clone(),
     );
-    let _heartbeat_handle = llm_worker_rbee::heartbeat::start_worker_heartbeat_task(heartbeat_config);
+    let _heartbeat_handle =
+        llm_worker_rbee::heartbeat::start_worker_heartbeat_task(heartbeat_config);
     tracing::info!("Heartbeat task started (30s interval)");
 
     // ============================================================
@@ -244,8 +243,9 @@ async fn main() -> anyhow::Result<()> {
         (SocketAddr::from(([127, 0, 0, 1], args.port)), String::new())
     } else {
         // NETWORK MODE: Auth required
-        let token = std::env::var("LLORCH_API_TOKEN")
-            .map_err(|_| anyhow::anyhow!("Network mode requires LLORCH_API_TOKEN (use --local-mode for dev)"))?;
+        let token = std::env::var("LLORCH_API_TOKEN").map_err(|_| {
+            anyhow::anyhow!("Network mode requires LLORCH_API_TOKEN (use --local-mode for dev)")
+        })?;
         if token.is_empty() {
             anyhow::bail!("LLORCH_API_TOKEN cannot be empty in network mode");
         }

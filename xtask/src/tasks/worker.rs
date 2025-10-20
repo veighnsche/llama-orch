@@ -23,11 +23,13 @@ impl Default for WorkerTestConfig {
         // Use higher port numbers to avoid conflicts
         Self {
             worker_id: format!("test-worker-{}", uuid::Uuid::new_v4()),
-            model_path: PathBuf::from(".test-models/tinyllama/tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf"),
+            model_path: PathBuf::from(
+                ".test-models/tinyllama/tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf",
+            ),
             model_ref: "hf:tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf".to_string(),
             backend: "cpu".to_string(),
             device: 0,
-            port: 28081, // Higher port to avoid conflicts
+            port: 28081,      // Higher port to avoid conflicts
             hive_port: 29200, // Higher port to avoid conflicts
             timeout_secs: 30,
         }
@@ -50,9 +52,7 @@ struct MockHiveState {
 
 impl MockHiveState {
     fn new() -> Self {
-        Self {
-            heartbeats: Arc::new(Mutex::new(Vec::new())),
-        }
+        Self { heartbeats: Arc::new(Mutex::new(Vec::new())) }
     }
 
     fn add_heartbeat(&self, payload: HeartbeatPayload) {
@@ -80,22 +80,21 @@ struct MockHiveServer {
 
 impl MockHiveServer {
     fn start(port: u16) -> Result<Self> {
-        use std::net::TcpListener;
         use std::io::{Read, Write};
+        use std::net::TcpListener;
 
         // Try to bind to port
         let listener = TcpListener::bind(format!("127.0.0.1:{}", port))
             .with_context(|| format!("Failed to bind to port {}", port))?;
-        
+
         // Set non-blocking so we can check shutdown signal
-        listener.set_nonblocking(true)
-            .context("Failed to set listener to non-blocking")?;
-        
+        listener.set_nonblocking(true).context("Failed to set listener to non-blocking")?;
+
         println!("✓ Mock hive server started on port {}", port);
 
         let state = MockHiveState::new();
         let state_clone = state.clone();
-        
+
         // Create shutdown channel
         let (shutdown_tx, shutdown_rx) = std::sync::mpsc::channel();
 
@@ -106,34 +105,41 @@ impl MockHiveServer {
                 if shutdown_rx.try_recv().is_ok() {
                     break;
                 }
-                
+
                 // Try to accept connection (non-blocking)
                 match listener.accept() {
                     Ok((mut stream, _)) => {
                         let state = state_clone.clone();
-                        
+
                         // Read HTTP request
                         let mut buffer = [0; 4096];
                         if let Ok(n) = stream.read(&mut buffer) {
                             let request = String::from_utf8_lossy(&buffer[..n]);
-                            
+
                             // Parse request - heartbeat sends to /v1/heartbeat
                             if request.contains("POST /v1/heartbeat") {
                                 // Find JSON body
                                 if let Some(body_start) = request.find("\r\n\r\n") {
                                     let body = &request[body_start + 4..];
-                                    
+
                                     // Try to parse JSON
-                                    if let Ok(payload) = serde_json::from_str::<HeartbeatPayload>(body) {
+                                    if let Ok(payload) =
+                                        serde_json::from_str::<HeartbeatPayload>(body)
+                                    {
                                         let count = state.heartbeat_count() + 1;
                                         let timestamp = chrono::Local::now().format("%H:%M:%S");
-                                        
-                                        eprintln!("[{}] ✅ Heartbeat #{} from worker: {}", 
-                                            timestamp, count, payload.worker_id);
-                                        eprintln!("           Health: {} at {}", payload.health_status, payload.timestamp);
-                                        
+
+                                        eprintln!(
+                                            "[{}] ✅ Heartbeat #{} from worker: {}",
+                                            timestamp, count, payload.worker_id
+                                        );
+                                        eprintln!(
+                                            "           Health: {} at {}",
+                                            payload.health_status, payload.timestamp
+                                        );
+
                                         state.add_heartbeat(payload);
-                                        
+
                                         // Send 200 OK response
                                         let response = "HTTP/1.1 200 OK\r\nContent-Type: application/json\r\n\r\n{\"status\":\"ok\"}";
                                         let _ = stream.write_all(response.as_bytes());
@@ -159,12 +165,7 @@ impl MockHiveServer {
             }
         });
 
-        Ok(Self {
-            handle: Some(handle),
-            port,
-            state,
-            shutdown_tx: Some(shutdown_tx),
-        })
+        Ok(Self { handle: Some(handle), port, state, shutdown_tx: Some(shutdown_tx) })
     }
 
     fn heartbeat_count(&self) -> usize {
@@ -174,16 +175,21 @@ impl MockHiveServer {
     fn print_logs(&self) -> Result<()> {
         println!("\n📋 Hive server logs:");
         let heartbeats = self.state.get_heartbeats();
-        
+
         if heartbeats.is_empty() {
             println!("   No heartbeats received");
         } else {
             for (i, hb) in heartbeats.iter().enumerate() {
-                println!("   Heartbeat #{}: worker={}, health={}, time={}", 
-                    i + 1, hb.worker_id, hb.health_status, hb.timestamp);
+                println!(
+                    "   Heartbeat #{}: worker={}, health={}, time={}",
+                    i + 1,
+                    hb.worker_id,
+                    hb.health_status,
+                    hb.timestamp
+                );
             }
         }
-        
+
         Ok(())
     }
 }
@@ -194,7 +200,7 @@ impl Drop for MockHiveServer {
         if let Some(tx) = self.shutdown_tx.take() {
             let _ = tx.send(());
         }
-        
+
         // Wait for thread to finish
         if let Some(handle) = self.handle.take() {
             let _ = handle.join();
@@ -241,10 +247,7 @@ impl WorkerProcess {
 
         println!("✓ Worker started (PID: {})", process.id());
 
-        Ok(Self {
-            process,
-            port: config.port,
-        })
+        Ok(Self { process, port: config.port })
     }
 
     fn wait_for_http_server(&self, timeout_secs: u64) -> Result<()> {
@@ -328,7 +331,7 @@ pub fn test_worker_isolation(config: Option<WorkerTestConfig>) -> Result<()> {
 
     // Step 5: Wait for first heartbeat (worker sends every 30s, max wait 35s)
     println!("\n⏳ Waiting for first heartbeat (max 35 seconds)...");
-    
+
     // Poll for heartbeat - STOP as soon as we get one!
     let start = std::time::Instant::now();
     let mut heartbeat_count = 0;
@@ -352,7 +355,7 @@ pub fn test_worker_isolation(config: Option<WorkerTestConfig>) -> Result<()> {
 
     // Step 7: Test inference with dual-call pattern
     println!("\n🤔 Testing inference with dual-call pattern...");
-    
+
     // Step 7a: POST to create job
     let inference_url = format!("http://127.0.0.1:{}/v1/inference", config.port);
     let payload = serde_json::json!({
@@ -396,23 +399,23 @@ pub fn test_worker_isolation(config: Option<WorkerTestConfig>) -> Result<()> {
     match ureq::get(&stream_url).call() {
         Ok(response) => {
             println!("✅ SSE connection established");
-            
+
             let reader = std::io::BufReader::new(response.into_reader());
             let mut token_count = 0;
             let mut done_received = false;
-            
+
             println!("📡 Streaming tokens (30s timeout):");
-            
+
             let stream_start = std::time::Instant::now();
             let stream_timeout = Duration::from_secs(30);
-            
+
             for line in reader.lines() {
                 // CRITICAL: Check timeout on EVERY line read!
                 if stream_start.elapsed() > stream_timeout {
                     println!("\n\n❌ TIMEOUT: No tokens after 30 seconds - KILLING TEST!");
                     break;
                 }
-                
+
                 if let Ok(line) = line {
                     if line.starts_with("data: ") {
                         let data = &line[6..];
@@ -438,13 +441,12 @@ pub fn test_worker_isolation(config: Option<WorkerTestConfig>) -> Result<()> {
                     }
                 }
             }
-            
-            
+
             println!("\n\n📊 Inference Test Results");
             println!("==================================");
             println!("Tokens received: {}", token_count);
             println!("[DONE] signal: {}", if done_received { "✅" } else { "❌" });
-            
+
             if token_count > 0 && done_received {
                 println!("\n✅ DUAL-CALL PATTERN TEST PASSED!");
             } else {
@@ -457,11 +459,11 @@ pub fn test_worker_isolation(config: Option<WorkerTestConfig>) -> Result<()> {
     }
 
     println!("\n🧹 Cleaning up...");
-    
+
     // Force kill worker process
     let _ = worker.process.kill();
     let _ = worker.process.wait();
-    
+
     drop(hive_server);
     println!("✓ Cleanup complete");
 

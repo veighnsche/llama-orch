@@ -46,7 +46,9 @@ pub async fn auth_middleware(
     let auth_header = req.headers().get("authorization").and_then(|h| h.to_str().ok());
 
     // TEAM-102: Parse Bearer token (RFC 6750 compliant)
-    let token = if let Some(t) = parse_bearer(auth_header) { t } else {
+    let token = if let Some(t) = parse_bearer(auth_header) {
+        t
+    } else {
         tracing::warn!("auth failed: missing or invalid Authorization header");
         return Err((
             StatusCode::UNAUTHORIZED,

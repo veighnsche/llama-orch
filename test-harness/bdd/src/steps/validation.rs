@@ -67,7 +67,8 @@ pub async fn then_log_not_contains_separate(world: &mut World, text: String) {
 pub async fn then_validation_explains_format(world: &mut World) {
     // TEAM-125: Verify error message contains format explanation
     let body = world.last_response_body.as_ref().expect("No response body");
-    let has_format_hint = body.contains("format") || body.contains("expected") || body.contains("must be");
+    let has_format_hint =
+        body.contains("format") || body.contains("expected") || body.contains("must be");
     assert!(has_format_hint, "Validation error doesn't explain expected format: {}", body);
     tracing::info!("✅ Verified validation error explains format");
 }
@@ -118,7 +119,11 @@ pub async fn when_request_with_path(world: &mut World, path: String) -> Result<(
 pub async fn then_fs_blocked(world: &mut World) {
     // TEAM-125: Verify filesystem access was blocked (400 Bad Request)
     let status = world.last_status_code.expect("No status code");
-    assert_eq!(status, 400, "Expected 400 Bad Request for blocked filesystem access, got {}", status);
+    assert_eq!(
+        status, 400,
+        "Expected 400 Bad Request for blocked filesystem access, got {}",
+        status
+    );
     let body = world.last_response_body.as_ref().expect("No response body");
     let blocked = body.contains("path") || body.contains("invalid") || body.contains("blocked");
     assert!(blocked, "Response doesn't indicate filesystem blocking: {}", body);
@@ -131,11 +136,11 @@ pub async fn given_symlink_exists(world: &mut World, link_path: String, target: 
     let temp_dir = world.temp_dir.as_ref().expect("No temp dir");
     let link_full = temp_dir.path().join(&link_path);
     let target_full = temp_dir.path().join(&target);
-    
+
     // Create target file
     std::fs::create_dir_all(target_full.parent().unwrap()).ok();
     std::fs::write(&target_full, "sensitive data").expect("Failed to create target");
-    
+
     // Create symlink
     std::os::unix::fs::symlink(&target_full, &link_full).expect("Failed to create symlink");
     tracing::info!("✅ Created symlink {} -> {}", link_path, target);
@@ -152,7 +157,10 @@ pub async fn then_symlink_not_followed(world: &mut World) {
 }
 
 #[when(expr = "I send request with worker_id {string}")]
-pub async fn when_request_with_worker_id(world: &mut World, worker_id: String) -> Result<(), String> {
+pub async fn when_request_with_worker_id(
+    world: &mut World,
+    worker_id: String,
+) -> Result<(), String> {
     let hive_url = world.hive_url.as_ref().ok_or("hive_url not set")?;
     let url = format!("{}/v1/workers/{}", hive_url, worker_id);
 
@@ -322,15 +330,11 @@ pub async fn when_send_random_inputs(world: &mut World, count: usize) {
     let queen_url = world.queen_url.as_ref().expect("queen_url not set");
     let url = format!("{}/v1/workers/spawn", queen_url);
     let client = reqwest::Client::new();
-    
+
     for _ in 0..count {
-        let random_str: String = (0..rng.gen_range(10..100))
-            .map(|_| rng.gen_range(0..255) as u8 as char)
-            .collect();
-        let _ = client.post(&url)
-            .json(&serde_json::json!({"model_ref": random_str}))
-            .send()
-            .await;
+        let random_str: String =
+            (0..rng.gen_range(10..100)).map(|_| rng.gen_range(0..255) as u8 as char).collect();
+        let _ = client.post(&url).json(&serde_json::json!({"model_ref": random_str})).send().await;
     }
     tracing::info!("✅ Sent {} requests with random inputs", count);
 }
@@ -409,9 +413,10 @@ pub async fn when_send_invalid_burst(world: &mut World, count: usize, seconds: u
     let url = format!("{}/v1/workers/spawn", queen_url);
     let client = reqwest::Client::new();
     let delay = std::time::Duration::from_millis((seconds * 1000) / count as u64);
-    
+
     for _ in 0..count {
-        let response = client.post(&url)
+        let response = client
+            .post(&url)
             .json(&serde_json::json!({"model_ref": "../../../etc/passwd"}))
             .send()
             .await;
@@ -427,7 +432,12 @@ pub async fn when_send_invalid_burst(world: &mut World, count: usize, seconds: u
 pub async fn then_rate_limited_after(world: &mut World, threshold: usize) {
     // TEAM-125: Verify rate limiting kicked in (429 Too Many Requests)
     let status = world.last_status_code.expect("No status code");
-    assert!(status == 429 || status == 400, "Expected 429 or 400 after {} failures, got {}", threshold, status);
+    assert!(
+        status == 429 || status == 400,
+        "Expected 429 or 400 after {} failures, got {}",
+        threshold,
+        status
+    );
     tracing::info!("✅ Verified rate limiting after {} failures", threshold);
 }
 
@@ -448,7 +458,10 @@ pub async fn then_error_not_contains(world: &mut World, text: String) {
 }
 
 #[when(expr = "I send malicious input to {string}")]
-pub async fn when_send_malicious_to_endpoint(world: &mut World, endpoint: String) -> Result<(), String> {
+pub async fn when_send_malicious_to_endpoint(
+    world: &mut World,
+    endpoint: String,
+) -> Result<(), String> {
     let queen_url = world.queen_url.as_ref().ok_or("queen_url not set")?;
     let url = format!("{}{}", queen_url, endpoint);
 

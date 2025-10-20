@@ -78,15 +78,12 @@ pub async fn handle_heartbeat(
     // TEAM-158: If first heartbeat (status is Unknown), trigger device detection
     if matches!(hive.status, HiveStatus::Unknown) {
         Narration::new(ACTOR_QUEEN_HEARTBEAT, ACTION_HEARTBEAT, &payload.hive_id)
-            .human(format!(
-                "First heartbeat from {}. Checking capabilities...",
-                payload.hive_id
-            ))
+            .human(format!("First heartbeat from {}. Checking capabilities...", payload.hive_id))
             .emit();
 
         // TEAM-158: Request device detection from hive
         let hive_url = format!("http://{}:{}/v1/devices", hive.host, hive.port);
-        
+
         Narration::new(ACTOR_QUEEN_HEARTBEAT, ACTION_DEVICE_DETECTION, &payload.hive_id)
             .human(format!(
                 "Unknown capabilities of beehive {}. Asking the beehive to detect devices",
@@ -95,30 +92,23 @@ pub async fn handle_heartbeat(
             .emit();
 
         let client = reqwest::Client::new();
-        let response = client
-            .get(&hive_url)
-            .send()
-            .await
-            .map_err(|e| {
-                Narration::new(ACTOR_QUEEN_HEARTBEAT, ACTION_ERROR, &payload.hive_id)
-                    .human(format!("Failed to request device detection: {}", e))
-                    .error_kind("device_detection_failed")
-                    .emit();
-                (
-                    StatusCode::INTERNAL_SERVER_ERROR,
-                    format!("Failed to request device detection: {}", e),
-                )
-            })?;
+        let response = client.get(&hive_url).send().await.map_err(|e| {
+            Narration::new(ACTOR_QUEEN_HEARTBEAT, ACTION_ERROR, &payload.hive_id)
+                .human(format!("Failed to request device detection: {}", e))
+                .error_kind("device_detection_failed")
+                .emit();
+            (
+                StatusCode::INTERNAL_SERVER_ERROR,
+                format!("Failed to request device detection: {}", e),
+            )
+        })?;
 
         let devices: DeviceResponse = response.json().await.map_err(|e| {
             Narration::new(ACTOR_QUEEN_HEARTBEAT, ACTION_ERROR, &payload.hive_id)
                 .human(format!("Failed to parse device response: {}", e))
                 .error_kind("device_parse_failed")
                 .emit();
-            (
-                StatusCode::INTERNAL_SERVER_ERROR,
-                format!("Failed to parse device response: {}", e),
-            )
+            (StatusCode::INTERNAL_SERVER_ERROR, format!("Failed to parse device response: {}", e))
         })?;
 
         // TEAM-158: Build device summary for narration
@@ -146,20 +136,15 @@ pub async fn handle_heartbeat(
             .emit();
 
         // TEAM-158: Update hive status to Online
-        state
-            .hive_catalog
-            .update_hive_status(&payload.hive_id, HiveStatus::Online)
-            .await
-            .map_err(|e| {
+        state.hive_catalog.update_hive_status(&payload.hive_id, HiveStatus::Online).await.map_err(
+            |e| {
                 Narration::new(ACTOR_QUEEN_HEARTBEAT, ACTION_ERROR, &payload.hive_id)
                     .human(format!("Failed to update hive status: {}", e))
                     .error_kind("status_update_failed")
                     .emit();
-                (
-                    StatusCode::INTERNAL_SERVER_ERROR,
-                    format!("Failed to update hive status: {}", e),
-                )
-            })?;
+                (StatusCode::INTERNAL_SERVER_ERROR, format!("Failed to update hive status: {}", e))
+            },
+        )?;
 
         Narration::new(ACTOR_QUEEN_HEARTBEAT, ACTION_DEVICE_DETECTION, &payload.hive_id)
             .human(format!("Hive {} is now online", payload.hive_id))
@@ -198,9 +183,7 @@ mod tests {
         };
         catalog.add_hive(hive).await.unwrap();
 
-        let state = HeartbeatState {
-            hive_catalog: catalog.clone(),
-        };
+        let state = HeartbeatState { hive_catalog: catalog.clone() };
 
         // Send heartbeat
         let now = chrono::Utc::now();
@@ -227,9 +210,7 @@ mod tests {
 
         let catalog = Arc::new(HiveCatalog::new(&db_path).await.unwrap());
 
-        let state = HeartbeatState {
-            hive_catalog: catalog,
-        };
+        let state = HeartbeatState { hive_catalog: catalog };
 
         // Send heartbeat for non-existent hive
         let payload = HiveHeartbeatPayload {

@@ -88,9 +88,7 @@ where
 {
     /// Create a new job registry
     pub fn new() -> Self {
-        Self {
-            jobs: Arc::new(Mutex::new(HashMap::new())),
-        }
+        Self { jobs: Arc::new(Mutex::new(HashMap::new())) }
     }
 
     /// Create a new job and return job_id
@@ -142,11 +140,7 @@ where
     /// TEAM-154 FIX: GET stream endpoint takes ownership of receiver
     /// This can only be called once per job!
     pub fn take_token_receiver(&self, job_id: &str) -> Option<TokenReceiver<T>> {
-        self.jobs
-            .lock()
-            .unwrap()
-            .get_mut(job_id)
-            .and_then(|job| job.token_receiver.take())
+        self.jobs.lock().unwrap().get_mut(job_id).and_then(|job| job.token_receiver.take())
     }
 
     /// Remove a job from the registry
@@ -178,9 +172,7 @@ where
 
 impl<T> Clone for JobRegistry<T> {
     fn clone(&self) -> Self {
-        Self {
-            jobs: Arc::clone(&self.jobs),
-        }
+        Self { jobs: Arc::clone(&self.jobs) }
     }
 }
 

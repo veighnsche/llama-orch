@@ -9,16 +9,16 @@ use std::process::Child;
 pub struct BddWorld {
     /// Last validation result
     pub last_result: Option<Result<(), String>>,
-    
+
     /// Queen URL for health checks
     pub queen_url: String,
-    
+
     /// Queen process handle (if started by test)
     pub queen_process: Option<Child>,
-    
+
     /// Health check result
     pub health_check_result: Option<Result<bool, String>>,
-    
+
     /// Expected message for validation
     pub expected_message: Option<String>,
 }

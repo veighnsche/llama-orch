@@ -165,7 +165,9 @@ fn extract_scores(content: &Content) -> Result<Vec<f32>> {
 ///
 /// TEAM-090: Merges define BPE merge rules
 fn extract_merges(content: &Content) -> Result<Option<Vec<(String, String)>>> {
-    let merges = if let Some(val) = content.metadata.get("tokenizer.ggml.merges") { val } else {
+    let merges = if let Some(val) = content.metadata.get("tokenizer.ggml.merges") {
+        val
+    } else {
         tracing::debug!("No tokenizer.ggml.merges found in GGUF (optional)");
         return Ok(None);
     };

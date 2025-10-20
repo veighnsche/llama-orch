@@ -146,11 +146,8 @@ pub async fn handle_create_job(
         }
 
         // TEAM-157: Spawn rbee-hive subprocess
-        let _hive_process = Command::new(&hive_binary)
-            .arg("--port")
-            .arg("8600")
-            .spawn()
-            .map_err(|e| {
+        let _hive_process =
+            Command::new(&hive_binary).arg("--port").arg("8600").spawn().map_err(|e| {
                 Narration::new(ACTOR_QUEEN_HTTP, ACTION_ERROR, "localhost")
                     .human(format!("Failed to start rbee-hive: {}", e))
                     .error_kind("hive_spawn_failed")
@@ -220,10 +217,7 @@ pub async fn handle_stream_job(
             .error_kind("no_token_receiver")
             .emit();
 
-        (
-            StatusCode::INTERNAL_SERVER_ERROR,
-            format!("Job {} has no token receiver", job_id),
-        )
+        (StatusCode::INTERNAL_SERVER_ERROR, format!("Job {} has no token receiver", job_id))
     })?;
 
     Narration::new(ACTOR_QUEEN_HTTP, ACTION_JOB_STREAM, &job_id)
@@ -248,13 +242,12 @@ pub async fn handle_stream_job(
         }
     });
 
-    let started_stream = stream::once(futures::future::ready(Ok(Event::default().data(started_event))));
+    let started_stream =
+        stream::once(futures::future::ready(Ok(Event::default().data(started_event))));
 
     let stream_with_done = started_stream
         .chain(token_events)
-        .chain(stream::once(futures::future::ready(
-            Ok(Event::default().data("[DONE]")),
-        )));
+        .chain(stream::once(futures::future::ready(Ok(Event::default().data("[DONE]")))));
 
     Ok(Sse::new(stream_with_done))
 }

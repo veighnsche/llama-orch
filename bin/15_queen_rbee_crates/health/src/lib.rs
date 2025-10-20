@@ -49,18 +49,15 @@ mod tests {
     async fn test_health_endpoint_returns_ok() {
         let response = handle_health().await;
         let json_response = response.into_response();
-        
+
         // Should return 200 OK
         assert_eq!(json_response.status(), 200);
     }
 
     #[test]
     fn test_health_response_serialization() {
-        let response = HealthResponse {
-            status: "ok".to_string(),
-            version: "0.1.0".to_string(),
-        };
-        
+        let response = HealthResponse { status: "ok".to_string(), version: "0.1.0".to_string() };
+
         let json = serde_json::to_string(&response).unwrap();
         assert!(json.contains("\"status\":\"ok\""));
         assert!(json.contains("\"version\":\"0.1.0\""));

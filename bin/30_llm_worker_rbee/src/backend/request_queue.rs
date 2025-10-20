@@ -16,13 +16,13 @@ use tokio::sync::mpsc;
 pub struct GenerationRequest {
     /// Unique request ID (job_id from HTTP request)
     pub request_id: String,
-    
+
     /// Input prompt to generate from
     pub prompt: String,
-    
+
     /// Sampling configuration (temperature, top_p, etc.)
     pub config: SamplingConfig,
-    
+
     /// Channel to send token responses back to HTTP handler
     pub response_tx: mpsc::UnboundedSender<TokenResponse>,
 }
@@ -32,10 +32,10 @@ pub struct GenerationRequest {
 pub enum TokenResponse {
     /// A generated token (decoded text)
     Token(String),
-    
+
     /// An error occurred during generation
     Error(String),
-    
+
     /// Generation completed successfully
     Done,
 }
@@ -57,7 +57,7 @@ impl RequestQueue {
         let (tx, rx) = mpsc::unbounded_channel();
         (Self { tx }, rx)
     }
-    
+
     /// Add a request to the queue
     ///
     /// Returns Ok(()) if request was queued successfully.

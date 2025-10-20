@@ -25,12 +25,12 @@
 
 use crate::backend::request_queue::{RequestQueue, TokenResponse};
 use crate::http::{execute, middleware::auth_middleware, stream};
-use job_registry::JobRegistry;
 use axum::{
     middleware,
     routing::{get, post},
     Json, Router,
 };
+use job_registry::JobRegistry;
 use observability_narration_core::axum::correlation_middleware;
 use serde::Serialize;
 use std::sync::Arc;
@@ -72,17 +72,14 @@ pub fn create_router(
     struct HealthResponse {
         status: String,
     }
-    
+
     async fn handle_health() -> Json<HealthResponse> {
-        Json(HealthResponse {
-            status: "healthy".to_string(),
-        })
+        Json(HealthResponse { status: "healthy".to_string() })
     }
-    
+
     // Public routes (no auth)
-    let public_routes = Router::new()
-        .route("/health", get(handle_health));
-    
+    let public_routes = Router::new().route("/health", get(handle_health));
+
     // TEAM-154: Create shared state for worker routes
     let worker_state = WorkerState { queue, registry };
 

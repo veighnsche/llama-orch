@@ -21,27 +21,22 @@ async fn queen_not_running(world: &mut BddWorld) {
         let _ = child.kill();
         let _ = child.wait();
     }
-    
+
     // Ensure no queen is running on the default port
     // Kill any existing queen process
-    let _ = std::process::Command::new("pkill")
-        .arg("-9")
-        .arg("-f")
-        .arg("queen-rbee")
-        .output();
-    
+    let _ = std::process::Command::new("pkill").arg("-9").arg("-f").arg("queen-rbee").output();
+
     // Wait a bit to ensure it's stopped
     tokio::time::sleep(Duration::from_secs(1)).await;
-    
+
     world.queen_process = None;
 }
 
 #[given(expr = "queen-rbee is running on port {int}")]
 async fn queen_running_on_port(world: &mut BddWorld, port: u16) {
     // Find the queen-rbee binary in the workspace target directory
-    let workspace_root = std::env::var("CARGO_MANIFEST_DIR")
-        .expect("CARGO_MANIFEST_DIR not set");
-    
+    let workspace_root = std::env::var("CARGO_MANIFEST_DIR").expect("CARGO_MANIFEST_DIR not set");
+
     let binary_path = std::path::PathBuf::from(&workspace_root)
         .parent()
         .expect("Cannot find parent")
@@ -52,7 +47,10 @@ async fn queen_running_on_port(world: &mut BddWorld, port: u16) {
         .join("target/debug/queen-rbee");
 
     if !binary_path.exists() {
-        panic!("queen-rbee binary not found at {:?}. Run: cargo build --bin queen-rbee", binary_path);
+        panic!(
+            "queen-rbee binary not found at {:?}. Run: cargo build --bin queen-rbee",
+            binary_path
+        );
     }
 
     // Start queen-rbee
@@ -65,7 +63,7 @@ async fn queen_running_on_port(world: &mut BddWorld, port: u16) {
         .expect("Failed to start queen-rbee");
 
     world.queen_process = Some(child);
-    
+
     // Wait for queen to start
     tokio::time::sleep(Duration::from_secs(2)).await;
 }
@@ -86,11 +84,10 @@ async fn check_queen_health(world: &mut BddWorld) {
 
 #[then("the health check should return true")]
 async fn health_check_returns_true(world: &mut BddWorld) {
-    let result = world.health_check_result.as_ref()
-        .expect("Health check was not performed");
-    
+    let result = world.health_check_result.as_ref().expect("Health check was not performed");
+
     match result {
-        Ok(true) => {}, // Success
+        Ok(true) => {} // Success
         Ok(false) => panic!("Expected health check to return true, but got false"),
         Err(e) => panic!("Expected health check to succeed, but got error: {}", e),
     }
@@ -98,11 +95,10 @@ async fn health_check_returns_true(world: &mut BddWorld) {
 
 #[then("the health check should return false")]
 async fn health_check_returns_false(world: &mut BddWorld) {
-    let result = world.health_check_result.as_ref()
-        .expect("Health check was not performed");
-    
+    let result = world.health_check_result.as_ref().expect("Health check was not performed");
+
     match result {
-        Ok(false) => {}, // Success
+        Ok(false) => {} // Success
         Ok(true) => panic!("Expected health check to return false, but got true"),
         Err(e) => panic!("Expected health check to return false, but got error: {}", e),
     }
@@ -110,9 +106,8 @@ async fn health_check_returns_false(world: &mut BddWorld) {
 
 #[then("the health check should timeout")]
 async fn health_check_timeouts(world: &mut BddWorld) {
-    let result = world.health_check_result.as_ref()
-        .expect("Health check was not performed");
-    
+    let result = world.health_check_result.as_ref().expect("Health check was not performed");
+
     // Should either return false or error
     assert!(result.is_err() || matches!(result, Ok(false)));
 }
@@ -121,24 +116,22 @@ async fn health_check_timeouts(world: &mut BddWorld) {
 async fn should_see_message(world: &mut BddWorld, expected: String) {
     // In a real scenario, we'd capture stdout/stderr
     // For now, we just verify the health check result matches expectations
-    let result = world.health_check_result.as_ref()
-        .expect("Health check was not performed");
-    
+    let result = world.health_check_result.as_ref().expect("Health check was not performed");
+
     if expected.contains("not running") {
         assert!(matches!(result, Ok(false)), "Expected queen to be not running");
     } else if expected.contains("running and healthy") {
         assert!(matches!(result, Ok(true)), "Expected queen to be running");
     }
-    
+
     // Store the expected message for validation
     world.expected_message = Some(expected);
 }
 
 #[then("I should see connection error")]
 async fn should_see_connection_error(world: &mut BddWorld) {
-    let result = world.health_check_result.as_ref()
-        .expect("Health check was not performed");
-    
+    let result = world.health_check_result.as_ref().expect("Health check was not performed");
+
     // Should return false (connection refused) or error
     assert!(result.is_err() || matches!(result, Ok(false)));
 }
@@ -147,12 +140,12 @@ async fn should_see_connection_error(world: &mut BddWorld) {
 /// This mirrors the implementation in the main crate
 async fn check_health(base_url: &str) -> Result<bool, String> {
     let health_url = format!("{}/health", base_url);
-    
+
     let client = reqwest::Client::builder()
         .timeout(Duration::from_millis(500))
         .build()
         .map_err(|e| e.to_string())?;
-    
+
     match client.get(&health_url).send().await {
         Ok(response) => {
             if response.status().is_success() {

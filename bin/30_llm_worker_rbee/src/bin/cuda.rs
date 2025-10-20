@@ -87,7 +87,7 @@ async fn main() -> Result<()> {
     // STEP 3: Start heartbeat task
     // ============================================================
     tracing::info!("Starting heartbeat task");
-    
+
     let heartbeat_config = llm_worker_rbee::heartbeat::HeartbeatConfig::new(
         args.worker_id.clone(),
         args.hive_url.clone(),

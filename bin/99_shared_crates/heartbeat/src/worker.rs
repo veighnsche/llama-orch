@@ -71,9 +71,7 @@ impl WorkerHeartbeatConfig {
 ///
 /// let handle = start_worker_heartbeat_task(config);
 /// ```
-pub fn start_worker_heartbeat_task(
-    config: WorkerHeartbeatConfig,
-) -> tokio::task::JoinHandle<()> {
+pub fn start_worker_heartbeat_task(config: WorkerHeartbeatConfig) -> tokio::task::JoinHandle<()> {
     tokio::spawn(async move {
         let mut interval_timer = interval(Duration::from_secs(config.interval_secs));
         let client = reqwest::Client::new();
@@ -117,12 +115,7 @@ async fn send_worker_heartbeat(
     url: &str,
     payload: &WorkerHeartbeatPayload,
 ) -> Result<(), Box<dyn std::error::Error>> {
-    let response = client
-        .post(url)
-        .json(payload)
-        .timeout(Duration::from_secs(5))
-        .send()
-        .await?;
+    let response = client.post(url).json(payload).timeout(Duration::from_secs(5)).send().await?;
 
     if !response.status().is_success() {
         let status = response.status();
@@ -147,7 +140,7 @@ mod tests {
             "worker-123".to_string(),
             "http://localhost:9200".to_string(),
         );
-        
+
         assert_eq!(config.worker_id, "worker-123");
         assert_eq!(config.callback_url, "http://localhost:9200");
         assert_eq!(config.interval_secs, 30, "Default interval should be 30 seconds");
@@ -160,7 +153,7 @@ mod tests {
             "http://localhost:8600".to_string(),
         )
         .with_interval(60);
-        
+
         assert_eq!(config.interval_secs, 60, "Custom interval should override default");
     }
 
@@ -172,7 +165,7 @@ mod tests {
         )
         .with_interval(15)
         .with_interval(45); // Last one wins
-        
+
         assert_eq!(config.interval_secs, 45, "Last interval should be used");
     }
 
@@ -186,10 +179,7 @@ mod tests {
         ];
 
         for (url, expected) in configs {
-            let config = WorkerHeartbeatConfig::new(
-                "worker-test".to_string(),
-                url.to_string(),
-            );
+            let config = WorkerHeartbeatConfig::new("worker-test".to_string(), url.to_string());
             assert_eq!(config.callback_url, expected);
         }
     }
@@ -221,7 +211,7 @@ mod tests {
             "http://localhost:9200".to_string(),
         )
         .with_interval(0);
-        
+
         assert_eq!(config.interval_secs, 0, "Zero interval should be allowed for testing");
     }
 
@@ -232,7 +222,7 @@ mod tests {
             "http://localhost:9200".to_string(),
         )
         .with_interval(3600); // 1 hour
-        
+
         assert_eq!(config.interval_secs, 3600);
     }
 
@@ -242,9 +232,9 @@ mod tests {
             "worker-original".to_string(),
             "http://localhost:9200".to_string(),
         );
-        
+
         let cloned = original.clone();
-        
+
         assert_eq!(original.worker_id, cloned.worker_id);
         assert_eq!(original.callback_url, cloned.callback_url);
         assert_eq!(original.interval_secs, cloned.interval_secs);
@@ -263,10 +253,10 @@ mod tests {
         .with_interval(3600); // Long interval so it doesn't actually send
 
         let handle = start_worker_heartbeat_task(config);
-        
+
         // Verify we got a handle
         assert!(!handle.is_finished(), "Task should be running");
-        
+
         // Clean up
         handle.abort();
     }
@@ -280,10 +270,10 @@ mod tests {
         .with_interval(3600);
 
         let handle = start_worker_heartbeat_task(config);
-        
+
         // Task should be running in background
         assert!(!handle.is_finished());
-        
+
         // Aborting should stop it
         handle.abort();
     }
@@ -297,22 +287,17 @@ mod tests {
         // This tests the behavior that the task constructs the URL correctly
         // We can't easily test the internal URL construction without mocking,
         // but we can verify the config accepts the base URL correctly
-        
-        let base_urls = vec![
-            "http://localhost:9200",
-            "http://127.0.0.1:8600",
-            "https://hive.example.com",
-        ];
+
+        let base_urls =
+            vec!["http://localhost:9200", "http://127.0.0.1:8600", "https://hive.example.com"];
 
         for base_url in base_urls {
-            let config = WorkerHeartbeatConfig::new(
-                "worker-test".to_string(),
-                base_url.to_string(),
-            );
-            
+            let config =
+                WorkerHeartbeatConfig::new("worker-test".to_string(), base_url.to_string());
+
             // Verify base URL is stored correctly
             assert_eq!(config.callback_url, base_url);
-            
+
             // The task will append "/v1/heartbeat" internally
             // Expected: base_url + "/v1/heartbeat"
         }
@@ -324,11 +309,9 @@ mod tests {
 
     #[test]
     fn config_handles_empty_worker_id() {
-        let config = WorkerHeartbeatConfig::new(
-            "".to_string(),
-            "http://localhost:9200".to_string(),
-        );
-        
+        let config =
+            WorkerHeartbeatConfig::new("".to_string(), "http://localhost:9200".to_string());
+
         assert_eq!(config.worker_id, "");
         // Note: In production, validation should happen at a higher level
     }
@@ -336,11 +319,9 @@ mod tests {
     #[test]
     fn config_handles_very_long_worker_id() {
         let long_id = "worker-".to_string() + &"a".repeat(1000);
-        let config = WorkerHeartbeatConfig::new(
-            long_id.clone(),
-            "http://localhost:9200".to_string(),
-        );
-        
+        let config =
+            WorkerHeartbeatConfig::new(long_id.clone(), "http://localhost:9200".to_string());
+
         assert_eq!(config.worker_id, long_id);
     }
 
@@ -350,7 +331,7 @@ mod tests {
             "worker-test".to_string(),
             "http://localhost:9200/".to_string(),
         );
-        
+
         assert_eq!(config.callback_url, "http://localhost:9200/");
         // Note: The task will handle this correctly by appending "/v1/heartbeat"
         // Result will be "http://localhost:9200//v1/heartbeat" which HTTP handles fine
@@ -358,11 +339,9 @@ mod tests {
 
     #[test]
     fn config_handles_url_without_port() {
-        let config = WorkerHeartbeatConfig::new(
-            "worker-test".to_string(),
-            "http://localhost".to_string(),
-        );
-        
+        let config =
+            WorkerHeartbeatConfig::new("worker-test".to_string(), "http://localhost".to_string());
+
         assert_eq!(config.callback_url, "http://localhost");
     }
 
@@ -377,9 +356,9 @@ mod tests {
             "http://localhost:9200".to_string(),
         )
         .with_interval(45);
-        
+
         let debug_str = format!("{:?}", config);
-        
+
         // Verify all fields are in debug output
         assert!(debug_str.contains("worker-debug"));
         assert!(debug_str.contains("http://localhost:9200"));
@@ -388,25 +367,21 @@ mod tests {
 
     #[tokio::test]
     async fn multiple_tasks_can_run_simultaneously() {
-        let config1 = WorkerHeartbeatConfig::new(
-            "worker-1".to_string(),
-            "http://localhost:9999".to_string(),
-        )
-        .with_interval(3600);
+        let config1 =
+            WorkerHeartbeatConfig::new("worker-1".to_string(), "http://localhost:9999".to_string())
+                .with_interval(3600);
 
-        let config2 = WorkerHeartbeatConfig::new(
-            "worker-2".to_string(),
-            "http://localhost:9998".to_string(),
-        )
-        .with_interval(3600);
+        let config2 =
+            WorkerHeartbeatConfig::new("worker-2".to_string(), "http://localhost:9998".to_string())
+                .with_interval(3600);
 
         let handle1 = start_worker_heartbeat_task(config1);
         let handle2 = start_worker_heartbeat_task(config2);
-        
+
         // Both tasks should be running
         assert!(!handle1.is_finished());
         assert!(!handle2.is_finished());
-        
+
         // Clean up
         handle1.abort();
         handle2.abort();
@@ -416,14 +391,14 @@ mod tests {
     fn config_interval_boundary_values() {
         // Test various boundary values for interval
         let intervals = vec![1, 5, 10, 15, 30, 60, 120, 300, 600, 3600];
-        
+
         for interval in intervals {
             let config = WorkerHeartbeatConfig::new(
                 "worker-test".to_string(),
                 "http://localhost:9200".to_string(),
             )
             .with_interval(interval);
-            
+
             assert_eq!(config.interval_secs, interval);
         }
     }

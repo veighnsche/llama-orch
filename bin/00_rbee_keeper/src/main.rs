@@ -32,26 +32,26 @@ pub enum Commands {
         /// Model reference (e.g., "HF:author/minillama")
         #[arg(long)]
         model: String,
-        
+
         /// Prompt text
         prompt: String,
-        
+
         /// Maximum tokens to generate
         #[arg(long, default_value = "20")]
         max_tokens: u32,
-        
+
         /// Temperature (0.0-2.0)
         #[arg(long, default_value = "0.7")]
         temperature: f32,
-        
+
         /// Node name (optional, for multi-node setups)
         #[arg(long)]
         node: Option<String>,
-        
+
         /// Backend (e.g., "cuda", "cpu", "metal")
         #[arg(long)]
         backend: Option<String>,
-        
+
         /// Device ID (e.g., 0, 1)
         #[arg(long)]
         device: Option<u32>,
@@ -80,7 +80,7 @@ pub enum Commands {
         /// Node name
         #[arg(long)]
         node: String,
-        
+
         /// Follow log output
         #[arg(long)]
         follow: bool,
@@ -108,31 +108,31 @@ pub enum SetupAction {
         /// Node name (e.g., "mac", "workstation")
         #[arg(long)]
         name: String,
-        
+
         /// SSH hostname
         #[arg(long)]
         ssh_host: String,
-        
+
         /// SSH port
         #[arg(long, default_value = "22")]
         ssh_port: u16,
-        
+
         /// SSH username
         #[arg(long)]
         ssh_user: String,
-        
+
         /// Path to SSH private key
         #[arg(long)]
         ssh_key: Option<String>,
-        
+
         /// Git repository URL
         #[arg(long)]
         git_repo: String,
-        
+
         /// Git branch
         #[arg(long, default_value = "main")]
         git_branch: String,
-        
+
         /// Installation path on remote node
         #[arg(long)]
         install_path: String,
@@ -162,7 +162,7 @@ pub enum HiveAction {
     Models {
         #[command(subcommand)]
         action: ModelsAction,
-        
+
         #[arg(long)]
         host: String,
     },
@@ -171,7 +171,7 @@ pub enum HiveAction {
     Worker {
         #[command(subcommand)]
         action: WorkerAction,
-        
+
         #[arg(long)]
         host: String,
     },
@@ -180,7 +180,7 @@ pub enum HiveAction {
     Git {
         #[command(subcommand)]
         action: GitAction,
-        
+
         #[arg(long)]
         host: String,
     },
@@ -195,26 +195,24 @@ pub enum HiveAction {
 #[derive(Subcommand)]
 pub enum ModelsAction {
     /// Download a model on remote hive
-    Download { 
-        model: String 
-    },
-    
+    Download { model: String },
+
     /// List models on remote hive
     List,
-    
+
     /// Show catalog on remote hive
     Catalog,
-    
+
     /// Register a model on remote hive
     Register {
         id: String,
-        
+
         #[arg(long)]
         name: String,
-        
+
         #[arg(long)]
         repo: String,
-        
+
         #[arg(long)]
         architecture: String,
     },
@@ -225,31 +223,29 @@ pub enum WorkerAction {
     /// Spawn worker on remote hive
     Spawn {
         backend: String,
-        
+
         #[arg(long)]
         model: String,
-        
+
         #[arg(long, default_value = "0")]
         gpu: u32,
     },
-    
+
     /// List workers on remote hive
     List,
-    
+
     /// Stop worker on remote hive
-    Stop { 
-        worker_id: String 
-    },
+    Stop { worker_id: String },
 }
 
 #[derive(Subcommand)]
 pub enum GitAction {
     /// Pull latest changes on remote hive
     Pull,
-    
+
     /// Show git status on remote hive
     Status,
-    
+
     /// Build rbee-hive on remote hive
     Build,
 }
@@ -258,14 +254,14 @@ pub enum GitAction {
 pub enum WorkersAction {
     /// List all registered workers
     List,
-    
+
     /// Check worker health on a specific node
     Health {
         /// Node name
         #[arg(long)]
         node: String,
     },
-    
+
     /// Manually shutdown a worker
     Shutdown {
         /// Worker ID
@@ -284,8 +280,9 @@ async fn handle_command(cli: Cli) -> Result<()> {
     match cli.command {
         Commands::Infer { model, prompt, max_tokens, temperature, node, backend, device } => {
             // TEAM-153: Ensure queen is running and get handle for cleanup
-            let queen_handle = rbee_keeper_queen_lifecycle::ensure_queen_running("http://localhost:8500").await?;
-            
+            let queen_handle =
+                rbee_keeper_queen_lifecycle::ensure_queen_running("http://localhost:8500").await?;
+
             // TODO: Submit inference job to queen
             println!("TODO: Implement infer command (submit job to queen)");
             println!("  Model: {}", model);
@@ -301,13 +298,13 @@ async fn handle_command(cli: Cli) -> Result<()> {
             if let Some(d) = device {
                 println!("  Device: {}", d);
             }
-            
+
             // TEAM-153: Cleanup - shutdown queen ONLY if we started it
             queen_handle.shutdown().await?;
-            
+
             Ok(())
         }
-        
+
         Commands::Setup { action } => {
             // TODO: Call rbee-keeper-commands::setup::handle()
             println!("TODO: Implement setup command");
@@ -327,19 +324,19 @@ async fn handle_command(cli: Cli) -> Result<()> {
             }
             Ok(())
         }
-        
+
         Commands::Hive { action: _ } => {
             // TODO: Call rbee-keeper-commands::hive::handle()
             println!("TODO: Implement hive command");
             Ok(())
         }
-        
+
         Commands::Workers { action: _ } => {
             // TODO: Call rbee-keeper-commands::workers::handle()
             println!("TODO: Implement workers command");
             Ok(())
         }
-        
+
         Commands::Logs { node, follow } => {
             // TODO: Call rbee-keeper-commands::logs::handle()
             println!("TODO: Implement logs command");
@@ -347,7 +344,7 @@ async fn handle_command(cli: Cli) -> Result<()> {
             println!("  Follow: {}", follow);
             Ok(())
         }
-        
+
         Commands::Install { system } => {
             // TODO: Call rbee-keeper-commands::install::handle()
             println!("TODO: Implement install command");
@@ -357,7 +354,7 @@ async fn handle_command(cli: Cli) -> Result<()> {
 
         Commands::TestHealth { queen_url } => {
             println!("🔍 Testing queen-rbee health at {}", queen_url);
-            
+
             match health_check::is_queen_healthy(&queen_url).await {
                 Ok(true) => {
                     println!("✅ queen-rbee is running and healthy");

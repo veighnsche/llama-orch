@@ -49,19 +49,24 @@ impl DaemonManager {
     /// - Binary not found
     /// - Failed to spawn process
     pub async fn spawn(&self) -> Result<Child> {
-        Narration::new(ACTOR_DAEMON_LIFECYCLE, ACTION_SPAWN, &self.binary_path.display().to_string())
-            .human(format!("Spawning daemon: {} with args: {:?}", self.binary_path.display(), self.args))
-            .emit();
+        Narration::new(
+            ACTOR_DAEMON_LIFECYCLE,
+            ACTION_SPAWN,
+            &self.binary_path.display().to_string(),
+        )
+        .human(format!(
+            "Spawning daemon: {} with args: {:?}",
+            self.binary_path.display(),
+            self.args
+        ))
+        .emit();
 
         let child = Command::new(&self.binary_path)
             .args(&self.args)
             .stdout(Stdio::inherit())
             .stderr(Stdio::inherit())
             .spawn()
-            .context(format!(
-                "Failed to spawn daemon: {}",
-                self.binary_path.display()
-            ))?;
+            .context(format!("Failed to spawn daemon: {}", self.binary_path.display()))?;
 
         let pid_str = child.id().map(|p| p.to_string()).unwrap_or_else(|| "unknown".to_string());
         Narration::new(ACTOR_DAEMON_LIFECYCLE, ACTION_SPAWN, &pid_str)
@@ -104,10 +109,7 @@ impl DaemonManager {
             .human(format!("Binary '{}' not found in target/debug or target/release", name))
             .error_kind("binary_not_found")
             .emit();
-        anyhow::bail!(
-            "Binary '{}' not found in target/debug or target/release",
-            name
-        )
+        anyhow::bail!("Binary '{}' not found in target/debug or target/release", name)
     }
 }
 

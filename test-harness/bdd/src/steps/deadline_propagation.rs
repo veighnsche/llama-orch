@@ -139,15 +139,15 @@ pub async fn then_worker_inherits_deadline(world: &mut World) {
 pub async fn then_worker_no_new_deadline(world: &mut World) {
     // TEAM-128: Verify worker did not receive a new deadline
     // Worker should inherit parent deadline, not get a fresh one
-    assert!(world.worker_received_deadline.is_some(), 
-            "Worker should have inherited deadline");
-    
+    assert!(world.worker_received_deadline.is_some(), "Worker should have inherited deadline");
+
     // Verify it matches the parent deadline (not a new one)
-    if let (Some(worker_dl), Some(hive_dl)) = (world.worker_received_deadline, world.hive_received_deadline) {
-        assert_eq!(worker_dl, hive_dl, 
-                  "Worker deadline should match hive deadline (inherited)");
+    if let (Some(worker_dl), Some(hive_dl)) =
+        (world.worker_received_deadline, world.hive_received_deadline)
+    {
+        assert_eq!(worker_dl, hive_dl, "Worker deadline should match hive deadline (inherited)");
     }
-    
+
     tracing::info!("✅ TEAM-128: Worker did not receive new deadline (inherited parent)");
 }
 
@@ -190,16 +190,18 @@ pub async fn then_deadline_unchanged(world: &mut World) {
     let queen_dl = world.queen_deadline;
     let hive_dl = world.hive_received_deadline;
     let worker_dl = world.worker_received_deadline;
-    
+
     if let (Some(q), Some(h)) = (queen_dl, hive_dl) {
         assert_eq!(q, h, "Deadline changed between queen and hive");
     }
-    
+
     if let (Some(h), Some(w)) = (hive_dl, worker_dl) {
         assert_eq!(h, w, "Deadline changed between hive and worker");
     }
-    
-    tracing::info!("✅ TEAM-128: Deadline timestamp unchanged across propagation (queen -> hive -> worker)");
+
+    tracing::info!(
+        "✅ TEAM-128: Deadline timestamp unchanged across propagation (queen -> hive -> worker)"
+    );
 }
 
 #[then(expr = "response status is {int} Request Timeout")]
@@ -227,13 +229,16 @@ pub async fn then_response_includes_deadline_timestamp(world: &mut World) {
     if let Some(deadline) = world.request_deadline {
         // In production, this would be in the response body JSON
         // For BDD tests, we verify the deadline is tracked
-        assert!(world.deadline_exceeded, 
-                "Deadline should be marked as exceeded");
-        
-        tracing::info!("✅ TEAM-128: Response includes original deadline timestamp: {}", 
-                      deadline.to_rfc3339());
+        assert!(world.deadline_exceeded, "Deadline should be marked as exceeded");
+
+        tracing::info!(
+            "✅ TEAM-128: Response includes original deadline timestamp: {}",
+            deadline.to_rfc3339()
+        );
     } else {
-        tracing::info!("✅ TEAM-128: Response includes original deadline timestamp (tracked in world state)");
+        tracing::info!(
+            "✅ TEAM-128: Response includes original deadline timestamp (tracked in world state)"
+        );
     }
 }
 

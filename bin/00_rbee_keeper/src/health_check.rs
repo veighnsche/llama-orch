@@ -22,11 +22,10 @@ use anyhow::Result;
 /// * `Err` - Other errors (timeout, invalid response, etc.)
 pub async fn is_queen_healthy(base_url: &str) -> Result<bool> {
     let health_url = format!("{}/health", base_url);
-    
-    let client = reqwest::Client::builder()
-        .timeout(std::time::Duration::from_millis(500))
-        .build()?;
-    
+
+    let client =
+        reqwest::Client::builder().timeout(std::time::Duration::from_millis(500)).build()?;
+
     match client.get(&health_url).send().await {
         Ok(response) => {
             if response.status().is_success() {

@@ -181,12 +181,17 @@ pub async fn then_no_timing_sidechannel(world: &mut World) {
     // Verified by checking timing variance < 5%
     if let Some(timings) = &world.timing_measurements {
         if let Some(timings_invalid) = &world.timing_measurements_invalid {
-            let avg_valid = timings.iter().sum::<Duration>().as_millis() as f64 / timings.len() as f64;
-            let avg_invalid = timings_invalid.iter().sum::<Duration>().as_millis() as f64 / timings_invalid.len() as f64;
+            let avg_valid =
+                timings.iter().sum::<Duration>().as_millis() as f64 / timings.len() as f64;
+            let avg_invalid = timings_invalid.iter().sum::<Duration>().as_millis() as f64
+                / timings_invalid.len() as f64;
             let variance = ((avg_valid - avg_invalid).abs() / avg_valid) * 100.0;
-            
+
             assert!(variance < 5.0, "Timing side-channel detected: variance {:.2}%", variance);
-            tracing::info!("✅ TEAM-128: No timing side-channel detected (variance {:.2}% < 5%)", variance);
+            tracing::info!(
+                "✅ TEAM-128: No timing side-channel detected (variance {:.2}% < 5%)",
+                variance
+            );
         }
     }
     tracing::info!("✅ TEAM-128: No timing side-channel detected (CWE-208 protected)");
@@ -282,11 +287,11 @@ pub async fn then_log_has_fingerprint(world: &mut World) {
     // TEAM-128: Verify log contains token fingerprint (6-char SHA-256 prefix)
     // auth-min uses token_fp6() to generate fingerprints
     let log_output = format!("{}{}", world.last_stdout, world.last_stderr);
-    
+
     // Check for fingerprint pattern: 6 hex characters
-    let has_fingerprint = log_output.contains("token:") || 
-                         log_output.chars().filter(|c| c.is_ascii_hexdigit()).count() >= 6;
-    
+    let has_fingerprint = log_output.contains("token:")
+        || log_output.chars().filter(|c| c.is_ascii_hexdigit()).count() >= 6;
+
     assert!(has_fingerprint, "Log does not contain token fingerprint");
     tracing::info!("✅ TEAM-128: Log contains token fingerprint (6-char SHA-256 prefix)");
 }
@@ -536,11 +541,19 @@ pub async fn then_no_race_conditions(world: &mut World) {
     // Check that all concurrent operations completed successfully
     let success_count = world.concurrent_results.iter().filter(|r| r.is_ok()).count();
     let total_count = world.concurrent_results.len();
-    
-    assert_eq!(success_count, total_count, "Race condition detected: {} failures out of {}", 
-               total_count - success_count, total_count);
-    
-    tracing::info!("✅ TEAM-128: No race conditions detected ({} concurrent ops, thread-safe auth)", total_count);
+
+    assert_eq!(
+        success_count,
+        total_count,
+        "Race condition detected: {} failures out of {}",
+        total_count - success_count,
+        total_count
+    );
+
+    tracing::info!(
+        "✅ TEAM-128: No race conditions detected ({} concurrent ops, thread-safe auth)",
+        total_count
+    );
 }
 
 #[then(expr = "all responses arrive within {int} seconds")]
@@ -665,14 +678,13 @@ pub async fn then_queen_auth_success(world: &mut World) {
     // TEAM-128: Verify queen-rbee authenticated the request
     // Check that request was not rejected with 401/403
     if let Some(status) = world.last_status_code {
-        assert!(status != 401 && status != 403, 
-                "Authentication failed with status {}", status);
+        assert!(status != 401 && status != 403, "Authentication failed with status {}", status);
     }
-    
+
     // Mark authentication as successful
     world.auth_required = true;
     world.queen_received_request = true;
-    
+
     tracing::info!("✅ TEAM-128: Queen-rbee authenticated rbee-keeper successfully");
 }
 
@@ -688,13 +700,16 @@ pub async fn then_hive_auth_success(world: &mut World) {
     // TEAM-128: Verify rbee-hive authenticated queen-rbee
     // Check that hive received and accepted the request
     world.hive_received_request = true;
-    
+
     // Verify no auth errors
     if let Some(status) = world.last_status_code {
-        assert!(status != 401 && status != 403, 
-                "Hive authentication failed with status {}", status);
+        assert!(
+            status != 401 && status != 403,
+            "Hive authentication failed with status {}",
+            status
+        );
     }
-    
+
     tracing::info!("✅ TEAM-128: Rbee-hive authenticated queen-rbee successfully");
 }
 
@@ -703,14 +718,13 @@ pub async fn then_inference_completes(world: &mut World) {
     // TEAM-128: Verify inference completed successfully
     // Check for 200 OK status and tokens generated
     if let Some(status) = world.last_status_code {
-        assert!(status == 200 || status == 201, 
-                "Inference failed with status {}", status);
+        assert!(status == 200 || status == 201, "Inference failed with status {}", status);
     }
-    
+
     // Mark worker as having processed the request
     world.worker_processing = false;
     world.worker_received_request = true;
-    
+
     tracing::info!("✅ TEAM-128: Inference completed successfully (status 200, tokens generated)");
 }
 
@@ -718,21 +732,23 @@ pub async fn then_inference_completes(world: &mut World) {
 pub async fn then_auth_logged(world: &mut World) {
     // TEAM-128: Verify all auth events logged with token fingerprints
     // Check audit log entries for fingerprint format (token:XXXXXX)
-    let auth_events: Vec<_> = world.audit_log_entries.iter()
+    let auth_events: Vec<_> = world
+        .audit_log_entries
+        .iter()
         .filter(|entry| {
-            entry.get("event_type")
+            entry
+                .get("event_type")
                 .and_then(|v| v.as_str())
                 .map(|s| s.starts_with("auth."))
                 .unwrap_or(false)
         })
         .collect();
-    
+
     for entry in auth_events {
         let actor = entry.get("actor").and_then(|v| v.as_str()).unwrap_or("");
-        assert!(actor.starts_with("token:"), 
-                "Auth event missing token fingerprint: {}", actor);
+        assert!(actor.starts_with("token:"), "Auth event missing token fingerprint: {}", actor);
     }
-    
+
     tracing::info!("✅ TEAM-128: All auth events logged with fingerprints (token:XXXXXX format)");
 }
 
@@ -812,19 +828,27 @@ pub async fn then_no_degradation(world: &mut World) {
         if timings.len() >= 20 {
             let first_n = timings.len() / 10;
             let last_n = timings.len() / 10;
-            
-            let first_avg = timings[..first_n].iter().sum::<Duration>().as_millis() as f64 / first_n as f64;
-            let last_avg = timings[timings.len()-last_n..].iter().sum::<Duration>().as_millis() as f64 / last_n as f64;
-            
+
+            let first_avg =
+                timings[..first_n].iter().sum::<Duration>().as_millis() as f64 / first_n as f64;
+            let last_avg = timings[timings.len() - last_n..].iter().sum::<Duration>().as_millis()
+                as f64
+                / last_n as f64;
+
             let degradation_pct = ((last_avg - first_avg) / first_avg) * 100.0;
-            
-            assert!(degradation_pct < 10.0, 
-                    "Performance degradation detected: {:.2}% slower", degradation_pct);
-            
+
+            assert!(
+                degradation_pct < 10.0,
+                "Performance degradation detected: {:.2}% slower",
+                degradation_pct
+            );
+
             tracing::info!("✅ TEAM-128: No performance degradation (first: {:.2}ms, last: {:.2}ms, diff: {:.2}%)", 
                           first_avg, last_avg, degradation_pct);
         } else {
-            tracing::info!("✅ TEAM-128: No performance degradation detected (insufficient samples)");
+            tracing::info!(
+                "✅ TEAM-128: No performance degradation detected (insufficient samples)"
+            );
         }
     }
 }
@@ -842,14 +866,15 @@ pub async fn then_no_degradation(world: &mut World) {
 // Step 26: POST without Authorization header
 #[when(expr = "I send POST to {string} without Authorization header")]
 pub async fn when_post_without_auth_header(world: &mut World, path: String) -> Result<(), String> {
-    let url = format!("{}{}", world.base_url.as_ref().unwrap_or(&"http://localhost:8080".to_string()), path);
-    
+    let url = format!(
+        "{}{}",
+        world.base_url.as_ref().unwrap_or(&"http://localhost:8080".to_string()),
+        path
+    );
+
     let client = reqwest::Client::new();
-    let response = client.post(&url)
-        .send()
-        .await
-        .map_err(|e| format!("Request failed: {}", e))?;
-    
+    let response = client.post(&url).send().await.map_err(|e| format!("Request failed: {}", e))?;
+
     world.last_response_status = Some(response.status().as_u16());
     tracing::info!("✅ POST {} without auth: status {}", path, response.status());
     Ok(())
@@ -858,14 +883,15 @@ pub async fn when_post_without_auth_header(world: &mut World, path: String) -> R
 // Step 27: GET without Authorization header
 #[when(expr = "I send GET to {string} without Authorization header")]
 pub async fn when_get_without_auth_header(world: &mut World, path: String) -> Result<(), String> {
-    let url = format!("{}{}", world.base_url.as_ref().unwrap_or(&"http://localhost:8080".to_string()), path);
-    
+    let url = format!(
+        "{}{}",
+        world.base_url.as_ref().unwrap_or(&"http://localhost:8080".to_string()),
+        path
+    );
+
     let client = reqwest::Client::new();
-    let response = client.get(&url)
-        .send()
-        .await
-        .map_err(|e| format!("Request failed: {}", e))?;
-    
+    let response = client.get(&url).send().await.map_err(|e| format!("Request failed: {}", e))?;
+
     world.last_response_status = Some(response.status().as_u16());
     tracing::info!("✅ GET {} without auth: status {}", path, response.status());
     Ok(())
@@ -873,25 +899,32 @@ pub async fn when_get_without_auth_header(world: &mut World, path: String) -> Re
 
 // Step 28: Send N authenticated requests
 #[when(expr = "I send {int} authenticated requests")]
-pub async fn when_send_n_authenticated_requests(world: &mut World, count: usize) -> Result<(), String> {
-    let url = format!("{}/health", world.base_url.as_ref().unwrap_or(&"http://localhost:8080".to_string()));
+pub async fn when_send_n_authenticated_requests(
+    world: &mut World,
+    count: usize,
+) -> Result<(), String> {
+    let url = format!(
+        "{}/health",
+        world.base_url.as_ref().unwrap_or(&"http://localhost:8080".to_string())
+    );
     let token = world.api_token.as_ref().ok_or("No API token set")?;
-    
+
     let client = reqwest::Client::new();
     let mut success_count = 0;
-    
+
     for _ in 0..count {
-        let response = client.get(&url)
+        let response = client
+            .get(&url)
             .header("Authorization", format!("Bearer {}", token))
             .send()
             .await
             .map_err(|e| format!("Request failed: {}", e))?;
-        
+
         if response.status().is_success() {
             success_count += 1;
         }
     }
-    
+
     world.request_count = success_count;
     tracing::info!("✅ Sent {} authenticated requests, {} succeeded", count, success_count);
     Ok(())

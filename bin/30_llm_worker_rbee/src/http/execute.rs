@@ -11,9 +11,7 @@ use crate::backend::request_queue::GenerationRequest;
 use crate::common::SamplingConfig;
 use crate::http::routes::WorkerState;
 use crate::http::validation::{ExecuteRequest, ValidationErrorResponse};
-use crate::narration::{
-    self, ACTION_ERROR, ACTION_EXECUTE_REQUEST, ACTOR_HTTP_SERVER,
-};
+use crate::narration::{self, ACTION_ERROR, ACTION_EXECUTE_REQUEST, ACTOR_HTTP_SERVER};
 use axum::{extract::State, Json};
 use observability_narration_core::NarrationFields;
 use serde::Serialize;
@@ -93,7 +91,7 @@ pub async fn handle_create_job(
     // - Receiver stored in registry for GET endpoint to consume
     let (response_tx, response_rx) = tokio::sync::mpsc::unbounded_channel();
     state.registry.set_token_receiver(&job_id, response_rx);
-    
+
     // TEAM-154: Add request to queue
     // Generation happens in spawn_blocking, HTTP handler returns immediately
     let generation_request = GenerationRequest {
@@ -102,7 +100,7 @@ pub async fn handle_create_job(
         config,
         response_tx,
     };
-    
+
     if let Err(e) = state.queue.add_request(generation_request) {
         warn!(job_id = %job_id, error = %e, "Failed to queue request");
 
@@ -117,12 +115,9 @@ pub async fn handle_create_job(
             ..Default::default()
         });
 
-        return Err(ValidationErrorResponse::single_error(
-            "queue",
-            "Failed to queue job",
-        ));
+        return Err(ValidationErrorResponse::single_error("queue", "Failed to queue job"));
     }
-    
+
     // TEAM-154: Return job_id and sse_url (JSON response, not SSE!)
     // Client will then call GET /v1/inference/{job_id}/stream for SSE
     let sse_url = format!("/v1/inference/{}/stream", job_id);

@@ -239,8 +239,10 @@ pub async fn then_variance_less_than(world: &mut World, max_variance: u32) {
     // TEAM-125: Calculate timing variance for constant-time verification
     let valid = world.timing_measurements.as_ref().expect("No valid timings");
     let invalid = world.timing_measurements_invalid.as_ref().expect("No invalid timings");
-    let avg_valid: f64 = valid.iter().map(|d| d.as_micros() as f64).sum::<f64>() / valid.len() as f64;
-    let avg_invalid: f64 = invalid.iter().map(|d| d.as_micros() as f64).sum::<f64>() / invalid.len() as f64;
+    let avg_valid: f64 =
+        valid.iter().map(|d| d.as_micros() as f64).sum::<f64>() / valid.len() as f64;
+    let avg_invalid: f64 =
+        invalid.iter().map(|d| d.as_micros() as f64).sum::<f64>() / invalid.len() as f64;
     let variance = ((avg_valid - avg_invalid).abs() / avg_valid) * 100.0;
     assert!(variance < max_variance as f64, "Variance {}% >= {}%", variance, max_variance);
     tracing::info!("✅ Verified variance {:.2}% < {}%", variance, max_variance);
@@ -423,18 +425,21 @@ pub async fn given_file_permissions_group_readable(world: &mut World, perms: Str
 
 // Step 31: Systemd credential exists
 #[given(expr = "systemd credential exists at {string}")]
-pub async fn given_systemd_credential_exists(world: &mut World, path: String) -> Result<(), String> {
+pub async fn given_systemd_credential_exists(
+    world: &mut World,
+    path: String,
+) -> Result<(), String> {
     use std::path::Path;
-    
+
     let path_obj = Path::new(&path);
     if let Some(parent) = path_obj.parent() {
         fs::create_dir_all(parent)
             .map_err(|e| format!("Failed to create systemd credential dir: {}", e))?;
     }
-    
+
     fs::write(&path, "test-token-12345")
         .map_err(|e| format!("Failed to write credential: {}", e))?;
-    
+
     world.systemd_credential_path = Some(path.clone());
     tracing::info!("✅ systemd credential created at {}", path);
     Ok(())

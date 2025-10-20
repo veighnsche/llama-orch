@@ -95,7 +95,8 @@ impl QuantizedLlamaModel {
         });
 
         // TEAM-088: List all available metadata keys for debugging
-        let available_keys: Vec<String> = content.metadata.keys().map(std::string::ToString::to_string).collect();
+        let available_keys: Vec<String> =
+            content.metadata.keys().map(std::string::ToString::to_string).collect();
         tracing::debug!(keys = ?available_keys, "Available GGUF metadata keys");
 
         narrate(NarrationFields {
@@ -121,7 +122,7 @@ impl QuantizedLlamaModel {
                         candle_core::quantized::gguf_file::Value::Array(arr) => Some(arr.len() as u32),
                         _ => None,
                     });
-                
+
                 if let Some(size) = derived_size {
                     // TEAM-089: Narrate successful vocab_size derivation
                     narrate(NarrationFields {
@@ -132,14 +133,14 @@ impl QuantizedLlamaModel {
                         cute: Some(format!("Found vocab_size by counting {size} tokens! 🔢✨")),
                         ..Default::default()
                     });
-                    
+
                     tracing::info!(
                         vocab_size = size,
                         source = "tokenizer.ggml.tokens",
                         "Derived vocab_size from tokenizer array"
                     );
                 }
-                
+
                 derived_size
             })
             .with_context(|| {
@@ -154,13 +155,13 @@ impl QuantizedLlamaModel {
                     error_kind: Some("missing_metadata_field".to_string()),
                     ..Default::default()
                 });
-                
+
                 tracing::error!(
                     required_key = "llama.vocab_size or tokenizer.ggml.tokens",
                     available_keys = ?available_keys,
                     "GGUF metadata missing required field"
                 );
-                
+
                 format!(
                     "Cannot determine vocab_size: missing both llama.vocab_size and tokenizer.ggml.tokens. \
                      Available keys: [{}]. This GGUF file may be incomplete or corrupted. \

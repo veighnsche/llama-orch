@@ -41,10 +41,10 @@ pub fn check_duplicate_steps() -> Result<()> {
     {
         let path = entry.path();
         let relative_path = path.strip_prefix(&steps_dir).unwrap_or(path);
-        
+
         total_files += 1;
-        let content = fs::read_to_string(path)
-            .context(format!("Failed to read {}", path.display()))?;
+        let content =
+            fs::read_to_string(path).context(format!("Failed to read {}", path.display()))?;
 
         let steps = extract_step_definitions(&content, relative_path.to_string_lossy().to_string());
         total_steps += steps.len();
@@ -54,11 +54,7 @@ pub fn check_duplicate_steps() -> Result<()> {
         }
     }
 
-    println!("{} {} files, {} step definitions", 
-        "📊 Found:".green(), 
-        total_files, 
-        total_steps
-    );
+    println!("{} {} files, {} step definitions", "📊 Found:".green(), total_files, total_steps);
     println!();
 
     // Find duplicates
@@ -72,13 +68,9 @@ pub fn check_duplicate_steps() -> Result<()> {
 
             println!("{} {}", "❌ DUPLICATE STEP:".red().bold(), pattern.yellow());
             println!();
-            
+
             for def in definitions {
-                println!("  {} {}:{}", 
-                    "→".red(),
-                    def.file.cyan(),
-                    def.line.to_string().yellow()
-                );
+                println!("  {} {}:{}", "→".red(), def.file.cyan(), def.line.to_string().yellow());
                 println!("    Function: {}", def.function_name.white());
             }
             println!();
@@ -88,7 +80,8 @@ pub fn check_duplicate_steps() -> Result<()> {
     if duplicates_found {
         println!();
         println!("{}", "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━".red());
-        println!("{} {} duplicate step definition(s) found!", 
+        println!(
+            "{} {} duplicate step definition(s) found!",
             "❌ FAILURE:".red().bold(),
             duplicate_count
         );
@@ -101,7 +94,7 @@ pub fn check_duplicate_steps() -> Result<()> {
         println!("  2. Make sure each step pattern is unique across all files");
         println!("  3. Run this check again: cargo xtask bdd:check-duplicates");
         println!();
-        
+
         std::process::exit(1);
     } else {
         println!("{}", "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━".green());
@@ -121,12 +114,12 @@ fn extract_step_definitions(content: &str, file: String) -> Vec<StepDefinition> 
 
     for (i, line) in lines.iter().enumerate() {
         let trimmed = line.trim();
-        
+
         // Look for step attributes: #[given(...)] #[when(...)] #[then(...)]
-        if trimmed.starts_with("#[given(") || 
-           trimmed.starts_with("#[when(") || 
-           trimmed.starts_with("#[then(") {
-            
+        if trimmed.starts_with("#[given(")
+            || trimmed.starts_with("#[when(")
+            || trimmed.starts_with("#[then(")
+        {
             // Extract the pattern from expr = "..." or regex = r"..."
             if let Some(pattern) = extract_pattern(trimmed) {
                 // Next non-empty line should be the function definition
@@ -153,11 +146,11 @@ fn extract_pattern(attribute_line: &str) -> Option<String> {
             return Some(after_expr[..end].to_string());
         }
     }
-    
+
     // Handle regex = r#"pattern"# or regex = r"pattern" or regex = "pattern"
     if let Some(start) = attribute_line.find("regex = ") {
         let after_regex = &attribute_line[start + 8..].trim_start();
-        
+
         // Handle r#"..."#
         if after_regex.starts_with("r#\"") {
             let content = &after_regex[3..];
@@ -188,7 +181,10 @@ fn find_function_name(lines: &[&str], start_idx: usize) -> Option<String> {
     // Look for "pub async fn function_name" in the next few lines
     for i in start_idx..std::cmp::min(start_idx + 5, lines.len()) {
         let line = lines[i].trim();
-        if line.starts_with("pub async fn ") || line.starts_with("async fn ") || line.starts_with("pub fn ") {
+        if line.starts_with("pub async fn ")
+            || line.starts_with("async fn ")
+            || line.starts_with("pub fn ")
+        {
             // Extract function name
             let after_fn = if line.starts_with("pub async fn ") {
                 &line[13..]
@@ -197,7 +193,7 @@ fn find_function_name(lines: &[&str], start_idx: usize) -> Option<String> {
             } else {
                 &line[7..]
             };
-            
+
             if let Some(paren_pos) = after_fn.find('(') {
                 return Some(after_fn[..paren_pos].to_string());
             }

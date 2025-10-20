@@ -1198,26 +1198,24 @@ impl Default for World {
 impl World {
     /// TEAM-121: Check if a service is available
     pub async fn check_service_available(&self, url: &str) -> bool {
-        let client = reqwest::Client::builder()
-            .timeout(std::time::Duration::from_secs(2))
-            .build()
-            .unwrap();
-        
+        let client =
+            reqwest::Client::builder().timeout(std::time::Duration::from_secs(2)).build().unwrap();
+
         match client.get(url).send().await {
             Ok(response) => response.status().is_success(),
             Err(_) => false,
         }
     }
-    
+
     /// TEAM-121: Skip test if services not available
     pub async fn require_services(&self) -> Result<(), String> {
         let queen_available = self.check_service_available("http://localhost:8080/health").await;
         let hive_available = self.check_service_available("http://localhost:8081/health").await;
-        
+
         if !queen_available || !hive_available {
             return Err("Services not available - skipping integration test".to_string());
         }
-        
+
         Ok(())
     }
 }

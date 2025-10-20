@@ -87,14 +87,13 @@ impl HiveCatalog {
     /// TEAM-156: Initializes SQLite database and creates schema if needed
     pub async fn new(db_path: &Path) -> Result<Self> {
         let db_url = format!("sqlite:{}", db_path.display());
-        
-        let options = SqliteConnectOptions::from_str(&db_url)?
-            .create_if_missing(true);
-        
+
+        let options = SqliteConnectOptions::from_str(&db_url)?.create_if_missing(true);
+
         let pool = SqlitePool::connect_with(options)
             .await
             .context("Failed to connect to SQLite database")?;
-        
+
         // TEAM-156: Create schema if not exists
         sqlx::query(
             r#"
@@ -115,7 +114,7 @@ impl HiveCatalog {
         .execute(&pool)
         .await
         .context("Failed to create hives table")?;
-        
+
         Ok(Self { pool })
     }
 
@@ -127,12 +126,12 @@ impl HiveCatalog {
             .fetch_all(&self.pool)
             .await
             .context("Failed to list hives")?;
-        
+
         let mut hives = Vec::new();
         for row in rows {
             let status_str: String = row.try_get("status")?;
             let status = HiveStatus::from_str(&status_str)?;
-            
+
             hives.push(HiveRecord {
                 id: row.try_get("id")?,
                 host: row.try_get("host")?,
@@ -146,7 +145,7 @@ impl HiveCatalog {
                 updated_at_ms: row.try_get("updated_at_ms")?,
             });
         }
-        
+
         Ok(hives)
     }
 
@@ -159,11 +158,11 @@ impl HiveCatalog {
             .fetch_optional(&self.pool)
             .await
             .context("Failed to get hive")?;
-        
+
         if let Some(row) = row {
             let status_str: String = row.try_get("status")?;
             let status = HiveStatus::from_str(&status_str)?;
-            
+
             Ok(Some(HiveRecord {
                 id: row.try_get("id")?,
                 host: row.try_get("host")?,
@@ -206,7 +205,7 @@ impl HiveCatalog {
         .execute(&self.pool)
         .await
         .context("Failed to add hive")?;
-        
+
         Ok(())
     }
 
@@ -215,7 +214,7 @@ impl HiveCatalog {
     /// TEAM-156: Updates status and updated_at timestamp
     pub async fn update_hive_status(&self, id: &str, status: HiveStatus) -> Result<()> {
         let now_ms = chrono::Utc::now().timestamp_millis();
-        
+
         sqlx::query(
             r#"
             UPDATE hives
@@ -229,7 +228,7 @@ impl HiveCatalog {
         .execute(&self.pool)
         .await
         .context("Failed to update hive status")?;
-        
+
         Ok(())
     }
 
@@ -238,7 +237,7 @@ impl HiveCatalog {
     /// TEAM-156: Records last heartbeat time
     pub async fn update_heartbeat(&self, id: &str, timestamp_ms: i64) -> Result<()> {
         let now_ms = chrono::Utc::now().timestamp_millis();
-        
+
         sqlx::query(
             r#"
             UPDATE hives
@@ -252,7 +251,7 @@ impl HiveCatalog {
         .execute(&self.pool)
         .await
         .context("Failed to update heartbeat")?;
-        
+
         Ok(())
     }
 }
@@ -266,10 +265,10 @@ mod tests {
     async fn test_create_catalog() {
         let dir = tempdir().unwrap();
         let db_path = dir.path().join("test.db");
-        
+
         let catalog = HiveCatalog::new(&db_path).await.unwrap();
         let hives = catalog.list_hives().await.unwrap();
-        
+
         assert_eq!(hives.len(), 0);
     }
 
@@ -277,9 +276,9 @@ mod tests {
     async fn test_add_and_list_hives() {
         let dir = tempdir().unwrap();
         let db_path = dir.path().join("test.db");
-        
+
         let catalog = HiveCatalog::new(&db_path).await.unwrap();
-        
+
         let now_ms = chrono::Utc::now().timestamp_millis();
         let hive = HiveRecord {
             id: "localhost".to_string(),
@@ -293,9 +292,9 @@ mod tests {
             created_at_ms: now_ms,
             updated_at_ms: now_ms,
         };
-        
+
         catalog.add_hive(hive).await.unwrap();
-        
+
         let hives = catalog.list_hives().await.unwrap();
         assert_eq!(hives.len(), 1);
         assert_eq!(hives[0].id, "localhost");
@@ -307,9 +306,9 @@ mod tests {
     async fn test_get_hive() {
         let dir = tempdir().unwrap();
         let db_path = dir.path().join("test.db");
-        
+
         let catalog = HiveCatalog::new(&db_path).await.unwrap();
-        
+
         let now_ms = chrono::Utc::now().timestamp_millis();
         let hive = HiveRecord {
             id: "test-hive".to_string(),
@@ -323,16 +322,16 @@ mod tests {
             created_at_ms: now_ms,
             updated_at_ms: now_ms,
         };
-        
+
         catalog.add_hive(hive).await.unwrap();
-        
+
         let retrieved = catalog.get_hive("test-hive").await.unwrap();
         assert!(retrieved.is_some());
-        
+
         let retrieved = retrieved.unwrap();
         assert_eq!(retrieved.id, "test-hive");
         assert_eq!(retrieved.status, HiveStatus::Online);
-        
+
         let not_found = catalog.get_hive("nonexistent").await.unwrap();
         assert!(not_found.is_none());
     }
@@ -341,9 +340,9 @@ mod tests {
     async fn test_update_status() {
         let dir = tempdir().unwrap();
         let db_path = dir.path().join("test.db");
-        
+
         let catalog = HiveCatalog::new(&db_path).await.unwrap();
-        
+
         let now_ms = chrono::Utc::now().timestamp_millis();
         let hive = HiveRecord {
             id: "status-test".to_string(),
@@ -357,10 +356,10 @@ mod tests {
             created_at_ms: now_ms,
             updated_at_ms: now_ms,
         };
-        
+
         catalog.add_hive(hive).await.unwrap();
         catalog.update_hive_status("status-test", HiveStatus::Online).await.unwrap();
-        
+
         let updated = catalog.get_hive("status-test").await.unwrap().unwrap();
         assert_eq!(updated.status, HiveStatus::Online);
     }
@@ -369,9 +368,9 @@ mod tests {
     async fn test_update_heartbeat() {
         let dir = tempdir().unwrap();
         let db_path = dir.path().join("test.db");
-        
+
         let catalog = HiveCatalog::new(&db_path).await.unwrap();
-        
+
         let now_ms = chrono::Utc::now().timestamp_millis();
         let hive = HiveRecord {
             id: "heartbeat-test".to_string(),
@@ -385,12 +384,12 @@ mod tests {
             created_at_ms: now_ms,
             updated_at_ms: now_ms,
         };
-        
+
         catalog.add_hive(hive).await.unwrap();
-        
+
         let heartbeat_time = chrono::Utc::now().timestamp_millis();
         catalog.update_heartbeat("heartbeat-test", heartbeat_time).await.unwrap();
-        
+
         let updated = catalog.get_hive("heartbeat-test").await.unwrap().unwrap();
         assert_eq!(updated.last_heartbeat_ms, Some(heartbeat_time));
     }

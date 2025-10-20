@@ -50,15 +50,7 @@ fn main() -> Result<()> {
         }
         Cmd::BddProgress { compare } => handle_bdd_progress(compare)?,
         Cmd::BddStubs { file, min_stubs } => handle_bdd_stubs(file, min_stubs)?,
-        Cmd::WorkerTest {
-            worker_id,
-            model,
-            backend,
-            device,
-            port,
-            hive_port,
-            timeout,
-        } => {
+        Cmd::WorkerTest { worker_id, model, backend, device, port, hive_port, timeout } => {
             let mut config = tasks::worker::WorkerTestConfig::default();
             if let Some(id) = worker_id {
                 config.worker_id = id;
@@ -140,11 +132,8 @@ fn handle_bdd_stubs(file: Option<String>, min_stubs: usize) -> Result<()> {
         println!("{:<40} {:>10} {:>8} {:>8}", "File", "Functions", "Stubs", "% Stub");
         println!("{}", "-".repeat(70));
 
-        let mut files: Vec<_> = results
-            .files
-            .iter()
-            .filter(|f| f.stub_count >= min_stubs)
-            .collect();
+        let mut files: Vec<_> =
+            results.files.iter().filter(|f| f.stub_count >= min_stubs).collect();
         files.sort_by(|a, b| b.stub_count.cmp(&a.stub_count));
 
         for file in files {

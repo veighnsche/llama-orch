@@ -1,27 +1,24 @@
 // TEAM-152: Created by TEAM-152
 // Purpose: BDD step definitions for queen lifecycle
 
-use cucumber::{given, then, when};
 use super::world::World;
+use cucumber::{given, then, when};
 
 #[given("queen-rbee is running on port 8500")]
 async fn queen_is_running(world: &mut World) {
     // Check if queen is actually running
     let client = reqwest::Client::new();
-    let result = client
-        .get("http://localhost:8500/health")
-        .send()
-        .await;
-    
+    let result = client.get("http://localhost:8500/health").send().await;
+
     world.queen_was_running = result.is_ok();
-    
+
     if !world.queen_was_running {
         // Start queen for this test
         let _ = std::process::Command::new("./target/debug/queen-rbee")
             .arg("--port")
             .arg("8500")
             .spawn();
-        
+
         // Wait for it to be ready
         tokio::time::sleep(tokio::time::Duration::from_secs(2)).await;
     }
@@ -30,13 +27,10 @@ async fn queen_is_running(world: &mut World) {
 #[given("queen-rbee is not running")]
 async fn queen_is_not_running(world: &mut World) {
     // Kill any running queen
-    let _ = std::process::Command::new("pkill")
-        .arg("-f")
-        .arg("queen-rbee")
-        .output();
-    
+    let _ = std::process::Command::new("pkill").arg("-f").arg("queen-rbee").output();
+
     world.queen_was_running = false;
-    
+
     // Wait a bit to ensure it's stopped
     tokio::time::sleep(tokio::time::Duration::from_millis(500)).await;
 }
@@ -44,7 +38,7 @@ async fn queen_is_not_running(world: &mut World) {
 #[when("I ensure queen is running")]
 async fn ensure_queen_running(world: &mut World) {
     world.ensure_called = true;
-    
+
     match rbee_keeper_queen_lifecycle::ensure_queen_running("http://localhost:8500").await {
         Ok(handle) => {
             world.queen_handle = Some(handle);
@@ -72,11 +66,8 @@ async fn should_not_see_message(world: &mut World, message: String) {
 async fn should_start_process(_world: &mut World) {
     // Check that queen is now running
     let client = reqwest::Client::new();
-    let result = client
-        .get("http://localhost:8500/health")
-        .send()
-        .await;
-    
+    let result = client.get("http://localhost:8500/health").send().await;
+
     assert!(result.is_ok(), "Queen should be running after ensure_queen_running");
 }
 
@@ -94,11 +85,8 @@ async fn should_poll_health(_world: &mut World) {
 #[then("queen should be running on port 8500")]
 async fn queen_should_be_running(_world: &mut World) {
     let client = reqwest::Client::new();
-    let result = client
-        .get("http://localhost:8500/health")
-        .send()
-        .await;
-    
+    let result = client.get("http://localhost:8500/health").send().await;
+
     assert!(result.is_ok(), "Queen should be running on port 8500");
 }
 
@@ -106,11 +94,8 @@ async fn queen_should_be_running(_world: &mut World) {
 async fn queen_responds_to_health(_world: &mut World) {
     // This is tested by ensure_queen_running with 30s timeout
     let client = reqwest::Client::new();
-    let result = client
-        .get("http://localhost:8500/health")
-        .send()
-        .await;
-    
+    let result = client.get("http://localhost:8500/health").send().await;
+
     assert!(result.is_ok(), "Queen should respond to health checks");
 }
 
@@ -122,10 +107,10 @@ async fn health_returns_status(_world: &mut World, expected_status: String) {
         .send()
         .await
         .expect("Health check should succeed");
-    
+
     let body: serde_json::Value = response.json().await.expect("Should parse JSON");
     let status = body["status"].as_str().expect("Should have status field");
-    
+
     assert_eq!(status, expected_status, "Health status should match");
 }
 
@@ -159,13 +144,10 @@ async fn should_send_shutdown(_world: &mut World) {
 async fn queen_should_stop() {
     // Wait a bit for shutdown to complete
     tokio::time::sleep(tokio::time::Duration::from_millis(500)).await;
-    
+
     let client = reqwest::Client::new();
-    let result = client
-        .get("http://localhost:8500/health")
-        .send()
-        .await;
-    
+    let result = client.get("http://localhost:8500/health").send().await;
+
     assert!(result.is_err(), "Queen should have stopped");
 }
 
@@ -177,11 +159,8 @@ async fn should_not_send_shutdown(_world: &mut World) {
 #[then("queen should still be running")]
 async fn queen_should_still_be_running(_world: &mut World) {
     let client = reqwest::Client::new();
-    let result = client
-        .get("http://localhost:8500/health")
-        .send()
-        .await;
-    
+    let result = client.get("http://localhost:8500/health").send().await;
+
     assert!(result.is_ok(), "Queen should still be running");
 }
 

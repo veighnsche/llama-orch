@@ -15,7 +15,7 @@ pub async fn handle_shutdown() -> StatusCode {
     Narration::new(ACTOR_QUEEN_RBEE, ACTION_SHUTDOWN, "http-server")
         .human("Received shutdown request, exiting gracefully")
         .emit();
-    
+
     // Exit the process gracefully
     std::process::exit(0);
 }

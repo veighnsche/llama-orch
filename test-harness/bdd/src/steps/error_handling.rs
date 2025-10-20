@@ -75,7 +75,7 @@ pub async fn given_rbee_hive_binary_not_found(world: &mut World) {
 pub async fn then_queen_attempts_ssh_with_timeout(world: &mut World, timeout: u16) {
     // TEAM-118: Store SSH timeout in world state
     world.ssh_timeout = Some(timeout as u64);
-    
+
     let node = world.beehive_nodes.get("workstation").expect("Node 'workstation' not in registry");
 
     let start = std::time::Instant::now();
@@ -684,7 +684,10 @@ pub async fn when_no_progress(world: &mut World, seconds: u16) {
 #[then(expr = "rbee-hive detects stall timeout")]
 pub async fn then_detects_stall(world: &mut World) {
     // TEAM-125: Verify stall detected
-    assert!(world.last_action.as_ref().map(|a| a.contains("no_progress")).unwrap_or(false), "No stall detected");
+    assert!(
+        world.last_action.as_ref().map(|a| a.contains("no_progress")).unwrap_or(false),
+        "No stall detected"
+    );
     tracing::debug!("✅ Stall timeout detected");
 }
 
@@ -788,7 +791,7 @@ pub async fn then_validates_ssh_key(world: &mut World) {
     let stderr = &world.last_stderr;
     let stdout = &world.last_stdout;
     let combined = format!("{}{}", stderr, stdout);
-    
+
     // TEAM-123: If the error message contains "SSH key", validation happened
     // If it contains "Connection" or "timeout", validation was skipped (bad!)
     if combined.contains("SSH key") || combined.contains("key not found") {
@@ -1002,7 +1005,10 @@ pub async fn when_no_tokens(world: &mut World, seconds: u16) {
 #[then(expr = "rbee-keeper detects stall timeout")]
 pub async fn then_detects_stall_timeout(world: &mut World) {
     // TEAM-125: Verify stall timeout detected
-    assert!(world.last_action.as_ref().map(|a| a.contains("no_tokens")).unwrap_or(false), "No stall");
+    assert!(
+        world.last_action.as_ref().map(|a| a.contains("no_tokens")).unwrap_or(false),
+        "No stall"
+    );
     tracing::debug!("✅ Stall timeout detected");
 }
 

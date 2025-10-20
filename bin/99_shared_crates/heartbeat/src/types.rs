@@ -81,12 +81,12 @@ mod tests {
         };
 
         let json = serde_json::to_string(&payload).unwrap();
-        
+
         // Verify all fields are present
         assert!(json.contains("worker-123"));
         assert!(json.contains("2025-10-19T00:00:00Z"));
         assert!(json.contains("healthy"));
-        
+
         // Verify it's valid JSON
         let _: serde_json::Value = serde_json::from_str(&json).unwrap();
     }
@@ -100,7 +100,7 @@ mod tests {
         }"#;
 
         let payload: WorkerHeartbeatPayload = serde_json::from_str(json).unwrap();
-        
+
         assert_eq!(payload.worker_id, "worker-456");
         assert_eq!(payload.timestamp, "2025-10-20T01:00:00Z");
         assert!(matches!(payload.health_status, HealthStatus::Degraded));
@@ -200,15 +200,15 @@ mod tests {
         };
 
         let json = serde_json::to_string(&payload).unwrap();
-        
+
         // Verify hive info
         assert!(json.contains("hive-prod"));
-        
+
         // Verify all workers are present
         assert!(json.contains("worker-1"));
         assert!(json.contains("worker-2"));
         assert!(json.contains("worker-3"));
-        
+
         // Verify states
         assert!(json.contains("Idle"));
         assert!(json.contains("Busy"));
@@ -231,7 +231,7 @@ mod tests {
         }"#;
 
         let payload: HiveHeartbeatPayload = serde_json::from_str(json).unwrap();
-        
+
         assert_eq!(payload.hive_id, "hive-test");
         assert_eq!(payload.workers.len(), 1);
         assert_eq!(payload.workers[0].worker_id, "w1");
@@ -261,7 +261,7 @@ mod tests {
     #[test]
     fn worker_state_allows_different_state_values() {
         let states = vec!["Idle", "Busy", "Loading", "Error", "Shutdown"];
-        
+
         for state_value in states {
             let state = WorkerState {
                 worker_id: "worker".to_string(),
@@ -269,7 +269,7 @@ mod tests {
                 last_heartbeat: "2025-10-20T00:00:00Z".to_string(),
                 health_status: "healthy".to_string(),
             };
-            
+
             assert_eq!(state.state, state_value);
         }
     }
@@ -285,7 +285,7 @@ mod tests {
 
         let json = serde_json::to_string(&state).unwrap();
         let parsed: serde_json::Value = serde_json::from_str(&json).unwrap();
-        
+
         // Verify it's an object with expected keys
         assert!(parsed.is_object());
         assert!(parsed.get("worker_id").is_some());
@@ -308,7 +308,7 @@ mod tests {
 
         let json = serde_json::to_string(&payload).unwrap();
         let deserialized: WorkerHeartbeatPayload = serde_json::from_str(&json).unwrap();
-        
+
         assert_eq!(deserialized.worker_id, "worker-123-abc_def.test");
     }
 
@@ -331,7 +331,7 @@ mod tests {
 
         let json = serde_json::to_string(&payload).unwrap();
         let deserialized: HiveHeartbeatPayload = serde_json::from_str(&json).unwrap();
-        
+
         assert_eq!(deserialized.workers.len(), 100);
         assert_eq!(deserialized.workers[0].worker_id, "worker-0");
         assert_eq!(deserialized.workers[99].worker_id, "worker-99");
@@ -346,7 +346,7 @@ mod tests {
         };
 
         let cloned = original.clone();
-        
+
         assert_eq!(original.worker_id, cloned.worker_id);
         assert_eq!(original.timestamp, cloned.timestamp);
     }
@@ -355,7 +355,7 @@ mod tests {
     fn health_status_clone_works_correctly() {
         let healthy = HealthStatus::Healthy;
         let cloned = healthy.clone();
-        
+
         assert!(matches!(cloned, HealthStatus::Healthy));
     }
 }

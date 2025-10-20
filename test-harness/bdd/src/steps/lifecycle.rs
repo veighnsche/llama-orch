@@ -668,10 +668,10 @@ pub async fn then_hive_removes_worker(world: &mut World) {
 pub async fn when_hive_spawns_worker(world: &mut World) {
     let worker_id = format!("worker-{}", uuid::Uuid::new_v4());
     let pid = std::process::id(); // Mock PID for testing
-    
+
     world.last_worker_id = Some(worker_id.clone());
     world.worker_pids.insert(worker_id.clone(), pid);
-    
+
     tracing::info!("✅ rbee-hive spawned worker {} with PID {}", worker_id, pid);
 }
 
@@ -743,9 +743,9 @@ pub async fn when_inference_runs(world: &mut World, minutes: u64) {
 pub async fn given_hive_with_workers(world: &mut World, count: usize) {
     use rbee_hive::registry::{WorkerInfo, WorkerState};
     use std::time::SystemTime;
-    
+
     let registry = world.hive_registry();
-    
+
     for i in 0..count {
         let worker = WorkerInfo {
             id: format!("worker-{:03}", i + 1),
@@ -765,6 +765,6 @@ pub async fn given_hive_with_workers(world: &mut World, count: usize) {
         };
         registry.register(worker).await;
     }
-    
+
     tracing::info!("✅ rbee-hive running with {} worker(s)", count);
 }

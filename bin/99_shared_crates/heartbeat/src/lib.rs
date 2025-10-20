@@ -56,19 +56,17 @@
 //! Refactored by: TEAM-151 (modular structure)
 
 // Modules
-pub mod types;
-pub mod worker;
 pub mod hive;
-pub mod queen; // TEAM-158: Queen heartbeat receiver
+pub mod queen;
+pub mod types;
+pub mod worker; // TEAM-158: Queen heartbeat receiver
 
 // ============================================================================
 // Re-exports for Convenience
 // ============================================================================
 
 // Re-export commonly used types
-pub use types::{
-    HealthStatus, HiveHeartbeatPayload, WorkerHeartbeatPayload, WorkerState,
-};
+pub use types::{HealthStatus, HiveHeartbeatPayload, WorkerHeartbeatPayload, WorkerState};
 
 // Re-export worker heartbeat functionality
 pub use worker::{start_worker_heartbeat_task, WorkerHeartbeatConfig};

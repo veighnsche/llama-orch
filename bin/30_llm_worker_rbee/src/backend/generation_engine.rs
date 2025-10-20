@@ -40,7 +40,7 @@ impl GenerationEngine {
     ) -> Self {
         Self { backend, request_rx }
     }
-    
+
     /// Start the generation engine loop
     ///
     /// This spawns a blocking task that processes requests sequentially.
@@ -52,9 +52,9 @@ impl GenerationEngine {
         tokio::task::spawn_blocking(move || {
             // Get tokio runtime handle for async operations within blocking context
             let rt = tokio::runtime::Handle::current();
-            
+
             tracing::info!("Generation engine started");
-            
+
             loop {
                 // Wait for next request (blocking is OK here, we're in spawn_blocking)
                 let request = match rt.block_on(self.request_rx.recv()) {
@@ -64,18 +64,18 @@ impl GenerationEngine {
                         break;
                     }
                 };
-                
+
                 tracing::info!(
                     request_id = %request.request_id,
                     prompt_len = request.prompt.len(),
                     max_tokens = request.config.max_tokens,
                     "Processing generation request"
                 );
-                
+
                 // Lock backend for this request only
                 // CRITICAL: Lock is held only during generation, not while waiting for requests
                 let mut backend = self.backend.lock().unwrap();
-                
+
                 // Generate tokens and send through channel
                 if let Err(e) = Self::generate_streaming(
                     &mut backend,
@@ -89,18 +89,18 @@ impl GenerationEngine {
                         "Generation failed"
                     );
                 }
-                
+
                 // Lock is released here, next request can proceed
                 tracing::debug!(
                     request_id = %request.request_id,
                     "Request completed, backend lock released"
                 );
             }
-            
+
             tracing::info!("Generation engine stopped");
         });
     }
-    
+
     /// Generate tokens and stream them through the channel
     ///
     /// This is the core generation loop that:
@@ -118,56 +118,54 @@ impl GenerationEngine {
         response_tx: mpsc::UnboundedSender<TokenResponse>,
     ) -> Result<()> {
         // Tokenize prompt
-        let encoding = backend.tokenizer.encode(prompt, true)
+        let encoding = backend
+            .tokenizer
+            .encode(prompt, true)
             .map_err(|e| anyhow::anyhow!("Tokenization failed: {}", e))?;
         let mut tokens = encoding.get_ids().to_vec();
-        
+
         tracing::debug!(prompt_tokens = tokens.len(), "Prompt tokenized");
-        
+
         // Reset cache to clear any previous state
         backend.model.reset_cache().context("Failed to reset cache before inference")?;
         tracing::debug!("Cache reset before generation");
-        
+
         // Create sampling components
         let mut logits_processor = sampling::create_logits_processor(config);
         let mut token_stream = TokenOutputStream::new(backend.tokenizer.clone());
-        
+
         // Generate tokens one by one
         for pos in 0..config.max_tokens {
             let pos_usize = pos as usize;
-            
+
             // Prepare input tensor
             let input_ids = if pos == 0 {
                 // First iteration: use all prompt tokens
-                Tensor::new(&tokens[..], &backend.device)?
-                    .unsqueeze(0)? // Add batch dimension: [seq_len] -> [1, seq_len]
+                Tensor::new(&tokens[..], &backend.device)?.unsqueeze(0)? // Add batch dimension: [seq_len] -> [1, seq_len]
             } else {
                 // Subsequent iterations: only last token
-                Tensor::new(&[tokens[tokens.len() - 1]], &backend.device)?
-                    .unsqueeze(0)? // Add batch dimension: [1] -> [1, 1]
+                Tensor::new(&[tokens[tokens.len() - 1]], &backend.device)?.unsqueeze(0)?
+                // Add batch dimension: [1] -> [1, 1]
             };
-            
+
             // Forward pass through model
             let logits = backend.model.forward(&input_ids, pos_usize)?;
-            
+
             // Get logits for last position
             let logits = logits.squeeze(0)?;
-            let logits = if logits.dims().len() > 1 {
-                logits.get(logits.dims()[0] - 1)?
-            } else {
-                logits
-            };
-            
+            let logits =
+                if logits.dims().len() > 1 { logits.get(logits.dims()[0] - 1)? } else { logits };
+
             // Sample next token
             let next_token = logits_processor.sample(&logits)?;
-            
+
             // Check for EOS
             let tokenizer_eos_id = backend.tokenizer.token_to_id("</s>");
             let is_eos = tokenizer_eos_id.map_or_else(
                 || next_token == backend.model.eos_token_id(),
                 |eos_id| next_token == eos_id,
             );
-            
+
             if is_eos {
                 tracing::debug!(
                     pos = pos,
@@ -176,11 +174,13 @@ impl GenerationEngine {
                 );
                 break;
             }
-            
+
             // Decode token and send IMMEDIATELY through channel
             // CRITICAL: This is where real-time streaming happens!
-            if let Some(token_str) = token_stream.next_token(next_token)
-                .map_err(|e| anyhow::anyhow!("Token decode failed: {}", e))? {
+            if let Some(token_str) = token_stream
+                .next_token(next_token)
+                .map_err(|e| anyhow::anyhow!("Token decode failed: {}", e))?
+            {
                 // Send token as soon as it's generated
                 if response_tx.send(TokenResponse::Token(token_str)).is_err() {
                     // Client disconnected, stop generation
@@ -188,26 +188,28 @@ impl GenerationEngine {
                     return Ok(());
                 }
             }
-            
+
             tokens.push(next_token);
-            
+
             // Log progress every 10 tokens
             if (pos + 1) % 10 == 0 {
                 tracing::debug!(tokens_generated = pos + 1, "Generation progress");
             }
         }
-        
+
         // Send any remaining decoded bytes
-        if let Some(rest) = token_stream.decode_rest()
-            .map_err(|e| anyhow::anyhow!("Failed to decode rest: {}", e))? {
+        if let Some(rest) = token_stream
+            .decode_rest()
+            .map_err(|e| anyhow::anyhow!("Failed to decode rest: {}", e))?
+        {
             let _ = response_tx.send(TokenResponse::Token(rest));
         }
-        
+
         // Send done signal
         let _ = response_tx.send(TokenResponse::Done);
-        
+
         tracing::debug!("Generation completed successfully");
-        
+
         Ok(())
     }
 }

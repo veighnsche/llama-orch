@@ -126,32 +126,38 @@ fn is_function_stub(function_lines: &[&str], has_todo: bool) -> bool {
     if has_todo {
         return true;
     }
-    
+
     // Join all lines to analyze the function body
     let body = function_lines.join(" ");
-    
+
     // Check if function modifies world state (world.something = )
     let modifies_world = body.contains("world.") && body.contains(" = ");
-    
+
     // Check if function makes assertions
-    let has_assertions = body.contains("assert!") || body.contains("assert_eq!") || 
-                        body.contains("assert_ne!") || body.contains("panic!");
-    
+    let has_assertions = body.contains("assert!")
+        || body.contains("assert_eq!")
+        || body.contains("assert_ne!")
+        || body.contains("panic!");
+
     // Check if function calls real APIs (reqwest, HTTP, registry, etc.)
-    let calls_apis = body.contains("reqwest::") || body.contains(".send()") ||
-                    body.contains("client.") || body.contains("http::") ||
-                    body.contains("registry.") || body.contains(".register(") ||
-                    body.contains(".update_state(") || body.contains(".list()");
-    
+    let calls_apis = body.contains("reqwest::")
+        || body.contains(".send()")
+        || body.contains("client.")
+        || body.contains("http::")
+        || body.contains("registry.")
+        || body.contains(".register(")
+        || body.contains(".update_state(")
+        || body.contains(".list()");
+
     // Check if function has meaningful logic (if statements, loops, match)
     let has_logic = (body.matches("if ").count() > 1) || // More than just "if let Some"
                    body.contains("for ") || 
                    body.contains("while ") ||
                    (body.matches("match ").count() > 0 && body.contains("=>"));
-    
+
     // Check if function uses world parameter (not just _world)
     let uses_world = body.contains("world.") && !body.contains("_world:");
-    
+
     // A function is a stub if it does NONE of the real work
     // (no state modification, no assertions, no API calls, no logic, doesn't use world)
     !modifies_world && !has_assertions && !calls_apis && !has_logic && !uses_world
@@ -209,11 +215,11 @@ fn analyze_file(path: &Path) -> Result<FileAnalysis> {
         // Track function body
         if in_function {
             function_lines.push(line.trim());
-            
+
             // Count braces to detect function end
             brace_depth += line.matches('{').count() as i32;
             brace_depth -= line.matches('}').count() as i32;
-            
+
             if brace_depth == 0 && line.contains('}') {
                 in_function = false;
             }
@@ -249,11 +255,7 @@ fn analyze_file(path: &Path) -> Result<FileAnalysis> {
     };
 
     Ok(FileAnalysis {
-        name: path
-            .file_name()
-            .and_then(|s| s.to_str())
-            .unwrap_or("unknown")
-            .to_string(),
+        name: path.file_name().and_then(|s| s.to_str()).unwrap_or("unknown").to_string(),
         path: path.to_path_buf(),
         total_functions,
         unused_world,
@@ -319,11 +321,8 @@ pub fn print_text_report(results: &AnalysisResults, detailed: bool, stubs_only: 
         );
         println!("{}", "-".repeat(90));
 
-        let files = if stubs_only {
-            results.files_with_stubs()
-        } else {
-            results.files_by_stub_count()
-        };
+        let files =
+            if stubs_only { results.files_with_stubs() } else { results.files_by_stub_count() };
 
         for file in files {
             if stubs_only && file.stub_count == 0 {
@@ -343,12 +342,8 @@ pub fn print_text_report(results: &AnalysisResults, detailed: bool, stubs_only: 
 
     // Show top 10 files needing work
     println!("\n=== TOP 10 FILES NEEDING WORK ===\n");
-    let top_files: Vec<&FileAnalysis> = results
-        .files_by_stub_count()
-        .into_iter()
-        .filter(|f| f.stub_count > 0)
-        .take(10)
-        .collect();
+    let top_files: Vec<&FileAnalysis> =
+        results.files_by_stub_count().into_iter().filter(|f| f.stub_count > 0).take(10).collect();
 
     for (i, file) in top_files.iter().enumerate() {
         let priority = if file.stub_percentage > 50.0 {
@@ -371,12 +366,8 @@ pub fn print_text_report(results: &AnalysisResults, detailed: bool, stubs_only: 
 
     // Show work estimation
     println!("\n=== WORK ESTIMATION ===\n");
-    let critical_stubs: usize = results
-        .files
-        .iter()
-        .filter(|f| f.stub_percentage > 50.0)
-        .map(|f| f.stub_count)
-        .sum();
+    let critical_stubs: usize =
+        results.files.iter().filter(|f| f.stub_percentage > 50.0).map(|f| f.stub_count).sum();
     let moderate_stubs: usize = results
         .files
         .iter()
@@ -390,11 +381,25 @@ pub fn print_text_report(results: &AnalysisResults, detailed: bool, stubs_only: 
         .map(|f| f.stub_count)
         .sum();
 
-    println!("🔴 CRITICAL (>50% stubs): {} stubs × 20 min = {:.1} hours", critical_stubs, critical_stubs as f64 * 20.0 / 60.0);
-    println!("🟡 MODERATE (20-50% stubs): {} stubs × 15 min = {:.1} hours", moderate_stubs, moderate_stubs as f64 * 15.0 / 60.0);
-    println!("🟢 LOW (<20% stubs): {} stubs × 10 min = {:.1} hours", low_stubs, low_stubs as f64 * 10.0 / 60.0);
-    
-    let total_hours = (critical_stubs as f64 * 20.0 + moderate_stubs as f64 * 15.0 + low_stubs as f64 * 10.0) / 60.0;
+    println!(
+        "🔴 CRITICAL (>50% stubs): {} stubs × 20 min = {:.1} hours",
+        critical_stubs,
+        critical_stubs as f64 * 20.0 / 60.0
+    );
+    println!(
+        "🟡 MODERATE (20-50% stubs): {} stubs × 15 min = {:.1} hours",
+        moderate_stubs,
+        moderate_stubs as f64 * 15.0 / 60.0
+    );
+    println!(
+        "🟢 LOW (<20% stubs): {} stubs × 10 min = {:.1} hours",
+        low_stubs,
+        low_stubs as f64 * 10.0 / 60.0
+    );
+
+    let total_hours =
+        (critical_stubs as f64 * 20.0 + moderate_stubs as f64 * 15.0 + low_stubs as f64 * 10.0)
+            / 60.0;
     println!("\n📊 TOTAL ESTIMATE: {:.1} hours ({:.1} days)", total_hours, total_hours / 8.0);
 
     // Show complete files
@@ -517,17 +522,12 @@ pub fn compare_progress(current: &AnalysisResults, previous: &AnalysisResults) {
     let impl_diff = current.implementation_percentage - previous.implementation_percentage;
     let stubs_diff = current.total_stubs as i32 - previous.total_stubs as i32;
 
-    println!("Implementation: {:.1}% → {:.1}% ({:+.1}%)",
-        previous.implementation_percentage,
-        current.implementation_percentage,
-        impl_diff
+    println!(
+        "Implementation: {:.1}% → {:.1}% ({:+.1}%)",
+        previous.implementation_percentage, current.implementation_percentage, impl_diff
     );
 
-    println!("Stubs: {} → {} ({:+})",
-        previous.total_stubs,
-        current.total_stubs,
-        stubs_diff
-    );
+    println!("Stubs: {} → {} ({:+})", previous.total_stubs, current.total_stubs, stubs_diff);
 
     if impl_diff > 0.0 {
         println!("\n✅ Progress made! {:.1}% more functions implemented", impl_diff);

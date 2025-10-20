@@ -17,7 +17,8 @@ pub async fn given_hive_on_port(world: &mut World, hive_num: usize, port: u16) {
 #[given(regex = r"^rbee-hive-(\d+) has (\d+) workers$")]
 pub async fn given_hive_has_workers(world: &mut World, hive_num: usize, count: usize) {
     // TEAM-125: Register workers for hive
-    world.registered_workers = (0..count).map(|i| format!("hive_{}_worker_{}", hive_num, i)).collect();
+    world.registered_workers =
+        (0..count).map(|i| format!("hive_{}_worker_{}", hive_num, i)).collect();
     tracing::info!("✅ rbee-hive-{} has {} workers", hive_num, count);
 }
 
@@ -108,7 +109,10 @@ pub async fn then_registry_consistent(world: &mut World) {
             worker_id
         );
     }
-    tracing::info!("✅ Registry state consistent: {} workers tracked", world.registered_workers.len());
+    tracing::info!(
+        "✅ Registry state consistent: {} workers tracked",
+        world.registered_workers.len()
+    );
 }
 
 #[then("no orphaned workers exist")]
@@ -143,15 +147,9 @@ pub async fn then_active_workers_tracked(world: &mut World) {
 pub async fn then_shutdown_workers_removed(world: &mut World) {
     // TEAM-126: Verify shutdown workers are removed from tracking
     // Check that no worker_churn_* workers remain (they were shutdown)
-    let churn_workers: Vec<&String> = world.registered_workers
-        .iter()
-        .filter(|w| w.starts_with("worker_churn_"))
-        .collect();
-    assert!(
-        churn_workers.is_empty(),
-        "Shutdown workers still tracked: {:?}",
-        churn_workers
-    );
+    let churn_workers: Vec<&String> =
+        world.registered_workers.iter().filter(|w| w.starts_with("worker_churn_")).collect();
+    assert!(churn_workers.is_empty(), "Shutdown workers still tracked: {:?}", churn_workers);
     tracing::info!("✅ All shutdown workers removed from registry");
 }
 
@@ -195,10 +193,7 @@ pub async fn when_worker_restarted(world: &mut World) {
 #[then("in-flight request is handled gracefully")]
 pub async fn then_inflight_handled_gracefully(world: &mut World) {
     // TEAM-126: Verify in-flight request handled gracefully
-    assert!(
-        !world.worker_processing,
-        "Worker still processing after restart"
-    );
+    assert!(!world.worker_processing, "Worker still processing after restart");
     assert!(
         world.last_error.is_some() || world.last_error_message.is_some(),
         "No error reported for interrupted inference"
@@ -209,7 +204,7 @@ pub async fn then_inflight_handled_gracefully(world: &mut World) {
 #[then("client receives appropriate error")]
 pub async fn then_client_receives_error(world: &mut World) {
     // TEAM-126: Verify client receives error
-    let has_error = world.last_error.is_some() 
+    let has_error = world.last_error.is_some()
         || world.last_error_message.is_some()
         || world.last_http_status == Some(503)
         || world.last_http_status == Some(500);
@@ -238,10 +233,7 @@ pub async fn then_worker_restarts_successfully(world: &mut World) {
 #[then("worker is available for new requests")]
 pub async fn then_worker_available_for_new(world: &mut World) {
     // TEAM-126: Verify worker available for new requests
-    assert!(
-        !world.worker_processing,
-        "Worker still processing, not available"
-    );
+    assert!(!world.worker_processing, "Worker still processing, not available");
     if let Some(worker_id) = &world.last_worker_id {
         assert!(
             world.registered_workers.contains(worker_id),
@@ -293,29 +285,18 @@ pub async fn when_network_partition(world: &mut World) {
 #[then("queen-rbee detects connection loss")]
 pub async fn then_queen_detects_loss(world: &mut World) {
     // TEAM-126: Verify queen detected connection loss
-    assert!(
-        world.crash_detected,
-        "Queen did not detect connection loss"
-    );
-    assert!(
-        world.hive_crashed,
-        "Hive not marked as unreachable"
-    );
+    assert!(world.crash_detected, "Queen did not detect connection loss");
+    assert!(world.hive_crashed, "Hive not marked as unreachable");
     tracing::info!("✅ Queen-rbee detected connection loss");
 }
 
 #[then("queen-rbee marks hive as unavailable")]
 pub async fn then_queen_marks_unavailable(world: &mut World) {
     // TEAM-126: Verify hive marked as unavailable
-    assert!(
-        world.hive_crashed,
-        "Hive not marked as unavailable"
-    );
+    assert!(world.hive_crashed, "Hive not marked as unavailable");
     // Check that hive is not in available beehive nodes
-    let available_hives: Vec<_> = world.beehive_nodes
-        .iter()
-        .filter(|(_, node)| node.status == "available")
-        .collect();
+    let available_hives: Vec<_> =
+        world.beehive_nodes.iter().filter(|(_, node)| node.status == "available").collect();
     assert!(
         available_hives.is_empty() || world.beehive_nodes.is_empty(),
         "Hive still marked as available after partition"
@@ -326,10 +307,7 @@ pub async fn then_queen_marks_unavailable(world: &mut World) {
 #[then("new requests are rejected with error")]
 pub async fn then_requests_rejected(world: &mut World) {
     // TEAM-126: Verify requests rejected
-    assert!(
-        world.hive_crashed,
-        "Hive available, requests should not be rejected"
-    );
+    assert!(world.hive_crashed, "Hive available, requests should not be rejected");
     // Simulate request rejection
     world.last_http_status = Some(503);
     world.last_error_message = Some("Service unavailable: hive unreachable".to_string());
@@ -348,24 +326,15 @@ pub async fn when_network_restored(world: &mut World) {
 #[then("queen-rbee reconnects to hive")]
 pub async fn then_queen_reconnects(world: &mut World) {
     // TEAM-126: Verify queen reconnected
-    assert!(
-        !world.hive_crashed,
-        "Hive still marked as crashed after reconnection"
-    );
-    assert!(
-        !world.crash_detected,
-        "Crash still detected after reconnection"
-    );
+    assert!(!world.hive_crashed, "Hive still marked as crashed after reconnection");
+    assert!(!world.crash_detected, "Crash still detected after reconnection");
     tracing::info!("✅ Queen-rbee reconnected to hive");
 }
 
 #[then("hive is marked as available")]
 pub async fn then_hive_marked_available(world: &mut World) {
     // TEAM-126: Verify hive marked as available
-    assert!(
-        !world.hive_crashed,
-        "Hive still marked as crashed"
-    );
+    assert!(!world.hive_crashed, "Hive still marked as crashed");
     // Mark hive as available in registry
     if let Some(node) = world.beehive_nodes.values_mut().next() {
         node.status = "available".to_string();
@@ -376,10 +345,7 @@ pub async fn then_hive_marked_available(world: &mut World) {
 #[then("requests resume normally")]
 pub async fn then_requests_resume(world: &mut World) {
     // TEAM-126: Verify requests resume
-    assert!(
-        !world.hive_crashed,
-        "Hive crashed, requests cannot resume"
-    );
+    assert!(!world.hive_crashed, "Hive crashed, requests cannot resume");
     // Clear error state
     world.last_http_status = Some(200);
     world.last_error_message = None;
@@ -419,24 +385,15 @@ pub async fn when_database_corrupted(world: &mut World) {
 #[then("rbee-hive detects corruption on next query")]
 pub async fn then_hive_detects_corruption(world: &mut World) {
     // TEAM-126: Verify corruption detected
-    assert!(
-        world.crash_detected,
-        "Corruption not detected"
-    );
-    assert!(
-        !world.registry_available,
-        "Registry still available despite corruption"
-    );
+    assert!(world.crash_detected, "Corruption not detected");
+    assert!(!world.registry_available, "Registry still available despite corruption");
     tracing::info!("✅ rbee-hive detected corruption on next query");
 }
 
 #[then("rbee-hive attempts recovery")]
 pub async fn then_hive_attempts_recovery(world: &mut World) {
     // TEAM-126: Verify recovery attempted
-    assert!(
-        world.last_error_message.is_some(),
-        "No error message for recovery attempt"
-    );
+    assert!(world.last_error_message.is_some(), "No error message for recovery attempt");
     // Simulate recovery attempt
     world.last_action = Some("recovery_attempted".to_string());
     tracing::info!("✅ rbee-hive attempted recovery");
@@ -445,10 +402,7 @@ pub async fn then_hive_attempts_recovery(world: &mut World) {
 #[then("error is logged with details")]
 pub async fn then_error_logged(world: &mut World) {
     // TEAM-126: Verify error logged
-    assert!(
-        world.last_error_message.is_some(),
-        "Error not logged"
-    );
+    assert!(world.last_error_message.is_some(), "Error not logged");
     let error_msg = world.last_error_message.as_ref().unwrap();
     assert!(
         error_msg.contains("corruption") || error_msg.contains("error"),
@@ -461,10 +415,7 @@ pub async fn then_error_logged(world: &mut World) {
 #[then("rbee-hive continues with in-memory fallback")]
 pub async fn then_hive_uses_fallback(world: &mut World) {
     // TEAM-126: Verify fallback to in-memory
-    assert!(
-        !world.registry_available,
-        "Database still available, not using fallback"
-    );
+    assert!(!world.registry_available, "Database still available, not using fallback");
     // Simulate fallback by using in-memory catalog
     world.registry_available = true; // Now using in-memory
     world.last_action = Some("fallback_to_memory".to_string());
@@ -474,10 +425,7 @@ pub async fn then_hive_uses_fallback(world: &mut World) {
 #[then("new models can still be provisioned")]
 pub async fn then_models_can_provision(world: &mut World) {
     // TEAM-126: Verify models can be provisioned with fallback
-    assert!(
-        world.registry_available,
-        "Registry not available, cannot provision"
-    );
+    assert!(world.registry_available, "Registry not available, cannot provision");
     // Add a new model to in-memory catalog
     let new_model = "model_new".to_string();
     world.model_catalog.insert(
@@ -524,7 +472,7 @@ pub async fn when_worker_loads_model(world: &mut World) {
     // TEAM-126: Simulate worker loading model (will OOM)
     let required = world.gpu_vram_total.unwrap_or(0);
     let available = world.gpu_vram_free.get(&0).copied().unwrap_or(0);
-    
+
     if required > available {
         world.worker_crashed = true;
         world.last_error_message = Some(format!(
@@ -539,10 +487,7 @@ pub async fn when_worker_loads_model(world: &mut World) {
 #[then("worker OOM kills during loading")]
 pub async fn then_worker_oom_loading(world: &mut World) {
     // TEAM-126: Verify worker OOM killed
-    assert!(
-        world.worker_crashed,
-        "Worker did not crash from OOM"
-    );
+    assert!(world.worker_crashed, "Worker did not crash from OOM");
     assert!(
         world.last_error_message.as_ref().map_or(false, |e| e.contains("OOM")),
         "Error message does not indicate OOM"
@@ -553,10 +498,7 @@ pub async fn then_worker_oom_loading(world: &mut World) {
 #[then("error is reported to client")]
 pub async fn then_error_reported(world: &mut World) {
     // TEAM-126: Verify error reported to client
-    assert!(
-        world.last_error_message.is_some(),
-        "No error reported to client"
-    );
+    assert!(world.last_error_message.is_some(), "No error reported to client");
     world.last_http_status = Some(500);
     tracing::info!("✅ Error reported to client: {}", world.last_error_message.as_ref().unwrap());
 }
@@ -564,10 +506,7 @@ pub async fn then_error_reported(world: &mut World) {
 #[then("worker is not registered")]
 pub async fn then_worker_not_registered(world: &mut World) {
     // TEAM-126: Verify worker not registered after OOM
-    assert!(
-        world.worker_crashed,
-        "Worker should have crashed"
-    );
+    assert!(world.worker_crashed, "Worker should have crashed");
     // Worker should not be in registry if it crashed during startup
     if let Some(worker_id) = &world.last_worker_id {
         assert!(
@@ -584,10 +523,7 @@ pub async fn then_resources_cleaned(world: &mut World) {
     // TEAM-126: Verify resources cleaned up
     // Check that crashed worker's PID is removed
     if let Some(worker_id) = &world.last_worker_id {
-        assert!(
-            !world.worker_pids.contains_key(worker_id),
-            "Crashed worker PID not cleaned up"
-        );
+        assert!(!world.worker_pids.contains_key(worker_id), "Crashed worker PID not cleaned up");
     }
     // Reset crash state
     world.worker_crashed = false;
@@ -633,15 +569,12 @@ pub async fn when_clients_send_simultaneously(world: &mut World, count: usize) {
 pub async fn then_all_registrations_processed(world: &mut World) {
     // TEAM-126: Verify all registrations processed
     let expected = world.concurrent_registrations.unwrap_or(0);
-    let actual = world.registered_workers.iter()
-        .filter(|w| w.starts_with("worker_concurrent_"))
-        .count();
+    let actual =
+        world.registered_workers.iter().filter(|w| w.starts_with("worker_concurrent_")).count();
     assert_eq!(
-        actual,
-        expected,
+        actual, expected,
         "Not all registrations processed: expected {}, got {}",
-        expected,
-        actual
+        expected, actual
     );
     tracing::info!("✅ All {} registrations processed", expected);
 }
@@ -655,14 +588,14 @@ pub async fn then_no_race_conditions(world: &mut World) {
         world.registered_workers.len(),
         "Race condition: duplicate worker IDs detected"
     );
-    
+
     let unique_pids: std::collections::HashSet<_> = world.worker_pids.values().collect();
     assert_eq!(
         unique_pids.len(),
         world.worker_pids.len(),
         "Race condition: duplicate PIDs detected"
     );
-    
+
     tracing::info!("✅ No race conditions (all IDs and PIDs unique)");
 }
 
@@ -670,11 +603,7 @@ pub async fn then_no_race_conditions(world: &mut World) {
 pub async fn then_workers_have_unique_ids(world: &mut World) {
     // TEAM-126: Verify all workers have unique IDs
     let unique_ids: std::collections::HashSet<_> = world.registered_workers.iter().collect();
-    assert_eq!(
-        unique_ids.len(),
-        world.registered_workers.len(),
-        "Duplicate worker IDs found"
-    );
+    assert_eq!(unique_ids.len(), world.registered_workers.len(), "Duplicate worker IDs found");
     tracing::info!("✅ All {} workers have unique IDs", world.registered_workers.len());
 }
 
@@ -708,7 +637,7 @@ pub async fn when_requests_sent_over_time(world: &mut World, count: usize, secon
     // TEAM-126: Simulate requests sent over time
     world.request_count = count;
     world.request_start_time = Some(std::time::Instant::now());
-    
+
     // Simulate latency measurements
     let mut measurements = Vec::new();
     for i in 0..count {
@@ -719,65 +648,42 @@ pub async fn when_requests_sent_over_time(world: &mut World, count: usize, secon
         measurements.push(std::time::Duration::from_millis(latency_ms));
     }
     world.timing_measurements = Some(measurements);
-    
+
     tracing::info!("✅ {} requests sent over {} seconds", count, seconds);
 }
 
 #[then("all requests are processed")]
 pub async fn then_all_processed(world: &mut World) {
     // TEAM-126: Verify all requests processed
-    assert_eq!(
-        world.active_requests.len(),
-        world.request_count,
-        "Not all requests processed"
-    );
-    assert!(
-        world.timing_measurements.is_some(),
-        "No timing measurements recorded"
-    );
+    assert_eq!(world.active_requests.len(), world.request_count, "Not all requests processed");
+    assert!(world.timing_measurements.is_some(), "No timing measurements recorded");
     tracing::info!("✅ All {} requests processed", world.request_count);
 }
 
 #[then(regex = r"^average latency is under (\d+)ms$")]
 pub async fn then_avg_latency_under(world: &mut World, ms: u64) {
     // TEAM-126: Verify average latency
-    let measurements = world.timing_measurements.as_ref()
-        .expect("No timing measurements");
-    
-    let total_ms: u64 = measurements.iter()
-        .map(|d| d.as_millis() as u64)
-        .sum();
+    let measurements = world.timing_measurements.as_ref().expect("No timing measurements");
+
+    let total_ms: u64 = measurements.iter().map(|d| d.as_millis() as u64).sum();
     let avg_ms = total_ms / measurements.len() as u64;
-    
-    assert!(
-        avg_ms < ms,
-        "Average latency {}ms exceeds threshold {}ms",
-        avg_ms,
-        ms
-    );
+
+    assert!(avg_ms < ms, "Average latency {}ms exceeds threshold {}ms", avg_ms, ms);
     tracing::info!("✅ Average latency {}ms < {}ms", avg_ms, ms);
 }
 
 #[then(regex = r"^p99 latency is under (\d+)ms$")]
 pub async fn then_p99_latency_under(world: &mut World, ms: u64) {
     // TEAM-126: Verify p99 latency
-    let measurements = world.timing_measurements.as_ref()
-        .expect("No timing measurements");
-    
-    let mut latencies: Vec<u64> = measurements.iter()
-        .map(|d| d.as_millis() as u64)
-        .collect();
+    let measurements = world.timing_measurements.as_ref().expect("No timing measurements");
+
+    let mut latencies: Vec<u64> = measurements.iter().map(|d| d.as_millis() as u64).collect();
     latencies.sort_unstable();
-    
+
     let p99_idx = (latencies.len() as f64 * 0.99) as usize;
     let p99_ms = latencies[p99_idx.min(latencies.len() - 1)];
-    
-    assert!(
-        p99_ms < ms,
-        "P99 latency {}ms exceeds threshold {}ms",
-        p99_ms,
-        ms
-    );
+
+    assert!(p99_ms < ms, "P99 latency {}ms exceeds threshold {}ms", p99_ms, ms);
     tracing::info!("✅ P99 latency {}ms < {}ms", p99_ms, ms);
 }
 
@@ -789,10 +695,7 @@ pub async fn then_no_timeouts(world: &mut World) {
         "Request timeout detected: status {}",
         world.last_http_status.unwrap_or(0)
     );
-    assert!(
-        !world.deadline_exceeded,
-        "Deadline exceeded"
-    );
+    assert!(!world.deadline_exceeded, "Deadline exceeded");
     tracing::info!("✅ No requests timed out");
 }
 

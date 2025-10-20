@@ -54,7 +54,11 @@ impl WorkerError {
     pub fn is_retriable(&self) -> bool {
         matches!(
             self,
-            Self::Cuda(_) | Self::Timeout | Self::Internal(_) | Self::InsufficientResources(_) | Self::InsufficientVram(_)
+            Self::Cuda(_)
+                | Self::Timeout
+                | Self::Internal(_)
+                | Self::InsufficientResources(_)
+                | Self::InsufficientVram(_)
         )
     }
 
@@ -187,7 +191,10 @@ mod tests {
         assert_eq!(WorkerError::Unhealthy("".to_string()).code(), "WORKER_UNHEALTHY");
         assert_eq!(WorkerError::Internal("".to_string()).code(), "INTERNAL");
         // TEAM-130: New resource error codes
-        assert_eq!(WorkerError::InsufficientResources("".to_string()).code(), "INSUFFICIENT_RESOURCES");
+        assert_eq!(
+            WorkerError::InsufficientResources("".to_string()).code(),
+            "INSUFFICIENT_RESOURCES"
+        );
         assert_eq!(WorkerError::InsufficientVram("".to_string()).code(), "INSUFFICIENT_VRAM");
     }
 

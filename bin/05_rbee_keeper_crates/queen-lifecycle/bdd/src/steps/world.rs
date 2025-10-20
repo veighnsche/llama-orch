@@ -9,19 +9,19 @@ use rbee_keeper_queen_lifecycle::QueenHandle;
 pub struct World {
     /// Whether queen was already running before test
     pub queen_was_running: bool,
-    
+
     /// Whether ensure_queen_running was called
     pub ensure_called: bool,
-    
+
     /// Result of ensure_queen_running (now returns QueenHandle)
     pub ensure_result: Option<anyhow::Result<QueenHandle>>,
-    
+
     /// The queen handle from ensure_queen_running
     pub queen_handle: Option<QueenHandle>,
-    
+
     /// Output messages captured
     pub output_messages: Vec<String>,
-    
+
     /// Whether shutdown was called
     pub shutdown_called: bool,
 }

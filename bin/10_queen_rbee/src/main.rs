@@ -57,10 +57,8 @@ async fn main() -> Result<()> {
         .emit();
 
     // TEAM-156: Initialize hive catalog
-    let catalog_path = args
-        .database
-        .map(PathBuf::from)
-        .unwrap_or_else(|| PathBuf::from("queen-hive-catalog.db"));
+    let catalog_path =
+        args.database.map(PathBuf::from).unwrap_or_else(|| PathBuf::from("queen-hive-catalog.db"));
 
     let hive_catalog = Arc::new(
         HiveCatalog::new(&catalog_path)
@@ -69,10 +67,7 @@ async fn main() -> Result<()> {
     );
 
     Narration::new(ACTOR_QUEEN_RBEE, ACTION_START, &catalog_path.display().to_string())
-        .human(format!(
-            "Initialized hive catalog at {}",
-            catalog_path.display()
-        ))
+        .human(format!("Initialized hive catalog at {}", catalog_path.display()))
         .emit();
 
     // TEAM-155: Initialize job registry for dual-call pattern
@@ -117,15 +112,11 @@ fn create_router(
     hive_catalog: Arc<HiveCatalog>,
 ) -> axum::Router {
     // TEAM-156: Create job state for endpoints with hive catalog
-    let job_state = http::jobs::QueenJobState {
-        registry: job_registry,
-        hive_catalog: hive_catalog.clone(),
-    };
+    let job_state =
+        http::jobs::QueenJobState { registry: job_registry, hive_catalog: hive_catalog.clone() };
 
     // TEAM-158: Create heartbeat state
-    let heartbeat_state = http::heartbeat::HeartbeatState {
-        hive_catalog,
-    };
+    let heartbeat_state = http::heartbeat::HeartbeatState { hive_catalog };
 
     axum::Router::new()
         .route("/health", get(http::health::handle_health))

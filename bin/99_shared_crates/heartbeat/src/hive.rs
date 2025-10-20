@@ -122,8 +122,7 @@ pub fn start_hive_heartbeat_task(
                 workers,
             };
 
-            match send_hive_heartbeat(&client, &heartbeat_url, &config.auth_token, &payload).await
-            {
+            match send_hive_heartbeat(&client, &heartbeat_url, &config.auth_token, &payload).await {
                 Ok(()) => {
                     debug!(
                         hive_id = %config.hive_id,
@@ -183,7 +182,7 @@ mod tests {
             "http://localhost:8500".to_string(),
             "test-token".to_string(),
         );
-        
+
         assert_eq!(config.hive_id, "localhost");
         assert_eq!(config.queen_url, "http://localhost:8500");
         assert_eq!(config.auth_token, "test-token");
@@ -198,7 +197,7 @@ mod tests {
             "prod-token".to_string(),
         )
         .with_interval(30);
-        
+
         assert_eq!(config.interval_secs, 30, "Custom interval should override default");
     }
 
@@ -211,7 +210,7 @@ mod tests {
         )
         .with_interval(10)
         .with_interval(20); // Last one wins
-        
+
         assert_eq!(config.interval_secs, 20, "Last interval should be used");
     }
 
@@ -282,7 +281,7 @@ mod tests {
             "token".to_string(),
         )
         .with_interval(0);
-        
+
         assert_eq!(config.interval_secs, 0, "Zero interval should be allowed for testing");
     }
 
@@ -294,7 +293,7 @@ mod tests {
             "token".to_string(),
         )
         .with_interval(1); // 1 second
-        
+
         assert_eq!(config.interval_secs, 1);
     }
 
@@ -306,7 +305,7 @@ mod tests {
             "token".to_string(),
         )
         .with_interval(3600); // 1 hour
-        
+
         assert_eq!(config.interval_secs, 3600);
     }
 
@@ -317,9 +316,9 @@ mod tests {
             "http://localhost:8500".to_string(),
             "original-token".to_string(),
         );
-        
+
         let cloned = original.clone();
-        
+
         assert_eq!(original.hive_id, cloned.hive_id);
         assert_eq!(original.queen_url, cloned.queen_url);
         assert_eq!(original.auth_token, cloned.auth_token);
@@ -342,10 +341,8 @@ mod tests {
 
     #[test]
     fn worker_state_provider_returns_empty_list() {
-        let provider = MockWorkerStateProvider {
-            states: vec![],
-        };
-        
+        let provider = MockWorkerStateProvider { states: vec![] };
+
         let states = provider.get_worker_states();
         assert_eq!(states.len(), 0);
     }
@@ -360,7 +357,7 @@ mod tests {
                 health_status: "healthy".to_string(),
             }],
         };
-        
+
         let states = provider.get_worker_states();
         assert_eq!(states.len(), 1);
         assert_eq!(states[0].worker_id, "worker-1");
@@ -390,7 +387,7 @@ mod tests {
                 },
             ],
         };
-        
+
         let states = provider.get_worker_states();
         assert_eq!(states.len(), 3);
         assert_eq!(states[0].worker_id, "worker-1");
@@ -408,10 +405,10 @@ mod tests {
                 health_status: "healthy".to_string(),
             }],
         };
-        
+
         let states1 = provider.get_worker_states();
         let states2 = provider.get_worker_states();
-        
+
         assert_eq!(states1.len(), states2.len());
         assert_eq!(states1[0].worker_id, states2[0].worker_id);
     }
@@ -429,15 +426,13 @@ mod tests {
         )
         .with_interval(3600); // Long interval so it doesn't actually send
 
-        let provider = Arc::new(MockWorkerStateProvider {
-            states: vec![],
-        });
+        let provider = Arc::new(MockWorkerStateProvider { states: vec![] });
 
         let handle = start_hive_heartbeat_task(config, provider);
-        
+
         // Verify we got a handle
         assert!(!handle.is_finished(), "Task should be running");
-        
+
         // Clean up
         handle.abort();
     }
@@ -451,15 +446,13 @@ mod tests {
         )
         .with_interval(3600);
 
-        let provider = Arc::new(MockWorkerStateProvider {
-            states: vec![],
-        });
+        let provider = Arc::new(MockWorkerStateProvider { states: vec![] });
 
         let handle = start_hive_heartbeat_task(config, provider);
-        
+
         // Task should be running in background
         assert!(!handle.is_finished());
-        
+
         // Aborting should stop it
         handle.abort();
     }
@@ -474,18 +467,16 @@ mod tests {
         .with_interval(3600);
 
         let provider = Arc::new(MockWorkerStateProvider {
-            states: vec![
-                WorkerState {
-                    worker_id: "worker-1".to_string(),
-                    state: "Idle".to_string(),
-                    last_heartbeat: "2025-10-20T00:00:00Z".to_string(),
-                    health_status: "healthy".to_string(),
-                },
-            ],
+            states: vec![WorkerState {
+                worker_id: "worker-1".to_string(),
+                state: "Idle".to_string(),
+                last_heartbeat: "2025-10-20T00:00:00Z".to_string(),
+                health_status: "healthy".to_string(),
+            }],
         });
 
         let handle = start_hive_heartbeat_task(config, provider);
-        
+
         assert!(!handle.is_finished());
         handle.abort();
     }
@@ -501,7 +492,7 @@ mod tests {
             "http://localhost:8500".to_string(),
             "token".to_string(),
         );
-        
+
         assert_eq!(config.hive_id, "");
         // Note: In production, validation should happen at a higher level
     }
@@ -513,7 +504,7 @@ mod tests {
             "http://localhost:8500".to_string(),
             "".to_string(),
         );
-        
+
         assert_eq!(config.auth_token, "");
         // Note: This might be intentional for local/dev mode
     }
@@ -526,7 +517,7 @@ mod tests {
             "http://localhost:8500".to_string(),
             "token".to_string(),
         );
-        
+
         assert_eq!(config.hive_id, long_id);
     }
 
@@ -537,7 +528,7 @@ mod tests {
             "http://localhost:8500/".to_string(),
             "token".to_string(),
         );
-        
+
         assert_eq!(config.queen_url, "http://localhost:8500/");
     }
 
@@ -548,7 +539,7 @@ mod tests {
             "http://localhost".to_string(),
             "token".to_string(),
         );
-        
+
         assert_eq!(config.queen_url, "http://localhost");
     }
 
@@ -564,9 +555,9 @@ mod tests {
             "debug-token".to_string(),
         )
         .with_interval(25);
-        
+
         let debug_str = format!("{:?}", config);
-        
+
         // Verify all fields are in debug output
         assert!(debug_str.contains("hive-debug"));
         assert!(debug_str.contains("http://localhost:8500"));
@@ -595,11 +586,11 @@ mod tests {
 
         let handle1 = start_hive_heartbeat_task(config1, provider1);
         let handle2 = start_hive_heartbeat_task(config2, provider2);
-        
+
         // Both tasks should be running
         assert!(!handle1.is_finished());
         assert!(!handle2.is_finished());
-        
+
         // Clean up
         handle1.abort();
         handle2.abort();
@@ -609,7 +600,7 @@ mod tests {
     fn config_interval_boundary_values() {
         // Test various boundary values for interval
         let intervals = vec![1, 5, 10, 15, 30, 60, 120, 300, 600, 3600];
-        
+
         for interval in intervals {
             let config = HiveHeartbeatConfig::new(
                 "hive-test".to_string(),
@@ -617,7 +608,7 @@ mod tests {
                 "token".to_string(),
             )
             .with_interval(interval);
-            
+
             assert_eq!(config.interval_secs, interval);
         }
     }
@@ -629,7 +620,7 @@ mod tests {
             "http://localhost:8500".to_string(),
             "token".to_string(),
         );
-        
+
         // Hive default is 15s, worker default is 30s
         assert_eq!(hive_config.interval_secs, 15);
         assert!(hive_config.interval_secs < 30, "Hive should send heartbeats faster than workers");

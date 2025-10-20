@@ -8,13 +8,13 @@
 
 use crate::http::routes::WorkerState;
 use crate::http::sse::InferenceEvent;
-use job_registry::JobState;
 use crate::narration::{self, ACTION_ERROR, ACTOR_HTTP_SERVER};
 use axum::{
     extract::{Path, State},
     response::{sse::Event, Sse},
 };
 use futures::stream::{self, Stream, StreamExt};
+use job_registry::JobState;
 use observability_narration_core::NarrationFields;
 use std::convert::Infallible;
 use tracing::{info, warn};
@@ -48,10 +48,7 @@ pub async fn handle_stream_job(
             ..Default::default()
         });
 
-        return Err((
-            axum::http::StatusCode::NOT_FOUND,
-            format!("Job {} not found", job_id),
-        ));
+        return Err((axum::http::StatusCode::NOT_FOUND, format!("Job {} not found", job_id)));
     }
 
     // Check job state
@@ -120,7 +117,7 @@ pub async fn handle_stream_job(
     let mut token_count = 0u32;
     let token_events = Box::pin(async_stream::stream! {
         use crate::backend::request_queue::TokenResponse;
-        
+
         while let Some(token_response) = response_rx.recv().await {
             match token_response {
                 TokenResponse::Token(token) => {
@@ -143,9 +140,9 @@ pub async fn handle_stream_job(
         }
     });
 
-    let started_stream = stream::once(futures::future::ready(
-        Ok(Event::default().json_data(&started_event).unwrap())
-    ));
+    let started_stream = stream::once(futures::future::ready(Ok(Event::default()
+        .json_data(&started_event)
+        .unwrap())));
 
     let stream_with_done: EventStream = Box::new(
         started_stream

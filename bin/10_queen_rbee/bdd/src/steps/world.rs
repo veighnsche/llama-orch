@@ -13,18 +13,17 @@ use tempfile::TempDir;
 pub struct BddWorld {
     /// Last validation result
     pub last_result: Option<Result<(), String>>,
-    
+
     // TEAM-156: Hive catalog test state
     pub temp_dir: Option<TempDir>,
     pub catalog_path: Option<PathBuf>,
     pub hive_count: usize,
-    
+
     // TEAM-158: Heartbeat test state
-    #[world(skip)]  // TEAM-158: HiveCatalog doesn't implement Debug
+    #[world(skip)] // TEAM-158: HiveCatalog doesn't implement Debug
     pub hive_catalog: Option<Arc<HiveCatalog>>,
     pub current_hive_id: Option<String>,
     pub heartbeat_payload: Option<HiveHeartbeatPayload>,
-    
     // TODO: Add integration test state fields here
     // e.g., HTTP client, process handles, temp directories
 }

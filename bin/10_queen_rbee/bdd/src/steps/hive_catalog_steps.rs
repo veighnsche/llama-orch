@@ -14,14 +14,12 @@ async fn hive_catalog_is_empty(world: &mut BddWorld) {
     // TEAM-156: Create temporary database for test
     let temp_dir = TempDir::new().expect("Failed to create temp dir");
     let db_path = temp_dir.path().join("test-catalog.db");
-    
-    let catalog = HiveCatalog::new(&db_path)
-        .await
-        .expect("Failed to create catalog");
-    
+
+    let catalog = HiveCatalog::new(&db_path).await.expect("Failed to create catalog");
+
     let hives = catalog.list_hives().await.expect("Failed to list hives");
     assert_eq!(hives.len(), 0, "Catalog should be empty");
-    
+
     world.temp_dir = Some(temp_dir);
     world.catalog_path = Some(db_path);
 }
@@ -31,12 +29,10 @@ async fn queen_starts_with_clean_database(world: &mut BddWorld) {
     // TEAM-156: Create temporary database and initialize catalog
     let temp_dir = TempDir::new().expect("Failed to create temp dir");
     let db_path = temp_dir.path().join("queen-catalog.db");
-    
+
     // Create the catalog to initialize the database file
-    let _catalog = HiveCatalog::new(&db_path)
-        .await
-        .expect("Failed to create catalog");
-    
+    let _catalog = HiveCatalog::new(&db_path).await.expect("Failed to create catalog");
+
     world.temp_dir = Some(temp_dir);
     world.catalog_path = Some(db_path);
 }
@@ -46,10 +42,8 @@ async fn submit_job_to_queen(world: &mut BddWorld) {
     // TEAM-156: This step is implemented in integration with rbee-keeper
     // For now, we just verify the catalog is accessible
     if let Some(ref path) = world.catalog_path {
-        let catalog = HiveCatalog::new(path)
-            .await
-            .expect("Failed to open catalog");
-        
+        let catalog = HiveCatalog::new(path).await.expect("Failed to open catalog");
+
         let hives = catalog.list_hives().await.expect("Failed to list hives");
         world.hive_count = hives.len();
     }
@@ -74,11 +68,9 @@ async fn hive_catalog_created(world: &mut BddWorld) {
     // TEAM-156: Verify database file exists
     if let Some(ref path) = world.catalog_path {
         assert!(path.exists(), "Database file should exist");
-        
+
         // Verify we can open it
-        let _catalog = HiveCatalog::new(path)
-            .await
-            .expect("Failed to open catalog");
+        let _catalog = HiveCatalog::new(path).await.expect("Failed to open catalog");
     } else {
         panic!("No catalog path set");
     }
@@ -88,10 +80,8 @@ async fn hive_catalog_created(world: &mut BddWorld) {
 async fn hive_catalog_is_empty_check(world: &mut BddWorld) {
     // TEAM-156: Verify catalog has no hives
     if let Some(ref path) = world.catalog_path {
-        let catalog = HiveCatalog::new(path)
-            .await
-            .expect("Failed to open catalog");
-        
+        let catalog = HiveCatalog::new(path).await.expect("Failed to open catalog");
+
         let hives = catalog.list_hives().await.expect("Failed to list hives");
         assert_eq!(hives.len(), 0, "Catalog should be empty");
     } else {

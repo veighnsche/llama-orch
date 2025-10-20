@@ -39,10 +39,10 @@ pub struct QueenHandle {
     /// True if rbee-keeper started the queen (must cleanup)
     /// False if queen was already running (don't touch it)
     started_by_us: bool,
-    
+
     /// Base URL of the queen
     base_url: String,
-    
+
     /// Process ID if we started it
     pid: Option<u32>,
 }
@@ -50,32 +50,24 @@ pub struct QueenHandle {
 impl QueenHandle {
     /// Create handle for queen that was already running
     fn already_running(base_url: String) -> Self {
-        Self {
-            started_by_us: false,
-            base_url,
-            pid: None,
-        }
+        Self { started_by_us: false, base_url, pid: None }
     }
-    
+
     /// Create handle for queen that we just started
     fn started_by_us(base_url: String, pid: Option<u32>) -> Self {
-        Self {
-            started_by_us: true,
-            base_url,
-            pid,
-        }
+        Self { started_by_us: true, base_url, pid }
     }
-    
+
     /// Check if we started the queen (and should clean it up)
     pub fn should_cleanup(&self) -> bool {
         self.started_by_us
     }
-    
+
     /// Get the queen's base URL
     pub fn base_url(&self) -> &str {
         &self.base_url
     }
-    
+
     /// Shutdown the queen (only if we started it)
     ///
     /// # Returns
@@ -88,17 +80,15 @@ impl QueenHandle {
                 .emit();
             return Ok(());
         }
-        
+
         Narration::new(ACTOR_QUEEN_LIFECYCLE, ACTION_QUEEN_SHUTDOWN, &self.base_url)
             .human(format!("Shutting down queen (PID: {:?})", self.pid))
             .emit();
-        
+
         // Try graceful shutdown via HTTP first
         let shutdown_url = format!("{}/shutdown", self.base_url);
-        let client = reqwest::Client::builder()
-            .timeout(Duration::from_secs(2))
-            .build()?;
-        
+        let client = reqwest::Client::builder().timeout(Duration::from_secs(2)).build()?;
+
         match client.post(&shutdown_url).send().await {
             Ok(_) => {
                 Narration::new(ACTOR_QUEEN_LIFECYCLE, ACTION_QUEEN_SHUTDOWN, &self.base_url)
@@ -112,19 +102,17 @@ impl QueenHandle {
                     Narration::new(ACTOR_QUEEN_LIFECYCLE, ACTION_QUEEN_SHUTDOWN, &pid.to_string())
                         .human(format!("HTTP shutdown failed, sending SIGTERM to PID {}", pid))
                         .emit();
-                    
+
                     // Use kill command (cross-platform via nix crate would be better, but this works)
-                    let _ = std::process::Command::new("kill")
-                        .arg(pid.to_string())
-                        .output();
-                    
+                    let _ = std::process::Command::new("kill").arg(pid.to_string()).output();
+
                     Narration::new(ACTOR_QUEEN_LIFECYCLE, ACTION_QUEEN_SHUTDOWN, &pid.to_string())
                         .human("Sent SIGTERM to queen")
                         .emit();
                 }
             }
         }
-        
+
         Ok(())
     }
 }
@@ -148,7 +136,7 @@ impl QueenHandle {
 /// * `Err` - Failed to start queen or timeout waiting for health
 pub async fn ensure_queen_running(base_url: &str) -> Result<QueenHandle> {
     let start_time = std::time::Instant::now();
-    
+
     // Step 1: Check if queen is already running
     if is_queen_healthy(base_url).await? {
         Narration::new(ACTOR_QUEEN_LIFECYCLE, ACTION_QUEEN_CHECK, base_url)
@@ -173,9 +161,8 @@ pub async fn ensure_queen_running(base_url: &str) -> Result<QueenHandle> {
     // Step 4: Spawn queen process
     let args = vec!["--port".to_string(), "8500".to_string()];
     let manager = DaemonManager::new(queen_binary, args);
-    
-    let mut _child = manager.spawn().await
-        .context("Failed to spawn queen-rbee process")?;
+
+    let mut _child = manager.spawn().await.context("Failed to spawn queen-rbee process")?;
 
     let pid_target = _child.id().map(|p| p.to_string()).unwrap_or_else(|| "unknown".to_string());
     Narration::new(ACTOR_QUEEN_LIFECYCLE, ACTION_QUEEN_START, &pid_target)
@@ -183,7 +170,8 @@ pub async fn ensure_queen_running(base_url: &str) -> Result<QueenHandle> {
         .emit();
 
     // Step 5: Poll health until ready (30 second timeout)
-    poll_until_healthy(base_url, Duration::from_secs(30)).await
+    poll_until_healthy(base_url, Duration::from_secs(30))
+        .await
         .context("Queen failed to become healthy within timeout")?;
 
     // Step 6: Success!
@@ -208,10 +196,8 @@ pub async fn ensure_queen_running(base_url: &str) -> Result<QueenHandle> {
 /// * `Err` - Other errors (timeout, invalid response, etc.)
 async fn is_queen_healthy(base_url: &str) -> Result<bool> {
     let health_url = format!("{}/health", base_url);
-    
-    let client = reqwest::Client::builder()
-        .timeout(Duration::from_millis(500))
-        .build()?;
+
+    let client = reqwest::Client::builder().timeout(Duration::from_millis(500)).build()?;
 
     match client.get(&health_url).send().await {
         Ok(response) => {
@@ -251,11 +237,14 @@ async fn poll_until_healthy(base_url: &str, timeout: Duration) -> Result<()> {
 
     loop {
         attempt += 1;
-        
+
         // Check if we've exceeded timeout
         if start.elapsed() >= timeout {
             Narration::new(ACTOR_QUEEN_LIFECYCLE, ACTION_QUEEN_START, "timeout")
-                .human(format!("Queen failed to become healthy within {} seconds", timeout.as_secs()))
+                .human(format!(
+                    "Queen failed to become healthy within {} seconds",
+                    timeout.as_secs()
+                ))
                 .error_kind("startup_timeout")
                 .emit();
             anyhow::bail!("Timeout waiting for queen to become healthy");
@@ -271,7 +260,11 @@ async fn poll_until_healthy(base_url: &str, timeout: Duration) -> Result<()> {
             }
             Ok(false) => {
                 Narration::new(ACTOR_QUEEN_LIFECYCLE, ACTION_QUEEN_POLL, "health")
-                    .human(format!("Polling queen health (attempt {}, delay {}ms)", attempt, delay.as_millis()))
+                    .human(format!(
+                        "Polling queen health (attempt {}, delay {}ms)",
+                        attempt,
+                        delay.as_millis()
+                    ))
                     .emit();
             }
             Err(e) => {

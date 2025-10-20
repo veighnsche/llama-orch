@@ -17,16 +17,61 @@ pub fn fix_all_duplicates() -> Result<()> {
     let duplicates_to_remove = vec![
         ("worker_preflight.rs", 354, "validation fails", "Keep error_handling.rs:745"),
         ("integration.rs", 290, "worker returns to idle state", "Keep lifecycle.rs:562"),
-        ("error_handling.rs", 1438, "error message does not contain {string}", "Keep validation.rs:353"),
-        ("deadline_propagation.rs", 311, "worker is processing inference request", "Keep error_handling.rs:961"),
+        (
+            "error_handling.rs",
+            1438,
+            "error message does not contain {string}",
+            "Keep validation.rs:353",
+        ),
+        (
+            "deadline_propagation.rs",
+            311,
+            "worker is processing inference request",
+            "Keep error_handling.rs:961",
+        ),
         ("audit_logging.rs", 589, "queen-rbee logs warning {string}", "Keep audit_logging.rs:385"),
-        ("authentication.rs", 28, "I send POST to {string} without Authorization header", "Keep authentication.rs:782"),
-        ("authentication.rs", 690, "I send {int} authenticated requests", "Keep authentication.rs:814"),
-        ("authentication.rs", 352, "I send GET to {string} without Authorization header", "Keep authentication.rs:798"),
-        ("worker_registration.rs", 89, "rbee-hive reports worker {string} with capabilities {string}", "Keep queen_rbee_registry.rs:126"),
-        ("error_handling.rs", 1465, "rbee-hive continues running (does NOT crash)", "Keep errors.rs:113"),
-        ("secrets.rs", 51, "queen-rbee starts with config:", "Keep configuration_management.rs:655"),
-        ("worker_registration.rs", 115, "the response contains {int} worker(s)", "Keep queen_rbee_registry.rs:237"),
+        (
+            "authentication.rs",
+            28,
+            "I send POST to {string} without Authorization header",
+            "Keep authentication.rs:782",
+        ),
+        (
+            "authentication.rs",
+            690,
+            "I send {int} authenticated requests",
+            "Keep authentication.rs:814",
+        ),
+        (
+            "authentication.rs",
+            352,
+            "I send GET to {string} without Authorization header",
+            "Keep authentication.rs:798",
+        ),
+        (
+            "worker_registration.rs",
+            89,
+            "rbee-hive reports worker {string} with capabilities {string}",
+            "Keep queen_rbee_registry.rs:126",
+        ),
+        (
+            "error_handling.rs",
+            1465,
+            "rbee-hive continues running (does NOT crash)",
+            "Keep errors.rs:113",
+        ),
+        (
+            "secrets.rs",
+            51,
+            "queen-rbee starts with config:",
+            "Keep configuration_management.rs:655",
+        ),
+        (
+            "worker_registration.rs",
+            115,
+            "the response contains {int} worker(s)",
+            "Keep queen_rbee_registry.rs:237",
+        ),
         ("pid_tracking.rs", 18, "rbee-hive spawns a worker process", "Keep lifecycle.rs:540"),
         ("error_handling.rs", 524, "rbee-hive detects worker crash", "Keep lifecycle.rs:574"),
         ("authentication.rs", 123, "log contains {string}", "Keep configuration_management.rs:669"),
@@ -37,14 +82,20 @@ pub fn fix_all_duplicates() -> Result<()> {
 
     for (file, line_num, pattern, reason) in duplicates_to_remove {
         let file_path = steps_dir.join(file);
-        
+
         match comment_out_step_definition(&file_path, line_num, pattern, reason) {
             Ok(true) => {
                 println!("{} {}:{} - {}", "✅ Fixed:".green(), file, line_num, pattern);
                 fixed_count += 1;
             }
             Ok(false) => {
-                println!("{} {}:{} - {} (already fixed or not found)", "⏭️  Skipped:".yellow(), file, line_num, pattern);
+                println!(
+                    "{} {}:{} - {} (already fixed or not found)",
+                    "⏭️  Skipped:".yellow(),
+                    file,
+                    line_num,
+                    pattern
+                );
             }
             Err(e) => {
                 println!("{} {}:{} - {}: {}", "❌ Error:".red(), file, line_num, pattern, e);
@@ -69,11 +120,11 @@ fn comment_out_step_definition(
     pattern: &str,
     reason: &str,
 ) -> Result<bool> {
-    let content = fs::read_to_string(file_path)
-        .context(format!("Failed to read {}", file_path.display()))?;
+    let content =
+        fs::read_to_string(file_path).context(format!("Failed to read {}", file_path.display()))?;
 
     let lines: Vec<&str> = content.lines().collect();
-    
+
     if target_line == 0 || target_line > lines.len() {
         return Ok(false);
     }
@@ -82,9 +133,10 @@ fn comment_out_step_definition(
     let line = lines[line_idx];
 
     // Check if this line contains a step attribute
-    if !line.trim().starts_with("#[given(") && 
-       !line.trim().starts_with("#[when(") && 
-       !line.trim().starts_with("#[then(") {
+    if !line.trim().starts_with("#[given(")
+        && !line.trim().starts_with("#[when(")
+        && !line.trim().starts_with("#[then(")
+    {
         return Ok(false); // Already fixed or wrong line
     }
 

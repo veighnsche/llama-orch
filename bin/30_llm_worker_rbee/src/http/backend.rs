@@ -27,7 +27,7 @@ pub trait InferenceBackend: Send + Sync {
     ///
     /// Returns the complete inference result including tokens and stop reason.
     /// TEAM-017: Changed to &mut self for stateful model backends
-    /// 
+    ///
     /// TEAM-149: This is now ONLY used for non-streaming requests (if any).
     /// Real-time streaming uses the generation engine + request queue pattern.
     async fn execute(

@@ -7,7 +7,6 @@ use cucumber::World;
 pub struct BddWorld {
     /// Last validation result
     pub last_result: Option<Result<(), String>>,
-    
     // TODO: Add test state fields here
 }
 

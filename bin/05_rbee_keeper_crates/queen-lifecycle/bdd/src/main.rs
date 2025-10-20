@@ -9,7 +9,5 @@ use steps::world::World;
 
 #[tokio::main]
 async fn main() {
-    World::cucumber()
-        .run("tests/features/")
-        .await;
+    World::cucumber().run("tests/features/").await;
 }

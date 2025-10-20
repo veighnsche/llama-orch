@@ -75,10 +75,7 @@ pub use capture::{CaptureAdapter, CapturedNarration};
 #[macro_export]
 macro_rules! narrate {
     ($narration:expr) => {{
-        $narration.emit_with_provenance(
-            env!("CARGO_PKG_NAME"),
-            env!("CARGO_PKG_VERSION")
-        )
+        $narration.emit_with_provenance(env!("CARGO_PKG_NAME"), env!("CARGO_PKG_VERSION"))
     }};
 }
 pub use correlation::{

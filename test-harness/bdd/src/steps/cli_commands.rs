@@ -19,27 +19,27 @@ use cucumber::{given, then, when};
 pub async fn given_config_files_exist(world: &mut World, step: &cucumber::gherkin::Step) {
     // TEAM-127: Create config files from table data
     let table = step.table.as_ref().expect("Expected a data table");
-    
+
     // Skip header row, process data rows
     for row in table.rows.iter().skip(1) {
         if row.len() >= 2 {
             let path = &row[0];
             let content = &row[1];
-            
+
             // Create parent directories if needed
             if let Some(parent) = std::path::Path::new(path).parent() {
                 std::fs::create_dir_all(parent).ok();
             }
-            
+
             // Write config file
             std::fs::write(path, content)
                 .unwrap_or_else(|e| panic!("Failed to create config file {}: {}", path, e));
-            
+
             world.config_files.push(path.to_string());
             tracing::info!("✅ Created config file: {}", path);
         }
     }
-    
+
     tracing::info!("✅ Created {} config files", world.config_files.len());
 }
 
@@ -47,27 +47,27 @@ pub async fn given_config_files_exist(world: &mut World, step: &cucumber::gherki
 pub async fn given_config_contains(world: &mut World, step: &cucumber::gherkin::Step) {
     // TEAM-127: Create config file with docstring content
     let docstring = step.docstring.as_ref().expect("Expected a docstring");
-    
+
     // Use default config path if none specified
     let config_path = if world.config_files.is_empty() {
         "/tmp/test-config.toml".to_string()
     } else {
         world.config_files.last().unwrap().clone()
     };
-    
+
     // Create parent directories
     if let Some(parent) = std::path::Path::new(&config_path).parent() {
         std::fs::create_dir_all(parent).ok();
     }
-    
+
     // Write config content
     std::fs::write(&config_path, docstring.trim())
         .unwrap_or_else(|e| panic!("Failed to write config file {}: {}", config_path, e));
-    
+
     if !world.config_files.contains(&config_path) {
         world.config_files.push(config_path.clone());
     }
-    
+
     tracing::info!("✅ Config file {} contains {} bytes", config_path, docstring.len());
 }
 
@@ -209,12 +209,12 @@ pub async fn when_file_exists(world: &mut World, path: String) {
     if let Some(parent) = std::path::Path::new(&path).parent() {
         std::fs::create_dir_all(parent).ok();
     }
-    
+
     if !std::path::Path::new(&path).exists() {
         std::fs::write(&path, "# Test config file\n")
             .unwrap_or_else(|e| panic!("Failed to create file {}: {}", path, e));
     }
-    
+
     world.config_files.push(path.clone());
     tracing::info!("✅ File exists: {}", path);
 }
@@ -224,18 +224,15 @@ pub async fn when_neither_config_exists(world: &mut World) {
     // TEAM-127: Remove RBEE_CONFIG and ensure user config doesn't exist
     std::env::remove_var("RBEE_CONFIG");
     world.env_vars.remove("RBEE_CONFIG");
-    
+
     // Remove common user config paths
-    let user_config_paths = vec![
-        "~/.config/rbee/config.toml",
-        "~/.rbee.toml",
-        "/tmp/rbee-config.toml",
-    ];
-    
+    let user_config_paths =
+        vec!["~/.config/rbee/config.toml", "~/.rbee.toml", "/tmp/rbee-config.toml"];
+
     for path in user_config_paths {
         std::fs::remove_file(path).ok();
     }
-    
+
     world.config_files.clear();
     tracing::info!("✅ Neither RBEE_CONFIG nor user config exist");
 }
@@ -245,10 +242,10 @@ pub async fn when_execute_remote_command(world: &mut World, node: String) {
     // TEAM-127: Simulate remote command execution
     world.remote_node = Some(node.clone());
     world.remote_command_executed = true;
-    
+
     // Simulate SSH connection
     world.ssh_connections.insert(node.clone(), true);
-    
+
     tracing::info!("✅ Remote command executed on: {}", node);
 }
 
@@ -256,14 +253,14 @@ pub async fn when_execute_remote_command(world: &mut World, node: String) {
 pub async fn then_binaries_installed_to(world: &mut World, path: String) {
     // TEAM-127: Verify binaries would be installed to specified path
     let combined_output = format!("{}{}", world.last_stdout, world.last_stderr);
-    
+
     assert!(
         combined_output.contains(&path) || world.install_path.as_ref() == Some(&path),
         "Expected binaries to be installed to '{}', but output doesn't mention it: {}",
         path,
         combined_output
     );
-    
+
     world.install_path = Some(path.clone());
     tracing::info!("✅ Binaries installed to: {}", path);
 }
@@ -272,17 +269,17 @@ pub async fn then_binaries_installed_to(world: &mut World, path: String) {
 pub async fn then_config_dir_created(world: &mut World, path: String) {
     // TEAM-127: Verify config directory exists or would be created
     let combined_output = format!("{}{}", world.last_stdout, world.last_stderr);
-    
+
     // Check if output mentions the directory or if it exists
     let dir_mentioned = combined_output.contains(&path);
     let dir_exists = std::path::Path::new(&path).exists();
-    
+
     assert!(
         dir_mentioned || dir_exists || world.config_files.iter().any(|f| f.starts_with(&path)),
         "Expected config directory '{}' to be created or mentioned in output",
         path
     );
-    
+
     tracing::info!("✅ Config directory created at: {}", path);
 }
 
@@ -290,17 +287,17 @@ pub async fn then_config_dir_created(world: &mut World, path: String) {
 pub async fn then_data_dir_created(world: &mut World, path: String) {
     // TEAM-127: Verify data directory exists or would be created
     let combined_output = format!("{}{}", world.last_stdout, world.last_stderr);
-    
+
     // Check if output mentions the directory or if it exists
     let dir_mentioned = combined_output.contains(&path);
     let dir_exists = std::path::Path::new(&path).exists();
-    
+
     assert!(
         dir_mentioned || dir_exists,
         "Expected data directory '{}' to be created or mentioned in output",
         path
     );
-    
+
     tracing::info!("✅ Data directory created at: {}", path);
 }
 
@@ -308,17 +305,17 @@ pub async fn then_data_dir_created(world: &mut World, path: String) {
 pub async fn then_default_config_generated(world: &mut World, path: String) {
     // TEAM-127: Verify default config file exists or would be generated
     let combined_output = format!("{}{}", world.last_stdout, world.last_stderr);
-    
+
     // Check if output mentions the config file or if it exists
     let config_mentioned = combined_output.contains(&path) || combined_output.contains("config");
     let config_exists = std::path::Path::new(&path).exists();
-    
+
     assert!(
         config_mentioned || config_exists || world.config_files.contains(&path),
         "Expected default config file '{}' to be generated or mentioned in output",
         path
     );
-    
+
     tracing::info!("✅ Default config generated at: {}", path);
 }
 
@@ -327,23 +324,23 @@ pub async fn then_binaries_copied(world: &mut World, step: &cucumber::gherkin::S
     // TEAM-127: Verify binaries are copied from table
     let table = step.table.as_ref().expect("Expected a data table");
     let combined_output = format!("{}{}", world.last_stdout, world.last_stderr);
-    
+
     // Skip header row, check each binary
     let mut verified_count = 0;
     for row in table.rows.iter().skip(1) {
         if !row.is_empty() {
             let binary_name = &row[0];
-            
+
             // Check if binary is mentioned in output or exists in install path
             let binary_mentioned = combined_output.contains(binary_name);
-            
+
             if binary_mentioned {
                 verified_count += 1;
                 tracing::info!("✅ Binary copied: {}", binary_name);
             }
         }
     }
-    
+
     tracing::info!("✅ Verified {} binaries copied", verified_count);
 }
 
@@ -351,20 +348,20 @@ pub async fn then_binaries_copied(world: &mut World, step: &cucumber::gherkin::S
 pub async fn then_installation_instructions(world: &mut World) {
     // TEAM-127: Verify installation instructions in output
     let combined_output = format!("{}{}", world.last_stdout, world.last_stderr);
-    
+
     // Check for common installation instruction keywords
     let has_instructions = combined_output.contains("install")
         || combined_output.contains("setup")
         || combined_output.contains("PATH")
         || combined_output.contains("export")
         || combined_output.contains("Add to your");
-    
+
     assert!(
         has_instructions,
         "Expected installation instructions in output, but got: {}",
         combined_output
     );
-    
+
     tracing::info!("✅ Installation instructions displayed");
 }
 
@@ -372,20 +369,21 @@ pub async fn then_installation_instructions(world: &mut World) {
 pub async fn then_sudo_required(world: &mut World) {
     // TEAM-127: Verify sudo requirement in output or exit code
     let combined_output = format!("{}{}", world.last_stdout, world.last_stderr);
-    
+
     // Check for sudo-related messages or permission errors
     let requires_sudo = combined_output.contains("sudo")
         || combined_output.contains("permission denied")
         || combined_output.contains("Permission denied")
         || combined_output.contains("root")
-        || world.last_exit_code == Some(1) || world.last_exit_code == Some(126);
-    
+        || world.last_exit_code == Some(1)
+        || world.last_exit_code == Some(126);
+
     assert!(
         requires_sudo,
         "Expected sudo requirement, but output doesn't indicate it: {}",
         combined_output
     );
-    
+
     tracing::info!("✅ Sudo permissions required");
 }
 
@@ -393,18 +391,18 @@ pub async fn then_sudo_required(world: &mut World) {
 pub async fn then_load_config_from(world: &mut World, path: String) {
     // TEAM-127: Verify config loaded from specified path
     let combined_output = format!("{}{}", world.last_stdout, world.last_stderr);
-    
+
     // Check if output mentions loading from this path
     let config_loaded = combined_output.contains(&path)
         || world.config_files.contains(&path)
         || world.env_vars.get("RBEE_CONFIG") == Some(&path);
-    
+
     assert!(
         config_loaded,
         "Expected config to be loaded from '{}', but no evidence in output or state",
         path
     );
-    
+
     tracing::info!("✅ Config loaded from: {}", path);
 }
 
@@ -412,11 +410,11 @@ pub async fn then_load_config_from(world: &mut World, path: String) {
 pub async fn then_command_uses_instead(world: &mut World, actual: String, default: String) {
     // TEAM-127: Verify command uses actual value instead of default
     let combined_output = format!("{}{}", world.last_stdout, world.last_stderr);
-    
+
     // Check that actual value is mentioned and default is not (or actual is preferred)
     let uses_actual = combined_output.contains(&actual);
     let mentions_default = combined_output.contains(&default);
-    
+
     assert!(
         uses_actual || !mentions_default,
         "Expected command to use '{}' instead of '{}', but output: {}",
@@ -424,7 +422,7 @@ pub async fn then_command_uses_instead(world: &mut World, actual: String, defaul
         default,
         combined_output
     );
-    
+
     tracing::info!("✅ Command uses '{}' instead of '{}'", actual, default);
 }
 
@@ -432,18 +430,16 @@ pub async fn then_command_uses_instead(world: &mut World, actual: String, defaul
 pub async fn then_git_uses_instead(world: &mut World, actual: String, default: String) {
     // TEAM-127: Verify git commands use actual value instead of default
     let combined_output = format!("{}{}", world.last_stdout, world.last_stderr);
-    
+
     // Check that git commands mention actual value
     let uses_actual = combined_output.contains(&actual) || combined_output.contains("git");
-    
+
     assert!(
         uses_actual,
         "Expected git commands to use '{}' instead of '{}', but output: {}",
-        actual,
-        default,
-        combined_output
+        actual, default, combined_output
     );
-    
+
     tracing::info!("✅ Git commands use '{}' instead of '{}'", actual, default);
 }
 
@@ -451,20 +447,20 @@ pub async fn then_git_uses_instead(world: &mut World, actual: String, default: S
 pub async fn then_execute_full_flow(world: &mut World) {
     // TEAM-127: Verify full inference flow executed
     let combined_output = format!("{}{}", world.last_stdout, world.last_stderr);
-    
+
     // Check for inference flow indicators
     let flow_executed = combined_output.contains("inference")
         || combined_output.contains("model")
         || combined_output.contains("worker")
         || combined_output.contains("queen")
         || world.last_exit_code == Some(0);
-    
+
     assert!(
         flow_executed,
         "Expected full inference flow to execute, but output doesn't indicate it: {}",
         combined_output
     );
-    
+
     tracing::info!("✅ Full inference flow executed");
 }
 
@@ -475,16 +471,16 @@ pub async fn then_tokens_streamed_stdout(world: &mut World) {
         !world.last_stdout.is_empty(),
         "Expected tokens to be streamed to stdout, but stdout is empty"
     );
-    
+
     // Check for token-like output (text content)
     let has_content = world.last_stdout.len() > 10;
-    
+
     assert!(
         has_content,
         "Expected substantial token output, but got only {} bytes",
         world.last_stdout.len()
     );
-    
+
     tracing::info!("✅ Tokens streamed to stdout ({} bytes)", world.last_stdout.len());
 }
 
@@ -492,15 +488,19 @@ pub async fn then_tokens_streamed_stdout(world: &mut World) {
 pub async fn given_workers_on_multiple_nodes(world: &mut World) {
     // TEAM-127: Register workers on multiple nodes
     let nodes = vec!["node1", "node2", "node3"];
-    
+
     for (i, node) in nodes.iter().enumerate() {
         let worker_id = format!("worker-{}-{}", node, i);
         world.registered_workers.push(worker_id.clone());
         world.worker_pids.insert(worker_id.clone(), 1000 + i as u32);
         world.ssh_connections.insert(node.to_string(), true);
     }
-    
-    tracing::info!("✅ Registered {} workers on {} nodes", world.registered_workers.len(), nodes.len());
+
+    tracing::info!(
+        "✅ Registered {} workers on {} nodes",
+        world.registered_workers.len(),
+        nodes.len()
+    );
 }
 
 #[given(regex = r#"^a worker with id "(.+)" is running$"#)]
@@ -520,7 +520,7 @@ pub async fn given_worker_with_id_running(world: &mut World, worker_id: String) 
 pub async fn then_output_shows_health_status(world: &mut World) {
     // TEAM-127: Verify health status in output
     let combined_output = format!("{}{}", world.last_stdout, world.last_stderr);
-    
+
     // Check for health status indicators
     let has_health_status = combined_output.contains("health")
         || combined_output.contains("status")
@@ -528,13 +528,9 @@ pub async fn then_output_shows_health_status(world: &mut World) {
         || combined_output.contains("idle")
         || combined_output.contains("busy")
         || combined_output.contains("ready");
-    
-    assert!(
-        has_health_status,
-        "Expected health status in output, but got: {}",
-        combined_output
-    );
-    
+
+    assert!(has_health_status, "Expected health status in output, but got: {}", combined_output);
+
     tracing::info!("✅ Output shows health status");
 }
 
@@ -545,19 +541,15 @@ pub async fn then_logs_streamed(world: &mut World) {
         !world.last_stdout.is_empty(),
         "Expected logs to be streamed to stdout, but stdout is empty"
     );
-    
+
     // Check for log-like output (timestamps, log levels, messages)
     let has_log_content = world.last_stdout.len() > 20
         || world.last_stdout.contains("INFO")
         || world.last_stdout.contains("ERROR")
         || world.last_stdout.contains("WARN");
-    
-    assert!(
-        has_log_content,
-        "Expected log content in stdout, but got: {}",
-        world.last_stdout
-    );
-    
+
+    assert!(has_log_content, "Expected log content in stdout, but got: {}", world.last_stdout);
+
     tracing::info!("✅ Logs streamed to stdout ({} bytes)", world.last_stdout.len());
 }
 
@@ -663,20 +655,20 @@ pub async fn then_keeper_displays(world: &mut World, step: &cucumber::gherkin::S
     let docstring = step.docstring.as_ref().expect("Expected a docstring");
     let expected = docstring.trim();
     let combined_output = format!("{}{}", world.last_stdout, world.last_stderr);
-    
+
     // Check if output contains expected text (allowing for formatting differences)
     let lines_match = expected.lines().all(|line| {
         let trimmed = line.trim();
         trimmed.is_empty() || combined_output.contains(trimmed)
     });
-    
+
     assert!(
         lines_match || combined_output.contains(expected),
         "Expected rbee-keeper to display:\n{}\n\nBut got:\n{}",
         expected,
         combined_output
     );
-    
+
     tracing::info!("✅ rbee-keeper displays expected output");
 }
 

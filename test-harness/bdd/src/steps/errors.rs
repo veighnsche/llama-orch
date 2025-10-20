@@ -27,14 +27,21 @@ pub async fn when_searching_for_unwrap(world: &mut World) {
     // In real implementation, would scan bin/*/src/ directories
     world.unwrap_calls_found = 0; // No unwrap() calls should be found
     world.code_scan_completed = true;
-    tracing::info!("✅ TEAM-129: Unwrap search completed, found {} calls", world.unwrap_calls_found);
+    tracing::info!(
+        "✅ TEAM-129: Unwrap search completed, found {} calls",
+        world.unwrap_calls_found
+    );
 }
 
 #[then(regex = r"^no unwrap calls are found in src\/ directories$")]
 pub async fn then_no_unwrap_in_src(world: &mut World) {
     // TEAM-129: Verify no unwrap() calls in production code
     assert!(world.code_scan_completed, "Code scan must be completed first");
-    assert_eq!(world.unwrap_calls_found, 0, "Found {} unwrap() calls in production code", world.unwrap_calls_found);
+    assert_eq!(
+        world.unwrap_calls_found, 0,
+        "Found {} unwrap() calls in production code",
+        world.unwrap_calls_found
+    );
     tracing::info!("✅ TEAM-129: Verified no unwrap() calls in production code");
 }
 
@@ -109,7 +116,10 @@ pub async fn then_response_includes_correlation_id(world: &mut World) {
         world.correlation_id = Some(uuid::Uuid::new_v4().to_string());
     }
     assert!(world.correlation_id.is_some(), "Correlation ID must be present");
-    tracing::info!("✅ TEAM-129: Response includes correlation_id: {}", world.correlation_id.as_ref().unwrap());
+    tracing::info!(
+        "✅ TEAM-129: Response includes correlation_id: {}",
+        world.correlation_id.as_ref().unwrap()
+    );
 }
 
 #[then(expr = "correlation_id is a valid UUID")]
@@ -117,11 +127,11 @@ pub async fn then_correlation_id_is_uuid(world: &mut World) {
     // TEAM-130: Verify correlation_id is a valid UUID format
     assert!(world.correlation_id.is_some(), "Correlation ID must be present");
     let correlation_id = world.correlation_id.as_ref().unwrap();
-    
+
     // Parse as UUID to verify format
     let parsed = uuid::Uuid::parse_str(correlation_id);
     assert!(parsed.is_ok(), "Correlation ID '{}' is not a valid UUID", correlation_id);
-    
+
     tracing::info!("✅ TEAM-130: correlation_id '{}' is valid UUID", correlation_id);
 }
 
@@ -130,14 +140,17 @@ pub async fn then_correlation_id_unique(world: &mut World) {
     // TEAM-130: Verify correlation_id is unique (different from previous requests)
     assert!(world.correlation_id.is_some(), "Correlation ID must be present");
     let current_id = world.correlation_id.as_ref().unwrap();
-    
+
     // Generate a new correlation_id for comparison
     let new_id = uuid::Uuid::new_v4().to_string();
     assert_ne!(current_id, &new_id, "Correlation IDs should be unique per request");
-    
+
     // Verify it's not a static/hardcoded value
-    assert_ne!(current_id, "00000000-0000-0000-0000-000000000000", "Correlation ID should not be nil UUID");
-    
+    assert_ne!(
+        current_id, "00000000-0000-0000-0000-000000000000",
+        "Correlation ID should not be nil UUID"
+    );
+
     tracing::info!("✅ TEAM-130: correlation_id is unique per request");
 }
 
@@ -146,7 +159,7 @@ pub async fn then_correlation_id_logged(world: &mut World) {
     // TEAM-130: Verify correlation_id appears in error message or logs
     assert!(world.correlation_id.is_some(), "Correlation ID must be present");
     let correlation_id = world.correlation_id.as_ref().unwrap();
-    
+
     // Check if correlation_id is in error message or response
     let has_correlation_id = if let Some(error_msg) = &world.last_error_message {
         error_msg.contains(correlation_id)
@@ -156,7 +169,7 @@ pub async fn then_correlation_id_logged(world: &mut World) {
         // Assume it's logged (would need log capture to verify)
         true
     };
-    
+
     assert!(has_correlation_id, "Correlation ID should be logged in error message");
     tracing::info!("✅ TEAM-130: correlation_id '{}' logged in error message", correlation_id);
 }
@@ -166,16 +179,18 @@ pub async fn then_correlation_id_in_all_logs(world: &mut World) {
     // TEAM-130: Verify correlation_id appears in all related log entries
     assert!(world.correlation_id.is_some(), "Correlation ID must be present");
     let correlation_id = world.correlation_id.as_ref().unwrap();
-    
+
     // Check log messages for correlation_id
     if !world.log_messages.is_empty() {
-        let logs_with_correlation = world.log_messages.iter()
-            .filter(|msg| msg.contains(correlation_id))
-            .count();
-        
+        let logs_with_correlation =
+            world.log_messages.iter().filter(|msg| msg.contains(correlation_id)).count();
+
         // At least some logs should contain the correlation_id
         assert!(logs_with_correlation > 0, "Correlation ID should appear in log entries");
-        tracing::info!("✅ TEAM-130: correlation_id appears in {} log entries", logs_with_correlation);
+        tracing::info!(
+            "✅ TEAM-130: correlation_id appears in {} log entries",
+            logs_with_correlation
+        );
     } else {
         // No logs captured, assume correlation_id would be present
         world.log_has_correlation_id = true;
@@ -188,14 +203,14 @@ pub async fn then_correlation_id_traces_flow(world: &mut World) {
     // TEAM-130: Verify correlation_id can trace request flow across components
     assert!(world.correlation_id.is_some(), "Correlation ID must be present");
     let correlation_id = world.correlation_id.as_ref().unwrap();
-    
+
     // Verify correlation_id is a valid UUID (traceable format)
     let parsed = uuid::Uuid::parse_str(correlation_id);
     assert!(parsed.is_ok(), "Correlation ID must be valid UUID for tracing");
-    
+
     // Mark that correlation_id is available for tracing
     world.log_has_correlation_id = true;
-    
+
     tracing::info!("✅ TEAM-130: correlation_id '{}' can trace request flow", correlation_id);
 }
 
@@ -211,9 +226,12 @@ pub async fn given_db_unavailable(world: &mut World) {
 pub async fn when_client_requests_spawn(world: &mut World) {
     // TEAM-130: Simulate client requesting worker spawn (when DB unavailable)
     world.last_http_status = Some(503); // Service Unavailable
-    world.last_error_message = Some("Service temporarily unavailable: database connection failed".to_string());
+    world.last_error_message =
+        Some("Service temporarily unavailable: database connection failed".to_string());
     world.error_occurred = true;
-    tracing::info!("✅ TEAM-130: Client requested worker spawn, received 503 due to DB unavailability");
+    tracing::info!(
+        "✅ TEAM-130: Client requested worker spawn, received 503 due to DB unavailability"
+    );
 }
 
 #[then(expr = "rbee-hive returns {int} Service Unavailable")]
@@ -231,11 +249,11 @@ pub async fn then_response_includes_structured_error(world: &mut World) {
     // TEAM-130: Verify response has structured error format
     assert!(world.error_occurred, "Error must have occurred");
     assert!(world.last_error_message.is_some(), "Error message must be present");
-    
+
     // Structured error should have: message, code, correlation_id
     let has_structure = world.last_error_message.is_some() && world.last_http_status.is_some();
     assert!(has_structure, "Response must include structured error");
-    
+
     tracing::info!("✅ TEAM-130: Response includes structured error");
 }
 
@@ -243,12 +261,12 @@ pub async fn then_response_includes_structured_error(world: &mut World) {
 pub async fn then_hive_continues_no_crash(world: &mut World) {
     // TEAM-130: Verify rbee-hive remains stable after error
     assert!(!world.hive_crashed, "rbee-hive should not have crashed");
-    
+
     // If hive_daemon_running is tracked, verify it's still true
     if world.hive_daemon_running {
         assert!(world.hive_daemon_running, "rbee-hive daemon should still be running");
     }
-    
+
     tracing::info!("✅ TEAM-130: rbee-hive continues running (does NOT crash)");
 }
 
@@ -258,10 +276,10 @@ pub async fn then_hive_retries_db(world: &mut World) {
     // In real implementation, would check retry counter or logs
     // For now, verify that registry_available can be toggled back
     assert!(!world.registry_available, "DB should be unavailable initially");
-    
+
     // Simulate retry attempt (would be done by actual product code)
     world.registry_available = true; // Retry succeeded
-    
+
     tracing::info!("✅ TEAM-130: rbee-hive retries DB connection");
 }
 
@@ -279,12 +297,15 @@ pub async fn then_error_not_contain(world: &mut World, sensitive_data: String) {
     // TEAM-130: Verify error message does NOT leak sensitive data
     assert!(world.last_error_message.is_some(), "Error message must be present");
     let error_msg = world.last_error_message.as_ref().unwrap();
-    
+
     // Check that sensitive data is NOT in the error message
-    assert!(!error_msg.contains(&sensitive_data), 
-        "Error message should NOT contain sensitive data '{}', but found it in: {}", 
-        sensitive_data, error_msg);
-    
+    assert!(
+        !error_msg.contains(&sensitive_data),
+        "Error message should NOT contain sensitive data '{}', but found it in: {}",
+        sensitive_data,
+        error_msg
+    );
+
     tracing::info!("✅ TEAM-130: Error message does NOT contain '{}'", sensitive_data);
 }
 
@@ -293,13 +314,13 @@ pub async fn then_error_contains_safe_message(world: &mut World) {
     // TEAM-130: Verify error message is generic and safe (no sensitive data)
     assert!(world.last_error_message.is_some(), "Error message must be present");
     let error_msg = world.last_error_message.as_ref().unwrap();
-    
+
     // Check for generic error patterns (not specific sensitive details)
-    let is_generic = error_msg.contains("failed") || 
-                     error_msg.contains("error") || 
-                     error_msg.contains("unavailable") ||
-                     error_msg.contains("invalid");
-    
+    let is_generic = error_msg.contains("failed")
+        || error_msg.contains("error")
+        || error_msg.contains("unavailable")
+        || error_msg.contains("invalid");
+
     assert!(is_generic, "Error message should be generic and safe");
     tracing::info!("✅ TEAM-130: Error message contains safe generic message: {}", error_msg);
 }
@@ -310,10 +331,10 @@ pub async fn when_token_validation_fails(world: &mut World) {
     world.last_http_status = Some(401); // Unauthorized
     world.last_error_message = Some("Token validation failed: invalid token format".to_string());
     world.error_occurred = true;
-    
+
     // Store a fake token for testing (would be from request)
     world.auth_token = Some("rbee_1234567890abcdef_secret".to_string());
-    
+
     tracing::info!("✅ TEAM-130: Token validation failed");
 }
 
@@ -322,17 +343,19 @@ pub async fn then_error_contains_token_prefix(world: &mut World) {
     // TEAM-130: Verify error message shows only token prefix, not full token
     assert!(world.last_error_message.is_some(), "Error message must be present");
     let error_msg = world.last_error_message.as_ref().unwrap();
-    
+
     // If we have a token, verify only prefix is shown
     if let Some(token) = &world.auth_token {
         // Full token should NOT be in error message
         assert!(!error_msg.contains(token), "Error message should NOT contain full token");
-        
+
         // But prefix might be shown (e.g., "rbee_1234...")
         // This is acceptable for debugging
     }
-    
-    tracing::info!("✅ TEAM-130: Error message contains token prefix only (full token not exposed)");
+
+    tracing::info!(
+        "✅ TEAM-130: Error message contains token prefix only (full token not exposed)"
+    );
 }
 
 #[then(expr = "full token is logged securely (not in response)")]
@@ -340,12 +363,12 @@ pub async fn then_full_token_logged_securely(world: &mut World) {
     // TEAM-130: Verify full token is logged securely but NOT in response
     assert!(world.last_error_message.is_some(), "Error message must be present");
     let error_msg = world.last_error_message.as_ref().unwrap();
-    
+
     // Full token should NOT be in the response/error message
     if let Some(token) = &world.auth_token {
         assert!(!error_msg.contains(token), "Full token should NOT be in response");
     }
-    
+
     // In real implementation, would verify token is in secure logs
     // For now, just verify it's not in the response
     tracing::info!("✅ TEAM-130: Full token logged securely (not in response)");
@@ -365,11 +388,11 @@ pub async fn then_error_contains_sanitized_path(world: &mut World) {
     // TEAM-130: Verify error message contains sanitized path (not absolute system paths)
     assert!(world.last_error_message.is_some(), "Error message must be present");
     let error_msg = world.last_error_message.as_ref().unwrap();
-    
+
     // Check that message doesn't contain absolute paths like /home/user/...
     assert!(!error_msg.contains("/home/"), "Error should not contain absolute home paths");
     assert!(!error_msg.contains("/root/"), "Error should not contain root paths");
-    
+
     // Generic messages like "unable to access resource" are acceptable
     tracing::info!("✅ TEAM-130: Error message contains sanitized path");
 }
@@ -388,18 +411,18 @@ pub async fn then_error_contains_generic_network_desc(world: &mut World) {
     // TEAM-130: Verify error message has generic network error description
     assert!(world.last_error_message.is_some(), "Error message must be present");
     let error_msg = world.last_error_message.as_ref().unwrap();
-    
+
     // Check for generic network error patterns
-    let is_generic_network = error_msg.contains("network") || 
-                             error_msg.contains("connection") ||
-                             error_msg.contains("unavailable");
-    
+    let is_generic_network = error_msg.contains("network")
+        || error_msg.contains("connection")
+        || error_msg.contains("unavailable");
+
     assert!(is_generic_network, "Error message should contain generic network error description");
-    
+
     // Should NOT contain specific IPs, ports, or internal details
     assert!(!error_msg.contains("192.168."), "Should not expose internal IPs");
     assert!(!error_msg.contains("10."), "Should not expose internal IPs");
-    
+
     tracing::info!("✅ TEAM-130: Error message contains generic network error description");
 }
 
@@ -420,13 +443,18 @@ pub async fn then_hive_increments_failed_checks(world: &mut World) {
     // In real implementation, would check registry for failed_health_checks count
     let registry = world.hive_registry();
     let workers = registry.list().await;
-    
+
     if let Some(worker) = workers.first() {
         // Verify worker has failed health check tracking
         // (actual counter would be in WorkerRegistry)
-        tracing::info!("✅ TEAM-130: failed_health_checks counter incremented for worker {}", worker.id);
+        tracing::info!(
+            "✅ TEAM-130: failed_health_checks counter incremented for worker {}",
+            worker.id
+        );
     } else {
-        tracing::info!("✅ TEAM-130: failed_health_checks counter incremented (no workers to verify)");
+        tracing::info!(
+            "✅ TEAM-130: failed_health_checks counter incremented (no workers to verify)"
+        );
     }
 }
 
@@ -442,7 +470,7 @@ pub async fn then_hive_does_not_remove_immediately(world: &mut World) {
 pub async fn then_hive_retries_health_check(world: &mut World) {
     // TEAM-130: Verify rbee-hive retries health check
     world.health_check_performed = true;
-    
+
     // In real implementation, would verify retry logic
     // For now, mark that health check retry is expected
     tracing::info!("✅ TEAM-130: rbee-hive retries health check");
@@ -453,7 +481,7 @@ pub async fn then_hive_removes_after_n_failures(world: &mut World, count: u32) {
     // TEAM-130: Verify worker is only removed after N consecutive failures
     // Typical value is 3 consecutive failures before removal
     assert!(count >= 3, "Should require at least 3 consecutive failures before removal");
-    
+
     // In real implementation, would verify worker removal logic
     // For now, verify the threshold is reasonable
     tracing::info!("✅ TEAM-130: rbee-hive removes worker after {} consecutive failures", count);
@@ -464,7 +492,7 @@ pub async fn when_n_concurrent_requests(world: &mut World, count: u32) {
     // TEAM-130: Simulate N concurrent requests arriving
     world.concurrent_requests = Some(count as usize);
     world.request_count = count as usize;
-    
+
     // Simulate that some requests are valid, some invalid
     tracing::info!("✅ TEAM-130: {} concurrent requests arrived", count);
 }
@@ -474,7 +502,7 @@ pub async fn when_n_requests_invalid(world: &mut World, count: u32) {
     // TEAM-130: Mark N requests as having invalid data
     // Store count for validation in subsequent steps
     world.concurrent_requests = Some(count as usize);
-    
+
     tracing::info!("✅ TEAM-130: {} requests have invalid data", count);
 }
 
@@ -482,7 +510,7 @@ pub async fn when_n_requests_invalid(world: &mut World, count: u32) {
 pub async fn then_hive_processes_without_panic(world: &mut World) {
     // TEAM-130: Verify rbee-hive handled all requests without panicking
     assert!(!world.hive_crashed, "rbee-hive should not have crashed/panicked");
-    
+
     // Verify request count was processed
     if let Some(count) = world.concurrent_requests {
         assert!(count > 0, "Should have processed {} requests", count);
@@ -523,13 +551,15 @@ pub async fn then_valid_requests_complete(world: &mut World) {
 pub async fn then_hive_remains_stable(world: &mut World) {
     // TEAM-130: Verify rbee-hive remains stable after handling errors
     assert!(!world.hive_crashed, "rbee-hive should remain stable");
-    
+
     // Verify hive is still accepting requests
     if world.hive_daemon_running {
-        assert!(world.hive_accepting_requests || world.hive_daemon_running, 
-            "rbee-hive should remain stable and accepting requests");
+        assert!(
+            world.hive_accepting_requests || world.hive_daemon_running,
+            "rbee-hive should remain stable and accepting requests"
+        );
     }
-    
+
     tracing::info!("✅ TEAM-130: rbee-hive remains stable");
 }
 
@@ -547,7 +577,7 @@ pub async fn when_spawn_fails_insufficient_resources(world: &mut World) {
 pub async fn then_response_includes_error_code(world: &mut World, code: String) {
     // TEAM-130: Verify response includes specified error_code
     assert!(world.error_occurred, "Error must have occurred");
-    
+
     // Check if error_code matches expected value
     if let Some(error_code) = &world.last_error_code {
         assert_eq!(error_code, &code, "Expected error_code '{}', got '{}'", code, error_code);
@@ -555,7 +585,7 @@ pub async fn then_response_includes_error_code(world: &mut World, code: String) 
         // If not set, set it for verification
         world.last_error_code = Some(code.clone());
     }
-    
+
     tracing::info!("✅ TEAM-130: Response includes error_code '{}'", code);
 }
 
@@ -564,12 +594,14 @@ pub async fn then_error_code_is_machine_readable(world: &mut World) {
     // TEAM-130: Verify error_code is machine-readable (no spaces, special chars)
     assert!(world.last_error_code.is_some(), "Error code must be present");
     let error_code = world.last_error_code.as_ref().unwrap();
-    
+
     // Machine-readable: no spaces, alphanumeric + underscore only
     assert!(!error_code.contains(' '), "Error code should not contain spaces");
-    assert!(error_code.chars().all(|c| c.is_alphanumeric() || c == '_'), 
-        "Error code should be alphanumeric with underscores only");
-    
+    assert!(
+        error_code.chars().all(|c| c.is_alphanumeric() || c == '_'),
+        "Error code should be alphanumeric with underscores only"
+    );
+
     tracing::info!("✅ TEAM-130: error_code '{}' is machine-readable string", error_code);
 }
 
@@ -578,12 +610,15 @@ pub async fn then_error_code_follows_convention(world: &mut World) {
     // TEAM-130: Verify error_code follows UPPER_SNAKE_CASE convention
     assert!(world.last_error_code.is_some(), "Error code must be present");
     let error_code = world.last_error_code.as_ref().unwrap();
-    
+
     // UPPER_SNAKE_CASE: all uppercase, underscores allowed
-    assert!(error_code.chars().all(|c| c.is_uppercase() || c == '_' || c.is_numeric()), 
-        "Error code '{}' should follow UPPER_SNAKE_CASE convention", error_code);
+    assert!(
+        error_code.chars().all(|c| c.is_uppercase() || c == '_' || c.is_numeric()),
+        "Error code '{}' should follow UPPER_SNAKE_CASE convention",
+        error_code
+    );
     assert!(!error_code.contains('-'), "Error code should use underscores, not hyphens");
-    
+
     tracing::info!("✅ TEAM-130: error_code '{}' follows UPPER_SNAKE_CASE convention", error_code);
 }
 
@@ -594,10 +629,10 @@ pub async fn when_spawn_fails_insufficient_vram(world: &mut World) {
     world.last_error_message = Some("Worker spawn failed: insufficient VRAM".to_string());
     world.last_error_code = Some("INSUFFICIENT_VRAM".to_string());
     world.error_occurred = true;
-    
+
     // Store VRAM details for error response
     world.gpu_vram_free.insert(0, 2_000_000_000); // 2GB free (not enough)
-    
+
     tracing::info!("✅ TEAM-130: Worker spawn failed due to insufficient VRAM");
 }
 
@@ -605,11 +640,15 @@ pub async fn when_spawn_fails_insufficient_vram(world: &mut World) {
 pub async fn then_details_contains_field(world: &mut World, field: String) {
     // TEAM-130: Verify error details contain specified field
     assert!(world.error_occurred, "Error must have occurred");
-    
+
     // Common detail fields: required_vram, available_vram, model_ref, etc.
     let valid_fields = vec!["required_vram", "available_vram", "model_ref", "device", "reason"];
-    assert!(valid_fields.contains(&field.as_str()), "Field '{}' should be a valid detail field", field);
-    
+    assert!(
+        valid_fields.contains(&field.as_str()),
+        "Field '{}' should be a valid detail field",
+        field
+    );
+
     tracing::info!("✅ TEAM-130: details contains '{}' field", field);
 }
 
@@ -617,7 +656,7 @@ pub async fn then_details_contains_field(world: &mut World, field: String) {
 pub async fn then_details_is_json_serializable(world: &mut World) {
     // TEAM-130: Verify details object can be serialized to JSON
     assert!(world.error_occurred, "Error must have occurred");
-    
+
     // Create a sample details object and verify it's JSON serializable
     let details = serde_json::json!({
         "required_vram": 8_000_000_000u64,
@@ -625,11 +664,11 @@ pub async fn then_details_is_json_serializable(world: &mut World) {
         "model_ref": "meta-llama/Llama-2-7b-hf",
         "device": 0
     });
-    
+
     // Verify it can be serialized
     let serialized = serde_json::to_string(&details);
     assert!(serialized.is_ok(), "Details object should be JSON serializable");
-    
+
     tracing::info!("✅ TEAM-130: details object is JSON serializable");
 }
 
@@ -637,7 +676,7 @@ pub async fn then_details_is_json_serializable(world: &mut World) {
 pub async fn when_various_errors_occur(world: &mut World) {
     // TEAM-130: Simulate various error types occurring
     world.error_occurred = true;
-    
+
     // Mark that we're testing multiple error types
     tracing::info!("✅ TEAM-130: Various errors simulated for HTTP status testing");
 }
@@ -694,7 +733,7 @@ pub async fn then_internal_errors_return_500(world: &mut World, status: u16) {
 pub async fn then_error_logged_with_severity(world: &mut World) {
     // TEAM-130: Verify error is logged with ERROR severity
     assert!(world.error_occurred, "Error must have occurred");
-    
+
     // In real implementation, would check log entries for ERROR level
     // For now, verify error state is tracked
     tracing::info!("✅ TEAM-130: Error logged with severity ERROR");
@@ -704,7 +743,7 @@ pub async fn then_error_logged_with_severity(world: &mut World) {
 pub async fn then_log_includes_error_code(world: &mut World) {
     // TEAM-130: Verify log entry includes error_code
     assert!(world.error_occurred, "Error must have occurred");
-    
+
     // Check if error_code is set (would be in logs)
     if let Some(error_code) = &world.last_error_code {
         tracing::info!("✅ TEAM-130: Log entry includes error_code '{}'", error_code);
@@ -717,11 +756,11 @@ pub async fn then_log_includes_error_code(world: &mut World) {
 pub async fn then_log_includes_timestamp(world: &mut World) {
     // TEAM-130: Verify log entry includes timestamp
     assert!(world.error_occurred, "Error must have occurred");
-    
+
     // All log entries should have timestamps (provided by tracing framework)
     // Verify we can capture current time
     let _now = std::time::SystemTime::now();
-    
+
     tracing::info!("✅ TEAM-130: Log entry includes timestamp");
 }
 
@@ -729,7 +768,7 @@ pub async fn then_log_includes_timestamp(world: &mut World) {
 pub async fn then_log_includes_component_name(world: &mut World) {
     // TEAM-130: Verify log entry includes component name (rbee-hive, queen-rbee, etc.)
     assert!(world.error_occurred, "Error must have occurred");
-    
+
     // Component names: rbee-hive, queen-rbee, llm-worker-rbee
     // These would be in the log target/module path
     tracing::info!("✅ TEAM-130: Log entry includes component name");
@@ -739,7 +778,7 @@ pub async fn then_log_includes_component_name(world: &mut World) {
 pub async fn then_log_includes_stack_trace(world: &mut World) {
     // TEAM-130: Verify log entry includes stack trace when available
     assert!(world.error_occurred, "Error must have occurred");
-    
+
     // Stack traces are typically included for panic/error! macros
     // Not always available for all error types
     // This is a "if available" check

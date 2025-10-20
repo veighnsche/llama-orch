@@ -14,11 +14,8 @@ use tokio::time::sleep;
 #[given("queen-rbee is not running")]
 async fn queen_not_running(world: &mut BddWorld) {
     // Kill any existing queen process
-    let _ = Command::new("pkill")
-        .arg("-f")
-        .arg("queen-rbee")
-        .output();
-    
+    let _ = Command::new("pkill").arg("-f").arg("queen-rbee").output();
+
     sleep(Duration::from_millis(500)).await;
     world.queen_process = None;
 }
@@ -31,7 +28,7 @@ async fn queen_is_running(world: &mut BddWorld) {
         .arg("http://localhost:8500/health")
         .output()
         .expect("Failed to check queen health");
-    
+
     if !output.status.success() {
         // Start queen
         let child = Command::new("../../../target/debug/queen-rbee")
@@ -41,9 +38,9 @@ async fn queen_is_running(world: &mut BddWorld) {
             .stderr(Stdio::null())
             .spawn()
             .expect("Failed to start queen-rbee");
-        
+
         world.queen_process = Some(child);
-        
+
         // Wait for queen to be ready
         for _ in 0..10 {
             sleep(Duration::from_millis(500)).await;
@@ -52,7 +49,7 @@ async fn queen_is_running(world: &mut BddWorld) {
                 .arg("http://localhost:8500/health")
                 .output()
                 .expect("Failed to check queen health");
-            
+
             if check.status.success() {
                 break;
             }
@@ -72,15 +69,12 @@ async fn job_exists(_world: &mut BddWorld, _job_id: String) {
 
 #[when(regex = r#"I run "(.+)""#)]
 async fn run_command(world: &mut BddWorld, command: String) {
-    let output = Command::new("sh")
-        .arg("-c")
-        .arg(&command)
-        .output()
-        .expect("Failed to run command");
-    
+    let output =
+        Command::new("sh").arg("-c").arg(&command).output().expect("Failed to run command");
+
     let stdout = String::from_utf8_lossy(&output.stdout);
     let stderr = String::from_utf8_lossy(&output.stderr);
-    
+
     world.expected_message = Some(format!("{}{}", stdout, stderr));
 }
 
@@ -88,7 +82,7 @@ async fn run_command(world: &mut BddWorld, command: String) {
 async fn post_to_endpoint(world: &mut BddWorld, endpoint: String) {
     let url = format!("{}{}", world.queen_url, endpoint);
     let client = reqwest::Client::new();
-    
+
     let response = client
         .post(&url)
         .json(&serde_json::json!({
@@ -100,10 +94,10 @@ async fn post_to_endpoint(world: &mut BddWorld, endpoint: String) {
         .send()
         .await
         .expect("Failed to POST");
-    
+
     let status = response.status();
     let body = response.text().await.expect("Failed to read response");
-    
+
     world.expected_message = Some(format!("Status: {}\nBody: {}", status, body));
 }
 
@@ -111,16 +105,12 @@ async fn post_to_endpoint(world: &mut BddWorld, endpoint: String) {
 async fn get_endpoint(world: &mut BddWorld, endpoint: String) {
     let url = format!("{}{}", world.queen_url, endpoint);
     let client = reqwest::Client::new();
-    
-    let response = client
-        .get(&url)
-        .send()
-        .await
-        .expect("Failed to GET");
-    
+
+    let response = client.get(&url).send().await.expect("Failed to GET");
+
     let status = response.status();
     let body = response.text().await.expect("Failed to read response");
-    
+
     world.expected_message = Some(format!("Status: {}\nBody: {}", status, body));
 }
 
@@ -132,34 +122,27 @@ async fn get_endpoint(world: &mut BddWorld, endpoint: String) {
 async fn queen_should_autostart(_world: &mut BddWorld) {
     // Wait a bit for queen to start
     sleep(Duration::from_secs(2)).await;
-    
+
     let output = Command::new("curl")
         .arg("-s")
         .arg("http://localhost:8500/health")
         .output()
         .expect("Failed to check queen health");
-    
+
     assert!(output.status.success(), "Queen should be running");
 }
 
 #[then(regex = r#"I should see "(.+)""#)]
 async fn should_see_message(world: &mut BddWorld, expected: String) {
-    let message = world.expected_message.as_ref()
-        .expect("No message captured");
-    
-    assert!(
-        message.contains(&expected),
-        "Expected to see '{}' in output:\n{}",
-        expected,
-        message
-    );
+    let message = world.expected_message.as_ref().expect("No message captured");
+
+    assert!(message.contains(&expected), "Expected to see '{}' in output:\n{}", expected, message);
 }
 
 #[then("the SSE stream should complete")]
 async fn sse_stream_completes(world: &mut BddWorld) {
-    let message = world.expected_message.as_ref()
-        .expect("No message captured");
-    
+    let message = world.expected_message.as_ref().expect("No message captured");
+
     assert!(
         message.contains("SSE test complete") || message.contains("[DONE]"),
         "SSE stream should complete"
@@ -168,20 +151,15 @@ async fn sse_stream_completes(world: &mut BddWorld) {
 
 #[then("queen-rbee should shutdown cleanly")]
 async fn queen_should_shutdown(world: &mut BddWorld) {
-    let message = world.expected_message.as_ref()
-        .expect("No message captured");
-    
-    assert!(
-        message.contains("Cleanup complete"),
-        "Queen should shutdown cleanly"
-    );
+    let message = world.expected_message.as_ref().expect("No message captured");
+
+    assert!(message.contains("Cleanup complete"), "Queen should shutdown cleanly");
 }
 
 #[then(regex = r#"the response should have status (\d+)"#)]
 async fn response_status(world: &mut BddWorld, status: u16) {
-    let message = world.expected_message.as_ref()
-        .expect("No message captured");
-    
+    let message = world.expected_message.as_ref().expect("No message captured");
+
     assert!(
         message.contains(&format!("Status: {}", status)),
         "Expected status {}, got: {}",
@@ -192,9 +170,8 @@ async fn response_status(world: &mut BddWorld, status: u16) {
 
 #[then(regex = r#"the response should contain "(.+)""#)]
 async fn response_contains(world: &mut BddWorld, expected: String) {
-    let message = world.expected_message.as_ref()
-        .expect("No message captured");
-    
+    let message = world.expected_message.as_ref().expect("No message captured");
+
     assert!(
         message.contains(&expected),
         "Expected response to contain '{}', got: {}",
@@ -205,14 +182,13 @@ async fn response_contains(world: &mut BddWorld, expected: String) {
 
 #[then(regex = r#"the job_id should start with "(.+)""#)]
 async fn job_id_starts_with(world: &mut BddWorld, prefix: String) {
-    let message = world.expected_message.as_ref()
-        .expect("No message captured");
-    
+    let message = world.expected_message.as_ref().expect("No message captured");
+
     // Extract job_id from JSON response
     if let Some(start) = message.find("\"job_id\":") {
         let rest = &message[start..];
         assert!(
-            rest.contains(&format!("\"job_id\":\"{}",prefix)),
+            rest.contains(&format!("\"job_id\":\"{}", prefix)),
             "job_id should start with '{}'",
             prefix
         );
@@ -223,9 +199,8 @@ async fn job_id_starts_with(world: &mut BddWorld, prefix: String) {
 
 #[then(regex = r#"the sse_url should match "(.+)""#)]
 async fn sse_url_matches(world: &mut BddWorld, pattern: String) {
-    let message = world.expected_message.as_ref()
-        .expect("No message captured");
-    
+    let message = world.expected_message.as_ref().expect("No message captured");
+
     // Check if sse_url contains the pattern
     assert!(
         message.contains("sse_url") && message.contains("/jobs/") && message.contains("/stream"),
@@ -242,14 +217,9 @@ async fn response_is_sse(_world: &mut BddWorld) {
 
 #[then(regex = r#"I should receive a "(.+)" event"#)]
 async fn should_receive_event(world: &mut BddWorld, event_type: String) {
-    let message = world.expected_message.as_ref()
-        .expect("No message captured");
-    
-    assert!(
-        message.contains(&event_type),
-        "Should receive '{}' event",
-        event_type
-    );
+    let message = world.expected_message.as_ref().expect("No message captured");
+
+    assert!(message.contains(&event_type), "Should receive '{}' event", event_type);
 }
 
 #[then("the following should happen in order:")]

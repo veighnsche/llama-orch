@@ -83,16 +83,16 @@ pub async fn then_registration_ephemeral(world: &mut World) {
     // 1. Worker registration exists in current session
     // 2. No persistence flag is set (no database write)
     // 3. Registry state is in-memory only
-    
+
     let has_workers = !world.registered_workers.is_empty() || !world.workers.is_empty();
     assert!(has_workers, "Expected at least one worker to be registered for ephemeral check");
-    
+
     // Verify no persistence indicators
     assert!(
         !world.registry_available || world.model_catalog.is_empty(),
         "Ephemeral registration should not persist to database"
     );
-    
+
     tracing::info!(
         "✅ TEAM-129: Registration is ephemeral - {} workers in memory, no persistence",
         world.registered_workers.len() + world.workers.len()
@@ -113,19 +113,22 @@ pub async fn when_hive_reports_worker(world: &mut World, worker_id: String, capa
         .map(|s| s.trim().trim_matches('"').to_string())
         .filter(|s| !s.is_empty())
         .collect();
-    
-    world.workers.insert(worker_id.clone(), crate::steps::world::WorkerInfo {
-        id: worker_id.clone(),
-        url: format!("http://localhost:8082"),
-        model_ref: "test-model".to_string(),
-        state: "ready".to_string(),
-        backend: "cuda".to_string(),
-        device: 0,
-        slots_total: 1,
-        slots_available: 1,
-        capabilities: caps.clone(),
-    });
-    
+
+    world.workers.insert(
+        worker_id.clone(),
+        crate::steps::world::WorkerInfo {
+            id: worker_id.clone(),
+            url: format!("http://localhost:8082"),
+            model_ref: "test-model".to_string(),
+            state: "ready".to_string(),
+            backend: "cuda".to_string(),
+            device: 0,
+            slots_total: 1,
+            slots_available: 1,
+            capabilities: caps.clone(),
+        },
+    );
+
     tracing::info!("✅ Worker {} reported with capabilities: {:?}", worker_id, caps);
 }
 
@@ -143,20 +146,23 @@ pub async fn given_worker_slots(world: &mut World, slots: usize) {
 #[given(expr = "worker-001 is registered in queen-rbee with last_heartbeat=T0")]
 pub async fn given_worker_registered_heartbeat(world: &mut World) {
     use std::time::SystemTime;
-    
+
     let worker_id = "worker-001".to_string();
-    world.workers.insert(worker_id.clone(), crate::steps::world::WorkerInfo {
-        id: worker_id.clone(),
-        url: "http://localhost:8082".to_string(),
-        model_ref: "test-model".to_string(),
-        state: "ready".to_string(),
-        backend: "cpu".to_string(),
-        device: 0,
-        slots_total: 1,
-        slots_available: 1,
-        capabilities: vec!["cpu".to_string()],
-    });
+    world.workers.insert(
+        worker_id.clone(),
+        crate::steps::world::WorkerInfo {
+            id: worker_id.clone(),
+            url: "http://localhost:8082".to_string(),
+            model_ref: "test-model".to_string(),
+            state: "ready".to_string(),
+            backend: "cpu".to_string(),
+            device: 0,
+            slots_total: 1,
+            slots_available: 1,
+            capabilities: vec!["cpu".to_string()],
+        },
+    );
     world.worker_heartbeat_t0 = Some(SystemTime::now());
-    
+
     tracing::info!("✅ Worker-001 registered with heartbeat T0");
 }

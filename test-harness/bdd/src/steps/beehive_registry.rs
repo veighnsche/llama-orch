@@ -241,12 +241,15 @@ pub async fn then_request_to_queen_rbee_registry(world: &mut World, url: String)
     // TEAM-128: Verify that the command execution sent a request
     // Make actual HTTP request to verify queen-rbee is reachable
     let client = crate::steps::world::create_http_client();
-    
+
     match client.get(&url).timeout(std::time::Duration::from_secs(2)).send().await {
         Ok(response) => {
             world.last_status_code = Some(response.status().as_u16());
-            tracing::info!("✅ TEAM-128: rbee-keeper sent request to: {} (status: {})", 
-                          url, response.status());
+            tracing::info!(
+                "✅ TEAM-128: rbee-keeper sent request to: {} (status: {})",
+                url,
+                response.status()
+            );
         }
         Err(e) => {
             tracing::warn!("Request to {} failed: {} (expected in test environment)", url, e);
@@ -259,7 +262,7 @@ pub async fn then_request_to_queen_rbee_registry(world: &mut World, url: String)
 pub async fn then_validate_ssh_connection(world: &mut World, step: &cucumber::gherkin::Step) {
     let docstring = step.docstring.as_ref().expect("Expected a docstring");
     let ssh_command = docstring.trim();
-    
+
     // TEAM-128: SSH validation happens inside queen-rbee
     // Parse SSH command to extract connection details
     let parts: Vec<&str> = ssh_command.split_whitespace().collect();
@@ -270,7 +273,7 @@ pub async fn then_validate_ssh_connection(world: &mut World, step: &cucumber::gh
             tracing::info!("✅ TEAM-128: queen-rbee validates SSH: {}@{}", user, host);
         }
     }
-    
+
     // Mark SSH validation as performed
     world.validation_passed = true;
     tracing::info!("✅ TEAM-128: SSH validation command: {}", ssh_command);
@@ -350,12 +353,18 @@ pub async fn then_do_not_save_node(world: &mut World) {
     // TEAM-128: Verify node was not added (check that beehive_nodes didn't grow)
     // Store initial count to verify no new nodes added
     let initial_count = world.beehive_nodes.len();
-    
+
     // Verify no new nodes were added after failed validation
-    assert_eq!(world.beehive_nodes.len(), initial_count, 
-              "Node was incorrectly saved to registry after validation failure");
-    
-    tracing::info!("✅ TEAM-128: Node NOT saved to registry (count: {}, as expected)", initial_count);
+    assert_eq!(
+        world.beehive_nodes.len(),
+        initial_count,
+        "Node was incorrectly saved to registry after validation failure"
+    );
+
+    tracing::info!(
+        "✅ TEAM-128: Node NOT saved to registry (count: {}, as expected)",
+        initial_count
+    );
 }
 
 // TEAM-067: Test verification - checks expected output format
@@ -428,27 +437,32 @@ pub async fn then_query_returns_no_results(world: &mut World) {
     // TEAM-128: Verify query returns empty results
     // Check that beehive_nodes is empty or target node not found
     let is_empty = world.beehive_nodes.is_empty();
-    
+
     // Also check via HTTP API if queen-rbee URL is available
     if let Some(queen_url) = &world.queen_rbee_url {
         let client = crate::steps::world::create_http_client();
         let url = format!("{}/v2/registry/beehives", queen_url);
-        
+
         match client.get(&url).send().await {
             Ok(response) if response.status() == 200 => {
                 if let Ok(body) = response.text().await {
-                    let is_empty_response = body.contains("[]") || body.contains("{}")
-                        || body.len() < 10;
-                    tracing::info!("✅ TEAM-128: Query returned no results via HTTP (empty: {})", 
-                                  is_empty_response);
+                    let is_empty_response =
+                        body.contains("[]") || body.contains("{}") || body.len() < 10;
+                    tracing::info!(
+                        "✅ TEAM-128: Query returned no results via HTTP (empty: {})",
+                        is_empty_response
+                    );
                 }
             }
             _ => {
-                tracing::info!("✅ TEAM-128: Query returned no results (local state empty: {})", is_empty);
+                tracing::info!(
+                    "✅ TEAM-128: Query returned no results (local state empty: {})",
+                    is_empty
+                );
             }
         }
     }
-    
+
     tracing::info!("✅ TEAM-128: Query returned no results (as expected)");
 }
 

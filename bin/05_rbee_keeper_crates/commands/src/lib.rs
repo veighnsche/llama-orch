@@ -10,9 +10,9 @@
 //! Command implementations for rbee-keeper CLI
 
 pub mod infer;
+pub mod install;
+pub mod logs;
 pub mod setup;
 pub mod workers;
-pub mod logs;
-pub mod install;
 
 // TODO: Implement command functionality
