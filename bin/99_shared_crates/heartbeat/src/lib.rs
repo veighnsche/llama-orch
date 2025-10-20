@@ -59,6 +59,7 @@
 pub mod types;
 pub mod worker;
 pub mod hive;
+pub mod queen; // TEAM-158: Queen heartbeat receiver
 
 // ============================================================================
 // Re-exports for Convenience
@@ -74,3 +75,6 @@ pub use worker::{start_worker_heartbeat_task, WorkerHeartbeatConfig};
 
 // Re-export hive heartbeat functionality
 pub use hive::{start_hive_heartbeat_task, HiveHeartbeatConfig, WorkerStateProvider};
+
+// TEAM-158: Re-export queen heartbeat functionality
+pub use queen::{HeartbeatAcknowledgement, HeartbeatHandler};

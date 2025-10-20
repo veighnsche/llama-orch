@@ -15,6 +15,7 @@ path = "src/main.rs"
 # HTTP framework
 axum = { workspace = true }
 tokio = { workspace = true, features = ["full"] }
+reqwest = { version = "0.12", features = ["json"] }  # TEAM-158: For device detection HTTP calls
 
 # CLI
 clap = { version = "4", features = ["derive"] }
@@ -35,6 +36,7 @@ anyhow = "1.0"
 job-registry = { path = "../99_shared_crates/job-registry" }
 observability-narration-core = { path = "../99_shared_crates/narration-core" }
 queen-rbee-hive-catalog = { path = "../15_queen_rbee_crates/hive-catalog" }
+rbee-heartbeat = { path = "../99_shared_crates/heartbeat" }  # TEAM-158: Shared heartbeat types
 
 # TODO: Add when registries are migrated
 # beehive_registry (for http/routes.rs, http/beehives.rs, etc.)
@@ -43,4 +45,5 @@ queen-rbee-hive-catalog = { path = "../15_queen_rbee_crates/hive-catalog" }
 # input_validation (for http/beehives.rs, http/inference.rs)
 
 [dev-dependencies]
-# Add dev dependencies as needed
+# TEAM-158: Test dependencies
+tempfile = "3.8"

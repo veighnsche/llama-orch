@@ -28,6 +28,9 @@ pub mod types; // Only for HealthResponse
 // TEAM-155: Job submission and streaming endpoints
 pub mod jobs;
 
+// TEAM-158: Heartbeat endpoint for hive health monitoring
+pub mod heartbeat;
+
 // TODO: Uncomment when registries are migrated
 // pub mod beehives;
 // pub mod inference;

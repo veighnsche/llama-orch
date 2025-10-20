@@ -16,8 +16,10 @@ cucumber = { version = "0.20", features = ["macros"] }
 tokio = { version = "1", features = ["macros", "rt-multi-thread"] }
 futures = { workspace = true }
 tempfile = "3.0"
+chrono = "0.4"  # TEAM-158: For timestamp handling
 queen-rbee = { path = ".." }
 queen-rbee-hive-catalog = { path = "../../15_queen_rbee_crates/hive-catalog" }
+rbee-heartbeat = { path = "../../99_shared_crates/heartbeat" }  # TEAM-158: For heartbeat types
 
 [[bin]]
 name = "bdd-runner"

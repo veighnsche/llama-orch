@@ -109,7 +109,8 @@ async fn main() -> Result<()> {
 ///
 /// TEAM-155: Added job endpoints for dual-call pattern
 /// TEAM-156: Added hive catalog to state
-/// Currently health, shutdown, and job endpoints are active.
+/// TEAM-158: Added heartbeat endpoint for hive health monitoring
+/// Currently health, shutdown, job, and heartbeat endpoints are active.
 /// TODO: Uncomment http::routes::create_router() when registries are migrated
 fn create_router(
     job_registry: Arc<JobRegistry<String>>,
@@ -118,6 +119,11 @@ fn create_router(
     // TEAM-156: Create job state for endpoints with hive catalog
     let job_state = http::jobs::QueenJobState {
         registry: job_registry,
+        hive_catalog: hive_catalog.clone(),
+    };
+
+    // TEAM-158: Create heartbeat state
+    let heartbeat_state = http::heartbeat::HeartbeatState {
         hive_catalog,
     };
 
@@ -128,4 +134,7 @@ fn create_router(
         .route("/jobs", post(http::jobs::handle_create_job))
         .route("/jobs/{job_id}/stream", get(http::jobs::handle_stream_job))
         .with_state(job_state)
+        // TEAM-158: Heartbeat endpoint
+        .route("/heartbeat", post(http::heartbeat::handle_heartbeat))
+        .with_state(heartbeat_state)
 }
