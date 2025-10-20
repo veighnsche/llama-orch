@@ -248,11 +248,13 @@ pub struct NarrationFields {
     pub pool_id: Option<String>,
     pub replica_id: Option<String>,
     pub worker_id: Option<String>,
+    /// TEAM-185: Added hive_id for multi-hive rbee operations
     pub hive_id: Option<String>,
     
     // Operation context (for job-based systems)
     /// The specific operation being performed (e.g., "worker_spawn", "infer", "model_download")
     /// Unlike action (which is static), this can be dynamic and operation-specific
+    /// TEAM-185: Added operation field for job-based systems to track dynamic operation names
     pub operation: Option<String>,
 
     // Contextual fields (ORCH-3304)

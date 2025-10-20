@@ -1,5 +1,7 @@
 # rbee API Reference
 
+<!-- TEAM-185: Updated API reference with new inference parameters and worker spawn syntax -->
+
 ## rbee CLI
 
 ```bash

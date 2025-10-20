@@ -5,6 +5,10 @@
 //! 2. POST /v1/jobs with operation payload
 //! 3. GET /jobs/{job_id}/stream and stream narration to stdout
 //! 4. Cleanup queen handle
+//!
+//! TEAM-185: Updated narration to use operation field instead of embedding in human message
+//! TEAM-185: Added hive_id to narration context
+//! TEAM-185: Replaced hardcoded action strings with constants from operations module
 
 use anyhow::Result;
 use futures::StreamExt;

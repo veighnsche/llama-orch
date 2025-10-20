@@ -14,6 +14,7 @@
 mod health;
 mod heartbeat; // TEAM-164: Binary-specific heartbeat logic
 mod http;
+mod operations;
 
 use anyhow::Result;
 use axum::routing::{get, post};
@@ -25,14 +26,11 @@ use std::net::SocketAddr;
 use std::path::PathBuf;
 use std::sync::Arc;
 
-// Actor and action constants
+use crate::operations::*;
+
+// Actor constant
 // TEAM-155: Added emoji prefix for visual identification
 const ACTOR_QUEEN_RBEE: &str = "👑 queen-rbee";
-const ACTION_START: &str = "start";
-const ACTION_LISTEN: &str = "listen";
-const ACTION_READY: &str = "ready";
-const ACTION_ERROR: &str = "error";
-const ACTION_SHUTDOWN: &str = "shutdown";
 
 #[derive(Parser, Debug)]
 #[command(name = "queen-rbee")]
@@ -129,20 +127,24 @@ fn create_router(
     let hive_start_state = hive_catalog;
 
     axum::Router::new()
+        // Health check (no /v1 prefix for compatibility)
         .route("/health", get(health::handle_health))
-        .route("/shutdown", post(handle_shutdown))
-        .route("/narration/stream", get(http::narration_stream::handle_narration_stream))
-        .route("/jobs", post(http::handle_create_job))
-        .with_state(job_state.clone())
-        .route("/jobs/{job_id}/stream", get(http::handle_stream_job))
-        .with_state(job_state.registry)
-        .route("/heartbeat", post(http::handle_heartbeat))
+        // V1 API endpoints (matches API_REFERENCE.md)
+        .route("/v1/shutdown", post(handle_shutdown))
+        .route("/v1/heartbeat", post(http::handle_heartbeat))
         .with_state(heartbeat_state)
+        .route("/v1/jobs", post(http::handle_create_job))
+        .with_state(job_state.clone())
+        .route("/v1/jobs/:job_id/stream", get(http::handle_stream_job))
+        .with_state(job_state.registry)
+        // Narration stream (global)
+        .route("/narration/stream", get(http::narration_stream::handle_narration_stream))
+        // Internal hive management
         .route("/hive/start", post(http::handle_hive_start))
         .with_state(hive_start_state)
 }
 
-/// POST /shutdown - Graceful shutdown
+/// POST /v1/shutdown - Graceful shutdown
 ///
 /// TEAM-153: Created by TEAM-153
 /// TEAM-164: Migrated from http.rs to main.rs

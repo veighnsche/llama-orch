@@ -4,6 +4,9 @@
 //!
 //! This module uses the shared `daemon-lifecycle` crate for common lifecycle operations.
 //! All observability is handled through narration-core (no tracing).
+//!
+//! TEAM-185: Consolidated from separate rbee-keeper-queen-lifecycle crate into this module
+//! TEAM-185: Imports ACTION_QUEEN_START and ACTION_QUEEN_STOP from operations module
 
 use anyhow::{Context, Result};
 use daemon_lifecycle::DaemonManager;

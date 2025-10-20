@@ -37,6 +37,7 @@ anyhow = "1.0"
 observability-narration-core = { path = "../99_shared_crates/narration-core" }
 
 # TEAM-152: Queen lifecycle management (consolidated)
+# TEAM-185: Consolidated queen-lifecycle crate dependencies directly into rbee-keeper
 daemon-lifecycle = { path = "../99_shared_crates/daemon-lifecycle" }
 timeout-enforcer = { path = "../99_shared_crates/timeout-enforcer" }
 

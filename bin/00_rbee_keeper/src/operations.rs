@@ -1,6 +1,9 @@
 //! Operation constants for rbee-keeper
 //!
 //! Centralized operation identifiers used in job payloads and narration.
+//!
+//! TEAM-185: Renamed from actions.rs to operations.rs
+//! TEAM-185: Reorganized constants - OP_* for job operations, ACTION_* for narration lifecycle
 
 // Actor
 pub const ACTOR_RBEE_KEEPER: &str = "🧑‍🌾 rbee-keeper";

@@ -28,6 +28,10 @@
 //! ```bash
 //! rbee-keeper infer "hello" --model HF:author/minillama
 //! ```
+//!
+//! TEAM-185: Consolidated queen-lifecycle crate into this binary
+//! TEAM-185: Renamed actions module to operations
+//! TEAM-185: Updated all operation strings to use constants
 
 mod config;
 mod job_client;
@@ -52,8 +56,9 @@ pub struct Cli {
 }
 
 #[derive(Subcommand)]
+/// TEAM-185: Added comprehensive inference parameters (top_p, top_k, device, worker_id, stream)
 pub enum Commands {
-    /// Queen management
+    /// Manage queen-rbee daemon
     Queen {
         #[command(subcommand)]
         action: QueenAction,
@@ -156,6 +161,7 @@ pub enum WorkerAction {
         #[arg(long)]
         model: String,
         /// Worker type: cpu, cuda, or metal
+        /// TEAM-185: Renamed from 'backend' to 'worker' for clarity
         #[arg(long)]
         worker: String,
         /// Device ID (GPU index for cuda/metal, ignored for cpu)

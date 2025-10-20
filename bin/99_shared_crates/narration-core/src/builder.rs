@@ -115,6 +115,7 @@ impl Narration {
     }
 
     /// Set the hive ID.
+    /// TEAM-185: Added for multi-hive rbee operations
     pub fn hive_id(mut self, id: impl Into<String>) -> Self {
         self.fields.hive_id = Some(id.into());
         self
@@ -122,6 +123,7 @@ impl Narration {
 
     /// Set the operation name (e.g., "worker_spawn", "infer", "model_download").
     /// This is for dynamic operation names in job-based systems.
+    /// TEAM-185: Added for job-based systems to track dynamic operation names
     pub fn operation(mut self, op: impl Into<String>) -> Self {
         self.fields.operation = Some(op.into());
         self
