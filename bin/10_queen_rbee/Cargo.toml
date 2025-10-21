@@ -37,6 +37,7 @@ anyhow = "1.0"
 job-registry = { path = "../99_shared_crates/job-registry" }
 observability-narration-core = { path = "../99_shared_crates/narration-core" }
 queen-rbee-hive-catalog = { path = "../15_queen_rbee_crates/hive-catalog" }
+queen-rbee-hive-registry = { path = "../15_queen_rbee_crates/hive-registry" }  # TEAM-188: Runtime hive state (RAM)
 queen-rbee-hive-lifecycle = { path = "../15_queen_rbee_crates/hive-lifecycle" }  # TEAM-164: Pure hive lifecycle logic
 queen-rbee-scheduler = { path = "../15_queen_rbee_crates/scheduler" }  # TEAM-164: Pure job orchestration logic
 rbee-heartbeat = { path = "../99_shared_crates/heartbeat" }  # TEAM-158: Shared heartbeat types

@@ -78,12 +78,11 @@ async fn handle_new_hive_discovery(
     payload: &HiveHeartbeatPayload,
 ) -> Result<(), (StatusCode, String)> {
     // TEAM-186: New hive discovery workflow
-    /**
-     * first check if the hive already exist in the catalog
-     * if it does, do nothing the registry happens in the update_hive_state
-     * if it doesn't, then say that the hive is not recognized by the queen and alert
-     */
-
+    // /**
+    //  * first check if the hive already exist in the catalog
+    //  * if it does, do nothing the registry happens in the update_hive_state
+    //  * if it doesn't, then say that the hive is not recognized by the queen and alert
+    //  */
     // TEAM-186: Log discovery
     eprintln!("🆕 New hive discovered: {}", payload.hive_id);
 

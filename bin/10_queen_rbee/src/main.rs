@@ -13,7 +13,9 @@
 // TEAM-164: Migrated endpoints to dedicated modules/files
 mod http;
 mod job_router;  // TEAM-186: Job routing and operation dispatch
-mod operations;
+mod narration;  // TEAM-188: Narration constants
+// TEAM-188: operations module doesn't exist yet
+// mod operations;
 
 use anyhow::Result;
 use axum::routing::{get, post};
@@ -25,11 +27,9 @@ use std::net::SocketAddr;
 use std::path::PathBuf;
 use std::sync::Arc;
 
-use crate::operations::*;
-
-// Actor constant
-// TEAM-155: Added emoji prefix for visual identification
-const ACTOR_QUEEN_RBEE: &str = "👑 queen-rbee";
+use crate::narration::*;
+// TEAM-188: operations module doesn't exist yet
+// use crate::operations::*;
 
 #[derive(Parser, Debug)]
 #[command(name = "queen-rbee")]
@@ -78,12 +78,15 @@ async fn main() -> Result<()> {
     // Generic over String for now (will stream text tokens)
     let job_registry: Arc<JobRegistry<String>> = Arc::new(JobRegistry::new());
 
+    // TEAM-188: Initialize hive registry (RAM) for runtime state
+    let hive_registry = Arc::new(queen_rbee_hive_registry::HiveRegistry::new());
+
     // TODO: Initialize other registries when migrated
     // - beehive_registry (SQLite catalog + RAM registry)
     // - worker_registry (RAM)
     // - Load config from args.config
 
-    let app = create_router(job_registry, hive_catalog);
+    let app = create_router(job_registry, hive_catalog, hive_registry);
     let addr = SocketAddr::from(([127, 0, 0, 1], args.port));
 
     Narration::new(ACTOR_QUEEN_RBEE, ACTION_LISTEN, &addr.to_string())
@@ -114,12 +117,13 @@ async fn main() -> Result<()> {
 fn create_router(
     job_registry: Arc<JobRegistry<String>>,
     hive_catalog: Arc<HiveCatalog>,
+    hive_registry: Arc<queen_rbee_hive_registry::HiveRegistry>,
 ) -> axum::Router {
     // TEAM-164: Create states for HTTP endpoints
     let job_state =
         http::SchedulerState { registry: job_registry, hive_catalog: hive_catalog.clone() };
 
-    let heartbeat_state = http::HeartbeatState { hive_catalog: hive_catalog.clone() };
+    let heartbeat_state = http::HeartbeatState { hive_registry };
 
     axum::Router::new()
         // Health check (no /v1 prefix for compatibility)
@@ -130,7 +134,7 @@ fn create_router(
         .with_state(heartbeat_state)
         .route("/v1/jobs", post(http::handle_create_job))
         .with_state(job_state.clone())
-        .route("/v1/jobs/:job_id/stream", get(http::handle_stream_job))
+        .route("/v1/jobs/{job_id}/stream", get(http::handle_stream_job))
         .with_state(job_state.clone())  // TEAM-186: Pass full state for payload retrieval
 }
 
