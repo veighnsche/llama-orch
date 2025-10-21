@@ -2,11 +2,94 @@
 
 ## Purpose
 
-**In-memory (RAM) registry for tracking real-time runtime state of all hives.**
+**In-memory (RAM) registry for tracking real-time runtime state of all hives AND workers.**
+
+This crate serves as a **unified registry** - it replaces the need for a separate worker-registry crate.
+
+### Key Insight
+
+The hive-registry contains EVERYTHING needed for worker tracking because:
+- Hives send heartbeats with complete worker information
+- Each worker has: URL, state, model, resources, backend, device, etc.
+- Worker URLs enable direct inference (bypassing hive as middleman)
+- All data is already in memory for fast lookups
+
+**Result**: The `worker-registry` crate was redundant and has been removed.
+
+---
+
+## Catalog vs Registry
 
 This is DIFFERENT from `hive-catalog` (SQLite - persistent storage):
 - **Catalog** = Persistent config (host, port, SSH, device capabilities)
 - **Registry** = Runtime state (workers, VRAM usage, last heartbeat)
+
+## Related Crates
+
+### hive-catalog (SQLite - Persistent)
+**Purpose**: Persistent storage for hive configuration
+
+**Stores**:
+- Host, port, SSH credentials
+- Device capabilities
+- Last heartbeat timestamp
+- Status (Unknown/Online/Offline)
+
+**Use case**: Configuration that survives restarts
+
+### hive-lifecycle (Orchestration)
+**Purpose**: Start, stop, and manage hive processes
+
+**Responsibilities**:
+- Spawn hives (localhost or remote via SSH)
+- Add hives to catalog
+- Fire-and-forget pattern
+- Heartbeat callback mechanism
+
+**Flow**:
+```
+hive-lifecycle          hive-catalog          hive-registry
+      │                       │                      │
+      │ 1. Start hive         │                      │
+      ├──────────────────────>│                      │
+      │    Add to catalog     │                      │
+      │                       │                      │
+      │ 2. Spawn process      │                      │
+      │                       │                      │
+      │ 3. Hive sends heartbeat                      │
+      ├──────────────────────────────────────────────>│
+      │              Update runtime state             │
+      │                       │                      │
+      │              Update catalog timestamp         │
+      │<──────────────────────┤                      │
+```
+
+### Integration Example
+```rust
+// 1. Start hive (hive-lifecycle)
+let response = execute_hive_start(catalog.clone(), request).await?;
+println!("Hive spawning at {}", response.hive_url);
+
+// 2. Hive sends heartbeat
+pub async fn handle_heartbeat(
+    State(state): State<HeartbeatState>,
+    Json(payload): Json<HiveHeartbeatPayload>,
+) -> Result<...> {
+    // Update catalog (persistent) - hive-catalog
+    state.hive_catalog
+        .update_heartbeat(&payload.hive_id, timestamp_ms)
+        .await?;
+    
+    // Update registry (in-memory) - hive-registry
+    state.hive_registry
+        .update_hive_state(&payload.hive_id, payload);
+    
+    Ok(...)
+}
+
+// 3. Query workers for scheduling
+let best_worker = registry.find_best_worker_for_model("llama-3-8b")?;
+```
 
 ## Core Responsibilities
 
@@ -17,15 +100,49 @@ This is DIFFERENT from `hive-catalog` (SQLite - persistent storage):
 - Hive online/offline status
 
 ### 2. Fast Lookups for Scheduling
+
+The registry provides detailed, real-time information about both hives AND workers for intelligent scheduling decisions:
+
+**Hive-Level Queries**:
 - Which hives are online (received heartbeat recently)?
 - Which hive has available VRAM for model X?
-- How many workers are running on hive Y? // so not how many that is not enough info. it should be which workers. are they currently working? how much (V)RAM is this worker taken and how much CPU and GPU resources is it taking. and in the heartbeat should also contain when the last time the worker is seen. so the queen needs a lot of info from the hive and their workers.
+- Total VRAM/RAM usage per hive
 
-// Alright so the worker registry is now actually redundant now I think of it. The heartbeat contains all the info about the worker registry. the only thing that the worker registry should save was the URL of the worker so that the queen can connect to it for inference without needing the hive as a middleman.
+**Worker-Level Queries** (The registry tracks ALL worker details):
+- **Which workers** are on each hive (not just count)
+- **Worker state**: Are they Idle, Busy, or Loading?
+- **Resource usage per worker**:
+  - VRAM used (bytes)
+  - RAM used (bytes)  
+  - CPU usage (percentage)
+  - GPU usage (percentage)
+- **Worker URL**: For direct inference (bypassing hive as middleman)
+- **Model loaded**: Which model is running on this worker?
+- **Backend**: cuda, cpu, or metal
+- **Device ID**: GPU index
+- **Last seen**: When worker last sent heartbeat to hive
 
-// So please update the this crate so that it also does the worker registry work. 
+### 3. Unified Hive + Worker Registry
 
-### 3. Heartbeat Processing
+**Important**: The hive-registry serves as BOTH the hive registry AND the worker registry. The separate `worker-registry` crate is **redundant and removed**.
+
+**Why?** The heartbeat already contains complete worker information:
+- Hive sends heartbeat with full worker list
+- Each worker in the list has: state, URL, resources, model, backend, etc.
+- Registry stores this in memory for fast lookups
+- Worker URLs enable direct inference routing (no hive middleman needed)
+
+**Architecture Decision**:
+```
+Before (redundant):
+├── hive-registry    → Track hives
+└── worker-registry  → Track workers (REDUNDANT!)
+
+After (unified):
+└── hive-registry    → Track hives + workers (all-in-one!)
+``` 
+
+### 4. Heartbeat Processing
 - Update hive state from `HiveHeartbeatPayload`
 - Calculate resource usage from worker list
 - Track hive liveness
@@ -76,9 +193,19 @@ pub struct WorkerInfo {
 }
 ```
 
+## Public API Summary
+
+**Total: 18 Public Functions**
+- 9 Hive Management Functions
+- 9 Worker Registry Functions
+
+The hive-registry provides comprehensive functionality for both hive-level and worker-level operations, serving as a unified registry for the entire system.
+
+---
+
 ## Public API
 
-### Core Operations
+### Hive Management Functions (9 functions)
 
 #### 1. Update Hive State (from heartbeat)
 ```rust
@@ -145,6 +272,92 @@ pub fn get_worker_count(&self, hive_id: &str) -> Option<usize>
 pub fn is_hive_online(&self, hive_id: &str, max_age_ms: i64) -> bool
 ```
 **Purpose**: Check if hive is considered online (recent heartbeat)
+
+---
+
+### Worker Registry Functions
+
+The registry provides **9 additional functions** for worker-level operations, enabling direct worker access and intelligent routing:
+
+#### 1. Get Worker
+```rust
+pub fn get_worker(&self, worker_id: &str) -> Option<(String, WorkerInfo)>
+```
+**Purpose**: Find worker by ID across all hives  
+**Returns**: `(hive_id, worker_info)` if found
+
+**Why important**: Locate a specific worker when you have the worker ID
+
+#### 2. Get Worker URL
+```rust
+pub fn get_worker_url(&self, worker_id: &str) -> Option<String>
+```
+**Purpose**: Get worker URL for **direct inference routing**  
+**Critical**: This enables bypassing the hive as a middleman
+
+**Example**: Route inference directly to worker
+```rust
+if let Some(url) = registry.get_worker_url("worker-123") {
+    // Send inference request directly to worker
+    let response = http_client.post(&url).json(&request).send().await?;
+}
+```
+
+#### 3. List All Workers
+```rust
+pub fn list_all_workers(&self) -> Vec<(String, WorkerInfo)>
+```
+**Purpose**: Get all workers across all hives  
+**Returns**: List of `(hive_id, worker_info)` tuples
+
+#### 4. Find Idle Workers
+```rust
+pub fn find_idle_workers(&self) -> Vec<(String, WorkerInfo)>
+```
+**Purpose**: Find all workers in "Idle" state (available for work)  
+**Use case**: Find available capacity for new inference requests
+
+#### 5. Find Workers by Model
+```rust
+pub fn find_workers_by_model(&self, model_id: &str) -> Vec<(String, WorkerInfo)>
+```
+**Purpose**: Find workers with specific model already loaded  
+**Use case**: Avoid model loading delay by routing to workers with model ready
+
+#### 6. Find Workers by Backend
+```rust
+pub fn find_workers_by_backend(&self, backend: &str) -> Vec<(String, WorkerInfo)>
+```
+**Purpose**: Find workers using specific backend (cuda, cpu, metal)  
+**Use case**: Hardware-specific routing (e.g., prefer CUDA workers)
+
+#### 7. Find Best Worker for Model
+```rust
+pub fn find_best_worker_for_model(&self, model_id: &str) -> Option<(String, WorkerInfo)>
+```
+**Purpose**: Intelligent worker selection with optimization  
+**Algorithm**:
+1. Prefer workers with model already loaded
+2. Among those, pick worker with lowest GPU usage
+3. Fallback to any idle worker with lowest GPU usage
+
+**This is the key scheduling function!**
+
+#### 8. Total Worker Count
+```rust
+pub fn total_worker_count(&self) -> usize
+```
+**Purpose**: Get total workers across all hives  
+**Use case**: Capacity monitoring, statistics
+
+#### 9. Get Workers on Hive
+```rust
+pub fn get_workers_on_hive(&self, hive_id: &str) -> Vec<WorkerInfo>
+```
+**Purpose**: Get all workers on a specific hive  
+**Use case**: Hive-specific monitoring, load distribution
+
+---
 
 ## Implementation Details
 
@@ -335,3 +548,11 @@ hive-registry/
 ✅ Documentation complete
 ✅ Used by heartbeat handler
 ✅ Used by scheduler for hive selection
+
+## See Also
+
+- **hive-catalog** (`/bin/15_queen_rbee_crates/hive-catalog/SPECS.md`) - Persistent storage (SQLite)
+- **hive-lifecycle** (`/bin/15_queen_rbee_crates/hive-lifecycle/SPECS.md`) - Start/stop hive processes
+- **heartbeat** (`/bin/99_shared_crates/heartbeat/`) - Heartbeat types and handlers
+- **Device detection** - Capabilities tracking
+- **Scheduler** - Uses registry for intelligent worker selection

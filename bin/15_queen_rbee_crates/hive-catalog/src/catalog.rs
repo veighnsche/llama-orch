@@ -18,6 +18,7 @@ use crate::schema::initialize_schema;
 use crate::types::{HiveRecord, HiveStatus};
 use anyhow::{Context, Result};
 use sqlx::sqlite::{SqliteConnectOptions, SqlitePool};
+use sqlx::Row;
 use std::path::Path;
 use std::str::FromStr;
 
@@ -249,5 +250,113 @@ impl HiveCatalog {
             .context("Failed to remove hive")?;
 
         Ok(())
+    }
+
+    // ========================================================================
+    // QUERY OPERATIONS
+    // ========================================================================
+
+    /// Find hives by status
+    ///
+    /// Returns all hives with the specified status.
+    pub async fn find_hives_by_status(&self, status: HiveStatus) -> Result<Vec<HiveRecord>> {
+        let rows = sqlx::query("SELECT * FROM hives WHERE status = ?")
+            .bind(status.to_string())
+            .fetch_all(&self.pool)
+            .await
+            .context("Failed to find hives by status")?;
+
+        rows.iter().map(map_row_to_hive).collect()
+    }
+
+    /// Find online hives
+    ///
+    /// Convenience method for finding hives with Online status.
+    pub async fn find_online_hives(&self) -> Result<Vec<HiveRecord>> {
+        self.find_hives_by_status(HiveStatus::Online).await
+    }
+
+    /// Find offline hives
+    ///
+    /// Convenience method for finding hives with Offline status.
+    pub async fn find_offline_hives(&self) -> Result<Vec<HiveRecord>> {
+        self.find_hives_by_status(HiveStatus::Offline).await
+    }
+
+    /// Count total hives in catalog
+    pub async fn count_hives(&self) -> Result<i64> {
+        let row = sqlx::query("SELECT COUNT(*) as count FROM hives")
+            .fetch_one(&self.pool)
+            .await
+            .context("Failed to count hives")?;
+
+        let count: i64 = row.try_get("count")?;
+        Ok(count)
+    }
+
+    /// Count hives by status
+    pub async fn count_by_status(&self, status: HiveStatus) -> Result<i64> {
+        let row = sqlx::query("SELECT COUNT(*) as count FROM hives WHERE status = ?")
+            .bind(status.to_string())
+            .fetch_one(&self.pool)
+            .await
+            .context("Failed to count hives by status")?;
+
+        let count: i64 = row.try_get("count")?;
+        Ok(count)
+    }
+
+    /// Check if hive exists in catalog
+    pub async fn hive_exists(&self, id: &str) -> Result<bool> {
+        let row = sqlx::query("SELECT COUNT(*) as count FROM hives WHERE id = ?")
+            .bind(id)
+            .fetch_one(&self.pool)
+            .await
+            .context("Failed to check if hive exists")?;
+
+        let count: i64 = row.try_get("count")?;
+        Ok(count > 0)
+    }
+
+    /// Find hives with stale heartbeats
+    ///
+    /// Returns hives that haven't sent a heartbeat within the specified duration.
+    /// Useful for detecting offline hives.
+    pub async fn find_stale_hives(&self, max_age_ms: i64) -> Result<Vec<HiveRecord>> {
+        let cutoff = chrono::Utc::now().timestamp_millis() - max_age_ms;
+
+        let rows = sqlx::query(
+            "SELECT * FROM hives WHERE last_heartbeat_ms IS NOT NULL AND last_heartbeat_ms < ?"
+        )
+        .bind(cutoff)
+        .fetch_all(&self.pool)
+        .await
+        .context("Failed to find stale hives")?;
+
+        rows.iter().map(map_row_to_hive).collect()
+    }
+
+    /// Find hives with devices detected
+    ///
+    /// Returns hives that have device capabilities information.
+    pub async fn find_hives_with_devices(&self) -> Result<Vec<HiveRecord>> {
+        let rows = sqlx::query("SELECT * FROM hives WHERE devices_json IS NOT NULL")
+            .fetch_all(&self.pool)
+            .await
+            .context("Failed to find hives with devices")?;
+
+        rows.iter().map(map_row_to_hive).collect()
+    }
+
+    /// Find hives without devices detected
+    ///
+    /// Returns hives that need device detection.
+    pub async fn find_hives_without_devices(&self) -> Result<Vec<HiveRecord>> {
+        let rows = sqlx::query("SELECT * FROM hives WHERE devices_json IS NULL")
+            .fetch_all(&self.pool)
+            .await
+            .context("Failed to find hives without devices")?;
+
+        rows.iter().map(map_row_to_hive).collect()
     }
 }

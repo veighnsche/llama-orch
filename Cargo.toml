@@ -21,17 +21,15 @@ members = [
     # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
     
     # queen-rbee crates
+    "bin/15_queen_rbee_crates/health",
     "bin/15_queen_rbee_crates/ssh-client",
     "bin/15_queen_rbee_crates/ssh-client/bdd",
     "bin/15_queen_rbee_crates/hive-registry",
     "bin/15_queen_rbee_crates/hive-registry/bdd",
-    "bin/15_queen_rbee_crates/worker-registry",
-    "bin/15_queen_rbee_crates/worker-registry/bdd",
     "bin/15_queen_rbee_crates/hive-lifecycle",
     "bin/15_queen_rbee_crates/hive-lifecycle/bdd",
     "bin/15_queen_rbee_crates/preflight",
     "bin/15_queen_rbee_crates/preflight/bdd",
-    "bin/15_queen_rbee_crates/health",
     "bin/15_queen_rbee_crates/hive-catalog",
     "bin/15_queen_rbee_crates/scheduler",
     
