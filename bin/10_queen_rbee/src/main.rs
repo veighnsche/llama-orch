@@ -11,8 +11,6 @@
 //! Port 8500 (default) - rbee-keeper checks GET /health to see if queen is running
 
 // TEAM-164: Migrated endpoints to dedicated modules/files
-mod health;
-mod heartbeat; // TEAM-164: Binary-specific heartbeat logic
 mod http;
 mod job_router;  // TEAM-186: Job routing and operation dispatch
 mod operations;
@@ -121,15 +119,11 @@ fn create_router(
     let job_state =
         http::SchedulerState { registry: job_registry, hive_catalog: hive_catalog.clone() };
 
-    let device_detector = Arc::new(http::HttpDeviceDetector::new());
-    let heartbeat_state =
-        http::HeartbeatState { hive_catalog: hive_catalog.clone(), device_detector };
-
-    let hive_start_state = hive_catalog;
+    let heartbeat_state = http::HeartbeatState { hive_catalog: hive_catalog.clone() };
 
     axum::Router::new()
         // Health check (no /v1 prefix for compatibility)
-        .route("/health", get(health::handle_health))
+        .route("/health", get(http::handle_health))
         // TEAM-186: V1 API endpoints (matches API_REFERENCE.md)
         .route("/v1/shutdown", post(handle_shutdown))
         .route("/v1/heartbeat", post(http::handle_heartbeat))
@@ -138,9 +132,6 @@ fn create_router(
         .with_state(job_state.clone())
         .route("/v1/jobs/:job_id/stream", get(http::handle_stream_job))
         .with_state(job_state.clone())  // TEAM-186: Pass full state for payload retrieval
-        // Internal hive management
-        .route("/hive/start", post(http::handle_hive_start))
-        .with_state(hive_start_state)
 }
 
 /// POST /v1/shutdown - Graceful shutdown

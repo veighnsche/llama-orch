@@ -1,4 +1,4 @@
-//! Health check endpoint
+//! Health check HTTP endpoint
 //!
 //! Simple health check for queen-rbee
 

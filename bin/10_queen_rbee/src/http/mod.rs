@@ -13,21 +13,15 @@
 //!
 //! ## Modules
 //!
-//! - `lifecycle` - Hive lifecycle endpoints (start, stop, etc.)
-//! - `jobs` - Job creation and management
-//! - `job_stream` - SSE streaming for job execution
+//! - `health` - Health check endpoint
 //! - `heartbeat` - Hive heartbeat endpoint
-//! - `device_detector` - HTTP-based device detection
+//! - `jobs` - Job creation and SSE streaming endpoints
 
-pub mod device_detector;
+pub mod health;
 pub mod heartbeat;
-pub mod job_stream;
 pub mod jobs;
-pub mod lifecycle;
 
 // Re-export commonly used types
-pub use device_detector::HttpDeviceDetector;
+pub use health::handle_health;
 pub use heartbeat::{handle_heartbeat, HeartbeatState, HttpHeartbeatAcknowledgement};
-pub use job_stream::handle_stream_job;
-pub use jobs::{handle_create_job, HttpJobResponse, SchedulerState};
-pub use lifecycle::{handle_hive_start, HiveStartResponse, HiveStartState};
+pub use jobs::{handle_create_job, handle_stream_job, HttpJobResponse, SchedulerState};
