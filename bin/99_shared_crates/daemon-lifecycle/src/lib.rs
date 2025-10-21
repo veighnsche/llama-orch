@@ -19,25 +19,38 @@
 //! # Interface
 //!
 //! ## Utility Functions
-//! ```rust
-//! // Spawn a daemon process
-//! pub async fn spawn(&self) -> Result<Child>
+//! ```rust,no_run
+//! use daemon_lifecycle::{DaemonManager, spawn_daemon};
+//! use std::path::PathBuf;
 //!
-//! // Find binary in standard locations
-//! pub fn find_binary(name: &str) -> Result<PathBuf>
+//! # async fn example() -> anyhow::Result<()> {
+//! // Create daemon manager
+//! let manager = DaemonManager::new(
+//!     PathBuf::from("target/debug/queen-rbee"),
+//!     vec!["--config".to_string(), "config.toml".to_string()]
+//! );
+//!
+//! // Spawn daemon process
+//! let child = manager.spawn().await?;
+//!
+//! // Find binary in target directory
+//! let binary_path = DaemonManager::find_in_target("queen-rbee")?;
+//! # Ok(())
+//! # }
 //! ```
 
 use anyhow::{Context, Result};
-use observability_narration_core::Narration;
+use observability_narration_core::NarrationFactory;
 use std::path::{Path, PathBuf};
 use std::process::Stdio;
 use tokio::process::{Child, Command};
 
-// Actor and action constants
-// TEAM-155: Added emoji prefix for visual identification
-const ACTOR_DAEMON_LIFECYCLE: &str = "⚙️ daemon-lifecycle";
-const ACTION_SPAWN: &str = "spawn";
-const ACTION_FIND_BINARY: &str = "find_binary";
+// TEAM-197: Migrated to narration-core v0.5.0 pattern
+// - Changed from Narration::new() to NarrationFactory pattern
+// - Shortened actor from "⚙️ daemon-lifecycle" to "dmn-life" (8 chars, ≤10 limit)
+// - Using .action() instead of .narrate()
+// - Fixed-width format for better log readability
+const NARRATE: NarrationFactory = NarrationFactory::new("dmn-life");
 
 /// Daemon manager for spawning and managing daemon processes
 pub struct DaemonManager {
@@ -64,17 +77,13 @@ impl DaemonManager {
     /// - Binary not found
     /// - Failed to spawn process
     pub async fn spawn(&self) -> Result<Child> {
-        Narration::new(
-            ACTOR_DAEMON_LIFECYCLE,
-            ACTION_SPAWN,
-            self.binary_path.display().to_string(),
-        )
-        .human(format!(
-            "Spawning daemon: {} with args: {:?}",
-            self.binary_path.display(),
-            self.args
-        ))
-        .emit();
+        // TEAM-197: Updated to narration-core v0.5.0 pattern
+        NARRATE
+            .action("spawn")
+            .context(self.binary_path.display().to_string())
+            .context(format!("{:?}", self.args))
+            .human("Spawning daemon: {0} with args: {1}")
+            .emit();
 
         // ============================================================
         // BUG FIX: TEAM-164 | Daemon holds parent's pipes open
@@ -126,8 +135,11 @@ impl DaemonManager {
             .context(format!("Failed to spawn daemon: {}", self.binary_path.display()))?;
 
         let pid_str = child.id().map(|p| p.to_string()).unwrap_or_else(|| "unknown".to_string());
-        Narration::new(ACTOR_DAEMON_LIFECYCLE, ACTION_SPAWN, &pid_str)
-            .human(format!("Daemon spawned with PID: {}", pid_str))
+        // TEAM-197: Updated to narration-core v0.5.0 pattern
+        NARRATE
+            .action("spawned")
+            .context(pid_str.clone())
+            .human("Daemon spawned with PID: {}")
             .emit();
         Ok(child)
     }
@@ -147,8 +159,12 @@ impl DaemonManager {
         // Try debug first (development mode)
         let debug_path = PathBuf::from("target/debug").join(name);
         if debug_path.exists() {
-            Narration::new(ACTOR_DAEMON_LIFECYCLE, ACTION_FIND_BINARY, name)
-                .human(format!("Found binary at: {}", debug_path.display()))
+            // TEAM-197: Updated to narration-core v0.5.0 pattern
+            NARRATE
+                .action("find_binary")
+                .context(name.to_string())
+                .context(debug_path.display().to_string())
+                .human("Found binary '{0}' at: {1}")
                 .emit();
             return Ok(debug_path);
         }
@@ -156,16 +172,23 @@ impl DaemonManager {
         // Try release
         let release_path = PathBuf::from("target/release").join(name);
         if release_path.exists() {
-            Narration::new(ACTOR_DAEMON_LIFECYCLE, ACTION_FIND_BINARY, name)
-                .human(format!("Found binary at: {}", release_path.display()))
+            // TEAM-197: Updated to narration-core v0.5.0 pattern
+            NARRATE
+                .action("find_binary")
+                .context(name.to_string())
+                .context(release_path.display().to_string())
+                .human("Found binary '{0}' at: {1}")
                 .emit();
             return Ok(release_path);
         }
 
-        Narration::new(ACTOR_DAEMON_LIFECYCLE, ACTION_FIND_BINARY, name)
-            .human(format!("Binary '{}' not found in target/debug or target/release", name))
+        // TEAM-197: Updated to narration-core v0.5.0 pattern
+        NARRATE
+            .action("find_binary")
+            .context(name.to_string())
+            .human("Binary '{}' not found in target/debug or target/release")
             .error_kind("binary_not_found")
-            .emit();
+            .emit_error();
         anyhow::bail!("Binary '{}' not found in target/debug or target/release", name)
     }
 }

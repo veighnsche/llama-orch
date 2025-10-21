@@ -33,6 +33,8 @@ ureq = { version = "2.9", features = ["json"] }
 # TEAM-160: E2E integration testing
 tokio = { workspace = true, features = ["full"] }
 # TEAM-162: Removed reqwest - tests rely only on CLI stdout, not HTTP calls
+# TEAM-193: Auto-update for dependency-aware rebuilds
+auto-update = { path = "../bin/99_shared_crates/auto-update" }
 
 [dev-dependencies]
 tempfile = "3.8"

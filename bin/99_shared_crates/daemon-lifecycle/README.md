@@ -1,8 +1,8 @@
 # daemon-lifecycle
 
-**Status:** 🚧 STUB (Created by TEAM-135)  
+**Status:** ✅ Production Ready (TEAM-197 narration v0.5.0 migration)  
 **Purpose:** Shared daemon lifecycle management for all rbee binaries  
-**Location:** `bin/shared-crates/daemon-lifecycle/` (SHARED - used by 3 binaries)
+**Location:** `bin/99_shared_crates/daemon-lifecycle/` (SHARED - used by 3 binaries)
 
 ---
 
@@ -392,9 +392,8 @@ while attempts < 30 {
 ### Required
 
 - **`tokio`**: Async runtime for process spawning
-- **`nix`**: Unix process management (signals, PIDs)
 - **`anyhow`**: Error handling
-- **`tracing`**: Structured logging
+- **`observability-narration-core`**: Structured observability (v0.5.0+)
 
 ### Optional
 
@@ -507,6 +506,8 @@ See: `/home/vince/Projects/llama-orch/bin/.specs/00_llama-orch.md`
 
 - **TEAM-130E**: Identified lifecycle duplication across binaries
 - **TEAM-135**: Scaffolding for new crate-based architecture
+- **TEAM-152**: Implemented core daemon spawning functionality with narration
+- **TEAM-197**: Migrated to narration-core v0.5.0 pattern (NarrationFactory, fixed-width format)
 
 ---
 

@@ -92,9 +92,10 @@ impl QueenHandle {
 ///
 /// TEAM-163: Added 30-second total timeout with visual countdown
 pub async fn ensure_queen_running(base_url: &str) -> Result<QueenHandle> {
-    // TEAM-163: Use TimeoutEnforcer for hard timeout with visual countdown
+    // TEAM-197: Use TimeoutEnforcer with progress bar for visual feedback
     TimeoutEnforcer::new(Duration::from_secs(30))
         .with_label("Starting queen-rbee")
+        .with_countdown() // Enable progress bar
         .enforce(ensure_queen_running_inner(base_url))
         .await
 }

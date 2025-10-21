@@ -1,70 +1,32 @@
 // Created by: TEAM-162
 // Smart wrapper for rbee-keeper: checks if build is stale, rebuilds if needed, then forwards command
+// TEAM-193: Updated to use auto-update crate for dependency-aware rebuilds
 
 use anyhow::{Context, Result};
-use std::path::{Path, PathBuf};
+use auto_update::AutoUpdater;
+use std::path::PathBuf;
 use std::process::Command;
-use std::time::SystemTime;
 
 const RBEE_KEEPER_BIN: &str = "bin/00_rbee_keeper";
 const TARGET_BINARY: &str = "target/debug/rbee-keeper";
 
 /// Check if rbee-keeper binary needs rebuilding
-fn needs_rebuild(workspace_root: &Path) -> Result<bool> {
-    let binary_path = workspace_root.join(TARGET_BINARY);
-
-    // If binary doesn't exist, definitely need to build
-    if !binary_path.exists() {
-        return Ok(true);
-    }
-
-    // Get binary modification time
-    let binary_meta = std::fs::metadata(&binary_path).context("Failed to get binary metadata")?;
-    let binary_time = binary_meta.modified().context("Failed to get binary modification time")?;
-
-    // Check if any source files in rbee-keeper are newer
-    let keeper_dir = workspace_root.join(RBEE_KEEPER_BIN);
-    let needs_rebuild = check_dir_newer(&keeper_dir, binary_time)?;
-
-    Ok(needs_rebuild)
+/// TEAM-193: Now uses AutoUpdater to check ALL dependencies (including shared crates)
+fn needs_rebuild(_workspace_root: &PathBuf) -> Result<bool> {
+    // TEAM-193: Use auto-update crate for dependency-aware rebuild detection
+    // This checks:
+    // 1. bin/00_rbee_keeper/ (source)
+    // 2. ALL Cargo.toml dependencies (daemon-lifecycle, narration-core, etc.)
+    // 3. Transitive dependencies (dependencies of dependencies)
+    let updater = AutoUpdater::new("rbee-keeper", RBEE_KEEPER_BIN)?;
+    updater.needs_rebuild()
 }
 
-/// Recursively check if any .rs or Cargo.toml files in dir are newer than reference_time
-fn check_dir_newer(dir: &Path, reference_time: SystemTime) -> Result<bool> {
-    if !dir.exists() {
-        return Ok(false);
-    }
-
-    for entry in std::fs::read_dir(dir)? {
-        let entry = entry?;
-        let path = entry.path();
-
-        // Skip target directories
-        if path.is_dir() && path.file_name().map(|n| n == "target").unwrap_or(false) {
-            continue;
-        }
-
-        if path.is_dir() {
-            if check_dir_newer(&path, reference_time)? {
-                return Ok(true);
-            }
-        } else if let Some(ext) = path.extension() {
-            if ext == "rs" || path.file_name().map(|n| n == "Cargo.toml").unwrap_or(false) {
-                let meta = std::fs::metadata(&path)?;
-                if let Ok(modified) = meta.modified() {
-                    if modified > reference_time {
-                        return Ok(true);
-                    }
-                }
-            }
-        }
-    }
-
-    Ok(false)
-}
+// TEAM-193: Removed check_dir_newer() - now handled by AutoUpdater
+// AutoUpdater parses Cargo.toml and checks ALL dependencies recursively
 
 /// Build rbee-keeper binary
-fn build_rbee_keeper(workspace_root: &Path) -> Result<()> {
+fn build_rbee_keeper(workspace_root: &PathBuf) -> Result<()> {
     println!("🔨 Building rbee-keeper...");
 
     let status = Command::new("cargo")

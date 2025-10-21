@@ -1,6 +1,7 @@
 //! Timeout Enforcer - Hard timeout enforcement with visual countdown
 //!
 //! Created by: TEAM-163
+//! Updated by: TEAM-197 (narration-core v0.5.0 migration)
 //!
 //! # Purpose
 //! Prevents hanging operations by enforcing hard timeouts with visual feedback.
@@ -33,9 +34,15 @@
 //! ```
 
 use anyhow::Result;
+use indicatif::{ProgressBar, ProgressStyle};
+use observability_narration_core::NarrationFactory;
 use std::future::Future;
 use std::time::Duration;
 use tokio::time::{interval, timeout};
+
+// TEAM-197: Migrated to narration-core v0.5.0 pattern
+// Actor: "timeout" (7 chars, ≤10 limit)
+const NARRATE: NarrationFactory = NarrationFactory::new("timeout");
 
 /// Timeout enforcer with visual countdown feedback
 ///
@@ -78,7 +85,9 @@ impl TimeoutEnforcer {
     /// let enforcer = TimeoutEnforcer::new(Duration::from_secs(30));
     /// ```
     pub fn new(duration: Duration) -> Self {
-        Self { duration, label: None, show_countdown: true }
+        // TEAM-197: Countdown disabled by default to avoid interfering with narration output
+        // The narration start/end messages provide sufficient feedback
+        Self { duration, label: None, show_countdown: false }
     }
 
     /// Set a label for the operation (shown in countdown)
@@ -93,6 +102,24 @@ impl TimeoutEnforcer {
     /// ```
     pub fn with_label(mut self, label: impl Into<String>) -> Self {
         self.label = Some(label.into());
+        self
+    }
+
+    /// Enable countdown display (visual feedback)
+    ///
+    /// Note: Countdown is disabled by default to avoid interfering with narration output.
+    /// Only enable if you need the visual countdown feedback.
+    ///
+    /// # Example
+    /// ```
+    /// use timeout_enforcer::TimeoutEnforcer;
+    /// use std::time::Duration;
+    ///
+    /// let enforcer = TimeoutEnforcer::new(Duration::from_secs(30))
+    ///     .with_countdown();
+    /// ```
+    pub fn with_countdown(mut self) -> Self {
+        self.show_countdown = true;
         self
     }
 
@@ -168,7 +195,7 @@ impl TimeoutEnforcer {
         }
     }
 
-    /// Enforce timeout with visual countdown
+    /// Enforce timeout with visual progress bar
     async fn enforce_with_countdown<F, T>(self, future: F) -> Result<T>
     where
         F: Future<Output = Result<T>>,
@@ -176,42 +203,63 @@ impl TimeoutEnforcer {
         let label = self.label.clone().unwrap_or_else(|| "Operation".to_string());
         let total_secs = self.duration.as_secs();
 
-        // Print initial message
-        eprintln!("⏱️  {} (timeout: {}s)", label, total_secs);
+        // TEAM-197: Use narration for start message
+        NARRATE
+            .action("start")
+            .context(label.clone())
+            .context(total_secs.to_string())
+            .human("⏱️  {0} (timeout: {1}s)")
+            .emit();
 
-        // Spawn countdown task
-        let label_clone = label.clone();
-        let countdown_handle = tokio::spawn(async move {
+        // TEAM-197: Create progress bar that fills up over time
+        let pb = ProgressBar::new(total_secs);
+        pb.set_style(
+            ProgressStyle::default_bar()
+                .template("{spinner:.green} [{bar:40.cyan/blue}] {pos}/{len}s - {msg}")
+                .expect("Invalid progress bar template")
+                .progress_chars("█▓▒░ "),
+        );
+        pb.set_message(label.clone());
+
+        // Spawn progress bar update task
+        let pb_clone = pb.clone();
+        let progress_handle = tokio::spawn(async move {
             let mut ticker = interval(Duration::from_secs(1));
             let mut elapsed = 0u64;
 
             loop {
                 ticker.tick().await;
                 elapsed += 1;
-                let remaining = total_secs.saturating_sub(elapsed);
+                pb_clone.set_position(elapsed);
 
-                if remaining == 0 {
+                if elapsed >= total_secs {
                     break;
                 }
-
-                // Show countdown every second
-                eprint!("\r⏱️  {} ... {}s remaining", label_clone, remaining);
             }
         });
 
         // Run the operation with timeout
         let result = match timeout(self.duration, future).await {
             Ok(result) => {
-                // Operation completed - stop countdown
-                countdown_handle.abort();
-                eprint!("\r"); // Clear countdown line
+                // Operation completed - stop progress bar
+                progress_handle.abort();
+                pb.finish_and_clear();
                 result
             }
             Err(_) => {
                 // Timeout occurred
-                countdown_handle.abort();
-                eprint!("\r"); // Clear countdown line
-                eprintln!("❌ {} TIMED OUT after {}s", label, total_secs);
+                progress_handle.abort();
+                pb.finish_and_clear();
+                
+                // TEAM-197: Use narration for timeout error
+                NARRATE
+                    .action("timeout")
+                    .context(label.clone())
+                    .context(total_secs.to_string())
+                    .human("❌ {0} TIMED OUT after {1}s")
+                    .error_kind("operation_timeout")
+                    .emit_error();
+                
                 anyhow::bail!(
                     "{} timed out after {} seconds - operation was hanging",
                     label,

@@ -29,6 +29,7 @@ members = [
     "bin/15_queen_rbee_crates/hive-lifecycle/bdd",
     "bin/15_queen_rbee_crates/hive-catalog",
     "bin/15_queen_rbee_crates/scheduler",
+    "bin/15_queen_rbee_crates/rbee-config",  # TEAM-194: File-based config for queen
     
     # rbee-hive crates (NO CLI!)
     "bin/25_rbee_hive_crates/worker-lifecycle",
@@ -64,6 +65,7 @@ members = [
     "bin/99_shared_crates/heartbeat",           # MOVED from worker-rbee-crates (used by workers AND hives)
     "bin/99_shared_crates/job-registry",        # TEAM-154: Dual-call pattern job tracking (worker/queen/hive)
     "bin/99_shared_crates/timeout-enforcer",    # TEAM-163: Hard timeout enforcement with visual countdown
+    "bin/99_shared_crates/auto-update",         # TEAM-193: Dependency-aware auto-update for binaries
     
     # Existing shared crates
     "bin/99_shared_crates/audit-logging",
