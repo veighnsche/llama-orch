@@ -9,17 +9,22 @@
 //! TEAM-185: Updated narration to use operation field instead of embedding in human message
 //! TEAM-185: Added hive_id to narration context
 //! TEAM-185: Replaced hardcoded action strings with constants from operations module
+//! TEAM-186: Accept Operation directly, serialize internally (DRY)
 
 use anyhow::Result;
 use futures::StreamExt;
 use observability_narration_core::Narration;
+use rbee_operations::Operation;
 
-use crate::operations::{ACTOR_RBEE_KEEPER, ACTION_JOB_SUBMIT, ACTION_JOB_STREAM, ACTION_JOB_COMPLETE};
+use crate::narration::{ACTOR_RBEE_KEEPER, ACTION_JOB_SUBMIT, ACTION_JOB_STREAM, ACTION_JOB_COMPLETE};
 use crate::queen_lifecycle::ensure_queen_running;
 
 /// Submit a job to queen-rbee and stream its narration output.
 ///
+/// TEAM-186: Now accepts Operation directly instead of pre-serialized JSON
+///
 /// This handles the complete lifecycle:
+/// - Serializes operation to JSON (DRY - no more repeated serialization!)
 /// - Ensures queen is running
 /// - Submits the job
 /// - Streams SSE narration events
@@ -27,8 +32,12 @@ use crate::queen_lifecycle::ensure_queen_running;
 pub async fn submit_and_stream_job(
     client: &reqwest::Client,
     queen_url: &str,
-    job_payload: serde_json::Value,
+    operation: Operation,
 ) -> Result<()> {
+    // TEAM-186: Serialize operation here (DRY - single place!)
+    let job_payload = serde_json::to_value(&operation)
+        .expect("Failed to serialize operation");
+    
     // Ensure queen is running
     let queen_handle = ensure_queen_running(queen_url).await?;
     
@@ -40,12 +49,12 @@ pub async fn submit_and_stream_job(
     let job_id = json["job_id"].as_str().ok_or_else(|| anyhow::anyhow!("No job_id in response"))?;
     let sse_url = json["sse_url"].as_str().ok_or_else(|| anyhow::anyhow!("No sse_url in response"))?;
     
-    // Extract operation name for narration
-    let operation = job_payload["operation"].as_str().unwrap_or("unknown");
-    let hive_id = job_payload["hive_id"].as_str();
+    // TEAM-186: Use Operation methods instead of JSON parsing
+    let operation_name = operation.name();
+    let hive_id = operation.hive_id();
     
     let mut narration = Narration::new(ACTOR_RBEE_KEEPER, ACTION_JOB_SUBMIT, job_id)
-        .operation(operation)
+        .operation(operation_name)
         .human(format!("📋 Job {} submitted", job_id));
     
     if let Some(hid) = hive_id {
@@ -64,7 +73,7 @@ pub async fn submit_and_stream_job(
     }
     
     let mut narration = Narration::new(ACTOR_RBEE_KEEPER, ACTION_JOB_STREAM, job_id)
-        .operation(operation)
+        .operation(operation_name)
         .human("📡 Streaming results...");
     
     if let Some(hid) = hive_id {
@@ -80,15 +89,14 @@ pub async fn submit_and_stream_job(
         
         // Print each SSE event to stdout
         for line in text.lines() {
-            if line.starts_with("data: ") {
-                let data = &line[6..]; // Remove "data: " prefix
+            if let Some(data) = line.strip_prefix("data: ") {
                 // Just print the data directly without wrapping in narration
                 println!("{}", data);
                 
                 // Check for [DONE] marker
                 if data.contains("[DONE]") {
                     let mut narration = Narration::new(ACTOR_RBEE_KEEPER, ACTION_JOB_COMPLETE, job_id)
-                        .operation(operation)
+                        .operation(operation_name)
                         .human("✅ Complete");
                     
                     if let Some(hid) = hive_id {

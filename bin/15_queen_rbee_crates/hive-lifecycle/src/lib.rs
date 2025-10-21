@@ -74,30 +74,37 @@ pub struct HiveStartResponse {
     pub port: u16,
 }
 
-/// Execute hive start orchestration
+/// Execute hive start command
 ///
-/// **Pattern:** Command Pattern (see CRATE_INTERFACE_STANDARD.md)
+/// TEAM-186: Removed catalog manipulation - lifecycle does NOT touch configuration!
 ///
-/// **IMPORTANT:** This function does NOT wait for the hive to be ready!
-/// The hive will send a heartbeat when it's online, which acts as the callback.
+/// **IMPORTANT: Async Fire-and-Forget Pattern**
+///
+/// This function:
+/// 1. Verifies hive exists in catalog (FAIL FAST if not registered)
+/// 2. Spawns the hive process
+/// 3. Returns immediately (does NOT wait for hive to be ready)
+/// 4. Hive will send heartbeat when ready
+///
+/// **CRITICAL: Hive MUST be registered by user FIRST!**
+/// - Catalog is configuration managed by the user
+/// - Lifecycle only starts/stops already-registered hives
+/// - If hive not in catalog → FAIL FAST
 ///
 /// Flow:
-/// 1. Queen decides where to spawn (localhost for now)
-/// 2. Queen decides port (8600)
-/// 3. Queen adds hive to catalog (status: Unknown)
-/// 4. Queen spawns hive process (fire and forget)
-/// 5. Hive starts up asynchronously
-/// 6. Hive sends heartbeat → Queen receives → Updates catalog → Triggers device detection
-///
-/// The heartbeat is the callback mechanism - queen doesn't wait!
+/// 1. Queen receives "start hive" command
+/// 2. Queen checks catalog (hive must exist!)
+/// 3. Queen spawns hive process → Returns "spawn initiated"
+/// 4. Hive starts up (takes time)
+/// 5. Hive sends heartbeat → Registry updated (RAM only!)
 ///
 /// # Arguments
-/// * `catalog` - Hive catalog for persistence
+/// * `catalog` - Hive catalog (READ-ONLY - for verification)
 /// * `request` - Hive start request
 ///
 /// # Returns
 /// * `Ok(HiveStartResponse)` - Hive spawn initiated (NOT necessarily running yet)
-/// * `Err` - Failed to spawn hive
+/// * `Err` - Failed to spawn hive (or hive not registered)
 pub async fn execute_hive_start(
     catalog: Arc<HiveCatalog>,
     request: HiveStartRequest,
@@ -106,44 +113,26 @@ pub async fn execute_hive_start(
         .human("🐝 Executing hive start")
         .emit();
 
-    // ============================================================
-    // ORCHESTRATION LOGIC - ALL DECISIONS HAPPEN HERE
-    // ============================================================
-    // For now: Always spawn on localhost:8600
-    // Future: Check available nodes, pick best one, use SSH if remote
-    // ============================================================
+    // TEAM-186: FAIL FAST - Hive MUST be registered in catalog first!
+    let hive = catalog
+        .get_hive(&request.hive_id)
+        .await
+        .context("Failed to check catalog")?
+        .ok_or_else(|| {
+            anyhow!(
+                "Hive '{}' not found in catalog! Register the hive first.",
+                request.hive_id
+            )
+        })?;
 
-    let host = "localhost".to_string();
-    let port = 8600u16;
-
-    Narration::new(ACTOR_HIVE_LIFECYCLE, ACTION_ORCHESTRATE, &format!("{}:{}", host, port))
-        .human(format!("🐝 Orchestrating: spawn hive on {}:{}", host, port))
+    Narration::new(ACTOR_HIVE_LIFECYCLE, ACTION_START, &hive.id)
+        .human(format!("✅ Hive '{}' found in catalog", hive.id))
         .emit();
 
-    // Step 1: Add to hive catalog
-    let now_ms = chrono::Utc::now().timestamp_millis();
-    let hive = HiveRecord {
-        id: host.clone(),
-        host: host.clone(),
-        port,
-        ssh_host: None,
-        ssh_port: None,
-        ssh_user: None,
-        devices: None,
-        created_at_ms: now_ms,
-        updated_at_ms: now_ms,
-    };
+    // TEAM-186: Spawn the hive process (no catalog changes!)
+    spawn_hive(hive.port, &request.queen_url).await?;
 
-    catalog.add_hive(hive).await.context("Failed to add hive to catalog")?;
-
-    Narration::new(ACTOR_HIVE_LIFECYCLE, ACTION_START, &host)
-        .human(format!("🐝 Hive {} added to catalog", host))
-        .emit();
-
-    // Step 2: Spawn the hive process
-    spawn_hive(port, &request.queen_url).await?;
-
-    let hive_url = format!("http://{}:{}", host, port);
+    let hive_url = format!("http://{}:{}", hive.host, hive.port);
 
     Narration::new(ACTOR_HIVE_LIFECYCLE, ACTION_START, &hive_url)
         .human(format!("✅ Hive spawn initiated: {} (will send heartbeat when ready)", hive_url))
@@ -151,7 +140,11 @@ pub async fn execute_hive_start(
 
     // Return structured response (Command Pattern)
     // NOTE: Hive is NOT necessarily running yet - it will send heartbeat when ready
-    Ok(HiveStartResponse { hive_url, hive_id: host, port })
+    Ok(HiveStartResponse {
+        hive_url,
+        hive_id: hive.id,
+        port: hive.port,
+    })
 }
 
 /// Spawn a hive process (internal helper)

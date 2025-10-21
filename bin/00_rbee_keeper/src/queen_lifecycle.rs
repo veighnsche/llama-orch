@@ -15,7 +15,7 @@ use std::time::Duration;
 use timeout_enforcer::TimeoutEnforcer;
 use tokio::time::sleep;
 
-use crate::operations::{ACTION_QUEEN_START, ACTION_QUEEN_STOP};
+use crate::narration::{ACTION_QUEEN_START, ACTION_QUEEN_STOP};
 
 // Actor constant
 // TEAM-155: Actor shows parent binary / subcrate for accurate provenance

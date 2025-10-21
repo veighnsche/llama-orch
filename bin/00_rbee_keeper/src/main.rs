@@ -35,12 +35,12 @@
 
 mod config;
 mod job_client;
-mod operations;
+mod narration;
 mod queen_lifecycle;
 
 use config::Config;
 use job_client::submit_and_stream_job;
-use operations::*;
+use narration::*;
 use queen_lifecycle::ensure_queen_running;
 use anyhow::Result;
 use clap::{Parser, Subcommand};
@@ -134,27 +134,71 @@ pub enum QueenAction {
 }
 
 #[derive(Subcommand)]
+// TEAM-186: Updated to match new install/uninstall workflow
 pub enum HiveAction {
-    Start {
-        id: String,
-    },
-    Stop {
-        id: String,
-    },
-    List,
-    Get {
-        id: String,
-    },
-    Create {
+    /// Install a hive (localhost or remote SSH)
+    Install {
+        /// Hive ID
         #[arg(long)]
-        host: String,
+        id: String,
+        /// SSH host for remote installation
         #[arg(long)]
+        ssh_host: Option<String>,
+        /// SSH port (default: 22)
+        #[arg(long)]
+        ssh_port: Option<u16>,
+        /// SSH user
+        #[arg(long)]
+        ssh_user: Option<String>,
+        /// Hive port (default: 8600)
+        #[arg(long, default_value = "8600")]
         port: u16,
     },
+    /// Uninstall a hive
+    Uninstall {
+        /// Hive ID
+        #[arg(long)]
+        id: String,
+        /// Only remove from catalog (for unreachable remote hives)
+        #[arg(long, default_value = "false")]
+        catalog_only: bool,
+    },
+    /// Update hive configuration
     Update {
+        /// Hive ID
+        #[arg(long)]
+        id: String,
+        /// Updated SSH host
+        #[arg(long)]
+        ssh_host: Option<String>,
+        /// Updated SSH port
+        #[arg(long)]
+        ssh_port: Option<u16>,
+        /// Updated SSH user
+        #[arg(long)]
+        ssh_user: Option<String>,
+        /// Refresh device capabilities from hive
+        #[arg(long, default_value = "false")]
+        refresh_capabilities: bool,
+    },
+    /// List all hives
+    List,
+    /// Start a hive
+    Start {
+        /// Hive ID (defaults to localhost)
+        #[arg(default_value = "localhost")]
         id: String,
     },
-    Delete {
+    /// Stop a hive
+    Stop {
+        /// Hive ID (defaults to localhost)
+        #[arg(default_value = "localhost")]
+        id: String,
+    },
+    /// Get hive details
+    Get {
+        /// Hive ID (defaults to localhost)
+        #[arg(default_value = "localhost")]
         id: String,
     },
 }
@@ -265,83 +309,97 @@ async fn handle_command(cli: Cli) -> Result<()> {
         },
 
         Commands::Hive { action } => {
-            // TEAM-186: Use typed Operation enum instead of JSON strings
+            // TEAM-186: Use typed Operation enum with new install/uninstall operations
             let operation = match action {
-                HiveAction::Start { ref id } => Operation::HiveStart { hive_id: id.clone() },
-                HiveAction::Stop { ref id } => Operation::HiveStop { hive_id: id.clone() },
+                HiveAction::Install { id, ssh_host, ssh_port, ssh_user, port } => {
+                    Operation::HiveInstall {
+                        hive_id: id,
+                        ssh_host,
+                        ssh_port,
+                        ssh_user,
+                        port,
+                    }
+                },
+                HiveAction::Uninstall { id, catalog_only } => {
+                    Operation::HiveUninstall {
+                        hive_id: id,
+                        catalog_only,
+                    }
+                },
+                HiveAction::Update { id, ssh_host, ssh_port, ssh_user, refresh_capabilities } => {
+                    Operation::HiveUpdate {
+                        hive_id: id,
+                        ssh_host,
+                        ssh_port,
+                        ssh_user,
+                        refresh_capabilities,
+                    }
+                },
+                HiveAction::Start { id } => Operation::HiveStart { hive_id: id },
+                HiveAction::Stop { id } => Operation::HiveStop { hive_id: id },
                 HiveAction::List => Operation::HiveList,
-                HiveAction::Get { ref id } => Operation::HiveGet { id: id.clone() },
-                HiveAction::Create { ref host, port } => Operation::HiveCreate { host: host.clone(), port },
-                HiveAction::Update { ref id } => Operation::HiveUpdate { id: id.clone() },
-                HiveAction::Delete { ref id } => Operation::HiveDelete { id: id.clone() },
+                HiveAction::Get { id } => Operation::HiveGet { hive_id: id },
             };
-            let job_payload = serde_json::to_value(&operation)
-                .expect("Failed to serialize operation");
-            submit_and_stream_job(&client, &queen_url, job_payload).await
+            // TEAM-186: No more repeated serialization! submit_and_stream_job handles it
+            submit_and_stream_job(&client, &queen_url, operation).await
         },
 
         Commands::Worker { hive_id, action } => {
             // TEAM-186: Use typed Operation enum instead of JSON strings
-            let operation = match action {
-                WorkerAction::Spawn { ref model, ref worker, device } => Operation::WorkerSpawn {
-                    hive_id: hive_id.clone(),
+            let operation = match &action {
+                WorkerAction::Spawn { model, worker, device } => Operation::WorkerSpawn {
+                    hive_id,
                     model: model.clone(),
                     worker: worker.clone(),
-                    device,
+                    device: *device,
                 },
-                WorkerAction::List => Operation::WorkerList { hive_id: hive_id.clone() },
-                WorkerAction::Get { ref id } => Operation::WorkerGet { hive_id: hive_id.clone(), id: id.clone() },
-                WorkerAction::Delete { ref id } => Operation::WorkerDelete { hive_id: hive_id.clone(), id: id.clone() },
+                WorkerAction::List => Operation::WorkerList { hive_id },
+                WorkerAction::Get { id } => Operation::WorkerGet { hive_id, id: id.clone() },
+                WorkerAction::Delete { id } => Operation::WorkerDelete { hive_id, id: id.clone() },
             };
-            let job_payload = serde_json::to_value(&operation)
-                .expect("Failed to serialize operation");
-            submit_and_stream_job(&client, &queen_url, job_payload).await
+            submit_and_stream_job(&client, &queen_url, operation).await
         },
 
         Commands::Model { hive_id, action } => {
             // TEAM-186: Use typed Operation enum instead of JSON strings
-            let operation = match action {
-                ModelAction::Download { ref model } => Operation::ModelDownload {
-                    hive_id: hive_id.clone(),
+            let operation = match &action {
+                ModelAction::Download { model } => Operation::ModelDownload {
+                    hive_id,
                     model: model.clone(),
                 },
-                ModelAction::List => Operation::ModelList { hive_id: hive_id.clone() },
-                ModelAction::Get { ref id } => Operation::ModelGet { hive_id: hive_id.clone(), id: id.clone() },
-                ModelAction::Delete { ref id } => Operation::ModelDelete { hive_id: hive_id.clone(), id: id.clone() },
+                ModelAction::List => Operation::ModelList { hive_id },
+                ModelAction::Get { id } => Operation::ModelGet { hive_id, id: id.clone() },
+                ModelAction::Delete { id } => Operation::ModelDelete { hive_id, id: id.clone() },
             };
-            let job_payload = serde_json::to_value(&operation)
-                .expect("Failed to serialize operation");
-            submit_and_stream_job(&client, &queen_url, job_payload).await
+            submit_and_stream_job(&client, &queen_url, operation).await
         },
 
         Commands::Infer { 
-            ref hive_id,
-            ref model, 
-            ref prompt, 
+            hive_id,
+            model, 
+            prompt, 
             max_tokens, 
             temperature,
             top_p,
             top_k,
-            ref device,
-            ref worker_id,
+            device,
+            worker_id,
             stream,
         } => {
             // TEAM-186: Use typed Operation enum instead of JSON strings
             let operation = Operation::Infer {
-                hive_id: hive_id.clone(),
-                model: model.clone(),
-                prompt: prompt.clone(),
+                hive_id,
+                model,
+                prompt,
                 max_tokens,
                 temperature,
                 top_p,
                 top_k,
-                device: device.clone(),
-                worker_id: worker_id.clone(),
+                device,
+                worker_id,
                 stream,
             };
-            let job_payload = serde_json::to_value(&operation)
-                .expect("Failed to serialize operation");
-            submit_and_stream_job(&client, &queen_url, job_payload).await
+            submit_and_stream_job(&client, &queen_url, operation).await
         }
     }
 }
