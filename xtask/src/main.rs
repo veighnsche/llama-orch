@@ -70,6 +70,7 @@ fn main() -> Result<()> {
         Cmd::E2eQueen => tokio::runtime::Runtime::new()?.block_on(e2e::test_queen_lifecycle())?,
         Cmd::E2eHive => tokio::runtime::Runtime::new()?.block_on(e2e::test_hive_lifecycle())?,
         Cmd::E2eCascade => tokio::runtime::Runtime::new()?.block_on(e2e::test_cascade_shutdown())?,
+        Cmd::Rbee { args } => tasks::rbee::run_rbee_keeper(args)?,
     }
     Ok(())
 }

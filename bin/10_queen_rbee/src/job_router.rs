@@ -127,7 +127,7 @@ async fn route_operation(
                 ))
                 .emit();
         }
-        Operation::HiveInstall {  .. } => {
+        Operation::HiveInstall { .. } => {
             // /**
             //  * Install hive binary and register in catalog
             //  *
@@ -161,7 +161,7 @@ async fn route_operation(
             //  * NOTE: Capabilities (devices) are populated later via HiveUpdate with refresh_capabilities=true
             //  */
         }
-        Operation::HiveUninstall {  .. } => {
+        Operation::HiveUninstall { .. } => {
             // /**
             //  * Uninstall hive and optionally clean up resources
             //  *
@@ -199,7 +199,7 @@ async fn route_operation(
             //  * TODO: Add interactive cleanup prompts or CLI flags
             //  */
         }
-        Operation::HiveUpdate {  .. } => {
+        Operation::HiveUpdate { .. } => {
             // /**
             //  * Update hive configuration and optionally refresh capabilities
             //  *
@@ -269,7 +269,7 @@ async fn route_operation(
         }
 
         // Worker operations
-        Operation::WorkerSpawn {  .. } => {
+        Operation::WorkerSpawn { .. } => {
             // /**
             //  * TODO: IMPLEMENT THIS
             //  *
@@ -281,7 +281,7 @@ async fn route_operation(
             //  * 5. Stream hive responses back to client
             //  */
         }
-        Operation::WorkerList {  .. } => {
+        Operation::WorkerList { .. } => {
             // /**
             //  * TODO: IMPLEMENT THIS
             //  *
@@ -291,7 +291,7 @@ async fn route_operation(
             //  * 3. Stream response from /v1/jobs/{job_id}/stream
             //  */
         }
-        Operation::WorkerGet {  .. } => {
+        Operation::WorkerGet { .. } => {
             // /**
             //  * TODO: IMPLEMENT THIS
             //  *
@@ -301,7 +301,7 @@ async fn route_operation(
             //  * 3. Stream response from /v1/jobs/{job_id}/stream
             //  */
         }
-        Operation::WorkerDelete {  .. } => {
+        Operation::WorkerDelete { .. } => {
             // /**
             //  * TODO: IMPLEMENT THIS
             //  *
@@ -313,7 +313,7 @@ async fn route_operation(
         }
 
         // Model operations
-        Operation::ModelDownload {  .. } => {
+        Operation::ModelDownload { .. } => {
             // /**
             //  * TODO: IMPLEMENT THIS
             //  *
@@ -323,7 +323,7 @@ async fn route_operation(
             //  * 3. Stream response from /v1/jobs/{job_id}/stream
             //  */
         }
-        Operation::ModelList {  .. } => {
+        Operation::ModelList { .. } => {
             // /**
             //  * TODO: IMPLEMENT THIS
             //  *
@@ -333,7 +333,7 @@ async fn route_operation(
             //  * 3. Stream response from /v1/jobs/{job_id}/stream
             //  */
         }
-        Operation::ModelGet {  .. } => {
+        Operation::ModelGet { .. } => {
             // /**
             //  * TODO: IMPLEMENT THIS
             //  *
@@ -343,7 +343,7 @@ async fn route_operation(
             //  * 3. Stream response from /v1/jobs/{job_id}/stream
             //  */
         }
-        Operation::ModelDelete {  .. } => {
+        Operation::ModelDelete { .. } => {
             // /**
             //  * TODO: IMPLEMENT THIS
             //  *
@@ -355,7 +355,7 @@ async fn route_operation(
         }
 
         // Inference operation
-        Operation::Infer {  .. } => {
+        Operation::Infer { .. } => {
             // //
             //  * TODO: IMPLEMENT THIS
             //  *

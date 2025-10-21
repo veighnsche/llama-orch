@@ -152,4 +152,12 @@ pub enum Cmd {
     /// TEAM-160: E2E test - Cascade shutdown (queen → hive)
     #[command(name = "e2e:cascade")]
     E2eCascade,
+
+    /// Smart wrapper for rbee-keeper: auto-builds if needed, then forwards command
+    #[command(name = "rbee", trailing_var_arg = true, allow_hyphen_values = true)]
+    Rbee {
+        /// Arguments to forward to rbee-keeper
+        #[arg(allow_hyphen_values = true)]
+        args: Vec<String>,
+    },
 }

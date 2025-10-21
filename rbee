@@ -1,0 +1,17 @@
+#!/usr/bin/env bash
+# Smart wrapper for rbee-keeper
+# Auto-builds if source is newer than binary, then forwards all commands
+# Created by: TEAM-162
+
+set -e
+
+# Get workspace root
+WORKSPACE_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+# Build xtask once if needed (quietly)
+if [[ ! -f "$WORKSPACE_ROOT/target/debug/xtask" ]]; then
+    cargo build --bin xtask --quiet 2>/dev/null
+fi
+
+# Call xtask binary directly to avoid recompiling it every time
+exec "$WORKSPACE_ROOT/target/debug/xtask" rbee "$@"

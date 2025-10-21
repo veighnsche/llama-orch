@@ -272,21 +272,48 @@ async fn handle_command(cli: Cli) -> Result<()> {
                 Ok(())
             }
             QueenAction::Stop => {
-                let client = reqwest::Client::builder()
+                // First check if queen is running
+                let health_check = client.get(format!("{}/health", queen_url)).send().await;
+                
+                let is_running = match health_check {
+                    Ok(response) if response.status().is_success() => true,
+                    _ => false,
+                };
+
+                if !is_running {
+                    Narration::new(ACTOR_RBEE_KEEPER, ACTION_QUEEN_STOP, "not_running")
+                        .human("⚠️  Queen not running")
+                        .emit();
+                    return Ok(());
+                }
+
+                // Queen is running, send shutdown request
+                let shutdown_client = reqwest::Client::builder()
                     .timeout(tokio::time::Duration::from_secs(30))
                     .build()?;
-                match client.post(format!("{}/v1/shutdown", queen_url)).send().await {
+                    
+                match shutdown_client.post(format!("{}/v1/shutdown", queen_url)).send().await {
                     Ok(_) => {
                         Narration::new(ACTOR_RBEE_KEEPER, ACTION_QUEEN_STOP, "stopped")
                             .human("✅ Queen stopped")
                             .emit();
                         Ok(())
                     }
-                    Err(_) => {
-                        Narration::new(ACTOR_RBEE_KEEPER, ACTION_QUEEN_STOP, "not_running")
-                            .human("⚠️  Queen not running")
-                            .emit();
-                        Ok(())
+                    Err(e) => {
+                        // Connection closed/reset is expected - queen shuts down before responding
+                        if e.is_connect() || e.to_string().contains("connection closed") {
+                            Narration::new(ACTOR_RBEE_KEEPER, ACTION_QUEEN_STOP, "stopped")
+                                .human("✅ Queen stopped")
+                                .emit();
+                            Ok(())
+                        } else {
+                            // Unexpected error
+                            Narration::new(ACTOR_RBEE_KEEPER, ACTION_QUEEN_STOP, "error")
+                                .human(format!("⚠️  Failed to stop queen: {}", e))
+                                .error_kind("shutdown_failed")
+                                .emit();
+                            Err(e.into())
+                        }
                     }
                 }
             }
