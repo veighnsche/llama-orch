@@ -26,20 +26,20 @@
 use anyhow::Result;
 use job_registry::JobRegistry;
 use observability_narration_core::NarrationFactory;
-use queen_rbee_hive_catalog::HiveCatalog;
+use rbee_config::RbeeConfig;
 use queen_rbee_hive_lifecycle::{execute_ssh_test, SshTestRequest};
 use queen_rbee_hive_registry::HiveRegistry; // TEAM-190: For Status operation
 use rbee_operations::Operation;
 use std::sync::Arc;
 
 // TEAM-192: Narration factory for job router
-const NARRATE_ROUTER: NarrationFactory = NarrationFactory::new("qn-router");
+const NARRATE: NarrationFactory = NarrationFactory::new("qn-router");
 
 /// State required for job routing and execution
 #[derive(Clone)]
 pub struct JobState {
     pub registry: Arc<JobRegistry<String>>,
-    pub hive_catalog: Arc<HiveCatalog>,
+    pub config: Arc<RbeeConfig>, // TEAM-194: File-based config
     pub hive_registry: Arc<HiveRegistry>, // TEAM-190: For Status operation
 }
 
@@ -60,7 +60,7 @@ pub async fn create_job(state: JobState, payload: serde_json::Value) -> Result<J
 
     state.registry.set_payload(&job_id, payload);
 
-    NARRATE_ROUTER
+    NARRATE
         .action("job_create")
         .context(&job_id)
         .human("Job {} created, waiting for client connection")
@@ -78,11 +78,11 @@ pub async fn execute_job(
     state: JobState,
 ) -> impl futures::stream::Stream<Item = String> {
     let registry = state.registry.clone();
-    let hive_catalog = state.hive_catalog.clone();
+    let config = state.config.clone(); // TEAM-194
     let hive_registry = state.hive_registry.clone(); // TEAM-190
 
     job_registry::execute_and_stream(job_id, registry.clone(), move |_job_id, payload| {
-        route_operation(payload, registry, hive_catalog, hive_registry)
+        route_operation(payload, registry, config, hive_registry)
     })
     .await
 }
@@ -93,18 +93,20 @@ pub async fn execute_job(
 async fn route_operation(
     payload: serde_json::Value,
     registry: Arc<JobRegistry<String>>,
-    hive_catalog: Arc<HiveCatalog>,
+    config: Arc<RbeeConfig>, // TEAM-194
     hive_registry: Arc<HiveRegistry>, // TEAM-190: Added for Status operation
 ) -> Result<()> {
-    let state = JobState { registry, hive_catalog, hive_registry };
+    let state = JobState { registry, config, hive_registry };
     // Parse payload into typed Operation enum
     let operation: Operation = serde_json::from_value(payload)
         .map_err(|e| anyhow::anyhow!("Failed to parse operation: {}", e))?;
 
     let operation_name = operation.name();
 
-    Narration::new(ACTOR_QUEEN_ROUTER, ACTION_ROUTE_JOB, operation_name)
-        .human(format!("Executing operation: {}", operation_name))
+    NARRATE
+        .action("route_job")
+        .context(operation_name)
+        .human("Executing operation: {}")
         .emit();
 
     // TEAM-186: Route to appropriate handler based on operation type
@@ -116,13 +118,13 @@ async fn route_operation(
         Operation::Status => {
             // TEAM-190: Show live status of all hives and workers from registry (not catalog)
 
-            NARRATE_ROUTER.action("status").human("📊 Fetching live status from registry").emit();
+            NARRATE.action("status").human("📊 Fetching live status from registry").emit();
 
             // Get all active hives (heartbeat within last 30 seconds)
             let active_hive_ids = state.hive_registry.list_active_hives(30_000);
 
             if active_hive_ids.is_empty() {
-                NARRATE_ROUTER
+                NARRATE
                     .action("status_empty")
                     .human(
                         "No active hives found.\n\
@@ -167,13 +169,12 @@ async fn route_operation(
             }
 
             // Display as table
-            Narration::new(ACTOR_QUEEN_ROUTER, "status_result", "registry")
-                .human(format!(
-                    "Live Status ({} hive(s), {} worker(s)):",
-                    active_hive_ids.len(),
-                    all_rows.iter().filter(|r| r["worker"] != "-").count()
-                ))
-                .table(&serde_json::Value::Array(all_rows))
+            NARRATE
+                .action("status_result")
+                .context(active_hive_ids.len().to_string())
+                .context(all_rows.iter().filter(|r| r["worker"] != "-").count().to_string())
+                .human("Live Status ({0} hive(s), {1} worker(s)):")
+                .table(serde_json::Value::Array(all_rows))
                 .emit();
         }
 
@@ -191,37 +192,38 @@ async fn route_operation(
                 ));
             }
 
-            Narration::new(ACTOR_QUEEN_ROUTER, "ssh_test_complete", "success")
-                .human(format!(
-                    "✅ SSH test successful: {}",
-                    response.test_output.unwrap_or_default()
-                ))
+            NARRATE
+                .action("ssh_test_ok")
+                .context(response.test_output.unwrap_or_default())
+                .human("✅ SSH test successful: {}")
                 .emit();
         }
         Operation::HiveInstall { hive_id, ssh_host, ssh_port, ssh_user, port, binary_path } => {
             // TEAM-189: Comprehensive hive installation with pre-flight checks and narration
             use queen_rbee_hive_catalog::HiveRecord;
 
-            Narration::new(ACTOR_QUEEN_ROUTER, "hive_install", &hive_id)
-                .human(format!("🔧 Installing hive '{}'", hive_id))
+            NARRATE
+                .action("hive_install")
+                .context(&hive_id)
+                .human("🔧 Installing hive '{}'")
                 .emit();
 
             // STEP 1: Pre-flight check - is it already installed?
-            NARRATE_ROUTER
-                .action("hive_install_preflight")
+            NARRATE
+                .action("hive_preflight")
                 .human("📋 Checking if hive is already installed...")
                 .emit();
 
             if state.hive_catalog.hive_exists(&hive_id).await? {
-                Narration::new(ACTOR_QUEEN_ROUTER, "hive_install_exists", &hive_id)
-                    .human(format!(
-                        "⚠️  Hive '{}' is already installed.\n\
+                NARRATE
+                    .action("hive_exists")
+                    .context(&hive_id)
+                    .context(&hive_id)
+                    .human("⚠️  Hive '{0}' is already installed.\n\
                          \n\
                          To reinstall, first uninstall it:\n\
                          \n\
-                           ./rbee hive uninstall --id {}",
-                        hive_id, hive_id
-                    ))
+                           ./rbee hive uninstall --id {1}")
                     .emit();
                 return Err(anyhow::anyhow!(
                     "Hive '{}' already exists. Uninstall first to reinstall.",
@@ -229,8 +231,8 @@ async fn route_operation(
                 ));
             }
 
-            NARRATE_ROUTER
-                .action("hive_install_preflight")
+            NARRATE
+                .action("hive_preflight")
                 .human("✅ Hive not found in catalog - proceeding with installation")
                 .emit();
 
@@ -245,12 +247,15 @@ async fn route_operation(
                     anyhow::anyhow!("--ssh-user required for remote installation")
                 })?;
 
-                Narration::new(ACTOR_QUEEN_ROUTER, "hive_install_mode", &hive_id)
-                    .human(format!("🌐 Remote installation: {}@{}:{}", user, host, ssh_port))
+                NARRATE
+                    .action("hive_mode")
+                    .context(format!("{}@{}:{}", user, host, ssh_port))
+                    .human("🌐 Remote installation: {}")
                     .emit();
 
                 // TODO: Implement remote SSH installation
-                Narration::new(ACTOR_QUEEN_ROUTER, "hive_install_not_implemented", &hive_id)
+                NARRATE
+                    .action("hive_not_impl")
                     .human(
                         "❌ Remote SSH installation not yet implemented.\n\
                            \n\
@@ -260,33 +265,37 @@ async fn route_operation(
                 return Err(anyhow::anyhow!("Remote installation not yet implemented"));
             } else {
                 // LOCALHOST INSTALLATION
-                NARRATE_ROUTER
-                    .action("hive_install_mode")
+                NARRATE
+                    .action("hive_mode")
                     .human("🏠 Localhost installation")
                     .emit();
 
                 // STEP 3: Find or build the rbee-hive binary
                 let binary = if let Some(provided_path) = binary_path {
-                    Narration::new(ACTOR_QUEEN_ROUTER, "hive_install_binary", &hive_id)
-                        .human(format!("📁 Using provided binary path: {}", provided_path))
+                    NARRATE
+                        .action("hive_binary")
+                        .context(&provided_path)
+                        .human("📁 Using provided binary path: {}")
                         .emit();
 
                     // Verify binary exists
                     let path = std::path::Path::new(&provided_path);
                     if !path.exists() {
-                        Narration::new(ACTOR_QUEEN_ROUTER, "hive_install_binary_error", &hive_id)
-                            .human(format!("❌ Binary not found at: {}", provided_path))
+                        NARRATE
+                            .action("hive_bin_err")
+                            .context(&provided_path)
+                            .human("❌ Binary not found at: {}")
                             .emit();
                         return Err(anyhow::anyhow!("Binary not found: {}", provided_path));
                     }
 
-                    NARRATE_ROUTER.action("hive_install_binary").human("✅ Binary found").emit();
+                    NARRATE.action("hive_binary").human("✅ Binary found").emit();
 
                     provided_path
                 } else {
                     // Find binary in target directory
-                    NARRATE_ROUTER
-                        .action("hive_install_binary")
+                    NARRATE
+                        .action("hive_binary")
                         .human("🔍 Looking for rbee-hive binary in target/debug...")
                         .emit();
 
@@ -294,17 +303,22 @@ async fn route_operation(
                     let release_path = std::path::PathBuf::from("target/release/rbee-hive");
 
                     if debug_path.exists() {
-                        Narration::new(ACTOR_QUEEN_ROUTER, "hive_install_binary", &hive_id)
-                            .human(format!("✅ Found binary at: {}", debug_path.display()))
+                        NARRATE
+                            .action("hive_binary")
+                            .context(debug_path.display().to_string())
+                            .human("✅ Found binary at: {}")
                             .emit();
                         debug_path.display().to_string()
                     } else if release_path.exists() {
-                        Narration::new(ACTOR_QUEEN_ROUTER, "hive_install_binary", &hive_id)
-                            .human(format!("✅ Found binary at: {}", release_path.display()))
+                        NARRATE
+                            .action("hive_binary")
+                            .context(release_path.display().to_string())
+                            .human("✅ Found binary at: {}")
                             .emit();
                         release_path.display().to_string()
                     } else {
-                        Narration::new(ACTOR_QUEEN_ROUTER, "hive_install_binary_error", &hive_id)
+                        NARRATE
+                            .action("hive_bin_err")
                             .human(
                                 "❌ rbee-hive binary not found.\n\
                                  \n\
@@ -322,8 +336,8 @@ async fn route_operation(
                 };
 
                 // STEP 4: Register in catalog
-                NARRATE_ROUTER
-                    .action("hive_install_register")
+                NARRATE
+                    .action("hive_register")
                     .human("📝 Registering hive in catalog...")
                     .emit();
 
@@ -342,49 +356,53 @@ async fn route_operation(
                 };
 
                 if let Err(e) = state.hive_catalog.add_hive(record).await {
-                    Narration::new(ACTOR_QUEEN_ROUTER, "hive_install_error", &hive_id)
-                        .human(format!("❌ Failed to add hive to catalog: {}", e))
+                    NARRATE
+                        .action("hive_error")
+                        .context(e.to_string())
+                        .human("❌ Failed to add hive to catalog: {}")
                         .emit();
                     return Err(e);
                 }
 
-                Narration::new(ACTOR_QUEEN_ROUTER, "hive_install_complete", &hive_id)
-                    .human(format!(
-                        "✅ Hive '{}' installed successfully!\n\
+                NARRATE
+                    .action("hive_complete")
+                    .context(&hive_id)
+                    .context(port.to_string())
+                    .context(&binary)
+                    .human("✅ Hive '{0}' installed successfully!\n\
                          \n\
                          Configuration:\n\
                          - Host: localhost\n\
-                         - Port: {}\n\
-                         - Binary: {}\n\
+                         - Port: {1}\n\
+                         - Binary: {2}\n\
                          \n\
                          To start the hive:\n\
                          \n\
-                           ./rbee hive start",
-                        hive_id, port, binary
-                    ))
+                           ./rbee hive start")
                     .emit();
             }
         }
         Operation::HiveUninstall { hive_id, catalog_only: _ } => {
             // TEAM-189: Hive uninstall with pre-flight check to ensure hive is stopped
-            Narration::new(ACTOR_QUEEN_ROUTER, "hive_uninstall", &hive_id)
-                .human(format!("🗑️  Uninstalling hive '{}'", hive_id))
+            NARRATE
+                .action("hive_uninstall")
+                .context(&hive_id)
+                .human("🗑️  Uninstalling hive '{}'")
                 .emit();
 
             // Check if hive exists
             let hive = state.hive_catalog.get_hive(&hive_id).await?;
             if hive.is_none() {
-                Narration::new(ACTOR_QUEEN_ROUTER, "hive_uninstall_not_found", &hive_id)
-                    .human(format!(
-                        "❌ Hive '{}' is not installed.\n\
+                NARRATE
+                    .action("hive_not_found")
+                    .context(&hive_id)
+                    .human("❌ Hive '{}' is not installed.\n\
                          \n\
                          Nothing to uninstall.\n\
                          \n\
                          To see installed hives:\n\
                          \n\
-                           ./rbee hive list",
-                        hive_id
-                    ))
+                           ./rbee hive list")
                     .emit();
                 return Err(anyhow::anyhow!("Hive '{}' is not installed", hive_id));
             }
@@ -392,8 +410,8 @@ async fn route_operation(
             let hive = hive.unwrap();
 
             // TEAM-189: Pre-flight check - ensure hive is stopped before uninstalling
-            NARRATE_ROUTER
-                .action("hive_uninstall_preflight")
+            NARRATE
+                .action("hive_preflight")
                 .human("📋 Checking if hive is running...")
                 .emit();
 
@@ -403,15 +421,14 @@ async fn route_operation(
 
             if let Ok(response) = client.get(&health_url).send().await {
                 if response.status().is_success() {
-                    Narration::new(ACTOR_QUEEN_ROUTER, "hive_uninstall_running", &hive_id)
-                        .human(format!(
-                            "❌ Cannot uninstall hive '{}' while it's running.\n\
+                    NARRATE
+                        .action("hive_running")
+                        .context(&hive_id)
+                        .human("❌ Cannot uninstall hive '{}' while it's running.\n\
                              \n\
                              Please stop the hive first:\n\
                              \n\
-                               ./rbee hive stop",
-                            hive_id
-                        ))
+                               ./rbee hive stop")
                         .emit();
                     return Err(anyhow::anyhow!(
                         "Hive '{}' is still running. Stop it first with: ./rbee hive stop",
@@ -420,21 +437,23 @@ async fn route_operation(
                 }
             }
 
-            NARRATE_ROUTER
-                .action("hive_uninstall_preflight")
+            NARRATE
+                .action("hive_preflight")
                 .human("✅ Hive is stopped - proceeding with uninstall")
                 .emit();
 
             // Remove from catalog
-            NARRATE_ROUTER
-                .action("hive_uninstall_remove")
+            NARRATE
+                .action("hive_remove")
                 .human("📝 Removing hive from catalog...")
                 .emit();
 
             state.hive_catalog.remove_hive(&hive_id).await?;
 
-            Narration::new(ACTOR_QUEEN_ROUTER, "hive_uninstall_complete", &hive_id)
-                .human(format!("✅ Hive '{}' uninstalled successfully", hive_id))
+            NARRATE
+                .action("hive_complete")
+                .context(&hive_id)
+                .human("✅ Hive '{}' uninstalled successfully")
                 .emit();
 
             // TEAM-189: Implemented pre-flight check - hive must be stopped before uninstall
@@ -509,8 +528,10 @@ async fn route_operation(
         }
         Operation::HiveStart { hive_id } => {
             // TEAM-189: Spawn hive daemon with health check polling
-            Narration::new(ACTOR_QUEEN_ROUTER, "hive_start", &hive_id)
-                .human(format!("🚀 Starting hive '{}'", hive_id))
+            NARRATE
+                .action("hive_start")
+                .context(&hive_id)
+                .human("🚀 Starting hive '{}'")
                 .emit();
 
             // Get hive from catalog
@@ -521,8 +542,8 @@ async fn route_operation(
                 .ok_or_else(|| anyhow::anyhow!("Hive '{}' not found in catalog", hive_id))?;
 
             // Check if already running
-            NARRATE_ROUTER
-                .action("hive_start_check")
+            NARRATE
+                .action("hive_check")
                 .human("📋 Checking if hive is already running...")
                 .emit();
 
@@ -532,11 +553,11 @@ async fn route_operation(
 
             if let Ok(response) = client.get(&health_url).send().await {
                 if response.status().is_success() {
-                    Narration::new(ACTOR_QUEEN_ROUTER, "hive_start_already_running", &hive_id)
-                        .human(format!(
-                            "✅ Hive '{}' is already running on {}",
-                            hive_id, health_url
-                        ))
+                    NARRATE
+                        .action("hive_running")
+                        .context(&hive_id)
+                        .context(&health_url)
+                        .human("✅ Hive '{0}' is already running on {1}")
                         .emit();
                     return Ok(());
                 }
@@ -547,8 +568,10 @@ async fn route_operation(
                 anyhow::anyhow!("Hive '{}' has no binary_path configured", hive_id)
             })?;
 
-            Narration::new(ACTOR_QUEEN_ROUTER, "hive_start_spawn", &hive_id)
-                .human(format!("🔧 Spawning hive daemon: {}", binary_path))
+            NARRATE
+                .action("hive_spawn")
+                .context(&binary_path)
+                .human("🔧 Spawning hive daemon: {}")
                 .emit();
 
             // Spawn the hive daemon
@@ -561,8 +584,8 @@ async fn route_operation(
             let _child = manager.spawn().await?;
 
             // Wait for health check
-            NARRATE_ROUTER
-                .action("hive_start_health")
+            NARRATE
+                .action("hive_health")
                 .human("⏳ Waiting for hive to be healthy...")
                 .emit();
 
@@ -571,18 +594,19 @@ async fn route_operation(
 
                 if let Ok(response) = client.get(&health_url).send().await {
                     if response.status().is_success() {
-                        Narration::new(ACTOR_QUEEN_ROUTER, "hive_start_success", &hive_id)
-                            .human(format!(
-                                "✅ Hive '{}' started successfully on {}",
-                                hive_id, health_url
-                            ))
+                        NARRATE
+                            .action("hive_success")
+                            .context(&hive_id)
+                            .context(&health_url)
+                            .human("✅ Hive '{0}' started successfully on {1}")
                             .emit();
                         return Ok(());
                     }
                 }
             }
 
-            Narration::new(ACTOR_QUEEN_ROUTER, "hive_start_timeout", &hive_id)
+            NARRATE
+                .action("hive_timeout")
                 .human(
                     "⚠️  Hive started but health check timed out.\n\
                      Check if it's running:\n\
@@ -593,8 +617,10 @@ async fn route_operation(
         }
         Operation::HiveStop { hive_id } => {
             // TEAM-189: Graceful shutdown (SIGTERM) with SIGKILL fallback
-            Narration::new(ACTOR_QUEEN_ROUTER, "hive_stop", &hive_id)
-                .human(format!("🛑 Stopping hive '{}'", hive_id))
+            NARRATE
+                .action("hive_stop")
+                .context(&hive_id)
+                .human("🛑 Stopping hive '{}'")
                 .emit();
 
             // Get hive from catalog
@@ -605,8 +631,8 @@ async fn route_operation(
                 .ok_or_else(|| anyhow::anyhow!("Hive '{}' not found in catalog", hive_id))?;
 
             // Check if it's running
-            NARRATE_ROUTER
-                .action("hive_stop_check")
+            NARRATE
+                .action("hive_check")
                 .human("📋 Checking if hive is running...")
                 .emit();
 
@@ -616,21 +642,25 @@ async fn route_operation(
 
             if let Ok(response) = client.get(&health_url).send().await {
                 if !response.status().is_success() {
-                    Narration::new(ACTOR_QUEEN_ROUTER, "hive_stop_not_running", &hive_id)
-                        .human(format!("⚠️  Hive '{}' is not running", hive_id))
+                    NARRATE
+                        .action("hive_not_run")
+                        .context(&hive_id)
+                        .human("⚠️  Hive '{}' is not running")
                         .emit();
                     return Ok(());
                 }
             } else {
-                Narration::new(ACTOR_QUEEN_ROUTER, "hive_stop_not_running", &hive_id)
-                    .human(format!("⚠️  Hive '{}' is not running", hive_id))
+                NARRATE
+                    .action("hive_not_run")
+                    .context(&hive_id)
+                    .human("⚠️  Hive '{}' is not running")
                     .emit();
                 return Ok(());
             }
 
             // Stop the hive process
-            NARRATE_ROUTER
-                .action("hive_stop_sigterm")
+            NARRATE
+                .action("hive_sigterm")
                 .human("📤 Sending SIGTERM (graceful shutdown)...")
                 .emit();
 
@@ -651,15 +681,17 @@ async fn route_operation(
                 .await?;
 
             if !output.status.success() {
-                Narration::new(ACTOR_QUEEN_ROUTER, "hive_stop_not_found", &hive_id)
-                    .human(format!("⚠️  No running process found for '{}'", binary_name))
+                NARRATE
+                    .action("hive_not_found")
+                    .context(binary_name)
+                    .human("⚠️  No running process found for '{}'")
                     .emit();
                 return Ok(());
             }
 
             // Wait for graceful shutdown
-            NARRATE_ROUTER
-                .action("hive_stop_wait")
+            NARRATE
+                .action("hive_wait")
                 .human("⏳ Waiting for graceful shutdown (5s)...")
                 .emit();
 
@@ -668,16 +700,18 @@ async fn route_operation(
 
                 if let Err(_) = client.get(&health_url).send().await {
                     // Health check failed - hive stopped
-                    Narration::new(ACTOR_QUEEN_ROUTER, "hive_stop_success", &hive_id)
-                        .human(format!("✅ Hive '{}' stopped successfully", hive_id))
+                    NARRATE
+                        .action("hive_success")
+                        .context(&hive_id)
+                        .human("✅ Hive '{}' stopped successfully")
                         .emit();
                     return Ok(());
                 }
 
                 if attempt == 5 {
                     // Timeout - force kill
-                    NARRATE_ROUTER
-                        .action("hive_stop_sigkill")
+                    NARRATE
+                        .action("hive_sigkill")
                         .human("⚠️  Graceful shutdown timed out, sending SIGKILL...")
                         .emit();
 
@@ -688,8 +722,10 @@ async fn route_operation(
 
                     tokio::time::sleep(tokio::time::Duration::from_millis(500)).await;
 
-                    Narration::new(ACTOR_QUEEN_ROUTER, "hive_stop_forced", &hive_id)
-                        .human(format!("✅ Hive '{}' force-stopped", hive_id))
+                    NARRATE
+                        .action("hive_forced")
+                        .context(&hive_id)
+                        .human("✅ Hive '{}' force-stopped")
                         .emit();
                 }
             }
@@ -697,14 +733,14 @@ async fn route_operation(
         Operation::HiveList => {
             // TEAM-190: List all hives from catalog with table output
 
-            NARRATE_ROUTER.action("hive_list").human("📊 Listing all hives").emit();
+            NARRATE.action("hive_list").human("📊 Listing all hives").emit();
 
             // Query catalog
             let hives = state.hive_catalog.list_hives().await?;
 
             if hives.is_empty() {
-                NARRATE_ROUTER
-                    .action("hive_list_empty")
+                NARRATE
+                    .action("hive_empty")
                     .human(
                         "No hives registered.\n\
                          \n\
@@ -730,9 +766,11 @@ async fn route_operation(
                 .collect();
 
             // Display as table
-            Narration::new(ACTOR_QUEEN_ROUTER, "hive_list_result", "catalog")
-                .human(format!("Found {} hive(s):", hives.len()))
-                .table(&serde_json::Value::Array(hives_json))
+            NARRATE
+                .action("hive_result")
+                .context(hives.len().to_string())
+                .human("Found {} hive(s):")
+                .table(serde_json::Value::Array(hives_json))
                 .emit();
         }
         Operation::HiveGet { .. } => {
@@ -760,15 +798,15 @@ async fn route_operation(
                         format!("  ./rbee hive install --id {}", hive_id)
                     };
 
-                    Narration::new(ACTOR_QUEEN_ROUTER, "hive_status_check", &hive_id)
-                        .human(format!(
-                            "❌ Hive '{}' not found in catalog.\n\
+                    NARRATE
+                        .action("hive_check")
+                        .context(&hive_id)
+                        .context(&install_cmd)
+                        .human("❌ Hive '{0}' not found in catalog.\n\
                              \n\
                              To install the hive:\n\
                              \n\
-                             {}",
-                            hive_id, install_cmd
-                        ))
+                             {1}")
                         .emit();
                     return Err(anyhow::anyhow!(
                         "Hive '{}' not found. Use 'rbee hive install' to add it.",
@@ -783,15 +821,15 @@ async fn route_operation(
                         format!("  ./rbee hive install --id {}", hive_id)
                     };
 
-                    Narration::new(ACTOR_QUEEN_ROUTER, "hive_status_check", &hive_id)
-                        .human(format!(
-                            "❌ Hive '{}' not found.\n\
+                    NARRATE
+                        .action("hive_check")
+                        .context(&hive_id)
+                        .context(&install_cmd)
+                        .human("❌ Hive '{0}' not found.\n\
                              \n\
                              Please install the hive first:\n\
                              \n\
-                             {}",
-                            hive_id, install_cmd
-                        ))
+                             {1}")
                         .emit();
                     return Err(anyhow::anyhow!(
                         "Hive '{}' not installed. Use 'rbee hive install' to add it.",
@@ -800,8 +838,10 @@ async fn route_operation(
                 }
                 Err(e) => {
                     // Other database error
-                    Narration::new(ACTOR_QUEEN_ROUTER, "hive_status_check", "db_error")
-                        .human(format!("❌ Database error: {}", e))
+                    NARRATE
+                        .action("hive_check")
+                        .context(e.to_string())
+                        .human("❌ Database error: {}")
                         .emit();
                     return Err(e);
                 }
@@ -809,8 +849,10 @@ async fn route_operation(
 
             let health_url = format!("http://{}:{}/health", hive.host, hive.port);
 
-            Narration::new(ACTOR_QUEEN_ROUTER, "hive_status_check", &hive_id)
-                .human(format!("Checking hive status at {}", health_url))
+            NARRATE
+                .action("hive_check")
+                .context(&health_url)
+                .human("Checking hive status at {}")
                 .emit();
 
             let client =
@@ -818,22 +860,27 @@ async fn route_operation(
 
             match client.get(&health_url).send().await {
                 Ok(response) if response.status().is_success() => {
-                    Narration::new(ACTOR_QUEEN_ROUTER, "hive_status_check", &hive_id)
-                        .human(format!("✅ Hive '{}' is running on {}", hive_id, health_url))
+                    NARRATE
+                        .action("hive_check")
+                        .context(&hive_id)
+                        .context(&health_url)
+                        .human("✅ Hive '{0}' is running on {1}")
                         .emit();
                 }
                 Ok(response) => {
-                    Narration::new(ACTOR_QUEEN_ROUTER, "hive_status_check", &hive_id)
-                        .human(format!(
-                            "⚠️  Hive '{}' responded with status: {}",
-                            hive_id,
-                            response.status()
-                        ))
+                    NARRATE
+                        .action("hive_check")
+                        .context(&hive_id)
+                        .context(response.status().to_string())
+                        .human("⚠️  Hive '{0}' responded with status: {1}")
                         .emit();
                 }
                 Err(_) => {
-                    Narration::new(ACTOR_QUEEN_ROUTER, "hive_status_check", &hive_id)
-                        .human(format!("❌ Hive '{}' is not running on {}", hive_id, health_url))
+                    NARRATE
+                        .action("hive_check")
+                        .context(&hive_id)
+                        .context(&health_url)
+                        .human("❌ Hive '{0}' is not running on {1}")
                         .emit();
                 }
             }

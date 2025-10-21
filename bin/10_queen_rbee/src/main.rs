@@ -22,7 +22,7 @@ use axum::routing::{get, post};
 use clap::Parser;
 use job_registry::JobRegistry;
 use observability_narration_core::NarrationFactory;
-use queen_rbee_hive_catalog::HiveCatalog;
+use rbee_config::RbeeConfig;
 use std::net::SocketAddr;
 use std::path::PathBuf;
 use std::sync::Arc;
@@ -45,9 +45,9 @@ struct Args {
     #[arg(short, long)]
     config: Option<String>,
 
-    /// Database path (SQLite) for hive catalog
-    #[arg(short, long)]
-    database: Option<String>,
+    /// Config directory path (defaults to ~/.config/rbee/)
+    #[arg(long)]
+    config_dir: Option<String>,
 }
 
 #[tokio::main]
@@ -62,19 +62,20 @@ async fn main() -> Result<()> {
         .human("Queen-rbee starting on port {}")
         .emit();
 
-    // TEAM-156: Initialize hive catalog
-    let catalog_path =
-        args.database.map(PathBuf::from).unwrap_or_else(|| PathBuf::from("queen-hive-catalog.db"));
+    // TEAM-194: Load file-based config from ~/.config/rbee/
+    let config = if let Some(dir) = args.config_dir {
+        RbeeConfig::load_from_dir(&PathBuf::from(dir))
+            .map_err(|e| anyhow::anyhow!("Failed to load config: {}", e))?
+    } else {
+        RbeeConfig::load()
+            .map_err(|e| anyhow::anyhow!("Failed to load config: {}", e))?
+    };
 
-    let hive_catalog = Arc::new(
-        HiveCatalog::new(&catalog_path)
-            .await
-            .map_err(|e| anyhow::anyhow!("Failed to initialize hive catalog: {}", e))?,
-    );
+    let config_dir = RbeeConfig::config_dir()?;
 
     NARRATE.action("start")
-        .context(catalog_path.display().to_string())
-        .human("Initialized hive catalog at {}")
+        .context(config_dir.display().to_string())
+        .human("Loaded config from {}")
         .emit();
 
     // TEAM-155: Initialize job registry for dual-call pattern
@@ -89,7 +90,7 @@ async fn main() -> Result<()> {
     // - worker_registry (RAM)
     // - Load config from args.config
 
-    let app = create_router(job_registry, hive_catalog, hive_registry);
+    let app = create_router(job_registry, Arc::new(config), hive_registry);
     let addr = SocketAddr::from(([127, 0, 0, 1], args.port));
 
     NARRATE.action("listen")
@@ -121,14 +122,15 @@ async fn main() -> Result<()> {
 /// TODO: Uncomment http::routes::create_router() when registries are migrated
 fn create_router(
     job_registry: Arc<JobRegistry<String>>,
-    hive_catalog: Arc<HiveCatalog>,
+    config: Arc<RbeeConfig>,
     hive_registry: Arc<queen_rbee_hive_registry::HiveRegistry>,
 ) -> axum::Router {
     // TEAM-164: Create states for HTTP endpoints
     // TEAM-190: Added hive_registry to job_state for Status operation
+    // TEAM-194: Replaced hive_catalog with config
     let job_state = http::SchedulerState {
         registry: job_registry,
-        hive_catalog: hive_catalog.clone(),
+        config: config.clone(),
         hive_registry: hive_registry.clone(),
     };
 

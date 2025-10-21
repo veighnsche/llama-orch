@@ -153,95 +153,50 @@ pub enum QueenAction {
 // TEAM-186: Updated to match new install/uninstall workflow
 // TEAM-187: Added SshTest for pre-installation SSH validation
 pub enum HiveAction {
-    /// Test SSH connection to remote host
+    /// Test SSH connection using config from hives.conf
     SshTest {
-        /// SSH host to test
-        #[arg(long)]
-        ssh_host: String,
-        /// SSH port (default: 22)
-        #[arg(long, default_value = "22")]
-        ssh_port: u16,
-        /// SSH user
-        #[arg(long)]
-        ssh_user: String,
+        /// Hive alias from ~/.config/rbee/hives.conf
+        #[arg(short = 'h', long = "host")]
+        alias: String,
     },
-    /// Install a hive (localhost or remote SSH)
+    /// Install a hive (must be configured in hives.conf first)
     Install {
-        /// Hive ID (defaults to "localhost" for local installations)
-        /// Required when using --ssh-host for remote installations
-        /// TEAM-189: Made --id optional with default "localhost" for better UX
-        #[arg(long, default_value = "localhost")]
-        id: String,
-        /// SSH host for remote installation
-        #[arg(long)]
-        ssh_host: Option<String>,
-        /// SSH port (default: 22)
-        #[arg(long)]
-        ssh_port: Option<u16>,
-        /// SSH user
-        #[arg(long)]
-        ssh_user: Option<String>,
-        /// Hive port (default: 8600)
-        #[arg(long, default_value = "8600")]
-        port: u16,
-        /// TEAM-187: Optional path to hive binary (defaults to git clone + cargo build (during development))
-        #[arg(long)]
-        binary_path: Option<String>,
+        /// Hive alias from ~/.config/rbee/hives.conf
+        #[arg(short = 'h', long = "host")]
+        alias: String,
     },
     /// Uninstall a hive
     Uninstall {
-        /// Hive ID (defaults to "localhost")
-        /// TEAM-189: Made --id optional with default "localhost" for consistency
-        #[arg(long, default_value = "localhost")]
-        id: String,
-        /// Only remove from catalog (for unreachable remote hives)
-        #[arg(long, default_value = "false")]
-        catalog_only: bool,
-    },
-    /// Update hive configuration
-    Update {
-        /// Hive ID
-        #[arg(long)]
-        id: String,
-        /// Updated SSH host
-        #[arg(long)]
-        ssh_host: Option<String>,
-        /// Updated SSH port
-        #[arg(long)]
-        ssh_port: Option<u16>,
-        /// Updated SSH user
-        #[arg(long)]
-        ssh_user: Option<String>,
-        /// Refresh device capabilities from hive
-        #[arg(long, default_value = "false")]
-        refresh_capabilities: bool,
+        /// Hive alias from ~/.config/rbee/hives.conf
+        #[arg(short = 'h', long = "host")]
+        alias: String,
     },
     /// List all hives
     List,
     /// Start a hive
     Start {
-        /// Hive ID (defaults to localhost)
-        #[arg(default_value = "localhost")]
-        id: String,
+        /// Hive alias (defaults to localhost)
+        #[arg(short = 'h', long = "host", default_value = "localhost")]
+        alias: String,
     },
     /// Stop a hive
     Stop {
-        /// Hive ID (defaults to localhost)
-        #[arg(default_value = "localhost")]
-        id: String,
+        /// Hive alias (defaults to localhost)
+        #[arg(short = 'h', long = "host", default_value = "localhost")]
+        alias: String,
     },
     /// Get hive details
     Get {
-        /// Hive ID (defaults to localhost)
-        #[arg(default_value = "localhost")]
-        id: String,
+        /// Hive alias (defaults to localhost)
+        #[arg(short = 'h', long = "host", default_value = "localhost")]
+        alias: String,
     },
     /// Check hive status
     /// TEAM-189: New command to check if hive is running via health endpoint
     Status {
-        /// Hive ID (defaults to localhost)
-        #[arg(default_value = "localhost")]
-        id: String,
+        /// Hive alias (defaults to localhost)
+        #[arg(short = 'h', long = "host", default_value = "localhost")]
+        alias: String,
     },
 }
 
@@ -388,41 +343,17 @@ async fn handle_command(cli: Cli) -> Result<()> {
         },
 
         Commands::Hive { action } => {
-            // TEAM-186: Use typed Operation enum with new install/uninstall operations
-            // TEAM-187: Eliminated unnecessary clones by moving owned values
+            // TEAM-194: Use alias-based operations (config from hives.conf)
             let operation = match action {
-                HiveAction::SshTest { ssh_host, ssh_port, ssh_user } => {
-                    Operation::SshTest { ssh_host, ssh_port, ssh_user }
-                }
-                HiveAction::Install { id, ssh_host, ssh_port, ssh_user, port, binary_path } => {
-                    Operation::HiveInstall {
-                        hive_id: id,
-                        ssh_host,
-                        ssh_port,
-                        ssh_user,
-                        port,
-                        binary_path,
-                    }
-                }
-                HiveAction::Uninstall { id, catalog_only } => {
-                    Operation::HiveUninstall { hive_id: id, catalog_only }
-                }
-                HiveAction::Update { id, ssh_host, ssh_port, ssh_user, refresh_capabilities } => {
-                    Operation::HiveUpdate {
-                        hive_id: id,
-                        ssh_host,
-                        ssh_port,
-                        ssh_user,
-                        refresh_capabilities,
-                    }
-                }
-                HiveAction::Start { id } => Operation::HiveStart { hive_id: id },
-                HiveAction::Stop { id } => Operation::HiveStop { hive_id: id },
+                HiveAction::SshTest { alias } => Operation::SshTest { alias },
+                HiveAction::Install { alias } => Operation::HiveInstall { alias },
+                HiveAction::Uninstall { alias } => Operation::HiveUninstall { alias },
+                HiveAction::Start { alias } => Operation::HiveStart { alias },
+                HiveAction::Stop { alias } => Operation::HiveStop { alias },
                 HiveAction::List => Operation::HiveList,
-                HiveAction::Get { id } => Operation::HiveGet { hive_id: id },
-                HiveAction::Status { id } => Operation::HiveStatus { hive_id: id }, // TEAM-189: Route to HiveStatus operation
+                HiveAction::Get { alias } => Operation::HiveGet { alias },
+                HiveAction::Status { alias } => Operation::HiveStatus { alias },
             };
-            // TEAM-186: No more repeated serialization! submit_and_stream_job handles it
             submit_and_stream_job(&client, &queen_url, operation).await
         }
 

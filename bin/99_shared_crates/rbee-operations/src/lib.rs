@@ -38,68 +38,40 @@ pub enum Operation {
 
     // Hive operations
     // TEAM-186: Renamed create→install, delete→uninstall
-    // TEAM-186: Added hive_id with default "localhost" to all operations
-    // TEAM-187: Added SshTest for pre-installation SSH validation
+    // TEAM-194: Simplified to alias-based lookups (config from hives.conf)
     SshTest {
-        ssh_host: String,
-        #[serde(default = "default_ssh_port")]
-        ssh_port: u16,
-        ssh_user: String,
+        /// Alias from hives.conf
+        alias: String,
     },
     HiveInstall {
-        hive_id: String,
-        #[serde(skip_serializing_if = "Option::is_none")]
-        ssh_host: Option<String>,
-        #[serde(skip_serializing_if = "Option::is_none")]
-        ssh_port: Option<u16>,
-        #[serde(skip_serializing_if = "Option::is_none")]
-        ssh_user: Option<String>,
-        #[serde(default = "default_port")]
-        port: u16,
-        /// TEAM-187: Optional path where to install/find the hive binary
-        /// If None, defaults to standard location (git clone + cargo build)
-        /// Assumes rustup is installed on all systems (fail fast if not)
-        #[serde(skip_serializing_if = "Option::is_none")]
-        binary_path: Option<String>,
+        /// Alias from hives.conf (must exist before install)
+        alias: String,
     },
     HiveUninstall {
-        hive_id: String,
-        /// If true, only remove from catalog (for unreachable remote hives)
-        #[serde(default)]
-        catalog_only: bool,
-    },
-    HiveUpdate {
-        hive_id: String,
-        /// Updated SSH host (if changed)
-        #[serde(skip_serializing_if = "Option::is_none")]
-        ssh_host: Option<String>,
-        /// Updated SSH port (if changed)
-        #[serde(skip_serializing_if = "Option::is_none")]
-        ssh_port: Option<u16>,
-        /// Updated SSH user (if changed)
-        #[serde(skip_serializing_if = "Option::is_none")]
-        ssh_user: Option<String>,
-        /// If true, refresh device capabilities from hive
-        #[serde(default)]
-        refresh_capabilities: bool,
+        /// Alias from hives.conf
+        alias: String,
     },
     HiveStart {
+        /// Alias from hives.conf (defaults to "localhost")
         #[serde(default = "default_hive_id")]
-        hive_id: String,
+        alias: String,
     },
     HiveStop {
+        /// Alias from hives.conf (defaults to "localhost")
         #[serde(default = "default_hive_id")]
-        hive_id: String,
+        alias: String,
     },
     HiveList,
     HiveGet {
+        /// Alias from hives.conf (defaults to "localhost")
         #[serde(default = "default_hive_id")]
-        hive_id: String,
+        alias: String,
     },
     /// TEAM-189: Check hive health endpoint status
     HiveStatus {
+        /// Alias from hives.conf (defaults to "localhost")
         #[serde(default = "default_hive_id")]
-        hive_id: String,
+        alias: String,
     },
 
     // Worker operations
@@ -166,14 +138,6 @@ fn default_hive_id() -> String {
     "localhost".to_string()
 }
 
-fn default_port() -> u16 {
-    8600
-}
-
-// TEAM-187: Default SSH port for SshTest operation
-fn default_ssh_port() -> u16 {
-    22
-}
 
 impl Operation {
     /// Get the operation name as a string (for logging/narration)
@@ -183,7 +147,6 @@ impl Operation {
             Operation::SshTest { .. } => "ssh_test",
             Operation::HiveInstall { .. } => "hive_install",
             Operation::HiveUninstall { .. } => "hive_uninstall",
-            Operation::HiveUpdate { .. } => "hive_update",
             Operation::HiveStart { .. } => "hive_start",
             Operation::HiveStop { .. } => "hive_stop",
             Operation::HiveList => "hive_list",
@@ -204,13 +167,12 @@ impl Operation {
     /// Get the hive_id if the operation targets a specific hive
     pub fn hive_id(&self) -> Option<&str> {
         match self {
-            Operation::HiveInstall { hive_id, .. } => Some(hive_id),
-            Operation::HiveUninstall { hive_id, .. } => Some(hive_id),
-            Operation::HiveUpdate { hive_id, .. } => Some(hive_id),
-            Operation::HiveStart { hive_id } => Some(hive_id),
-            Operation::HiveStop { hive_id } => Some(hive_id),
-            Operation::HiveGet { hive_id } => Some(hive_id),
-            Operation::HiveStatus { hive_id } => Some(hive_id),
+            Operation::HiveInstall { alias } => Some(alias),
+            Operation::HiveUninstall { alias } => Some(alias),
+            Operation::HiveStart { alias } => Some(alias),
+            Operation::HiveStop { alias } => Some(alias),
+            Operation::HiveGet { alias } => Some(alias),
+            Operation::HiveStatus { alias } => Some(alias),
             Operation::WorkerSpawn { hive_id, .. } => Some(hive_id),
             Operation::WorkerList { hive_id } => Some(hive_id),
             Operation::WorkerGet { hive_id, .. } => Some(hive_id),
@@ -232,11 +194,11 @@ impl Operation {
 /// Operation name constants
 ///
 /// TEAM-186: Kept for backward compatibility with string-based code
+/// TEAM-194: Removed OP_HIVE_UPDATE (operation removed)
 pub mod constants {
     // TEAM-186: Renamed create→install, delete→uninstall
     pub const OP_HIVE_INSTALL: &str = "hive_install";
     pub const OP_HIVE_UNINSTALL: &str = "hive_uninstall";
-    pub const OP_HIVE_UPDATE: &str = "hive_update";
     pub const OP_HIVE_START: &str = "hive_start";
     pub const OP_HIVE_STOP: &str = "hive_stop";
     pub const OP_HIVE_LIST: &str = "hive_list";
@@ -269,76 +231,51 @@ mod tests {
 
     #[test]
     fn test_serialize_hive_install() {
-        // TEAM-186: Test localhost install
+        // TEAM-194: Test alias-based install
         let op = Operation::HiveInstall {
-            hive_id: "localhost".to_string(),
-            ssh_host: None,
-            ssh_port: None,
-            ssh_user: None,
-            port: 8600,
+            alias: "localhost".to_string(),
         };
         let json = serde_json::to_string(&op).unwrap();
         assert!(json.contains(r#""operation":"hive_install"#));
-        assert!(json.contains(r#""hive_id":"localhost"#));
-        assert!(json.contains(r#""port":8600"#));
-        assert!(!json.contains(r#""ssh_host""#)); // Should be omitted
+        assert!(json.contains(r#""alias":"localhost"#));
     }
 
     #[test]
     fn test_serialize_hive_install_remote() {
-        // TEAM-186: Test remote SSH install
+        // TEAM-194: Test remote alias install
         let op = Operation::HiveInstall {
-            hive_id: "hive-prod-01".to_string(),
-            ssh_host: Some("192.168.1.100".to_string()),
-            ssh_port: Some(22),
-            ssh_user: Some("admin".to_string()),
-            port: 8600,
+            alias: "workstation".to_string(),
         };
         let json = serde_json::to_string(&op).unwrap();
-        assert!(json.contains(r#""ssh_host":"192.168.1.100"#));
-        assert!(json.contains(r#""ssh_port":22"#));
-        assert!(json.contains(r#""ssh_user":"admin"#));
+        assert!(json.contains(r#""operation":"hive_install"#));
+        assert!(json.contains(r#""alias":"workstation"#));
     }
 
     #[test]
     fn test_serialize_hive_uninstall() {
-        // TEAM-186: Test uninstall with catalog_only flag
-        let op = Operation::HiveUninstall { hive_id: "localhost".to_string(), catalog_only: false };
+        // TEAM-194: Test alias-based uninstall
+        let op = Operation::HiveUninstall { alias: "localhost".to_string() };
         let json = serde_json::to_string(&op).unwrap();
         assert!(json.contains(r#""operation":"hive_uninstall"#));
-        assert!(json.contains(r#""hive_id":"localhost"#));
+        assert!(json.contains(r#""alias":"localhost"#));
     }
 
-    #[test]
-    fn test_serialize_hive_update() {
-        // TEAM-186: Test update with refresh_capabilities
-        let op = Operation::HiveUpdate {
-            hive_id: "localhost".to_string(),
-            ssh_host: Some("192.168.1.101".to_string()),
-            ssh_port: None,
-            ssh_user: None,
-            refresh_capabilities: true,
-        };
-        let json = serde_json::to_string(&op).unwrap();
-        assert!(json.contains(r#""operation":"hive_update"#));
-        assert!(json.contains(r#""refresh_capabilities":true"#));
-    }
 
     #[test]
     fn test_serialize_hive_start() {
-        let op = Operation::HiveStart { hive_id: "localhost".to_string() };
+        let op = Operation::HiveStart { alias: "localhost".to_string() };
         let json = serde_json::to_string(&op).unwrap();
-        assert_eq!(json, r#"{"operation":"hive_start","hive_id":"localhost"}"#);
+        assert_eq!(json, r#"{"operation":"hive_start","alias":"localhost"}"#);
     }
 
     #[test]
     fn test_hive_start_defaults_to_localhost() {
-        // TEAM-186: Test that hive_id defaults to "localhost"
+        // TEAM-194: Test that alias defaults to "localhost"
         let json = r#"{"operation":"hive_start"}"#;
         let op: Operation = serde_json::from_str(json).unwrap();
         match op {
-            Operation::HiveStart { hive_id } => {
-                assert_eq!(hive_id, "localhost");
+            Operation::HiveStart { alias } => {
+                assert_eq!(alias, "localhost");
             }
             _ => panic!("Wrong operation type"),
         }
@@ -410,40 +347,32 @@ mod tests {
     #[test]
     fn test_operation_name() {
         assert_eq!(Operation::HiveList.name(), "hive_list");
-        assert_eq!(Operation::HiveStart { hive_id: "test".to_string() }.name(), "hive_start");
-        // TEAM-186: Test new operation names
+        assert_eq!(Operation::HiveStart { alias: "test".to_string() }.name(), "hive_start");
+        // TEAM-194: Test alias-based operation names
         assert_eq!(
             Operation::HiveInstall {
-                hive_id: "test".to_string(),
-                ssh_host: None,
-                ssh_port: None,
-                ssh_user: None,
-                port: 8600,
+                alias: "test".to_string(),
             }
             .name(),
             "hive_install"
         );
         assert_eq!(
-            Operation::HiveUninstall { hive_id: "test".to_string(), catalog_only: false }.name(),
+            Operation::HiveUninstall { alias: "test".to_string() }.name(),
             "hive_uninstall"
         );
     }
 
     #[test]
     fn test_operation_hive_id() {
-        let op = Operation::HiveStart { hive_id: "localhost".to_string() };
+        let op = Operation::HiveStart { alias: "localhost".to_string() };
         assert_eq!(op.hive_id(), Some("localhost"));
 
         let op = Operation::HiveList;
         assert_eq!(op.hive_id(), None);
 
-        // TEAM-186: Test hive_id extraction for new operations
+        // TEAM-194: Test alias extraction for new operations
         let op = Operation::HiveInstall {
-            hive_id: "hive-prod".to_string(),
-            ssh_host: None,
-            ssh_port: None,
-            ssh_user: None,
-            port: 8600,
+            alias: "hive-prod".to_string(),
         };
         assert_eq!(op.hive_id(), Some("hive-prod"));
     }

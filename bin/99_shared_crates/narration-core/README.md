@@ -2,1200 +2,400 @@
 
 **Structured observability with human-readable narration**
 
-`bin/shared-crates/narration-core` — Emits structured logs with actor/action/target taxonomy and plain English descriptions.
+`bin/99_shared_crates/narration-core` — Emits structured logs with actor/action taxonomy and plain English descriptions.
 
-**Version**: 0.4.0 (TEAM-191 format & factory upgrade)  
-**Status**: ✅ Production Ready (100% tests passing)  
+**Version**: 0.5.0 (TEAM-192 fixed-width format & compile-time validation)  
+**Status**: ✅ Production Ready  
 **Specification**: [`.specs/00_narration-core.md`](.specs/00_narration-core.md)
 
 ---
 
-## ✨ What's New (v0.4.0) — TEAM-191 Format & Factory 🏭
+## ✨ What's New (v0.5.0) — TEAM-192 Fixed-Width Format 📏
 
 ### Breaking Changes ⚠️
-- **Output Format Changed**: Actor now appears inline on same line (not on separate line)
-  - **Old**: `[actor]\n  message`
-  - **New**: `[actor                ] message` (20-char column alignment)
-  - **Impact**: Better readability, consistent column alignment for messages
+
+1. **Output Format Changed** - Fixed 30-character prefix for perfect column alignment
+   - **Old**: `[actor                ] message`
+   - **New**: `[actor     ] action         : message`
+   - **Impact**: Messages always start at column 31, much easier to scan logs
+
+2. **Actor Length Limit** - Max 10 characters (compile-time enforced)
+   - **Why**: Ensures fixed-width format works
+   - **Impact**: Use short actor names like `"keeper"`, `"queen"`, `"qn-router"`
+
+3. **Action Length Limit** - Max 15 characters (runtime enforced)
+   - **Why**: Ensures fixed-width format works
+   - **Impact**: Use concise action names like `"queen_start"`, `"job_submit"`
+
+4. **Method Renamed** - `.narrate()` → `.action()`
+   - **Why**: More semantic and clearer
+   - **Impact**: Update all calls from `NARRATE.narrate("action")` to `NARRATE.action("action")`
 
 ### New Features 🚀
-- **🏭 NarrationFactory** - Define default actor once per crate, reuse everywhere
-  - Reduces boilerplate significantly
-  - Compile-time constant (`const fn`)
-  - Works with all builder methods
-- **📏 Column Alignment** - Actor field padded to 20 chars for consistent message alignment
-- **✨ Improved Readability** - Messages start at same column, easier to scan logs
 
-### Example Migration
+- **📏 Fixed-Width Format** - 30-char prefix ensures perfect column alignment
+  ```
+  [keeper    ] queen_status   : ✅ Queen is running on http://localhost:8500
+  [kpr-life  ] queen_start    : ⚠️  Queen is asleep, waking queen
+  [queen     ] start          : Queen-rbee starting on port 8500
+  [qn-router ] job_create     : Job abc123 created, waiting for client connection
+  ```
+
+- **🔒 Compile-Time Validation** - Actor length checked at compile time
+  - Prevents runtime errors
+  - Clear error messages if actor is too long
+
+- **✅ Runtime Validation** - Action length checked at runtime
+  - Panics with clear message if action exceeds 15 chars
+  - Helps catch mistakes early
+
+### Migration Guide
+
 ```rust
-// Before (v0.3.0)
-Narration::new(ACTOR_QUEEN_ROUTER, ACTION_STATUS, "registry")
-    .human("Status check")
+// Before (v0.4.0)
+const NARRATE: NarrationFactory = NarrationFactory::new("🧑‍🌾 rbee-keeper");
+NARRATE.narrate("queen_start")
+    .human("Starting queen")
     .emit();
 
-// After (v0.4.0) - Option 1: Keep using Narration::new
-Narration::new(ACTOR_QUEEN_ROUTER, ACTION_STATUS, "registry")
-    .human("Status check")
+// After (v0.5.0)
+const NARRATE: NarrationFactory = NarrationFactory::new("keeper");
+NARRATE.action("queen_start")
+    .human("Starting queen")
     .emit();
+```
 
-// After (v0.4.0) - Option 2: Use factory (recommended)
-const NARRATE: NarrationFactory = NarrationFactory::new(ACTOR_QUEEN_ROUTER);
-NARRATE.narrate(ACTION_STATUS, "registry")
-    .human("Status check")
+**Key Changes:**
+1. Shorten actor to ≤ 10 chars (remove emojis if needed)
+2. Change `.narrate()` to `.action()`
+3. Keep actions ≤ 15 chars
+
+---
+
+## 🚀 Quick Start
+
+### Basic Usage
+
+```rust
+use observability_narration_core::NarrationFactory;
+
+// Define factory once per file
+const NARRATE: NarrationFactory = NarrationFactory::new("keeper");
+
+// Use it everywhere
+NARRATE.action("queen_start")
+    .context("http://localhost:8500")
+    .human("Starting queen on {}")
+    .emit();
+```
+
+### Output Format
+
+```
+[keeper    ] queen_start    : Starting queen on http://localhost:8500
+│          │                │
+│          │                └─ Message (starts at column 31)
+│          └─ Action (15 chars, left-aligned)
+└─ Actor (10 chars, left-aligned)
+```
+
+**Total prefix**: 30 characters (including brackets, spaces, colon)
+
+---
+
+## 📖 Core Concepts
+
+### 1. Actor (10 chars max)
+
+The **who** - which service/component is emitting this narration.
+
+```rust
+const NARRATE: NarrationFactory = NarrationFactory::new("keeper");
+//                                                       ^^^^^^^^
+//                                                       Max 10 chars
+```
+
+**Examples:**
+- `"keeper"` - rbee-keeper CLI
+- `"queen"` - queen-rbee daemon
+- `"qn-router"` - queen-rbee job router
+- `"kpr-life"` - rbee-keeper lifecycle module
+- `"hive"` - rbee-hive daemon
+
+### 2. Action (15 chars max)
+
+The **what** - what action is being performed.
+
+```rust
+NARRATE.action("queen_start")
+//             ^^^^^^^^^^^^^^
+//             Max 15 chars
+```
+
+**Examples:**
+- `"queen_start"` - Starting queen-rbee
+- `"job_submit"` - Submitting a job
+- `"hive_install"` - Installing a hive
+- `"status"` - Status check
+
+### 3. Human Message
+
+The **why/how** - plain English explanation with context interpolation.
+
+```rust
+NARRATE.action("queen_start")
+    .context("http://localhost:8500")
+    .context("8500")
+    .human("Starting queen on {0}, port {1}")
+    //     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    //     Use {0}, {1}, {2} or just {} for first context
     .emit();
 ```
 
 ---
 
-## ✨ What's New (v0.3.0) — TEAM-191 Upgrade 🎀
+## 🎯 Pattern: One Factory Per File
 
-### New Features 🚀
-- **📊 Table Formatting Documentation** - Comprehensive guide for `.table()` method with examples
-- **👑 Queen-Rbee Actor Constants** - `ACTOR_QUEEN_RBEE`, `ACTOR_QUEEN_ROUTER` (with cute emojis!)
-- **🎯 Job & Hive Action Constants** - Complete taxonomy for queen-rbee operations
-  - Job routing: `ACTION_ROUTE_JOB`, `ACTION_PARSE_OPERATION`, `ACTION_JOB_CREATE`
-  - Hive management: `ACTION_HIVE_INSTALL`, `ACTION_HIVE_START`, `ACTION_HIVE_STOP`, etc.
-  - System actions: `ACTION_STATUS`, `ACTION_START`, `ACTION_LISTEN`, `ACTION_READY`, `ACTION_ERROR`
-- **😊 Emoji Support Confirmed** - Emojis work perfectly in human fields (📊, ✅, ❌, 🔧, 🏠, etc.)
-- **📝 Multi-line Message Support** - Long formatted messages with newlines fully supported
-
-### Improvements 📚
-- **README** - Table formatting prominently documented with examples
-- **Taxonomy** - Extended with 15+ new action constants for queen-rbee
-- **Editorial Quality** - Queen-rbee usage patterns reviewed and approved! ⭐⭐⭐⭐⭐
-
-### What We Learned 💡
-- Table formatting is AMAZING for status displays and lists!
-- Emojis make debugging delightful! Keep using them! 🎀
-- Multi-line messages work great for complex operations!
-- Queen-rbee team writes excellent narrations! 💝
-
----
-
-## ✨ What's New (v0.2.0)
-
-### New Features 🚀
-- **Builder Pattern API** - Ergonomic fluent API reduces boilerplate by 43%
-- **Axum Middleware** - Built-in correlation ID middleware with auto-extraction/generation
-- **Comprehensive Documentation** - Policy guide, field reference, troubleshooting sections
-- **Code Quality** - Reduced duplication from ~400 lines to ~90 lines (78% reduction)
-
-### Testing & Quality ✅
-- **100% Functional Test Pass Rate** - 75/75 tests passing (50 unit + 16 integration + 9 property)
-- **Zero Flaky Tests** - Fixed global state issues with improved `CaptureAdapter`
-- **Property-Based Tests** - Comprehensive invariant testing for security & correctness
-- **Comprehensive Specification** - 42 normative requirements (NARR-1001..NARR-8005)
-- **BDD-Ready** - Test capture adapter with rich assertion helpers
-
-### Features 🚀
-- **7 Logging Levels** - MUTE, TRACE, DEBUG, INFO, WARN, ERROR, FATAL
-- **6 Secret Patterns** - Bearer tokens, API keys, JWT, private keys, URL passwords, UUIDs
-- **Auto-Injection** - `narrate_auto()` automatically adds provenance metadata
-- **Correlation ID Helpers** - Generate, validate (<100ns), extract from headers
-- **HTTP Context Propagation** - Extract/inject correlation IDs from HTTP headers
-- **Unicode Safety** - ASCII fast path, CRLF sanitization, zero-width character filtering
-- **Conditional Compilation** - Zero overhead in production builds
-- **ReDoS-Safe Redaction** - Bounded quantifiers with `OnceLock` caching
-
----
-
-## What This Library Does
-
-narration-core provides **production-ready structured observability** for llama-orch:
-
-### Core Features
-- **Narration events** — Actor/action/target with human-readable descriptions
-- **Cute mode** — Optional whimsical children's book narration! 🎀✨
-- **Story mode** — Dialogue-based narration for multi-service flows 🎭
-- **7 Logging Levels** — MUTE, TRACE, DEBUG, INFO, WARN, ERROR, FATAL
-- **Correlation IDs** — Track requests across service boundaries (<100ns validation)
-- **Secret redaction** — Automatic masking of 6 secret types with ReDoS protection
-- **Auto-injection** — Automatic provenance metadata (emitted_by, emitted_at_ms)
-- **Zero-cost abstractions** — Built on `tracing` with conditional compilation
-
-### Testing & Observability
-- **Test capture adapter** — Rich assertion helpers for BDD tests
-- **Property-based tests** — Invariant testing for security guarantees
-- **HTTP context propagation** — Extract/inject correlation IDs from headers
-- **Unicode safety** — ASCII fast path, CRLF sanitization, homograph attack prevention
-- **JSON logs** — Structured output for production
-
-### Quality Metrics
-- ✅ **100% functional test pass rate** (66/66 tests)
-- ✅ **Zero flaky tests** (fixed global state issues)
-- ✅ **42 normative requirements** documented with stable IDs
-- ✅ **Property tests** for security invariants
-- ✅ **Integration tests** for multi-service workflows
-
-**Used by**: All services (queen-rbee, pool-managerd, worker-orcd, provisioners)
-
----
-
-## Key Concepts
-
-### Narration Event
-
-Every event includes:
-
-- **actor** — Who performed the action (queen-rbee, pool-managerd, etc.)
-- **action** — What was done (enqueue, provision, register, etc.)
-- **target** — What was acted upon (job_id, pool_id, model_id, etc.)
-- **human** — Plain English description for humans
-- **cute** — Whimsical children's book narration (optional) 🎀
-
-Optional fields:
-- **correlation_id** — Request tracking across services
-- **session_id** — Session identifier
-- **pool_id** — Pool identifier
-- **replica_id** — Replica identifier
-
----
-
-## Usage
-
-### Builder Pattern (NEW in v0.2.0) ✨
-
-The ergonomic builder API reduces boilerplate by 43%:
+**Best Practice:** Each file defines its own `const NARRATE` factory.
 
 ```rust
-use observability_narration_core::{Narration, ACTOR_ORCHESTRATORD, ACTION_ENQUEUE};
+// src/main.rs
+use observability_narration_core::NarrationFactory;
 
-Narration::new(ACTOR_ORCHESTRATORD, ACTION_ENQUEUE, job_id)
-    .human(format!("Enqueued job {job_id}"))
-    .correlation_id(req_id)
-    .pool_id(pool_id)
-    .emit();
-```
+const NARRATE: NarrationFactory = NarrationFactory::new("keeper");
 
-### Narration Macro (NEW in v0.4.0) 🎀 — MOST ERGONOMIC!
-
-The **ultimate ergonomic pattern** - inspired by `println!`:
-
-```rust
-use observability_narration_core::{narration_macro, ACTOR_QUEEN_ROUTER, ACTION_STATUS};
-
-// Create the macro with actor baked in!
-narration_macro!(ACTOR_QUEEN_ROUTER);
-
-// Now use it - looks just like println!
-narrate!(ACTION_STATUS, "registry")
-    .human("Found 2 hives")
-    .emit();
-
-narrate!(ACTION_HIVE_INSTALL, "hive-1")
-    .human("🔧 Installing hive")
-    .emit();
-```
-
-**Benefits**:
-- ✅ **Shortest syntax** - `narrate!(action, target)`
-- ✅ **Rust-idiomatic** - follows `println!` pattern
-- ✅ **Actor defined once** - never repeat it
-- ✅ **Zero runtime overhead** - compile-time macro
-- ✅ **Most ergonomic!** 🎀
-
-### Narration Factory (NEW in v0.4.0) 🏭 — Type-Safe Alternative
-
-If you prefer type-safe structs over macros:
-
-```rust
-use observability_narration_core::{NarrationFactory, ACTOR_QUEEN_ROUTER, ACTION_STATUS};
-
-// Define at module/crate level
-const NARRATE: NarrationFactory = NarrationFactory::new(ACTOR_QUEEN_ROUTER);
-
-// Use throughout the crate
-NARRATE.narrate(ACTION_STATUS, "registry")
-    .human("Found 2 hives")
-    .emit();
-```
-
-**Benefits**:
-- ✅ Type-safe - compile-time constant (`const fn`)
-- ✅ IDE-friendly - better autocomplete
-- ✅ Actor defined once
-- ✅ Works with all builder methods
-
-### Table Formatting (NEW in v0.3.0) 📊
-
-Format JSON data as beautiful CLI tables for structured output:
-
-```rust
-use observability_narration_core::Narration;
-
-let hives = serde_json::json!([
-    {"id": "hive-1", "host": "localhost", "port": 8600},
-    {"id": "hive-2", "host": "192.168.1.10", "port": 8600}
-]);
-
-Narration::new("queen-router", "hive_list", "catalog")
-    .human("Found 2 hive(s):")
-    .table(&hives)
-    .emit();
-```
-
-**Output** (NEW format in v0.4.0):
-```
-[queen-router        ] Found 2 hive(s):
-
-  id     │ host          │ port
-  ───────┼───────────────┼──────
-  hive-1 │ localhost     │ 8600
-  hive-2 │ 192.168.1.10  │ 8600
-```
-
-**Features**:
-- Arrays of objects → column-based tables with headers
-- Single objects → key-value tables
-- Automatic column width calculation
-- Unicode box-drawing characters (│ ─ ┼)
-- Appends to existing human message
-- Perfect for status displays, lists, and reports
-- **NEW**: Actor-first inline format with column alignment
-
-### Basic Narration
-
-```rust
-use observability_narration_core::{narrate, NarrationFields, ACTOR_ORCHESTRATORD, ACTION_ENQUEUE};
-
-narrate(NarrationFields {
-    actor: ACTOR_ORCHESTRATORD,
-    action: ACTION_ENQUEUE,
-    target: job_id.to_string(),
-    human: format!("Enqueued job {job_id} for pool {pool_id}"),
-    correlation_id: Some(req_id),
-    pool_id: Some(pool_id),
-    ..Default::default()
-});
-```
-
-### Auto-Injection (NEW in v0.1.0) ✨
-
-Automatically adds `emitted_by` and `emitted_at_ms` fields:
-
-```rust
-use observability_narration_core::auto::narrate_auto;
-
-narrate_auto(NarrationFields {
-    actor: "pool-managerd",
-    action: "provision",
-    target: pool_id.to_string(),
-    human: format!("Provisioning engine for pool {pool_id}"),
-    ..Default::default()
-});
-// Automatically adds:
-// - emitted_by: "pool-managerd@0.1.0"
-// - emitted_at_ms: 1696118400000
-```
-
-### With Correlation ID
-
-```rust
-use narration_core::{narrate_with_correlation, Actor, Action};
-
-narrate_with_correlation!(
-    correlation_id = req_id,
-    actor = Actor::PoolManagerd,
-    action = Action::Provision,
-    target = pool_id,
-    human = "Provisioning engine for pool {pool_id}"
-);
-```
-
-### Secret Redaction
-
-```rust
-use narration_core::{narrate, Actor, Action};
-
-// Automatically redacts bearer tokens
-narrate!(
-    actor = Actor::Orchestratord,
-    action = Action::Authenticate,
-    target = "api",
-    authorization = format!("Bearer {}", token), // Will be redacted
-    human = "Authenticated API request"
-);
-```
-
-### Cute Mode (Children's Book Narration)
-
-```rust
-use narration_core::{narrate, NarrationFields};
-
-narrate(NarrationFields {
-    actor: "vram-residency",
-    action: "seal",
-    target: "llama-7b".to_string(),
-    human: "Sealed model shard 'llama-7b' in 2048 MB VRAM on GPU 0 (5 ms)".to_string(),
-    cute: Some("Tucked llama-7b safely into GPU0's warm 2GB nest! Sweet dreams! 🛏️✨".to_string()),
-    ..Default::default()
-});
-```
-
-**Output**:
-```json
-{
-  "actor": "vram-residency",
-  "action": "seal",
-  "target": "llama-7b",
-  "human": "Sealed model shard 'llama-7b' in 2048 MB VRAM on GPU 0 (5 ms)",
-  "cute": "Tucked llama-7b safely into GPU0's warm 2GB nest! Sweet dreams! 🛏️✨"
+fn main() {
+    NARRATE.action("start").human("Starting rbee-keeper").emit();
 }
 ```
 
----
+```rust
+// src/queen_lifecycle.rs
+use observability_narration_core::NarrationFactory;
 
-## Event Taxonomy
+const NARRATE: NarrationFactory = NarrationFactory::new("kpr-life");
 
-### Actors
-
-- **Orchestratord** — Main orchestrator service
-- **PoolManagerd** — GPU node pool manager
-- **EngineProvisioner** — Engine provisioning service
-- **ModelProvisioner** — Model provisioning service
-- **Adapter** — Worker adapter
-
-### Actions
-
-- **Enqueue** — Add job to queue
-- **Dispatch** — Send job to worker
-- **Provision** — Provision engine or model
-- **Register** — Register node or pool
-- **Heartbeat** — Send heartbeat
-- **Deregister** — Remove node or pool
-- **Complete** — Job completed
-- **Error** — Error occurred
-
----
-
-## JSON Output
-
-### Production Format
-
-```json
-{
-  "timestamp": "2025-10-01T00:00:00Z",
-  "level": "INFO",
-  "actor": "queen-rbee",
-  "action": "enqueue",
-  "target": "job-123",
-  "correlation_id": "req-abc",
-  "pool_id": "default",
-  "human": "Enqueued job job-123 for pool default"
+pub async fn ensure_queen_running() {
+    NARRATE.action("queen_check").human("Checking queen health").emit();
 }
 ```
 
-### Console Format (Development)
+**Benefits:**
+- ✅ No shared factories to import
+- ✅ Each file controls its own actor
+- ✅ Shorter, cleaner code
+- ✅ Less coupling
 
+---
+
+## 🔧 Builder Methods
+
+### Context Interpolation
+
+Add values that can be referenced in messages:
+
+```rust
+NARRATE.action("queen_start")
+    .context("http://localhost:8500")  // {0}
+    .context("8500")                   // {1}
+    .context("production")             // {2}
+    .human("Starting queen on {0}, port {1}, env {2}")
+    .emit();
 ```
-2025-10-01T00:00:00Z INFO queen-rbee enqueue job-123 [req-abc] Enqueued job job-123 for pool default
+
+**Output:**
+```
+[keeper    ] queen_start    : Starting queen on http://localhost:8500, port 8500, env production
+```
+
+### Metadata Fields
+
+```rust
+NARRATE.action("job_complete")
+    .correlation_id("req-abc123")
+    .session_id("session-xyz")
+    .pool_id("default")
+    .duration_ms(150)
+    .emit();
+```
+
+### Error Handling
+
+```rust
+NARRATE.action("queen_start")
+    .context(error.to_string())
+    .human("Failed to start queen: {}")
+    .error_kind("startup_failed")
+    .emit_error();  // Emits at ERROR level
 ```
 
 ---
 
-## Testing (NEW in v0.1.0) ✅
+## 📊 Table Formatting
 
-### Capture Adapter with Serial Execution
+Display structured data as tables:
 
 ```rust
-use observability_narration_core::CaptureAdapter;
-use serial_test::serial;
+use serde_json::json;
+
+let data = vec![
+    json!({"hive_id": "hive-1", "status": "running", "workers": 3}),
+    json!({"hive_id": "hive-2", "status": "stopped", "workers": 0}),
+];
+
+NARRATE.action("status")
+    .human("Found 2 hives:")
+    .table(data)
+    .emit();
+```
+
+**Output:**
+```
+[qn-router ] status         : Found 2 hives:
+┌─────────┬─────────┬─────────┐
+│ hive_id │ status  │ workers │
+├─────────┼─────────┼─────────┤
+│ hive-1  │ running │ 3       │
+│ hive-2  │ stopped │ 0       │
+└─────────┴─────────┴─────────┘
+```
+
+---
+
+## 🎨 Logging Levels
+
+```rust
+// INFO (default)
+NARRATE.action("start").human("Starting").emit();
+
+// WARN
+NARRATE.action("retry").human("Retrying connection").emit_warn();
+
+// ERROR
+NARRATE.action("failed").human("Operation failed").emit_error();
+
+// DEBUG (requires feature flag)
+#[cfg(feature = "debug-enabled")]
+NARRATE.action("debug").human("Debug info").emit_debug();
+```
+
+---
+
+## 🔒 Compile-Time Validation
+
+### Actor Length (Compile-Time)
+
+```rust
+// ✅ PASS - 6 characters
+const NARRATE: NarrationFactory = NarrationFactory::new("keeper");
+
+// ❌ FAIL - 17 characters (compile error)
+const NARRATE: NarrationFactory = NarrationFactory::new("keeper/queen-life");
+```
+
+**Error:**
+```
+error[E0080]: evaluation panicked: Actor string is too long! Maximum 10 characters allowed.
+```
+
+### Action Length (Runtime)
+
+```rust
+// ✅ PASS - 12 characters
+NARRATE.action("queen_status").emit();
+
+// ❌ FAIL - 20 characters (runtime panic)
+NARRATE.action("queen_status_check_v2").emit();
+```
+
+**Error:**
+```
+thread 'main' panicked at 'Action string is too long! Maximum 15 characters allowed. Got 'queen_status_check_v2' (20 chars)'
+```
+
+---
+
+## 📏 Format Specification
+
+### Output Format
+
+```
+[{actor:<10}] {action:<15}: {message}
+```
+
+**Breakdown:**
+- `[` - Opening bracket (1 char)
+- `{actor:<10}` - Actor, left-aligned, padded to 10 chars
+- `]` - Closing bracket (1 char)
+- ` ` - Space (1 char)
+- `{action:<15}` - Action, left-aligned, padded to 15 chars
+- `:` - Colon (1 char)
+- ` ` - Space (1 char)
+- `{message}` - Human message (variable length)
+
+**Total prefix**: 30 characters
+
+### Examples
+
+```
+[keeper    ] queen_start    : Starting queen
+[queen     ] listen         : Listening on http://127.0.0.1:8500
+[qn-router ] job_create     : Job abc123 created
+[kpr-life  ] queen_check    : Queen is already running
+```
+
+---
+
+## 🧪 Testing
+
+### Capture Adapter
+
+```rust
+use observability_narration_core::{CaptureAdapter, NarrationFactory};
 
 #[test]
-#[serial(capture_adapter)]  // Prevents test interference
 fn test_narration() {
     let adapter = CaptureAdapter::install();
     
-    // Perform actions that emit narration
-    narrate(NarrationFields {
-        actor: "queen-rbee",
-        action: "enqueue",
-        target: "job-123".to_string(),
-        human: "Enqueued job".to_string(),
-        ..Default::default()
-    });
+    const NARRATE: NarrationFactory = NarrationFactory::new("test");
+    NARRATE.action("test_action").human("Test message").emit();
     
-    // Assert narration was emitted
     let captured = adapter.captured();
     assert_eq!(captured.len(), 1);
-    assert_eq!(captured[0].actor, "queen-rbee");
-    assert_eq!(captured[0].action, "enqueue");
-}
-```
-
-### Rich Assertion Helpers
-
-```rust
-// Assert event contains text
-adapter.assert_includes("Enqueued job");
-
-// Assert field value
-adapter.assert_field("action", "enqueue");
-adapter.assert_field("target", "job-123");
-
-// Assert correlation ID present
-adapter.assert_correlation_id_present();
-
-// Assert provenance present (NEW)
-adapter.assert_provenance_present();
-
-// Get all captured events
-let events = adapter.captured();
-assert_eq!(events.len(), 3);
-
-// Clear captured events
-adapter.clear();
-```
-
-### Property-Based Testing (NEW)
-
-Test invariants that must always hold:
-
-```rust
-#[test]
-fn property_bearer_tokens_never_leak() {
-    let test_cases = vec![
-        "Bearer abc123",
-        "Authorization: Bearer xyz789",
-    ];
-    
-    for input in test_cases {
-        let redacted = redact_secrets(input, RedactionPolicy::default());
-        assert!(!redacted.contains("abc123"));
-        assert!(redacted.contains("[REDACTED]"));
-    }
-}
-```
-
-### Integration Testing
-
-```rust
-#[test]
-#[serial(capture_adapter)]
-fn test_correlation_id_propagation() {
-    let adapter = CaptureAdapter::install();
-    let correlation_id = "req-123".to_string();
-
-    // Service 1
-    narrate(NarrationFields {
-        actor: "queen-rbee",
-        action: "dispatch",
-        target: "job-1".to_string(),
-        human: "Dispatching".to_string(),
-        correlation_id: Some(correlation_id.clone()),
-        ..Default::default()
-    });
-
-    // Service 2
-    narrate(NarrationFields {
-        actor: "pool-managerd",
-        action: "provision",
-        target: "pool-1".to_string(),
-        human: "Provisioning".to_string(),
-        correlation_id: Some(correlation_id.clone()),
-        ..Default::default()
-    });
-
-    let captured = adapter.captured();
-    assert_eq!(captured.len(), 2);
-    assert_eq!(captured[0].correlation_id, Some(correlation_id.clone()));
-    assert_eq!(captured[1].correlation_id, Some(correlation_id));
-}
-```
-
-### Running Tests
-
-```bash
-# Run all tests with test-support feature
-cargo test -p observability-narration-core --features test-support
-
-# Run unit tests only
-cargo test -p observability-narration-core --lib --features test-support
-
-# Run integration tests only
-cargo test -p observability-narration-core --test integration --features test-support
-
-# Run property tests only
-cargo test -p observability-narration-core --test property_tests
-
-# Run with parallel execution (safe with serial_test)
-cargo test -p observability-narration-core --features test-support -- --test-threads=8
-```
-
----
-
-## Correlation ID Propagation
-
-### Across Services
-
-```rust
-// queen-rbee generates correlation ID
-let correlation_id = CorrelationId::new();
-
-narrate!(
-    correlation_id = correlation_id.clone(),
-    actor = Actor::Orchestratord,
-    action = Action::Dispatch,
-    target = job_id,
-    human = "Dispatching job to pool-managerd"
-);
-
-// Pass to pool-managerd via HTTP header
-let response = client
-    .post("/provision")
-    .header("X-Correlation-ID", correlation_id.to_string())
-    .send()
-    .await?;
-
-// pool-managerd extracts and uses correlation ID
-let correlation_id = extract_correlation_id(&request)?;
-
-narrate!(
-    correlation_id = correlation_id,
-    actor = Actor::PoolManagerd,
-    action = Action::Provision,
-    target = pool_id,
-    human = "Received provision request"
-);
-```
-
----
-
-## Secret Redaction
-
-### Automatic Redaction
-
-The following fields are automatically redacted:
-
-- `authorization` — Bearer tokens
-- `api_key` — API keys
-- `token` — Generic tokens
-- `password` — Passwords
-- `secret` — Generic secrets
-
-### Example
-
-```rust
-narrate!(
-    actor = Actor::Orchestratord,
-    action = Action::Authenticate,
-    authorization = "Bearer abc123", // Becomes "[REDACTED]"
-    human = "Authenticated request"
-);
-```
-
-Output:
-
-```json
-{
-  "actor": "queen-rbee",
-  "action": "authenticate",
-  "authorization": "[REDACTED]",
-  "human": "Authenticated request"
+    assert_eq!(captured[0].actor, "test");
+    assert_eq!(captured[0].action, "test_action");
 }
 ```
 
 ---
 
-## Debugging
+## 📚 Additional Resources
 
-### Grep by Correlation ID
-
-```bash
-# Find all events for a request
-grep "correlation_id=req-abc" logs/*.log
-
-# Extract human descriptions
-grep "correlation_id=req-abc" logs/*.log | jq -r '.human'
-```
-
-### Filter by Actor
-
-```bash
-# All pool-managerd events
-grep "actor=pool-managerd" logs/*.log
-
-# All provision actions
-grep "action=provision" logs/*.log
-```
-
-### Read the Story
-
-```bash
-# Get human-readable story
-grep "human=" logs/*.log | jq -r '.human'
-```
+- **Changelog**: [CHANGELOG.md](CHANGELOG.md)
+- **Specification**: [`.specs/00_narration-core.md`](.specs/00_narration-core.md)
+- **Examples**: [`examples/`](examples/)
+- **Tests**: [`tests/`](tests/)
 
 ---
 
-## HTTP Context Propagation (NEW in v0.1.0) 🌐
+## 🎀 Design Philosophy
 
-### Extract Correlation ID from Headers
-
-```rust
-use observability_narration_core::http::{extract_context_from_headers, HeaderLike};
-
-// Implement HeaderLike for your HTTP framework
-impl HeaderLike for MyRequest {
-    fn get_header(&self, name: &str) -> Option<&str> {
-        self.headers.get(name).map(|v| v.as_str())
-    }
-}
-
-// Extract correlation ID
-let context = extract_context_from_headers(&request);
-if let Some(correlation_id) = context.correlation_id {
-    narrate(NarrationFields {
-        actor: "my-service",
-        action: "handle_request",
-        target: "endpoint".to_string(),
-        human: "Processing request".to_string(),
-        correlation_id: Some(correlation_id),
-        ..Default::default()
-    });
-}
-```
-
-### Inject Correlation ID into Headers
-
-```rust
-use observability_narration_core::http::{inject_context_into_headers, NarrationContext};
-
-let context = NarrationContext {
-    correlation_id: Some("req-123".to_string()),
-    trace_id: Some("trace-456".to_string()),
-    span_id: Some("span-789".to_string()),
-};
-
-// Inject into outgoing request
-inject_context_into_headers(&context, &mut request);
-// Adds headers:
-// - X-Correlation-Id: req-123
-// - X-Trace-Id: trace-456
-// - X-Span-Id: span-789
-```
+1. **Human-First** - Logs should be readable by humans, not just machines
+2. **Consistent Format** - Fixed-width prefix for easy scanning
+3. **Compile-Time Safety** - Catch errors at compile time when possible
+4. **Simple API** - One factory per file, minimal boilerplate
+5. **Context-Rich** - Interpolate values into messages for clarity
 
 ---
 
-## Unicode Safety (NEW in v0.1.0) 🛡️
+## 📝 Version History
 
-### ASCII Fast Path
-
-Zero-copy string handling for ASCII-only content:
-
-```rust
-use observability_narration_core::sanitize_for_json;
-
-let clean = "Hello, world!";
-let sanitized = sanitize_for_json(clean);
-// Zero-copy: sanitized == clean (no allocation)
-```
-
-### CRLF Sanitization
-
-```rust
-use observability_narration_core::sanitize_crlf;
-
-let input = "Line 1\nLine 2\rLine 3";
-let sanitized = sanitize_crlf(input);
-// "Line 1 Line 2 Line 3"
-```
-
-### Homograph Attack Prevention
-
-```rust
-use observability_narration_core::{validate_actor, validate_action};
-
-// Rejects non-ASCII to prevent homograph attacks
-assert!(validate_actor("queen-rbee").is_ok());
-assert!(validate_actor("оrchestratord").is_err());  // Cyrillic 'о'
-```
+- **v0.5.0** (TEAM-192) - Fixed-width format, compile-time validation, `.action()` method
+- **v0.4.0** (TEAM-191) - Factory pattern, column alignment
+- **v0.3.0** - Table formatting, queen-rbee taxonomy
+- **v0.2.0** - Builder pattern, Axum middleware
+- **v0.1.0** - Initial release
 
 ---
 
-## Integration Guides
-
-### For Consumer Teams
-
-- **worker-orcd**: See [`docs/WORKER_ORCD_INTEGRATION.md`](docs/WORKER_ORCD_INTEGRATION.md)
-- **queen-rbee**: Coming soon
-- **pool-managerd**: Coming soon
-
-Each guide includes:
-- Dependency setup
-- Correlation ID extraction
-- Critical path narrations
-- Editorial guidelines
-- Testing examples
-- Verification commands
-
----
-
-## Dependencies
-
-### Internal
-
-- None (foundational library)
-
-### External
-
-- `tracing` — Structured logging
-- `serde` — Serialization
-- `serde_json` — JSON output
-
----
-
-## Specifications & Requirements
-
-### Normative Requirements
-
-See [`.specs/00_narration-core.md`](.specs/00_narration-core.md) for complete specification.
-
-**42 requirements** organized by category:
-- **NARR-1001..1007**: Core Narration (7 requirements)
-- **NARR-2001..2005**: Correlation IDs (5 requirements)
-- **NARR-3001..3008**: Redaction (8 requirements)
-- **NARR-4001..4005**: Unicode Safety (5 requirements)
-- **NARR-5001..5007**: Performance (7 requirements)
-- **NARR-6001..6006**: Testing (6 requirements)
-- **NARR-7001..7005**: Auto-Injection (5 requirements)
-
-### Verification
-
-All requirements are verified by tests:
-- **Unit tests**: 41/41 passing (100%)
-- **Integration tests**: 16/16 passing (100%)
-- **Property tests**: 9/9 passing (100%, 1 ignored with documented reason)
-
-### Audit Compliance
-
-✅ **All audit findings resolved**:
-- ✅ Zero flaky tests (VIOLATION #1 - RESOLVED)
-- ✅ 100% test pass rate (VIOLATION #2 - RESOLVED)
-- ✅ Comprehensive specification (VIOLATION #3 - RESOLVED)
-
----
-
-## Performance Characteristics
-
-### Correlation ID Validation
-- **Target**: <100ns per validation
-- **Actual**: ~50ns (byte-level, no regex)
-- **Status**: ✅ Exceeds target
-
-### ASCII Fast Path
-- **Target**: <1μs for typical strings
-- **Actual**: ~0.5μs (zero-copy for clean ASCII)
-- **Status**: ✅ Exceeds target
-
-### CRLF Sanitization
-- **Target**: <50ns for clean strings
-- **Actual**: ~20ns (zero-copy when no CRLF)
-- **Status**: ✅ Exceeds target
-
-### Redaction Performance
-- **Target**: <5μs for strings with secrets
-- **Actual**: ~430ns for single secret, ~1.4μs for multiple secrets (measured)
-- **Status**: ✅ Exceeds target by 3-11x
-- **Benchmark**: `cargo bench -p observability-narration-core redaction`
-
----
-
-## Dependencies
-
-### Runtime
-- `tracing` — Structured logging foundation
-- `serde` — Serialization support
-- `regex` — Pattern matching for redaction
-- `uuid` — Correlation ID generation
-
-### Development
-- `serial_test` — Test isolation for global state
-- `criterion` — Performance benchmarking
-
-### Optional
-- `opentelemetry` — Distributed tracing integration (feature: `otel`)
-
----
-
-## When to Narrate
-
-### Always Narrate (INFO level)
-
-**Request lifecycle**:
-- Request received (with correlation ID)
-- Request completed (with duration)
-
-**State transitions**:
-- Job enqueued/dispatched/completed
-- Worker spawned/ready/shutdown
-- Model loaded/unloaded
-
-**External calls**:
-- HTTP requests to other services
-- Database operations
-- File I/O
-
-### Narrate on Error (ERROR level)
-
-- Validation failures
-- External service errors
-- Timeout/cancellation
-- Resource exhaustion
-
-### Don't Narrate
-
-- Internal function calls
-- Loop iterations
-- Temporary variables
-- Debug-only info (use TRACE instead)
-
-### Performance Impact
-
-- Each narration: ~1-5μs overhead
-- Redaction: ~430ns-1.4μs for strings with secrets
-- **Recommendation**: <100 narrations per request
-
-### Example: Good Narration
-
-```rust
-use observability_narration_core::{Narration, ACTOR_WORKER_ORCD};
-
-// ✅ Request received
-Narration::new(ACTOR_WORKER_ORCD, "request_received", job_id)
-    .human("Received execute request")
-    .correlation_id(req_id)
-    .emit();
-
-// ✅ State transition
-Narration::new(ACTOR_WORKER_ORCD, "inference_start", job_id)
-    .human("Starting inference")
-    .correlation_id(req_id)
-    .emit();
-
-// ✅ Request completed
-Narration::new(ACTOR_WORKER_ORCD, "request_completed", job_id)
-    .human("Completed inference")
-    .correlation_id(req_id)
-    .duration_ms(elapsed_ms)
-    .emit();
-```
-
-### Example: Bad Narration
-
-```rust
-// ❌ Internal function call
-fn parse_token(token: &str) -> Result<Token> {
-    Narration::new(ACTOR_WORKER_ORCD, "parse_token", token)
-        .human("Parsing token")
-        .emit();  // ← Don't narrate internal functions
-    // ...
-}
-
-// ❌ Loop iteration
-for item in items {
-    Narration::new(ACTOR_WORKER_ORCD, "process_item", item.id)
-        .human("Processing item")
-        .emit();  // ← Don't narrate loops
-}
-```
-
----
-
-## Axum Integration
-
-### Middleware Setup
-
-Add the `axum` feature to your `Cargo.toml`:
-
-```toml
-[dependencies]
-observability-narration-core = { path = "../narration-core", features = ["axum"] }
-axum = "0.7"
-tokio = { version = "1", features = ["full"] }
-```
-
-### Complete Example
-
-```rust
-use axum::{
-    Router,
-    routing::post,
-    middleware,
-    extract::{Extension, Json},
-    response::IntoResponse,
-    http::StatusCode,
-};
-use observability_narration_core::{
-    Narration,
-    ACTOR_WORKER_ORCD,
-    axum::correlation_middleware,
-};
-
-#[derive(serde::Deserialize)]
-struct ExecuteRequest {
-    job_id: String,
-}
-
-async fn execute_handler(
-    Extension(correlation_id): Extension<String>,
-    Json(payload): Json<ExecuteRequest>,
-) -> Result<impl IntoResponse, StatusCode> {
-    // Narrate request received
-    Narration::new(ACTOR_WORKER_ORCD, "execute", &payload.job_id)
-        .human("Received execute request")
-        .correlation_id(&correlation_id)
-        .emit();
-    
-    // ... handler logic
-    
-    Ok(StatusCode::OK)
-}
-
-#[tokio::main]
-async fn main() {
-    let app = Router::new()
-        .route("/execute", post(execute_handler))
-        .layer(middleware::from_fn(correlation_middleware));
-    
-    let listener = tokio::net::TcpListener::bind("0.0.0.0:8080").await.unwrap();
-    axum::serve(listener, app).await.unwrap();
-}
-```
-
-The middleware automatically:
-- Extracts `X-Correlation-ID` from request headers
-- Validates the ID format (UUID v4)
-- Generates a new ID if missing or invalid
-- Stores the ID in request extensions for handler access
-- Adds the ID to response headers
-
----
-
-## NarrationFields Reference
-
-### Required Fields
-
-| Field | Type | Description | Example |
-|-------|------|-------------|---------|
-| `actor` | `&'static str` | Service name | `ACTOR_WORKER_ORCD` |
-| `action` | `&'static str` | Action performed | `ACTION_EXECUTE` |
-| `target` | `String` | Target of action | `job_id` |
-| `human` | `String` | Human description | `"Executing job"` |
-
-### Optional Identity Fields
-
-| Field | Type | Description |
-|-------|------|-------------|
-| `correlation_id` | `Option<String>` | Request tracking ID |
-| `session_id` | `Option<String>` | Session identifier |
-| `job_id` | `Option<String>` | Job identifier |
-| `task_id` | `Option<String>` | Task identifier |
-| `pool_id` | `Option<String>` | Pool identifier |
-| `replica_id` | `Option<String>` | Replica identifier |
-| `worker_id` | `Option<String>` | Worker identifier |
-
-### Optional Context Fields
-
-| Field | Type | Description |
-|-------|------|-------------|
-| `error_kind` | `Option<String>` | Error category |
-| `duration_ms` | `Option<u64>` | Operation duration |
-| `retry_after_ms` | `Option<u64>` | Retry delay |
-| `backoff_ms` | `Option<u64>` | Backoff duration |
-| `queue_position` | `Option<usize>` | Position in queue |
-| `predicted_start_ms` | `Option<u64>` | Predicted start time |
-
-### Optional Engine/Model Fields
-
-| Field | Type | Description |
-|-------|------|-------------|
-| `engine` | `Option<String>` | Engine name |
-| `engine_version` | `Option<String>` | Engine version |
-| `model_ref` | `Option<String>` | Model reference |
-| `device` | `Option<String>` | Device identifier |
-
-### Optional Performance Fields
-
-| Field | Type | Description |
-|-------|------|-------------|
-| `tokens_in` | `Option<u64>` | Input token count |
-| `tokens_out` | `Option<u64>` | Output token count |
-| `decode_time_ms` | `Option<u64>` | Decode duration |
-
-### Auto-Injected Fields
-
-These fields are automatically populated by `narrate_auto()` and builder `.emit()`:
-
-| Field | Type | Description |
-|-------|------|-------------|
-| `emitted_by` | `Option<String>` | Service@version (auto) |
-| `emitted_at_ms` | `Option<u64>` | Unix timestamp (auto) |
-| `trace_id` | `Option<String>` | OpenTelemetry trace ID |
-| `span_id` | `Option<String>` | OpenTelemetry span ID |
-| `parent_span_id` | `Option<String>` | Parent span ID |
-| `source_location` | `Option<String>` | Source file:line |
-
----
-
-## Troubleshooting
-
-### Events Not Captured in Tests
-
-**Problem**: `adapter.captured()` returns empty vec.
-
-**Causes**:
-1. Missing `#[serial(capture_adapter)]` attribute
-2. `CaptureAdapter::install()` not called
-3. Wrong test feature flag
-
-**Solution**:
-```rust
-use serial_test::serial;
-
-#[test]
-#[serial(capture_adapter)]  // ← Required!
-fn test_narration() {
-    let adapter = CaptureAdapter::install();  // ← Required!
-    // ... test code
-}
-```
-
-**Run with**: `cargo test --features test-support`
-
----
-
-### Correlation ID Not Propagating
-
-**Problem**: Downstream services don't see correlation ID.
-
-**Causes**:
-1. Not extracted from request headers
-2. Not injected into outgoing headers
-3. Validation failed (invalid format)
-
-**Solution**:
-```rust
-use observability_narration_core::http::{extract_context_from_headers, inject_context_into_headers};
-
-// Extract from incoming request
-let (correlation_id, _, _, _) = extract_context_from_headers(&req.headers());
-let correlation_id = correlation_id.unwrap_or_else(|| generate_correlation_id());
-
-// Inject into outgoing request
-inject_context_into_headers(
-    &mut outgoing_headers,
-    Some(&correlation_id),
-    None, None, None
-);
-```
-
----
-
-### Secrets Appearing in Logs
-
-**Problem**: Sensitive data not redacted.
-
-**Causes**:
-1. Secret in `human` text (should be auto-redacted)
-2. Secret in custom field (not auto-redacted)
-
-**Solution**:
-```rust
-// ✅ Redacted in human text
-Narration::new(ACTOR_WORKER_ORCD, "auth", "api")
-    .human(format!("Auth with token {token}"))  // ← Redacted
-    .emit();
-
-// ❌ NOT redacted (custom field)
-// Don't put secrets in non-standard fields
-```
-
----
-
-### Middleware Not Working
-
-**Problem**: Correlation ID middleware not extracting ID.
-
-**Causes**:
-1. Middleware not added to router
-2. Wrong header name (case-sensitive)
-3. Missing `axum` feature
-
-**Solution**:
-```rust
-// Enable axum feature in Cargo.toml
-// [dependencies]
-// observability-narration-core = { path = "...", features = ["axum"] }
-
-use observability_narration_core::axum::correlation_middleware;
-
-let app = Router::new()
-    .route("/execute", post(handler))
-    .layer(middleware::from_fn(correlation_middleware));  // ← Add middleware
-```
-
----
-
-## Status
-
-- **Version**: 0.2.0
-- **License**: GPL-3.0-or-later
-- **Stability**: ✅ Production Ready
-- **Test Coverage**: 100% functional tests passing (75/75 tests)
-- **Specification**: Complete (42 normative requirements)
-- **Maintainers**: @llama-orch-maintainers
-
----
-
-## Roadmap
-
-### v0.2.0 (Current)
-- [x] Builder pattern for ergonomic API ✅
-- [x] Axum middleware integration ✅
-- [x] Code quality improvements (macro deduplication) ✅
-- [x] Comprehensive documentation (policy guide, field reference, troubleshooting) ✅
-- [ ] Add more property tests for edge cases
-- [ ] Performance benchmarking in CI
-
-### v0.3.0 (Future)
-- [ ] Contract tests for JSON schema
-- [ ] Smoke tests with real services
-- [ ] Coverage enforcement
-- [ ] Service migration guides
-
----
-
-## Contributing
-
-See [`CONTRIBUTING.md`](../../CONTRIBUTING.md) for guidelines.
-
-### Running Tests
-
-```bash
-# Full test suite
-cargo test -p observability-narration-core --features test-support
-
-# With coverage
-cargo tarpaulin -p observability-narration-core --features test-support
-
-# Benchmarks
-cargo bench -p observability-narration-core
-```
-
-### Code Quality
-
-```bash
-# Format
-cargo fmt -p observability-narration-core
-
-# Lint
-cargo clippy -p observability-narration-core -- -D warnings
-
-# Audit
-cargo audit
-```
-
----
-
-**Built with diligence, tested with rigor, delivered with confidence.** ✅
+**Made with 💝 by the rbee team**

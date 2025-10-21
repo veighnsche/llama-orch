@@ -14,7 +14,7 @@ use axum::{
 use futures::stream::{Stream, StreamExt};
 use job_registry::JobRegistry;
 use observability_narration_core::sse_sink;
-use queen_rbee_hive_catalog::HiveCatalog;
+use rbee_config::RbeeConfig;
 use std::{convert::Infallible, sync::Arc};
 
 /// State for HTTP job endpoints
@@ -22,8 +22,8 @@ use std::{convert::Infallible, sync::Arc};
 pub struct SchedulerState {
     /// Registry for managing job lifecycle and payloads
     pub registry: Arc<JobRegistry<String>>,
-    /// Catalog of registered hives for job routing
-    pub hive_catalog: Arc<HiveCatalog>,
+    /// TEAM-194: File-based config (replaces hive_catalog)
+    pub config: Arc<RbeeConfig>,
     /// TEAM-190: Runtime registry for live hive/worker state
     pub hive_registry: Arc<queen_rbee_hive_registry::HiveRegistry>,
 }
@@ -33,7 +33,7 @@ impl From<SchedulerState> for crate::job_router::JobState {
     fn from(state: SchedulerState) -> Self {
         Self {
             registry: state.registry,
-            hive_catalog: state.hive_catalog,
+            config: state.config, // TEAM-194
             hive_registry: state.hive_registry, // TEAM-190
         }
     }

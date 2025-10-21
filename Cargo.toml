@@ -104,7 +104,7 @@ members = [
     # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
     # TEAM-040: System-level BDD tests
     
-    "test-harness/bdd",      # BDD test harness (binary: bdd-runner)
+    "test-harness/bdd", "bin/15_queen_rbee_crates/rbee-config",      # BDD test harness (binary: bdd-runner)
     
 ]
 
