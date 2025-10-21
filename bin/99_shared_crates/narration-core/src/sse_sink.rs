@@ -35,8 +35,17 @@ pub struct SseBroadcaster {
 }
 
 /// Narration event formatted for SSE transport.
+/// 
+/// TEAM-201: Added `formatted` field for centralized formatting.
+/// Consumers should use `formatted` instead of manually formatting actor/action/human.
 #[derive(Debug, Clone, serde::Serialize)]
 pub struct NarrationEvent {
+    /// Pre-formatted text matching stderr output
+    /// Format: "[actor     ] action         : message"
+    /// TEAM-201: This is the SINGLE source of truth for SSE display
+    pub formatted: String,
+    
+    // Keep existing fields for backward compatibility and programmatic access
     pub actor: String,
     pub action: String,
     pub target: String,
@@ -67,13 +76,22 @@ impl From<NarrationFields> for NarrationEvent {
         let story = fields.story.as_ref()
             .map(|s| redact_secrets(s, RedactionPolicy::default()));
         
+        // TEAM-201: Pre-format text (same format as stderr output)
+        // Format: "[actor     ] action         : message"
+        // - Actor: 10 chars (left-aligned, padded)
+        // - Action: 15 chars (left-aligned, padded)
+        // This matches lib.rs line 449 exactly
+        // CRITICAL: Use redacted human, not raw fields.human!
+        let formatted = format!("[{:<10}] {:<15}: {}", fields.actor, fields.action, human);
+        
         Self {
+            formatted,  // ✅ TEAM-201: NEW FIELD
             actor: fields.actor.to_string(),
             action: fields.action.to_string(),
             target,   // ✅ Redacted
-            human,    // ✅ Redacted
-            cute,     // ✅ Redacted (if present)
-            story,    // ✅ Redacted (if present)
+            human: human.to_string(),    // ✅ Redacted
+            cute: cute.map(|c| c.to_string()),     // ✅ Redacted (if present)
+            story: story.map(|s| s.to_string()),    // ✅ Redacted (if present)
             correlation_id: fields.correlation_id,
             job_id: fields.job_id,
             emitted_by: fields.emitted_by,
@@ -374,6 +392,105 @@ mod team_199_security_tests {
         
         // Note: We can't easily test narrate_at_level output without capturing stderr
         // But we verify SSE uses the same redact_secrets() function
+    }
+}
+
+// TEAM-201: Formatting tests for centralized formatted field
+#[cfg(test)]
+mod team_201_formatting_tests {
+    use super::*;
+    use crate::NarrationFields;
+
+    #[test]
+    fn test_formatted_field_matches_stderr_format() {
+        let fields = NarrationFields {
+            actor: "test-actor",
+            action: "test-action",
+            target: "test-target".to_string(),
+            human: "Test message".to_string(),
+            ..Default::default()
+        };
+
+        let event = NarrationEvent::from(fields);
+
+        // Formatted field should match: "[actor     ] action         : message"
+        assert_eq!(event.formatted, "[test-actor] test-action    : Test message");
+        
+        // Verify padding
+        assert!(event.formatted.starts_with("[test-actor]"));
+        assert!(event.formatted.contains("test-action    :"));
+    }
+
+    #[test]
+    fn test_formatted_with_short_actor() {
+        let fields = NarrationFields {
+            actor: "abc",
+            action: "xyz",
+            target: "test".to_string(),
+            human: "Short".to_string(),
+            ..Default::default()
+        };
+
+        let event = NarrationEvent::from(fields);
+
+        // Should pad to 10 chars for actor, 15 for action
+        assert_eq!(event.formatted, "[abc       ] xyz            : Short");
+    }
+
+    #[test]
+    fn test_formatted_with_long_actor() {
+        let fields = NarrationFields {
+            actor: "very-long-actor-name",
+            action: "very-long-action-name",
+            target: "test".to_string(),
+            human: "Long".to_string(),
+            ..Default::default()
+        };
+
+        let event = NarrationEvent::from(fields);
+
+        // Should truncate/handle long names (Rust format! will extend if needed)
+        assert!(event.formatted.contains("very-long-actor-name"));
+        assert!(event.formatted.contains("very-long-action-name"));
+        assert!(event.formatted.contains("Long"));
+    }
+
+    #[test]
+    fn test_formatted_uses_redacted_human() {
+        let fields = NarrationFields {
+            actor: "test",
+            action: "test",
+            target: "test".to_string(),
+            human: "API key: sk-test123".to_string(),
+            ..Default::default()
+        };
+
+        let event = NarrationEvent::from(fields);
+
+        // Formatted should use redacted human
+        assert!(event.formatted.contains("[REDACTED]"));
+        assert!(!event.formatted.contains("sk-test123"));
+    }
+
+    #[test]
+    fn test_backward_compat_raw_fields_still_available() {
+        let fields = NarrationFields {
+            actor: "test",
+            action: "action",
+            target: "target".to_string(),
+            human: "Message".to_string(),
+            ..Default::default()
+        };
+
+        let event = NarrationEvent::from(fields);
+
+        // Old fields still work (backward compatibility)
+        assert_eq!(event.actor, "test");
+        assert_eq!(event.action, "action");
+        assert_eq!(event.human, "Message");
+        
+        // But formatted is also available (new way)
+        assert!(!event.formatted.is_empty());
     }
 }
 

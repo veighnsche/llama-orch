@@ -106,10 +106,8 @@ pub async fn handle_stream_job(
                         Ok(event) => {
                             received_first_event = true;
                             last_event_time = std::time::Instant::now();
-                            // TEAM-197: Format narration with fixed-width columns for consistency
-                            // Format: "[actor     ] action         : message"
-                            let formatted = format!("[{:<10}] {:<15}: {}", event.actor, event.action, event.human);
-                            yield Ok(Event::default().data(formatted));
+                            // TEAM-201: Use pre-formatted text from narration-core (no manual formatting!)
+                            yield Ok(Event::default().data(&event.formatted));
                         }
                         Err(_) => {
                             // Broadcaster closed (shouldn't happen)
