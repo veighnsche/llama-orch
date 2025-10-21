@@ -5,9 +5,7 @@
 //! TEAM-186: Removed HiveStatus enum and runtime fields (status, last_heartbeat_ms)
 
 use crate::device_types::DeviceCapabilities;
-use anyhow::Result;
 use serde::{Deserialize, Serialize};
-use std::str::FromStr;
 
 /// Hive record stored in catalog
 ///

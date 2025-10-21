@@ -42,8 +42,8 @@
 
 use anyhow::{anyhow, Context, Result};
 use observability_narration_core::Narration;
-use queen_rbee_hive_catalog::{HiveCatalog, HiveRecord};
-use queen_rbee_ssh_client::{test_ssh_connection, SshConfig, SshTestResult};
+use queen_rbee_hive_catalog::HiveCatalog;
+use queen_rbee_ssh_client::{test_ssh_connection, SshConfig};
 use std::process::{Command, Stdio};
 use std::sync::Arc;
 
