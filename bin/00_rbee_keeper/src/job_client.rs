@@ -13,13 +13,13 @@
 
 use anyhow::Result;
 use futures::StreamExt;
-use observability_narration_core::Narration;
+use observability_narration_core::NarrationFactory;
 use rbee_operations::Operation;
 
-use crate::narration::{
-    ACTION_JOB_COMPLETE, ACTION_JOB_STREAM, ACTION_JOB_SUBMIT, ACTOR_RBEE_KEEPER,
-};
 use crate::queen_lifecycle::ensure_queen_running;
+
+// TEAM-192: Local narration factory for job_client.rs
+const NARRATE: NarrationFactory = NarrationFactory::new("keeper");
 
 /// Submit a job to queen-rbee and stream its narration output.
 ///
@@ -55,9 +55,11 @@ pub async fn submit_and_stream_job(
     let operation_name = operation.name();
     let hive_id = operation.hive_id();
 
-    let mut narration = Narration::new(ACTOR_RBEE_KEEPER, ACTION_JOB_SUBMIT, job_id)
+    let mut narration = NARRATE
+        .action("job_submit")
+        .context(job_id)
         .operation(operation_name)
-        .human(format!("📋 Job {} submitted", job_id));
+        .human("📋 Job {} submitted");
 
     if let Some(hid) = hive_id {
         narration = narration.hive_id(hid);
@@ -74,7 +76,9 @@ pub async fn submit_and_stream_job(
         anyhow::bail!("Failed to connect to SSE stream: {}", error);
     }
 
-    let mut narration = Narration::new(ACTOR_RBEE_KEEPER, ACTION_JOB_STREAM, job_id)
+    let mut narration = NARRATE
+        .action("job_stream")
+        .context(job_id)
         .operation(operation_name)
         .human("📡 Streaming results...");
 
@@ -106,11 +110,15 @@ pub async fn submit_and_stream_job(
                 if data.contains("[DONE]") {
                     // TEAM-189: Show ❌ Failed for failures, ✅ Complete for successes
                     let mut narration = if job_failed {
-                        Narration::new(ACTOR_RBEE_KEEPER, ACTION_JOB_COMPLETE, job_id)
+                        NARRATE
+                            .action("job_complete")
+                            .context(job_id)
                             .operation(operation_name)
                             .human("❌ Failed")
                     } else {
-                        Narration::new(ACTOR_RBEE_KEEPER, ACTION_JOB_COMPLETE, job_id)
+                        NARRATE
+                            .action("job_complete")
+                            .context(job_id)
                             .operation(operation_name)
                             .human("✅ Complete")
                     };

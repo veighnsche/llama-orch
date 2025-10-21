@@ -441,9 +441,12 @@ pub fn narrate_at_level(fields: NarrationFields, level: NarrationLevel) {
 
     // TEAM-153: Always output to stderr for guaranteed shell visibility
     // This works whether or not tracing subscriber is initialized
-    // TEAM-191: Actor-first inline format with column alignment for readability
-    // Actor is left-aligned in 20-char field for consistent message column
-    eprintln!("[{:<20}] {}", fields.actor, human);
+    // TEAM-192: Fixed-width format with 30-char prefix for consistent message column
+    // Format: "[actor     ] action         : message"
+    // - Actor: 10 chars (left-aligned, padded with spaces)
+    // - Action: 15 chars (left-aligned, padded with spaces)
+    // - Total prefix: 30 chars (including brackets, spaces, and colon)
+    eprintln!("[{:<10}] {:<15}: {}", fields.actor, fields.action, human);
 
     // TEAM-164: Send to SSE subscribers if enabled (for distributed narration)
     if sse_sink::is_enabled() {

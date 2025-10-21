@@ -21,13 +21,14 @@ use anyhow::Result;
 use axum::routing::{get, post};
 use clap::Parser;
 use job_registry::JobRegistry;
-use observability_narration_core::Narration;
+use observability_narration_core::NarrationFactory;
 use queen_rbee_hive_catalog::HiveCatalog;
 use std::net::SocketAddr;
 use std::path::PathBuf;
 use std::sync::Arc;
 
-use crate::narration::*;
+// TEAM-192: Local narration factory for main.rs
+const NARRATE: NarrationFactory = NarrationFactory::new("queen");
 // TEAM-188: operations module doesn't exist yet
 // use crate::operations::*;
 
@@ -56,8 +57,9 @@ async fn main() -> Result<()> {
     // TEAM-164: Initialize SSE sink for distributed narration
     observability_narration_core::sse_sink::init(1000);
 
-    Narration::new(ACTOR_QUEEN_RBEE, ACTION_START, &args.port.to_string())
-        .human(format!("Queen-rbee starting on port {}", args.port))
+    NARRATE.action("start")
+        .context(args.port.to_string())
+        .human("Queen-rbee starting on port {}")
         .emit();
 
     // TEAM-156: Initialize hive catalog
@@ -70,8 +72,9 @@ async fn main() -> Result<()> {
             .map_err(|e| anyhow::anyhow!("Failed to initialize hive catalog: {}", e))?,
     );
 
-    Narration::new(ACTOR_QUEEN_RBEE, ACTION_START, &catalog_path.display().to_string())
-        .human(format!("Initialized hive catalog at {}", catalog_path.display()))
+    NARRATE.action("start")
+        .context(catalog_path.display().to_string())
+        .human("Initialized hive catalog at {}")
         .emit();
 
     // TEAM-155: Initialize job registry for dual-call pattern
@@ -89,18 +92,20 @@ async fn main() -> Result<()> {
     let app = create_router(job_registry, hive_catalog, hive_registry);
     let addr = SocketAddr::from(([127, 0, 0, 1], args.port));
 
-    Narration::new(ACTOR_QUEEN_RBEE, ACTION_LISTEN, &addr.to_string())
-        .human(format!("Listening on http://{}", addr))
+    NARRATE.action("listen")
+        .context(addr.to_string())
+        .human("Listening on http://{}")
         .emit();
 
-    Narration::new(ACTOR_QUEEN_RBEE, ACTION_READY, "http-server")
+    NARRATE.action("ready")
         .human("Ready to accept connections")
         .emit();
 
     let listener = tokio::net::TcpListener::bind(addr).await?;
     axum::serve(listener, app).await.map_err(|e| {
-        Narration::new(ACTOR_QUEEN_RBEE, ACTION_ERROR, "http-server")
-            .human(format!("Server error: {}", e))
+        NARRATE.action("error")
+            .context(e.to_string())
+            .human("Server error: {}")
             .error_kind("server_failed")
             .emit();
         anyhow::anyhow!("Server failed: {}", e)
@@ -148,7 +153,7 @@ fn create_router(
 /// TEAM-164: Migrated from http.rs to main.rs
 use axum::http::StatusCode;
 async fn handle_shutdown() -> StatusCode {
-    Narration::new(ACTOR_QUEEN_RBEE, ACTION_SHUTDOWN, "http-server")
+    NARRATE.action("shutdown")
         .human("Received shutdown request, exiting gracefully")
         .emit();
     std::process::exit(0);

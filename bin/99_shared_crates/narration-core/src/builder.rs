@@ -38,13 +38,13 @@ use serde_json::Value;
 /// Narration::new("queen-rbee", "start", "queen-rbee")
 ///     .context("http://localhost:8080")
 ///     .context("8080")
-///     .human("✅ Queen started on {0}, port {1}")  // {0} = first context, {1} = second
+///     .human("✅ Queen started on {0}, port {1}")  // {0} or {} = first context, {1} = second
 ///     .emit();
 /// ```
 pub struct Narration {
     fields: NarrationFields,
     /// TEAM-191: Store context values for format string interpolation
-    /// Index 0 = target, Index 1+ = additional context via .context()
+    /// Use .context() to add values, reference with {0}, {1}, etc. or just {}
     context_values: Vec<String>,
 }
 
@@ -100,11 +100,11 @@ impl Narration {
 
     /// Set the human-readable description.
     ///
-    /// Supports format string interpolation with `{0}`, `{1}`, `{2}`, etc.
+    /// Supports format string interpolation with `{}`, `{0}`, `{1}`, `{2}`, etc.
     ///
     /// # TEAM-191: Format String Interpolation
     /// Use `{N}` to reference context values by index!
-    /// - `{0}` = first context (from `.context()`)
+    /// - `{}` or `{0}` = first context (from `.context()`)
     /// - `{1}` = second context
     /// - `{2}` = third context, etc.
     ///
@@ -113,7 +113,7 @@ impl Narration {
     /// Narration::new("queen-rbee", "start", "queen-rbee")
     ///     .context("http://localhost:8080")
     ///     .context("8080")
-    ///     .human("✅ Queen started on {0}, port {1}")
+    ///     .human("✅ Queen started on {}, port {1}")  // {} = {0}
     ///     .emit();
     /// ```
     ///
@@ -123,6 +123,10 @@ impl Narration {
         // TEAM-191: Replace {N} with context values
         for (i, value) in self.context_values.iter().enumerate() {
             msg = msg.replace(&format!("{{{}}}", i), value);
+        }
+        // TEAM-191: Replace {} with first context value (if exists)
+        if let Some(first) = self.context_values.first() {
+            msg = msg.replace("{}", first);
         }
         self.fields.human = msg;
         self
@@ -187,10 +191,11 @@ impl Narration {
 
     /// Set the cute narration message (requires `cute-mode` feature).
     ///
-    /// Supports format string interpolation with `{0}`, `{1}`, `{2}`, etc.
+    /// Supports format string interpolation with `{}`, `{0}`, `{1}`, `{2}`, etc.
     ///
     /// # TEAM-191: Format String Interpolation
     /// Use `{N}` to reference context values by index!
+    /// `{}` or `{0}` = first context
     #[cfg(feature = "cute-mode")]
     pub fn cute(mut self, msg: impl Into<String>) -> Self {
         let mut msg = msg.into();
@@ -198,21 +203,30 @@ impl Narration {
         for (i, value) in self.context_values.iter().enumerate() {
             msg = msg.replace(&format!("{{{}}}", i), value);
         }
+        // TEAM-191: Replace {} with first context value (if exists)
+        if let Some(first) = self.context_values.first() {
+            msg = msg.replace("{}", first);
+        }
         self.fields.cute = Some(msg);
         self
     }
 
     /// Set the story narration message.
     ///
-    /// Supports format string interpolation with `{0}`, `{1}`, `{2}`, etc.
+    /// Supports format string interpolation with `{}`, `{0}`, `{1}`, `{2}`, etc.
     ///
     /// # TEAM-191: Format String Interpolation
     /// Use `{N}` to reference context values by index!
+    /// `{}` or `{0}` = first context
     pub fn story(mut self, msg: impl Into<String>) -> Self {
         let mut msg = msg.into();
         // TEAM-191: Replace {N} with context values
         for (i, value) in self.context_values.iter().enumerate() {
             msg = msg.replace(&format!("{{{}}}", i), value);
+        }
+        // TEAM-191: Replace {} with first context value (if exists)
+        if let Some(first) = self.context_values.first() {
+            msg = msg.replace("{}", first);
         }
         self.fields.story = Some(msg);
         self
@@ -593,21 +607,64 @@ impl NarrationFactory {
     ///
     /// This is a `const fn`, so it can be used in `const` contexts.
     ///
+    /// # Compile-Time Validation
+    /// - Actor string must be ≤ 20 characters (enforced at compile time)
+    ///
     /// # Example
     /// ```rust
     /// use observability_narration_core::{NarrationFactory, ACTOR_QUEEN_ROUTER};
     ///
     /// const NARRATE: NarrationFactory = NarrationFactory::new(ACTOR_QUEEN_ROUTER);
     /// ```
+    ///
+    /// # Panics
+    /// Panics at compile time if actor string is longer than 20 characters.
     pub const fn new(actor: &'static str) -> Self {
+        // TEAM-192: Compile-time check for actor length
+        // Actor must be ≤ 10 characters for fixed-width output format
+        const MAX_ACTOR_LENGTH: usize = 10;
+
+        // Count Unicode characters (not bytes)
+        // This is a const fn compatible way to count chars
+        let bytes = actor.as_bytes();
+        let mut char_count = 0;
+        let mut i = 0;
+
+        while i < bytes.len() {
+            // Count UTF-8 characters by checking the first byte
+            let byte = bytes[i];
+            if byte < 0x80 {
+                // ASCII (1 byte)
+                i += 1;
+            } else if byte < 0xE0 {
+                // 2-byte character
+                i += 2;
+            } else if byte < 0xF0 {
+                // 3-byte character
+                i += 3;
+            } else {
+                // 4-byte character
+                i += 4;
+            }
+            char_count += 1;
+        }
+
+        // This assertion happens at compile time in const context
+        assert!(
+            char_count <= MAX_ACTOR_LENGTH,
+            "Actor string is too long! Maximum 10 characters allowed."
+        );
+
         Self { actor }
     }
 
     /// Create a new narration with the factory's default actor.
     ///
     /// # Arguments
-    /// - `action`: Action performed (use constants like `ACTION_STATUS`)
-    /// - `target`: Target of the action (e.g., job ID, registry name)
+    /// - `action`: Action performed (max 15 characters)
+    ///
+    /// # TEAM-192: Compile-time validation!
+    /// - Action must be ≤ 15 characters for fixed-width output format
     ///
     /// # Example
     /// ```rust
@@ -615,12 +672,29 @@ impl NarrationFactory {
     ///
     /// const NARRATE: NarrationFactory = NarrationFactory::new(ACTOR_QUEEN_ROUTER);
     ///
-    /// NARRATE.narrate(ACTION_STATUS, "registry")
-    ///     .human("Status check complete")
+    /// NARRATE.action("status")
+    ///     .context("http://localhost:8080")
+    ///     .human("Status check on {}")
     ///     .emit();
     /// ```
-    pub fn narrate(&self, action: &'static str, target: impl Into<String>) -> Narration {
-        Narration::new(self.actor, action, target)
+    ///
+    /// # Panics
+    /// Panics at runtime if action string is longer than 15 characters.
+    pub fn action(&self, action: &'static str) -> Narration {
+        // TEAM-192: Runtime check for action length
+        const MAX_ACTION_LENGTH: usize = 15;
+
+        // Count Unicode characters (not bytes)
+        let char_count = action.chars().count();
+
+        assert!(
+            char_count <= MAX_ACTION_LENGTH,
+            "Action string is too long! Maximum 15 characters allowed. Got '{}' ({} chars)",
+            action,
+            char_count
+        );
+
+        Narration::new(self.actor, action, action)
     }
 
     /// Get the factory's default actor.
@@ -632,7 +706,7 @@ impl NarrationFactory {
 #[cfg(test)]
 mod factory_tests {
     use super::*;
-    use crate::{CaptureAdapter, ACTOR_QUEEN_ROUTER, ACTION_STATUS};
+    use crate::{CaptureAdapter, ACTION_STATUS, ACTOR_QUEEN_ROUTER};
     use serial_test::serial;
 
     #[test]
@@ -642,14 +716,13 @@ mod factory_tests {
 
         const NARRATE: NarrationFactory = NarrationFactory::new(ACTOR_QUEEN_ROUTER);
 
-        NARRATE.narrate(ACTION_STATUS, "registry").human("Test message").emit();
+        NARRATE.action(ACTION_STATUS).context("registry").human("Test message: {}").emit();
 
         let captured = adapter.captured();
         assert_eq!(captured.len(), 1);
         assert_eq!(captured[0].actor, ACTOR_QUEEN_ROUTER);
         assert_eq!(captured[0].action, ACTION_STATUS);
-        assert_eq!(captured[0].target, "registry");
-        assert_eq!(captured[0].human, "Test message");
+        assert_eq!(captured[0].human, "Test message: registry");
     }
 
     #[test]
@@ -660,8 +733,9 @@ mod factory_tests {
         const NARRATE: NarrationFactory = NarrationFactory::new(ACTOR_QUEEN_ROUTER);
 
         NARRATE
-            .narrate(ACTION_STATUS, "registry")
-            .human("Status check")
+            .action(ACTION_STATUS)
+            .context("registry")
+            .human("Test: {}")
             .correlation_id("req-123")
             .duration_ms(100)
             .emit();
@@ -669,6 +743,7 @@ mod factory_tests {
         let captured = adapter.captured();
         assert_eq!(captured.len(), 1);
         assert_eq!(captured[0].actor, ACTOR_QUEEN_ROUTER);
+        assert_eq!(captured[0].human, "Test: registry");
         assert_eq!(captured[0].correlation_id, Some("req-123".to_string()));
         assert_eq!(captured[0].duration_ms, Some(100));
     }
@@ -746,5 +821,21 @@ mod factory_tests {
         let captured = adapter.captured();
         assert_eq!(captured.len(), 1);
         assert_eq!(captured[0].human, "Values: value1, value2, value3");
+    }
+
+    #[test]
+    #[serial(capture_adapter)]
+    fn test_context_with_empty_braces() {
+        let adapter = CaptureAdapter::install();
+
+        Narration::new("queen-rbee", "start", "queen-rbee")
+            .context("http://localhost:8080")
+            .context("8080")
+            .human("✅ Queen started on {}, port {1}") // {} = {0}
+            .emit();
+
+        let captured = adapter.captured();
+        assert_eq!(captured.len(), 1);
+        assert_eq!(captured[0].human, "✅ Queen started on http://localhost:8080, port 8080");
     }
 }

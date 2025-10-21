@@ -35,17 +35,28 @@
 
 mod config;
 mod job_client;
-mod narration;
 mod queen_lifecycle;
 
 use anyhow::Result;
 use clap::{Parser, Subcommand};
 use config::Config;
 use job_client::submit_and_stream_job;
-use narration::*;
-use observability_narration_core::Narration;
+use observability_narration_core::NarrationFactory;
 use queen_lifecycle::ensure_queen_running;
 use rbee_operations::Operation;
+
+/// Narration factory for rbee-keeper main operations.
+///
+/// # Usage
+/// ```rust,ignore
+/// use crate::narration::NARRATE;
+///
+/// NARRATE.narrate("queen_start")
+///     .context(queen_url)
+///     .human("🚀 Starting queen on {}")
+///     .emit();
+/// ```
+const NARRATE: NarrationFactory = NarrationFactory::new("keeper");
 
 #[derive(Parser)]
 #[command(name = "rbee")]
@@ -286,8 +297,10 @@ async fn handle_command(cli: Cli) -> Result<()> {
         Commands::Queen { action } => match action {
             QueenAction::Start => {
                 let queen_handle = ensure_queen_running(&queen_url).await?;
-                Narration::new(ACTOR_RBEE_KEEPER, ACTION_QUEEN_START, queen_handle.base_url())
-                    .human(format!("✅ Queen started on {}", queen_handle.base_url()))
+                NARRATE
+                    .action("queen_start")
+                    .context(queen_handle.base_url())
+                    .human("✅ Queen started on {}")
                     .emit();
                 std::mem::forget(queen_handle);
                 Ok(())
@@ -295,16 +308,14 @@ async fn handle_command(cli: Cli) -> Result<()> {
             QueenAction::Stop => {
                 // First check if queen is running
                 let health_check = client.get(format!("{}/health", queen_url)).send().await;
-                
+
                 let is_running = match health_check {
                     Ok(response) if response.status().is_success() => true,
                     _ => false,
                 };
 
                 if !is_running {
-                    Narration::new(ACTOR_RBEE_KEEPER, ACTION_QUEEN_STOP, "not_running")
-                        .human("⚠️  Queen not running")
-                        .emit();
+                    NARRATE.action("queen_stop").human("⚠️  Queen not running").emit();
                     return Ok(());
                 }
 
@@ -312,25 +323,23 @@ async fn handle_command(cli: Cli) -> Result<()> {
                 let shutdown_client = reqwest::Client::builder()
                     .timeout(tokio::time::Duration::from_secs(30))
                     .build()?;
-                    
+
                 match shutdown_client.post(format!("{}/v1/shutdown", queen_url)).send().await {
                     Ok(_) => {
-                        Narration::new(ACTOR_RBEE_KEEPER, ACTION_QUEEN_STOP, "stopped")
-                            .human("✅ Queen stopped")
-                            .emit();
+                        NARRATE.action("queen_stop").human("✅ Queen stopped").emit();
                         Ok(())
                     }
                     Err(e) => {
                         // Connection closed/reset is expected - queen shuts down before responding
                         if e.is_connect() || e.to_string().contains("connection closed") {
-                            Narration::new(ACTOR_RBEE_KEEPER, ACTION_QUEEN_STOP, "stopped")
-                                .human("✅ Queen stopped")
-                                .emit();
+                            NARRATE.action("queen_stop").human("✅ Queen stopped").emit();
                             Ok(())
                         } else {
                             // Unexpected error
-                            Narration::new(ACTOR_RBEE_KEEPER, ACTION_QUEEN_STOP, "error")
-                                .human(format!("⚠️  Failed to stop queen: {}", e))
+                            NARRATE
+                                .action("queen_stop")
+                                .context(e.to_string())
+                                .human("⚠️  Failed to stop queen: {}")
                                 .error_kind("shutdown_failed")
                                 .emit();
                             Err(e.into())
@@ -346,8 +355,10 @@ async fn handle_command(cli: Cli) -> Result<()> {
 
                 match client.get(format!("{}/health", queen_url)).send().await {
                     Ok(response) if response.status().is_success() => {
-                        Narration::new(ACTOR_RBEE_KEEPER, ACTION_QUEEN_STATUS, "running")
-                            .human(format!("✅ Queen is running on {}", queen_url))
+                        NARRATE
+                            .action("queen_status")
+                            .context(&queen_url)
+                            .human("✅ Queen is running on {}")
                             .emit();
 
                         // Try to get more details from the response
@@ -357,17 +368,18 @@ async fn handle_command(cli: Cli) -> Result<()> {
                         Ok(())
                     }
                     Ok(response) => {
-                        Narration::new(ACTOR_RBEE_KEEPER, ACTION_QUEEN_STATUS, "unhealthy")
-                            .human(format!(
-                                "⚠️  Queen responded with status: {}",
-                                response.status()
-                            ))
+                        NARRATE
+                            .action("queen_status")
+                            .context(response.status().to_string())
+                            .human("⚠️  Queen responded with status: {}")
                             .emit();
                         Ok(())
                     }
                     Err(_) => {
-                        Narration::new(ACTOR_RBEE_KEEPER, ACTION_QUEEN_STATUS, "not_running")
-                            .human(format!("❌ Queen is not running on {}", queen_url))
+                        NARRATE
+                            .action("queen_status")
+                            .context(&queen_url)
+                            .human("❌ Queen is not running on {}")
                             .emit();
                         Ok(())
                     }

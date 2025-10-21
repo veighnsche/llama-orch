@@ -10,21 +10,13 @@
 
 use anyhow::{Context, Result};
 use daemon_lifecycle::DaemonManager;
-use observability_narration_core::Narration;
+use observability_narration_core::NarrationFactory;
 use std::time::Duration;
 use timeout_enforcer::TimeoutEnforcer;
 use tokio::time::sleep;
 
-use crate::narration::{ACTION_QUEEN_START, ACTION_QUEEN_STOP};
-
-// Actor constant
-// TEAM-155: Actor shows parent binary / subcrate for accurate provenance
-const ACTOR_QUEEN_LIFECYCLE: &str = "🧑‍🌾 rbee-keeper / ⚙️ queen-lifecycle";
-
-// Internal lifecycle actions (not exposed in operations.rs)
-const ACTION_QUEEN_CHECK: &str = "queen_check";
-const ACTION_QUEEN_POLL: &str = "queen_poll";
-const ACTION_QUEEN_READY: &str = "queen_ready";
+// TEAM-192: Local narration factory for queen lifecycle
+const NARRATE: NarrationFactory = NarrationFactory::new("kpr-life");
 
 /// Handle to the queen-rbee process
 ///
@@ -71,7 +63,8 @@ impl QueenHandle {
     /// # Returns
     /// * `Ok(())` - Always succeeds (queen stays alive)
     pub async fn shutdown(self) -> Result<()> {
-        Narration::new(ACTOR_QUEEN_LIFECYCLE, ACTION_QUEEN_STOP, &self.base_url)
+        NARRATE
+            .action("queen_stop")
             .human("Task complete, keeping queen alive for future tasks")
             .emit();
         Ok(())
@@ -110,23 +103,21 @@ async fn ensure_queen_running_inner(base_url: &str) -> Result<QueenHandle> {
 
     // Step 1: Check if queen is already running
     if is_queen_healthy(base_url).await? {
-        Narration::new(ACTOR_QUEEN_LIFECYCLE, ACTION_QUEEN_CHECK, base_url)
-            .human("Queen is already running and healthy")
-            .emit();
+        NARRATE.action("queen_check").human("Queen is already running and healthy").emit();
         return Ok(QueenHandle::already_running(base_url.to_string()));
     }
 
     // Step 2: Queen is not running, start it
-    Narration::new(ACTOR_QUEEN_LIFECYCLE, ACTION_QUEEN_START, "queen-rbee")
-        .human("⚠️  Queen is asleep, waking queen")
-        .emit();
+    NARRATE.action("queen_start").human("⚠️  Queen is asleep, waking queen").emit();
 
     // Step 3: Find queen-rbee binary in target directory
     let queen_binary = DaemonManager::find_in_target("queen-rbee")
         .context("Failed to find queen-rbee binary in target directory")?;
 
-    Narration::new(ACTOR_QUEEN_LIFECYCLE, ACTION_QUEEN_START, queen_binary.display().to_string())
-        .human(format!("Found queen-rbee binary at {}", queen_binary.display()))
+    NARRATE
+        .action("queen_start")
+        .context(queen_binary.display().to_string())
+        .human("Found queen-rbee binary at {}")
         .emit();
 
     // Step 4: Spawn queen process
@@ -135,8 +126,8 @@ async fn ensure_queen_running_inner(base_url: &str) -> Result<QueenHandle> {
 
     let mut _child = manager.spawn().await.context("Failed to spawn queen-rbee process")?;
 
-    let pid_target = _child.id().map(|p| p.to_string()).unwrap_or_else(|| "unknown".to_string());
-    Narration::new(ACTOR_QUEEN_LIFECYCLE, ACTION_QUEEN_START, &pid_target)
+    NARRATE
+        .action("queen_start")
         .human("Queen-rbee process spawned, waiting for health check")
         .emit();
 
@@ -148,7 +139,8 @@ async fn ensure_queen_running_inner(base_url: &str) -> Result<QueenHandle> {
     // Step 6: Success!
     let elapsed_ms = start_time.elapsed().as_millis() as u64;
     let pid = _child.id();
-    Narration::new(ACTOR_QUEEN_LIFECYCLE, ACTION_QUEEN_READY, "queen-rbee")
+    NARRATE
+        .action("queen_ready")
         .human("✅ Queen is awake and healthy")
         .duration_ms(elapsed_ms)
         .emit();
@@ -211,11 +203,10 @@ async fn poll_until_healthy(base_url: &str, timeout: Duration) -> Result<()> {
 
         // Check if we've exceeded timeout
         if start.elapsed() >= timeout {
-            Narration::new(ACTOR_QUEEN_LIFECYCLE, ACTION_QUEEN_START, "timeout")
-                .human(format!(
-                    "Queen failed to become healthy within {} seconds",
-                    timeout.as_secs()
-                ))
+            NARRATE
+                .action("queen_start")
+                .context(timeout.as_secs().to_string())
+                .human("Queen failed to become healthy within {} seconds")
                 .error_kind("startup_timeout")
                 .emit();
             anyhow::bail!("Timeout waiting for queen to become healthy");
@@ -224,23 +215,26 @@ async fn poll_until_healthy(base_url: &str, timeout: Duration) -> Result<()> {
         // Try health check
         match is_queen_healthy(base_url).await {
             Ok(true) => {
-                Narration::new(ACTOR_QUEEN_LIFECYCLE, ACTION_QUEEN_POLL, "health")
-                    .human(format!("Queen health check succeeded after {:?}", start.elapsed()))
+                NARRATE
+                    .action("queen_poll")
+                    .context(format!("{:?}", start.elapsed()))
+                    .human("Queen health check succeeded after {}")
                     .emit();
                 return Ok(());
             }
             Ok(false) => {
-                Narration::new(ACTOR_QUEEN_LIFECYCLE, ACTION_QUEEN_POLL, "health")
-                    .human(format!(
-                        "Polling queen health (attempt {}, delay {}ms)",
-                        attempt,
-                        delay.as_millis()
-                    ))
+                NARRATE
+                    .action("queen_poll")
+                    .context(attempt.to_string())
+                    .context(delay.as_millis().to_string())
+                    .human("Polling queen health (attempt {}, delay {}ms)")
                     .emit();
             }
             Err(e) => {
-                Narration::new(ACTOR_QUEEN_LIFECYCLE, ACTION_QUEEN_POLL, "health")
-                    .human(format!("Queen health check failed: {}", e))
+                NARRATE
+                    .action("queen_poll")
+                    .context(e.to_string())
+                    .human("Queen health check failed: {}")
                     .error_kind("health_check_failed")
                     .emit();
             }
