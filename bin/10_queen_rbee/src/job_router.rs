@@ -63,9 +63,13 @@ pub async fn create_job(state: JobState, payload: serde_json::Value) -> Result<J
 
     state.registry.set_payload(&job_id, payload);
 
+    // TEAM-200: Create job-specific SSE channel for isolation
+    observability_narration_core::sse_sink::create_job_channel(job_id.clone(), 1000);
+
     NARRATE
         .action("job_create")
         .context(&job_id)
+        .job_id(&job_id)  // ← TEAM-200: Include job_id so narration routes correctly
         .human("Job {} created, waiting for client connection")
         .emit();
 

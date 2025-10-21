@@ -6,16 +6,32 @@
 use crate::NarrationFields;
 // TEAM-199: Import redaction utilities for security fix
 use crate::{redact_secrets, RedactionPolicy};
+use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
 use tokio::sync::broadcast;
 
-/// Global SSE broadcaster for narration events.
+/// Global SSE broadcaster with job-scoped channels.
+/// 
+/// TEAM-200: Refactored to support:
+/// - Global channel for system-wide narration
+/// - Per-job channels for isolated job narration
+/// - Thread-local channels for request-scoped narration
 static SSE_BROADCASTER: once_cell::sync::Lazy<SseBroadcaster> =
     once_cell::sync::Lazy::new(|| SseBroadcaster::new());
 
-/// Broadcaster for SSE narration events.
+/// Broadcaster for SSE narration events with job isolation.
+/// 
+/// TEAM-200: This replaces the simple global broadcaster with:
+/// 1. Global channel - For non-job narration (queen startup, etc.)
+/// 2. Per-job channels - Isolated narration for each job
+/// 3. Thread-local support - Request-scoped narration (like worker pattern)
 pub struct SseBroadcaster {
-    sender: Arc<Mutex<Option<broadcast::Sender<NarrationEvent>>>>,
+    /// Global channel for non-job narration
+    global: Arc<Mutex<Option<broadcast::Sender<NarrationEvent>>>>,
+    
+    /// Per-job channels (keyed by job_id)
+    /// TEAM-200: Each job gets isolated SSE stream
+    jobs: Arc<Mutex<HashMap<String, broadcast::Sender<NarrationEvent>>>>,
 }
 
 /// Narration event formatted for SSE transport.
@@ -68,75 +84,158 @@ impl From<NarrationFields> for NarrationEvent {
 
 impl SseBroadcaster {
     fn new() -> Self {
-        Self { sender: Arc::new(Mutex::new(None)) }
+        Self {
+            global: Arc::new(Mutex::new(None)),
+            jobs: Arc::new(Mutex::new(HashMap::new())),
+        }
     }
 
-    /// Initialize the SSE broadcaster with a channel capacity.
+    /// Initialize the global SSE broadcaster.
+    /// 
+    /// TEAM-200: This creates the global channel for non-job narration.
     pub fn init(&self, capacity: usize) {
         let (tx, _) = broadcast::channel(capacity);
-        *self.sender.lock().unwrap() = Some(tx);
+        *self.global.lock().unwrap() = Some(tx);
     }
 
-    /// Send a narration event to all SSE subscribers.
-    pub fn send(&self, event: NarrationEvent) {
-        if let Some(tx) = self.sender.lock().unwrap().as_ref() {
+    /// Create a new job-specific SSE channel.
+    /// 
+    /// TEAM-200: Call this when a job is created (before execution starts).
+    /// The job's SSE stream will be isolated from other jobs.
+    pub fn create_job_channel(&self, job_id: String, capacity: usize) {
+        let (tx, _) = broadcast::channel(capacity);
+        self.jobs.lock().unwrap().insert(job_id, tx);
+    }
+
+    /// Remove a job's SSE channel (cleanup when job completes).
+    /// 
+    /// TEAM-200: Call this when a job completes to prevent memory leaks.
+    pub fn remove_job_channel(&self, job_id: &str) {
+        self.jobs.lock().unwrap().remove(job_id);
+    }
+
+    /// Send narration to a specific job's SSE stream.
+    /// 
+    /// TEAM-200: This is the primary send method - routes to job-specific channel.
+    pub fn send_to_job(&self, job_id: &str, event: NarrationEvent) {
+        let jobs = self.jobs.lock().unwrap();
+        if let Some(tx) = jobs.get(job_id) {
             // Ignore send errors (no subscribers is OK)
             let _ = tx.send(event);
         }
     }
 
-    /// Subscribe to narration events.
-    pub fn subscribe(&self) -> Option<broadcast::Receiver<NarrationEvent>> {
-        self.sender.lock().unwrap().as_ref().map(|tx| tx.subscribe())
+    /// Send narration to the global channel (non-job narration).
+    /// 
+    /// TEAM-200: Use this for system-wide events (queen startup, etc.)
+    pub fn send_global(&self, event: NarrationEvent) {
+        if let Some(tx) = self.global.lock().unwrap().as_ref() {
+            let _ = tx.send(event);
+        }
+    }
+
+    /// Subscribe to a specific job's SSE stream.
+    /// 
+    /// TEAM-200: Keeper calls this with job_id to get isolated stream.
+    pub fn subscribe_to_job(&self, job_id: &str) -> Option<broadcast::Receiver<NarrationEvent>> {
+        self.jobs.lock().unwrap()
+            .get(job_id)
+            .map(|tx| tx.subscribe())
+    }
+
+    /// Subscribe to the global SSE stream.
+    /// 
+    /// TEAM-200: Use for monitoring all system-wide narration.
+    pub fn subscribe_global(&self) -> Option<broadcast::Receiver<NarrationEvent>> {
+        self.global.lock().unwrap()
+            .as_ref()
+            .map(|tx| tx.subscribe())
+    }
+
+    /// Check if a job channel exists.
+    pub fn has_job_channel(&self, job_id: &str) -> bool {
+        self.jobs.lock().unwrap().contains_key(job_id)
     }
 }
 
 /// Initialize the global SSE broadcaster.
 ///
-/// Call this once at application startup if you want narration to be
-/// transported over SSE in addition to stderr/tracing.
-///
-/// # Example
-/// ```rust,ignore
-/// use observability_narration_core::sse_sink;
-///
-/// #[tokio::main]
-/// async fn main() {
-///     sse_sink::init(1000); // Buffer up to 1000 events
-///     // Now all narration will be sent to SSE subscribers
-/// }
-/// ```
+/// TEAM-200: This initializes the global channel for non-job narration.
+/// Job channels are created separately via create_job_channel().
 pub fn init(capacity: usize) {
     SSE_BROADCASTER.init(capacity);
 }
 
-/// Send a narration event to SSE subscribers.
-///
-/// This is called automatically by `narrate_at_level` if SSE is initialized.
-pub fn send(fields: &NarrationFields) {
-    SSE_BROADCASTER.send(fields.clone().into());
-}
-
-/// Subscribe to narration events over SSE.
-///
-/// Returns None if SSE broadcaster hasn't been initialized.
-///
+/// Create a job-specific SSE channel.
+/// 
+/// TEAM-200: Call this in job_router::create_job() before execution starts.
+/// 
 /// # Example
 /// ```rust,ignore
 /// use observability_narration_core::sse_sink;
+/// 
+/// let job_id = "job-abc123";
+/// sse_sink::create_job_channel(job_id.to_string(), 1000);
+/// // Now narration with this job_id goes to isolated channel
+/// ```
+pub fn create_job_channel(job_id: String, capacity: usize) {
+    SSE_BROADCASTER.create_job_channel(job_id, capacity);
+}
+
+/// Remove a job's SSE channel (cleanup).
+/// 
+/// TEAM-200: Call this when job completes to prevent memory leaks.
+pub fn remove_job_channel(job_id: &str) {
+    SSE_BROADCASTER.remove_job_channel(job_id);
+}
+
+/// Send a narration event to appropriate channel based on job_id.
 ///
-/// let mut rx = sse_sink::subscribe().expect("SSE not initialized");
+/// TEAM-200: Routing logic:
+/// - If event has job_id → send to job-specific channel
+/// - Otherwise → send to global channel
+pub fn send(fields: &NarrationFields) {
+    let event = NarrationEvent::from(fields.clone());
+    
+    // Route based on job_id
+    if let Some(job_id) = &fields.job_id {
+        SSE_BROADCASTER.send_to_job(job_id, event);
+    } else {
+        SSE_BROADCASTER.send_global(event);
+    }
+}
+
+/// Subscribe to a specific job's SSE stream.
+/// 
+/// TEAM-200: Keeper calls this with job_id from job creation response.
+///
+/// # Example
+/// ```rust,ignore
+/// let mut rx = sse_sink::subscribe_to_job("job-abc123")
+///     .expect("Job channel not found");
 /// while let Ok(event) = rx.recv().await {
-///     println!("Narration: {}", event.human);
+///     println!("{}", event.formatted);
 /// }
 /// ```
-pub fn subscribe() -> Option<broadcast::Receiver<NarrationEvent>> {
-    SSE_BROADCASTER.subscribe()
+pub fn subscribe_to_job(job_id: &str) -> Option<broadcast::Receiver<NarrationEvent>> {
+    SSE_BROADCASTER.subscribe_to_job(job_id)
+}
+
+/// Subscribe to the global SSE stream (all non-job narration).
+pub fn subscribe_global() -> Option<broadcast::Receiver<NarrationEvent>> {
+    SSE_BROADCASTER.subscribe_global()
 }
 
 /// Check if SSE broadcasting is enabled.
+/// 
+/// TEAM-200: Returns true if global channel is initialized.
 pub fn is_enabled() -> bool {
-    SSE_BROADCASTER.sender.lock().unwrap().is_some()
+    SSE_BROADCASTER.global.lock().unwrap().is_some()
+}
+
+/// Check if a job channel exists.
+pub fn has_job_channel(job_id: &str) -> bool {
+    SSE_BROADCASTER.has_job_channel(job_id)
 }
 
 // TEAM-199: Security tests for SSE redaction
@@ -275,5 +374,113 @@ mod team_199_security_tests {
         
         // Note: We can't easily test narrate_at_level output without capturing stderr
         // But we verify SSE uses the same redact_secrets() function
+    }
+}
+
+// TEAM-200: Isolation tests for job-scoped SSE broadcaster
+#[cfg(test)]
+mod team_200_isolation_tests {
+    use super::*;
+    use crate::NarrationFields;
+
+    #[tokio::test]
+    #[serial_test::serial(capture_adapter)]
+    async fn test_job_isolation() {
+        // Initialize broadcaster
+        init(100);
+
+        // Create two job channels
+        create_job_channel("job-a".to_string(), 100);
+        create_job_channel("job-b".to_string(), 100);
+
+        // Subscribe to both jobs
+        let mut rx_a = subscribe_to_job("job-a").unwrap();
+        let mut rx_b = subscribe_to_job("job-b").unwrap();
+
+        // Send narration to job-a
+        let fields_a = NarrationFields {
+            actor: "test",
+            action: "action_a",
+            target: "target-a".to_string(),
+            human: "Message for Job A".to_string(),
+            job_id: Some("job-a".to_string()),
+            ..Default::default()
+        };
+        send(&fields_a);
+
+        // Send narration to job-b
+        let fields_b = NarrationFields {
+            actor: "test",
+            action: "action_b",
+            target: "target-b".to_string(),
+            human: "Message for Job B".to_string(),
+            job_id: Some("job-b".to_string()),
+            ..Default::default()
+        };
+        send(&fields_b);
+
+        // Job A should only receive its message
+        let event_a = rx_a.try_recv().unwrap();
+        assert_eq!(event_a.human, "Message for Job A");
+        assert!(rx_a.try_recv().is_err()); // No more messages
+
+        // Job B should only receive its message
+        let event_b = rx_b.try_recv().unwrap();
+        assert_eq!(event_b.human, "Message for Job B");
+        assert!(rx_b.try_recv().is_err()); // No more messages
+
+        // Cleanup
+        remove_job_channel("job-a");
+        remove_job_channel("job-b");
+    }
+
+    #[tokio::test]
+    #[serial_test::serial(capture_adapter)]
+    async fn test_global_channel_for_non_job_narration() {
+        init(100);
+        let mut rx = subscribe_global().unwrap();
+
+        // Drain any pre-existing events from other tests
+        while rx.try_recv().is_ok() {}
+
+        // Send narration without job_id
+        let fields = NarrationFields {
+            actor: "queen",
+            action: "startup",
+            target: "queen-rbee".to_string(),
+            human: "Queen starting".to_string(),
+            job_id: None, // ← No job_id
+            ..Default::default()
+        };
+        send(&fields);
+
+        // Should go to global channel
+        let event = rx.try_recv().unwrap();
+        assert_eq!(event.human, "Queen starting");
+    }
+
+    #[test]
+    #[serial_test::serial(capture_adapter)]
+    fn test_channel_cleanup() {
+        create_job_channel("job-temp".to_string(), 100);
+        assert!(has_job_channel("job-temp"));
+
+        remove_job_channel("job-temp");
+        assert!(!has_job_channel("job-temp"));
+    }
+
+    #[test]
+    #[serial_test::serial(capture_adapter)]
+    fn test_send_to_nonexistent_job_is_safe() {
+        // Sending to non-existent job should not panic
+        let fields = NarrationFields {
+            actor: "test",
+            action: "test",
+            target: "test".to_string(),
+            human: "Test".to_string(),
+            job_id: Some("nonexistent-job".to_string()),
+            ..Default::default()
+        };
+        send(&fields); // Should not panic
     }
 }

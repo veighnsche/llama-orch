@@ -61,32 +61,34 @@ pub async fn handle_create_job(
 /// GET /v1/jobs/{job_id}/stream - Stream job results via SSE
 ///
 /// TEAM-189: Fixed to subscribe to SSE narration broadcaster
+/// TEAM-200: Subscribe to JOB-SPECIFIC channel (not global!)
 ///
 /// This handler:
-/// 1. Subscribes to the global SSE narration broadcaster
+/// 1. Subscribes to the job-specific SSE narration broadcaster
 /// 2. Triggers job execution (which emits narrations)
 /// 3. Streams narration events to the client
 /// 4. Also streams token results (for inference operations)
 /// 5. Sends [DONE] marker when complete
+/// 6. Cleans up job channel to prevent memory leaks
 ///
 /// Client connects here, which triggers job execution and streams results.
 pub async fn handle_stream_job(
     Path(job_id): Path<String>,
     State(state): State<SchedulerState>,
 ) -> Sse<impl Stream<Item = Result<Event, Infallible>>> {
-    // TEAM-189: Subscribe to SSE narration broadcaster BEFORE starting execution
-    let mut sse_rx = sse_sink::subscribe().expect("SSE sink not initialized");
+    // TEAM-200: Subscribe to JOB-SPECIFIC SSE channel (not global!)
+    let mut sse_rx = sse_sink::subscribe_to_job(&job_id)
+        .expect("Job channel not found - did you forget to create it?");
 
     // Trigger job execution (spawns in background)
     let token_stream = crate::job_router::execute_job(job_id.clone(), state.into()).await;
 
-    // TEAM-189: Give the background task a moment to start executing
+    // Give the background task a moment to start executing
     // Without this, the stream might close before any narrations are emitted
     tokio::time::sleep(tokio::time::Duration::from_millis(50)).await;
 
-    // TEAM-189: Stream narration events from SSE broadcaster
-    // For now, we only stream narration events (not tokens from job registry)
-    // This works for all operations including SSH test
+    // TEAM-200: Stream narration from job-specific channel
+    // This ensures User A only sees Job A's narration
     let combined_stream = async_stream::stream! {
         let mut last_event_time = std::time::Instant::now();
         let completion_timeout = std::time::Duration::from_millis(2000);
@@ -122,6 +124,8 @@ pub async fn handle_stream_job(
                 _ = &mut timeout_fut, if received_first_event => {
                     if last_event_time.elapsed() >= completion_timeout {
                         yield Ok(Event::default().data("[DONE]"));
+                        // TEAM-200: Cleanup job channel
+                        sse_sink::remove_job_channel(&job_id);
                         break;
                     }
                 }
