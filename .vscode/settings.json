@@ -70,5 +70,83 @@
     "editor.tabSize": 4,
     "editor.formatOnSave": true
   },
-  "cmake.sourceDirectory": "/home/vince/Projects/llama-orch/reference/llama.cpp"
+  "cmake.sourceDirectory": "/home/vince/Projects/llama-orch/reference/llama.cpp",
+
+  // ========================================
+  // CRITICAL: Exclude massive build artifacts from indexing
+  // Prevents language server from consuming 94GB+ of RAM
+  // ========================================
+  "files.exclude": {
+    "**/target": true,
+    "**/node_modules": true,
+    "**/.git": true,
+    "**/dist": true,
+    "**/build": true,
+    "**/.next": true,
+    "**/.cache": true,
+    "**/.turbo": true,
+    "**/.venv-testing": true,
+    "**/.pytest_cache": true,
+    "**/.runtime": true,
+    "**/*.pyc": true,
+    "**/__pycache__": true,
+    "**/queen-hive-catalog.db": true,
+    "**/queen-hive-catalog.db-shm": true,
+    "**/queen-hive-catalog.db-wal": true
+  },
+
+  "files.watcherExclude": {
+    "**/target/**": true,
+    "**/node_modules/**": true,
+    "**/.git/**": true,
+    "**/dist/**": true,
+    "**/build/**": true,
+    "**/.next/**": true,
+    "**/.cache/**": true,
+    "**/.turbo/**": true,
+    "**/.venv-testing/**": true,
+    "**/.pytest_cache/**": true,
+    "**/.runtime/**": true,
+    "**/__pycache__/**": true
+  },
+
+  "search.exclude": {
+    "**/target": true,
+    "**/node_modules": true,
+    "**/.git": true,
+    "**/dist": true,
+    "**/build": true,
+    "**/.venv-testing": true,
+    "**/.pytest_cache": true
+  },
+
+  // ========================================
+  // Rust Analyzer: Disable heavy analysis features
+  // Proc-macros and build scripts cause exponential memory use
+  // ========================================
+  "rust-analyzer.procMacro.enable": false,
+  "rust-analyzer.cargo.buildScripts.enable": false,
+  "rust-analyzer.checkOnSave.enable": true,
+  "rust-analyzer.checkOnSave.command": "clippy",
+  "rust-analyzer.cargo.allFeatures": false,
+  "rust-analyzer.cargo.noDefaultFeatures": false,
+  
+  // Limit parallel jobs to reduce memory spikes
+  "rust-analyzer.cargo.extraEnv": {
+    "CARGO_BUILD_JOBS": "4"
+  },
+
+  // Cache prune settings
+  "rust-analyzer.cachePriming.enable": true,
+  "rust-analyzer.cachePriming.numThreads": 4,
+
+  // Exclude heavy test directories from analysis
+  "rust-analyzer.files.excludeDirs": [
+    "target",
+    ".venv-testing",
+    ".pytest_cache",
+    ".runtime",
+    "node_modules",
+    "reference/llama.cpp"
+  ]
 }

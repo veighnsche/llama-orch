@@ -11,7 +11,8 @@ name = "queen_rbee_hive_registry"
 path = "src/lib.rs"
 
 [dependencies]
-# Add dependencies as needed
+serde = { version = "1.0", features = ["derive"] }
+chrono = "0.4"
+rbee-heartbeat = { path = "../../99_shared_crates/heartbeat" }
 
 [dev-dependencies]
-# Add dev dependencies as needed

@@ -1,0 +1,48 @@
+# CRITICAL: Prevent indexing of massive build artifacts
+# Language server will ignore these directories entirely
+# Prevents 94GB+ RAM consumption issue
+
+# Rust build artifacts (85GB)
+target/
+**/target/
+
+# Python artifacts (6.7GB)
+.venv-testing/
+**/.venv-testing/
+__pycache__/
+**/__pycache__/
+*.pyc
+.pytest_cache/
+**/.pytest_cache/
+
+# Node.js artifacts (2.3GB)
+node_modules/
+**/node_modules/
+.pnpm-store/
+**/.pnpm-store/
+.turbo/
+**/.turbo/
+
+# Build outputs
+dist/
+build/
+.next/
+.cache/
+**/dist/
+**/build/
+**/.next/
+**/.cache/
+
+# Runtime artifacts
+.runtime/
+**/.runtime/
+*.db
+*.db-shm
+*.db-wal
+
+# Version control
+.git/
+
+# Reference implementations (may contain large artifacts)
+reference/llama.cpp/
+reference/rbee-landing-from-v0/

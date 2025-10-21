@@ -24,4 +24,4 @@ pub mod jobs;
 // Re-export commonly used types
 pub use health::handle_health;
 pub use heartbeat::{handle_heartbeat, HeartbeatState, HttpHeartbeatAcknowledgement};
-pub use jobs::{handle_create_job, handle_stream_job, HttpJobResponse, SchedulerState};
+pub use jobs::{handle_create_job, handle_stream_job, SchedulerState};
