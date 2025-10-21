@@ -78,9 +78,9 @@ impl HiveCatalog {
         sqlx::query(
             r#"
             INSERT INTO hives (
-                id, host, port, ssh_host, ssh_port, ssh_user,
+                id, host, port, ssh_host, ssh_port, ssh_user, binary_path,
                 devices_json, created_at_ms, updated_at_ms
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             "#,
         )
         .bind(&hive.id)
@@ -89,6 +89,7 @@ impl HiveCatalog {
         .bind(&hive.ssh_host)
         .bind(hive.ssh_port.map(|p| p as i64))
         .bind(&hive.ssh_user)
+        .bind(&hive.binary_path)
         .bind(devices_json)
         .bind(hive.created_at_ms)
         .bind(hive.updated_at_ms)
@@ -149,7 +150,7 @@ impl HiveCatalog {
         sqlx::query(
             r#"
             UPDATE hives
-            SET host = ?, port = ?, ssh_host = ?, ssh_port = ?, ssh_user = ?,
+            SET host = ?, port = ?, ssh_host = ?, ssh_port = ?, ssh_user = ?, binary_path = ?,
                 devices_json = ?, updated_at_ms = ?
             WHERE id = ?
             "#,
@@ -159,6 +160,7 @@ impl HiveCatalog {
         .bind(&hive.ssh_host)
         .bind(hive.ssh_port.map(|p| p as i64))
         .bind(&hive.ssh_user)
+        .bind(&hive.binary_path)
         .bind(devices_json)
         .bind(now_ms)
         .bind(&hive.id)

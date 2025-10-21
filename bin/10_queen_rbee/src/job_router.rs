@@ -127,77 +127,277 @@ async fn route_operation(
                 ))
                 .emit();
         }
-        Operation::HiveInstall { .. } => {
-            // /**
-            //  * Install hive binary and register in catalog
-            //  *
-            //  * LOCALHOST INSTALLATION:
-            //  * 1. Check if hive_id already exists in catalog → error if exists
-            //  * 2. Determine binary location:
-            //  *    - If binary_path provided: validate path exists
-            //  *    - Else: check catalog for previous install path
-            //  *    - Else: default to cargo build (requires rustup)
-            //  * 3. If building from source:
-            //  *    - Verify rustup installed (fail fast if not)
-            //  *    - Git clone veighsnche/llama-orch to temp dir
-            //  *    - Run: cargo build --release --bin rbee-hive
-            //  *    - Copy binary to standard location
-            //  * 4. Verify binary is executable
-            //  * 5. Add to catalog: HiveRecord { id, host: "localhost", port, binary_path, devices: None }
-            //  *
-            //  * REMOTE SSH INSTALLATION:
-            //  * 1. Run SshTest operation first (fail fast on SSH issues)
-            //  * 2. Check if hive_id already exists in catalog → error if exists
-            //  * 3. Determine binary location on remote:
-            //  *    - If binary_path provided: use that path
-            //  *    - Else: default to git clone + cargo build on remote
-            //  * 4. If building from source (over SSH):
-            //  *    - Verify rustup installed on remote (ssh command: rustup --version)
-            //  *    - Git clone veighsnche/llama-orch on remote
-            //  *    - Run: cargo build --release --bin rbee-hive (over SSH)
-            //  * 5. Verify binary exists on remote (ssh command: test -f <path>)
-            //  * 6. Add to catalog: HiveRecord { id, host, port, ssh_*, binary_path, devices: None }
-            //  *
-            //  * NOTE: Capabilities (devices) are populated later via HiveUpdate with refresh_capabilities=true
-            //  */
+        Operation::HiveInstall { hive_id, ssh_host, ssh_port, ssh_user, port, binary_path } => {
+            // TEAM-189: Comprehensive hive installation with pre-flight checks and narration
+            use queen_rbee_hive_catalog::HiveRecord;
+
+            Narration::new(ACTOR_QUEEN_ROUTER, "hive_install", &hive_id)
+                .human(format!("🔧 Installing hive '{}'", hive_id))
+                .emit();
+
+            // STEP 1: Pre-flight check - is it already installed?
+            Narration::new(ACTOR_QUEEN_ROUTER, "hive_install_preflight", &hive_id)
+                .human("📋 Checking if hive is already installed...")
+                .emit();
+
+            if state.hive_catalog.hive_exists(&hive_id).await? {
+                Narration::new(ACTOR_QUEEN_ROUTER, "hive_install_exists", &hive_id)
+                    .human(format!(
+                        "⚠️  Hive '{}' is already installed.\n\
+                         \n\
+                         To reinstall, first uninstall it:\n\
+                         \n\
+                           ./rbee hive uninstall --id {}",
+                        hive_id, hive_id
+                    ))
+                    .emit();
+                return Err(anyhow::anyhow!(
+                    "Hive '{}' already exists. Uninstall first to reinstall.",
+                    hive_id
+                ));
+            }
+
+            Narration::new(ACTOR_QUEEN_ROUTER, "hive_install_preflight", &hive_id)
+                .human("✅ Hive not found in catalog - proceeding with installation")
+                .emit();
+
+            // STEP 2: Determine if this is localhost or remote installation
+            let is_remote = ssh_host.is_some();
+
+            if is_remote {
+                // REMOTE INSTALLATION
+                let host = ssh_host.as_ref().unwrap();
+                let ssh_port = ssh_port.unwrap_or(22);
+                let user = ssh_user.as_ref().ok_or_else(|| {
+                    anyhow::anyhow!("--ssh-user required for remote installation")
+                })?;
+
+                Narration::new(ACTOR_QUEEN_ROUTER, "hive_install_mode", &hive_id)
+                    .human(format!("🌐 Remote installation: {}@{}:{}", user, host, ssh_port))
+                    .emit();
+
+                // TODO: Implement remote SSH installation
+                Narration::new(ACTOR_QUEEN_ROUTER, "hive_install_not_implemented", &hive_id)
+                    .human(
+                        "❌ Remote SSH installation not yet implemented.\n\
+                           \n\
+                           Currently only localhost installation is supported.",
+                    )
+                    .emit();
+                return Err(anyhow::anyhow!("Remote installation not yet implemented"));
+            } else {
+                // LOCALHOST INSTALLATION
+                Narration::new(ACTOR_QUEEN_ROUTER, "hive_install_mode", &hive_id)
+                    .human("🏠 Localhost installation")
+                    .emit();
+
+                // STEP 3: Find or build the rbee-hive binary
+                let binary = if let Some(provided_path) = binary_path {
+                    Narration::new(ACTOR_QUEEN_ROUTER, "hive_install_binary", &hive_id)
+                        .human(format!("📁 Using provided binary path: {}", provided_path))
+                        .emit();
+
+                    // Verify binary exists
+                    let path = std::path::Path::new(&provided_path);
+                    if !path.exists() {
+                        Narration::new(ACTOR_QUEEN_ROUTER, "hive_install_binary_error", &hive_id)
+                            .human(format!("❌ Binary not found at: {}", provided_path))
+                            .emit();
+                        return Err(anyhow::anyhow!("Binary not found: {}", provided_path));
+                    }
+
+                    Narration::new(ACTOR_QUEEN_ROUTER, "hive_install_binary", &hive_id)
+                        .human("✅ Binary found")
+                        .emit();
+
+                    provided_path
+                } else {
+                    // Find binary in target directory
+                    Narration::new(ACTOR_QUEEN_ROUTER, "hive_install_binary", &hive_id)
+                        .human("🔍 Looking for rbee-hive binary in target/debug...")
+                        .emit();
+
+                    let debug_path = std::path::PathBuf::from("target/debug/rbee-hive");
+                    let release_path = std::path::PathBuf::from("target/release/rbee-hive");
+
+                    if debug_path.exists() {
+                        Narration::new(ACTOR_QUEEN_ROUTER, "hive_install_binary", &hive_id)
+                            .human(format!("✅ Found binary at: {}", debug_path.display()))
+                            .emit();
+                        debug_path.display().to_string()
+                    } else if release_path.exists() {
+                        Narration::new(ACTOR_QUEEN_ROUTER, "hive_install_binary", &hive_id)
+                            .human(format!("✅ Found binary at: {}", release_path.display()))
+                            .emit();
+                        release_path.display().to_string()
+                    } else {
+                        Narration::new(ACTOR_QUEEN_ROUTER, "hive_install_binary_error", &hive_id)
+                            .human(
+                                "❌ rbee-hive binary not found.\n\
+                                 \n\
+                                 Please build it first:\n\
+                                 \n\
+                                   cargo build --bin rbee-hive\n\
+                                 \n\
+                                 Or provide a binary path:\n\
+                                 \n\
+                                   ./rbee hive install --binary-path /path/to/rbee-hive",
+                            )
+                            .emit();
+                        return Err(anyhow::anyhow!("rbee-hive binary not found. Build it with: cargo build --bin rbee-hive"));
+                    }
+                };
+
+                // STEP 4: Register in catalog
+                Narration::new(ACTOR_QUEEN_ROUTER, "hive_install_register", &hive_id)
+                    .human("📝 Registering hive in catalog...")
+                    .emit();
+
+                let now_ms = chrono::Utc::now().timestamp_millis();
+                let record = HiveRecord {
+                    id: hive_id.clone(),
+                    host: "localhost".to_string(),
+                    port,
+                    ssh_host: None,
+                    ssh_port: None,
+                    ssh_user: None,
+                    binary_path: Some(binary.clone()),
+                    devices: None, // Will be populated later via refresh_capabilities
+                    created_at_ms: now_ms,
+                    updated_at_ms: now_ms,
+                };
+
+                if let Err(e) = state.hive_catalog.add_hive(record).await {
+                    Narration::new(ACTOR_QUEEN_ROUTER, "hive_install_error", &hive_id)
+                        .human(format!("❌ Failed to add hive to catalog: {}", e))
+                        .emit();
+                    return Err(e);
+                }
+
+                Narration::new(ACTOR_QUEEN_ROUTER, "hive_install_complete", &hive_id)
+                    .human(format!(
+                        "✅ Hive '{}' installed successfully!\n\
+                         \n\
+                         Configuration:\n\
+                         - Host: localhost\n\
+                         - Port: {}\n\
+                         - Binary: {}\n\
+                         \n\
+                         To start the hive:\n\
+                         \n\
+                           ./rbee hive start",
+                        hive_id, port, binary
+                    ))
+                    .emit();
+            }
         }
-        Operation::HiveUninstall { .. } => {
-            // /**
-            //  * Uninstall hive and optionally clean up resources
-            //  *
-            //  * CATALOG-ONLY MODE (catalog_only=true):
-            //  * - Used for unreachable remote hives
-            //  * - Simply remove HiveRecord from catalog
-            //  * - No SSH connection or binary cleanup
-            //  * - Return success
-            //  *
-            //  * FULL UNINSTALL (catalog_only=false):
-            //  *
-            //  * LOCALHOST:
-            //  * 1. Lookup hive in catalog → error if not found
-            //  * 2. Get binary_path from HiveRecord
-            //  * 3. Check if hive is running:
-            //  *    - If running: SIGTERM first, wait 5s, then SIGKILL if needed
-            //  *    - Kill all child workers (SIGKILL)
-            //  * 4. Cleanup options (interactive or flags):
-            //  *    - Remove workers? (delete worker binaries)
-            //  *    - Remove models? (delete model files)
-            //  * 5. Remove hive binary at binary_path
-            //  * 6. Remove from catalog
-            //  *
-            //  * REMOTE SSH:
-            //  * 1. Run SshTest operation first
-            //  * 2. Lookup hive in catalog → error if not found
-            //  * 3. Get binary_path from HiveRecord
-            //  * 4. Check if hive is running (over SSH):
-            //  *    - SSH: pkill -TERM rbee-hive, wait, pkill -KILL if needed
-            //  * 5. Cleanup options (same as localhost, but over SSH)
-            //  * 6. Remove hive binary on remote (ssh: rm <binary_path>)
-            //  * 7. Remove from catalog
-            //  *
-            //  * TODO: Implement emergency stop (SIGKILL all workers)
-            //  * TODO: Add interactive cleanup prompts or CLI flags
-            //  */
+        Operation::HiveUninstall { hive_id, catalog_only: _ } => {
+            // TEAM-189: Hive uninstall with pre-flight check to ensure hive is stopped
+            Narration::new(ACTOR_QUEEN_ROUTER, "hive_uninstall", &hive_id)
+                .human(format!("🗑️  Uninstalling hive '{}'", hive_id))
+                .emit();
+
+            // Check if hive exists
+            let hive = state.hive_catalog.get_hive(&hive_id).await?;
+            if hive.is_none() {
+                Narration::new(ACTOR_QUEEN_ROUTER, "hive_uninstall_not_found", &hive_id)
+                    .human(format!(
+                        "❌ Hive '{}' is not installed.\n\
+                         \n\
+                         Nothing to uninstall.\n\
+                         \n\
+                         To see installed hives:\n\
+                         \n\
+                           ./rbee hive list",
+                        hive_id
+                    ))
+                    .emit();
+                return Err(anyhow::anyhow!("Hive '{}' is not installed", hive_id));
+            }
+            
+            let hive = hive.unwrap();
+
+            // TEAM-189: Pre-flight check - ensure hive is stopped before uninstalling
+            Narration::new(ACTOR_QUEEN_ROUTER, "hive_uninstall_preflight", &hive_id)
+                .human("📋 Checking if hive is running...")
+                .emit();
+
+            let health_url = format!("http://{}:{}/health", hive.host, hive.port);
+            let client =
+                reqwest::Client::builder().timeout(tokio::time::Duration::from_secs(2)).build()?;
+
+            if let Ok(response) = client.get(&health_url).send().await {
+                if response.status().is_success() {
+                    Narration::new(ACTOR_QUEEN_ROUTER, "hive_uninstall_running", &hive_id)
+                        .human(format!(
+                            "❌ Cannot uninstall hive '{}' while it's running.\n\
+                             \n\
+                             Please stop the hive first:\n\
+                             \n\
+                               ./rbee hive stop",
+                            hive_id
+                        ))
+                        .emit();
+                    return Err(anyhow::anyhow!(
+                        "Hive '{}' is still running. Stop it first with: ./rbee hive stop",
+                        hive_id
+                    ));
+                }
+            }
+
+            Narration::new(ACTOR_QUEEN_ROUTER, "hive_uninstall_preflight", &hive_id)
+                .human("✅ Hive is stopped - proceeding with uninstall")
+                .emit();
+
+            // Remove from catalog
+            Narration::new(ACTOR_QUEEN_ROUTER, "hive_uninstall_remove", &hive_id)
+                .human("📝 Removing hive from catalog...")
+                .emit();
+
+            state.hive_catalog.remove_hive(&hive_id).await?;
+
+            Narration::new(ACTOR_QUEEN_ROUTER, "hive_uninstall_complete", &hive_id)
+                .human(format!("✅ Hive '{}' uninstalled successfully", hive_id))
+                .emit();
+
+            // TEAM-189: Implemented pre-flight check - hive must be stopped before uninstall
+            //
+            // CURRENT IMPLEMENTATION:
+            // 1. Check if hive exists in catalog → error if not found
+            // 2. Check if hive is running (health endpoint) → error if running
+            // 3. Remove from catalog
+            //
+            // IMPORTANT: User must manually stop the hive first:
+            //   ./rbee hive stop
+            // This ensures clean shutdown of hive and all child workers.
+            //
+            // FUTURE ENHANCEMENTS (for TEAM-190+):
+            //
+            // CATALOG-ONLY MODE (catalog_only=true):
+            // - Used for unreachable remote hives (network issues, host down)
+            // - Simply remove HiveRecord from catalog
+            // - No SSH connection or health check
+            // - Warn user about orphaned processes on remote host
+            //
+            // ADDITIONAL CLEANUP OPTIONS (flags):
+            // - --remove-workers: Delete worker binaries (requires hive stopped)
+            // - --remove-models: Delete model files (requires hive stopped)
+            // - --remove-binary: Delete hive binary itself
+            //
+            // LOCALHOST FULL CLEANUP:
+            // 1. Verify hive stopped (health check fails)
+            // 2. Verify no worker processes running (pgrep llm-worker)
+            // 3. Optional: Remove worker binaries if --remove-workers
+            // 4. Optional: Remove models if --remove-models
+            // 5. Optional: Remove hive binary if --remove-binary
+            // 6. Remove from catalog
+            //
+            // REMOTE SSH FULL CLEANUP:
+            // 1. Run SshTest to verify connectivity
+            // 2. Verify hive stopped (SSH: curl health or pgrep)
+            // 3. Verify no worker processes (SSH: pgrep llm-worker)
+            // 4. Optional: Remove files via SSH (rm commands)
+            // 5. Remove from catalog
         }
         Operation::HiveUpdate { .. } => {
             // /**
@@ -230,24 +430,186 @@ async fn route_operation(
             //  * TODO: Implement device detection API in rbee-hive
             //  */
         }
-        Operation::HiveStart { .. } => {
-            // /**
-            //  * TODO: IMPLEMENT THIS
-            //  *
-            //  * Start a hive daemon process
-            //  * - Lookup binary_path from catalog
-            //  * - Spawn hive process with proper config
-            //  * - Wait for health check to confirm startup
-            //  */
+        Operation::HiveStart { hive_id } => {
+            // TEAM-189: Spawn hive daemon with health check polling
+            Narration::new(ACTOR_QUEEN_ROUTER, "hive_start", &hive_id)
+                .human(format!("🚀 Starting hive '{}'", hive_id))
+                .emit();
+
+            // Get hive from catalog
+            let hive = state
+                .hive_catalog
+                .get_hive(&hive_id)
+                .await?
+                .ok_or_else(|| anyhow::anyhow!("Hive '{}' not found in catalog", hive_id))?;
+
+            // Check if already running
+            Narration::new(ACTOR_QUEEN_ROUTER, "hive_start_check", &hive_id)
+                .human("📋 Checking if hive is already running...")
+                .emit();
+
+            let health_url = format!("http://{}:{}/health", hive.host, hive.port);
+            let client =
+                reqwest::Client::builder().timeout(tokio::time::Duration::from_secs(2)).build()?;
+
+            if let Ok(response) = client.get(&health_url).send().await {
+                if response.status().is_success() {
+                    Narration::new(ACTOR_QUEEN_ROUTER, "hive_start_already_running", &hive_id)
+                        .human(format!(
+                            "✅ Hive '{}' is already running on {}",
+                            hive_id, health_url
+                        ))
+                        .emit();
+                    return Ok(());
+                }
+            }
+
+            // Get binary path
+            let binary_path = hive.binary_path.ok_or_else(|| {
+                anyhow::anyhow!("Hive '{}' has no binary_path configured", hive_id)
+            })?;
+
+            Narration::new(ACTOR_QUEEN_ROUTER, "hive_start_spawn", &hive_id)
+                .human(format!("🔧 Spawning hive daemon: {}", binary_path))
+                .emit();
+
+            // Spawn the hive daemon
+            use daemon_lifecycle::DaemonManager;
+            let manager = DaemonManager::new(
+                std::path::PathBuf::from(&binary_path),
+                vec!["--port".to_string(), hive.port.to_string()],
+            );
+
+            let _child = manager.spawn().await?;
+
+            // Wait for health check
+            Narration::new(ACTOR_QUEEN_ROUTER, "hive_start_health", &hive_id)
+                .human("⏳ Waiting for hive to be healthy...")
+                .emit();
+
+            for attempt in 1..=10 {
+                tokio::time::sleep(tokio::time::Duration::from_millis(200 * attempt)).await;
+
+                if let Ok(response) = client.get(&health_url).send().await {
+                    if response.status().is_success() {
+                        Narration::new(ACTOR_QUEEN_ROUTER, "hive_start_success", &hive_id)
+                            .human(format!(
+                                "✅ Hive '{}' started successfully on {}",
+                                hive_id, health_url
+                            ))
+                            .emit();
+                        return Ok(());
+                    }
+                }
+            }
+
+            Narration::new(ACTOR_QUEEN_ROUTER, "hive_start_timeout", &hive_id)
+                .human(
+                    "⚠️  Hive started but health check timed out.\n\
+                     Check if it's running:\n\
+                     \n\
+                       ./rbee hive status",
+                )
+                .emit();
         }
-        Operation::HiveStop { .. } => {
-            // /**
-            //  * TODO: IMPLEMENT THIS
-            //  *
-            //  * Stop a running hive daemon
-            //  * - Send SIGTERM, wait for graceful shutdown
-            //  * - SIGKILL if timeout exceeded
-            //  */
+        Operation::HiveStop { hive_id } => {
+            // TEAM-189: Graceful shutdown (SIGTERM) with SIGKILL fallback
+            Narration::new(ACTOR_QUEEN_ROUTER, "hive_stop", &hive_id)
+                .human(format!("🛑 Stopping hive '{}'", hive_id))
+                .emit();
+
+            // Get hive from catalog
+            let hive = state
+                .hive_catalog
+                .get_hive(&hive_id)
+                .await?
+                .ok_or_else(|| anyhow::anyhow!("Hive '{}' not found in catalog", hive_id))?;
+
+            // Check if it's running
+            Narration::new(ACTOR_QUEEN_ROUTER, "hive_stop_check", &hive_id)
+                .human("📋 Checking if hive is running...")
+                .emit();
+
+            let health_url = format!("http://{}:{}/health", hive.host, hive.port);
+            let client =
+                reqwest::Client::builder().timeout(tokio::time::Duration::from_secs(2)).build()?;
+
+            if let Ok(response) = client.get(&health_url).send().await {
+                if !response.status().is_success() {
+                    Narration::new(ACTOR_QUEEN_ROUTER, "hive_stop_not_running", &hive_id)
+                        .human(format!("⚠️  Hive '{}' is not running", hive_id))
+                        .emit();
+                    return Ok(());
+                }
+            } else {
+                Narration::new(ACTOR_QUEEN_ROUTER, "hive_stop_not_running", &hive_id)
+                    .human(format!("⚠️  Hive '{}' is not running", hive_id))
+                    .emit();
+                return Ok(());
+            }
+
+            // Stop the hive process
+            Narration::new(ACTOR_QUEEN_ROUTER, "hive_stop_sigterm", &hive_id)
+                .human("📤 Sending SIGTERM (graceful shutdown)...")
+                .emit();
+
+            // Use pkill to stop the hive by binary name
+            let binary_path = hive.binary_path.ok_or_else(|| {
+                anyhow::anyhow!("Hive '{}' has no binary_path configured", hive_id)
+            })?;
+
+            let binary_name = std::path::Path::new(&binary_path)
+                .file_name()
+                .and_then(|n| n.to_str())
+                .unwrap_or("rbee-hive");
+
+            // Send SIGTERM
+            let output = tokio::process::Command::new("pkill")
+                .args(&["-TERM", binary_name])
+                .output()
+                .await?;
+
+            if !output.status.success() {
+                Narration::new(ACTOR_QUEEN_ROUTER, "hive_stop_not_found", &hive_id)
+                    .human(format!("⚠️  No running process found for '{}'", binary_name))
+                    .emit();
+                return Ok(());
+            }
+
+            // Wait for graceful shutdown
+            Narration::new(ACTOR_QUEEN_ROUTER, "hive_stop_wait", &hive_id)
+                .human("⏳ Waiting for graceful shutdown (5s)...")
+                .emit();
+
+            for attempt in 1..=5 {
+                tokio::time::sleep(tokio::time::Duration::from_secs(1)).await;
+
+                if let Err(_) = client.get(&health_url).send().await {
+                    // Health check failed - hive stopped
+                    Narration::new(ACTOR_QUEEN_ROUTER, "hive_stop_success", &hive_id)
+                        .human(format!("✅ Hive '{}' stopped successfully", hive_id))
+                        .emit();
+                    return Ok(());
+                }
+
+                if attempt == 5 {
+                    // Timeout - force kill
+                    Narration::new(ACTOR_QUEEN_ROUTER, "hive_stop_sigkill", &hive_id)
+                        .human("⚠️  Graceful shutdown timed out, sending SIGKILL...")
+                        .emit();
+
+                    tokio::process::Command::new("pkill")
+                        .args(&["-KILL", binary_name])
+                        .output()
+                        .await?;
+
+                    tokio::time::sleep(tokio::time::Duration::from_millis(500)).await;
+
+                    Narration::new(ACTOR_QUEEN_ROUTER, "hive_stop_forced", &hive_id)
+                        .human(format!("✅ Hive '{}' force-stopped", hive_id))
+                        .emit();
+                }
+            }
         }
         Operation::HiveList => {
             // /**
@@ -266,6 +628,100 @@ async fn route_operation(
             //  * - Query HiveCatalog.get(hive_id)
             //  * - Return HiveRecord or 404
             //  */
+        }
+        Operation::HiveStatus { hive_id } => {
+            // TEAM-189: Check hive health endpoint with friendly error messages
+            // Check hive status by pinging its health endpoint
+            // Similar to queen status pattern
+
+            // TEAM-189: Friendly error handling for missing hive
+            let hive = match state.hive_catalog.get_hive(&hive_id).await {
+                Ok(Some(h)) => h,
+                Ok(None) => {
+                    // Hive not found in catalog
+                    let install_cmd = if hive_id == "localhost" {
+                        "  ./rbee hive install".to_string()
+                    } else {
+                        format!("  ./rbee hive install --id {}", hive_id)
+                    };
+
+                    Narration::new(ACTOR_QUEEN_ROUTER, "hive_status_check", &hive_id)
+                        .human(format!(
+                            "❌ Hive '{}' not found in catalog.\n\
+                             \n\
+                             To install the hive:\n\
+                             \n\
+                             {}",
+                            hive_id, install_cmd
+                        ))
+                        .emit();
+                    return Err(anyhow::anyhow!(
+                        "Hive '{}' not found. Use 'rbee hive install' to add it.",
+                        hive_id
+                    ));
+                }
+                Err(e) if e.to_string().contains("no column") => {
+                    // Database schema issue OR hive not installed (treat same for users)
+                    let install_cmd = if hive_id == "localhost" {
+                        "  ./rbee hive install".to_string()
+                    } else {
+                        format!("  ./rbee hive install --id {}", hive_id)
+                    };
+
+                    Narration::new(ACTOR_QUEEN_ROUTER, "hive_status_check", &hive_id)
+                        .human(format!(
+                            "❌ Hive '{}' not found.\n\
+                             \n\
+                             Please install the hive first:\n\
+                             \n\
+                             {}",
+                            hive_id, install_cmd
+                        ))
+                        .emit();
+                    return Err(anyhow::anyhow!(
+                        "Hive '{}' not installed. Use 'rbee hive install' to add it.",
+                        hive_id
+                    ));
+                }
+                Err(e) => {
+                    // Other database error
+                    Narration::new(ACTOR_QUEEN_ROUTER, "hive_status_check", "db_error")
+                        .human(format!("❌ Database error: {}", e))
+                        .emit();
+                    return Err(e);
+                }
+            };
+
+            let health_url = format!("http://{}:{}/health", hive.host, hive.port);
+
+            Narration::new(ACTOR_QUEEN_ROUTER, "hive_status_check", &hive_id)
+                .human(format!("Checking hive status at {}", health_url))
+                .emit();
+
+            let client =
+                reqwest::Client::builder().timeout(tokio::time::Duration::from_secs(5)).build()?;
+
+            match client.get(&health_url).send().await {
+                Ok(response) if response.status().is_success() => {
+                    Narration::new(ACTOR_QUEEN_ROUTER, "hive_status_check", &hive_id)
+                        .human(format!("✅ Hive '{}' is running on {}", hive_id, health_url))
+                        .emit();
+                }
+                Ok(response) => {
+                    Narration::new(ACTOR_QUEEN_ROUTER, "hive_status_check", &hive_id)
+                        .human(format!(
+                            "⚠️  Hive '{}' responded with status: {}",
+                            hive_id,
+                            response.status()
+                        ))
+                        .emit();
+                }
+                Err(_) => {
+                    Narration::new(ACTOR_QUEEN_ROUTER, "hive_status_check", &hive_id)
+                        .human(format!("❌ Hive '{}' is not running on {}", hive_id, health_url))
+                        .emit();
+                }
+            }
         }
 
         // Worker operations

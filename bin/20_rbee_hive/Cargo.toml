@@ -15,7 +15,16 @@ name = "rbee_hive"
 path = "src/lib.rs"
 
 [dependencies]
-tokio = { workspace = true }
+# HTTP framework
+# TEAM-189: Added HTTP server with /health endpoint
+axum = { workspace = true }
+tokio = { workspace = true, features = ["full"] }
+
+# CLI
+clap = { version = "4", features = ["derive"] }
+
+# Error handling
+anyhow = "1.0"
 
 [dev-dependencies]
 # Add dev dependencies as needed

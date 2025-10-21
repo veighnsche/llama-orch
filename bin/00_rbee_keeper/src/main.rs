@@ -151,8 +151,10 @@ pub enum HiveAction {
     },
     /// Install a hive (localhost or remote SSH)
     Install {
-        /// Hive ID
-        #[arg(long)]
+        /// Hive ID (defaults to "localhost" for local installations)
+        /// Required when using --ssh-host for remote installations
+        /// TEAM-189: Made --id optional with default "localhost" for better UX
+        #[arg(long, default_value = "localhost")]
         id: String,
         /// SSH host for remote installation
         #[arg(long)]
@@ -172,8 +174,9 @@ pub enum HiveAction {
     },
     /// Uninstall a hive
     Uninstall {
-        /// Hive ID
-        #[arg(long)]
+        /// Hive ID (defaults to "localhost")
+        /// TEAM-189: Made --id optional with default "localhost" for consistency
+        #[arg(long, default_value = "localhost")]
         id: String,
         /// Only remove from catalog (for unreachable remote hives)
         #[arg(long, default_value = "false")]
@@ -213,6 +216,13 @@ pub enum HiveAction {
     },
     /// Get hive details
     Get {
+        /// Hive ID (defaults to localhost)
+        #[arg(default_value = "localhost")]
+        id: String,
+    },
+    /// Check hive status
+    /// TEAM-189: New command to check if hive is running via health endpoint
+    Status {
         /// Hive ID (defaults to localhost)
         #[arg(default_value = "localhost")]
         id: String,
@@ -387,6 +397,7 @@ async fn handle_command(cli: Cli) -> Result<()> {
                 HiveAction::Stop { id } => Operation::HiveStop { hive_id: id },
                 HiveAction::List => Operation::HiveList,
                 HiveAction::Get { id } => Operation::HiveGet { hive_id: id },
+                HiveAction::Status { id } => Operation::HiveStatus { hive_id: id }, // TEAM-189: Route to HiveStatus operation
             };
             // TEAM-186: No more repeated serialization! submit_and_stream_job handles it
             submit_and_stream_job(&client, &queen_url, operation).await

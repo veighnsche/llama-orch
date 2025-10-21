@@ -34,6 +34,7 @@ async-stream = "0.3"
 anyhow = "1.0"
 
 # Internal dependencies
+daemon-lifecycle = { path = "../99_shared_crates/daemon-lifecycle" }  # TEAM-189: For spawning hive daemons (hive start)
 job-registry = { path = "../99_shared_crates/job-registry" }
 observability-narration-core = { path = "../99_shared_crates/narration-core" }
 queen-rbee-hive-catalog = { path = "../15_queen_rbee_crates/hive-catalog" }

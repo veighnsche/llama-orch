@@ -12,6 +12,7 @@ use sqlx::sqlite::SqlitePool;
 /// CONFIGURATION ONLY - No runtime/heartbeat data!
 /// Runtime data (status, heartbeat, workers) lives in hive-registry (RAM)
 /// TEAM-186: Removed status and last_heartbeat_ms columns from schema
+/// TEAM-189: Added binary_path column for hive binary location
 const HIVES_TABLE_SCHEMA: &str = r#"
     CREATE TABLE IF NOT EXISTS hives (
         id TEXT PRIMARY KEY,
@@ -20,6 +21,7 @@ const HIVES_TABLE_SCHEMA: &str = r#"
         ssh_host TEXT,
         ssh_port INTEGER,
         ssh_user TEXT,
+        binary_path TEXT,
         devices_json TEXT,
         created_at_ms INTEGER NOT NULL,
         updated_at_ms INTEGER NOT NULL

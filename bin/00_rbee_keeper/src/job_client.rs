@@ -84,6 +84,7 @@ pub async fn submit_and_stream_job(
     narration.emit();
 
     let mut stream = response.bytes_stream();
+    let mut job_failed = false; // TEAM-189: Track job failures to show proper final status
 
     while let Some(chunk) = stream.next().await {
         let chunk = chunk?;
@@ -96,12 +97,23 @@ pub async fn submit_and_stream_job(
                 // Just print the data directly without wrapping in narration
                 println!("{}", data);
 
+                // TEAM-189: Track if the job failed
+                if data.contains("failed:") || data.contains("Job") && data.contains("failed") {
+                    job_failed = true;
+                }
+
                 // Check for [DONE] marker
                 if data.contains("[DONE]") {
-                    let mut narration =
+                    // TEAM-189: Show ❌ Failed for failures, ✅ Complete for successes
+                    let mut narration = if job_failed {
                         Narration::new(ACTOR_RBEE_KEEPER, ACTION_JOB_COMPLETE, job_id)
                             .operation(operation_name)
-                            .human("✅ Complete");
+                            .human("❌ Failed")
+                    } else {
+                        Narration::new(ACTOR_RBEE_KEEPER, ACTION_JOB_COMPLETE, job_id)
+                            .operation(operation_name)
+                            .human("✅ Complete")
+                    };
 
                     if let Some(hid) = hive_id {
                         narration = narration.hive_id(hid);

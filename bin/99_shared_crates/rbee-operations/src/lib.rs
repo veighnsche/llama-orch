@@ -91,6 +91,11 @@ pub enum Operation {
         #[serde(default = "default_hive_id")]
         hive_id: String,
     },
+    /// TEAM-189: Check hive health endpoint status
+    HiveStatus {
+        #[serde(default = "default_hive_id")]
+        hive_id: String,
+    },
 
     // Worker operations
     WorkerSpawn {
@@ -177,6 +182,7 @@ impl Operation {
             Operation::HiveStop { .. } => "hive_stop",
             Operation::HiveList => "hive_list",
             Operation::HiveGet { .. } => "hive_get",
+            Operation::HiveStatus { .. } => "hive_status",
             Operation::WorkerSpawn { .. } => "worker_spawn",
             Operation::WorkerList { .. } => "worker_list",
             Operation::WorkerGet { .. } => "worker_get",
@@ -198,6 +204,7 @@ impl Operation {
             Operation::HiveStart { hive_id } => Some(hive_id),
             Operation::HiveStop { hive_id } => Some(hive_id),
             Operation::HiveGet { hive_id } => Some(hive_id),
+            Operation::HiveStatus { hive_id } => Some(hive_id),
             Operation::WorkerSpawn { hive_id, .. } => Some(hive_id),
             Operation::WorkerList { hive_id } => Some(hive_id),
             Operation::WorkerGet { hive_id, .. } => Some(hive_id),
@@ -228,6 +235,7 @@ pub mod constants {
     pub const OP_HIVE_STOP: &str = "hive_stop";
     pub const OP_HIVE_LIST: &str = "hive_list";
     pub const OP_HIVE_GET: &str = "hive_get";
+    pub const OP_HIVE_STATUS: &str = "hive_status"; // TEAM-189
 
     pub const OP_WORKER_SPAWN: &str = "worker_spawn";
     pub const OP_WORKER_LIST: &str = "worker_list";
