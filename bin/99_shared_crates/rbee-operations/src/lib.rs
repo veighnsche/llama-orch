@@ -28,9 +28,14 @@ use serde::{Deserialize, Serialize};
 /// All supported operations in the rbee system
 ///
 /// TEAM-186: Single source of truth for operation types
+/// TEAM-190: Added Status operation for live hive/worker overview
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 #[serde(tag = "operation", rename_all = "snake_case")]
 pub enum Operation {
+    // System-wide operations
+    /// TEAM-190: Show live status of all hives and workers from registry
+    Status,
+
     // Hive operations
     // TEAM-186: Renamed create→install, delete→uninstall
     // TEAM-186: Added hive_id with default "localhost" to all operations
@@ -174,6 +179,7 @@ impl Operation {
     /// Get the operation name as a string (for logging/narration)
     pub fn name(&self) -> &'static str {
         match self {
+            Operation::Status => "status", // TEAM-190
             Operation::SshTest { .. } => "ssh_test",
             Operation::HiveInstall { .. } => "hive_install",
             Operation::HiveUninstall { .. } => "hive_uninstall",

@@ -28,6 +28,7 @@ use job_registry::JobRegistry;
 use observability_narration_core::Narration;
 use queen_rbee_hive_catalog::HiveCatalog;
 use queen_rbee_hive_lifecycle::{execute_ssh_test, SshTestRequest};
+use queen_rbee_hive_registry::HiveRegistry; // TEAM-190: For Status operation
 use rbee_operations::Operation;
 use std::sync::Arc;
 
@@ -40,6 +41,7 @@ const ACTION_PARSE_OPERATION: &str = "parse_operation";
 pub struct JobState {
     pub registry: Arc<JobRegistry<String>>,
     pub hive_catalog: Arc<HiveCatalog>,
+    pub hive_registry: Arc<HiveRegistry>, // TEAM-190: For Status operation
 }
 
 /// Response from job creation
@@ -76,9 +78,10 @@ pub async fn execute_job(
 ) -> impl futures::stream::Stream<Item = String> {
     let registry = state.registry.clone();
     let hive_catalog = state.hive_catalog.clone();
+    let hive_registry = state.hive_registry.clone(); // TEAM-190
 
     job_registry::execute_and_stream(job_id, registry.clone(), move |_job_id, payload| {
-        route_operation(payload, registry, hive_catalog)
+        route_operation(payload, registry, hive_catalog, hive_registry)
     })
     .await
 }
@@ -90,8 +93,9 @@ async fn route_operation(
     payload: serde_json::Value,
     registry: Arc<JobRegistry<String>>,
     hive_catalog: Arc<HiveCatalog>,
+    hive_registry: Arc<HiveRegistry>, // TEAM-190: Added for Status operation
 ) -> Result<()> {
-    let state = JobState { registry, hive_catalog };
+    let state = JobState { registry, hive_catalog, hive_registry };
     // Parse payload into typed Operation enum
     let operation: Operation = serde_json::from_value(payload)
         .map_err(|e| anyhow::anyhow!("Failed to parse operation: {}", e))?;
@@ -105,7 +109,74 @@ async fn route_operation(
     // TEAM-186: Route to appropriate handler based on operation type
     // TEAM-187: Updated to handle HiveInstall/HiveUninstall/HiveUpdate operations
     // TEAM-188: Implemented SshTest operation
+    // TEAM-190: Added Status operation for live hive/worker overview
     match operation {
+        // System-wide operations
+        Operation::Status => {
+            // TEAM-190: Show live status of all hives and workers from registry (not catalog)
+            
+            Narration::new(ACTOR_QUEEN_ROUTER, "status", "registry")
+                .human("📊 Fetching live status from registry")
+                .emit();
+            
+            // Get all active hives (heartbeat within last 30 seconds)
+            let active_hive_ids = state.hive_registry.list_active_hives(30_000);
+            
+            if active_hive_ids.is_empty() {
+                Narration::new(ACTOR_QUEEN_ROUTER, "status_empty", "registry")
+                    .human(
+                        "No active hives found.\n\
+                         \n\
+                         Hives must send heartbeats to appear here.\n\
+                         \n\
+                         To start a hive:\n\
+                         \n\
+                           ./rbee hive start"
+                    )
+                    .emit();
+                return Ok(());
+            }
+            
+            // Collect all hives and their workers
+            let mut all_rows = Vec::new();
+            
+            for hive_id in &active_hive_ids {
+                if let Some(hive_state) = state.hive_registry.get_hive_state(hive_id) {
+                    if hive_state.workers.is_empty() {
+                        // Hive with no workers
+                        all_rows.push(serde_json::json!({
+                            "hive": hive_id,
+                            "worker": "-",
+                            "state": "-",
+                            "model": "-",
+                            "url": "-",
+                        }));
+                    } else {
+                        // Hive with workers
+                        for worker in &hive_state.workers {
+                            all_rows.push(serde_json::json!({
+                                "hive": hive_id,
+                                "worker": worker.worker_id,
+                                "state": worker.state,
+                                "model": worker.model_id.as_ref().unwrap_or(&"-".to_string()),
+                                "url": worker.url,
+                            }));
+                        }
+                    }
+                }
+            }
+            
+            // Display as table
+            Narration::new(ACTOR_QUEEN_ROUTER, "status_result", "registry")
+                .human(format!(
+                    "Live Status ({} hive(s), {} worker(s)):",
+                    active_hive_ids.len(),
+                    all_rows.iter().filter(|r| r["worker"] != "-").count()
+                ))
+                .table(&serde_json::Value::Array(all_rows))
+                .emit();
+        }
+
         // Hive operations
         Operation::SshTest { ssh_host, ssh_port, ssh_user } => {
             // TEAM-188: Test SSH connection to remote host
@@ -612,13 +683,46 @@ async fn route_operation(
             }
         }
         Operation::HiveList => {
-            // /**
-            //  * TODO: IMPLEMENT THIS
-            //  *
-            //  * List all hives from catalog
-            //  * - Query HiveCatalog.list_all()
-            //  * - Return array of HiveRecords
-            //  */
+            // TEAM-190: List all hives from catalog with table output
+            
+            Narration::new(ACTOR_QUEEN_ROUTER, "hive_list", "catalog")
+                .human("📊 Listing all hives")
+                .emit();
+            
+            // Query catalog
+            let hives = state.hive_catalog.list_hives().await?;
+            
+            if hives.is_empty() {
+                Narration::new(ACTOR_QUEEN_ROUTER, "hive_list_empty", "catalog")
+                    .human(
+                        "No hives registered.\n\
+                         \n\
+                         To install a hive:\n\
+                         \n\
+                           ./rbee hive install"
+                    )
+                    .emit();
+                return Ok(());
+            }
+            
+            // Convert to JSON array for table display
+            let hives_json: Vec<serde_json::Value> = hives
+                .iter()
+                .map(|h| {
+                    serde_json::json!({
+                        "id": h.id,
+                        "host": h.host,
+                        "port": h.port,
+                        "binary_path": h.binary_path.as_ref().unwrap_or(&"-".to_string()),
+                    })
+                })
+                .collect();
+            
+            // Display as table
+            Narration::new(ACTOR_QUEEN_ROUTER, "hive_list_result", "catalog")
+                .human(format!("Found {} hive(s):", hives.len()))
+                .table(&serde_json::Value::Array(hives_json))
+                .emit();
         }
         Operation::HiveGet { .. } => {
             // /**

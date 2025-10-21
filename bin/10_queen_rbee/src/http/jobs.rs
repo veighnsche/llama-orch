@@ -24,12 +24,18 @@ pub struct SchedulerState {
     pub registry: Arc<JobRegistry<String>>,
     /// Catalog of registered hives for job routing
     pub hive_catalog: Arc<HiveCatalog>,
+    /// TEAM-190: Runtime registry for live hive/worker state
+    pub hive_registry: Arc<queen_rbee_hive_registry::HiveRegistry>,
 }
 
 /// Convert HTTP state to router state
 impl From<SchedulerState> for crate::job_router::JobState {
     fn from(state: SchedulerState) -> Self {
-        Self { registry: state.registry, hive_catalog: state.hive_catalog }
+        Self {
+            registry: state.registry,
+            hive_catalog: state.hive_catalog,
+            hive_registry: state.hive_registry, // TEAM-190
+        }
     }
 }
 

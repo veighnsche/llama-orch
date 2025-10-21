@@ -26,5 +26,9 @@ clap = { version = "4", features = ["derive"] }
 # Error handling
 anyhow = "1.0"
 
+# TEAM-190: Heartbeat functionality
+rbee-heartbeat = { path = "../99_shared_crates/heartbeat" }
+observability-narration-core = { path = "../99_shared_crates/narration-core" }
+
 [dev-dependencies]
 # Add dev dependencies as needed

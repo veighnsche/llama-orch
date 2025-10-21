@@ -58,7 +58,12 @@ pub struct Cli {
 
 #[derive(Subcommand)]
 /// TEAM-185: Added comprehensive inference parameters (top_p, top_k, device, worker_id, stream)
+/// TEAM-190: Added Status command for live hive/worker overview
 pub enum Commands {
+    /// Show live status of all hives and workers
+    /// TEAM-190: Queries hive-registry for runtime state (not catalog)
+    Status,
+
     /// Manage queen-rbee daemon
     Queen {
         #[command(subcommand)]
@@ -272,6 +277,12 @@ async fn handle_command(cli: Cli) -> Result<()> {
     let client = reqwest::Client::new();
 
     match cli.command {
+        Commands::Status => {
+            // TEAM-190: Show live status of all hives and workers from registry
+            let operation = Operation::Status;
+            submit_and_stream_job(&client, &queen_url, operation).await
+        }
+
         Commands::Queen { action } => match action {
             QueenAction::Start => {
                 let queen_handle = ensure_queen_running(&queen_url).await?;

@@ -120,8 +120,12 @@ fn create_router(
     hive_registry: Arc<queen_rbee_hive_registry::HiveRegistry>,
 ) -> axum::Router {
     // TEAM-164: Create states for HTTP endpoints
-    let job_state =
-        http::SchedulerState { registry: job_registry, hive_catalog: hive_catalog.clone() };
+    // TEAM-190: Added hive_registry to job_state for Status operation
+    let job_state = http::SchedulerState {
+        registry: job_registry,
+        hive_catalog: hive_catalog.clone(),
+        hive_registry: hive_registry.clone(),
+    };
 
     let heartbeat_state = http::HeartbeatState { hive_registry };
 
