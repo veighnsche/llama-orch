@@ -93,8 +93,6 @@ pub fn run_rbee_keeper(args: Vec<String>) -> Result<()> {
     // Check if rebuild is needed
     if needs_rebuild(&workspace_root)? {
         build_rbee_keeper(&workspace_root)?;
-    } else {
-        println!("✅ rbee-keeper is up-to-date\n");
     }
 
     // Forward command to rbee-keeper

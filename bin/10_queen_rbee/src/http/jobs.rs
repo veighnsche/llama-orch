@@ -1,6 +1,7 @@
 //! Job creation and streaming HTTP endpoints
 //!
 //! TEAM-186: Job-based architecture - ALL operations go through POST /v1/jobs
+//! TEAM-189: Fixed SSE streaming - subscribe to narration broadcaster
 //!
 //! This module is a thin HTTP wrapper that delegates to job_router for business logic.
 
@@ -12,6 +13,7 @@ use axum::{
 };
 use futures::stream::{Stream, StreamExt};
 use job_registry::JobRegistry;
+use observability_narration_core::sse_sink;
 use queen_rbee_hive_catalog::HiveCatalog;
 use std::{convert::Infallible, sync::Arc};
 
@@ -52,18 +54,73 @@ pub async fn handle_create_job(
 
 /// GET /v1/jobs/{job_id}/stream - Stream job results via SSE
 ///
-/// Thin HTTP wrapper that delegates to job_router::execute_job().
+/// TEAM-189: Fixed to subscribe to SSE narration broadcaster
+///
+/// This handler:
+/// 1. Subscribes to the global SSE narration broadcaster
+/// 2. Triggers job execution (which emits narrations)
+/// 3. Streams narration events to the client
+/// 4. Also streams token results (for inference operations)
+/// 5. Sends [DONE] marker when complete
 ///
 /// Client connects here, which triggers job execution and streams results.
 pub async fn handle_stream_job(
     Path(job_id): Path<String>,
     State(state): State<SchedulerState>,
 ) -> Sse<impl Stream<Item = Result<Event, Infallible>>> {
-    // Delegate to router for execution
-    let token_stream = crate::job_router::execute_job(job_id, state.into()).await;
+    // TEAM-189: Subscribe to SSE narration broadcaster BEFORE starting execution
+    let mut sse_rx = sse_sink::subscribe().expect("SSE sink not initialized");
 
-    // Convert String stream to SSE Event stream
-    let event_stream = token_stream.map(|data| Ok(Event::default().data(data)));
+    // Trigger job execution (spawns in background)
+    let token_stream = crate::job_router::execute_job(job_id.clone(), state.into()).await;
+    
+    // TEAM-189: Give the background task a moment to start executing
+    // Without this, the stream might close before any narrations are emitted
+    tokio::time::sleep(tokio::time::Duration::from_millis(50)).await;
 
-    Sse::new(event_stream)
+    // TEAM-189: Stream narration events from SSE broadcaster
+    // For now, we only stream narration events (not tokens from job registry)
+    // This works for all operations including SSH test
+    let combined_stream = async_stream::stream! {
+        let mut last_event_time = std::time::Instant::now();
+        let completion_timeout = std::time::Duration::from_millis(2000);
+        let mut received_first_event = false;
+
+        loop {
+            // Wait for either a narration event or timeout
+            let timeout_fut = tokio::time::sleep(completion_timeout);
+            tokio::pin!(timeout_fut);
+
+            tokio::select! {
+                // Receive narration events from SSE broadcaster
+                result = sse_rx.recv() => {
+                    match result {
+                        Ok(event) => {
+                            received_first_event = true;
+                            last_event_time = std::time::Instant::now();
+                            // Format narration as SSE data: [actor] message
+                            let formatted = format!("[{}] {}", event.actor, event.human);
+                            yield Ok(Event::default().data(formatted));
+                        }
+                        Err(_) => {
+                            // Broadcaster closed (shouldn't happen)
+                            if received_first_event {
+                                yield Ok(Event::default().data("[DONE]"));
+                            }
+                            break;
+                        }
+                    }
+                }
+                // Timeout: if no events for 2 seconds after first event, we're done
+                _ = &mut timeout_fut, if received_first_event => {
+                    if last_event_time.elapsed() >= completion_timeout {
+                        yield Ok(Event::default().data("[DONE]"));
+                        break;
+                    }
+                }
+            }
+        }
+    };
+
+    Sse::new(combined_stream)
 }

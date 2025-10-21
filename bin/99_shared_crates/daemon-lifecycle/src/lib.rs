@@ -109,10 +109,19 @@ impl DaemonManager {
         // - With output capture: works (no more hang)
         // ============================================================
 
-        let child = Command::new(&self.binary_path)
-            .args(&self.args)
+        // TEAM-189: Propagate SSH agent environment variables to daemon
+        // This allows the daemon to use the parent's SSH agent for authentication
+        let mut cmd = Command::new(&self.binary_path);
+        cmd.args(&self.args)
             .stdout(Stdio::null()) // TEAM-164: Don't inherit parent's stdout pipe
-            .stderr(Stdio::null()) // TEAM-164: Don't inherit parent's stderr pipe
+            .stderr(Stdio::null()); // TEAM-164: Don't inherit parent's stderr pipe
+        
+        // Propagate SSH agent socket if available
+        if let Ok(ssh_auth_sock) = std::env::var("SSH_AUTH_SOCK") {
+            cmd.env("SSH_AUTH_SOCK", ssh_auth_sock);
+        }
+        
+        let child = cmd
             .spawn()
             .context(format!("Failed to spawn daemon: {}", self.binary_path.display()))?;
 

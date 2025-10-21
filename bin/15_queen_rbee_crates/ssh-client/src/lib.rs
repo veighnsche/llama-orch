@@ -136,9 +136,32 @@ pub async fn test_ssh_connection(config: SshConfig) -> Result<SshTestResult> {
     result
 }
 
+/// Check if SSH agent is running (pre-flight check)
+fn check_ssh_agent() -> Result<(), String> {
+    match std::env::var("SSH_AUTH_SOCK") {
+        Ok(sock) if !sock.is_empty() => Ok(()),
+        _ => Err(
+            "SSH agent not running.\n\
+             \n\
+             To start SSH agent:\n\
+             \n\
+               eval $(ssh-agent)\n\
+               ssh-add ~/.ssh/id_rsa\n\
+             \n\
+             Then retry the command."
+                .to_string(),
+        ),
+    }
+}
+
 /// Blocking SSH connection test (called from tokio::spawn_blocking)
 fn test_ssh_connection_blocking(config: SshConfig) -> Result<SshTestResult> {
     let _target = format!("{}:{}", config.host, config.port);
+
+    // TEAM-189: Pre-flight check - verify SSH agent is running
+    if let Err(msg) = check_ssh_agent() {
+        return Ok(SshTestResult { success: false, error: Some(msg), test_output: None });
+    }
 
     // Step 1: Establish TCP connection with timeout
     let tcp = match TcpStream::connect_timeout(
