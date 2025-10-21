@@ -62,16 +62,18 @@ mod hives_config;
 mod queen_config;
 mod validation;
 
-pub use capabilities::{CapabilitiesCache, DeviceInfo, HiveCapabilities};
+pub use capabilities::{CapabilitiesCache, DeviceInfo, DeviceType, HiveCapabilities};
 pub use error::{ConfigError, Result};
 pub use hives_config::{HiveEntry, HivesConfig};
 pub use queen_config::{QueenConfig, QueenSettings, RuntimeSettings};
-pub use validation::{preflight_validation, validate_capabilities_sync, validate_hives_config, ValidationResult};
+pub use validation::{
+    preflight_validation, validate_capabilities_sync, validate_hives_config, ValidationResult,
+};
 
 use std::path::{Path, PathBuf};
 
 /// Main configuration structure
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct RbeeConfig {
     /// Queen-level configuration
     pub queen: QueenConfig,
@@ -94,20 +96,17 @@ impl RbeeConfig {
         let hives = HivesConfig::load(&dir.join("hives.conf"))?;
         let capabilities = CapabilitiesCache::load(&dir.join("capabilities.yaml"))?;
 
-        Ok(Self {
-            queen,
-            hives,
-            capabilities,
-        })
+        Ok(Self { queen, hives, capabilities })
     }
 
     /// Get config directory path (~/.config/rbee/)
     pub fn config_dir() -> Result<PathBuf> {
-        let home = std::env::var("HOME")
-            .map_err(|_| ConfigError::InvalidConfig("HOME environment variable not set".to_string()))?;
-        
+        let home = std::env::var("HOME").map_err(|_| {
+            ConfigError::InvalidConfig("HOME environment variable not set".to_string())
+        })?;
+
         let config_dir = PathBuf::from(home).join(".config").join("rbee");
-        
+
         // Create directory if it doesn't exist
         if !config_dir.exists() {
             std::fs::create_dir_all(&config_dir)?;
@@ -118,6 +117,9 @@ impl RbeeConfig {
 
     /// Validate all config files
     pub fn validate(&self) -> Result<ValidationResult> {
+        // TEAM-195: Validate queen config first
+        self.queen.validate()?;
+
         preflight_validation(&self.hives, &self.capabilities)
     }
 
@@ -135,7 +137,7 @@ mod tests {
 
     fn create_test_config_dir() -> TempDir {
         let dir = TempDir::new().unwrap();
-        
+
         // Create config.toml
         let config_toml = r#"
 [queen]
@@ -197,9 +199,9 @@ hives: {}
     fn test_config_dir_creation() {
         let temp = TempDir::new().unwrap();
         let test_home = temp.path().to_str().unwrap();
-        
+
         std::env::set_var("HOME", test_home);
-        
+
         let config_dir = RbeeConfig::config_dir().unwrap();
         assert!(config_dir.exists());
         assert!(config_dir.ends_with(".config/rbee"));
@@ -217,7 +219,9 @@ hives: {}
                 name: "RTX 4090".to_string(),
                 vram_gb: 24,
                 compute_capability: Some("8.9".to_string()),
+                device_type: capabilities::DeviceType::Gpu,
             }],
+            "http://localhost:8081".to_string(),
         );
 
         config.capabilities.update_hive("localhost", caps);

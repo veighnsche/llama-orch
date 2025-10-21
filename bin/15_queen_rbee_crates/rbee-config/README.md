@@ -1,6 +1,7 @@
 # rbee-config
 
 **Created by:** TEAM-193  
+**Updated by:** TEAM-198  
 **Purpose:** File-based configuration for rbee following Unix best practices
 
 ## Overview
@@ -67,6 +68,43 @@ hives:
     last_updated_ms: 1729540800000
 ```
 
+## Usage
+
+```rust
+use rbee_config::RbeeConfig;
+
+// Load all config files
+let config = RbeeConfig::load()?;
+
+// Validate config
+config.validate()?;
+
+// Get a hive by alias
+if let Some(hive) = config.hives.get("localhost") {
+    println!("Hive: {}@{}:{}", hive.ssh_user, hive.hostname, hive.hive_port);
+}
+
+// Update capabilities
+let caps = HiveCapabilities {
+    alias: "localhost".to_string(),
+    devices: vec![/* ... */],
+    last_updated_ms: chrono::Utc::now().timestamp_millis(),
+    endpoint: "http://localhost:8081".to_string(),
+};
+
+config.capabilities.update_hive("localhost".to_string(), caps);
+config.capabilities.save()?;
+```
+
+## Features
+
+- SSH config style parsing
+- Automatic config directory creation
+- Alias uniqueness validation
+- Required field validation
+- Auto-generated capabilities cache
+- Thread-safe config access
+
 ## API
 
 ### Load Configuration
@@ -132,6 +170,16 @@ config.capabilities.update_hive("localhost", caps);
 config.save_capabilities()?;
 ```
 
+## Testing
+
+```bash
+cargo test -p rbee-config
+```
+
+## Documentation
+
+See `docs/HIVE_CONFIGURATION.md` for user guide.
+
 ## Module Structure
 
 - `lib.rs` - Main API and RbeeConfig struct
@@ -161,23 +209,4 @@ The new file-based system:
 - ✅ Device capabilities → `capabilities.yaml` (auto-generated)
 - ✅ Runtime status → `hive-registry` (in-memory)
 
-## Testing
-
-```bash
-# Run all tests
-cargo test -p rbee-config
-
-# Run with output
-cargo test -p rbee-config -- --nocapture
-
-# Run specific test
-cargo test -p rbee-config test_load_from_dir
-```
-
-## Examples
-
-See `tests/` directory for comprehensive examples of:
-- Parsing valid and invalid configs
-- Handling missing files
-- Validation scenarios
-- Capabilities management
+See `docs/MIGRATION_GUIDE.md` for migration instructions.

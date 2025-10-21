@@ -198,6 +198,13 @@ pub enum HiveAction {
         #[arg(short = 'h', long = "host", default_value = "localhost")]
         alias: String,
     },
+    /// Refresh device capabilities for a hive
+    /// TEAM-196: Fetch and cache device capabilities from a running hive
+    RefreshCapabilities {
+        /// Hive alias from ~/.config/rbee/hives.conf
+        #[arg(short = 'h', long = "host")]
+        alias: String,
+    },
 }
 
 #[derive(Subcommand)]
@@ -344,6 +351,7 @@ async fn handle_command(cli: Cli) -> Result<()> {
 
         Commands::Hive { action } => {
             // TEAM-194: Use alias-based operations (config from hives.conf)
+            // TEAM-196: Added RefreshCapabilities command
             let operation = match action {
                 HiveAction::SshTest { alias } => Operation::SshTest { alias },
                 HiveAction::Install { alias } => Operation::HiveInstall { alias },
@@ -353,6 +361,9 @@ async fn handle_command(cli: Cli) -> Result<()> {
                 HiveAction::List => Operation::HiveList,
                 HiveAction::Get { alias } => Operation::HiveGet { alias },
                 HiveAction::Status { alias } => Operation::HiveStatus { alias },
+                HiveAction::RefreshCapabilities { alias } => {
+                    Operation::HiveRefreshCapabilities { alias }
+                }
             };
             submit_and_stream_job(&client, &queen_url, operation).await
         }

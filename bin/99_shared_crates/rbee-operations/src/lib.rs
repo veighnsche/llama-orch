@@ -73,6 +73,11 @@ pub enum Operation {
         #[serde(default = "default_hive_id")]
         alias: String,
     },
+    /// TEAM-196: Refresh device capabilities for a running hive
+    HiveRefreshCapabilities {
+        /// Alias from hives.conf
+        alias: String,
+    },
 
     // Worker operations
     WorkerSpawn {
@@ -138,7 +143,6 @@ fn default_hive_id() -> String {
     "localhost".to_string()
 }
 
-
 impl Operation {
     /// Get the operation name as a string (for logging/narration)
     pub fn name(&self) -> &'static str {
@@ -152,6 +156,7 @@ impl Operation {
             Operation::HiveList => "hive_list",
             Operation::HiveGet { .. } => "hive_get",
             Operation::HiveStatus { .. } => "hive_status",
+            Operation::HiveRefreshCapabilities { .. } => "hive_refresh_capabilities", // TEAM-196
             Operation::WorkerSpawn { .. } => "worker_spawn",
             Operation::WorkerList { .. } => "worker_list",
             Operation::WorkerGet { .. } => "worker_get",
@@ -173,6 +178,7 @@ impl Operation {
             Operation::HiveStop { alias } => Some(alias),
             Operation::HiveGet { alias } => Some(alias),
             Operation::HiveStatus { alias } => Some(alias),
+            Operation::HiveRefreshCapabilities { alias } => Some(alias), // TEAM-196
             Operation::WorkerSpawn { hive_id, .. } => Some(hive_id),
             Operation::WorkerList { hive_id } => Some(hive_id),
             Operation::WorkerGet { hive_id, .. } => Some(hive_id),
@@ -232,9 +238,7 @@ mod tests {
     #[test]
     fn test_serialize_hive_install() {
         // TEAM-194: Test alias-based install
-        let op = Operation::HiveInstall {
-            alias: "localhost".to_string(),
-        };
+        let op = Operation::HiveInstall { alias: "localhost".to_string() };
         let json = serde_json::to_string(&op).unwrap();
         assert!(json.contains(r#""operation":"hive_install"#));
         assert!(json.contains(r#""alias":"localhost"#));
@@ -243,9 +247,7 @@ mod tests {
     #[test]
     fn test_serialize_hive_install_remote() {
         // TEAM-194: Test remote alias install
-        let op = Operation::HiveInstall {
-            alias: "workstation".to_string(),
-        };
+        let op = Operation::HiveInstall { alias: "workstation".to_string() };
         let json = serde_json::to_string(&op).unwrap();
         assert!(json.contains(r#""operation":"hive_install"#));
         assert!(json.contains(r#""alias":"workstation"#));
@@ -259,7 +261,6 @@ mod tests {
         assert!(json.contains(r#""operation":"hive_uninstall"#));
         assert!(json.contains(r#""alias":"localhost"#));
     }
-
 
     #[test]
     fn test_serialize_hive_start() {
@@ -349,17 +350,8 @@ mod tests {
         assert_eq!(Operation::HiveList.name(), "hive_list");
         assert_eq!(Operation::HiveStart { alias: "test".to_string() }.name(), "hive_start");
         // TEAM-194: Test alias-based operation names
-        assert_eq!(
-            Operation::HiveInstall {
-                alias: "test".to_string(),
-            }
-            .name(),
-            "hive_install"
-        );
-        assert_eq!(
-            Operation::HiveUninstall { alias: "test".to_string() }.name(),
-            "hive_uninstall"
-        );
+        assert_eq!(Operation::HiveInstall { alias: "test".to_string() }.name(), "hive_install");
+        assert_eq!(Operation::HiveUninstall { alias: "test".to_string() }.name(), "hive_uninstall");
     }
 
     #[test]
@@ -371,9 +363,7 @@ mod tests {
         assert_eq!(op.hive_id(), None);
 
         // TEAM-194: Test alias extraction for new operations
-        let op = Operation::HiveInstall {
-            alias: "hive-prod".to_string(),
-        };
+        let op = Operation::HiveInstall { alias: "hive-prod".to_string() };
         assert_eq!(op.hive_id(), Some("hive-prod"));
     }
 }

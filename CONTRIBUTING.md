@@ -18,6 +18,22 @@ Thank you for your interest in contributing!
   - `cargo build --workspace`
   - `cargo test --workspace --all-features -- --nocapture`
 
+## Configuration Files
+
+When developing rbee, you'll work with these config files:
+
+- `~/.config/rbee/config.toml` - Queen settings
+- `~/.config/rbee/hives.conf` - Hive definitions
+- `~/.config/rbee/capabilities.yaml` - Auto-generated (don't edit)
+
+For testing, you can use a different config directory:
+
+```bash
+export RBEE_CONFIG_DIR=/tmp/rbee-test-config
+```
+
+(Note: This requires implementing `RBEE_CONFIG_DIR` env var support)
+
 ## Xtask
 
 Use `cargo xtask` subcommands to regenerate contracts and run CI helpers.

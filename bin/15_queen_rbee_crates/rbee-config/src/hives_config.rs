@@ -18,19 +18,19 @@ pub struct HivesConfig {
 pub struct HiveEntry {
     /// Alias (from "Host" directive)
     pub alias: String,
-    
+
     /// Hostname or IP address
     pub hostname: String,
-    
+
     /// SSH port
     pub ssh_port: u16,
-    
+
     /// SSH username
     pub ssh_user: String,
-    
+
     /// Hive HTTP API port
     pub hive_port: u16,
-    
+
     /// Optional path to rbee-hive binary
     pub binary_path: Option<String>,
 }
@@ -39,9 +39,7 @@ impl HivesConfig {
     /// Create new empty hives config (for testing)
     #[cfg(test)]
     pub(crate) fn new_empty() -> Self {
-        Self {
-            hives: HashMap::new(),
-        }
+        Self { hives: HashMap::new() }
     }
 
     /// Create from hashmap (for testing)
@@ -54,21 +52,17 @@ impl HivesConfig {
     pub fn load(path: &Path) -> Result<Self> {
         if !path.exists() {
             // Return empty config if file doesn't exist
-            return Ok(Self {
-                hives: HashMap::new(),
-            });
+            return Ok(Self { hives: HashMap::new() });
         }
 
-        let content = std::fs::read_to_string(path).map_err(|e| ConfigError::ReadError {
-            path: path.to_path_buf(),
-            source: e,
-        })?;
+        let content = std::fs::read_to_string(path)
+            .map_err(|e| ConfigError::ReadError { path: path.to_path_buf(), source: e })?;
 
         let hives = parse_hives_conf(&content)?;
-        
+
         let config = Self { hives };
         config.validate_unique_aliases()?;
-        
+
         Ok(config)
     }
 
@@ -130,12 +124,12 @@ fn parse_hives_conf(content: &str) -> Result<HashMap<String, HiveEntry>> {
             // Save previous host if exists
             if let Some(alias) = current_host.take() {
                 let entry = current_entry.finalize(&alias)?;
-                
+
                 // Check for duplicate alias
                 if hives.contains_key(&alias) {
                     return Err(ConfigError::DuplicateAlias { alias });
                 }
-                
+
                 hives.insert(alias, entry);
                 current_entry = PartialHiveEntry::default();
             }
@@ -165,21 +159,19 @@ fn parse_hives_conf(content: &str) -> Result<HashMap<String, HiveEntry>> {
             match key {
                 "HostName" => current_entry.hostname = Some(value.to_string()),
                 "Port" => {
-                    current_entry.ssh_port = Some(value.parse().map_err(|_| {
-                        ConfigError::InvalidPort {
+                    current_entry.ssh_port =
+                        Some(value.parse().map_err(|_| ConfigError::InvalidPort {
                             host: current_host.clone().unwrap_or_default(),
                             value: value.to_string(),
-                        }
-                    })?);
+                        })?);
                 }
                 "User" => current_entry.ssh_user = Some(value.to_string()),
                 "HivePort" => {
-                    current_entry.hive_port = Some(value.parse().map_err(|_| {
-                        ConfigError::InvalidPort {
+                    current_entry.hive_port =
+                        Some(value.parse().map_err(|_| ConfigError::InvalidPort {
                             host: current_host.clone().unwrap_or_default(),
                             value: value.to_string(),
-                        }
-                    })?);
+                        })?);
                 }
                 "BinaryPath" => current_entry.binary_path = Some(value.to_string()),
                 _ => {
@@ -197,11 +189,11 @@ fn parse_hives_conf(content: &str) -> Result<HashMap<String, HiveEntry>> {
     // Save last host
     if let Some(alias) = current_host {
         let entry = current_entry.finalize(&alias)?;
-        
+
         if hives.contains_key(&alias) {
             return Err(ConfigError::DuplicateAlias { alias });
         }
-        
+
         hives.insert(alias, entry);
     }
 
@@ -227,7 +219,7 @@ impl PartialHiveEntry {
         })?;
 
         let ssh_port = self.ssh_port.unwrap_or(22); // Default SSH port
-        
+
         let ssh_user = self.ssh_user.ok_or_else(|| ConfigError::MissingField {
             host: alias.to_string(),
             field: "User".to_string(),

@@ -11,28 +11,16 @@ pub enum ConfigError {
     DirectoryNotFound(PathBuf),
 
     #[error("Failed to read config file {path}: {source}")]
-    ReadError {
-        path: PathBuf,
-        source: std::io::Error,
-    },
+    ReadError { path: PathBuf, source: std::io::Error },
 
     #[error("Failed to write config file {path}: {source}")]
-    WriteError {
-        path: PathBuf,
-        source: std::io::Error,
-    },
+    WriteError { path: PathBuf, source: std::io::Error },
 
     #[error("Failed to parse TOML config {path}: {source}")]
-    TomlParseError {
-        path: PathBuf,
-        source: toml::de::Error,
-    },
+    TomlParseError { path: PathBuf, source: toml::de::Error },
 
     #[error("Failed to parse YAML config {path}: {source}")]
-    YamlParseError {
-        path: PathBuf,
-        source: serde_yaml::Error,
-    },
+    YamlParseError { path: PathBuf, source: serde_yaml::Error },
 
     #[error("Failed to serialize YAML: {0}")]
     YamlSerializeError(#[from] serde_yaml::Error),

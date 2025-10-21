@@ -10,7 +10,9 @@
 
 use axum::{routing::get, Router};
 use clap::Parser;
-use rbee_heartbeat::{start_hive_heartbeat_task, HiveHeartbeatConfig, WorkerStateProvider, WorkerState};
+use rbee_heartbeat::{
+    start_hive_heartbeat_task, HiveHeartbeatConfig, WorkerState, WorkerStateProvider,
+};
 use std::net::SocketAddr;
 use std::sync::Arc;
 
@@ -69,7 +71,7 @@ async fn main() -> anyhow::Result<()> {
     let app = Router::new().route("/health", get(health_check));
 
     let addr = SocketAddr::from(([127, 0, 0, 1], args.port));
-    
+
     println!("✅ rbee-hive listening on http://{}", addr);
 
     let listener = tokio::net::TcpListener::bind(addr).await?;

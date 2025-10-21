@@ -11,6 +11,7 @@
 //! Port 8500 (default) - rbee-keeper checks GET /health to see if queen is running
 
 // TEAM-164: Migrated endpoints to dedicated modules/files
+mod hive_client; // TEAM-196: HTTP client for hive capabilities
 mod http;
 mod job_router; // TEAM-186: Job routing and operation dispatch
 mod narration; // TEAM-188: Narration constants
@@ -57,7 +58,8 @@ async fn main() -> Result<()> {
     // TEAM-164: Initialize SSE sink for distributed narration
     observability_narration_core::sse_sink::init(1000);
 
-    NARRATE.action("start")
+    NARRATE
+        .action("start")
         .context(args.port.to_string())
         .human("Queen-rbee starting on port {}")
         .emit();
@@ -67,13 +69,13 @@ async fn main() -> Result<()> {
         RbeeConfig::load_from_dir(&PathBuf::from(dir))
             .map_err(|e| anyhow::anyhow!("Failed to load config: {}", e))?
     } else {
-        RbeeConfig::load()
-            .map_err(|e| anyhow::anyhow!("Failed to load config: {}", e))?
+        RbeeConfig::load().map_err(|e| anyhow::anyhow!("Failed to load config: {}", e))?
     };
 
     let config_dir = RbeeConfig::config_dir()?;
 
-    NARRATE.action("start")
+    NARRATE
+        .action("start")
         .context(config_dir.display().to_string())
         .human("Loaded config from {}")
         .emit();
@@ -93,18 +95,14 @@ async fn main() -> Result<()> {
     let app = create_router(job_registry, Arc::new(config), hive_registry);
     let addr = SocketAddr::from(([127, 0, 0, 1], args.port));
 
-    NARRATE.action("listen")
-        .context(addr.to_string())
-        .human("Listening on http://{}")
-        .emit();
+    NARRATE.action("listen").context(addr.to_string()).human("Listening on http://{}").emit();
 
-    NARRATE.action("ready")
-        .human("Ready to accept connections")
-        .emit();
+    NARRATE.action("ready").human("Ready to accept connections").emit();
 
     let listener = tokio::net::TcpListener::bind(addr).await?;
     axum::serve(listener, app).await.map_err(|e| {
-        NARRATE.action("error")
+        NARRATE
+            .action("error")
             .context(e.to_string())
             .human("Server error: {}")
             .error_kind("server_failed")
@@ -155,8 +153,6 @@ fn create_router(
 /// TEAM-164: Migrated from http.rs to main.rs
 use axum::http::StatusCode;
 async fn handle_shutdown() -> StatusCode {
-    NARRATE.action("shutdown")
-        .human("Received shutdown request, exiting gracefully")
-        .emit();
+    NARRATE.action("shutdown").human("Received shutdown request, exiting gracefully").emit();
     std::process::exit(0);
 }

@@ -11,6 +11,7 @@
 use anyhow::{Context, Result};
 use daemon_lifecycle::DaemonManager;
 use observability_narration_core::NarrationFactory;
+use rbee_config::RbeeConfig; // TEAM-195: For preflight validation
 use std::time::Duration;
 use timeout_enforcer::TimeoutEnforcer;
 use tokio::time::sleep;
@@ -107,10 +108,64 @@ async fn ensure_queen_running_inner(base_url: &str) -> Result<QueenHandle> {
         return Ok(QueenHandle::already_running(base_url.to_string()));
     }
 
-    // Step 2: Queen is not running, start it
+    // Step 2: TEAM-195: Preflight validation before starting queen
+    NARRATE.action("queen_preflight").human("📋 Loading rbee configuration...").emit();
+
+    let config = RbeeConfig::load().context("Failed to load rbee config")?;
+
+    NARRATE
+        .action("queen_preflight")
+        .human(format!("✅ Config loaded from {}", RbeeConfig::config_dir()?.display()))
+        .emit();
+
+    // Validate configuration
+    NARRATE.action("queen_preflight").human("🔍 Validating configuration...").emit();
+
+    let validation_result = config.validate().context("Configuration validation failed")?;
+
+    if !validation_result.is_valid() {
+        NARRATE
+            .action("queen_preflight")
+            .human(format!(
+                "❌ Configuration validation failed:\n\n{}\n\nPlease fix the errors in ~/.config/rbee/ and try again.",
+                validation_result.errors.join("\n")
+            ))
+            .error_kind("config_validation_failed")
+            .emit();
+        anyhow::bail!("Configuration validation failed: {}", validation_result.errors.join(", "));
+    }
+
+    // Report hive count
+    let hive_count = config.hives.len();
+    NARRATE.action("queen_preflight").human(format!("✅ {} hive(s) configured", hive_count)).emit();
+
+    // Report capabilities
+    let caps_count = config.capabilities.aliases().len();
+    if caps_count > 0 {
+        NARRATE
+            .action("queen_preflight")
+            .human(format!("📊 {} hive(s) have cached capabilities", caps_count))
+            .emit();
+    } else {
+        NARRATE
+            .action("queen_preflight")
+            .human("⚠️  No cached capabilities found (hives not yet started)")
+            .emit();
+    }
+
+    // Report warnings if any
+    if validation_result.has_warnings() {
+        for warning in &validation_result.warnings {
+            NARRATE.action("queen_preflight").human(format!("⚠️  {}", warning)).emit();
+        }
+    }
+
+    NARRATE.action("queen_preflight").human("✅ All preflight checks passed").emit();
+
+    // Step 3: Queen is not running, start it
     NARRATE.action("queen_start").human("⚠️  Queen is asleep, waking queen").emit();
 
-    // Step 3: Find queen-rbee binary in target directory
+    // Step 4: Find queen-rbee binary in target directory
     let queen_binary = DaemonManager::find_in_target("queen-rbee")
         .context("Failed to find queen-rbee binary in target directory")?;
 
@@ -120,7 +175,7 @@ async fn ensure_queen_running_inner(base_url: &str) -> Result<QueenHandle> {
         .human("Found queen-rbee binary at {}")
         .emit();
 
-    // Step 4: Spawn queen process
+    // Step 5: Spawn queen process
     let args = vec!["--port".to_string(), "8500".to_string()];
     let manager = DaemonManager::new(queen_binary, args);
 
@@ -131,12 +186,12 @@ async fn ensure_queen_running_inner(base_url: &str) -> Result<QueenHandle> {
         .human("Queen-rbee process spawned, waiting for health check")
         .emit();
 
-    // Step 5: Poll health until ready (30 second timeout)
+    // Step 6: Poll health until ready (30 second timeout)
     poll_until_healthy(base_url, Duration::from_secs(30))
         .await
         .context("Queen failed to become healthy within timeout")?;
 
-    // Step 6: Success!
+    // Step 7: Success!
     let elapsed_ms = start_time.elapsed().as_millis() as u64;
     let pid = _child.id();
     NARRATE

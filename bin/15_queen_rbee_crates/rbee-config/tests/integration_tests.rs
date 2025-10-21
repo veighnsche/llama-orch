@@ -2,7 +2,7 @@
 //!
 //! Created by: TEAM-193
 
-use rbee_config::{RbeeConfig, HiveCapabilities, DeviceInfo};
+use rbee_config::{DeviceInfo, DeviceType, HiveCapabilities, RbeeConfig};
 use std::fs;
 use tempfile::TempDir;
 
@@ -69,7 +69,7 @@ fn test_validation_with_complete_config() {
 
     let result = config.validate().unwrap();
     assert!(result.is_valid());
-    
+
     // Should have warning about gpu-cloud not having capabilities
     assert!(result.has_warnings());
     assert!(result.warnings.iter().any(|w| w.contains("gpu-cloud")));
@@ -88,7 +88,9 @@ fn test_update_and_save_capabilities() {
             name: "NVIDIA H100".to_string(),
             vram_gb: 80,
             compute_capability: Some("9.0".to_string()),
+            device_type: DeviceType::Gpu,
         }],
+        "http://localhost:8081".to_string(),
     );
 
     config.capabilities.update_hive("gpu-cloud", caps);
@@ -97,7 +99,7 @@ fn test_update_and_save_capabilities() {
     // Reload and verify
     let reloaded = RbeeConfig::load_from_dir(dir.path()).unwrap();
     assert_eq!(reloaded.capabilities.len(), 3);
-    
+
     let gpu_cloud_caps = reloaded.capabilities.get("gpu-cloud").unwrap();
     assert_eq!(gpu_cloud_caps.devices.len(), 1);
     assert_eq!(gpu_cloud_caps.devices[0].name, "NVIDIA H100");
@@ -122,7 +124,7 @@ fn test_load_invalid_hives_conf() {
     // Should fail due to duplicate alias
     let result = RbeeConfig::load_from_dir(dir.path());
     assert!(result.is_err());
-    
+
     let err = result.unwrap_err();
     assert!(err.to_string().contains("duplicate"));
 }
@@ -196,7 +198,9 @@ fn test_yaml_header_preservation() {
             name: "Test GPU".to_string(),
             vram_gb: 8,
             compute_capability: None,
+            device_type: DeviceType::Gpu,
         }],
+        "http://localhost:8081".to_string(),
     );
 
     config.capabilities.update_hive("test", caps);

@@ -11,7 +11,7 @@ use std::path::Path;
 pub struct QueenConfig {
     #[serde(default)]
     pub queen: QueenSettings,
-    
+
     #[serde(default)]
     pub runtime: RuntimeSettings,
 }
@@ -22,7 +22,7 @@ pub struct QueenSettings {
     /// Port for queen-rbee HTTP API
     #[serde(default = "default_queen_port")]
     pub port: u16,
-    
+
     /// Log level (trace, debug, info, warn, error)
     #[serde(default = "default_log_level")]
     pub log_level: String,
@@ -30,10 +30,7 @@ pub struct QueenSettings {
 
 impl Default for QueenSettings {
     fn default() -> Self {
-        Self {
-            port: default_queen_port(),
-            log_level: default_log_level(),
-        }
+        Self { port: default_queen_port(), log_level: default_log_level() }
     }
 }
 
@@ -47,22 +44,29 @@ pub struct RuntimeSettings {
 
 impl Default for RuntimeSettings {
     fn default() -> Self {
-        Self {
-            max_concurrent_operations: default_max_concurrent(),
-        }
+        Self { max_concurrent_operations: default_max_concurrent() }
     }
 }
 
 impl Default for QueenConfig {
     fn default() -> Self {
-        Self {
-            queen: QueenSettings::default(),
-            runtime: RuntimeSettings::default(),
-        }
+        Self { queen: QueenSettings::default(), runtime: RuntimeSettings::default() }
     }
 }
 
 impl QueenConfig {
+    /// Validate queen configuration
+    pub fn validate(&self) -> Result<()> {
+        // TEAM-195: u16 max is 65535, so only check for 0
+        if self.queen.port == 0 {
+            return Err(ConfigError::InvalidConfig(format!(
+                "Invalid queen port: {} (must be 1-65535)",
+                self.queen.port
+            )));
+        }
+        Ok(())
+    }
+
     /// Load from config.toml file
     pub fn load(path: &Path) -> Result<Self> {
         if !path.exists() {
@@ -70,26 +74,21 @@ impl QueenConfig {
             return Ok(Self::default());
         }
 
-        let content = std::fs::read_to_string(path).map_err(|e| ConfigError::ReadError {
-            path: path.to_path_buf(),
-            source: e,
-        })?;
+        let content = std::fs::read_to_string(path)
+            .map_err(|e| ConfigError::ReadError { path: path.to_path_buf(), source: e })?;
 
-        toml::from_str(&content).map_err(|e| ConfigError::TomlParseError {
-            path: path.to_path_buf(),
-            source: e,
-        })
+        toml::from_str(&content)
+            .map_err(|e| ConfigError::TomlParseError { path: path.to_path_buf(), source: e })
     }
 
     /// Save to config.toml file
     pub fn save(&self, path: &Path) -> Result<()> {
-        let content = toml::to_string_pretty(self)
-            .map_err(|e| ConfigError::InvalidConfig(format!("Failed to serialize config: {}", e)))?;
+        let content = toml::to_string_pretty(self).map_err(|e| {
+            ConfigError::InvalidConfig(format!("Failed to serialize config: {}", e))
+        })?;
 
-        std::fs::write(path, content).map_err(|e| ConfigError::WriteError {
-            path: path.to_path_buf(),
-            source: e,
-        })
+        std::fs::write(path, content)
+            .map_err(|e| ConfigError::WriteError { path: path.to_path_buf(), source: e })
     }
 }
 
@@ -168,5 +167,26 @@ port = 7070
         assert_eq!(config.queen.port, 7070);
         assert_eq!(config.queen.log_level, "info"); // default
         assert_eq!(config.runtime.max_concurrent_operations, 10); // default
+    }
+
+    // TEAM-195: Validation tests
+    #[test]
+    fn test_validate_valid_config() {
+        let config = QueenConfig::default();
+        assert!(config.validate().is_ok());
+    }
+
+    #[test]
+    fn test_validate_invalid_port_zero() {
+        let mut config = QueenConfig::default();
+        config.queen.port = 0;
+        assert!(config.validate().is_err());
+    }
+
+    #[test]
+    fn test_validate_valid_port_max() {
+        let mut config = QueenConfig::default();
+        config.queen.port = 65535; // Max valid u16
+        assert!(config.validate().is_ok());
     }
 }

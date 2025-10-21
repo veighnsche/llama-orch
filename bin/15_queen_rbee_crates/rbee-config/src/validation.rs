@@ -2,9 +2,9 @@
 //!
 //! Created by: TEAM-193
 
+use crate::capabilities::CapabilitiesCache;
 use crate::error::Result;
 use crate::hives_config::HivesConfig;
-use crate::capabilities::CapabilitiesCache;
 
 /// Validation results
 #[derive(Debug, Clone)]
@@ -17,11 +17,7 @@ pub struct ValidationResult {
 impl ValidationResult {
     /// Create new validation result
     pub fn new() -> Self {
-        Self {
-            valid: true,
-            errors: Vec::new(),
-            warnings: Vec::new(),
-        }
+        Self { valid: true, errors: Vec::new(), warnings: Vec::new() }
     }
 
     /// Add error
@@ -69,12 +65,12 @@ pub fn validate_hives_config(hives: &HivesConfig) -> ValidationResult {
             result.add_error(format!("Hive '{}': hostname is empty", entry.alias));
         }
 
-        // Validate SSH port
+        // Validate SSH port (u16 max is 65535, so no need to check upper bound)
         if entry.ssh_port == 0 {
             result.add_error(format!("Hive '{}': SSH port cannot be 0", entry.alias));
         }
 
-        // Validate hive port
+        // Validate hive port (u16 max is 65535, so no need to check upper bound)
         if entry.hive_port == 0 {
             result.add_error(format!("Hive '{}': hive port cannot be 0", entry.alias));
         }
@@ -108,18 +104,14 @@ pub fn validate_capabilities_sync(
 
     // Find hives without capabilities
     for alias in hive_aliases.difference(&cap_aliases) {
-        result.add_warning(format!(
-            "Hive '{}' is configured but has no cached capabilities",
-            alias
-        ));
+        result
+            .add_warning(format!("Hive '{}' is configured but has no cached capabilities", alias));
     }
 
     // Find capabilities for non-existent hives
     for alias in cap_aliases.difference(&hive_aliases) {
-        result.add_warning(format!(
-            "Capabilities cached for '{}' but hive is not configured",
-            alias
-        ));
+        result
+            .add_warning(format!("Capabilities cached for '{}' but hive is not configured", alias));
     }
 
     result
@@ -148,8 +140,8 @@ pub fn preflight_validation(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::hives_config::HiveEntry;
     use crate::capabilities::HiveCapabilities;
+    use crate::hives_config::HiveEntry;
     use std::collections::HashMap;
 
     fn create_test_hive(alias: &str) -> HiveEntry {
@@ -221,11 +213,11 @@ mod tests {
         let mut cap_map = HashMap::new();
         cap_map.insert(
             "hive1".to_string(),
-            HiveCapabilities::new("hive1".to_string(), vec![]),
+            HiveCapabilities::new("hive1".to_string(), vec![], "http://localhost:8081".to_string()),
         );
         cap_map.insert(
             "hive3".to_string(),
-            HiveCapabilities::new("hive3".to_string(), vec![]),
+            HiveCapabilities::new("hive3".to_string(), vec![], "http://localhost:8081".to_string()),
         );
         let capabilities = CapabilitiesCache::from_map(
             std::path::PathBuf::new(),
@@ -253,5 +245,32 @@ mod tests {
         let result = preflight_validation(&hives, &capabilities).unwrap();
         assert!(result.is_valid());
         assert!(result.has_warnings()); // test hive has no capabilities
+    }
+
+    // TEAM-195: Port validation tests
+    #[test]
+    fn test_validate_zero_ssh_port() {
+        let mut hives_map = HashMap::new();
+        let mut hive = create_test_hive("test");
+        hive.ssh_port = 0; // Invalid port
+        hives_map.insert("test".to_string(), hive);
+        let hives = HivesConfig::from_map(hives_map);
+
+        let result = validate_hives_config(&hives);
+        assert!(!result.is_valid());
+        assert!(result.errors.iter().any(|e| e.contains("SSH port cannot be 0")));
+    }
+
+    #[test]
+    fn test_validate_zero_hive_port() {
+        let mut hives_map = HashMap::new();
+        let mut hive = create_test_hive("test");
+        hive.hive_port = 0; // Invalid port
+        hives_map.insert("test".to_string(), hive);
+        let hives = HivesConfig::from_map(hives_map);
+
+        let result = validate_hives_config(&hives);
+        assert!(!result.is_valid());
+        assert!(result.errors.iter().any(|e| e.contains("hive port cannot be 0")));
     }
 }

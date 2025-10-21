@@ -115,12 +115,12 @@ impl DaemonManager {
         cmd.args(&self.args)
             .stdout(Stdio::null()) // TEAM-164: Don't inherit parent's stdout pipe
             .stderr(Stdio::null()); // TEAM-164: Don't inherit parent's stderr pipe
-        
+
         // Propagate SSH agent socket if available
         if let Ok(ssh_auth_sock) = std::env::var("SSH_AUTH_SOCK") {
             cmd.env("SSH_AUTH_SOCK", ssh_auth_sock);
         }
-        
+
         let child = cmd
             .spawn()
             .context(format!("Failed to spawn daemon: {}", self.binary_path.display()))?;

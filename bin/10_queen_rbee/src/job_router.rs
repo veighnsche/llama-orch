@@ -23,14 +23,17 @@
 //! Stream results via SSE
 //! ```
 
-use anyhow::Result;
+use anyhow::{Context, Result};
 use job_registry::JobRegistry;
 use observability_narration_core::NarrationFactory;
-use rbee_config::RbeeConfig;
 use queen_rbee_hive_lifecycle::{execute_ssh_test, SshTestRequest};
 use queen_rbee_hive_registry::HiveRegistry; // TEAM-190: For Status operation
+use rbee_config::{HiveCapabilities, RbeeConfig};
 use rbee_operations::Operation;
 use std::sync::Arc;
+
+// TEAM-196: Import hive client for capabilities fetching
+use crate::hive_client::{check_hive_health, fetch_hive_capabilities};
 
 // TEAM-192: Narration factory for job router
 const NARRATE: NarrationFactory = NarrationFactory::new("qn-router");
@@ -39,7 +42,7 @@ const NARRATE: NarrationFactory = NarrationFactory::new("qn-router");
 #[derive(Clone)]
 pub struct JobState {
     pub registry: Arc<JobRegistry<String>>,
-    pub config: Arc<RbeeConfig>, // TEAM-194: File-based config
+    pub config: Arc<RbeeConfig>,          // TEAM-194: File-based config
     pub hive_registry: Arc<HiveRegistry>, // TEAM-190: For Status operation
 }
 
@@ -87,13 +90,46 @@ pub async fn execute_job(
     .await
 }
 
+/// TEAM-195: Validate that a hive alias exists in config
+///
+/// Returns helpful error message listing available hives if alias not found.
+fn validate_hive_exists<'a>(
+    config: &'a RbeeConfig,
+    alias: &str,
+) -> Result<&'a rbee_config::HiveEntry> {
+    config.hives.get(alias).ok_or_else(|| {
+        let available_hives = config.hives.all();
+        let hive_list = if available_hives.is_empty() {
+            "  (none configured)".to_string()
+        } else {
+            available_hives
+                .iter()
+                .map(|h| format!("  - {}", h.alias))
+                .collect::<Vec<_>>()
+                .join("\n")
+        };
+
+        anyhow::anyhow!(
+            "Hive alias '{}' not found in hives.conf.\n\
+             \n\
+             Available hives:\n\
+             {}\n\
+             \n\
+             Add '{}' to ~/.config/rbee/hives.conf to use it.",
+            alias,
+            hive_list,
+            alias
+        )
+    })
+}
+
 /// Internal: Route operation to appropriate handler
 ///
 /// This parses the payload and dispatches to the correct operation handler.
 async fn route_operation(
     payload: serde_json::Value,
     registry: Arc<JobRegistry<String>>,
-    config: Arc<RbeeConfig>, // TEAM-194
+    config: Arc<RbeeConfig>,          // TEAM-194
     hive_registry: Arc<HiveRegistry>, // TEAM-190: Added for Status operation
 ) -> Result<()> {
     let state = JobState { registry, config, hive_registry };
@@ -103,11 +139,7 @@ async fn route_operation(
 
     let operation_name = operation.name();
 
-    NARRATE
-        .action("route_job")
-        .context(operation_name)
-        .human("Executing operation: {}")
-        .emit();
+    NARRATE.action("route_job").context(operation_name).human("Executing operation: {}").emit();
 
     // TEAM-186: Route to appropriate handler based on operation type
     // TEAM-187: Updated to handle HiveInstall/HiveUninstall/HiveUpdate operations
@@ -182,8 +214,8 @@ async fn route_operation(
         Operation::SshTest { alias } => {
             // TEAM-188: Test SSH connection using config from hives.conf
             // TEAM-194: Lookup SSH details from config by alias
-            let hive_config = state.config.hives.get(&alias)
-                .ok_or_else(|| anyhow::anyhow!("Hive '{}' not found in config", alias))?;
+            // TEAM-195: Use validation helper for better error messages
+            let hive_config = validate_hive_exists(&state.config, &alias)?;
 
             let request = SshTestRequest {
                 ssh_host: hive_config.hostname.clone(),
@@ -208,17 +240,14 @@ async fn route_operation(
         }
         Operation::HiveInstall { alias } => {
             // TEAM-194: Install hive using config from hives.conf
-            let hive_config = state.config.hives.get(&alias)
-                .ok_or_else(|| anyhow::anyhow!("Hive '{}' not found in config. Add it to ~/.config/rbee/hives.conf first", alias))?;
+            // TEAM-195: Use validation helper for better error messages
+            let hive_config = validate_hive_exists(&state.config, &alias)?;
 
-            NARRATE
-                .action("hive_install")
-                .context(&alias)
-                .human("🔧 Installing hive '{}'")
-                .emit();
+            NARRATE.action("hive_install").context(&alias).human("🔧 Installing hive '{}'").emit();
 
             // STEP 1: Determine if this is localhost or remote installation
-            let is_remote = hive_config.hostname != "127.0.0.1" && hive_config.hostname != "localhost";
+            let is_remote =
+                hive_config.hostname != "127.0.0.1" && hive_config.hostname != "localhost";
 
             if is_remote {
                 // REMOTE INSTALLATION
@@ -244,10 +273,7 @@ async fn route_operation(
                 return Err(anyhow::anyhow!("Remote installation not yet implemented"));
             } else {
                 // LOCALHOST INSTALLATION
-                NARRATE
-                    .action("hive_mode")
-                    .human("🏠 Localhost installation")
-                    .emit();
+                NARRATE.action("hive_mode").human("🏠 Localhost installation").emit();
 
                 // STEP 2: Find or build the rbee-hive binary
                 let binary = if let Some(provided_path) = &hive_config.binary_path {
@@ -319,7 +345,8 @@ async fn route_operation(
                     .context(&alias)
                     .context(hive_config.hive_port.to_string())
                     .context(&binary)
-                    .human("✅ Hive '{0}' configured successfully!\n\
+                    .human(
+                        "✅ Hive '{0}' configured successfully!\n\
                          \n\
                          Configuration:\n\
                          - Host: localhost\n\
@@ -328,28 +355,53 @@ async fn route_operation(
                          \n\
                          To start the hive:\n\
                          \n\
-                           ./rbee hive start --host {0}")
+                           ./rbee hive start --host {0}",
+                    )
                     .emit();
             }
         }
         Operation::HiveUninstall { alias } => {
             // TEAM-194: Hive uninstall - remove from config
+            // TEAM-195: Use validation helper for better error messages
+            let _hive_config = validate_hive_exists(&state.config, &alias)?;
+
             NARRATE
                 .action("hive_uninstall")
                 .context(&alias)
                 .human("🗑️  Uninstalling hive '{}'")
                 .emit();
 
-            // Check if hive exists in config
-            let _hive_config = state.config.hives.get(&alias)
-                .ok_or_else(|| anyhow::anyhow!("Hive '{}' not found in config", alias))?;
+            // TEAM-196: Remove from capabilities cache
+            if state.config.capabilities.contains(&alias) {
+                NARRATE
+                    .action("hive_cache_cleanup")
+                    .human("🗑️  Removing from capabilities cache...")
+                    .emit();
+
+                let mut config = (*state.config).clone();
+                config.capabilities.remove(&alias);
+                if let Err(e) = config.capabilities.save() {
+                    NARRATE
+                        .action("hive_cache_error")
+                        .context(e.to_string())
+                        .human("⚠️  Failed to save capabilities cache: {}")
+                        .emit();
+                } else {
+                    NARRATE
+                        .action("hive_cache_removed")
+                        .human("✅ Removed from capabilities cache")
+                        .emit();
+                }
+            }
 
             NARRATE
                 .action("hive_complete")
                 .context(&alias)
-                .human("✅ Hive '{}' uninstalled successfully.\n\
+                .human(
+                    "✅ Hive '{}' uninstalled successfully.\n\
                      \n\
-                     To remove from config, edit ~/.config/rbee/hives.conf")
+                     To remove from config, edit ~/.config/rbee/hives.conf",
+                )
                 .emit();
 
             // TEAM-189: Implemented pre-flight check - hive must be stopped before uninstall
@@ -393,23 +445,16 @@ async fn route_operation(
         }
         Operation::HiveStart { alias } => {
             // TEAM-194: Start hive using config from hives.conf
-            NARRATE
-                .action("hive_start")
-                .context(&alias)
-                .human("🚀 Starting hive '{}'")
-                .emit();
+            // TEAM-195: Use validation helper for better error messages
+            let hive_config = validate_hive_exists(&state.config, &alias)?;
 
-            // Get hive from config
-            let hive_config = state.config.hives.get(&alias)
-                .ok_or_else(|| anyhow::anyhow!("Hive '{}' not found in config", alias))?;
+            NARRATE.action("hive_start").context(&alias).human("🚀 Starting hive '{}'").emit();
 
             // Check if already running
-            NARRATE
-                .action("hive_check")
-                .human("📋 Checking if hive is already running...")
-                .emit();
+            NARRATE.action("hive_check").human("📋 Checking if hive is already running...").emit();
 
-            let health_url = format!("http://{}:{}/health", hive_config.hostname, hive_config.hive_port);
+            let health_url =
+                format!("http://{}:{}/health", hive_config.hostname, hive_config.hive_port);
             let client =
                 reqwest::Client::builder().timeout(tokio::time::Duration::from_secs(2)).build()?;
 
@@ -426,9 +471,10 @@ async fn route_operation(
             }
 
             // Get binary path
-            let binary_path = hive_config.binary_path.as_ref().ok_or_else(|| {
-                anyhow::anyhow!("Hive '{}' has no binary_path configured", alias)
-            })?;
+            let binary_path = hive_config
+                .binary_path
+                .as_ref()
+                .ok_or_else(|| anyhow::anyhow!("Hive '{}' has no binary_path configured", alias))?;
 
             NARRATE
                 .action("hive_spawn")
@@ -446,10 +492,7 @@ async fn route_operation(
             let _child = manager.spawn().await?;
 
             // Wait for health check
-            NARRATE
-                .action("hive_health")
-                .human("⏳ Waiting for hive to be healthy...")
-                .emit();
+            NARRATE.action("hive_health").human("⏳ Waiting for hive to be healthy...").emit();
 
             for attempt in 1..=10 {
                 tokio::time::sleep(tokio::time::Duration::from_millis(200 * attempt)).await;
@@ -462,6 +505,85 @@ async fn route_operation(
                             .context(&health_url)
                             .human("✅ Hive '{0}' started successfully on {1}")
                             .emit();
+
+                        // TEAM-196: Fetch and cache capabilities
+                        let endpoint =
+                            format!("http://{}:{}", hive_config.hostname, hive_config.hive_port);
+
+                        NARRATE
+                            .action("hive_capabilities")
+                            .human("📊 Fetching device capabilities...")
+                            .emit();
+
+                        match fetch_hive_capabilities(&endpoint).await {
+                            Ok(devices) => {
+                                NARRATE
+                                    .action("hive_capabilities_found")
+                                    .context(devices.len().to_string())
+                                    .human("✅ Discovered {} device(s)")
+                                    .emit();
+
+                                // Log discovered devices
+                                for device in &devices {
+                                    let device_info = match device.device_type {
+                                        rbee_config::DeviceType::Gpu => {
+                                            format!(
+                                                "  🎮 {} - {} (VRAM: {} GB, Compute: {})",
+                                                device.id,
+                                                device.name,
+                                                device.vram_gb,
+                                                device
+                                                    .compute_capability
+                                                    .as_deref()
+                                                    .unwrap_or("unknown")
+                                            )
+                                        }
+                                        rbee_config::DeviceType::Cpu => {
+                                            format!("  🖥️  {} - {}", device.id, device.name)
+                                        }
+                                    };
+
+                                    NARRATE
+                                        .action("hive_device")
+                                        .context(&device_info)
+                                        .human("{}")
+                                        .emit();
+                                }
+
+                                // Update capabilities cache
+                                NARRATE
+                                    .action("hive_cache")
+                                    .human("💾 Updating capabilities cache...")
+                                    .emit();
+
+                                let caps =
+                                    HiveCapabilities::new(alias.clone(), devices, endpoint.clone());
+
+                                // Clone config, update it, and replace in state
+                                let mut config = (*state.config).clone();
+                                config.capabilities.update_hive(&alias, caps);
+                                if let Err(e) = config.capabilities.save() {
+                                    NARRATE
+                                        .action("hive_cache_error")
+                                        .context(e.to_string())
+                                        .human("⚠️  Failed to save capabilities cache: {}")
+                                        .emit();
+                                } else {
+                                    NARRATE
+                                        .action("hive_cache_saved")
+                                        .human("✅ Capabilities cached")
+                                        .emit();
+                                }
+                            }
+                            Err(e) => {
+                                NARRATE
+                                    .action("hive_capabilities_error")
+                                    .context(e.to_string())
+                                    .human("⚠️  Failed to fetch capabilities: {}")
+                                    .emit();
+                            }
+                        }
+
                         return Ok(());
                     }
                 }
@@ -479,23 +601,16 @@ async fn route_operation(
         }
         Operation::HiveStop { alias } => {
             // TEAM-194: Graceful shutdown using config
-            NARRATE
-                .action("hive_stop")
-                .context(&alias)
-                .human("🛑 Stopping hive '{}'")
-                .emit();
+            // TEAM-195: Use validation helper for better error messages
+            let hive_config = validate_hive_exists(&state.config, &alias)?;
 
-            // Get hive from config
-            let hive_config = state.config.hives.get(&alias)
-                .ok_or_else(|| anyhow::anyhow!("Hive '{}' not found in config", alias))?;
+            NARRATE.action("hive_stop").context(&alias).human("🛑 Stopping hive '{}'").emit();
 
             // Check if it's running
-            NARRATE
-                .action("hive_check")
-                .human("📋 Checking if hive is running...")
-                .emit();
+            NARRATE.action("hive_check").human("📋 Checking if hive is running...").emit();
 
-            let health_url = format!("http://{}:{}/health", hive_config.hostname, hive_config.hive_port);
+            let health_url =
+                format!("http://{}:{}/health", hive_config.hostname, hive_config.hive_port);
             let client =
                 reqwest::Client::builder().timeout(tokio::time::Duration::from_secs(2)).build()?;
 
@@ -524,9 +639,10 @@ async fn route_operation(
                 .emit();
 
             // Use pkill to stop the hive by binary name
-            let binary_path = hive_config.binary_path.as_ref().ok_or_else(|| {
-                anyhow::anyhow!("Hive '{}' has no binary_path configured", alias)
-            })?;
+            let binary_path = hive_config
+                .binary_path
+                .as_ref()
+                .ok_or_else(|| anyhow::anyhow!("Hive '{}' has no binary_path configured", alias))?;
 
             let binary_name = std::path::Path::new(&binary_path)
                 .file_name()
@@ -549,10 +665,7 @@ async fn route_operation(
             }
 
             // Wait for graceful shutdown
-            NARRATE
-                .action("hive_wait")
-                .human("⏳ Waiting for graceful shutdown (5s)...")
-                .emit();
+            NARRATE.action("hive_wait").human("⏳ Waiting for graceful shutdown (5s)...").emit();
 
             for attempt in 1..=5 {
                 tokio::time::sleep(tokio::time::Duration::from_secs(1)).await;
@@ -634,14 +747,10 @@ async fn route_operation(
         }
         Operation::HiveGet { alias } => {
             // TEAM-194: Get single hive details from config
-            let hive_config = state.config.hives.get(&alias)
-                .ok_or_else(|| anyhow::anyhow!("Hive '{}' not found in config", alias))?;
+            // TEAM-195: Use validation helper for better error messages
+            let hive_config = validate_hive_exists(&state.config, &alias)?;
 
-            NARRATE
-                .action("hive_get")
-                .context(&alias)
-                .human("Hive '{}' details:")
-                .emit();
+            NARRATE.action("hive_get").context(&alias).human("Hive '{}' details:").emit();
 
             println!("Alias: {}", alias);
             println!("Host: {}", hive_config.hostname);
@@ -652,10 +761,11 @@ async fn route_operation(
         }
         Operation::HiveStatus { alias } => {
             // TEAM-194: Check hive health using config
-            let hive_config = state.config.hives.get(&alias)
-                .ok_or_else(|| anyhow::anyhow!("Hive '{}' not found in config", alias))?;
+            // TEAM-195: Use validation helper for better error messages
+            let hive_config = validate_hive_exists(&state.config, &alias)?;
 
-            let health_url = format!("http://{}:{}/health", hive_config.hostname, hive_config.hive_port);
+            let health_url =
+                format!("http://{}:{}/health", hive_config.hostname, hive_config.hive_port);
 
             NARRATE
                 .action("hive_check")
@@ -692,6 +802,96 @@ async fn route_operation(
                         .emit();
                 }
             }
+        }
+        Operation::HiveRefreshCapabilities { alias } => {
+            // TEAM-196: Refresh device capabilities for a running hive
+            NARRATE
+                .action("hive_refresh")
+                .context(&alias)
+                .human("🔄 Refreshing capabilities for '{}'")
+                .emit();
+
+            // Get hive config
+            let hive_config = validate_hive_exists(&state.config, &alias)?;
+
+            // Check if hive is running
+            let endpoint = format!("http://{}:{}", hive_config.hostname, hive_config.hive_port);
+
+            NARRATE.action("hive_health_check").human("📋 Checking if hive is running...").emit();
+
+            match check_hive_health(&endpoint).await {
+                Ok(true) => {
+                    NARRATE.action("hive_healthy").human("✅ Hive is running").emit();
+                }
+                Ok(false) => {
+                    return Err(anyhow::anyhow!(
+                        "Hive '{}' is not healthy. Start it first with:\n\
+                         \n\
+                           ./rbee hive start -h {}",
+                        alias,
+                        alias
+                    ));
+                }
+                Err(e) => {
+                    return Err(anyhow::anyhow!(
+                        "Failed to connect to hive '{}': {}\n\
+                         \n\
+                         Start it first with:\n\
+                         \n\
+                           ./rbee hive start -h {}",
+                        alias,
+                        e,
+                        alias
+                    ));
+                }
+            }
+
+            // Fetch fresh capabilities
+            NARRATE.action("hive_capabilities").human("📊 Fetching device capabilities...").emit();
+
+            let devices =
+                fetch_hive_capabilities(&endpoint).await.context("Failed to fetch capabilities")?;
+
+            NARRATE
+                .action("hive_capabilities_found")
+                .context(devices.len().to_string())
+                .human("✅ Discovered {} device(s)")
+                .emit();
+
+            // Log discovered devices
+            for device in &devices {
+                let device_info = match device.device_type {
+                    rbee_config::DeviceType::Gpu => {
+                        format!(
+                            "  🎮 {} - {} (VRAM: {} GB, Compute: {})",
+                            device.id,
+                            device.name,
+                            device.vram_gb,
+                            device.compute_capability.as_deref().unwrap_or("unknown")
+                        )
+                    }
+                    rbee_config::DeviceType::Cpu => {
+                        format!("  🖥️  {} - {}", device.id, device.name)
+                    }
+                };
+
+                NARRATE.action("hive_device").context(&device_info).human("{}").emit();
+            }
+
+            // Update cache
+            NARRATE.action("hive_cache").human("💾 Updating capabilities cache...").emit();
+
+            let caps = HiveCapabilities::new(alias.clone(), devices, endpoint.clone());
+
+            let mut config = (*state.config).clone();
+            config.capabilities.update_hive(&alias, caps);
+            config.capabilities.save()?;
+
+            NARRATE
+                .action("hive_refresh_complete")
+                .context(&alias)
+                .human("✅ Capabilities refreshed for '{}'")
+                .emit();
         }
 
         // Worker operations

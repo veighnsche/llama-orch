@@ -33,7 +33,7 @@ impl From<SchedulerState> for crate::job_router::JobState {
     fn from(state: SchedulerState) -> Self {
         Self {
             registry: state.registry,
-            config: state.config, // TEAM-194
+            config: state.config,               // TEAM-194
             hive_registry: state.hive_registry, // TEAM-190
         }
     }
@@ -79,7 +79,7 @@ pub async fn handle_stream_job(
 
     // Trigger job execution (spawns in background)
     let token_stream = crate::job_router::execute_job(job_id.clone(), state.into()).await;
-    
+
     // TEAM-189: Give the background task a moment to start executing
     // Without this, the stream might close before any narrations are emitted
     tokio::time::sleep(tokio::time::Duration::from_millis(50)).await;

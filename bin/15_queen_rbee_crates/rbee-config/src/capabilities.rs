@@ -16,10 +16,10 @@ use std::path::{Path, PathBuf};
 pub struct CapabilitiesCache {
     #[serde(skip)]
     path: PathBuf,
-    
+
     /// Last time this cache was updated
     pub last_updated: String,
-    
+
     /// Capabilities per hive
     pub hives: HashMap<String, HiveCapabilities>,
 }
@@ -29,49 +29,62 @@ pub struct CapabilitiesCache {
 pub struct HiveCapabilities {
     /// Hive alias
     pub alias: String,
-    
+
     /// Detected devices
     pub devices: Vec<DeviceInfo>,
-    
+
     /// Last update timestamp (milliseconds since epoch)
     pub last_updated_ms: i64,
+
+    /// Hive endpoint (e.g., "http://localhost:8081")
+    /// TEAM-196: Added for capabilities refresh
+    pub endpoint: String,
 }
 
 /// Device information
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct DeviceInfo {
-    /// Device ID (e.g., "GPU-0", "CPU")
+    /// Device ID (e.g., "GPU-0", "CPU-0")
     pub id: String,
-    
+
     /// Device name (e.g., "NVIDIA RTX 4090")
     pub name: String,
-    
+
     /// VRAM in GB (for GPUs)
     pub vram_gb: u32,
-    
+
     /// Compute capability (for CUDA GPUs)
     #[serde(skip_serializing_if = "Option::is_none")]
     pub compute_capability: Option<String>,
+
+    /// Device type
+    /// TEAM-196: Added for device classification
+    pub device_type: DeviceType,
+}
+
+/// Device type classification
+/// TEAM-196: Added for Phase 4 capabilities
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[serde(rename_all = "lowercase")]
+pub enum DeviceType {
+    Gpu,
+    Cpu,
 }
 
 impl CapabilitiesCache {
     /// Create new empty cache
     pub fn new(path: PathBuf) -> Self {
-        Self {
-            path,
-            last_updated: Utc::now().to_rfc3339(),
-            hives: HashMap::new(),
-        }
+        Self { path, last_updated: Utc::now().to_rfc3339(), hives: HashMap::new() }
     }
 
     /// Create from hashmap (for testing)
     #[cfg(test)]
-    pub(crate) fn from_map(path: PathBuf, last_updated: String, hives: HashMap<String, HiveCapabilities>) -> Self {
-        Self {
-            path,
-            last_updated,
-            hives,
-        }
+    pub(crate) fn from_map(
+        path: PathBuf,
+        last_updated: String,
+        hives: HashMap<String, HiveCapabilities>,
+    ) -> Self {
+        Self { path, last_updated, hives }
     }
 
     /// Load from capabilities.yaml file
@@ -81,17 +94,11 @@ impl CapabilitiesCache {
             return Ok(Self::new(path.to_path_buf()));
         }
 
-        let content = std::fs::read_to_string(path).map_err(|e| ConfigError::ReadError {
-            path: path.to_path_buf(),
-            source: e,
-        })?;
+        let content = std::fs::read_to_string(path)
+            .map_err(|e| ConfigError::ReadError { path: path.to_path_buf(), source: e })?;
 
-        let mut cache: Self = serde_yaml::from_str(&content).map_err(|e| {
-            ConfigError::YamlParseError {
-                path: path.to_path_buf(),
-                source: e,
-            }
-        })?;
+        let mut cache: Self = serde_yaml::from_str(&content)
+            .map_err(|e| ConfigError::YamlParseError { path: path.to_path_buf(), source: e })?;
 
         cache.path = path.to_path_buf();
         Ok(cache)
@@ -108,10 +115,8 @@ impl CapabilitiesCache {
         let yaml = serde_yaml::to_string(&self)?;
         content.push_str(&yaml);
 
-        std::fs::write(&self.path, content).map_err(|e| ConfigError::WriteError {
-            path: self.path.clone(),
-            source: e,
-        })
+        std::fs::write(&self.path, content)
+            .map_err(|e| ConfigError::WriteError { path: self.path.clone(), source: e })
     }
 
     /// Update capabilities for a hive
@@ -157,22 +162,19 @@ impl CapabilitiesCache {
 
 impl HiveCapabilities {
     /// Create new capabilities for a hive
-    pub fn new(alias: String, devices: Vec<DeviceInfo>) -> Self {
-        Self {
-            alias,
-            devices,
-            last_updated_ms: Utc::now().timestamp_millis(),
-        }
+    /// TEAM-196: Updated to include endpoint parameter
+    pub fn new(alias: String, devices: Vec<DeviceInfo>, endpoint: String) -> Self {
+        Self { alias, devices, last_updated_ms: Utc::now().timestamp_millis(), endpoint }
     }
 
     /// Check if hive has any GPUs
     pub fn has_gpu(&self) -> bool {
-        self.devices.iter().any(|d| d.id.starts_with("GPU-"))
+        self.devices.iter().any(|d| matches!(d.device_type, DeviceType::Gpu))
     }
 
     /// Get GPU count
     pub fn gpu_count(&self) -> usize {
-        self.devices.iter().filter(|d| d.id.starts_with("GPU-")).count()
+        self.devices.iter().filter(|d| matches!(d.device_type, DeviceType::Gpu)).count()
     }
 
     /// Get total VRAM across all GPUs
@@ -213,7 +215,9 @@ mod tests {
                 name: "RTX 4090".to_string(),
                 vram_gb: 24,
                 compute_capability: Some("8.9".to_string()),
+                device_type: DeviceType::Gpu,
             }],
+            "http://localhost:8081".to_string(),
         );
 
         cache.update_hive("test-hive", caps.clone());
@@ -230,7 +234,11 @@ mod tests {
         let path = PathBuf::from("/tmp/test.yaml");
         let mut cache = CapabilitiesCache::new(path);
 
-        let caps = HiveCapabilities::new("test-hive".to_string(), vec![]);
+        let caps = HiveCapabilities::new(
+            "test-hive".to_string(),
+            vec![],
+            "http://localhost:8081".to_string(),
+        );
         cache.update_hive("test-hive", caps);
 
         assert_eq!(cache.len(), 1);
@@ -252,14 +260,17 @@ mod tests {
                     name: "RTX 4090".to_string(),
                     vram_gb: 24,
                     compute_capability: Some("8.9".to_string()),
+                    device_type: DeviceType::Gpu,
                 },
                 DeviceInfo {
                     id: "GPU-1".to_string(),
                     name: "RTX 3060".to_string(),
                     vram_gb: 12,
                     compute_capability: Some("8.6".to_string()),
+                    device_type: DeviceType::Gpu,
                 },
             ],
+            "http://localhost:8081".to_string(),
         );
 
         cache.update_hive("localhost", caps);
@@ -284,14 +295,17 @@ mod tests {
                     name: "RTX 4090".to_string(),
                     vram_gb: 24,
                     compute_capability: Some("8.9".to_string()),
+                    device_type: DeviceType::Gpu,
                 },
                 DeviceInfo {
                     id: "GPU-1".to_string(),
                     name: "RTX 3060".to_string(),
                     vram_gb: 12,
                     compute_capability: None,
+                    device_type: DeviceType::Gpu,
                 },
             ],
+            "http://localhost:8081".to_string(),
         );
 
         assert!(caps.has_gpu());
@@ -311,7 +325,9 @@ mod tests {
                 name: "RTX 4090".to_string(),
                 vram_gb: 24,
                 compute_capability: Some("8.9".to_string()),
+                device_type: DeviceType::Gpu,
             }],
+            "http://localhost:8081".to_string(),
         );
 
         cache.update_hive("localhost", caps);

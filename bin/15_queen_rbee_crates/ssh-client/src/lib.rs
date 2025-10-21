@@ -140,8 +140,7 @@ pub async fn test_ssh_connection(config: SshConfig) -> Result<SshTestResult> {
 fn check_ssh_agent() -> Result<(), String> {
     match std::env::var("SSH_AUTH_SOCK") {
         Ok(sock) if !sock.is_empty() => Ok(()),
-        _ => Err(
-            "SSH agent not running.\n\
+        _ => Err("SSH agent not running.\n\
              \n\
              To start SSH agent:\n\
              \n\
@@ -149,8 +148,7 @@ fn check_ssh_agent() -> Result<(), String> {
                ssh-add ~/.ssh/id_rsa\n\
              \n\
              Then retry the command."
-                .to_string(),
-        ),
+            .to_string()),
     }
 }
 

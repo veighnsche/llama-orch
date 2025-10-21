@@ -362,6 +362,17 @@ rbee's security is built on **five specialized security crates** that work toget
 - EU market advantage (GDPR compliance moat)
 
 ---
+## Configuration
+
+rbee uses file-based configuration stored in `~/.config/rbee/`:
+
+- `config.toml` - Queen-level settings
+- `hives.conf` - Hive definitions (SSH config style)
+- `capabilities.yaml` - Auto-generated device capabilities
+
+See [docs/HIVE_CONFIGURATION.md](docs/HIVE_CONFIGURATION.md) for details.
+
+---
 ## Documentation
 ### Core Specifications
 - [`.specs/20_queen-rbee.md`](.specs/20_queen-rbee.md) — Control plane service
@@ -371,6 +382,9 @@ rbee's security is built on **five specialized security crates** that work toget
 - [`SECURITY.md`](SECURITY.md) — Security policy and Minimal Auth Hooks seam
 - **[`bin/shared-crates/secrets-management/`](bin/shared-crates/secrets-management/)** — ⚠️ **Use this for ALL credentials** (API tokens, seal keys, worker tokens)
 ### Operational Guides
+- [`docs/HIVE_CONFIGURATION.md`](docs/HIVE_CONFIGURATION.md) — Hive configuration guide
+- [`docs/MIGRATION_GUIDE.md`](docs/MIGRATION_GUIDE.md) — SQLite to file-based config migration
+- [`docs/HIVE_QUICK_REFERENCE.md`](docs/HIVE_QUICK_REFERENCE.md) — Quick reference card
 - [`docs/CONFIGURATION.md`](docs/CONFIGURATION.md) — Complete environment variable reference
 - [`docs/MANUAL_MODEL_STAGING.md`](docs/MANUAL_MODEL_STAGING.md) — Model staging guide
 ### Development
