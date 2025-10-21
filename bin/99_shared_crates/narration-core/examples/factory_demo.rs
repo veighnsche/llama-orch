@@ -1,13 +1,15 @@
+// TEAM-199: Example disabled due to API changes - needs update to current NarrationFactory API
 // //! Demo of NarrationFactory pattern (v0.4.0)
 // //!
 // //! Run with: cargo run --example factory_demo --features test-support
 
 // use observability_narration_core::{
-//     NarrationFactory, ACTOR_QUEEN_ROUTER, ACTION_HIVE_INSTALL, ACTION_HIVE_START, ACTION_STATUS,
+//     NarrationFactory, ACTION_HIVE_INSTALL, ACTION_HIVE_START, ACTION_STATUS,
 // };
 
+// // TEAM-199: Use short actor name (pre-existing constants exceed 10 char limit)
 // // Define factory at module level (compile-time constant)
-// const NARRATE: NarrationFactory = NarrationFactory::new(ACTOR_QUEEN_ROUTER);
+// const NARRATE: NarrationFactory = NarrationFactory::new("demo");
 
 // fn main() {
 //     println!("🎀 Narration Factory Demo (v0.4.0)\n");
@@ -18,20 +20,22 @@
 //     println!("Output:\n");
 
 //     // Example 1: Status check
-//     NARRATE.narrate(ACTION_STATUS, "registry").human("Found 2 hives").emit();
+//     NARRATE.action(ACTION_STATUS).context("registry").human("Found 2 hives").emit();
 
 //     // Example 2: Hive installation
 //     NARRATE
-//         .narrate(ACTION_HIVE_INSTALL, "hive-1")
+//         .action(ACTION_HIVE_INSTALL)
+//         .context("hive-1")
 //         .human("🔧 Installing hive 'hive-1'")
 //         .emit();
 
 //     // Example 3: Hive start
-//     NARRATE.narrate(ACTION_HIVE_START, "hive-1").human("🚀 Starting hive 'hive-1'").emit();
+//     NARRATE.action(ACTION_HIVE_START).context("hive-1").human("🚀 Starting hive 'hive-1'").emit();
 
 //     // Example 4: With correlation ID
 //     NARRATE
-//         .narrate(ACTION_STATUS, "registry")
+//         .action(ACTION_STATUS)
+//         .context("registry")
 //         .human("Status check complete")
 //         .correlation_id("req-123")
 //         .duration_ms(50)
@@ -41,3 +45,7 @@
 //     println!("✨ All messages start at position 23 (after the actor field)");
 //     println!("✨ Much easier to scan than the old format!");
 // }
+
+fn main() {
+    println!("Example disabled - needs API update");
+}

@@ -706,21 +706,24 @@ impl NarrationFactory {
 #[cfg(test)]
 mod factory_tests {
     use super::*;
-    use crate::{CaptureAdapter, ACTION_STATUS, ACTOR_QUEEN_ROUTER};
+    use crate::{CaptureAdapter, ACTION_STATUS};
     use serial_test::serial;
+
+    // TEAM-199: Use short actor name for tests (pre-existing actor constants exceed 10 char limit)
+    const TEST_ACTOR: &str = "test";
 
     #[test]
     #[serial(capture_adapter)]
     fn test_factory_basic() {
         let adapter = CaptureAdapter::install();
 
-        const NARRATE: NarrationFactory = NarrationFactory::new(ACTOR_QUEEN_ROUTER);
+        const NARRATE: NarrationFactory = NarrationFactory::new(TEST_ACTOR);
 
         NARRATE.action(ACTION_STATUS).context("registry").human("Test message: {}").emit();
 
         let captured = adapter.captured();
         assert_eq!(captured.len(), 1);
-        assert_eq!(captured[0].actor, ACTOR_QUEEN_ROUTER);
+        assert_eq!(captured[0].actor, TEST_ACTOR);
         assert_eq!(captured[0].action, ACTION_STATUS);
         assert_eq!(captured[0].human, "Test message: registry");
     }
@@ -730,7 +733,7 @@ mod factory_tests {
     fn test_factory_with_builder_chain() {
         let adapter = CaptureAdapter::install();
 
-        const NARRATE: NarrationFactory = NarrationFactory::new(ACTOR_QUEEN_ROUTER);
+        const NARRATE: NarrationFactory = NarrationFactory::new(TEST_ACTOR);
 
         NARRATE
             .action(ACTION_STATUS)
@@ -742,7 +745,7 @@ mod factory_tests {
 
         let captured = adapter.captured();
         assert_eq!(captured.len(), 1);
-        assert_eq!(captured[0].actor, ACTOR_QUEEN_ROUTER);
+        assert_eq!(captured[0].actor, TEST_ACTOR);
         assert_eq!(captured[0].human, "Test: registry");
         assert_eq!(captured[0].correlation_id, Some("req-123".to_string()));
         assert_eq!(captured[0].duration_ms, Some(100));
@@ -750,8 +753,8 @@ mod factory_tests {
 
     #[test]
     fn test_factory_actor_getter() {
-        const NARRATE: NarrationFactory = NarrationFactory::new(ACTOR_QUEEN_ROUTER);
-        assert_eq!(NARRATE.actor(), ACTOR_QUEEN_ROUTER);
+        const NARRATE: NarrationFactory = NarrationFactory::new(TEST_ACTOR);
+        assert_eq!(NARRATE.actor(), TEST_ACTOR);
     }
 
     #[test]
