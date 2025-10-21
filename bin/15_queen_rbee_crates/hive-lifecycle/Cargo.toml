@@ -17,6 +17,7 @@ tokio = { version = "1", features = ["process"] }
 chrono = "0.4"
 observability-narration-core = { path = "../../99_shared_crates/narration-core" }
 queen-rbee-hive-catalog = { path = "../hive-catalog" }
+queen-rbee-ssh-client = { path = "../ssh-client" }
 
 [dev-dependencies]
 # Add dev dependencies as needed

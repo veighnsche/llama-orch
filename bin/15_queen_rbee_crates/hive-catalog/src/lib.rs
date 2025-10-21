@@ -65,7 +65,8 @@
 // TEAM-158: Modular structure for maintainability
 mod catalog;
 mod device_types;
-mod heartbeat_traits; // TEAM-159: HiveCatalog trait impl for rbee-heartbeat
+// TEAM-188: Commented out heartbeat_traits - HiveStatus was removed in TEAM-186
+// mod heartbeat_traits; // TEAM-159: HiveCatalog trait impl for rbee-heartbeat
 mod row_mapper;
 mod schema;
 mod types;

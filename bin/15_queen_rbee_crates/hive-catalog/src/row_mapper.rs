@@ -26,6 +26,7 @@ pub fn map_row_to_hive(row: &sqlx::sqlite::SqliteRow) -> Result<HiveRecord> {
         ssh_host: row.try_get("ssh_host")?,
         ssh_port: row.try_get::<Option<i64>, _>("ssh_port")?.map(|p| p as u16),
         ssh_user: row.try_get("ssh_user")?,
+        binary_path: row.try_get("binary_path")?,  // TEAM-187: Added binary_path field
         devices,
         created_at_ms: row.try_get("created_at_ms")?,
         updated_at_ms: row.try_get("updated_at_ms")?,

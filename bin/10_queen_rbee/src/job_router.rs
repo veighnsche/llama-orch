@@ -27,6 +27,7 @@ use anyhow::Result;
 use job_registry::JobRegistry;
 use observability_narration_core::Narration;
 use queen_rbee_hive_catalog::HiveCatalog;
+use queen_rbee_hive_lifecycle::{execute_ssh_test, SshTestRequest};
 use rbee_operations::Operation;
 use std::sync::Arc;
 
@@ -109,261 +110,268 @@ async fn route_operation(
 
     // TEAM-186: Route to appropriate handler based on operation type
     // TEAM-187: Updated to handle HiveInstall/HiveUninstall/HiveUpdate operations
-    // TEAM-187: All operations are no-op stubs until routes are implemented
+    // TEAM-188: Implemented SshTest operation
     match operation {
         // Hive operations
-        Operation::SshTest { .. } => {
-            /**
-             * Test SSH connection to remote host
-             * 
-             * 1. Create SSH client with provided credentials
-             * 2. Attempt connection with timeout (5s)
-             * 3. Run simple test command (e.g., `echo test`)
-             * 4. Return 204 on success, error on failure
-             * 
-             * TODO: Implement SSH client in bin/15_queen_rbee_crates/hive-lifecycle/src/ssh.rs
-             * TODO: Handle connection timeouts gracefully
-             * TODO: Validate SSH key authentication vs password
-             */
+        Operation::SshTest { ssh_host, ssh_port, ssh_user } => {
+            // TEAM-188: Test SSH connection to remote host
+            let request = SshTestRequest {
+                ssh_host,
+                ssh_port,
+                ssh_user,
+            };
+
+            let response = execute_ssh_test(request).await?;
+
+            if !response.success {
+                return Err(anyhow::anyhow!(
+                    "SSH connection failed: {}",
+                    response.error.unwrap_or_else(|| "Unknown error".to_string())
+                ));
+            }
+
+            Narration::new(ACTOR_QUEEN_ROUTER, "ssh_test_complete", "success")
+                .human(format!("✅ SSH test successful: {}", response.test_output.unwrap_or_default()))
+                .emit();
         }
         Operation::HiveInstall { binary_path, .. } => {
-            /**
-             * Install hive binary and register in catalog
-             * 
-             * LOCALHOST INSTALLATION:
-             * 1. Check if hive_id already exists in catalog → error if exists
-             * 2. Determine binary location:
-             *    - If binary_path provided: validate path exists
-             *    - Else: check catalog for previous install path
-             *    - Else: default to cargo build (requires rustup)
-             * 3. If building from source:
-             *    - Verify rustup installed (fail fast if not)
-             *    - Git clone veighsnche/llama-orch to temp dir
-             *    - Run: cargo build --release --bin rbee-hive
-             *    - Copy binary to standard location
-             * 4. Verify binary is executable
-             * 5. Add to catalog: HiveRecord { id, host: "localhost", port, binary_path, devices: None }
-             * 
-             * REMOTE SSH INSTALLATION:
-             * 1. Run SshTest operation first (fail fast on SSH issues)
-             * 2. Check if hive_id already exists in catalog → error if exists
-             * 3. Determine binary location on remote:
-             *    - If binary_path provided: use that path
-             *    - Else: default to git clone + cargo build on remote
-             * 4. If building from source (over SSH):
-             *    - Verify rustup installed on remote (ssh command: rustup --version)
-             *    - Git clone veighsnche/llama-orch on remote
-             *    - Run: cargo build --release --bin rbee-hive (over SSH)
-             * 5. Verify binary exists on remote (ssh command: test -f <path>)
-             * 6. Add to catalog: HiveRecord { id, host, port, ssh_*, binary_path, devices: None }
-             * 
-             * NOTE: Capabilities (devices) are populated later via HiveUpdate with refresh_capabilities=true
-             */
+            // /**
+            //  * Install hive binary and register in catalog
+            //  * 
+            //  * LOCALHOST INSTALLATION:
+            //  * 1. Check if hive_id already exists in catalog → error if exists
+            //  * 2. Determine binary location:
+            //  *    - If binary_path provided: validate path exists
+            //  *    - Else: check catalog for previous install path
+            //  *    - Else: default to cargo build (requires rustup)
+            //  * 3. If building from source:
+            //  *    - Verify rustup installed (fail fast if not)
+            //  *    - Git clone veighsnche/llama-orch to temp dir
+            //  *    - Run: cargo build --release --bin rbee-hive
+            //  *    - Copy binary to standard location
+            //  * 4. Verify binary is executable
+            //  * 5. Add to catalog: HiveRecord { id, host: "localhost", port, binary_path, devices: None }
+            //  * 
+            //  * REMOTE SSH INSTALLATION:
+            //  * 1. Run SshTest operation first (fail fast on SSH issues)
+            //  * 2. Check if hive_id already exists in catalog → error if exists
+            //  * 3. Determine binary location on remote:
+            //  *    - If binary_path provided: use that path
+            //  *    - Else: default to git clone + cargo build on remote
+            //  * 4. If building from source (over SSH):
+            //  *    - Verify rustup installed on remote (ssh command: rustup --version)
+            //  *    - Git clone veighsnche/llama-orch on remote
+            //  *    - Run: cargo build --release --bin rbee-hive (over SSH)
+            //  * 5. Verify binary exists on remote (ssh command: test -f <path>)
+            //  * 6. Add to catalog: HiveRecord { id, host, port, ssh_*, binary_path, devices: None }
+            //  * 
+            //  * NOTE: Capabilities (devices) are populated later via HiveUpdate with refresh_capabilities=true
+            //  */
         }
         Operation::HiveUninstall { catalog_only, .. } => {
-            /**
-             * Uninstall hive and optionally clean up resources
-             * 
-             * CATALOG-ONLY MODE (catalog_only=true):
-             * - Used for unreachable remote hives
-             * - Simply remove HiveRecord from catalog
-             * - No SSH connection or binary cleanup
-             * - Return success
-             * 
-             * FULL UNINSTALL (catalog_only=false):
-             * 
-             * LOCALHOST:
-             * 1. Lookup hive in catalog → error if not found
-             * 2. Get binary_path from HiveRecord
-             * 3. Check if hive is running:
-             *    - If running: SIGTERM first, wait 5s, then SIGKILL if needed
-             *    - Kill all child workers (SIGKILL)
-             * 4. Cleanup options (interactive or flags):
-             *    - Remove workers? (delete worker binaries)
-             *    - Remove models? (delete model files)
-             * 5. Remove hive binary at binary_path
-             * 6. Remove from catalog
-             * 
-             * REMOTE SSH:
-             * 1. Run SshTest operation first
-             * 2. Lookup hive in catalog → error if not found
-             * 3. Get binary_path from HiveRecord
-             * 4. Check if hive is running (over SSH):
-             *    - SSH: pkill -TERM rbee-hive, wait, pkill -KILL if needed
-             * 5. Cleanup options (same as localhost, but over SSH)
-             * 6. Remove hive binary on remote (ssh: rm <binary_path>)
-             * 7. Remove from catalog
-             * 
-             * TODO: Implement emergency stop (SIGKILL all workers)
-             * TODO: Add interactive cleanup prompts or CLI flags
-             */
+            // /**
+            //  * Uninstall hive and optionally clean up resources
+            //  * 
+            //  * CATALOG-ONLY MODE (catalog_only=true):
+            //  * - Used for unreachable remote hives
+            //  * - Simply remove HiveRecord from catalog
+            //  * - No SSH connection or binary cleanup
+            //  * - Return success
+            //  * 
+            //  * FULL UNINSTALL (catalog_only=false):
+            //  * 
+            //  * LOCALHOST:
+            //  * 1. Lookup hive in catalog → error if not found
+            //  * 2. Get binary_path from HiveRecord
+            //  * 3. Check if hive is running:
+            //  *    - If running: SIGTERM first, wait 5s, then SIGKILL if needed
+            //  *    - Kill all child workers (SIGKILL)
+            //  * 4. Cleanup options (interactive or flags):
+            //  *    - Remove workers? (delete worker binaries)
+            //  *    - Remove models? (delete model files)
+            //  * 5. Remove hive binary at binary_path
+            //  * 6. Remove from catalog
+            //  * 
+            //  * REMOTE SSH:
+            //  * 1. Run SshTest operation first
+            //  * 2. Lookup hive in catalog → error if not found
+            //  * 3. Get binary_path from HiveRecord
+            //  * 4. Check if hive is running (over SSH):
+            //  *    - SSH: pkill -TERM rbee-hive, wait, pkill -KILL if needed
+            //  * 5. Cleanup options (same as localhost, but over SSH)
+            //  * 6. Remove hive binary on remote (ssh: rm <binary_path>)
+            //  * 7. Remove from catalog
+            //  * 
+            //  * TODO: Implement emergency stop (SIGKILL all workers)
+            //  * TODO: Add interactive cleanup prompts or CLI flags
+            //  */
         }
         Operation::HiveUpdate { refresh_capabilities, .. } => {
-            /**
-             * Update hive configuration and optionally refresh capabilities
-             * 
-             * COMMON FLOW:
-             * 1. Lookup hive in catalog → error if not found
-             * 2. Update SSH connection details if provided:
-             *    - ssh_host, ssh_port, ssh_user
-             *    - Update HiveRecord in catalog
-             * 
-             * CAPABILITY REFRESH (refresh_capabilities=true):
-             * 
-             * LOCALHOST:
-             * 1. Check if hive is running (ping health endpoint)
-             * 2. If not running: error (hive must be running for capability detection)
-             * 3. Call hive API: GET /v1/devices
-             * 4. Parse DeviceCapabilities response (CPU, GPUs)
-             * 5. Update HiveRecord.devices in catalog
-             * 
-             * REMOTE SSH:
-             * 1. Run SshTest if SSH details changed
-             * 2. Check if hive is running (over SSH or health endpoint)
-             * 3. If not running: error
-             * 4. Call hive API: GET /v1/devices (via SSH tunnel or direct)
-             * 5. Parse DeviceCapabilities response
-             * 6. Update HiveRecord.devices in catalog
-             * 
-             * TODO: Implement hive health check endpoint
-             * TODO: Implement device detection API in rbee-hive
-             */
+            // /**
+            //  * Update hive configuration and optionally refresh capabilities
+            //  * 
+            //  * COMMON FLOW:
+            //  * 1. Lookup hive in catalog → error if not found
+            //  * 2. Update SSH connection details if provided:
+            //  *    - ssh_host, ssh_port, ssh_user
+            //  *    - Update HiveRecord in catalog
+            //  * 
+            //  * CAPABILITY REFRESH (refresh_capabilities=true):
+            //  * 
+            //  * LOCALHOST:
+            //  * 1. Check if hive is running (ping health endpoint)
+            //  * 2. If not running: error (hive must be running for capability detection)
+            //  * 3. Call hive API: GET /v1/devices
+            //  * 4. Parse DeviceCapabilities response (CPU, GPUs)
+            //  * 5. Update HiveRecord.devices in catalog
+            //  * 
+            //  * REMOTE SSH:
+            //  * 1. Run SshTest if SSH details changed
+            //  * 2. Check if hive is running (over SSH or health endpoint)
+            //  * 3. If not running: error
+            //  * 4. Call hive API: GET /v1/devices (via SSH tunnel or direct)
+            //  * 5. Parse DeviceCapabilities response
+            //  * 6. Update HiveRecord.devices in catalog
+            //  * 
+            //  * TODO: Implement hive health check endpoint
+            //  * TODO: Implement device detection API in rbee-hive
+            //  */
         }
         Operation::HiveStart { .. } => {
-            /**
-             * TODO: IMPLEMENT THIS
-             * 
-             * Start a hive daemon process
-             * - Lookup binary_path from catalog
-             * - Spawn hive process with proper config
-             * - Wait for health check to confirm startup
-             */
+            // /**
+            //  * TODO: IMPLEMENT THIS
+            //  * 
+            //  * Start a hive daemon process
+            //  * - Lookup binary_path from catalog
+            //  * - Spawn hive process with proper config
+            //  * - Wait for health check to confirm startup
+            //  */
         }
         Operation::HiveStop { .. } => {
-            /**
-             * TODO: IMPLEMENT THIS
-             * 
-             * Stop a running hive daemon
-             * - Send SIGTERM, wait for graceful shutdown
-             * - SIGKILL if timeout exceeded
-             */
+            // /**
+            //  * TODO: IMPLEMENT THIS
+            //  * 
+            //  * Stop a running hive daemon
+            //  * - Send SIGTERM, wait for graceful shutdown
+            //  * - SIGKILL if timeout exceeded
+            //  */
         }
         Operation::HiveList => {
-            /**
-             * TODO: IMPLEMENT THIS
-             * 
-             * List all hives from catalog
-             * - Query HiveCatalog.list_all()
-             * - Return array of HiveRecords
-             */
+            // /**
+            //  * TODO: IMPLEMENT THIS
+            //  * 
+            //  * List all hives from catalog
+            //  * - Query HiveCatalog.list_all()
+            //  * - Return array of HiveRecords
+            //  */
         }
         Operation::HiveGet { .. } => {
-            /**
-             * TODO: IMPLEMENT THIS
-             * 
-             * Get single hive details from catalog
-             * - Query HiveCatalog.get(hive_id)
-             * - Return HiveRecord or 404
-             */
+            // /**
+            //  * TODO: IMPLEMENT THIS
+            //  * 
+            //  * Get single hive details from catalog
+            //  * - Query HiveCatalog.get(hive_id)
+            //  * - Return HiveRecord or 404
+            //  */
         }
 
         // Worker operations
         Operation::WorkerSpawn { hive_id, .. } => {
-            /**
-             * TODO: IMPLEMENT THIS
-             * 
-             * Forward operation to hive using job-based architecture:
-             * 1. Lookup hive in catalog by hive_id → error if not found
-             * 2. Get hive host:port from HiveRecord
-             * 3. Forward entire operation payload to: POST http://{host}:{port}/v1/jobs
-             * 4. Connect to SSE stream: GET http://{host}:{port}/v1/jobs/{job_id}/stream
-             * 5. Stream hive responses back to client
-             */
+            // /**
+            //  * TODO: IMPLEMENT THIS
+            //  * 
+            //  * Forward operation to hive using job-based architecture:
+            //  * 1. Lookup hive in catalog by hive_id → error if not found
+            //  * 2. Get hive host:port from HiveRecord
+            //  * 3. Forward entire operation payload to: POST http://{host}:{port}/v1/jobs
+            //  * 4. Connect to SSE stream: GET http://{host}:{port}/v1/jobs/{job_id}/stream
+            //  * 5. Stream hive responses back to client
+            //  */
         }
         Operation::WorkerList { hive_id, .. } => {
-            /**
-             * TODO: IMPLEMENT THIS
-             * 
-             * Forward operation to hive using job-based architecture:
-             * 1. Lookup hive in catalog by hive_id
-             * 2. POST operation to http://{host}:{port}/v1/jobs
-             * 3. Stream response from /v1/jobs/{job_id}/stream
-             */
+            // /**
+            //  * TODO: IMPLEMENT THIS
+            //  * 
+            //  * Forward operation to hive using job-based architecture:
+            //  * 1. Lookup hive in catalog by hive_id
+            //  * 2. POST operation to http://{host}:{port}/v1/jobs
+            //  * 3. Stream response from /v1/jobs/{job_id}/stream
+            //  */
         }
         Operation::WorkerGet { hive_id, .. } => {
-            /**
-             * TODO: IMPLEMENT THIS
-             * 
-             * Forward operation to hive using job-based architecture:
-             * 1. Lookup hive in catalog by hive_id
-             * 2. POST operation to http://{host}:{port}/v1/jobs
-             * 3. Stream response from /v1/jobs/{job_id}/stream
-             */
+            // /**
+            //  * TODO: IMPLEMENT THIS
+            //  * 
+            //  * Forward operation to hive using job-based architecture:
+            //  * 1. Lookup hive in catalog by hive_id
+            //  * 2. POST operation to http://{host}:{port}/v1/jobs
+            //  * 3. Stream response from /v1/jobs/{job_id}/stream
+            //  */
         }
         Operation::WorkerDelete { hive_id, .. } => {
-            /**
-             * TODO: IMPLEMENT THIS
-             * 
-             * Forward operation to hive using job-based architecture:
-             * 1. Lookup hive in catalog by hive_id
-             * 2. POST operation to http://{host}:{port}/v1/jobs
-             * 3. Stream response from /v1/jobs/{job_id}/stream
-             */
+            // /**
+            //  * TODO: IMPLEMENT THIS
+            //  * 
+            //  * Forward operation to hive using job-based architecture:
+            //  * 1. Lookup hive in catalog by hive_id
+            //  * 2. POST operation to http://{host}:{port}/v1/jobs
+            //  * 3. Stream response from /v1/jobs/{job_id}/stream
+            //  */
         }
 
         // Model operations
         Operation::ModelDownload { hive_id, .. } => {
-            /**
-             * TODO: IMPLEMENT THIS
-             * 
-             * Forward operation to hive using job-based architecture:
-             * 1. Lookup hive in catalog by hive_id
-             * 2. POST operation to http://{host}:{port}/v1/jobs
-             * 3. Stream response from /v1/jobs/{job_id}/stream
-             */
+            // /**
+            //  * TODO: IMPLEMENT THIS
+            //  * 
+            //  * Forward operation to hive using job-based architecture:
+            //  * 1. Lookup hive in catalog by hive_id
+            //  * 2. POST operation to http://{host}:{port}/v1/jobs
+            //  * 3. Stream response from /v1/jobs/{job_id}/stream
+            //  */
         }
         Operation::ModelList { hive_id, .. } => {
-            /**
-             * TODO: IMPLEMENT THIS
-             * 
-             * Forward operation to hive using job-based architecture:
-             * 1. Lookup hive in catalog by hive_id
-             * 2. POST operation to http://{host}:{port}/v1/jobs
-             * 3. Stream response from /v1/jobs/{job_id}/stream
-             */
+            // /**
+            //  * TODO: IMPLEMENT THIS
+            //  * 
+            //  * Forward operation to hive using job-based architecture:
+            //  * 1. Lookup hive in catalog by hive_id
+            //  * 2. POST operation to http://{host}:{port}/v1/jobs
+            //  * 3. Stream response from /v1/jobs/{job_id}/stream
+            //  */
         }
         Operation::ModelGet { hive_id, .. } => {
-            /**
-             * TODO: IMPLEMENT THIS
-             * 
-             * Forward operation to hive using job-based architecture:
-             * 1. Lookup hive in catalog by hive_id
-             * 2. POST operation to http://{host}:{port}/v1/jobs
-             * 3. Stream response from /v1/jobs/{job_id}/stream
-             */
+            // /**
+            //  * TODO: IMPLEMENT THIS
+            //  * 
+            //  * Forward operation to hive using job-based architecture:
+            //  * 1. Lookup hive in catalog by hive_id
+            //  * 2. POST operation to http://{host}:{port}/v1/jobs
+            //  * 3. Stream response from /v1/jobs/{job_id}/stream
+            //  */
         }
         Operation::ModelDelete { hive_id, .. } => {
-            /**
-             * TODO: IMPLEMENT THIS
-             * 
-             * Forward operation to hive using job-based architecture:
-             * 1. Lookup hive in catalog by hive_id
-             * 2. POST operation to http://{host}:{port}/v1/jobs
-             * 3. Stream response from /v1/jobs/{job_id}/stream
-             */
+            // /**
+            //  * TODO: IMPLEMENT THIS
+            //  * 
+            //  * Forward operation to hive using job-based architecture:
+            //  * 1. Lookup hive in catalog by hive_id
+            //  * 2. POST operation to http://{host}:{port}/v1/jobs
+            //  * 3. Stream response from /v1/jobs/{job_id}/stream
+            //  */
         }
 
         // Inference operation
         Operation::Infer { hive_id, .. } => {
-            /**
-             * TODO: IMPLEMENT THIS
-             * 
-             * Forward operation to hive using job-based architecture:
-             * 1. Lookup hive in catalog by hive_id
-             * 2. POST operation to http://{host}:{port}/v1/jobs
-             * 3. Stream response from /v1/jobs/{job_id}/stream
-             * 4. Hive will handle worker selection, model loading, and inference
-             */
+            // //
+            //  * TODO: IMPLEMENT THIS
+            //  * 
+            //  * Forward operation to hive using job-based architecture:
+            //  * 1. Lookup hive in catalog by hive_id
+            //  * 2. POST operation to http://{host}:{port}/v1/jobs
+            //  * 3. Stream response from /v1/jobs/{job_id}/stream
+            //  * 4. Hive will handle worker selection, model loading, and inference
+            //  
         }
     }
 
