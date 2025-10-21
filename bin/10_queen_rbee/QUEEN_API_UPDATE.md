@@ -1,6 +1,7 @@
 # Queen-rbee HTTP API Update
 
 **Date:** 2025-10-21  
+**Team:** TEAM-186  
 **Status:** ✅ Complete
 
 ## Summary

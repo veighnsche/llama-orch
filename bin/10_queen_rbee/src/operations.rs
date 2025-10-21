@@ -1,6 +1,6 @@
 //! Operation constants for queen-rbee
 //!
-//! Centralized action identifiers used for narration.
+//! TEAM-186: Centralized action identifiers used for narration.
 
 // Actor
 pub const ACTOR_QUEEN_RBEE: &str = "👑 queen-rbee";

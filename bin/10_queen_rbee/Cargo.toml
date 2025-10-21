@@ -40,6 +40,7 @@ queen-rbee-hive-catalog = { path = "../15_queen_rbee_crates/hive-catalog" }
 queen-rbee-hive-lifecycle = { path = "../15_queen_rbee_crates/hive-lifecycle" }  # TEAM-164: Pure hive lifecycle logic
 queen-rbee-scheduler = { path = "../15_queen_rbee_crates/scheduler" }  # TEAM-164: Pure job orchestration logic
 rbee-heartbeat = { path = "../99_shared_crates/heartbeat" }  # TEAM-158: Shared heartbeat types
+rbee-operations = { path = "../99_shared_crates/rbee-operations" }  # TEAM-186: Shared operation types
 
 # TODO: Add when registries are migrated
 # beehive_registry (for http/routes.rs, http/beehives.rs, etc.)

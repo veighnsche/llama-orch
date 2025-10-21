@@ -1,12 +1,14 @@
 # rbee API Reference
 
 <!-- TEAM-185: Updated API reference with new inference parameters and worker spawn syntax -->
+<!-- TEAM-186: Added queen status command -->
 
 ## rbee CLI
 
 ```bash
 rbee queen start                              # Start queen-rbee daemon
 rbee queen stop                               # Stop queen-rbee daemon
+rbee queen status                             # Check queen-rbee daemon status
 rbee hive start {id}                          # Start hive
 rbee hive stop {id}                           # Stop hive
 rbee hive list                                # List hives

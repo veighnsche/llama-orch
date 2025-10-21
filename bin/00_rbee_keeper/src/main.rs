@@ -45,6 +45,7 @@ use queen_lifecycle::ensure_queen_running;
 use anyhow::Result;
 use clap::{Parser, Subcommand};
 use observability_narration_core::Narration;
+use rbee_operations::Operation;
 
 #[derive(Parser)]
 #[command(name = "rbee")]
@@ -124,8 +125,12 @@ pub enum Commands {
 
 #[derive(Subcommand)]
 pub enum QueenAction {
+    /// Start queen-rbee daemon
     Start,
+    /// Stop queen-rbee daemon
     Stop,
+    /// Check queen-rbee daemon status
+    Status,
 }
 
 #[derive(Subcommand)]
@@ -185,8 +190,6 @@ pub enum ModelAction {
     Delete { id: String },
 }
 
-
-
 #[tokio::main]
 async fn main() -> Result<()> {
     let cli = Cli::parse();
@@ -227,91 +230,87 @@ async fn handle_command(cli: Cli) -> Result<()> {
                     }
                 }
             }
+            QueenAction::Status => {
+                // TEAM-186: Check queen-rbee health endpoint
+                let client = reqwest::Client::builder()
+                    .timeout(tokio::time::Duration::from_secs(5))
+                    .build()?;
+                
+                match client.get(format!("{}/health", queen_url)).send().await {
+                    Ok(response) if response.status().is_success() => {
+                        Narration::new(ACTOR_RBEE_KEEPER, ACTION_QUEEN_STATUS, "running")
+                            .human(format!("✅ Queen is running on {}", queen_url))
+                            .emit();
+                        
+                        // Try to get more details from the response
+                        if let Ok(body) = response.text().await {
+                            println!("Status: {}", body);
+                        }
+                        Ok(())
+                    }
+                    Ok(response) => {
+                        Narration::new(ACTOR_RBEE_KEEPER, ACTION_QUEEN_STATUS, "unhealthy")
+                            .human(format!("⚠️  Queen responded with status: {}", response.status()))
+                            .emit();
+                        Ok(())
+                    }
+                    Err(_) => {
+                        Narration::new(ACTOR_RBEE_KEEPER, ACTION_QUEEN_STATUS, "not_running")
+                            .human(format!("❌ Queen is not running on {}", queen_url))
+                            .emit();
+                        Ok(())
+                    }
+                }
+            }
         },
 
         Commands::Hive { action } => {
-            let job_payload = match action {
-                HiveAction::Start { ref id } => serde_json::json!({
-                    "operation": OP_HIVE_START,
-                    "hive_id": id
-                }),
-                HiveAction::Stop { ref id } => serde_json::json!({
-                    "operation": OP_HIVE_STOP,
-                    "hive_id": id
-                }),
-                HiveAction::List => serde_json::json!({
-                    "operation": OP_HIVE_LIST
-                }),
-                HiveAction::Get { ref id } => serde_json::json!({
-                    "operation": OP_HIVE_GET,
-                    "id": id
-                }),
-                HiveAction::Create { ref host, port } => serde_json::json!({
-                    "operation": OP_HIVE_CREATE,
-                    "host": host,
-                    "port": port
-                }),
-                HiveAction::Update { ref id } => serde_json::json!({
-                    "operation": OP_HIVE_UPDATE,
-                    "id": id
-                }),
-                HiveAction::Delete { ref id } => serde_json::json!({
-                    "operation": OP_HIVE_DELETE,
-                    "id": id
-                }),
+            // TEAM-186: Use typed Operation enum instead of JSON strings
+            let operation = match action {
+                HiveAction::Start { ref id } => Operation::HiveStart { hive_id: id.clone() },
+                HiveAction::Stop { ref id } => Operation::HiveStop { hive_id: id.clone() },
+                HiveAction::List => Operation::HiveList,
+                HiveAction::Get { ref id } => Operation::HiveGet { id: id.clone() },
+                HiveAction::Create { ref host, port } => Operation::HiveCreate { host: host.clone(), port },
+                HiveAction::Update { ref id } => Operation::HiveUpdate { id: id.clone() },
+                HiveAction::Delete { ref id } => Operation::HiveDelete { id: id.clone() },
             };
+            let job_payload = serde_json::to_value(&operation)
+                .expect("Failed to serialize operation");
             submit_and_stream_job(&client, &queen_url, job_payload).await
         },
 
         Commands::Worker { hive_id, action } => {
-            let job_payload = match action {
-                WorkerAction::Spawn { ref model, ref worker, device } => serde_json::json!({
-                    "operation": OP_WORKER_SPAWN,
-                    "hive_id": hive_id,
-                    "model": model,
-                    "worker": worker,
-                    "device": device
-                }),
-                WorkerAction::List => serde_json::json!({
-                    "operation": OP_WORKER_LIST,
-                    "hive_id": hive_id
-                }),
-                WorkerAction::Get { ref id } => serde_json::json!({
-                    "operation": OP_WORKER_GET,
-                    "hive_id": hive_id,
-                    "id": id
-                }),
-                WorkerAction::Delete { ref id } => serde_json::json!({
-                    "operation": OP_WORKER_DELETE,
-                    "hive_id": hive_id,
-                    "id": id
-                }),
+            // TEAM-186: Use typed Operation enum instead of JSON strings
+            let operation = match action {
+                WorkerAction::Spawn { ref model, ref worker, device } => Operation::WorkerSpawn {
+                    hive_id: hive_id.clone(),
+                    model: model.clone(),
+                    worker: worker.clone(),
+                    device,
+                },
+                WorkerAction::List => Operation::WorkerList { hive_id: hive_id.clone() },
+                WorkerAction::Get { ref id } => Operation::WorkerGet { hive_id: hive_id.clone(), id: id.clone() },
+                WorkerAction::Delete { ref id } => Operation::WorkerDelete { hive_id: hive_id.clone(), id: id.clone() },
             };
+            let job_payload = serde_json::to_value(&operation)
+                .expect("Failed to serialize operation");
             submit_and_stream_job(&client, &queen_url, job_payload).await
         },
 
         Commands::Model { hive_id, action } => {
-            let job_payload = match action {
-                ModelAction::Download { ref model } => serde_json::json!({
-                    "operation": OP_MODEL_DOWNLOAD,
-                    "hive_id": hive_id,
-                    "model": model
-                }),
-                ModelAction::List => serde_json::json!({
-                    "operation": OP_MODEL_LIST,
-                    "hive_id": hive_id
-                }),
-                ModelAction::Get { ref id } => serde_json::json!({
-                    "operation": OP_MODEL_GET,
-                    "hive_id": hive_id,
-                    "id": id
-                }),
-                ModelAction::Delete { ref id } => serde_json::json!({
-                    "operation": OP_MODEL_DELETE,
-                    "hive_id": hive_id,
-                    "id": id
-                }),
+            // TEAM-186: Use typed Operation enum instead of JSON strings
+            let operation = match action {
+                ModelAction::Download { ref model } => Operation::ModelDownload {
+                    hive_id: hive_id.clone(),
+                    model: model.clone(),
+                },
+                ModelAction::List => Operation::ModelList { hive_id: hive_id.clone() },
+                ModelAction::Get { ref id } => Operation::ModelGet { hive_id: hive_id.clone(), id: id.clone() },
+                ModelAction::Delete { ref id } => Operation::ModelDelete { hive_id: hive_id.clone(), id: id.clone() },
             };
+            let job_payload = serde_json::to_value(&operation)
+                .expect("Failed to serialize operation");
             submit_and_stream_job(&client, &queen_url, job_payload).await
         },
 
@@ -327,30 +326,21 @@ async fn handle_command(cli: Cli) -> Result<()> {
             ref worker_id,
             stream,
         } => {
-            let mut job_payload = serde_json::json!({
-                "operation": OP_INFER,
-                "hive_id": hive_id,
-                "model": model,
-                "prompt": prompt,
-                "max_tokens": max_tokens,
-                "temperature": temperature,
-                "stream": stream,
-            });
-            
-            // Add optional parameters if provided
-            if let Some(tp) = top_p {
-                job_payload["top_p"] = serde_json::json!(tp);
-            }
-            if let Some(tk) = top_k {
-                job_payload["top_k"] = serde_json::json!(tk);
-            }
-            if let Some(ref dev) = device {
-                job_payload["device"] = serde_json::json!(dev);
-            }
-            if let Some(ref wid) = worker_id {
-                job_payload["worker_id"] = serde_json::json!(wid);
-            }
-            
+            // TEAM-186: Use typed Operation enum instead of JSON strings
+            let operation = Operation::Infer {
+                hive_id: hive_id.clone(),
+                model: model.clone(),
+                prompt: prompt.clone(),
+                max_tokens,
+                temperature,
+                top_p,
+                top_k,
+                device: device.clone(),
+                worker_id: worker_id.clone(),
+                stream,
+            };
+            let job_payload = serde_json::to_value(&operation)
+                .expect("Failed to serialize operation");
             submit_and_stream_job(&client, &queen_url, job_payload).await
         }
     }

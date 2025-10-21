@@ -62,6 +62,10 @@ use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
 use tokio::sync::mpsc::UnboundedSender;
 
+// TEAM-186: For execute_and_stream helper
+use futures::stream::{self, Stream};
+use observability_narration_core::Narration;
+
 /// Job state in the registry
 #[derive(Debug, Clone)]
 pub enum JobState {
@@ -91,11 +95,16 @@ pub type TokenReceiver<T> = tokio::sync::mpsc::UnboundedReceiver<T>;
 /// TEAM-154 FIX: Store receiver, not sender!
 /// - POST creates channel, stores receiver, passes sender to generation engine
 /// - GET retrieves receiver and streams tokens
+///
+/// TEAM-186: Added payload field for deferred execution
+/// - POST stores payload, GET retrieves and executes
 pub struct Job<T> {
     pub job_id: String,
     pub state: JobState,
     pub created_at: chrono::DateTime<chrono::Utc>,
     pub token_receiver: Option<TokenReceiver<T>>,
+    /// TEAM-186: Store operation payload for deferred execution
+    pub payload: Option<serde_json::Value>,
 }
 
 // TEAM-154: Job cannot be cloned because UnboundedReceiver is not Clone
@@ -131,10 +140,28 @@ where
             state: JobState::Queued,
             created_at: chrono::Utc::now(),
             token_receiver: None,
+            payload: None,  // TEAM-186: Initialize as None
         };
 
         self.jobs.lock().unwrap().insert(job_id.clone(), job);
         job_id
+    }
+
+    /// Set payload for a job (for deferred execution)
+    ///
+    /// TEAM-186: Store operation payload to execute later when client connects
+    pub fn set_payload(&self, job_id: &str, payload: serde_json::Value) {
+        if let Some(job) = self.jobs.lock().unwrap().get_mut(job_id) {
+            job.payload = Some(payload);
+        }
+    }
+
+    /// Take payload from a job (consumes it)
+    ///
+    /// TEAM-186: Retrieve and remove payload for execution
+    /// This can only be called once per job!
+    pub fn take_payload(&self, job_id: &str) -> Option<serde_json::Value> {
+        self.jobs.lock().unwrap().get_mut(job_id).and_then(|job| job.payload.take())
     }
 
     /// Check if job exists
@@ -203,6 +230,99 @@ impl<T> Clone for JobRegistry<T> {
     fn clone(&self) -> Self {
         Self { jobs: Arc::clone(&self.jobs) }
     }
+}
+
+// ============================================================================
+// TEAM-186: Execute and Stream Helper
+// ============================================================================
+
+/// Execute a job and stream its results
+///
+/// TEAM-186: Reusable helper for deferred execution pattern
+///
+/// This function:
+/// 1. Retrieves the job payload from the registry
+/// 2. Spawns async execution in background
+/// 3. Returns a stream of results for SSE
+///
+/// # Type Parameters
+/// - `T`: Token type for streaming (must implement ToString)
+/// - `F`: Future that executes the job
+/// - `Exec`: Function that creates the execution future
+///
+/// # Arguments
+/// - `job_id`: The job ID to execute
+/// - `registry`: Job registry containing the job
+/// - `executor`: Function that takes (job_id, payload) and returns a Future
+///
+/// # Returns
+/// A stream of string tokens suitable for SSE streaming
+///
+/// # Example
+/// ```rust,ignore
+/// use job_registry::execute_and_stream;
+///
+/// let stream = execute_and_stream(
+///     job_id,
+///     registry,
+///     |job_id, payload| async move {
+///         // Execute job logic here
+///         route_job(state, payload).await
+///     }
+/// ).await;
+/// ```
+pub async fn execute_and_stream<T, F, Exec>(
+    job_id: String,
+    registry: Arc<JobRegistry<T>>,
+    executor: Exec,
+) -> impl Stream<Item = String>
+where
+    T: ToString + Send + 'static,
+    F: std::future::Future<Output = Result<(), anyhow::Error>> + Send + 'static,
+    Exec: FnOnce(String, serde_json::Value) -> F + Send + 'static,
+{
+    const ACTOR: &str = "📋 job-executor";
+    
+    // TEAM-186: Retrieve payload and spawn execution
+    let payload = registry.take_payload(&job_id);
+    
+    if let Some(payload) = payload {
+        let job_id_clone = job_id.clone();
+        
+        tokio::spawn(async move {
+            Narration::new(ACTOR, "job_execute", &job_id_clone)
+                .human(format!("Executing job {}", job_id_clone))
+                .emit();
+            
+            // Execute the job
+            if let Err(e) = executor(job_id_clone.clone(), payload).await {
+                Narration::new(ACTOR, "job_error", &job_id_clone)
+                    .human(format!("Job {} failed: {}", job_id_clone, e))
+                    .error_kind("job_execution_failed")
+                    .emit();
+            }
+        });
+    } else {
+        Narration::new(ACTOR, "job_no_payload", &job_id)
+            .human(format!("Warning: No payload found for job {}", job_id))
+            .emit();
+    }
+    
+    // TEAM-186: Stream results
+    let receiver = registry.take_token_receiver(&job_id);
+    
+    stream::unfold(receiver, |rx_opt| async move {
+        match rx_opt {
+            Some(mut rx) => match rx.recv().await {
+                Some(token) => {
+                    let data = token.to_string();
+                    Some((data, Some(rx)))
+                }
+                None => None,
+            },
+            None => None,
+        }
+    })
 }
 
 #[cfg(test)]

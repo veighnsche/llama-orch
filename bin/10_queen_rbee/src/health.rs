@@ -1,22 +1,12 @@
-//! Health endpoint for queen-rbee
+//! Health check endpoint
 //!
-//! Created by: TEAM-043
-//! Refactored by: TEAM-052
-//! Migrated by: TEAM-164 (from http.rs to dedicated file)
+//! Simple health check for queen-rbee
 
-use axum::{response::IntoResponse, Json};
-use serde::Serialize;
+use axum::http::StatusCode;
 
-#[derive(Serialize)]
-struct HealthResponse {
-    status: String,
-    version: String,
-}
-
-/// GET /health - Health check
-pub async fn handle_health() -> impl IntoResponse {
-    Json(HealthResponse {
-        status: "ok".to_string(),
-        version: env!("CARGO_PKG_VERSION").to_string(),
-    })
+/// GET /health - Health check endpoint
+///
+/// Returns 200 OK if queen-rbee is running
+pub async fn handle_health() -> StatusCode {
+    StatusCode::OK
 }

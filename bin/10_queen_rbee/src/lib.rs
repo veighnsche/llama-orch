@@ -7,6 +7,13 @@
 
 //! queen-rbee library
 //!
-//! Core library code for queen-rbee daemon
+//! TEAM-164: Extracted shared logic from main.rs into library modules
+//! TEAM-186: Added job_router module for operation routing
+
+pub mod health;
+pub mod heartbeat;
+pub mod http;
+pub mod job_router;  // TEAM-186: Job routing and operation dispatch
+pub mod operations;
 
 // TODO: Implement library functionality
