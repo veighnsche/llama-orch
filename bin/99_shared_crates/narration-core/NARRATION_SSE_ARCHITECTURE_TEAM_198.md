@@ -1,6 +1,26 @@
+# ⚠️ WARNING: THIS DOCUMENT HAS BEEN SUPERSEDED
+
+**Status:** PARTIALLY INCORRECT - See TEAM-197's review
+
+**Correct implementation:** See TEAM-199 through TEAM-203 documents
+
+**What's wrong with this document:**
+- FLAW 1: Missing redaction in SSE path → Fixed by TEAM-199
+- FLAW 2: Wrong ingestion endpoint design → Rejected by TEAM-197
+- FLAW 3: Incomplete format helper → Fixed by TEAM-201
+
+**What's correct:**
+- Core problem identification ✅
+- Solution direction (centralized formatting) ✅
+- Add formatted field to NarrationEvent ✅
+
+**For implementation, follow:** START_HERE_TEAMS_199_203.md
+
+---
+
 # Narration SSE Architecture - Complete Investigation
 
-**TEAM-198** | **Date:** 2025-10-22 | **Status:** ARCHITECTURE ANALYSIS + SOLUTION
+**TEAM-198** | **Date:** 2025-10-22 | **Status:** ⚠️ SUPERSEDED (See warning above)
 
 ---
 
