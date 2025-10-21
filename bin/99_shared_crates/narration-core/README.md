@@ -4,9 +4,71 @@
 
 `bin/shared-crates/narration-core` — Emits structured logs with actor/action/target taxonomy and plain English descriptions.
 
-**Version**: 0.2.0  
+**Version**: 0.4.0 (TEAM-191 format & factory upgrade)  
 **Status**: ✅ Production Ready (100% tests passing)  
 **Specification**: [`.specs/00_narration-core.md`](.specs/00_narration-core.md)
+
+---
+
+## ✨ What's New (v0.4.0) — TEAM-191 Format & Factory 🏭
+
+### Breaking Changes ⚠️
+- **Output Format Changed**: Actor now appears inline on same line (not on separate line)
+  - **Old**: `[actor]\n  message`
+  - **New**: `[actor                ] message` (20-char column alignment)
+  - **Impact**: Better readability, consistent column alignment for messages
+
+### New Features 🚀
+- **🏭 NarrationFactory** - Define default actor once per crate, reuse everywhere
+  - Reduces boilerplate significantly
+  - Compile-time constant (`const fn`)
+  - Works with all builder methods
+- **📏 Column Alignment** - Actor field padded to 20 chars for consistent message alignment
+- **✨ Improved Readability** - Messages start at same column, easier to scan logs
+
+### Example Migration
+```rust
+// Before (v0.3.0)
+Narration::new(ACTOR_QUEEN_ROUTER, ACTION_STATUS, "registry")
+    .human("Status check")
+    .emit();
+
+// After (v0.4.0) - Option 1: Keep using Narration::new
+Narration::new(ACTOR_QUEEN_ROUTER, ACTION_STATUS, "registry")
+    .human("Status check")
+    .emit();
+
+// After (v0.4.0) - Option 2: Use factory (recommended)
+const NARRATE: NarrationFactory = NarrationFactory::new(ACTOR_QUEEN_ROUTER);
+NARRATE.narrate(ACTION_STATUS, "registry")
+    .human("Status check")
+    .emit();
+```
+
+---
+
+## ✨ What's New (v0.3.0) — TEAM-191 Upgrade 🎀
+
+### New Features 🚀
+- **📊 Table Formatting Documentation** - Comprehensive guide for `.table()` method with examples
+- **👑 Queen-Rbee Actor Constants** - `ACTOR_QUEEN_RBEE`, `ACTOR_QUEEN_ROUTER` (with cute emojis!)
+- **🎯 Job & Hive Action Constants** - Complete taxonomy for queen-rbee operations
+  - Job routing: `ACTION_ROUTE_JOB`, `ACTION_PARSE_OPERATION`, `ACTION_JOB_CREATE`
+  - Hive management: `ACTION_HIVE_INSTALL`, `ACTION_HIVE_START`, `ACTION_HIVE_STOP`, etc.
+  - System actions: `ACTION_STATUS`, `ACTION_START`, `ACTION_LISTEN`, `ACTION_READY`, `ACTION_ERROR`
+- **😊 Emoji Support Confirmed** - Emojis work perfectly in human fields (📊, ✅, ❌, 🔧, 🏠, etc.)
+- **📝 Multi-line Message Support** - Long formatted messages with newlines fully supported
+
+### Improvements 📚
+- **README** - Table formatting prominently documented with examples
+- **Taxonomy** - Extended with 15+ new action constants for queen-rbee
+- **Editorial Quality** - Queen-rbee usage patterns reviewed and approved! ⭐⭐⭐⭐⭐
+
+### What We Learned 💡
+- Table formatting is AMAZING for status displays and lists!
+- Emojis make debugging delightful! Keep using them! 🎀
+- Multi-line messages work great for complex operations!
+- Queen-rbee team writes excellent narrations! 💝
 
 ---
 
@@ -104,6 +166,92 @@ Narration::new(ACTOR_ORCHESTRATORD, ACTION_ENQUEUE, job_id)
     .pool_id(pool_id)
     .emit();
 ```
+
+### Narration Macro (NEW in v0.4.0) 🎀 — MOST ERGONOMIC!
+
+The **ultimate ergonomic pattern** - inspired by `println!`:
+
+```rust
+use observability_narration_core::{narration_macro, ACTOR_QUEEN_ROUTER, ACTION_STATUS};
+
+// Create the macro with actor baked in!
+narration_macro!(ACTOR_QUEEN_ROUTER);
+
+// Now use it - looks just like println!
+narrate!(ACTION_STATUS, "registry")
+    .human("Found 2 hives")
+    .emit();
+
+narrate!(ACTION_HIVE_INSTALL, "hive-1")
+    .human("🔧 Installing hive")
+    .emit();
+```
+
+**Benefits**:
+- ✅ **Shortest syntax** - `narrate!(action, target)`
+- ✅ **Rust-idiomatic** - follows `println!` pattern
+- ✅ **Actor defined once** - never repeat it
+- ✅ **Zero runtime overhead** - compile-time macro
+- ✅ **Most ergonomic!** 🎀
+
+### Narration Factory (NEW in v0.4.0) 🏭 — Type-Safe Alternative
+
+If you prefer type-safe structs over macros:
+
+```rust
+use observability_narration_core::{NarrationFactory, ACTOR_QUEEN_ROUTER, ACTION_STATUS};
+
+// Define at module/crate level
+const NARRATE: NarrationFactory = NarrationFactory::new(ACTOR_QUEEN_ROUTER);
+
+// Use throughout the crate
+NARRATE.narrate(ACTION_STATUS, "registry")
+    .human("Found 2 hives")
+    .emit();
+```
+
+**Benefits**:
+- ✅ Type-safe - compile-time constant (`const fn`)
+- ✅ IDE-friendly - better autocomplete
+- ✅ Actor defined once
+- ✅ Works with all builder methods
+
+### Table Formatting (NEW in v0.3.0) 📊
+
+Format JSON data as beautiful CLI tables for structured output:
+
+```rust
+use observability_narration_core::Narration;
+
+let hives = serde_json::json!([
+    {"id": "hive-1", "host": "localhost", "port": 8600},
+    {"id": "hive-2", "host": "192.168.1.10", "port": 8600}
+]);
+
+Narration::new("queen-router", "hive_list", "catalog")
+    .human("Found 2 hive(s):")
+    .table(&hives)
+    .emit();
+```
+
+**Output** (NEW format in v0.4.0):
+```
+[queen-router        ] Found 2 hive(s):
+
+  id     │ host          │ port
+  ───────┼───────────────┼──────
+  hive-1 │ localhost     │ 8600
+  hive-2 │ 192.168.1.10  │ 8600
+```
+
+**Features**:
+- Arrays of objects → column-based tables with headers
+- Single objects → key-value tables
+- Automatic column width calculation
+- Unicode box-drawing characters (│ ─ ┼)
+- Appends to existing human message
+- Perfect for status displays, lists, and reports
+- **NEW**: Actor-first inline format with column alignment
 
 ### Basic Narration
 

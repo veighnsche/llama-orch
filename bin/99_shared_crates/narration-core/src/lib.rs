@@ -56,7 +56,7 @@ pub mod trace;
 pub mod unicode;
 
 pub use auto::{current_timestamp_ms, narrate_auto, narrate_full, service_identity};
-pub use builder::Narration;
+pub use builder::{Narration, NarrationFactory};
 pub use capture::{CaptureAdapter, CapturedNarration};
 
 /// Macro to emit narration with automatic caller crate provenance.
@@ -78,6 +78,54 @@ macro_rules! narrate {
     ($narration:expr) => {{
         $narration.emit_with_provenance(env!("CARGO_PKG_NAME"), env!("CARGO_PKG_VERSION"))
     }};
+}
+
+/// Create a module-level narration macro with a default actor.
+///
+/// This is the MOST ergonomic way to use narration! The macro captures the actor
+/// at the call site, so you never have to repeat it.
+///
+/// # Example
+/// ```rust,ignore
+/// use observability_narration_core::{narration_macro, ACTOR_QUEEN_ROUTER, ACTION_STATUS};
+///
+/// // Create the macro with the actor baked in!
+/// narration_macro!(ACTOR_QUEEN_ROUTER);
+///
+/// // Now use it - ONLY ACTION NEEDED!
+/// narrate!(ACTION_STATUS)
+///     .context("http://localhost:8080")
+///     .context("8080")
+///     .human("Found 2 hives on {0}, port {1}")
+///     .emit();
+/// ```
+///
+/// # TEAM-191: Ultimate Ergonomics with .context()!
+/// This pattern is inspired by `println!` - define once, use everywhere.
+/// The actor is captured at macro definition time, not at use time.
+/// Use `.context()` to add values that can be referenced with `{0}`, `{1}`, etc.
+#[macro_export]
+macro_rules! narration_macro {
+    ($actor:expr) => {
+        /// Create a narration with the default actor.
+        ///
+        /// # Arguments
+        /// - `action`: Action constant (e.g., `ACTION_STATUS`)
+        ///
+        /// # Example
+        /// ```ignore
+        /// narrate!(ACTION_STATUS)
+        ///     .context("value1")
+        ///     .context("value2")
+        ///     .human("Status: {0}, {1}")
+        ///     .emit();
+        /// ```
+        macro_rules! narrate {
+            ($action:expr) => {
+                $crate::Narration::new($actor, $action, stringify!($action))
+            };
+        }
+    };
 }
 pub use correlation::{
     from_header as correlation_from_header, generate_correlation_id,
@@ -103,6 +151,10 @@ pub const ACTOR_WORKER_ORCD: &str = "worker-orcd";
 pub const ACTOR_INFERENCE_ENGINE: &str = "inference-engine";
 /// VRAM residency manager
 pub const ACTOR_VRAM_RESIDENCY: &str = "vram-residency";
+/// Queen-rbee main service (TEAM-191: Added for queen-rbee operations)
+pub const ACTOR_QUEEN_RBEE: &str = "👑 queen-rbee";
+/// Queen router (job routing and operation dispatch) (TEAM-191: Added for job routing)
+pub const ACTOR_QUEEN_ROUTER: &str = "👑 queen-router";
 
 /// Extract service name from a module path string.
 ///
@@ -185,6 +237,40 @@ pub const ACTION_VERIFY: &str = "verify";
 pub const ACTION_REGISTER: &str = "register";
 pub const ACTION_DEREGISTER: &str = "deregister";
 pub const ACTION_PROVISION: &str = "provision";
+
+// TEAM-191: Job routing actions (used by queen-rbee)
+/// Route job to appropriate handler
+pub const ACTION_ROUTE_JOB: &str = "route_job";
+/// Parse operation payload
+pub const ACTION_PARSE_OPERATION: &str = "parse_operation";
+/// Create new job
+pub const ACTION_JOB_CREATE: &str = "job_create";
+
+// TEAM-191: Hive management actions (used by queen-rbee)
+/// Install hive
+pub const ACTION_HIVE_INSTALL: &str = "hive_install";
+/// Uninstall hive
+pub const ACTION_HIVE_UNINSTALL: &str = "hive_uninstall";
+/// Start hive daemon
+pub const ACTION_HIVE_START: &str = "hive_start";
+/// Stop hive daemon
+pub const ACTION_HIVE_STOP: &str = "hive_stop";
+/// Check hive status
+pub const ACTION_HIVE_STATUS: &str = "hive_status";
+/// List all hives
+pub const ACTION_HIVE_LIST: &str = "hive_list";
+
+// TEAM-191: System actions (used by queen-rbee)
+/// Get system status
+pub const ACTION_STATUS: &str = "status";
+/// Start service
+pub const ACTION_START: &str = "start";
+/// Listen for connections
+pub const ACTION_LISTEN: &str = "listen";
+/// Service ready
+pub const ACTION_READY: &str = "ready";
+/// Error occurred
+pub const ACTION_ERROR: &str = "error";
 
 use serde::{Deserialize, Serialize};
 use tracing::{event, Level};
@@ -355,8 +441,9 @@ pub fn narrate_at_level(fields: NarrationFields, level: NarrationLevel) {
 
     // TEAM-153: Always output to stderr for guaranteed shell visibility
     // This works whether or not tracing subscriber is initialized
-    // TEAM-155: Multi-line format for readability - [actor] on first line, message indented
-    eprintln!("[{}]\n  {}", fields.actor, human);
+    // TEAM-191: Actor-first inline format with column alignment for readability
+    // Actor is left-aligned in 20-char field for consistent message column
+    eprintln!("[{:<20}] {}", fields.actor, human);
 
     // TEAM-164: Send to SSE subscribers if enabled (for distributed narration)
     if sse_sink::is_enabled() {

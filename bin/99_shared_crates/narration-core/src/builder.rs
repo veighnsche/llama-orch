@@ -33,9 +33,19 @@ use serde_json::Value;
 ///     .human("Failed to spawn worker")
 ///     .error_kind("ResourceExhausted")
 ///     .emit_error();
+///
+/// // TEAM-191: With context interpolation (BEST!)
+/// Narration::new("queen-rbee", "start", "queen-rbee")
+///     .context("http://localhost:8080")
+///     .context("8080")
+///     .human("✅ Queen started on {0}, port {1}")  // {0} = first context, {1} = second
+///     .emit();
 /// ```
 pub struct Narration {
     fields: NarrationFields,
+    /// TEAM-191: Store context values for format string interpolation
+    /// Index 0 = target, Index 1+ = additional context via .context()
+    context_values: Vec<String>,
 }
 
 impl Narration {
@@ -53,22 +63,68 @@ impl Narration {
     /// let narration = Narration::new(ACTOR_ORCHESTRATORD, "enqueue", "job-123");
     /// ```
     pub fn new(actor: &'static str, action: &'static str, target: impl Into<String>) -> Self {
+        let target_value = target.into();
         Self {
             fields: NarrationFields {
                 actor,
                 action,
-                target: target.into(),
+                target: target_value,
                 human: String::new(),
                 ..Default::default()
             },
+            // TEAM-191: Initialize context_values empty - use .context() to add values
+            context_values: Vec::new(),
         }
+    }
+
+    /// Add context value for format string interpolation.
+    ///
+    /// Context values can be referenced in `.human()`, `.cute()`, and `.story()`
+    /// using `{0}`, `{1}`, `{2}`, etc.
+    ///
+    /// # TEAM-191: Chainable Context!
+    /// Add as many context values as you need, then reference them by index!
+    ///
+    /// # Example
+    /// ```rust,ignore
+    /// Narration::new("queen-rbee", "start", "queen-rbee")
+    ///     .context("http://localhost:8080")  // {0}
+    ///     .context("8080")                   // {1}
+    ///     .human("✅ Queen started on {0}, port {1}")
+    ///     .emit();
+    /// ```
+    pub fn context(mut self, value: impl Into<String>) -> Self {
+        self.context_values.push(value.into());
+        self
     }
 
     /// Set the human-readable description.
     ///
+    /// Supports format string interpolation with `{0}`, `{1}`, `{2}`, etc.
+    ///
+    /// # TEAM-191: Format String Interpolation
+    /// Use `{N}` to reference context values by index!
+    /// - `{0}` = first context (from `.context()`)
+    /// - `{1}` = second context
+    /// - `{2}` = third context, etc.
+    ///
+    /// # Example
+    /// ```rust,ignore
+    /// Narration::new("queen-rbee", "start", "queen-rbee")
+    ///     .context("http://localhost:8080")
+    ///     .context("8080")
+    ///     .human("✅ Queen started on {0}, port {1}")
+    ///     .emit();
+    /// ```
+    ///
     /// This field is automatically redacted for secrets.
     pub fn human(mut self, msg: impl Into<String>) -> Self {
-        self.fields.human = msg.into();
+        let mut msg = msg.into();
+        // TEAM-191: Replace {N} with context values
+        for (i, value) in self.context_values.iter().enumerate() {
+            msg = msg.replace(&format!("{{{}}}", i), value);
+        }
+        self.fields.human = msg;
         self
     }
 
@@ -130,15 +186,35 @@ impl Narration {
     }
 
     /// Set the cute narration message (requires `cute-mode` feature).
+    ///
+    /// Supports format string interpolation with `{0}`, `{1}`, `{2}`, etc.
+    ///
+    /// # TEAM-191: Format String Interpolation
+    /// Use `{N}` to reference context values by index!
     #[cfg(feature = "cute-mode")]
     pub fn cute(mut self, msg: impl Into<String>) -> Self {
-        self.fields.cute = Some(msg.into());
+        let mut msg = msg.into();
+        // TEAM-191: Replace {N} with context values
+        for (i, value) in self.context_values.iter().enumerate() {
+            msg = msg.replace(&format!("{{{}}}", i), value);
+        }
+        self.fields.cute = Some(msg);
         self
     }
 
     /// Set the story narration message.
+    ///
+    /// Supports format string interpolation with `{0}`, `{1}`, `{2}`, etc.
+    ///
+    /// # TEAM-191: Format String Interpolation
+    /// Use `{N}` to reference context values by index!
     pub fn story(mut self, msg: impl Into<String>) -> Self {
-        self.fields.story = Some(msg.into());
+        let mut msg = msg.into();
+        // TEAM-191: Replace {N} with context values
+        for (i, value) in self.context_values.iter().enumerate() {
+            msg = msg.replace(&format!("{{{}}}", i), value);
+        }
+        self.fields.story = Some(msg);
         self
     }
 
@@ -484,5 +560,191 @@ mod tests {
         // Auto-injection should add emitted_by and emitted_at_ms
         assert!(captured[0].emitted_by.is_some());
         assert!(captured[0].emitted_at_ms.is_some());
+    }
+}
+
+// ============================================================================
+// Narration Factory (TEAM-191)
+// ============================================================================
+
+/// Factory for creating narrations with a default actor.
+///
+/// This allows crates to define a default actor once and reuse it,
+/// reducing boilerplate and ensuring consistency.
+///
+/// # Example
+/// ```rust
+/// use observability_narration_core::{NarrationFactory, ACTOR_QUEEN_ROUTER, ACTION_STATUS};
+///
+/// // Define at module/crate level
+/// const NARRATE: NarrationFactory = NarrationFactory::new(ACTOR_QUEEN_ROUTER);
+///
+/// // Use throughout the crate
+/// NARRATE.narrate(ACTION_STATUS, "registry")
+///     .human("Found 2 hives")
+///     .emit();
+/// ```
+pub struct NarrationFactory {
+    actor: &'static str,
+}
+
+impl NarrationFactory {
+    /// Create a new narration factory with a default actor.
+    ///
+    /// This is a `const fn`, so it can be used in `const` contexts.
+    ///
+    /// # Example
+    /// ```rust
+    /// use observability_narration_core::{NarrationFactory, ACTOR_QUEEN_ROUTER};
+    ///
+    /// const NARRATE: NarrationFactory = NarrationFactory::new(ACTOR_QUEEN_ROUTER);
+    /// ```
+    pub const fn new(actor: &'static str) -> Self {
+        Self { actor }
+    }
+
+    /// Create a new narration with the factory's default actor.
+    ///
+    /// # Arguments
+    /// - `action`: Action performed (use constants like `ACTION_STATUS`)
+    /// - `target`: Target of the action (e.g., job ID, registry name)
+    ///
+    /// # Example
+    /// ```rust
+    /// use observability_narration_core::{NarrationFactory, ACTOR_QUEEN_ROUTER, ACTION_STATUS};
+    ///
+    /// const NARRATE: NarrationFactory = NarrationFactory::new(ACTOR_QUEEN_ROUTER);
+    ///
+    /// NARRATE.narrate(ACTION_STATUS, "registry")
+    ///     .human("Status check complete")
+    ///     .emit();
+    /// ```
+    pub fn narrate(&self, action: &'static str, target: impl Into<String>) -> Narration {
+        Narration::new(self.actor, action, target)
+    }
+
+    /// Get the factory's default actor.
+    pub const fn actor(&self) -> &'static str {
+        self.actor
+    }
+}
+
+#[cfg(test)]
+mod factory_tests {
+    use super::*;
+    use crate::{CaptureAdapter, ACTOR_QUEEN_ROUTER, ACTION_STATUS};
+    use serial_test::serial;
+
+    #[test]
+    #[serial(capture_adapter)]
+    fn test_factory_basic() {
+        let adapter = CaptureAdapter::install();
+
+        const NARRATE: NarrationFactory = NarrationFactory::new(ACTOR_QUEEN_ROUTER);
+
+        NARRATE.narrate(ACTION_STATUS, "registry").human("Test message").emit();
+
+        let captured = adapter.captured();
+        assert_eq!(captured.len(), 1);
+        assert_eq!(captured[0].actor, ACTOR_QUEEN_ROUTER);
+        assert_eq!(captured[0].action, ACTION_STATUS);
+        assert_eq!(captured[0].target, "registry");
+        assert_eq!(captured[0].human, "Test message");
+    }
+
+    #[test]
+    #[serial(capture_adapter)]
+    fn test_factory_with_builder_chain() {
+        let adapter = CaptureAdapter::install();
+
+        const NARRATE: NarrationFactory = NarrationFactory::new(ACTOR_QUEEN_ROUTER);
+
+        NARRATE
+            .narrate(ACTION_STATUS, "registry")
+            .human("Status check")
+            .correlation_id("req-123")
+            .duration_ms(100)
+            .emit();
+
+        let captured = adapter.captured();
+        assert_eq!(captured.len(), 1);
+        assert_eq!(captured[0].actor, ACTOR_QUEEN_ROUTER);
+        assert_eq!(captured[0].correlation_id, Some("req-123".to_string()));
+        assert_eq!(captured[0].duration_ms, Some(100));
+    }
+
+    #[test]
+    fn test_factory_actor_getter() {
+        const NARRATE: NarrationFactory = NarrationFactory::new(ACTOR_QUEEN_ROUTER);
+        assert_eq!(NARRATE.actor(), ACTOR_QUEEN_ROUTER);
+    }
+
+    #[test]
+    #[serial(capture_adapter)]
+    fn test_context_single() {
+        let adapter = CaptureAdapter::install();
+
+        Narration::new("queen-rbee", "start", "queen-rbee")
+            .context("http://localhost:8080")
+            .human("✅ Queen started on {0}")
+            .emit();
+
+        let captured = adapter.captured();
+        assert_eq!(captured.len(), 1);
+        assert_eq!(captured[0].human, "✅ Queen started on http://localhost:8080");
+    }
+
+    #[test]
+    #[serial(capture_adapter)]
+    fn test_context_multiple() {
+        let adapter = CaptureAdapter::install();
+
+        Narration::new("queen-rbee", "start", "queen-rbee")
+            .context("http://localhost:8080")
+            .context("8080")
+            .human("✅ Queen started on {0}, port {1}")
+            .emit();
+
+        let captured = adapter.captured();
+        assert_eq!(captured.len(), 1);
+        assert_eq!(captured[0].human, "✅ Queen started on http://localhost:8080, port 8080");
+    }
+
+    #[test]
+    #[serial(capture_adapter)]
+    fn test_context_with_story() {
+        let adapter = CaptureAdapter::install();
+
+        Narration::new("queen-rbee", "start", "queen-rbee")
+            .context("http://localhost:8080")
+            .context("8080")
+            .human("✅ Queen started on {0}, port {1}")
+            .story("The queen awoke at {0} on port {1}! 🎀")
+            .emit();
+
+        let captured = adapter.captured();
+        assert_eq!(captured.len(), 1);
+        assert_eq!(captured[0].human, "✅ Queen started on http://localhost:8080, port 8080");
+        assert_eq!(
+            captured[0].story,
+            Some("The queen awoke at http://localhost:8080 on port 8080! 🎀".to_string())
+        );
+    }
+
+    #[test]
+    #[serial(capture_adapter)]
+    fn test_context_chainable() {
+        let adapter = CaptureAdapter::install();
+
+        Narration::new("queen-rbee", "start", "queen-rbee")
+            .context("value1")
+            .context("value2")
+            .context("value3")
+            .human("Values: {0}, {1}, {2}")
+            .emit();
+
+        let captured = adapter.captured();
+        assert_eq!(captured.len(), 1);
+        assert_eq!(captured[0].human, "Values: value1, value2, value3");
     }
 }
