@@ -345,14 +345,11 @@ fn format_array_table(items: &[Value]) -> String {
 
     // Build header
     let mut output = String::new();
-    let header: Vec<String> = keys
-        .iter()
-        .enumerate()
-        .map(|(i, k)| format!("{:width$}", k, width = widths[i]))
-        .collect();
+    let header: Vec<String> =
+        keys.iter().enumerate().map(|(i, k)| format!("{:width$}", k, width = widths[i])).collect();
     output.push_str(&header.join(" │ "));
     output.push('\n');
-    
+
     // Separator
     let sep: Vec<String> = widths.iter().map(|w| "─".repeat(*w)).collect();
     output.push_str(&sep.join("─┼─"));
@@ -397,7 +394,7 @@ fn format_value_compact(value: &Value) -> String {
         Value::Number(n) => n.to_string(),
         Value::String(s) => s.clone(),
         Value::Array(arr) => format!("[{}]", arr.len()),
-        Value::Object(obj) => format!("{{{}}}" , obj.len()),
+        Value::Object(obj) => format!("{{{}}}", obj.len()),
     }
 }
 

@@ -250,7 +250,7 @@ pub struct NarrationFields {
     pub worker_id: Option<String>,
     /// TEAM-185: Added hive_id for multi-hive rbee operations
     pub hive_id: Option<String>,
-    
+
     // Operation context (for job-based systems)
     /// The specific operation being performed (e.g., "worker_spawn", "infer", "model_download")
     /// Unlike action (which is static), this can be dynamic and operation-specific

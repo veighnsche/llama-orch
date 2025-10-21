@@ -53,19 +53,16 @@ pub struct JobResponse {
 ///
 /// This is the clean public API for job creation.
 /// Called by HTTP layer to create jobs.
-pub async fn create_job(
-    state: JobState,
-    payload: serde_json::Value,
-) -> Result<JobResponse> {
+pub async fn create_job(state: JobState, payload: serde_json::Value) -> Result<JobResponse> {
     let job_id = state.registry.create_job();
     let sse_url = format!("/v1/jobs/{}/stream", job_id);
-    
+
     state.registry.set_payload(&job_id, payload);
-    
+
     Narration::new(ACTOR_QUEEN_ROUTER, "job_create", &job_id)
         .human(format!("Job {} created, waiting for client connection", job_id))
         .emit();
-    
+
     Ok(JobResponse { job_id, sse_url })
 }
 
@@ -79,14 +76,11 @@ pub async fn execute_job(
 ) -> impl futures::stream::Stream<Item = String> {
     let registry = state.registry.clone();
     let hive_catalog = state.hive_catalog.clone();
-    
-    job_registry::execute_and_stream(
-        job_id,
-        registry.clone(),
-        move |_job_id, payload| {
-            route_operation(payload, registry, hive_catalog)
-        },
-    ).await
+
+    job_registry::execute_and_stream(job_id, registry.clone(), move |_job_id, payload| {
+        route_operation(payload, registry, hive_catalog)
+    })
+    .await
 }
 
 /// Internal: Route operation to appropriate handler
@@ -115,11 +109,7 @@ async fn route_operation(
         // Hive operations
         Operation::SshTest { ssh_host, ssh_port, ssh_user } => {
             // TEAM-188: Test SSH connection to remote host
-            let request = SshTestRequest {
-                ssh_host,
-                ssh_port,
-                ssh_user,
-            };
+            let request = SshTestRequest { ssh_host, ssh_port, ssh_user };
 
             let response = execute_ssh_test(request).await?;
 
@@ -131,13 +121,16 @@ async fn route_operation(
             }
 
             Narration::new(ACTOR_QUEEN_ROUTER, "ssh_test_complete", "success")
-                .human(format!("✅ SSH test successful: {}", response.test_output.unwrap_or_default()))
+                .human(format!(
+                    "✅ SSH test successful: {}",
+                    response.test_output.unwrap_or_default()
+                ))
                 .emit();
         }
         Operation::HiveInstall { binary_path, .. } => {
             // /**
             //  * Install hive binary and register in catalog
-            //  * 
+            //  *
             //  * LOCALHOST INSTALLATION:
             //  * 1. Check if hive_id already exists in catalog → error if exists
             //  * 2. Determine binary location:
@@ -151,7 +144,7 @@ async fn route_operation(
             //  *    - Copy binary to standard location
             //  * 4. Verify binary is executable
             //  * 5. Add to catalog: HiveRecord { id, host: "localhost", port, binary_path, devices: None }
-            //  * 
+            //  *
             //  * REMOTE SSH INSTALLATION:
             //  * 1. Run SshTest operation first (fail fast on SSH issues)
             //  * 2. Check if hive_id already exists in catalog → error if exists
@@ -164,22 +157,22 @@ async fn route_operation(
             //  *    - Run: cargo build --release --bin rbee-hive (over SSH)
             //  * 5. Verify binary exists on remote (ssh command: test -f <path>)
             //  * 6. Add to catalog: HiveRecord { id, host, port, ssh_*, binary_path, devices: None }
-            //  * 
+            //  *
             //  * NOTE: Capabilities (devices) are populated later via HiveUpdate with refresh_capabilities=true
             //  */
         }
         Operation::HiveUninstall { catalog_only, .. } => {
             // /**
             //  * Uninstall hive and optionally clean up resources
-            //  * 
+            //  *
             //  * CATALOG-ONLY MODE (catalog_only=true):
             //  * - Used for unreachable remote hives
             //  * - Simply remove HiveRecord from catalog
             //  * - No SSH connection or binary cleanup
             //  * - Return success
-            //  * 
+            //  *
             //  * FULL UNINSTALL (catalog_only=false):
-            //  * 
+            //  *
             //  * LOCALHOST:
             //  * 1. Lookup hive in catalog → error if not found
             //  * 2. Get binary_path from HiveRecord
@@ -191,7 +184,7 @@ async fn route_operation(
             //  *    - Remove models? (delete model files)
             //  * 5. Remove hive binary at binary_path
             //  * 6. Remove from catalog
-            //  * 
+            //  *
             //  * REMOTE SSH:
             //  * 1. Run SshTest operation first
             //  * 2. Lookup hive in catalog → error if not found
@@ -201,7 +194,7 @@ async fn route_operation(
             //  * 5. Cleanup options (same as localhost, but over SSH)
             //  * 6. Remove hive binary on remote (ssh: rm <binary_path>)
             //  * 7. Remove from catalog
-            //  * 
+            //  *
             //  * TODO: Implement emergency stop (SIGKILL all workers)
             //  * TODO: Add interactive cleanup prompts or CLI flags
             //  */
@@ -209,22 +202,22 @@ async fn route_operation(
         Operation::HiveUpdate { refresh_capabilities, .. } => {
             // /**
             //  * Update hive configuration and optionally refresh capabilities
-            //  * 
+            //  *
             //  * COMMON FLOW:
             //  * 1. Lookup hive in catalog → error if not found
             //  * 2. Update SSH connection details if provided:
             //  *    - ssh_host, ssh_port, ssh_user
             //  *    - Update HiveRecord in catalog
-            //  * 
+            //  *
             //  * CAPABILITY REFRESH (refresh_capabilities=true):
-            //  * 
+            //  *
             //  * LOCALHOST:
             //  * 1. Check if hive is running (ping health endpoint)
             //  * 2. If not running: error (hive must be running for capability detection)
             //  * 3. Call hive API: GET /v1/devices
             //  * 4. Parse DeviceCapabilities response (CPU, GPUs)
             //  * 5. Update HiveRecord.devices in catalog
-            //  * 
+            //  *
             //  * REMOTE SSH:
             //  * 1. Run SshTest if SSH details changed
             //  * 2. Check if hive is running (over SSH or health endpoint)
@@ -232,7 +225,7 @@ async fn route_operation(
             //  * 4. Call hive API: GET /v1/devices (via SSH tunnel or direct)
             //  * 5. Parse DeviceCapabilities response
             //  * 6. Update HiveRecord.devices in catalog
-            //  * 
+            //  *
             //  * TODO: Implement hive health check endpoint
             //  * TODO: Implement device detection API in rbee-hive
             //  */
@@ -240,7 +233,7 @@ async fn route_operation(
         Operation::HiveStart { .. } => {
             // /**
             //  * TODO: IMPLEMENT THIS
-            //  * 
+            //  *
             //  * Start a hive daemon process
             //  * - Lookup binary_path from catalog
             //  * - Spawn hive process with proper config
@@ -250,7 +243,7 @@ async fn route_operation(
         Operation::HiveStop { .. } => {
             // /**
             //  * TODO: IMPLEMENT THIS
-            //  * 
+            //  *
             //  * Stop a running hive daemon
             //  * - Send SIGTERM, wait for graceful shutdown
             //  * - SIGKILL if timeout exceeded
@@ -259,7 +252,7 @@ async fn route_operation(
         Operation::HiveList => {
             // /**
             //  * TODO: IMPLEMENT THIS
-            //  * 
+            //  *
             //  * List all hives from catalog
             //  * - Query HiveCatalog.list_all()
             //  * - Return array of HiveRecords
@@ -268,7 +261,7 @@ async fn route_operation(
         Operation::HiveGet { .. } => {
             // /**
             //  * TODO: IMPLEMENT THIS
-            //  * 
+            //  *
             //  * Get single hive details from catalog
             //  * - Query HiveCatalog.get(hive_id)
             //  * - Return HiveRecord or 404
@@ -279,7 +272,7 @@ async fn route_operation(
         Operation::WorkerSpawn { hive_id, .. } => {
             // /**
             //  * TODO: IMPLEMENT THIS
-            //  * 
+            //  *
             //  * Forward operation to hive using job-based architecture:
             //  * 1. Lookup hive in catalog by hive_id → error if not found
             //  * 2. Get hive host:port from HiveRecord
@@ -291,7 +284,7 @@ async fn route_operation(
         Operation::WorkerList { hive_id, .. } => {
             // /**
             //  * TODO: IMPLEMENT THIS
-            //  * 
+            //  *
             //  * Forward operation to hive using job-based architecture:
             //  * 1. Lookup hive in catalog by hive_id
             //  * 2. POST operation to http://{host}:{port}/v1/jobs
@@ -301,7 +294,7 @@ async fn route_operation(
         Operation::WorkerGet { hive_id, .. } => {
             // /**
             //  * TODO: IMPLEMENT THIS
-            //  * 
+            //  *
             //  * Forward operation to hive using job-based architecture:
             //  * 1. Lookup hive in catalog by hive_id
             //  * 2. POST operation to http://{host}:{port}/v1/jobs
@@ -311,7 +304,7 @@ async fn route_operation(
         Operation::WorkerDelete { hive_id, .. } => {
             // /**
             //  * TODO: IMPLEMENT THIS
-            //  * 
+            //  *
             //  * Forward operation to hive using job-based architecture:
             //  * 1. Lookup hive in catalog by hive_id
             //  * 2. POST operation to http://{host}:{port}/v1/jobs
@@ -323,7 +316,7 @@ async fn route_operation(
         Operation::ModelDownload { hive_id, .. } => {
             // /**
             //  * TODO: IMPLEMENT THIS
-            //  * 
+            //  *
             //  * Forward operation to hive using job-based architecture:
             //  * 1. Lookup hive in catalog by hive_id
             //  * 2. POST operation to http://{host}:{port}/v1/jobs
@@ -333,7 +326,7 @@ async fn route_operation(
         Operation::ModelList { hive_id, .. } => {
             // /**
             //  * TODO: IMPLEMENT THIS
-            //  * 
+            //  *
             //  * Forward operation to hive using job-based architecture:
             //  * 1. Lookup hive in catalog by hive_id
             //  * 2. POST operation to http://{host}:{port}/v1/jobs
@@ -343,7 +336,7 @@ async fn route_operation(
         Operation::ModelGet { hive_id, .. } => {
             // /**
             //  * TODO: IMPLEMENT THIS
-            //  * 
+            //  *
             //  * Forward operation to hive using job-based architecture:
             //  * 1. Lookup hive in catalog by hive_id
             //  * 2. POST operation to http://{host}:{port}/v1/jobs
@@ -353,7 +346,7 @@ async fn route_operation(
         Operation::ModelDelete { hive_id, .. } => {
             // /**
             //  * TODO: IMPLEMENT THIS
-            //  * 
+            //  *
             //  * Forward operation to hive using job-based architecture:
             //  * 1. Lookup hive in catalog by hive_id
             //  * 2. POST operation to http://{host}:{port}/v1/jobs
@@ -365,13 +358,13 @@ async fn route_operation(
         Operation::Infer { hive_id, .. } => {
             // //
             //  * TODO: IMPLEMENT THIS
-            //  * 
+            //  *
             //  * Forward operation to hive using job-based architecture:
             //  * 1. Lookup hive in catalog by hive_id
             //  * 2. POST operation to http://{host}:{port}/v1/jobs
             //  * 3. Stream response from /v1/jobs/{job_id}/stream
             //  * 4. Hive will handle worker selection, model loading, and inference
-            //  
+            //
         }
     }
 

@@ -56,9 +56,7 @@ impl From<NarrationFields> for NarrationEvent {
 
 impl SseBroadcaster {
     fn new() -> Self {
-        Self {
-            sender: Arc::new(Mutex::new(None)),
-        }
+        Self { sender: Arc::new(Mutex::new(None)) }
     }
 
     /// Initialize the SSE broadcaster with a channel capacity.

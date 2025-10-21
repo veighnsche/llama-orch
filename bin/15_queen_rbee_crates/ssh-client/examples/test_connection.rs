@@ -9,22 +9,18 @@ async fn main() -> anyhow::Result<()> {
     let args: Vec<String> = std::env::args().collect();
     let host = args.get(1).map(|s| s.as_str()).unwrap_or("workstation.arpa.home");
     let user = args.get(2).map(|s| s.as_str()).unwrap_or("vince");
-    
+
     println!("🔐 Testing SSH connection to {}@{}", user, host);
     println!("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
-    
-    let config = SshConfig {
-        host: host.to_string(),
-        port: 22,
-        user: user.to_string(),
-        timeout_secs: 5,
-    };
-    
+
+    let config =
+        SshConfig { host: host.to_string(), port: 22, user: user.to_string(), timeout_secs: 5 };
+
     let result = test_ssh_connection(config).await?;
-    
+
     println!("\n📊 Result:");
     println!("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
-    
+
     if result.success {
         println!("✅ SUCCESS");
         if let Some(output) = result.test_output {
@@ -36,6 +32,6 @@ async fn main() -> anyhow::Result<()> {
             println!("🚨 Error: {}", error);
         }
     }
-    
+
     Ok(())
 }

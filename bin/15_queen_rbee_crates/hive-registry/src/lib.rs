@@ -48,9 +48,7 @@ pub struct HiveRegistry {
 impl HiveRegistry {
     /// Create a new empty hive registry
     pub fn new() -> Self {
-        Self {
-            hives: RwLock::new(HashMap::new()),
-        }
+        Self { hives: RwLock::new(HashMap::new()) }
     }
 
     /// Update hive runtime state from heartbeat
@@ -158,10 +156,7 @@ impl HiveRegistry {
     /// - `max_age_ms`: Maximum age of last heartbeat (e.g., 30000 = 30 seconds)
     pub fn is_hive_online(&self, hive_id: &str, max_age_ms: i64) -> bool {
         let hives = self.hives.read().unwrap();
-        hives
-            .get(hive_id)
-            .map(|state| state.is_recent(max_age_ms))
-            .unwrap_or(false)
+        hives.get(hive_id).map(|state| state.is_recent(max_age_ms)).unwrap_or(false)
     }
 
     /// Get total number of hives in registry
@@ -181,7 +176,7 @@ impl HiveRegistry {
     /// Returns (hive_id, worker_info) if found.
     pub fn get_worker(&self, worker_id: &str) -> Option<(String, WorkerInfo)> {
         let hives = self.hives.read().unwrap();
-        
+
         for (hive_id, state) in hives.iter() {
             if let Some(worker) = state.workers.iter().find(|w| w.worker_id == worker_id) {
                 return Some((hive_id.clone(), worker.clone()));
@@ -202,7 +197,7 @@ impl HiveRegistry {
     /// Returns list of (hive_id, worker_info) tuples.
     pub fn list_all_workers(&self) -> Vec<(String, WorkerInfo)> {
         let hives = self.hives.read().unwrap();
-        
+
         hives
             .iter()
             .flat_map(|(hive_id, state)| {
@@ -215,10 +210,7 @@ impl HiveRegistry {
     ///
     /// Returns list of (hive_id, worker_info) for workers that are idle.
     pub fn find_idle_workers(&self) -> Vec<(String, WorkerInfo)> {
-        self.list_all_workers()
-            .into_iter()
-            .filter(|(_, worker)| worker.state == "Idle")
-            .collect()
+        self.list_all_workers().into_iter().filter(|(_, worker)| worker.state == "Idle").collect()
     }
 
     /// Find workers by model
@@ -227,9 +219,7 @@ impl HiveRegistry {
     pub fn find_workers_by_model(&self, model_id: &str) -> Vec<(String, WorkerInfo)> {
         self.list_all_workers()
             .into_iter()
-            .filter(|(_, worker)| {
-                worker.model_id.as_ref().map(|m| m == model_id).unwrap_or(false)
-            })
+            .filter(|(_, worker)| worker.model_id.as_ref().map(|m| m == model_id).unwrap_or(false))
             .collect()
     }
 
@@ -239,9 +229,7 @@ impl HiveRegistry {
     pub fn find_workers_by_backend(&self, backend: &str) -> Vec<(String, WorkerInfo)> {
         self.list_all_workers()
             .into_iter()
-            .filter(|(_, worker)| {
-                worker.backend.as_ref().map(|b| b == backend).unwrap_or(false)
-            })
+            .filter(|(_, worker)| worker.backend.as_ref().map(|b| b == backend).unwrap_or(false))
             .collect()
     }
 
@@ -253,13 +241,13 @@ impl HiveRegistry {
     /// 3. Falls back to any idle worker with lowest GPU usage
     pub fn find_best_worker_for_model(&self, model_id: &str) -> Option<(String, WorkerInfo)> {
         let idle_workers = self.find_idle_workers();
-        
+
         // First, try to find idle workers with model already loaded
         let with_model: Vec<_> = idle_workers
             .iter()
             .filter(|(_, w)| w.model_id.as_ref().map(|m| m == model_id).unwrap_or(false))
             .collect();
-        
+
         if !with_model.is_empty() {
             // Find one with lowest GPU usage
             return with_model
@@ -271,15 +259,13 @@ impl HiveRegistry {
                 })
                 .map(|(hive, worker)| (hive.clone(), worker.clone()));
         }
-        
+
         // Fall back to any idle worker with lowest GPU usage
-        idle_workers
-            .into_iter()
-            .min_by(|(_, a), (_, b)| {
-                let a_gpu = a.gpu_percent.unwrap_or(100.0);
-                let b_gpu = b.gpu_percent.unwrap_or(100.0);
-                a_gpu.partial_cmp(&b_gpu).unwrap()
-            })
+        idle_workers.into_iter().min_by(|(_, a), (_, b)| {
+            let a_gpu = a.gpu_percent.unwrap_or(100.0);
+            let b_gpu = b.gpu_percent.unwrap_or(100.0);
+            a_gpu.partial_cmp(&b_gpu).unwrap()
+        })
     }
 
     /// Get total worker count across all hives
@@ -291,10 +277,7 @@ impl HiveRegistry {
     /// Get workers on a specific hive
     pub fn get_workers_on_hive(&self, hive_id: &str) -> Vec<WorkerInfo> {
         let hives = self.hives.read().unwrap();
-        hives
-            .get(hive_id)
-            .map(|state| state.workers.clone())
-            .unwrap_or_default()
+        hives.get(hive_id).map(|state| state.workers.clone()).unwrap_or_default()
     }
 }
 
@@ -641,4 +624,3 @@ mod tests {
         assert_eq!(workers.len(), 0);
     }
 }
-

@@ -140,16 +140,10 @@ pub async fn execute_hive_start(
         .emit();
 
     // TEAM-186: FAIL FAST - Hive MUST be registered in catalog first!
-    let hive = catalog
-        .get_hive(&request.hive_id)
-        .await
-        .context("Failed to check catalog")?
-        .ok_or_else(|| {
-            anyhow!(
-                "Hive '{}' not found in catalog! Register the hive first.",
-                request.hive_id
-            )
-        })?;
+    let hive =
+        catalog.get_hive(&request.hive_id).await.context("Failed to check catalog")?.ok_or_else(
+            || anyhow!("Hive '{}' not found in catalog! Register the hive first.", request.hive_id),
+        )?;
 
     Narration::new(ACTOR_HIVE_LIFECYCLE, ACTION_START, &hive.id)
         .human(format!("✅ Hive '{}' found in catalog", hive.id))
@@ -166,11 +160,7 @@ pub async fn execute_hive_start(
 
     // Return structured response (Command Pattern)
     // NOTE: Hive is NOT necessarily running yet - it will send heartbeat when ready
-    Ok(HiveStartResponse {
-        hive_url,
-        hive_id: hive.id,
-        port: hive.port,
-    })
+    Ok(HiveStartResponse { hive_url, hive_id: hive.id, port: hive.port })
 }
 
 /// Spawn a hive process (internal helper)
@@ -246,7 +236,7 @@ async fn spawn_hive(port: u16, queen_url: &str) -> Result<()> {
 /// ```
 pub async fn execute_ssh_test(request: SshTestRequest) -> Result<SshTestResponse> {
     let target = format!("{}@{}:{}", request.ssh_user, request.ssh_host, request.ssh_port);
-    
+
     Narration::new(ACTOR_HIVE_LIFECYCLE, ACTION_SSH_TEST, &target)
         .human(format!("🔐 Testing SSH connection to {}", target))
         .emit();
@@ -275,7 +265,10 @@ pub async fn execute_ssh_test(request: SshTestRequest) -> Result<SshTestResponse
             .emit();
     } else {
         Narration::new(ACTOR_HIVE_LIFECYCLE, ACTION_SSH_TEST, "failed")
-            .human(format!("❌ SSH test failed: {}", response.error.as_deref().unwrap_or("unknown")))
+            .human(format!(
+                "❌ SSH test failed: {}",
+                response.error.as_deref().unwrap_or("unknown")
+            ))
             .emit();
     }
 

@@ -56,37 +56,37 @@ pub struct HiveHeartbeatPayload {
 pub struct WorkerState {
     /// Worker ID
     pub worker_id: String,
-    
+
     /// Worker state (e.g., "Idle", "Busy", "Loading")
     pub state: String,
-    
+
     /// Last heartbeat timestamp from worker
     pub last_heartbeat: String,
-    
+
     /// Health status
     pub health_status: String,
-    
+
     /// Worker URL for direct inference (e.g., "http://localhost:9300")
     pub url: String,
-    
+
     /// Model loaded on this worker
     pub model_id: Option<String>,
-    
+
     /// Backend type (e.g., "cpu", "cuda", "metal")
     pub backend: Option<String>,
-    
+
     /// Device ID (e.g., GPU index)
     pub device_id: Option<u32>,
-    
+
     /// VRAM used by this worker (bytes)
     pub vram_bytes: Option<u64>,
-    
+
     /// RAM used by this worker (bytes)
     pub ram_bytes: Option<u64>,
-    
+
     /// CPU usage percentage (0-100)
     pub cpu_percent: Option<f32>,
-    
+
     /// GPU usage percentage (0-100)
     pub gpu_percent: Option<f32>,
 }

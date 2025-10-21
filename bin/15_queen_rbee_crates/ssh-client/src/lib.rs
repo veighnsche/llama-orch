@@ -44,12 +44,7 @@ pub struct SshConfig {
 
 impl Default for SshConfig {
     fn default() -> Self {
-        Self {
-            host: String::new(),
-            port: 22,
-            user: String::new(),
-            timeout_secs: 5,
-        }
+        Self { host: String::new(), port: 22, user: String::new(), timeout_secs: 5 }
     }
 }
 
@@ -106,17 +101,15 @@ pub struct SshTestResult {
 /// ```
 pub async fn test_ssh_connection(config: SshConfig) -> Result<SshTestResult> {
     let target = format!("{}@{}:{}", config.user, config.host, config.port);
-    
+
     Narration::new(ACTOR_SSH_CLIENT, ACTION_TEST, &target)
         .human(format!("🔐 Testing SSH connection to {}", target))
         .emit();
 
     // Spawn blocking task for SSH operations (ssh2 is sync)
-    let result = tokio::task::spawn_blocking(move || {
-        test_ssh_connection_blocking(config)
-    })
-    .await
-    .context("SSH test task panicked")?;
+    let result = tokio::task::spawn_blocking(move || test_ssh_connection_blocking(config))
+        .await
+        .context("SSH test task panicked")?;
 
     match &result {
         Ok(test_result) if test_result.success => {
@@ -126,7 +119,11 @@ pub async fn test_ssh_connection(config: SshConfig) -> Result<SshTestResult> {
         }
         Ok(test_result) => {
             Narration::new(ACTOR_SSH_CLIENT, ACTION_TEST, "failed")
-                .human(format!("❌ SSH connection to {} failed: {}", target, test_result.error.as_deref().unwrap_or("unknown")))
+                .human(format!(
+                    "❌ SSH connection to {} failed: {}",
+                    target,
+                    test_result.error.as_deref().unwrap_or("unknown")
+                ))
                 .emit();
         }
         Err(e) => {
@@ -145,9 +142,7 @@ fn test_ssh_connection_blocking(config: SshConfig) -> Result<SshTestResult> {
 
     // Step 1: Establish TCP connection with timeout
     let tcp = match TcpStream::connect_timeout(
-        &format!("{}:{}", config.host, config.port)
-            .parse()
-            .context("Invalid host:port")?,
+        &format!("{}:{}", config.host, config.port).parse().context("Invalid host:port")?,
         Duration::from_secs(config.timeout_secs),
     ) {
         Ok(tcp) => tcp,
@@ -169,7 +164,7 @@ fn test_ssh_connection_blocking(config: SshConfig) -> Result<SshTestResult> {
     // Step 2: Perform SSH handshake
     let mut session = Session::new().context("Failed to create SSH session")?;
     session.set_tcp_stream(tcp);
-    
+
     if let Err(e) = session.handshake() {
         return Ok(SshTestResult {
             success: false,
@@ -183,7 +178,10 @@ fn test_ssh_connection_blocking(config: SshConfig) -> Result<SshTestResult> {
     if let Err(e) = session.userauth_agent(&config.user) {
         return Ok(SshTestResult {
             success: false,
-            error: Some(format!("SSH authentication failed: {}. Ensure SSH agent is running and keys are loaded.", e)),
+            error: Some(format!(
+                "SSH authentication failed: {}. Ensure SSH agent is running and keys are loaded.",
+                e
+            )),
             test_output: None,
         });
     }
@@ -191,7 +189,9 @@ fn test_ssh_connection_blocking(config: SshConfig) -> Result<SshTestResult> {
     if !session.authenticated() {
         return Ok(SshTestResult {
             success: false,
-            error: Some("SSH authentication failed: Not authenticated after userauth_agent".to_string()),
+            error: Some(
+                "SSH authentication failed: Not authenticated after userauth_agent".to_string(),
+            ),
             test_output: None,
         });
     }
@@ -237,9 +237,5 @@ fn test_ssh_connection_blocking(config: SshConfig) -> Result<SshTestResult> {
     }
 
     // Success!
-    Ok(SshTestResult {
-        success: true,
-        error: None,
-        test_output: Some(output.trim().to_string()),
-    })
+    Ok(SshTestResult { success: true, error: None, test_output: Some(output.trim().to_string()) })
 }

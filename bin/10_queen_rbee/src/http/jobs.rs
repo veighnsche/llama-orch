@@ -27,10 +27,7 @@ pub struct SchedulerState {
 /// Convert HTTP state to router state
 impl From<SchedulerState> for crate::job_router::JobState {
     fn from(state: SchedulerState) -> Self {
-        Self {
-            registry: state.registry,
-            hive_catalog: state.hive_catalog,
-        }
+        Self { registry: state.registry, hive_catalog: state.hive_catalog }
     }
 }
 
@@ -64,9 +61,9 @@ pub async fn handle_stream_job(
 ) -> Sse<impl Stream<Item = Result<Event, Infallible>>> {
     // Delegate to router for execution
     let token_stream = crate::job_router::execute_job(job_id, state.into()).await;
-    
+
     // Convert String stream to SSE Event stream
     let event_stream = token_stream.map(|data| Ok(Event::default().data(data)));
-    
+
     Sse::new(event_stream)
 }

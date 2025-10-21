@@ -38,13 +38,13 @@ mod job_client;
 mod narration;
 mod queen_lifecycle;
 
+use anyhow::Result;
+use clap::{Parser, Subcommand};
 use config::Config;
 use job_client::submit_and_stream_job;
 use narration::*;
-use queen_lifecycle::ensure_queen_running;
-use anyhow::Result;
-use clap::{Parser, Subcommand};
 use observability_narration_core::Narration;
+use queen_lifecycle::ensure_queen_running;
 use rbee_operations::Operation;
 
 #[derive(Parser)]
@@ -295,13 +295,13 @@ async fn handle_command(cli: Cli) -> Result<()> {
                 let client = reqwest::Client::builder()
                     .timeout(tokio::time::Duration::from_secs(5))
                     .build()?;
-                
+
                 match client.get(format!("{}/health", queen_url)).send().await {
                     Ok(response) if response.status().is_success() => {
                         Narration::new(ACTOR_RBEE_KEEPER, ACTION_QUEEN_STATUS, "running")
                             .human(format!("✅ Queen is running on {}", queen_url))
                             .emit();
-                        
+
                         // Try to get more details from the response
                         if let Ok(body) = response.text().await {
                             println!("Status: {}", body);
@@ -310,7 +310,10 @@ async fn handle_command(cli: Cli) -> Result<()> {
                     }
                     Ok(response) => {
                         Narration::new(ACTOR_RBEE_KEEPER, ACTION_QUEEN_STATUS, "unhealthy")
-                            .human(format!("⚠️  Queen responded with status: {}", response.status()))
+                            .human(format!(
+                                "⚠️  Queen responded with status: {}",
+                                response.status()
+                            ))
                             .emit();
                         Ok(())
                     }
@@ -329,12 +332,8 @@ async fn handle_command(cli: Cli) -> Result<()> {
             // TEAM-187: Eliminated unnecessary clones by moving owned values
             let operation = match action {
                 HiveAction::SshTest { ssh_host, ssh_port, ssh_user } => {
-                    Operation::SshTest {
-                        ssh_host,
-                        ssh_port,
-                        ssh_user,
-                    }
-                },
+                    Operation::SshTest { ssh_host, ssh_port, ssh_user }
+                }
                 HiveAction::Install { id, ssh_host, ssh_port, ssh_user, port, binary_path } => {
                     Operation::HiveInstall {
                         hive_id: id,
@@ -344,13 +343,10 @@ async fn handle_command(cli: Cli) -> Result<()> {
                         port,
                         binary_path,
                     }
-                },
+                }
                 HiveAction::Uninstall { id, catalog_only } => {
-                    Operation::HiveUninstall {
-                        hive_id: id,
-                        catalog_only,
-                    }
-                },
+                    Operation::HiveUninstall { hive_id: id, catalog_only }
+                }
                 HiveAction::Update { id, ssh_host, ssh_port, ssh_user, refresh_capabilities } => {
                     Operation::HiveUpdate {
                         hive_id: id,
@@ -359,7 +355,7 @@ async fn handle_command(cli: Cli) -> Result<()> {
                         ssh_user,
                         refresh_capabilities,
                     }
-                },
+                }
                 HiveAction::Start { id } => Operation::HiveStart { hive_id: id },
                 HiveAction::Stop { id } => Operation::HiveStop { hive_id: id },
                 HiveAction::List => Operation::HiveList,
@@ -367,7 +363,7 @@ async fn handle_command(cli: Cli) -> Result<()> {
             };
             // TEAM-186: No more repeated serialization! submit_and_stream_job handles it
             submit_and_stream_job(&client, &queen_url, operation).await
-        },
+        }
 
         Commands::Worker { hive_id, action } => {
             // TEAM-186: Use typed Operation enum instead of JSON strings
@@ -384,28 +380,27 @@ async fn handle_command(cli: Cli) -> Result<()> {
                 WorkerAction::Delete { id } => Operation::WorkerDelete { hive_id, id: id.clone() },
             };
             submit_and_stream_job(&client, &queen_url, operation).await
-        },
+        }
 
         Commands::Model { hive_id, action } => {
             // TEAM-186: Use typed Operation enum instead of JSON strings
             // TEAM-187: Match on &action to avoid cloning hive_id multiple times
             let operation = match &action {
-                ModelAction::Download { model } => Operation::ModelDownload {
-                    hive_id,
-                    model: model.clone(),
-                },
+                ModelAction::Download { model } => {
+                    Operation::ModelDownload { hive_id, model: model.clone() }
+                }
                 ModelAction::List => Operation::ModelList { hive_id },
                 ModelAction::Get { id } => Operation::ModelGet { hive_id, id: id.clone() },
                 ModelAction::Delete { id } => Operation::ModelDelete { hive_id, id: id.clone() },
             };
             submit_and_stream_job(&client, &queen_url, operation).await
-        },
+        }
 
-        Commands::Infer { 
+        Commands::Infer {
             hive_id,
-            model, 
-            prompt, 
-            max_tokens, 
+            model,
+            prompt,
+            max_tokens,
             temperature,
             top_p,
             top_k,

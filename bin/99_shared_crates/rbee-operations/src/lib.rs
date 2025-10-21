@@ -289,10 +289,7 @@ mod tests {
     #[test]
     fn test_serialize_hive_uninstall() {
         // TEAM-186: Test uninstall with catalog_only flag
-        let op = Operation::HiveUninstall {
-            hive_id: "localhost".to_string(),
-            catalog_only: false,
-        };
+        let op = Operation::HiveUninstall { hive_id: "localhost".to_string(), catalog_only: false };
         let json = serde_json::to_string(&op).unwrap();
         assert!(json.contains(r#""operation":"hive_uninstall"#));
         assert!(json.contains(r#""hive_id":"localhost"#));
@@ -315,9 +312,7 @@ mod tests {
 
     #[test]
     fn test_serialize_hive_start() {
-        let op = Operation::HiveStart {
-            hive_id: "localhost".to_string(),
-        };
+        let op = Operation::HiveStart { hive_id: "localhost".to_string() };
         let json = serde_json::to_string(&op).unwrap();
         assert_eq!(json, r#"{"operation":"hive_start","hive_id":"localhost"}"#);
     }
@@ -401,13 +396,7 @@ mod tests {
     #[test]
     fn test_operation_name() {
         assert_eq!(Operation::HiveList.name(), "hive_list");
-        assert_eq!(
-            Operation::HiveStart {
-                hive_id: "test".to_string()
-            }
-            .name(),
-            "hive_start"
-        );
+        assert_eq!(Operation::HiveStart { hive_id: "test".to_string() }.name(), "hive_start");
         // TEAM-186: Test new operation names
         assert_eq!(
             Operation::HiveInstall {
@@ -421,20 +410,14 @@ mod tests {
             "hive_install"
         );
         assert_eq!(
-            Operation::HiveUninstall {
-                hive_id: "test".to_string(),
-                catalog_only: false,
-            }
-            .name(),
+            Operation::HiveUninstall { hive_id: "test".to_string(), catalog_only: false }.name(),
             "hive_uninstall"
         );
     }
 
     #[test]
     fn test_operation_hive_id() {
-        let op = Operation::HiveStart {
-            hive_id: "localhost".to_string(),
-        };
+        let op = Operation::HiveStart { hive_id: "localhost".to_string() };
         assert_eq!(op.hive_id(), Some("localhost"));
 
         let op = Operation::HiveList;

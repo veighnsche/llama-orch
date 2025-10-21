@@ -18,34 +18,34 @@ use std::str::FromStr;
 pub struct HiveRecord {
     /// Hive identifier (e.g., "localhost", "hive-prod-01")
     pub id: String,
-    
+
     /// Host address
     pub host: String,
-    
+
     /// Port
     pub port: u16,
-    
+
     /// SSH host (for remote hives)
     pub ssh_host: Option<String>,
-    
+
     /// SSH port (for remote hives)
     pub ssh_port: Option<u16>,
-    
+
     /// SSH username (for remote hives)
     pub ssh_user: Option<String>,
-    
+
     /// TEAM-187: Path to the hive binary on the system
     /// For localhost: absolute path to the binary
     /// For remote: path on the remote system
     pub binary_path: Option<String>,
-    
+
     /// Device capabilities (CPU, GPUs)
     /// None = not yet detected
     pub devices: Option<DeviceCapabilities>,
-    
+
     /// When this hive was added to catalog
     pub created_at_ms: i64,
-    
+
     /// Last time configuration was updated
     pub updated_at_ms: i64,
 }

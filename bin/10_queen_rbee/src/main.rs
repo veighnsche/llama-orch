@@ -12,10 +12,10 @@
 
 // TEAM-164: Migrated endpoints to dedicated modules/files
 mod http;
-mod job_router;  // TEAM-186: Job routing and operation dispatch
-mod narration;  // TEAM-188: Narration constants
-// TEAM-188: operations module doesn't exist yet
-// mod operations;
+mod job_router; // TEAM-186: Job routing and operation dispatch
+mod narration; // TEAM-188: Narration constants
+               // TEAM-188: operations module doesn't exist yet
+               // mod operations;
 
 use anyhow::Result;
 use axum::routing::{get, post};
@@ -135,7 +135,7 @@ fn create_router(
         .route("/v1/jobs", post(http::handle_create_job))
         .with_state(job_state.clone())
         .route("/v1/jobs/{job_id}/stream", get(http::handle_stream_job))
-        .with_state(job_state.clone())  // TEAM-186: Pass full state for payload retrieval
+        .with_state(job_state.clone()) // TEAM-186: Pass full state for payload retrieval
 }
 
 /// POST /v1/shutdown - Graceful shutdown

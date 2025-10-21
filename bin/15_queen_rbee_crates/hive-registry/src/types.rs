@@ -90,11 +90,7 @@ pub struct ResourceInfo {
 
 impl HiveRuntimeState {
     /// Create a new runtime state from heartbeat data
-    pub fn from_heartbeat(
-        hive_id: String,
-        workers: Vec<WorkerInfo>,
-        timestamp_ms: i64,
-    ) -> Self {
+    pub fn from_heartbeat(hive_id: String, workers: Vec<WorkerInfo>, timestamp_ms: i64) -> Self {
         let worker_count = workers.len();
         let (vram_used_gb, ram_used_gb) = calculate_resources(&workers);
 

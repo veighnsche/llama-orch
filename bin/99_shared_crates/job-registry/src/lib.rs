@@ -140,7 +140,7 @@ where
             state: JobState::Queued,
             created_at: chrono::Utc::now(),
             token_receiver: None,
-            payload: None,  // TEAM-186: Initialize as None
+            payload: None, // TEAM-186: Initialize as None
         };
 
         self.jobs.lock().unwrap().insert(job_id.clone(), job);
@@ -282,18 +282,18 @@ where
     Exec: FnOnce(String, serde_json::Value) -> F + Send + 'static,
 {
     const ACTOR: &str = "📋 job-executor";
-    
+
     // TEAM-186: Retrieve payload and spawn execution
     let payload = registry.take_payload(&job_id);
-    
+
     if let Some(payload) = payload {
         let job_id_clone = job_id.clone();
-        
+
         tokio::spawn(async move {
             Narration::new(ACTOR, "job_execute", &job_id_clone)
                 .human(format!("Executing job {}", job_id_clone))
                 .emit();
-            
+
             // Execute the job
             if let Err(e) = executor(job_id_clone.clone(), payload).await {
                 Narration::new(ACTOR, "job_error", &job_id_clone)
@@ -307,10 +307,10 @@ where
             .human(format!("Warning: No payload found for job {}", job_id))
             .emit();
     }
-    
+
     // TEAM-186: Stream results
     let receiver = registry.take_token_receiver(&job_id);
-    
+
     stream::unfold(receiver, |rx_opt| async move {
         match rx_opt {
             Some(mut rx) => match rx.recv().await {
