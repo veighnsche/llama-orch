@@ -2,30 +2,38 @@
 //!
 //! Created by: TEAM-156
 //! Refactored by: TEAM-158 - CRUD pattern
+//! TEAM-186: Removed all runtime/heartbeat functions (status, heartbeat updates, status queries)
 //!
 //! # CRUD Operations
 //!
-//! This module follows standard CRUD (Create, Read, Update, Delete) pattern:
+//! CONFIGURATION ONLY - No runtime/heartbeat data!
+//! Runtime data (status, heartbeat, workers) lives in hive-registry (RAM)
 //!
 //! - **Create:** `add_hive()`
 //! - **Read:** `get_hive()`, `list_hives()`
-//! - **Update:** `update_hive()`, `update_hive_status()`, `update_heartbeat()`
+//! - **Update:** `update_hive()`, `update_devices()`
 //! - **Delete:** `remove_hive()`
+//!
+//! TEAM-186: Removed functions:
+//! - update_hive_status(), update_heartbeat()
+//! - find_hives_by_status(), find_online_hives(), find_offline_hives()
+//! - find_stale_hives(), count_hives(), count_by_status()
 
 use crate::device_types::DeviceCapabilities;
 use crate::row_mapper::map_row_to_hive;
 use crate::schema::initialize_schema;
-use crate::types::{HiveRecord, HiveStatus};
+use crate::types::HiveRecord;
 use anyhow::{Context, Result};
 use sqlx::sqlite::{SqliteConnectOptions, SqlitePool};
-use sqlx::Row;
 use std::path::Path;
 use std::str::FromStr;
 
 /// Hive catalog - SQLite-based persistent storage
 ///
-/// TEAM-156: Provides persistent storage for registered hives
-/// TEAM-158: Follows CRUD pattern for maintainability
+/// CONFIGURATION ONLY - No runtime/heartbeat data!
+/// Stores: host, port, SSH credentials, device capabilities
+/// Does NOT store: status, heartbeat, workers (those are in hive-registry)
+/// TEAM-186: Enforced configuration-only architecture
 pub struct HiveCatalog {
     pool: SqlitePool,
 }
@@ -61,6 +69,8 @@ impl HiveCatalog {
     ///
     /// TEAM-156: Inserts hive record into database
     /// TEAM-158: CRUD - Create operation (with devices)
+    /// Stores CONFIGURATION only (host, port, SSH, devices)
+    /// Does NOT store runtime data (status, heartbeat)
     pub async fn add_hive(&self, hive: HiveRecord) -> Result<()> {
         // TEAM-158: Serialize devices to JSON
         let devices_json = hive.devices.as_ref().and_then(|d| d.to_json().ok());
@@ -69,8 +79,8 @@ impl HiveCatalog {
             r#"
             INSERT INTO hives (
                 id, host, port, ssh_host, ssh_port, ssh_user,
-                status, last_heartbeat_ms, devices_json, created_at_ms, updated_at_ms
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                devices_json, created_at_ms, updated_at_ms
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
             "#,
         )
         .bind(&hive.id)
@@ -79,8 +89,6 @@ impl HiveCatalog {
         .bind(&hive.ssh_host)
         .bind(hive.ssh_port.map(|p| p as i64))
         .bind(&hive.ssh_user)
-        .bind(hive.status.to_string())
-        .bind(hive.last_heartbeat_ms)
         .bind(devices_json)
         .bind(hive.created_at_ms)
         .bind(hive.updated_at_ms)
@@ -128,12 +136,13 @@ impl HiveCatalog {
     // UPDATE
     // ========================================================================
 
-    /// Update an entire hive record
+    /// Update hive configuration
     ///
     /// TEAM-158: CRUD - Update operation (full record with devices)
+    /// Updates CONFIGURATION only (host, port, SSH)
+    /// Does NOT update runtime data (use hive-registry for that)
     pub async fn update_hive(&self, hive: HiveRecord) -> Result<()> {
         let now_ms = chrono::Utc::now().timestamp_millis();
-
         // TEAM-158: Serialize devices to JSON
         let devices_json = hive.devices.as_ref().and_then(|d| d.to_json().ok());
 
@@ -141,7 +150,7 @@ impl HiveCatalog {
             r#"
             UPDATE hives
             SET host = ?, port = ?, ssh_host = ?, ssh_port = ?, ssh_user = ?,
-                status = ?, last_heartbeat_ms = ?, devices_json = ?, updated_at_ms = ?
+                devices_json = ?, updated_at_ms = ?
             WHERE id = ?
             "#,
         )
@@ -150,62 +159,12 @@ impl HiveCatalog {
         .bind(&hive.ssh_host)
         .bind(hive.ssh_port.map(|p| p as i64))
         .bind(&hive.ssh_user)
-        .bind(hive.status.to_string())
-        .bind(hive.last_heartbeat_ms)
         .bind(devices_json)
         .bind(now_ms)
         .bind(&hive.id)
         .execute(&self.pool)
         .await
         .context("Failed to update hive")?;
-
-        Ok(())
-    }
-
-    /// Update hive status
-    ///
-    /// TEAM-156: Updates status and updated_at timestamp
-    /// TEAM-158: CRUD - Update operation (partial - status only)
-    pub async fn update_hive_status(&self, id: &str, status: HiveStatus) -> Result<()> {
-        let now_ms = chrono::Utc::now().timestamp_millis();
-
-        sqlx::query(
-            r#"
-            UPDATE hives
-            SET status = ?, updated_at_ms = ?
-            WHERE id = ?
-            "#,
-        )
-        .bind(status.to_string())
-        .bind(now_ms)
-        .bind(id)
-        .execute(&self.pool)
-        .await
-        .context("Failed to update hive status")?;
-
-        Ok(())
-    }
-
-    /// Update hive heartbeat timestamp
-    ///
-    /// TEAM-156: Records last heartbeat time
-    /// TEAM-158: CRUD - Update operation (partial - heartbeat only)
-    pub async fn update_heartbeat(&self, id: &str, timestamp_ms: i64) -> Result<()> {
-        let now_ms = chrono::Utc::now().timestamp_millis();
-
-        sqlx::query(
-            r#"
-            UPDATE hives
-            SET last_heartbeat_ms = ?, updated_at_ms = ?
-            WHERE id = ?
-            "#,
-        )
-        .bind(timestamp_ms)
-        .bind(now_ms)
-        .bind(id)
-        .execute(&self.pool)
-        .await
-        .context("Failed to update heartbeat")?;
 
         Ok(())
     }
@@ -253,92 +212,15 @@ impl HiveCatalog {
     }
 
     // ========================================================================
-    // QUERY OPERATIONS
+    // QUERY OPERATIONS (Configuration only)
     // ========================================================================
-
-    /// Find hives by status
-    ///
-    /// Returns all hives with the specified status.
-    pub async fn find_hives_by_status(&self, status: HiveStatus) -> Result<Vec<HiveRecord>> {
-        let rows = sqlx::query("SELECT * FROM hives WHERE status = ?")
-            .bind(status.to_string())
-            .fetch_all(&self.pool)
-            .await
-            .context("Failed to find hives by status")?;
-
-        rows.iter().map(map_row_to_hive).collect()
-    }
-
-    /// Find online hives
-    ///
-    /// Convenience method for finding hives with Online status.
-    pub async fn find_online_hives(&self) -> Result<Vec<HiveRecord>> {
-        self.find_hives_by_status(HiveStatus::Online).await
-    }
-
-    /// Find offline hives
-    ///
-    /// Convenience method for finding hives with Offline status.
-    pub async fn find_offline_hives(&self) -> Result<Vec<HiveRecord>> {
-        self.find_hives_by_status(HiveStatus::Offline).await
-    }
-
-    /// Count total hives in catalog
-    pub async fn count_hives(&self) -> Result<i64> {
-        let row = sqlx::query("SELECT COUNT(*) as count FROM hives")
-            .fetch_one(&self.pool)
-            .await
-            .context("Failed to count hives")?;
-
-        let count: i64 = row.try_get("count")?;
-        Ok(count)
-    }
-
-    /// Count hives by status
-    pub async fn count_by_status(&self, status: HiveStatus) -> Result<i64> {
-        let row = sqlx::query("SELECT COUNT(*) as count FROM hives WHERE status = ?")
-            .bind(status.to_string())
-            .fetch_one(&self.pool)
-            .await
-            .context("Failed to count hives by status")?;
-
-        let count: i64 = row.try_get("count")?;
-        Ok(count)
-    }
-
-    /// Check if hive exists in catalog
-    pub async fn hive_exists(&self, id: &str) -> Result<bool> {
-        let row = sqlx::query("SELECT COUNT(*) as count FROM hives WHERE id = ?")
-            .bind(id)
-            .fetch_one(&self.pool)
-            .await
-            .context("Failed to check if hive exists")?;
-
-        let count: i64 = row.try_get("count")?;
-        Ok(count > 0)
-    }
-
-    /// Find hives with stale heartbeats
-    ///
-    /// Returns hives that haven't sent a heartbeat within the specified duration.
-    /// Useful for detecting offline hives.
-    pub async fn find_stale_hives(&self, max_age_ms: i64) -> Result<Vec<HiveRecord>> {
-        let cutoff = chrono::Utc::now().timestamp_millis() - max_age_ms;
-
-        let rows = sqlx::query(
-            "SELECT * FROM hives WHERE last_heartbeat_ms IS NOT NULL AND last_heartbeat_ms < ?"
-        )
-        .bind(cutoff)
-        .fetch_all(&self.pool)
-        .await
-        .context("Failed to find stale hives")?;
-
-        rows.iter().map(map_row_to_hive).collect()
-    }
+    // TEAM-186: Removed all status/heartbeat query functions
+    // TEAM-186: Kept only device-related configuration queries
 
     /// Find hives with devices detected
     ///
     /// Returns hives that have device capabilities information.
+    /// Useful for knowing which hives have been fully configured.
     pub async fn find_hives_with_devices(&self) -> Result<Vec<HiveRecord>> {
         let rows = sqlx::query("SELECT * FROM hives WHERE devices_json IS NOT NULL")
             .fetch_all(&self.pool)
@@ -351,6 +233,7 @@ impl HiveCatalog {
     /// Find hives without devices detected
     ///
     /// Returns hives that need device detection.
+    /// Useful for triggering device detection on new hives.
     pub async fn find_hives_without_devices(&self) -> Result<Vec<HiveRecord>> {
         let rows = sqlx::query("SELECT * FROM hives WHERE devices_json IS NULL")
             .fetch_all(&self.pool)
@@ -358,5 +241,20 @@ impl HiveCatalog {
             .context("Failed to find hives without devices")?;
 
         rows.iter().map(map_row_to_hive).collect()
+    }
+
+    /// Check if hive exists in catalog
+    ///
+    /// Useful for validation before operations.
+    pub async fn hive_exists(&self, id: &str) -> Result<bool> {
+        let row = sqlx::query("SELECT COUNT(*) as count FROM hives WHERE id = ?")
+            .bind(id)
+            .fetch_one(&self.pool)
+            .await
+            .context("Failed to check if hive exists")?;
+
+        use sqlx::Row;
+        let count: i64 = row.try_get("count")?;
+        Ok(count > 0)
     }
 }

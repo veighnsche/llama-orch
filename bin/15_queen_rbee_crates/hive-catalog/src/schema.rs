@@ -2,13 +2,16 @@
 //!
 //! Created by: TEAM-158
 //! Purpose: Separate schema creation from business logic
+//! TEAM-186: Removed status and last_heartbeat_ms columns
 
 use anyhow::{Context, Result};
 use sqlx::sqlite::SqlitePool;
 
 /// SQL schema for hives table
 ///
-/// TEAM-158: Added devices_json column for device capabilities
+/// CONFIGURATION ONLY - No runtime/heartbeat data!
+/// Runtime data (status, heartbeat, workers) lives in hive-registry (RAM)
+/// TEAM-186: Removed status and last_heartbeat_ms columns from schema
 const HIVES_TABLE_SCHEMA: &str = r#"
     CREATE TABLE IF NOT EXISTS hives (
         id TEXT PRIMARY KEY,
@@ -17,8 +20,6 @@ const HIVES_TABLE_SCHEMA: &str = r#"
         ssh_host TEXT,
         ssh_port INTEGER,
         ssh_user TEXT,
-        status TEXT NOT NULL,
-        last_heartbeat_ms INTEGER,
         devices_json TEXT,
         created_at_ms INTEGER NOT NULL,
         updated_at_ms INTEGER NOT NULL

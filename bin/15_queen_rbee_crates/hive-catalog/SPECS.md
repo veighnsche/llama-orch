@@ -2,35 +2,59 @@
 
 ## Purpose
 
-**Persistent storage (SQLite) for hive configuration and metadata.**
+**Persistent storage (SQLite) for hive CONFIGURATION ONLY.**
+
+## ⚠️ CRITICAL: Configuration Only - No Runtime Data!
+
+**Hard Block**: Nothing from heartbeat touches SQLite!
+
+### What Catalog Stores (Configuration)
+- ✅ Host, port
+- ✅ SSH credentials (host, port, user)
+- ✅ Device capabilities (CPU, GPUs)
+- ✅ Created/updated timestamps
+
+### What Catalog Does NOT Store (Runtime - use hive-registry!)
+- ❌ Status (Online/Offline)
+- ❌ Last heartbeat timestamp
+- ❌ Workers
+- ❌ VRAM/RAM usage
+- ❌ Anything that changes frequently
+
+**Why?** Heartbeats arrive every 5 seconds. Writing to SQLite every 5 seconds is unnecessary complexity. The registry (RAM) rebuilds from heartbeats in max 5 seconds after restart.
+
+**Trade-off**: 5 seconds of amnesia vs massive complexity savings = Worth it!
+
+---
+
+## Catalog vs Registry
 
 This is DIFFERENT from `hive-registry` (RAM - runtime state):
-- **Catalog** = Persistent config (host, port, SSH, device capabilities) - **SURVIVES RESTARTS**
-- **Registry** = Runtime state (workers, VRAM usage, last heartbeat) - **LOST ON RESTART**
+- **Catalog (SQLite)** = Configuration that survives restarts
+- **Registry (RAM)** = Runtime state that rebuilds from heartbeats (5s max)
 
 ## Core Responsibilities
 
-### 1. Persistent Storage
+### 1. Persistent Configuration Storage
 - Store hive configuration that survives restarts
 - SQLite database for reliability
 - Schema versioning and migrations
 
-### 2. Hive Metadata Management
+### 2. Hive Configuration Management
 - Connection info (host, port)
 - SSH credentials for remote hives
 - Device capabilities (CPU, GPUs, VRAM, RAM)
-- Status tracking (Unknown, Online, Offline)
-- Heartbeat timestamps
+- **NOT** status, heartbeat, or workers (those are in registry!)
 
 ### 3. CRUD Operations
 - **Create**: Add new hives
 - **Read**: Get single hive or list all
-- **Update**: Full or partial updates
+- **Update**: Configuration only (host, port, SSH, devices)
 - **Delete**: Remove hives
 
 ## Data Model
 
-### HiveRecord
+### HiveRecord (Configuration Only!)
 ```rust
 pub struct HiveRecord {
     /// Unique hive identifier (e.g., "localhost", "hive-prod-01")
@@ -51,12 +75,6 @@ pub struct HiveRecord {
     /// SSH username (optional - only for network hives)
     pub ssh_user: Option<String>,
     
-    /// Current status
-    pub status: HiveStatus,
-    
-    /// Last heartbeat timestamp (milliseconds since epoch)
-    pub last_heartbeat_ms: Option<i64>,
-    
     /// Device capabilities (CPU, GPUs)
     /// None = not yet detected
     pub devices: Option<DeviceCapabilities>,
@@ -69,19 +87,7 @@ pub struct HiveRecord {
 }
 ```
 
-### HiveStatus
-```rust
-pub enum HiveStatus {
-    /// Status unknown (freshly added, never seen)
-    Unknown,
-    
-    /// Hive is online and responding
-    Online,
-    
-    /// Hive is offline (not responding)
-    Offline,
-}
-```
+**Note**: No `status` or `last_heartbeat_ms` fields! Those are in hive-registry (RAM).
 
 ### DeviceCapabilities
 ```rust
@@ -115,6 +121,8 @@ pub struct GpuDevice {
 
 ## Database Schema
 
+**Configuration Only - No Runtime Data!**
+
 ```sql
 CREATE TABLE IF NOT EXISTS hives (
     id                  TEXT PRIMARY KEY,
@@ -123,26 +131,23 @@ CREATE TABLE IF NOT EXISTS hives (
     ssh_host            TEXT,
     ssh_port            INTEGER,
     ssh_user            TEXT,
-    status              TEXT NOT NULL DEFAULT 'unknown',
-    last_heartbeat_ms   INTEGER,
     devices_json        TEXT,        -- JSON serialized DeviceCapabilities
     created_at_ms       INTEGER NOT NULL,
     updated_at_ms       INTEGER NOT NULL
 );
-
-CREATE INDEX IF NOT EXISTS idx_hives_status ON hives(status);
-CREATE INDEX IF NOT EXISTS idx_hives_heartbeat ON hives(last_heartbeat_ms);
 ```
+
+**Note**: No `status` or `last_heartbeat_ms` columns! No indexes on them either!
 
 ## Public API Summary
 
-**Total: 16 Public Methods**
+**Total: 9 Public Methods** (Configuration Only)
 - 1 Initialization
 - 1 Create
 - 2 Read
-- 4 Update
+- 2 Update (config + devices)
 - 1 Delete
-- 8 Query operations
+- 3 Query operations (device-related)
 
 ---
 

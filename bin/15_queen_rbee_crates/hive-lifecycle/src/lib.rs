@@ -129,8 +129,6 @@ pub async fn execute_hive_start(
         ssh_host: None,
         ssh_port: None,
         ssh_user: None,
-        status: HiveStatus::Unknown,
-        last_heartbeat_ms: None,
         devices: None,
         created_at_ms: now_ms,
         updated_at_ms: now_ms,

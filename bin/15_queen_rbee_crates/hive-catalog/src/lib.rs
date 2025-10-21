@@ -6,10 +6,22 @@
 //!
 //! TEAM-156: Created by TEAM-156
 //! TEAM-158: Refactored to CRUD pattern
+//! TEAM-186: Removed all runtime/heartbeat data (status, last_heartbeat_ms, related functions)
 //!
 //! This crate provides persistent storage for hive metadata using SQLite.
 //! It follows a standard CRUD (Create, Read, Update, Delete) pattern for
 //! maintainability and consistency.
+//!
+//! # CONFIGURATION ONLY - No Runtime Data!
+//!
+//! This catalog stores CONFIGURATION that survives restarts:
+//! - Host, port, SSH credentials
+//! - Device capabilities (CPU, GPUs)
+//!
+//! It does NOT store runtime data (use hive-registry for that):
+//! - Status (Online/Offline) - use registry
+//! - Heartbeat timestamps - use registry
+//! - Workers - use registry
 //!
 //! # Interface
 //!
@@ -24,9 +36,7 @@
 //!
 //! // UPDATE
 //! pub async fn update_hive(&self, hive: HiveRecord) -> Result<()>
-//! pub async fn update_hive_status(&self, id: &str, status: HiveStatus) -> Result<>()
-//! pub async fn update_heartbeat(&self, id: &str, timestamp_ms: i64) -> Result<>()
-//! pub async fn update_devices(&self, id: &str, devices: DeviceCapabilities) -> Result<>()
+//! pub async fn update_devices(&self, id: &str, devices: DeviceCapabilities) -> Result<()>
 //!
 //! // DELETE
 //! pub async fn remove_hive(&self, id: &str) -> Result<()>
@@ -35,7 +45,7 @@
 //! # Usage
 //!
 //! ```rust,no_run
-//! use queen_rbee_hive_catalog::{HiveCatalog, HiveRecord, HiveStatus};
+//! use queen_rbee_hive_catalog::{HiveCatalog, HiveRecord};
 //! use std::path::Path;
 //!
 //! # #[tokio::main]
@@ -61,9 +71,10 @@ mod schema;
 mod types;
 
 // Re-export public API
+// TEAM-186: Removed HiveStatus export (deleted enum)
 pub use catalog::HiveCatalog;
 pub use device_types::{CpuDevice, DeviceBackend, DeviceCapabilities, GpuDevice};
-pub use types::{HiveRecord, HiveStatus};
+pub use types::HiveRecord;
 
 /// Actor constant for narration
 pub const ACTOR_HIVE_CATALOG: &str = "👑 queen-rbee / ⚙️ hive-catalog";

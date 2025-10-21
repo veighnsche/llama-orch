@@ -12,6 +12,6 @@
 
 pub mod http;  // TEAM-186: Reorganized into http/ folder with mod.rs (includes health, heartbeat)
 pub mod job_router;  // TEAM-186: Job routing and operation dispatch
-pub mod operations;
+pub mod narration;
 
 // TODO: Implement library functionality
