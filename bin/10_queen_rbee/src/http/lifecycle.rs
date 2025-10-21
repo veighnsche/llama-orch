@@ -8,13 +8,18 @@ use queen_rbee_hive_lifecycle;
 use serde::Serialize;
 use std::sync::Arc;
 
+/// Response for hive start operation
 #[derive(Debug, Serialize)]
 pub struct HiveStartResponse {
+    /// URL of the started hive
     pub hive_url: String,
+    /// ID of the hive
     pub hive_id: String,
+    /// Port the hive is running on
     pub port: u16,
 }
 
+/// State for hive start endpoint
 pub type HiveStartState = Arc<HiveCatalog>;
 
 /// POST /hive/start - Start a hive

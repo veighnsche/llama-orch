@@ -12,7 +12,7 @@
 
 pub mod health;
 pub mod heartbeat;
-pub mod http;
+pub mod http;  // TEAM-186: Reorganized into http/ folder with mod.rs
 pub mod job_router;  // TEAM-186: Job routing and operation dispatch
 pub mod operations;
 
