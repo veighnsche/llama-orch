@@ -56,7 +56,7 @@ async fn main() -> Result<()> {
     let args = Args::parse();
 
     // TEAM-164: Initialize SSE sink for distributed narration
-    observability_narration_core::sse_sink::init(1000);
+    // TEAM-204: Removed init() - no global channel, job channels created on-demand
 
     NARRATE
         .action("start")

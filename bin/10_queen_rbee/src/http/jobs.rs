@@ -17,6 +17,17 @@ use observability_narration_core::sse_sink;
 use rbee_config::RbeeConfig;
 use std::{convert::Infallible, sync::Arc};
 
+/// TEAM-204: Drop guard ensures job channel cleanup even on panic/early return
+struct JobChannelGuard {
+    job_id: String,
+}
+
+impl Drop for JobChannelGuard {
+    fn drop(&mut self) {
+        sse_sink::remove_job_channel(&self.job_id);
+    }
+}
+
 /// State for HTTP job endpoints
 #[derive(Clone)]
 pub struct SchedulerState {
@@ -62,6 +73,8 @@ pub async fn handle_create_job(
 ///
 /// TEAM-189: Fixed to subscribe to SSE narration broadcaster
 /// TEAM-200: Subscribe to JOB-SPECIFIC channel (not global!)
+/// TEAM-204: Proper error handling instead of panic
+/// TEAM-204: Drop guard ensures cleanup on panic/early return
 ///
 /// This handler:
 /// 1. Subscribes to the job-specific SSE narration broadcaster
@@ -69,27 +82,33 @@ pub async fn handle_create_job(
 /// 3. Streams narration events to the client
 /// 4. Also streams token results (for inference operations)
 /// 5. Sends [DONE] marker when complete
-/// 6. Cleans up job channel to prevent memory leaks
+/// 6. Cleans up job channel to prevent memory leaks (guaranteed by drop guard)
 ///
 /// Client connects here, which triggers job execution and streams results.
 pub async fn handle_stream_job(
     Path(job_id): Path<String>,
     State(state): State<SchedulerState>,
 ) -> Sse<impl Stream<Item = Result<Event, Infallible>>> {
-    // TEAM-200: Subscribe to JOB-SPECIFIC SSE channel (not global!)
-    let mut sse_rx = sse_sink::subscribe_to_job(&job_id)
-        .expect("Job channel not found - did you forget to create it?");
+    // TEAM-204: Drop guard ensures cleanup even if we panic or return early
+    let _guard = JobChannelGuard { job_id: job_id.clone() };
+    
+    // TEAM-204: Check if job channel exists before proceeding
+    let sse_rx_opt = sse_sink::subscribe_to_job(&job_id);
+    
+    // Trigger job execution (spawns in background) - do this even if channel missing
+    let _token_stream = crate::job_router::execute_job(job_id.clone(), state.into()).await;
 
-    // Trigger job execution (spawns in background)
-    let token_stream = crate::job_router::execute_job(job_id.clone(), state.into()).await;
-
-    // Give the background task a moment to start executing
-    // Without this, the stream might close before any narrations are emitted
-    tokio::time::sleep(tokio::time::Duration::from_millis(50)).await;
-
-    // TEAM-200: Stream narration from job-specific channel
-    // This ensures User A only sees Job A's narration
+    // Single stream that handles both error and success cases
     let combined_stream = async_stream::stream! {
+        // TEAM-204: Handle missing channel gracefully
+        let Some(mut sse_rx) = sse_rx_opt else {
+            yield Ok(Event::default().data("ERROR: Job channel not found. This may indicate a race condition or job creation failure."));
+            return;
+        };
+
+        // Give the background task a moment to start executing
+        tokio::time::sleep(tokio::time::Duration::from_millis(50)).await;
+
         let mut last_event_time = std::time::Instant::now();
         let completion_timeout = std::time::Duration::from_millis(2000);
         let mut received_first_event = false;
@@ -122,8 +141,7 @@ pub async fn handle_stream_job(
                 _ = &mut timeout_fut, if received_first_event => {
                     if last_event_time.elapsed() >= completion_timeout {
                         yield Ok(Event::default().data("[DONE]"));
-                        // TEAM-200: Cleanup job channel
-                        sse_sink::remove_job_channel(&job_id);
+                        // TEAM-204: Cleanup happens automatically via drop guard
                         break;
                     }
                 }
