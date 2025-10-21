@@ -104,8 +104,9 @@ pub async fn handle_stream_job(
                         Ok(event) => {
                             received_first_event = true;
                             last_event_time = std::time::Instant::now();
-                            // Format narration as SSE data: [actor] message
-                            let formatted = format!("[{}] {}", event.actor, event.human);
+                            // TEAM-197: Format narration with fixed-width columns for consistency
+                            // Format: "[actor     ] action         : message"
+                            let formatted = format!("[{:<10}] {:<15}: {}", event.actor, event.action, event.human);
                             yield Ok(Event::default().data(formatted));
                         }
                         Err(_) => {

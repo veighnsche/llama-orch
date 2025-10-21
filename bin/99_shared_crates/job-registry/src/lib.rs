@@ -6,6 +6,7 @@
 //!
 //! TEAM-154: Created by TEAM-154
 //! TEAM-154 FIX: Fixed dual-call pattern by storing receiver instead of sender
+//! TEAM-197: Migrated to narration-core v0.5.0 pattern
 //!
 //! This crate provides in-memory job state management for the dual-call pattern:
 //! 1. POST creates job, returns job_id + sse_url
@@ -14,24 +15,27 @@
 //! # Interface
 //!
 //! ## Registry Operations
-//! ```rust
+//! ```rust,no_run
+//! # use job_registry::{JobRegistry, JobState};
+//! # let registry: JobRegistry<String> = JobRegistry::new();
+//! # let job_id = "job-123";
 //! // CREATE
-//! pub fn create_job(&self) -> String
+//! let job_id = registry.create_job();
 //!
 //! // READ
-//! pub fn has_job(&self, id: &str) -> bool
-//! pub fn get_job_state(&self, id: &str) -> Option<JobState>
+//! let exists = registry.has_job(&job_id);
+//! let state = registry.get_job_state(&job_id);
 //!
 //! // UPDATE
-//! pub fn update_state(&self, id: &str, state: JobState)
-//! pub fn set_token_receiver(&self, id: &str, receiver: TokenReceiver<T>)
+//! registry.update_state(&job_id, JobState::Running);
+//! // registry.set_token_receiver(&job_id, receiver);
 //!
 //! // DELETE
-//! pub fn remove_job(&self, id: &str) -> Option<Job<T>>
+//! // let removed = registry.remove_job(&job_id);
 //!
 //! // UTILITY
-//! pub fn job_count(&self) -> usize
-//! pub fn job_ids(&self) -> Vec<String>
+//! let count = registry.job_count();
+//! let ids = registry.job_ids();
 //! ```
 //!
 //! # Pattern
@@ -45,17 +49,17 @@
 //! use job_registry::{JobRegistry, JobState};
 //! use tokio::sync::mpsc;
 //!
-//! let registry = JobRegistry::new();
+//! let registry: JobRegistry<String> = JobRegistry::new();
 //!
 //! // Create a job (server generates ID)
 //! let job_id = registry.create_job();
 //!
-//! // Store token sender for streaming
+//! // Store token receiver for streaming
 //! let (tx, rx) = mpsc::unbounded_channel();
-//! registry.set_token_sender(&job_id, tx);
+//! registry.set_token_receiver(&job_id, rx);
 //!
-//! // Later: retrieve job and stream
-//! let job = registry.get_job(&job_id).unwrap();
+//! // Later: retrieve job state
+//! let state = registry.get_job_state(&job_id).unwrap();
 //! ```
 
 use std::collections::HashMap;
@@ -64,7 +68,11 @@ use tokio::sync::mpsc::UnboundedSender;
 
 // TEAM-186: For execute_and_stream helper
 use futures::stream::{self, Stream};
-use observability_narration_core::Narration;
+use observability_narration_core::NarrationFactory;
+
+// TEAM-197: Migrated to narration-core v0.5.0 pattern
+// Actor: "job-exec" (8 chars, ≤10 limit)
+const NARRATE: NarrationFactory = NarrationFactory::new("job-exec");
 
 /// Job state in the registry
 #[derive(Debug, Clone)]
@@ -281,8 +289,6 @@ where
     F: std::future::Future<Output = Result<(), anyhow::Error>> + Send + 'static,
     Exec: FnOnce(String, serde_json::Value) -> F + Send + 'static,
 {
-    const ACTOR: &str = "📋 job-executor";
-
     // TEAM-186: Retrieve payload and spawn execution
     let payload = registry.take_payload(&job_id);
 
@@ -290,21 +296,29 @@ where
         let job_id_clone = job_id.clone();
 
         tokio::spawn(async move {
-            Narration::new(ACTOR, "job_execute", &job_id_clone)
-                .human(format!("Executing job {}", job_id_clone))
+            // TEAM-197: Use narration v0.5.0 pattern
+            NARRATE
+                .action("execute")
+                .context(job_id_clone.clone())
+                .human("Executing job {}")
                 .emit();
 
             // Execute the job
             if let Err(e) = executor(job_id_clone.clone(), payload).await {
-                Narration::new(ACTOR, "job_error", &job_id_clone)
-                    .human(format!("Job {} failed: {}", job_id_clone, e))
+                NARRATE
+                    .action("failed")
+                    .context(job_id_clone.clone())
+                    .context(e.to_string())
+                    .human("Job {} failed: {}")
                     .error_kind("job_execution_failed")
-                    .emit();
+                    .emit_error();
             }
         });
     } else {
-        Narration::new(ACTOR, "job_no_payload", &job_id)
-            .human(format!("Warning: No payload found for job {}", job_id))
+        NARRATE
+            .action("no_payload")
+            .context(job_id.clone())
+            .human("Warning: No payload found for job {}")
             .emit();
     }
 
@@ -339,13 +353,12 @@ mod tests {
     }
 
     #[test]
-    fn test_get_job() {
+    fn test_get_job_state() {
         let registry: JobRegistry<String> = JobRegistry::new();
         let job_id = registry.create_job();
 
-        let job = registry.get_job(&job_id).unwrap();
-        assert_eq!(job.job_id, job_id);
-        assert!(matches!(job.state, JobState::Queued));
+        let state = registry.get_job_state(&job_id).unwrap();
+        assert!(matches!(state, JobState::Queued));
     }
 
     #[test]
@@ -355,22 +368,24 @@ mod tests {
 
         registry.update_state(&job_id, JobState::Running);
 
-        let job = registry.get_job(&job_id).unwrap();
-        assert!(matches!(job.state, JobState::Running));
+        let state = registry.get_job_state(&job_id).unwrap();
+        assert!(matches!(state, JobState::Running));
     }
 
     #[tokio::test]
-    async fn test_token_sender() {
+    async fn test_token_receiver() {
         let registry: JobRegistry<String> = JobRegistry::new();
         let job_id = registry.create_job();
 
-        let (tx, mut rx) = tokio::sync::mpsc::unbounded_channel();
-        registry.set_token_sender(&job_id, tx);
+        let (tx, rx) = tokio::sync::mpsc::unbounded_channel();
+        registry.set_token_receiver(&job_id, rx);
 
-        let sender = registry.get_token_sender(&job_id).unwrap();
-        sender.send("test".to_string()).unwrap();
+        // Send a token
+        tx.send("test".to_string()).unwrap();
 
-        let received = rx.recv().await.unwrap();
+        // Take receiver and read token
+        let mut receiver = registry.take_token_receiver(&job_id).unwrap();
+        let received = receiver.recv().await.unwrap();
         assert_eq!(received, "test");
     }
 
