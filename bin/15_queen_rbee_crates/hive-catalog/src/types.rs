@@ -34,6 +34,11 @@ pub struct HiveRecord {
     /// SSH username (for remote hives)
     pub ssh_user: Option<String>,
     
+    /// TEAM-187: Path to the hive binary on the system
+    /// For localhost: absolute path to the binary
+    /// For remote: path on the remote system
+    pub binary_path: Option<String>,
+    
     /// Device capabilities (CPU, GPUs)
     /// None = not yet detected
     pub devices: Option<DeviceCapabilities>,

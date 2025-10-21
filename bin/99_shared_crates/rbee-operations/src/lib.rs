@@ -34,6 +34,13 @@ pub enum Operation {
     // Hive operations
     // TEAM-186: Renamed create→install, delete→uninstall
     // TEAM-186: Added hive_id with default "localhost" to all operations
+    // TEAM-187: Added SshTest for pre-installation SSH validation
+    SshTest {
+        ssh_host: String,
+        #[serde(default = "default_ssh_port")]
+        ssh_port: u16,
+        ssh_user: String,
+    },
     HiveInstall {
         hive_id: String,
         #[serde(skip_serializing_if = "Option::is_none")]
@@ -44,6 +51,11 @@ pub enum Operation {
         ssh_user: Option<String>,
         #[serde(default = "default_port")]
         port: u16,
+        /// TEAM-187: Optional path where to install/find the hive binary
+        /// If None, defaults to standard location (git clone + cargo build)
+        /// Assumes rustup is installed on all systems (fail fast if not)
+        #[serde(skip_serializing_if = "Option::is_none")]
+        binary_path: Option<String>,
     },
     HiveUninstall {
         hive_id: String,
@@ -148,10 +160,16 @@ fn default_port() -> u16 {
     8600
 }
 
+// TEAM-187: Default SSH port for SshTest operation
+fn default_ssh_port() -> u16 {
+    22
+}
+
 impl Operation {
     /// Get the operation name as a string (for logging/narration)
     pub fn name(&self) -> &'static str {
         match self {
+            Operation::SshTest { .. } => "ssh_test",
             Operation::HiveInstall { .. } => "hive_install",
             Operation::HiveUninstall { .. } => "hive_uninstall",
             Operation::HiveUpdate { .. } => "hive_update",

@@ -135,7 +135,20 @@ pub enum QueenAction {
 
 #[derive(Subcommand)]
 // TEAM-186: Updated to match new install/uninstall workflow
+// TEAM-187: Added SshTest for pre-installation SSH validation
 pub enum HiveAction {
+    /// Test SSH connection to remote host
+    SshTest {
+        /// SSH host to test
+        #[arg(long)]
+        ssh_host: String,
+        /// SSH port (default: 22)
+        #[arg(long, default_value = "22")]
+        ssh_port: u16,
+        /// SSH user
+        #[arg(long)]
+        ssh_user: String,
+    },
     /// Install a hive (localhost or remote SSH)
     Install {
         /// Hive ID
@@ -153,6 +166,9 @@ pub enum HiveAction {
         /// Hive port (default: 8600)
         #[arg(long, default_value = "8600")]
         port: u16,
+        /// TEAM-187: Optional path to hive binary (defaults to git clone + cargo build (during development))
+        #[arg(long)]
+        binary_path: Option<String>,
     },
     /// Uninstall a hive
     Uninstall {
@@ -310,14 +326,23 @@ async fn handle_command(cli: Cli) -> Result<()> {
 
         Commands::Hive { action } => {
             // TEAM-186: Use typed Operation enum with new install/uninstall operations
+            // TEAM-187: Eliminated unnecessary clones by moving owned values
             let operation = match action {
-                HiveAction::Install { id, ssh_host, ssh_port, ssh_user, port } => {
+                HiveAction::SshTest { ssh_host, ssh_port, ssh_user } => {
+                    Operation::SshTest {
+                        ssh_host,
+                        ssh_port,
+                        ssh_user,
+                    }
+                },
+                HiveAction::Install { id, ssh_host, ssh_port, ssh_user, port, binary_path } => {
                     Operation::HiveInstall {
                         hive_id: id,
                         ssh_host,
                         ssh_port,
                         ssh_user,
                         port,
+                        binary_path,
                     }
                 },
                 HiveAction::Uninstall { id, catalog_only } => {
@@ -346,6 +371,7 @@ async fn handle_command(cli: Cli) -> Result<()> {
 
         Commands::Worker { hive_id, action } => {
             // TEAM-186: Use typed Operation enum instead of JSON strings
+            // TEAM-187: Match on &action to avoid cloning hive_id multiple times
             let operation = match &action {
                 WorkerAction::Spawn { model, worker, device } => Operation::WorkerSpawn {
                     hive_id,
@@ -362,6 +388,7 @@ async fn handle_command(cli: Cli) -> Result<()> {
 
         Commands::Model { hive_id, action } => {
             // TEAM-186: Use typed Operation enum instead of JSON strings
+            // TEAM-187: Match on &action to avoid cloning hive_id multiple times
             let operation = match &action {
                 ModelAction::Download { model } => Operation::ModelDownload {
                     hive_id,
@@ -387,6 +414,7 @@ async fn handle_command(cli: Cli) -> Result<()> {
             stream,
         } => {
             // TEAM-186: Use typed Operation enum instead of JSON strings
+            // TEAM-187: Eliminated all clones by moving owned values directly
             let operation = Operation::Infer {
                 hive_id,
                 model,

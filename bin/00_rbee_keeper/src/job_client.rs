@@ -89,6 +89,7 @@ pub async fn submit_and_stream_job(
         
         // Print each SSE event to stdout
         for line in text.lines() {
+            // TEAM-187: Use strip_prefix() instead of manual slicing (Clippy fix)
             if let Some(data) = line.strip_prefix("data: ") {
                 // Just print the data directly without wrapping in narration
                 println!("{}", data);

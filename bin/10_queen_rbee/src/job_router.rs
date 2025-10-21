@@ -108,307 +108,264 @@ async fn route_operation(
         .emit();
 
     // TEAM-186: Route to appropriate handler based on operation type
+    // TEAM-187: Updated to handle HiveInstall/HiveUninstall/HiveUpdate operations
+    // TEAM-187: All operations are no-op stubs until routes are implemented
     match operation {
         // Hive operations
-        Operation::HiveStart { hive_id } => {
-            handle_hive_start_job(state, hive_id).await?;
+        Operation::SshTest { .. } => {
+            /**
+             * Test SSH connection to remote host
+             * 
+             * 1. Create SSH client with provided credentials
+             * 2. Attempt connection with timeout (5s)
+             * 3. Run simple test command (e.g., `echo test`)
+             * 4. Return 204 on success, error on failure
+             * 
+             * TODO: Implement SSH client in bin/15_queen_rbee_crates/hive-lifecycle/src/ssh.rs
+             * TODO: Handle connection timeouts gracefully
+             * TODO: Validate SSH key authentication vs password
+             */
         }
-        Operation::HiveStop { hive_id } => {
-            handle_hive_stop_job(state, hive_id).await?;
+        Operation::HiveInstall { binary_path, .. } => {
+            /**
+             * Install hive binary and register in catalog
+             * 
+             * LOCALHOST INSTALLATION:
+             * 1. Check if hive_id already exists in catalog → error if exists
+             * 2. Determine binary location:
+             *    - If binary_path provided: validate path exists
+             *    - Else: check catalog for previous install path
+             *    - Else: default to cargo build (requires rustup)
+             * 3. If building from source:
+             *    - Verify rustup installed (fail fast if not)
+             *    - Git clone veighsnche/llama-orch to temp dir
+             *    - Run: cargo build --release --bin rbee-hive
+             *    - Copy binary to standard location
+             * 4. Verify binary is executable
+             * 5. Add to catalog: HiveRecord { id, host: "localhost", port, binary_path, devices: None }
+             * 
+             * REMOTE SSH INSTALLATION:
+             * 1. Run SshTest operation first (fail fast on SSH issues)
+             * 2. Check if hive_id already exists in catalog → error if exists
+             * 3. Determine binary location on remote:
+             *    - If binary_path provided: use that path
+             *    - Else: default to git clone + cargo build on remote
+             * 4. If building from source (over SSH):
+             *    - Verify rustup installed on remote (ssh command: rustup --version)
+             *    - Git clone veighsnche/llama-orch on remote
+             *    - Run: cargo build --release --bin rbee-hive (over SSH)
+             * 5. Verify binary exists on remote (ssh command: test -f <path>)
+             * 6. Add to catalog: HiveRecord { id, host, port, ssh_*, binary_path, devices: None }
+             * 
+             * NOTE: Capabilities (devices) are populated later via HiveUpdate with refresh_capabilities=true
+             */
+        }
+        Operation::HiveUninstall { catalog_only, .. } => {
+            /**
+             * Uninstall hive and optionally clean up resources
+             * 
+             * CATALOG-ONLY MODE (catalog_only=true):
+             * - Used for unreachable remote hives
+             * - Simply remove HiveRecord from catalog
+             * - No SSH connection or binary cleanup
+             * - Return success
+             * 
+             * FULL UNINSTALL (catalog_only=false):
+             * 
+             * LOCALHOST:
+             * 1. Lookup hive in catalog → error if not found
+             * 2. Get binary_path from HiveRecord
+             * 3. Check if hive is running:
+             *    - If running: SIGTERM first, wait 5s, then SIGKILL if needed
+             *    - Kill all child workers (SIGKILL)
+             * 4. Cleanup options (interactive or flags):
+             *    - Remove workers? (delete worker binaries)
+             *    - Remove models? (delete model files)
+             * 5. Remove hive binary at binary_path
+             * 6. Remove from catalog
+             * 
+             * REMOTE SSH:
+             * 1. Run SshTest operation first
+             * 2. Lookup hive in catalog → error if not found
+             * 3. Get binary_path from HiveRecord
+             * 4. Check if hive is running (over SSH):
+             *    - SSH: pkill -TERM rbee-hive, wait, pkill -KILL if needed
+             * 5. Cleanup options (same as localhost, but over SSH)
+             * 6. Remove hive binary on remote (ssh: rm <binary_path>)
+             * 7. Remove from catalog
+             * 
+             * TODO: Implement emergency stop (SIGKILL all workers)
+             * TODO: Add interactive cleanup prompts or CLI flags
+             */
+        }
+        Operation::HiveUpdate { refresh_capabilities, .. } => {
+            /**
+             * Update hive configuration and optionally refresh capabilities
+             * 
+             * COMMON FLOW:
+             * 1. Lookup hive in catalog → error if not found
+             * 2. Update SSH connection details if provided:
+             *    - ssh_host, ssh_port, ssh_user
+             *    - Update HiveRecord in catalog
+             * 
+             * CAPABILITY REFRESH (refresh_capabilities=true):
+             * 
+             * LOCALHOST:
+             * 1. Check if hive is running (ping health endpoint)
+             * 2. If not running: error (hive must be running for capability detection)
+             * 3. Call hive API: GET /v1/devices
+             * 4. Parse DeviceCapabilities response (CPU, GPUs)
+             * 5. Update HiveRecord.devices in catalog
+             * 
+             * REMOTE SSH:
+             * 1. Run SshTest if SSH details changed
+             * 2. Check if hive is running (over SSH or health endpoint)
+             * 3. If not running: error
+             * 4. Call hive API: GET /v1/devices (via SSH tunnel or direct)
+             * 5. Parse DeviceCapabilities response
+             * 6. Update HiveRecord.devices in catalog
+             * 
+             * TODO: Implement hive health check endpoint
+             * TODO: Implement device detection API in rbee-hive
+             */
+        }
+        Operation::HiveStart { .. } => {
+            /**
+             * TODO: IMPLEMENT THIS
+             * 
+             * Start a hive daemon process
+             * - Lookup binary_path from catalog
+             * - Spawn hive process with proper config
+             * - Wait for health check to confirm startup
+             */
+        }
+        Operation::HiveStop { .. } => {
+            /**
+             * TODO: IMPLEMENT THIS
+             * 
+             * Stop a running hive daemon
+             * - Send SIGTERM, wait for graceful shutdown
+             * - SIGKILL if timeout exceeded
+             */
         }
         Operation::HiveList => {
-            handle_hive_list_job(state).await?;
+            /**
+             * TODO: IMPLEMENT THIS
+             * 
+             * List all hives from catalog
+             * - Query HiveCatalog.list_all()
+             * - Return array of HiveRecords
+             */
         }
-        Operation::HiveGet { id } => {
-            handle_hive_get_job(state, id).await?;
-        }
-        Operation::HiveCreate { host, port } => {
-            handle_hive_create_job(state, host, port).await?;
-        }
-        Operation::HiveUpdate { id } => {
-            handle_hive_update_job(state, id).await?;
-        }
-        Operation::HiveDelete { id } => {
-            handle_hive_delete_job(state, id).await?;
+        Operation::HiveGet { .. } => {
+            /**
+             * TODO: IMPLEMENT THIS
+             * 
+             * Get single hive details from catalog
+             * - Query HiveCatalog.get(hive_id)
+             * - Return HiveRecord or 404
+             */
         }
 
         // Worker operations
-        Operation::WorkerSpawn { hive_id, model, worker, device } => {
-            handle_worker_spawn_job(state, hive_id, model, worker, device).await?;
+        Operation::WorkerSpawn { hive_id, .. } => {
+            /**
+             * TODO: IMPLEMENT THIS
+             * 
+             * Forward operation to hive using job-based architecture:
+             * 1. Lookup hive in catalog by hive_id → error if not found
+             * 2. Get hive host:port from HiveRecord
+             * 3. Forward entire operation payload to: POST http://{host}:{port}/v1/jobs
+             * 4. Connect to SSE stream: GET http://{host}:{port}/v1/jobs/{job_id}/stream
+             * 5. Stream hive responses back to client
+             */
         }
-        Operation::WorkerList { hive_id } => {
-            handle_worker_list_job(state, hive_id).await?;
+        Operation::WorkerList { hive_id, .. } => {
+            /**
+             * TODO: IMPLEMENT THIS
+             * 
+             * Forward operation to hive using job-based architecture:
+             * 1. Lookup hive in catalog by hive_id
+             * 2. POST operation to http://{host}:{port}/v1/jobs
+             * 3. Stream response from /v1/jobs/{job_id}/stream
+             */
         }
-        Operation::WorkerGet { hive_id, id } => {
-            handle_worker_get_job(state, hive_id, id).await?;
+        Operation::WorkerGet { hive_id, .. } => {
+            /**
+             * TODO: IMPLEMENT THIS
+             * 
+             * Forward operation to hive using job-based architecture:
+             * 1. Lookup hive in catalog by hive_id
+             * 2. POST operation to http://{host}:{port}/v1/jobs
+             * 3. Stream response from /v1/jobs/{job_id}/stream
+             */
         }
-        Operation::WorkerDelete { hive_id, id } => {
-            handle_worker_delete_job(state, hive_id, id).await?;
+        Operation::WorkerDelete { hive_id, .. } => {
+            /**
+             * TODO: IMPLEMENT THIS
+             * 
+             * Forward operation to hive using job-based architecture:
+             * 1. Lookup hive in catalog by hive_id
+             * 2. POST operation to http://{host}:{port}/v1/jobs
+             * 3. Stream response from /v1/jobs/{job_id}/stream
+             */
         }
 
         // Model operations
-        Operation::ModelDownload { hive_id, model } => {
-            handle_model_download_job(state, hive_id, model).await?;
+        Operation::ModelDownload { hive_id, .. } => {
+            /**
+             * TODO: IMPLEMENT THIS
+             * 
+             * Forward operation to hive using job-based architecture:
+             * 1. Lookup hive in catalog by hive_id
+             * 2. POST operation to http://{host}:{port}/v1/jobs
+             * 3. Stream response from /v1/jobs/{job_id}/stream
+             */
         }
-        Operation::ModelList { hive_id } => {
-            handle_model_list_job(state, hive_id).await?;
+        Operation::ModelList { hive_id, .. } => {
+            /**
+             * TODO: IMPLEMENT THIS
+             * 
+             * Forward operation to hive using job-based architecture:
+             * 1. Lookup hive in catalog by hive_id
+             * 2. POST operation to http://{host}:{port}/v1/jobs
+             * 3. Stream response from /v1/jobs/{job_id}/stream
+             */
         }
-        Operation::ModelGet { hive_id, id } => {
-            handle_model_get_job(state, hive_id, id).await?;
+        Operation::ModelGet { hive_id, .. } => {
+            /**
+             * TODO: IMPLEMENT THIS
+             * 
+             * Forward operation to hive using job-based architecture:
+             * 1. Lookup hive in catalog by hive_id
+             * 2. POST operation to http://{host}:{port}/v1/jobs
+             * 3. Stream response from /v1/jobs/{job_id}/stream
+             */
         }
-        Operation::ModelDelete { hive_id, id } => {
-            handle_model_delete_job(state, hive_id, id).await?;
+        Operation::ModelDelete { hive_id, .. } => {
+            /**
+             * TODO: IMPLEMENT THIS
+             * 
+             * Forward operation to hive using job-based architecture:
+             * 1. Lookup hive in catalog by hive_id
+             * 2. POST operation to http://{host}:{port}/v1/jobs
+             * 3. Stream response from /v1/jobs/{job_id}/stream
+             */
         }
 
         // Inference operation
-        Operation::Infer {
-            hive_id,
-            model,
-            prompt,
-            max_tokens,
-            temperature,
-            top_p,
-            top_k,
-            device,
-            worker_id,
-            stream,
-        } => {
-            handle_infer_job(
-                state,
-                hive_id,
-                model,
-                prompt,
-                max_tokens,
-                temperature,
-                top_p,
-                top_k,
-                device,
-                worker_id,
-                stream,
-            )
-            .await?;
+        Operation::Infer { hive_id, .. } => {
+            /**
+             * TODO: IMPLEMENT THIS
+             * 
+             * Forward operation to hive using job-based architecture:
+             * 1. Lookup hive in catalog by hive_id
+             * 2. POST operation to http://{host}:{port}/v1/jobs
+             * 3. Stream response from /v1/jobs/{job_id}/stream
+             * 4. Hive will handle worker selection, model loading, and inference
+             */
         }
     }
 
-    Ok(())
-}
-
-// ============================================================================
-// HIVE OPERATION HANDLERS
-// ============================================================================
-
-async fn handle_hive_start_job(
-    _state: JobState,
-    hive_id: String,
-) -> Result<()> {
-    // TODO: Implement hive start logic
-    Narration::new(ACTOR_QUEEN_ROUTER, "hive_start", &hive_id)
-        .human(format!("TODO: Start hive {}", hive_id))
-        .emit();
-    Ok(())
-}
-
-async fn handle_hive_stop_job(
-    _state: JobState,
-    hive_id: String,
-) -> Result<()> {
-    // TODO: Implement hive stop logic
-    Narration::new(ACTOR_QUEEN_ROUTER, "hive_stop", &hive_id)
-        .human(format!("TODO: Stop hive {}", hive_id))
-        .emit();
-    Ok(())
-}
-
-async fn handle_hive_list_job(_state: JobState) -> Result<()> {
-    // TODO: Implement hive list logic
-    Narration::new(ACTOR_QUEEN_ROUTER, "hive_list", "list")
-        .human("TODO: List hives")
-        .emit();
-    Ok(())
-}
-
-async fn handle_hive_get_job(_state: JobState, id: String) -> Result<()> {
-    // TODO: Implement hive get logic
-    Narration::new(ACTOR_QUEEN_ROUTER, "hive_get", &id)
-        .human(format!("TODO: Get hive {}", id))
-        .emit();
-    Ok(())
-}
-
-async fn handle_hive_create_job(
-    _state: JobState,
-    host: String,
-    port: u16,
-) -> Result<()> {
-    // TODO: Implement hive create logic
-    Narration::new(ACTOR_QUEEN_ROUTER, "hive_create", &host)
-        .human(format!("TODO: Create hive at {}:{}", host, port))
-        .emit();
-    Ok(())
-}
-
-async fn handle_hive_update_job(_state: JobState, id: String) -> Result<()> {
-    // TODO: Implement hive update logic
-    Narration::new(ACTOR_QUEEN_ROUTER, "hive_update", &id)
-        .human(format!("TODO: Update hive {}", id))
-        .emit();
-    Ok(())
-}
-
-async fn handle_hive_delete_job(_state: JobState, id: String) -> Result<()> {
-    // TODO: Implement hive delete logic
-    Narration::new(ACTOR_QUEEN_ROUTER, "hive_delete", &id)
-        .human(format!("TODO: Delete hive {}", id))
-        .emit();
-    Ok(())
-}
-
-// ============================================================================
-// WORKER OPERATION HANDLERS
-// ============================================================================
-
-async fn handle_worker_spawn_job(
-    _state: JobState,
-    hive_id: String,
-    model: String,
-    worker: String,
-    device: u32,
-) -> Result<()> {
-    // TODO: Implement worker spawn logic
-    Narration::new(ACTOR_QUEEN_ROUTER, "worker_spawn", &hive_id)
-        .human(format!(
-            "TODO: Spawn worker on hive {} with model {} ({}:device{})",
-            hive_id, model, worker, device
-        ))
-        .emit();
-    Ok(())
-}
-
-async fn handle_worker_list_job(
-    _state: JobState,
-    hive_id: String,
-) -> Result<()> {
-    // TODO: Implement worker list logic
-    Narration::new(ACTOR_QUEEN_ROUTER, "worker_list", &hive_id)
-        .human(format!("TODO: List workers on hive {}", hive_id))
-        .emit();
-    Ok(())
-}
-
-async fn handle_worker_get_job(
-    _state: JobState,
-    hive_id: String,
-    id: String,
-) -> Result<()> {
-    // TODO: Implement worker get logic
-    Narration::new(ACTOR_QUEEN_ROUTER, "worker_get", &id)
-        .human(format!(
-            "TODO: Get worker {} on hive {}",
-            id, hive_id
-        ))
-        .emit();
-    Ok(())
-}
-
-async fn handle_worker_delete_job(
-    _state: JobState,
-    hive_id: String,
-    id: String,
-) -> Result<()> {
-    // TODO: Implement worker delete logic
-    Narration::new(ACTOR_QUEEN_ROUTER, "worker_delete", &id)
-        .human(format!(
-            "TODO: Delete worker {} on hive {}",
-            id, hive_id
-        ))
-        .emit();
-    Ok(())
-}
-
-// ============================================================================
-// MODEL OPERATION HANDLERS
-// ============================================================================
-
-async fn handle_model_download_job(
-    _state: JobState,
-    hive_id: String,
-    model: String,
-) -> Result<()> {
-    // TODO: Implement model download logic
-    Narration::new(ACTOR_QUEEN_ROUTER, "model_download", &model)
-        .human(format!(
-            "TODO: Download model {} on hive {}",
-            model, hive_id
-        ))
-        .emit();
-    Ok(())
-}
-
-async fn handle_model_list_job(
-    _state: JobState,
-    hive_id: String,
-) -> Result<()> {
-    // TODO: Implement model list logic
-    Narration::new(ACTOR_QUEEN_ROUTER, "model_list", &hive_id)
-        .human(format!("TODO: List models on hive {}", hive_id))
-        .emit();
-    Ok(())
-}
-
-async fn handle_model_get_job(
-    _state: JobState,
-    hive_id: String,
-    id: String,
-) -> Result<()> {
-    // TODO: Implement model get logic
-    Narration::new(ACTOR_QUEEN_ROUTER, "model_get", &id)
-        .human(format!(
-            "TODO: Get model {} on hive {}",
-            id, hive_id
-        ))
-        .emit();
-    Ok(())
-}
-
-async fn handle_model_delete_job(
-    _state: JobState,
-    hive_id: String,
-    id: String,
-) -> Result<()> {
-    // TODO: Implement model delete logic
-    Narration::new(ACTOR_QUEEN_ROUTER, "model_delete", &id)
-        .human(format!(
-            "TODO: Delete model {} on hive {}",
-            id, hive_id
-        ))
-        .emit();
-    Ok(())
-}
-
-// ============================================================================
-// INFERENCE OPERATION HANDLER
-// ============================================================================
-
-#[allow(clippy::too_many_arguments)]
-async fn handle_infer_job(
-    _state: JobState,
-    hive_id: String,
-    model: String,
-    prompt: String,
-    max_tokens: u32,
-    temperature: f32,
-    _top_p: Option<f32>,
-    _top_k: Option<u32>,
-    _device: Option<String>,
-    _worker_id: Option<String>,
-    _stream: bool,
-) -> Result<()> {
-    // TODO: Implement inference logic
-    Narration::new(ACTOR_QUEEN_ROUTER, "infer", &hive_id)
-        .human(format!(
-            "TODO: Run inference on hive {} with model {} (prompt: '{}', max_tokens: {}, temp: {})",
-            hive_id, model, prompt, max_tokens, temperature
-        ))
-        .emit();
     Ok(())
 }
