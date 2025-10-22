@@ -8,6 +8,7 @@ use std::path::Path;
 
 /// Queen-level configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Default)]
 pub struct QueenConfig {
     #[serde(default)]
     pub queen: QueenSettings,
@@ -48,11 +49,6 @@ impl Default for RuntimeSettings {
     }
 }
 
-impl Default for QueenConfig {
-    fn default() -> Self {
-        Self { queen: QueenSettings::default(), runtime: RuntimeSettings::default() }
-    }
-}
 
 impl QueenConfig {
     /// Validate queen configuration
@@ -93,7 +89,7 @@ impl QueenConfig {
 }
 
 // Default value functions
-fn default_queen_port() -> u16 {
+const fn default_queen_port() -> u16 {
     8080
 }
 
@@ -101,7 +97,7 @@ fn default_log_level() -> String {
     "info".to_string()
 }
 
-fn default_max_concurrent() -> usize {
+const fn default_max_concurrent() -> usize {
     10
 }
 

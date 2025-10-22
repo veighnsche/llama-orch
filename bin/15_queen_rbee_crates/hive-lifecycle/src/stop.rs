@@ -93,7 +93,7 @@ pub async fn execute_hive_stop(
 
     // Send SIGTERM
     let output =
-        tokio::process::Command::new("pkill").args(&["-TERM", binary_name]).output().await?;
+        tokio::process::Command::new("pkill").args(["-TERM", binary_name]).output().await?;
 
     if !output.status.success() {
         NARRATE
@@ -140,7 +140,7 @@ pub async fn execute_hive_stop(
                 .human("⚠️  Graceful shutdown timed out, sending SIGKILL...")
                 .emit();
 
-            tokio::process::Command::new("pkill").args(&["-KILL", binary_name]).output().await?;
+            tokio::process::Command::new("pkill").args(["-KILL", binary_name]).output().await?;
 
             sleep(Duration::from_millis(500)).await;
 

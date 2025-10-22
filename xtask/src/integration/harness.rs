@@ -215,7 +215,7 @@ impl TestHarness {
         println!("💀 Killing process: {}", name);
 
         // Use pkill to kill by name
-        let _ = Command::new("pkill").args(&["-9", "-f", name]).output();
+        let _ = Command::new("pkill").args(["-9", "-f", name]).output();
 
         sleep(Duration::from_millis(500)).await;
         Ok(())
@@ -230,9 +230,9 @@ impl TestHarness {
         // Instead, directly kill processes using pkill.
 
         // Force kill any processes by name (no binary lookup needed)
-        let _ = Command::new("pkill").args(&["-9", "-f", "queen-rbee"]).output();
-        let _ = Command::new("pkill").args(&["-9", "-f", "rbee-hive"]).output();
-        let _ = Command::new("pkill").args(&["-9", "-f", "rbee-keeper"]).output();
+        let _ = Command::new("pkill").args(["-9", "-f", "queen-rbee"]).output();
+        let _ = Command::new("pkill").args(["-9", "-f", "rbee-hive"]).output();
+        let _ = Command::new("pkill").args(["-9", "-f", "rbee-keeper"]).output();
 
         // Kill all tracked processes
         for (name, mut child) in self.processes.drain() {
@@ -251,9 +251,9 @@ impl TestHarness {
     /// TEAM-252: Drop cannot use async/await or block_on() - causes deadlock in tokio tests!
     fn cleanup_sync(&mut self) {
         // Force kill any processes by name (no binary lookup needed)
-        let _ = Command::new("pkill").args(&["-9", "-f", "queen-rbee"]).output();
-        let _ = Command::new("pkill").args(&["-9", "-f", "rbee-hive"]).output();
-        let _ = Command::new("pkill").args(&["-9", "-f", "rbee-keeper"]).output();
+        let _ = Command::new("pkill").args(["-9", "-f", "queen-rbee"]).output();
+        let _ = Command::new("pkill").args(["-9", "-f", "rbee-hive"]).output();
+        let _ = Command::new("pkill").args(["-9", "-f", "rbee-keeper"]).output();
 
         // Kill all tracked processes
         for (_name, mut child) in self.processes.drain() {

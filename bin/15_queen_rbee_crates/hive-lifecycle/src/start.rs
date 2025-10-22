@@ -71,12 +71,12 @@ pub async fn execute_hive_start(
                 .emit();
 
             // Check cache and return early
-            return handle_capabilities_cache(alias, &hive_config, &config, job_id).await;
+            return handle_capabilities_cache(alias, hive_config, &config, job_id).await;
         }
     }
 
     // Step 2: Get binary path
-    let binary_path = resolve_binary_path(&hive_config, job_id)?;
+    let binary_path = resolve_binary_path(hive_config, job_id)?;
 
     NARRATE
         .action("hive_spawn")
@@ -113,7 +113,7 @@ pub async fn execute_hive_start(
                     .emit();
 
                 // Step 5: Fetch and cache capabilities
-                return fetch_and_cache_capabilities(alias, &hive_config, &config, job_id).await;
+                return fetch_and_cache_capabilities(alias, hive_config, &config, job_id).await;
             }
         }
 
@@ -276,7 +276,7 @@ async fn fetch_and_cache_capabilities(
             NARRATE
                 .action("hive_caps_http")
                 .job_id(job_id)
-                .context(&format!("{}/capabilities", endpoint))
+                .context(format!("{}/capabilities", endpoint))
                 .human("🌐 GET {}")
                 .emit();
 

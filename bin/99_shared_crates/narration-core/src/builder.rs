@@ -497,7 +497,7 @@ fn format_array_table(items: &[Value]) -> String {
                 .map(|(i, k)| {
                     let val = map
                         .get(k)
-                        .map(|v| format_value_compact(v))
+                        .map(format_value_compact)
                         .unwrap_or_else(|| String::from("-"));
                     format!("{:width$}", val, width = widths[i])
                 })

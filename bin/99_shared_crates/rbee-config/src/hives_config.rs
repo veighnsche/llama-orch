@@ -87,7 +87,7 @@ impl HivesConfig {
     }
 
     /// Validate unique aliases (should already be enforced by HashMap)
-    pub fn validate_unique_aliases(&self) -> Result<()> {
+    pub const fn validate_unique_aliases(&self) -> Result<()> {
         // HashMap already enforces uniqueness, but we check during parsing
         Ok(())
     }

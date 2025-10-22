@@ -13,7 +13,7 @@ use tokio::sync::mpsc;
 /// TEAM-200: Refactored to support per-job channels
 /// TEAM-204: CRITICAL SECURITY FIX - Removed global channel (privacy hazard)
 static SSE_BROADCASTER: once_cell::sync::Lazy<SseBroadcaster> =
-    once_cell::sync::Lazy::new(|| SseBroadcaster::new());
+    once_cell::sync::Lazy::new(SseBroadcaster::new);
 
 /// Broadcaster for SSE narration events with job isolation.
 ///

@@ -72,7 +72,7 @@ pub async fn execute_hive_install(
                    Currently only localhost installation is supported.",
             )
             .emit();
-        return Err(anyhow::anyhow!("Remote installation not yet implemented"));
+        Err(anyhow::anyhow!("Remote installation not yet implemented"))
     } else {
         // LOCALHOST INSTALLATION
         NARRATE.action("hive_mode").job_id(job_id).human("🏠 Localhost installation").emit();
