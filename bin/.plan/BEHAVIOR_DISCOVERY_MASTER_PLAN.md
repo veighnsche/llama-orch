@@ -323,9 +323,27 @@ The following crates are **NOT in workspace** and should **NOT be investigated**
 
 1. **This is DISCOVERY only** - No code changes during Phases 1-5
 2. **Document what EXISTS** - Don't design new behaviors
-3. **Identify gaps** - Test coverage gaps are valuable findings
-4. **Follow template** - Consistency enables Phase 6 planning
-5. **Work concurrently** - Teams in same phase are independent
+3. **Identify TEST gaps for IMPLEMENTED features** - Don't confuse unimplemented features with test gaps
+4. **Future features are NOT test gaps** - If code has TODO markers for future features, that's intentional
+5. **Follow template** - Consistency enables Phase 6 planning
+6. **Work concurrently** - Teams in same phase are independent
+
+### CRITICAL: Unimplemented Features vs Test Gaps
+
+**Unimplemented Feature (NOT a test gap):**
+- Code has TODO markers
+- Endpoints documented but not in main.rs
+- Operations defined but match arms are stubs
+- Supporting crates are stubs
+- **These are INTENTIONAL - future work, not bugs**
+
+**Test Gap (NEEDS tests):**
+- Code is IMPLEMENTED but has NO tests
+- Behavior EXISTS but is NOT covered by unit/BDD/integration tests
+- Error paths EXIST but are NOT tested
+- Edge cases EXIST but are NOT tested
+
+**Focus on testing what we HAVE TODAY, not what we plan to build tomorrow.**
 
 ---
 

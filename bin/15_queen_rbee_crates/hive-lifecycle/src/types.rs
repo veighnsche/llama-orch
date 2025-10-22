@@ -1,4 +1,5 @@
 // TEAM-210: Request/Response types for all hive operations
+// TEAM-220: Investigated - 9 request/response pairs documented
 
 use serde::{Deserialize, Serialize};
 

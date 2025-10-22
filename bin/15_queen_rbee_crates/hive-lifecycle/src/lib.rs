@@ -1,6 +1,7 @@
 // TEAM-135: Created by TEAM-135 (scaffolding)
 // TEAM-164: Implemented hive lifecycle management
 // TEAM-210: Phase 1 Foundation - Module structure and types
+// TEAM-220: Investigated - Behavior inventory complete
 // Purpose: Lifecycle management for rbee-hive instances
 
 #![warn(missing_docs)]

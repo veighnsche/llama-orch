@@ -1,4 +1,5 @@
 // TEAM-210: Validation helpers for hive operations
+// TEAM-220: Investigated - Localhost special case + auto-generation documented
 
 use anyhow::Result;
 use once_cell::sync::Lazy;

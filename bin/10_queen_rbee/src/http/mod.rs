@@ -1,6 +1,7 @@
 //! HTTP endpoints for queen-rbee
 //!
 //! TEAM-186: Reorganized into separate modules for better organization
+//! TEAM-217: Investigated Oct 22, 2025 - Behavior inventory complete
 //!
 //! ## Architecture
 //!

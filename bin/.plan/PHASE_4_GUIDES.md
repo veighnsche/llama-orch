@@ -304,8 +304,15 @@ Each team must deliver:
 - [ ] All behaviors documented
 - [ ] All error paths documented
 - [ ] All integration points documented
-- [ ] Test coverage gaps identified
+- [ ] Test coverage gaps identified (for IMPLEMENTED features only)
 - [ ] Code signatures added (`// TEAM-XXX: Investigated`)
+
+### CRITICAL: Test Gaps vs Future Features
+
+**Test gaps = IMPLEMENTED code with NO tests**
+**Future features = Code with TODO markers or stub implementations**
+
+**Focus on testing what EXISTS today, not what we plan to build.**
 
 ---
 

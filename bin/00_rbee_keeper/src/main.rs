@@ -2,6 +2,7 @@
 //!
 //! TEAM-151: Migrated CLI from old.rbee-keeper to numbered architecture
 //! TEAM-158: Cleaned up over-engineering - rbee-keeper is just a thin HTTP client!
+//! TEAM-216: Investigated - Complete behavior inventory created
 //!
 //! # CRITICAL ARCHITECTURE PRINCIPLE
 //!

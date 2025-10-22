@@ -329,8 +329,23 @@ Each team must deliver:
 - [ ] All flows diagrammed
 - [ ] All error paths documented
 - [ ] All edge cases documented
-- [ ] Test coverage gaps identified
+- [ ] Test coverage gaps identified (for IMPLEMENTED flows only)
 - [ ] Code signatures added (`// TEAM-XXX: Investigated`)
+
+### CRITICAL: Test Gaps vs Future Features
+
+**Many integration flows involve unimplemented features:**
+- Worker operations (spawn, list, get, delete) - NOT YET IMPLEMENTED
+- Model operations (download, list, get, delete) - NOT YET IMPLEMENTED
+- Inference operation - NOT YET IMPLEMENTED
+
+**Test gaps = IMPLEMENTED flows with NO tests**
+
+**Focus on testing IMPLEMENTED flows:**
+- Hive operations (install, start, stop, list, get, status, refresh-capabilities)
+- Heartbeat flows
+- Device detection flows
+- SSE streaming flows
 
 ---
 

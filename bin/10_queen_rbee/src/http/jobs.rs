@@ -2,6 +2,7 @@
 //!
 //! TEAM-186: Job-based architecture - ALL operations go through POST /v1/jobs
 //! TEAM-189: Fixed SSE streaming - subscribe to narration broadcaster
+//! TEAM-217: Investigated Oct 22, 2025 - Behavior inventory complete
 //!
 //! This module is a thin HTTP wrapper that delegates to job_router for business logic.
 

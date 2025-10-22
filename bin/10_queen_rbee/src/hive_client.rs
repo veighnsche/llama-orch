@@ -1,6 +1,7 @@
 //! Hive HTTP client for capabilities discovery
 //!
 //! Created by: TEAM-196
+//! TEAM-217: Investigated Oct 22, 2025 - Behavior inventory complete
 //!
 //! This module provides HTTP client functions to fetch device capabilities
 //! from running rbee-hive instances.

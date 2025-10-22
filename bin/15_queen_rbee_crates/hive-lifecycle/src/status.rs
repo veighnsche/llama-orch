@@ -1,4 +1,5 @@
 // TEAM-211: Check if hive is running
+// TEAM-220: Investigated - Health check with 5s timeout documented
 
 use anyhow::Result;
 use observability_narration_core::NarrationFactory;

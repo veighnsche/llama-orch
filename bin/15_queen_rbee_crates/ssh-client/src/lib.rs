@@ -1,5 +1,6 @@
 // TEAM-135: Created by TEAM-135 (scaffolding)
 // TEAM-188: Implemented SSH test connection functionality
+// TEAM-222: Investigated behavior inventory (Phase 2)
 // Purpose: SSH client for managing remote rbee-hive instances
 
 #![warn(missing_docs)]

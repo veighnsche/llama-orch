@@ -1,4 +1,5 @@
 // TEAM-210: Moved from lib.rs for better organization
+// TEAM-220: Investigated - SSH connection testing documented
 
 use anyhow::Result;
 use observability_narration_core::Narration;

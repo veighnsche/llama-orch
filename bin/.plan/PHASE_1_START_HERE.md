@@ -119,6 +119,21 @@ See `.plan/BEHAVIOR_DISCOVERY_MASTER_PLAN.md` for full template.
 - ❌ Skip error paths
 - ❌ Exceed 3 pages
 - ❌ Wait for other teams
+- ❌ **Confuse unimplemented features with test gaps**
+
+### CRITICAL: Test What EXISTS Today
+
+**Unimplemented features are NOT test gaps:**
+- If code has TODO markers → future feature (intentional)
+- If endpoints documented but not in code → future feature (intentional)
+- If operations defined but stubs → future feature (intentional)
+
+**Test gaps are for IMPLEMENTED features:**
+- Code EXISTS but has NO tests
+- Behavior EXISTS but NOT covered
+- Error paths EXIST but NOT tested
+
+**Focus: Test what we HAVE, not what we PLAN.**
 
 ---
 

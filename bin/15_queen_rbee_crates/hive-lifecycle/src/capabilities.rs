@@ -1,4 +1,5 @@
 // TEAM-214: Refresh hive capabilities
+// TEAM-220: Investigated - Capabilities fetch + cache update documented
 //
 // COPIED FROM: bin/10_queen_rbee/src/job_router.rs lines 922-1011
 //

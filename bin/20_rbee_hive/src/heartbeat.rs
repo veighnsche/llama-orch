@@ -1,6 +1,7 @@
 //! Rbee-hive heartbeat handling
 //!
 //! TEAM-164: Binary-specific heartbeat logic for rbee-hive
+//! TEAM-218: Investigated Oct 22, 2025 - STUB with TODOs, not wired to main.rs
 //!
 //! **What lives here:**
 //! - Hive receives heartbeats from workers

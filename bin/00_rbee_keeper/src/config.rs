@@ -1,6 +1,8 @@
 //! Configuration management for rbee-keeper
 //!
 //! Loads config from ~/.config/rbee/config.toml
+//!
+//! TEAM-216: Investigated - Complete behavior inventory created
 
 use anyhow::{Context, Result};
 use serde::{Deserialize, Serialize};

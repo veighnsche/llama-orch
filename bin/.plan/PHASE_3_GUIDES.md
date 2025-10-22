@@ -271,8 +271,18 @@ Each team must deliver:
 - [ ] All state machines documented
 - [ ] All error paths documented
 - [ ] All integration points documented
-- [ ] Test coverage gaps identified
+- [ ] Test coverage gaps identified (for IMPLEMENTED features only)
 - [ ] Code signatures added (`// TEAM-XXX: Investigated`)
+
+### CRITICAL: Test Gaps vs Future Features
+
+**Many hive crates are STUBS (intentional future work):**
+- download-tracker, model-catalog, model-provisioner, monitor, vram-checker, worker-catalog, worker-lifecycle, worker-registry
+- These are NOT test gaps - they are future features
+
+**Test gaps = Code that EXISTS but has NO tests**
+
+**Focus on testing what EXISTS today (e.g., device-detection).**
 
 ---
 

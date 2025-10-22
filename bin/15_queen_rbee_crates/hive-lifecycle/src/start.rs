@@ -1,4 +1,5 @@
 // TEAM-212: Start hive daemon
+// TEAM-220: Investigated - 5-step lifecycle + exponential backoff documented
 
 use anyhow::Result;
 use daemon_lifecycle::DaemonManager;

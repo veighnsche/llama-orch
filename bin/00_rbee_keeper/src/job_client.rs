@@ -10,6 +10,7 @@
 //! TEAM-185: Added hive_id to narration context
 //! TEAM-185: Replaced hardcoded action strings with constants from operations module
 //! TEAM-186: Accept Operation directly, serialize internally (DRY)
+//! TEAM-216: Investigated - Complete behavior inventory created
 
 use anyhow::Result;
 use futures::StreamExt;

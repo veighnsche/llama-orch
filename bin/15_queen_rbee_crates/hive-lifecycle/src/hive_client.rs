@@ -1,4 +1,5 @@
 // TEAM-212: Hive HTTP client for capabilities discovery
+// TEAM-220: Investigated - HTTP client + health check documented
 //
 // COPIED FROM: bin/10_queen_rbee/src/hive_client.rs
 //

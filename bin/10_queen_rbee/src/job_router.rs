@@ -1,6 +1,7 @@
 //! Job routing and operation dispatch
 //!
 //! TEAM-186: Centralized job routing logic for all operations
+//! TEAM-217: Investigated Oct 22, 2025 - Behavior inventory complete
 //!
 //! This module handles:
 //! - Parsing operation payloads into typed Operation enum

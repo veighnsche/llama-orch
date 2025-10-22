@@ -1,4 +1,5 @@
 // TEAM-212: Stop hive daemon
+// TEAM-220: Investigated - Graceful shutdown (SIGTERM → SIGKILL) documented
 
 use anyhow::Result;
 use observability_narration_core::NarrationFactory;

@@ -1,4 +1,5 @@
 // TEAM-213: Install hive configuration
+// TEAM-220: Investigated - Binary resolution + localhost-only documented
 
 use anyhow::Result;
 use observability_narration_core::NarrationFactory;

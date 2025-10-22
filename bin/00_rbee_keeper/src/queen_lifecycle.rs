@@ -7,6 +7,7 @@
 //!
 //! TEAM-185: Consolidated from separate rbee-keeper-queen-lifecycle crate into this module
 //! TEAM-185: Imports ACTION_QUEEN_START and ACTION_QUEEN_STOP from operations module
+//! TEAM-216: Investigated - Complete behavior inventory created
 
 use anyhow::{Context, Result};
 use daemon_lifecycle::DaemonManager;

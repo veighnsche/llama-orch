@@ -2,6 +2,7 @@
 // TEAM-189: Implemented basic HTTP server with /health endpoint
 // TEAM-190: Added hive heartbeat task to send status to queen every 5 seconds
 // TEAM-202: Replaced println!() with narration for job-scoped SSE visibility
+// TEAM-218: Investigated Oct 22, 2025 - Behavior inventory complete
 // Purpose: rbee-hive binary entry point (DAEMON ONLY - NO CLI!)
 // Status: Basic HTTP daemon with heartbeat and narration - ready for worker management implementation
 

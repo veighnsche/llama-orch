@@ -1,4 +1,5 @@
 // TEAM-213: Uninstall hive configuration
+// TEAM-220: Investigated - Cache cleanup + future enhancements documented
 
 use anyhow::Result;
 use observability_narration_core::NarrationFactory;

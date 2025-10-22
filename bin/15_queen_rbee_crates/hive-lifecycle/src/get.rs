@@ -1,4 +1,5 @@
 // TEAM-211: Get details for a single hive
+// TEAM-220: Investigated - Single hive query documented
 
 use anyhow::Result;
 use observability_narration_core::NarrationFactory;

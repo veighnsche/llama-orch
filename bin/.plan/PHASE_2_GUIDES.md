@@ -225,8 +225,15 @@ Each team must produce:
 - [ ] Max 3 pages
 - [ ] All behaviors documented
 - [ ] All edge cases identified
-- [ ] Test coverage gaps identified
+- [ ] Test coverage gaps identified (for IMPLEMENTED features only)
 - [ ] Code signatures added (`// TEAM-XXX: Investigated`)
+
+### CRITICAL: Test Gaps vs Future Features
+
+**Test gaps = IMPLEMENTED code with NO tests**
+**Future features = Code with TODO markers (intentional, not a gap)**
+
+**Focus on testing what EXISTS today, not what we plan to build.**
 
 ### Phase 2
 - [ ] All 3 teams completed

@@ -1,4 +1,5 @@
 // TEAM-211: List all configured hives
+// TEAM-220: Investigated - Simple query operation documented
 
 use anyhow::Result;
 use observability_narration_core::NarrationFactory;

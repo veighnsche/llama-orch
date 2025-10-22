@@ -3,6 +3,7 @@
 //! TEAM-186: Heartbeat handling for queen-rbee
 //! TEAM-186: Changed from catalog to registry (heartbeat is runtime data)
 //! TEAM-186: Added new hive discovery workflow
+//! TEAM-217: Investigated Oct 22, 2025 - Behavior inventory complete
 //!
 //! **Heartbeat flow:**
 //! - Updates registry (RAM) with full hive state
