@@ -10,7 +10,11 @@
 //! Daemon for managing LLM worker instances on a single machine
 
 mod narration;
-use narration::{NARRATE, ACTION_STARTUP, ACTION_HEARTBEAT, ACTION_LISTEN, ACTION_READY};
+use narration::{
+    NARRATE, ACTION_STARTUP, ACTION_HEARTBEAT, ACTION_LISTEN, ACTION_READY,
+    ACTION_CAPS_REQUEST, ACTION_CAPS_GPU_CHECK, ACTION_CAPS_GPU_FOUND,
+    ACTION_CAPS_CPU_ADD, ACTION_CAPS_RESPONSE,
+};
 
 use axum::{routing::get, Router, Json};
 use serde::Serialize;
@@ -27,7 +31,7 @@ use std::sync::Arc;
 #[command(version)]
 struct Args {
     /// HTTP server port
-    #[arg(short, long, default_value = "8600")]
+    #[arg(short, long, default_value = "9000")]
     port: u16,
 
     /// TEAM-190: Hive ID (defaults to "localhost")
@@ -134,9 +138,33 @@ struct CapabilitiesResponse {
 }
 
 /// TEAM-205: Capabilities endpoint - returns detected GPU/CPU devices
+/// TEAM-206: Added comprehensive narration for device detection visibility
 async fn get_capabilities() -> Json<CapabilitiesResponse> {
+    // TEAM-206: Narrate incoming request
+    NARRATE
+        .action(ACTION_CAPS_REQUEST)
+        .human("📡 Received capabilities request from queen")
+        .emit();
+    
+    // TEAM-206: Narrate GPU detection attempt
+    NARRATE
+        .action(ACTION_CAPS_GPU_CHECK)
+        .human("🔍 Detecting GPUs via nvidia-smi...")
+        .emit();
+    
     // Detect GPUs
     let gpu_info = rbee_hive_device_detection::detect_gpus();
+    
+    // TEAM-206: Narrate GPU detection results
+    NARRATE
+        .action(ACTION_CAPS_GPU_FOUND)
+        .context(gpu_info.count.to_string())
+        .human(if gpu_info.count > 0 {
+            "✅ Found {} GPU(s)"
+        } else {
+            "ℹ️  No GPUs detected, using CPU only"
+        })
+        .emit();
     
     let mut devices: Vec<HiveDevice> = gpu_info.devices.iter().map(|gpu| HiveDevice {
         id: format!("GPU-{}", gpu.index),
@@ -146,6 +174,12 @@ async fn get_capabilities() -> Json<CapabilitiesResponse> {
         compute_capability: Some(format!("{}.{}", gpu.compute_capability.0, gpu.compute_capability.1)),
     }).collect();
     
+    // TEAM-206: Narrate CPU fallback
+    NARRATE
+        .action(ACTION_CAPS_CPU_ADD)
+        .human("🖥️  Adding CPU-0 as fallback device")
+        .emit();
+    
     // Add CPU device (always available)
     devices.push(HiveDevice {
         id: "CPU-0".to_string(),
@@ -154,6 +188,13 @@ async fn get_capabilities() -> Json<CapabilitiesResponse> {
         vram_gb: None,
         compute_capability: None,
     });
+    
+    // TEAM-206: Narrate response being sent
+    NARRATE
+        .action(ACTION_CAPS_RESPONSE)
+        .context(devices.len().to_string())
+        .human("📤 Sending capabilities response ({} device(s))")
+        .emit();
     
     Json(CapabilitiesResponse { devices })
 }

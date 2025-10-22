@@ -69,6 +69,7 @@ pub struct TimeoutEnforcer {
     duration: Duration,
     label: Option<String>,
     show_countdown: bool,
+    job_id: Option<String>,  // TEAM-207: For SSE routing
 }
 
 impl TimeoutEnforcer {
@@ -87,7 +88,7 @@ impl TimeoutEnforcer {
     pub fn new(duration: Duration) -> Self {
         // TEAM-197: Countdown disabled by default to avoid interfering with narration output
         // The narration start/end messages provide sufficient feedback
-        Self { duration, label: None, show_countdown: false }
+        Self { duration, label: None, show_countdown: false, job_id: None }
     }
 
     /// Set a label for the operation (shown in countdown)
@@ -102,6 +103,25 @@ impl TimeoutEnforcer {
     /// ```
     pub fn with_label(mut self, label: impl Into<String>) -> Self {
         self.label = Some(label.into());
+        self
+    }
+
+    /// Set job_id for SSE routing (server-side operations)
+    ///
+    /// TEAM-207: Required for timeout narration to flow through SSE channels.
+    /// Without this, timeout events go to stdout and never reach the client.
+    ///
+    /// # Example
+    /// ```
+    /// use timeout_enforcer::TimeoutEnforcer;
+    /// use std::time::Duration;
+    ///
+    /// let enforcer = TimeoutEnforcer::new(Duration::from_secs(30))
+    ///     .with_label("Fetching data")
+    ///     .with_job_id("job-123");
+    /// ```
+    pub fn with_job_id(mut self, job_id: impl Into<String>) -> Self {
+        self.job_id = Some(job_id.into());
         self
     }
 
@@ -181,16 +201,47 @@ impl TimeoutEnforcer {
     }
 
     /// Enforce timeout silently (no countdown)
+    /// 
+    /// TEAM-207: Still emits narration (start/timeout events), just no progress bar.
+    /// This ensures timeout enforcement is visible in SSE streams even when running as daemon.
     async fn enforce_silent<F, T>(self, future: F) -> Result<T>
     where
         F: Future<Output = Result<T>>,
     {
-        let label = self.label.as_deref().unwrap_or("Operation");
+        let label = self.label.clone().unwrap_or_else(|| "Operation".to_string());
+        let total_secs = self.duration.as_secs();
+
+        // TEAM-207: Emit start narration (no progress bar, just notification)
+        let mut narration = NARRATE
+            .action("start")
+            .context(label.clone())
+            .context(total_secs.to_string())
+            .human("⏱️  {0} (timeout: {1}s)");
+
+        if let Some(ref job_id) = self.job_id {
+            narration = narration.job_id(job_id);
+        }
+
+        narration.emit();
 
         match timeout(self.duration, future).await {
             Ok(result) => result,
             Err(_) => {
-                anyhow::bail!("{} timed out after {} seconds", label, self.duration.as_secs())
+                // TEAM-207: Emit timeout error narration
+                let mut narration = NARRATE
+                    .action("timeout")
+                    .context(label.clone())
+                    .context(total_secs.to_string())
+                    .human("❌ {0} TIMED OUT after {1}s")
+                    .error_kind("operation_timeout");
+
+                if let Some(ref job_id) = self.job_id {
+                    narration = narration.job_id(job_id);
+                }
+
+                narration.emit_error();
+
+                anyhow::bail!("{} timed out after {} seconds", label, total_secs)
             }
         }
     }
@@ -204,12 +255,18 @@ impl TimeoutEnforcer {
         let total_secs = self.duration.as_secs();
 
         // TEAM-197: Use narration for start message
-        NARRATE
+        // TEAM-207: Include job_id for SSE routing
+        let mut narration = NARRATE
             .action("start")
             .context(label.clone())
             .context(total_secs.to_string())
-            .human("⏱️  {0} (timeout: {1}s)")
-            .emit();
+            .human("⏱️  {0} (timeout: {1}s)");
+
+        if let Some(ref job_id) = self.job_id {
+            narration = narration.job_id(job_id);
+        }
+
+        narration.emit();
 
         // TEAM-197: Create progress bar that fills up over time
         let pb = ProgressBar::new(total_secs);
@@ -252,13 +309,19 @@ impl TimeoutEnforcer {
                 pb.finish_and_clear();
                 
                 // TEAM-197: Use narration for timeout error
-                NARRATE
+                // TEAM-207: Include job_id for SSE routing
+                let mut narration = NARRATE
                     .action("timeout")
                     .context(label.clone())
                     .context(total_secs.to_string())
                     .human("❌ {0} TIMED OUT after {1}s")
-                    .error_kind("operation_timeout")
-                    .emit_error();
+                    .error_kind("operation_timeout");
+
+                if let Some(ref job_id) = self.job_id {
+                    narration = narration.job_id(job_id);
+                }
+
+                narration.emit_error();
                 
                 anyhow::bail!(
                     "{} timed out after {} seconds - operation was hanging",

@@ -47,8 +47,13 @@ pub async fn submit_and_stream_job(
     // Ensure queen is running
     let queen_handle = ensure_queen_running(queen_url).await?;
 
+    // TEAM-207: Add timeout to job submission - prevents hanging if queen freezes
+    let submit_client = reqwest::Client::builder()
+        .timeout(Duration::from_secs(10))
+        .build()?;
+
     // Submit job to queen
-    let res = client.post(format!("{}/v1/jobs", queen_url)).json(&job_payload).send().await?;
+    let res = submit_client.post(format!("{}/v1/jobs", queen_url)).json(&job_payload).send().await?;
     let json: serde_json::Value = res.json().await?;
 
     // Extract job_id and sse_url
@@ -77,14 +82,18 @@ pub async fn submit_and_stream_job(
     let operation_name_clone = operation_name;
     let hive_id_clone = hive_id;
     let sse_full_url = format!("{}{}", queen_url, sse_url);
-    let client_clone = client.clone();
     
     let stream_result = TimeoutEnforcer::new(Duration::from_secs(30))
         .with_label("Streaming job results")
         .silent()  // Don't show countdown - narration provides feedback
         .enforce(async move {
+            // TEAM-207: Add timeout to SSE connection - prevents hanging on initial GET
+            let sse_client = reqwest::Client::builder()
+                .timeout(Duration::from_secs(10))
+                .build()?;
+
             // Stream narration from job's SSE endpoint
-            let response = client_clone.get(&sse_full_url).send().await?;
+            let response = sse_client.get(&sse_full_url).send().await?;
 
             if !response.status().is_success() {
                 let error = response.text().await?;

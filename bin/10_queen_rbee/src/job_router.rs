@@ -30,7 +30,8 @@ use queen_rbee_hive_lifecycle::{execute_ssh_test, SshTestRequest};
 use queen_rbee_hive_registry::HiveRegistry; // TEAM-190: For Status operation
 use rbee_config::{HiveCapabilities, RbeeConfig};
 use rbee_operations::Operation;
-use std::{path::PathBuf, sync::Arc};
+use std::{path::PathBuf, sync::Arc, time::Duration};
+use timeout_enforcer::TimeoutEnforcer;
 
 // TEAM-196: Import hive client for capabilities fetching
 use crate::hive_client::{check_hive_health, fetch_hive_capabilities};
@@ -532,9 +533,8 @@ async fn route_operation(
             // Wait for health check
             NARRATE.action("hive_health").human("⏳ Waiting for hive to be healthy...").job_id(&job_id).emit();
 
+            // TEAM-206: Check first, THEN sleep (avoid unnecessary delay if hive starts fast)
             for attempt in 1..=10 {
-                tokio::time::sleep(tokio::time::Duration::from_millis(200 * attempt)).await;
-
                 if let Ok(response) = client.get(&health_url).send().await {
                     if response.status().is_success() {
                         NARRATE
@@ -548,12 +548,85 @@ async fn route_operation(
                         let endpoint =
                             format!("http://{}:{}", hive_config.hostname, hive_config.hive_port);
 
+                        // TEAM-206: Check if capabilities are already cached
                         NARRATE
-                            .action("hive_caps").job_id(&job_id)  // TEAM-205: Shortened to fit 15-char limit
-                            .human("📊 Fetching device capabilities...")
+                            .action("hive_cache_chk").job_id(&job_id)
+                            .human("💾 Checking capabilities cache...")
                             .emit();
 
-                        match fetch_hive_capabilities(&endpoint).await {
+                        if state.config.capabilities.contains(&alias) {
+                            NARRATE
+                                .action("hive_cache_hit").job_id(&job_id)
+                                .human("✅ Using cached capabilities (use 'rbee hive refresh' to update)")
+                                .emit();
+
+                            // Display cached devices
+                            if let Some(caps) = state.config.capabilities.get(&alias) {
+                                let devices = &caps.devices;
+                                NARRATE
+                                    .action("hive_caps_ok").job_id(&job_id)
+                                    .context(devices.len().to_string())
+                                    .human("✅ Discovered {} device(s)")
+                                    .emit();
+
+                                for device in devices {
+                                    let device_info = match device.device_type {
+                                        rbee_config::DeviceType::Gpu => {
+                                            format!(
+                                                "  🎮 {} - {} (VRAM: {} GB, Compute: {})",
+                                                device.id,
+                                                device.name,
+                                                device.vram_gb,
+                                                device
+                                                    .compute_capability
+                                                    .as_deref()
+                                                    .unwrap_or("unknown")
+                                            )
+                                        }
+                                        rbee_config::DeviceType::Cpu => {
+                                            format!("  🖥️  {} - {}", device.id, device.name)
+                                        }
+                                    };
+
+                                    NARRATE
+                                        .action("hive_device").job_id(&job_id)
+                                        .context(&device_info)
+                                        .human("{}")
+                                        .emit();
+                                }
+                            }
+
+                            return Ok(());
+                        }
+
+                        // TEAM-206: Cache miss - fetch fresh capabilities
+                        NARRATE
+                            .action("hive_cache_miss").job_id(&job_id)
+                            .human("ℹ️  No cached capabilities, fetching fresh...")
+                            .emit();
+
+                        NARRATE
+                            .action("hive_caps").job_id(&job_id)  // TEAM-205: Shortened to fit 15-char limit
+                            .human("📊 Fetching device capabilities from hive...")
+                            .emit();
+
+                        // TEAM-207: Wrap in TimeoutEnforcer for visible timeout
+                        let caps_result = TimeoutEnforcer::new(Duration::from_secs(15))
+                            .with_label("Fetching device capabilities")
+                            .with_job_id(&job_id)  // TEAM-207: Required for SSE routing!
+                            .with_countdown()
+                            .enforce(async {
+                                NARRATE
+                                    .action("hive_caps_http").job_id(&job_id)
+                                    .context(&format!("{}/capabilities", endpoint))
+                                    .human("🌐 GET {}")
+                                    .emit();
+
+                                fetch_hive_capabilities(&endpoint).await
+                            })
+                            .await;
+
+                        match caps_result {
                             Ok(devices) => {
                                 NARRATE
                                     .action("hive_caps_ok").job_id(&job_id)  // TEAM-205: Shortened
@@ -624,6 +697,11 @@ async fn route_operation(
 
                         return Ok(());
                     }
+                }
+
+                // TEAM-206: Sleep before next attempt (but not after last)
+                if attempt < 10 {
+                    tokio::time::sleep(tokio::time::Duration::from_millis(200 * attempt)).await;
                 }
             }
 

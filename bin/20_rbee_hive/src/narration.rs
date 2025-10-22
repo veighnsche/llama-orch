@@ -19,3 +19,10 @@ pub const ACTION_WORKER_SPAWN: &str = "worker_spawn";
 pub const ACTION_WORKER_STOP: &str = "worker_stop";
 pub const ACTION_LISTEN: &str = "listen";
 pub const ACTION_READY: &str = "ready";
+
+// TEAM-206: Capabilities endpoint actions
+pub const ACTION_CAPS_REQUEST: &str = "caps_request";
+pub const ACTION_CAPS_GPU_CHECK: &str = "caps_gpu_check";
+pub const ACTION_CAPS_GPU_FOUND: &str = "caps_gpu_found";
+pub const ACTION_CAPS_CPU_ADD: &str = "caps_cpu_add";
+pub const ACTION_CAPS_RESPONSE: &str = "caps_response";

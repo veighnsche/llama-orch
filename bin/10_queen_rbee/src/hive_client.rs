@@ -36,6 +36,7 @@ pub struct HiveDevice {
 pub async fn fetch_hive_capabilities(endpoint: &str) -> Result<Vec<DeviceInfo>> {
     let url = format!("{}/capabilities", endpoint);
 
+    // TEAM-207: Timeout handled by TimeoutEnforcer at call site
     let response = reqwest::get(&url).await.context("Failed to connect to hive")?;
 
     if !response.status().is_success() {
@@ -81,6 +82,7 @@ pub async fn fetch_hive_capabilities(endpoint: &str) -> Result<Vec<DeviceInfo>> 
 pub async fn check_hive_health(endpoint: &str) -> Result<bool> {
     let url = format!("{}/health", endpoint);
 
+    // TEAM-207: Timeout handled by TimeoutEnforcer at call site
     let response = reqwest::get(&url).await.context("Failed to connect to hive")?;
 
     Ok(response.status().is_success())
