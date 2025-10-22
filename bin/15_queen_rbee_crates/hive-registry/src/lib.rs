@@ -2,6 +2,8 @@
 //!
 //! In-memory registry for tracking real-time runtime state of all hives.
 //!
+//! TEAM-221: Investigated 2025-10-22 - Comprehensive behavior inventory complete
+//!
 //! This is DIFFERENT from `hive-catalog` (SQLite - persistent storage):
 //! - **Catalog** = Persistent config (host, port, SSH, device capabilities)
 //! - **Registry** = Runtime state (workers, VRAM usage, last heartbeat)

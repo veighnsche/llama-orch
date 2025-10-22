@@ -20,3 +20,4 @@ anyhow = "1.0"  # Error handling
 
 [dev-dependencies]
 tokio = { version = "1", features = ["rt", "macros"] }
+base64 = "0.21"

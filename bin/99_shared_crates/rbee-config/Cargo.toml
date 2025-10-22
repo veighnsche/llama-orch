@@ -15,6 +15,7 @@ thiserror = "1.0"
 
 [dev-dependencies]
 tempfile = "3.8"
+tokio = { version = "1.0", features = ["rt", "macros", "sync"] }
 
 [lints]
 workspace = true

@@ -28,4 +28,5 @@ rbee-config = { path = "../../99_shared_crates/rbee-config" }
 queen-rbee-ssh-client = { path = "../ssh-client" }
 
 [dev-dependencies]
-# Add dev dependencies as needed
+tempfile = "3.8"
+nix = { version = "0.27", features = ["signal", "process"] }

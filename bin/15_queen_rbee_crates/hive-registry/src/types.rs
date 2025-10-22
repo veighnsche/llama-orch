@@ -1,6 +1,8 @@
 //! Type definitions for hive registry
 //!
 //! Runtime state structures for tracking hive information in memory.
+//!
+//! TEAM-221: Investigated 2025-10-22 - All types documented
 
 use serde::{Deserialize, Serialize};
 

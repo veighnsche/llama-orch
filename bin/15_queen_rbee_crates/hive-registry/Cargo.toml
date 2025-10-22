@@ -16,3 +16,4 @@ chrono = "0.4"
 rbee-heartbeat = { path = "../../99_shared_crates/heartbeat" }
 
 [dev-dependencies]
+tokio = { version = "1", features = ["macros", "rt-multi-thread"] }

@@ -5,12 +5,16 @@ edition = "2021"
 publish = false
 license = "GPL-3.0-or-later"
 autobenches = false
-autotests = false
+autotests = true
 autodocs = false
 
 [[bin]]
 name = "xtask"
 path = "src/main.rs"
+
+[lib]
+name = "xtask"
+path = "src/lib.rs"
 
 [dependencies]
 anyhow = { workspace = true }
@@ -35,6 +39,6 @@ tokio = { workspace = true, features = ["full"] }
 # TEAM-162: Removed reqwest - tests rely only on CLI stdout, not HTTP calls
 # TEAM-193: Auto-update for dependency-aware rebuilds
 auto-update = { path = "../bin/99_shared_crates/auto-update" }
-
-[dev-dependencies]
+# TEAM-252: Integration testing dependencies
 tempfile = "3.8"
+futures = "0.3"
