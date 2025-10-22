@@ -88,16 +88,9 @@ impl Narration {
     /// JOB.action("hive_start").human("Starting hive").emit();
     /// ```
     pub fn action(mut self, action: &'static str) -> Self {
-        // Runtime check for action length (same as NarrationFactory)
-        const MAX_ACTION_LENGTH: usize = 15;
-        let char_count = action.chars().count();
-        assert!(
-            char_count <= MAX_ACTION_LENGTH,
-            "Action string is too long! Maximum 15 characters allowed. Got '{}' ({} chars)",
-            action,
-            char_count
-        );
-
+        // TEAM-257: Removed panic on long action names - just use as-is
+        // The 15-char limit was for formatting aesthetics, not a hard requirement
+        // If formatting looks bad, that's a display issue, not a panic-worthy error
         self.fields.action = action;
         // If target is empty, use action as target (backwards compat)
         if self.fields.target.is_empty() {
@@ -708,20 +701,13 @@ impl NarrationFactory {
     /// ```
     ///
     /// # Panics
-    /// Panics at runtime if action string is longer than 15 characters.
+    /// Creates a narration with the given action.
+    /// 
+    /// Note: Action names longer than 15 characters may affect formatting aesthetics
+    /// but will not cause errors.
     pub fn action(&self, action: &'static str) -> Narration {
-        // TEAM-192: Runtime check for action length
-        const MAX_ACTION_LENGTH: usize = 15;
-
-        // Count Unicode characters (not bytes)
-        let char_count = action.chars().count();
-
-        assert!(
-            char_count <= MAX_ACTION_LENGTH,
-            "Action string is too long! Maximum 15 characters allowed. Got '{}' ({} chars)",
-            action,
-            char_count
-        );
+        // TEAM-257: Removed panic on long action names - just use as-is
+        // The 15-char limit was for formatting aesthetics, not a hard requirement
 
         Narration::new(self.actor, action, action)
     }

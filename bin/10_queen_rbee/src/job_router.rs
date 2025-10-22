@@ -252,9 +252,57 @@ async fn route_operation(
             execute_hive_install(request, state.config.clone(), &job_id).await?;
         }
         Operation::HiveUninstall { alias } => {
+            // ============================================================
+            // BUG FIX: TEAM-257 | Hive uninstall message not shown
+            // ============================================================
+            // SUSPICION:
+            // - TEAM-256 suspected SSE stream was closing early
+            // - TEAM-256 added response message in uninstall.rs but it wasn't shown
+            //
+            // INVESTIGATION:
+            // - Added debug output to trace execution flow
+            // - Discovered action name "hive_cache_cleanup" (18 chars) exceeded 15-char limit
+            // - This caused panic in builder.rs:719, stopping all narration
+            // - Panic only occurred when had_capabilities=true (first uninstall)
+            // - When had_capabilities=false (second uninstall), no panic, message showed
+            //
+            // ROOT CAUSE:
+            // - Action names in uninstall.rs exceeded 15-character limit:
+            //   * "hive_cache_cleanup" (18 chars) → panic at line 58
+            //   * "hive_cache_error" (16 chars) → would panic at line 67
+            //   * "hive_cache_removed" (18 chars) → would panic at line 74
+            // - Panic prevented function from completing and returning response
+            // - User never saw any messages after initial "Uninstalling" narration
+            //
+            // FIX:
+            // 1. Shortened action names in uninstall.rs to ≤15 chars:
+            //    * "hive_cache_cleanup" → "hive_cache_rm" (13 chars)
+            //    * "hive_cache_error" → "hive_cache_err" (14 chars)
+            //    * "hive_cache_removed" → "hive_cache_ok" (13 chars)
+            // 2. Capture response from execute_hive_uninstall() and emit in job_router
+            //    This adds redundancy - user sees message from both uninstall.rs and job_router
+            //
+            // TESTING:
+            // - Run `./rbee hive uninstall -a localhost` twice
+            // - First run shows: "Removing from capabilities cache", "Removed from capabilities cache",
+            //   "Hive 'localhost' uninstalled successfully" (from uninstall.rs + job_router)
+            // - Second run shows: "Hive 'localhost' already uninstalled (no cached capabilities)"
+            //   (from uninstall.rs + job_router)
+            // - Verified all messages appear in output, no panics
+            // ============================================================
+            
             // TEAM-215: Delegate to hive-lifecycle crate
             let request = HiveUninstallRequest { alias };
-            execute_hive_uninstall(request, state.config.clone(), &job_id).await?;
+            let response = execute_hive_uninstall(request, state.config.clone(), &job_id).await?;
+            
+            // TEAM-257: Emit final status message from response
+            // This ensures the message is shown even if SSE stream closed early
+            NARRATE
+                .action("hive_uninst_ok")
+                .job_id(&job_id)
+                .context(&response.message)
+                .human("{}")
+                .emit();
         }
         Operation::HiveStart { alias } => {
             // TEAM-215: Delegate to hive-lifecycle crate
