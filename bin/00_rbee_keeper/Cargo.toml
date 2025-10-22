@@ -41,7 +41,7 @@ observability-narration-core = { path = "../99_shared_crates/narration-core" }
 daemon-lifecycle = { path = "../99_shared_crates/daemon-lifecycle" }
 timeout-enforcer = { path = "../99_shared_crates/timeout-enforcer" }
 rbee-operations = { path = "../99_shared_crates/rbee-operations" }  # TEAM-186: Shared operation types
-rbee-config = { path = "../15_queen_rbee_crates/rbee-config" }  # TEAM-195: For preflight validation
+rbee-config = { path = "../99_shared_crates/rbee-config" }  # TEAM-195: For preflight validation
 
 [dev-dependencies]
 # Add dev dependencies as needed
