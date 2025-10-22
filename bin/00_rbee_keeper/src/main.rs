@@ -340,10 +340,7 @@ async fn handle_command(cli: Cli) -> Result<()> {
                 // First check if queen is running
                 let health_check = client.get(format!("{}/health", queen_url)).send().await;
 
-                let is_running = match health_check {
-                    Ok(response) if response.status().is_success() => true,
-                    _ => false,
-                };
+                let is_running = matches!(health_check, Ok(response) if response.status().is_success());
 
                 if !is_running {
                     NARRATE.action("queen_stop").human("⚠️  Queen not running").emit();

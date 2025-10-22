@@ -17,7 +17,7 @@
 //! Modified by: TEAM-015 (Integrated worker-common and worker-http)
 //! Modified by: TEAM-088 (added comprehensive error narration)
 //! Modified by: TEAM-115 (added heartbeat mechanism)
-//! Modified by: TEAM-154 (migrated `job_registry` to shared crate)
+//! Modified by: TEAM-154 (migrated `job_server` to shared crate)
 
 pub mod backend;
 pub mod common;

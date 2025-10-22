@@ -1,5 +1,5 @@
 [package]
-name = "job-registry"
+name = "job-server"
 version = "0.1.0"
 edition = "2021"
 authors = ["TEAM-154"]

@@ -13,7 +13,7 @@
 //! Modified by: TEAM-088 (added comprehensive error narration)
 
 use clap::Parser;
-use job_registry::JobRegistry;
+use job_server::JobRegistry;
 use llm_worker_rbee::{
     backend::{
         generation_engine::GenerationEngine,
@@ -206,7 +206,7 @@ async fn main() -> anyhow::Result<()> {
 
     // TEAM-154: Create job registry for dual-call pattern
     // Generic over TokenResponse type from request_queue
-    let job_registry: Arc<JobRegistry<TokenResponse>> = Arc::new(JobRegistry::new());
+    let job_server: Arc<JobRegistry<TokenResponse>> = Arc::new(JobRegistry::new());
 
     // Start generation engine in background
     let generation_engine = GenerationEngine::new(Arc::clone(&backend), request_rx);
@@ -257,8 +257,8 @@ async fn main() -> anyhow::Result<()> {
     // HTTP handlers add requests to queue and return immediately
     // Generation happens in spawn_blocking, tokens stream in real-time
     // TEAM-102: Added expected_token for authentication
-    // TEAM-154: Added job_registry for dual-call pattern
-    let router = create_router(request_queue, job_registry, expected_token);
+    // TEAM-154: Added job_server for dual-call pattern
+    let router = create_router(request_queue, job_server, expected_token);
 
     // Start HTTP server (worker-http)
     let server = HttpServer::new(addr, router).await?;

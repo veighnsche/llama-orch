@@ -14,7 +14,7 @@ use axum::{
     response::{sse::Event, Sse},
 };
 use futures::stream::{self, Stream, StreamExt};
-use job_registry::JobState;
+use job_server::JobState;
 use observability_narration_core::NarrationFields;
 use std::convert::Infallible;
 use tracing::{info, warn};

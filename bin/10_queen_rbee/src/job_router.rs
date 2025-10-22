@@ -25,7 +25,7 @@
 //! ```
 
 use anyhow::Result;
-use job_registry::JobRegistry;
+use job_server::JobRegistry;
 use observability_narration_core::NarrationFactory;
 use queen_rbee_hive_lifecycle::{
     execute_hive_get, execute_hive_install, execute_hive_list, execute_hive_refresh_capabilities,
@@ -94,7 +94,7 @@ pub async fn execute_job(
     let config = state.config.clone(); // TEAM-194
     let hive_registry = state.hive_registry.clone(); // TEAM-190
 
-    job_registry::execute_and_stream(job_id, registry.clone(), move |job_id, payload| {
+    job_server::execute_and_stream(job_id, registry.clone(), move |job_id, payload| {
         route_operation(job_id, payload, registry, config, hive_registry)
     })
     .await

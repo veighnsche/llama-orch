@@ -22,7 +22,7 @@ mod narration; // TEAM-188: Narration constants
 use anyhow::Result;
 use axum::routing::{get, post};
 use clap::Parser;
-use job_registry::JobRegistry;
+use job_server::JobRegistry;
 use observability_narration_core::NarrationFactory;
 use rbee_config::RbeeConfig;
 use std::net::SocketAddr;
@@ -83,7 +83,7 @@ async fn main() -> Result<()> {
 
     // TEAM-155: Initialize job registry for dual-call pattern
     // Generic over String for now (will stream text tokens)
-    let job_registry: Arc<JobRegistry<String>> = Arc::new(JobRegistry::new());
+    let job_server: Arc<JobRegistry<String>> = Arc::new(JobRegistry::new());
 
     // TEAM-188: Initialize hive registry (RAM) for runtime state
     let hive_registry = Arc::new(queen_rbee_hive_registry::HiveRegistry::new());
@@ -93,7 +93,7 @@ async fn main() -> Result<()> {
     // - worker_registry (RAM)
     // - Load config from args.config
 
-    let app = create_router(job_registry, Arc::new(config), hive_registry);
+    let app = create_router(job_server, Arc::new(config), hive_registry);
     let addr = SocketAddr::from(([127, 0, 0, 1], args.port));
 
     NARRATE.action("listen").context(addr.to_string()).human("Listening on http://{}").emit();
@@ -120,7 +120,7 @@ async fn main() -> Result<()> {
 /// Currently health, shutdown, job, and heartbeat endpoints are active.
 /// TODO: Uncomment http::routes::create_router() when registries are migrated
 fn create_router(
-    job_registry: Arc<JobRegistry<String>>,
+    job_server: Arc<JobRegistry<String>>,
     config: Arc<RbeeConfig>,
     hive_registry: Arc<queen_rbee_hive_registry::HiveRegistry>,
 ) -> axum::Router {
@@ -128,7 +128,7 @@ fn create_router(
     // TEAM-190: Added hive_registry to job_state for Status operation
     // TEAM-194: Replaced hive_catalog with config
     let job_state = http::SchedulerState {
-        registry: job_registry,
+        registry: job_server,
         config: config.clone(),
         hive_registry: hive_registry.clone(),
     };

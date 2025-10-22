@@ -16,7 +16,7 @@
 //!
 //! ## Registry Operations
 //! ```rust,no_run
-//! # use job_registry::{JobRegistry, JobState};
+//! # use job_server::{JobRegistry, JobState};
 //! # let registry: JobRegistry<String> = JobRegistry::new();
 //! # let job_id = "job-123";
 //! // CREATE
@@ -46,7 +46,7 @@
 //! # Usage
 //!
 //! ```rust
-//! use job_registry::{JobRegistry, JobState};
+//! use job_server::{JobRegistry, JobState};
 //! use tokio::sync::mpsc;
 //!
 //! let registry: JobRegistry<String> = JobRegistry::new();
@@ -268,7 +268,7 @@ impl<T> Clone for JobRegistry<T> {
 ///
 /// # Example
 /// ```rust,ignore
-/// use job_registry::execute_and_stream;
+/// use job_server::execute_and_stream;
 ///
 /// let stream = execute_and_stream(
 ///     job_id,

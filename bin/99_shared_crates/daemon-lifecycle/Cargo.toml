@@ -13,6 +13,7 @@ path = "src/lib.rs"
 [dependencies]
 tokio = { version = "1", features = ["process", "time", "fs"] }
 anyhow = "1.0"
+reqwest = { version = "0.12", features = ["json"] }  # TEAM-259: For health checks
 observability-narration-core = { path = "../narration-core" }
 
 [dev-dependencies]

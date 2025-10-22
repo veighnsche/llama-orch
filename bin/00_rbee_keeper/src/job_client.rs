@@ -11,11 +11,11 @@
 //! TEAM-185: Replaced hardcoded action strings with constants from operations module
 //! TEAM-186: Accept Operation directly, serialize internally (DRY)
 //! TEAM-216: Investigated - Complete behavior inventory created
-//! TEAM-259: Refactored to use rbee-job-client shared crate
+//! TEAM-259: Refactored to use job-client shared crate
 
 use anyhow::Result;
 use observability_narration_core::NarrationFactory;
-use rbee_job_client::JobClient;
+use job_client::JobClient;
 use rbee_operations::Operation;
 use std::time::Duration;
 use timeout_enforcer::TimeoutEnforcer;
@@ -28,7 +28,7 @@ const NARRATE: NarrationFactory = NarrationFactory::new("keeper");
 /// Submit a job to queen-rbee and stream its narration output.
 ///
 /// TEAM-186: Now accepts Operation directly instead of pre-serialized JSON
-/// TEAM-259: Refactored to use rbee-job-client shared crate
+/// TEAM-259: Refactored to use job-client shared crate
 ///
 /// This handles the complete lifecycle:
 /// - Ensures queen is running

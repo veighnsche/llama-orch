@@ -30,7 +30,7 @@ use axum::{
     routing::{get, post},
     Json, Router,
 };
-use job_registry::JobRegistry;
+use job_server::JobRegistry;
 use observability_narration_core::axum::correlation_middleware;
 use serde::Serialize;
 use std::sync::Arc;

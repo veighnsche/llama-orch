@@ -206,7 +206,7 @@ input-validation = { path = "../99_shared_crates/input-validation" }
 rbee-heartbeat = { path = "../99_shared_crates/heartbeat" }
 
 # TEAM-154: Job registry shared crate (dual-call pattern)
-job-registry = { path = "../99_shared_crates/job-registry" }
+job-server = { path = "../99_shared_crates/job-server" }
 
 [dev-dependencies]
 # Testing utilities

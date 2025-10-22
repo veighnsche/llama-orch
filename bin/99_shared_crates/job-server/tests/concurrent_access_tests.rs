@@ -1,9 +1,9 @@
-// TEAM-243: Concurrent access tests for job-registry
+// TEAM-243: Concurrent access tests for job-server
 // Purpose: Verify thread-safe concurrent operations on job registry
 // Scale: Reasonable for NUC (5-10 concurrent, 100 jobs total)
 // Historical Context: TEAM-243 implemented Priority 1 critical tests for job lifecycle
 
-use job_registry::{JobRegistry, JobState};
+use job_server::{JobRegistry, JobState};
 use std::sync::Arc;
 use tokio::sync::mpsc;
 use tokio::task;

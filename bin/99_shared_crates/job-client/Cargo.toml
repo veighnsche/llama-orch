@@ -1,5 +1,5 @@
 [package]
-name = "rbee-job-client"
+name = "job-client"
 version.workspace = true
 edition.workspace = true
 license.workspace = true

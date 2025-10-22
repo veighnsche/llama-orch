@@ -13,7 +13,7 @@ use axum::{
     Json,
 };
 use futures::stream::{Stream, StreamExt};
-use job_registry::JobRegistry;
+use job_server::JobRegistry;
 use observability_narration_core::sse_sink;
 use rbee_config::RbeeConfig;
 use std::{convert::Infallible, sync::Arc};

@@ -10,7 +10,7 @@
 //! # Usage
 //!
 //! ```rust,no_run
-//! use rbee_job_client::JobClient;
+//! use job_client::JobClient;
 //! use rbee_operations::Operation;
 //!
 //! # async fn example() -> anyhow::Result<()> {
@@ -46,7 +46,7 @@ impl JobClient {
     ///
     /// # Example
     /// ```
-    /// use rbee_job_client::JobClient;
+    /// use job_client::JobClient;
     ///
     /// let client = JobClient::new("http://localhost:8500");
     /// ```
