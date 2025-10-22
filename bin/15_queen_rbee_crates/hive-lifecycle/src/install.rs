@@ -1,11 +1,13 @@
 // TEAM-213: Install hive configuration
 // TEAM-220: Investigated - Binary resolution + localhost-only documented
+// TEAM-256: Migrated shell SSH commands to russh-based helpers
 
 use anyhow::Result;
 use observability_narration_core::NarrationFactory;
 use rbee_config::RbeeConfig;
 use std::sync::Arc;
 
+use crate::ssh_helper::{scp_copy, ssh_exec};
 use crate::types::{HiveInstallRequest, HiveInstallResponse};
 use crate::validation::validate_hive_exists;
 
@@ -58,21 +60,145 @@ pub async fn execute_hive_install(
         NARRATE
             .action("hive_mode")
             .job_id(job_id)
-            .context(format!("{}@{}:{}", user, host, ssh_port))
+            .context(&format!("{}@{}:{}", user, host, ssh_port))
             .human("🌐 Remote installation: {}")
             .emit();
 
-        // TODO: Implement remote SSH installation
+        // STEP 1: Find local binary
+        let local_binary = if let Some(provided_path) = &hive_config.binary_path {
+            NARRATE
+                .action("hive_binary")
+                .job_id(job_id)
+                .context(provided_path)
+                .human("📁 Using provided binary path: {}")
+                .emit();
+
+            let path = std::path::Path::new(provided_path);
+            if !path.exists() {
+                NARRATE
+                    .action("hive_bin_err")
+                    .job_id(job_id)
+                    .context(provided_path)
+                    .human("❌ Binary not found at: {}")
+                    .emit();
+                return Err(anyhow::anyhow!("Binary not found: {}", provided_path));
+            }
+
+            provided_path.clone()
+        } else {
+            // Find binary in target directory
+            NARRATE
+                .action("hive_binary")
+                .job_id(job_id)
+                .human("🔍 Looking for rbee-hive binary...")
+                .emit();
+
+            let debug_path = std::path::PathBuf::from("target/debug/rbee-hive");
+            let release_path = std::path::PathBuf::from("target/release/rbee-hive");
+
+            if debug_path.exists() {
+                NARRATE
+                    .action("hive_binary")
+                    .job_id(job_id)
+                    .context(&debug_path.display().to_string())
+                    .human("✅ Found binary at: {}")
+                    .emit();
+                debug_path.display().to_string()
+            } else if release_path.exists() {
+                NARRATE
+                    .action("hive_binary")
+                    .job_id(job_id)
+                    .context(&release_path.display().to_string())
+                    .human("✅ Found binary at: {}")
+                    .emit();
+                release_path.display().to_string()
+            } else {
+                NARRATE
+                    .action("hive_bin_err")
+                    .job_id(job_id)
+                    .human(
+                        "❌ rbee-hive binary not found.\n\
+                         \n\
+                         Please build it first:\n\
+                         \n\
+                           cargo build --bin rbee-hive",
+                    )
+                    .emit();
+                return Err(anyhow::anyhow!(
+                    "rbee-hive binary not found. Build it with: cargo build --bin rbee-hive"
+                ));
+            }
+        };
+
+        // STEP 2: Ensure remote directory exists
+        // TEAM-256: Use ssh_exec instead of shell command
+        ssh_exec(
+            hive_config,
+            "mkdir -p ~/.local/bin",
+            job_id,
+            "hive_mkdir",
+            "Creating remote directory",
+        )
+        .await?;
+
+        // STEP 3: Copy binary to remote host via SFTP
+        // TEAM-256: Use scp_copy (now SFTP-based) instead of shell command
+        let remote_path = "~/.local/bin/rbee-hive";
+        scp_copy(hive_config, &local_binary, remote_path, job_id).await?;
+
+        // STEP 4: Make binary executable
+        // TEAM-256: Use ssh_exec instead of shell command
+        ssh_exec(
+            hive_config,
+            &format!("chmod +x {}", remote_path),
+            job_id,
+            "hive_chmod",
+            "Making binary executable",
+        )
+        .await?;
+
+        // STEP 5: Verify installation
+        // TEAM-256: Use ssh_exec instead of shell command
+        let version = ssh_exec(
+            hive_config,
+            &format!("{} --version", remote_path),
+            job_id,
+            "hive_verify",
+            "Verifying installation",
+        )
+        .await?;
         NARRATE
-            .action("hive_not_impl")
+            .action("hive_verified")
             .job_id(job_id)
+            .context(&version.trim().to_string())
+            .human("✅ Verified: {}")
+            .emit();
+
+        NARRATE
+            .action("hive_complete")
+            .job_id(job_id)
+            .context(alias)
+            .context(&hive_config.hive_port.to_string())
+            .context(remote_path)
             .human(
-                "❌ Remote SSH installation not yet implemented.\n\
-                   \n\
-                   Currently only localhost installation is supported.",
+                "✅ Hive '{0}' installed successfully!\n\
+                 \n\
+                 Configuration:\n\
+                 - Host: {}@{}\n\
+                 - Port: {1}\n\
+                 - Binary: {2}\n\
+                 \n\
+                 To start the hive:\n\
+                 \n\
+                   ./rbee hive start -a {0}",
             )
             .emit();
-        Err(anyhow::anyhow!("Remote installation not yet implemented"))
+
+        Ok(HiveInstallResponse {
+            success: true,
+            message: format!("Hive '{}' installed successfully", alias),
+            binary_path: Some(remote_path.to_string()),
+        })
     } else {
         // LOCALHOST INSTALLATION
         NARRATE.action("hive_mode").job_id(job_id).human("🏠 Localhost installation").emit();

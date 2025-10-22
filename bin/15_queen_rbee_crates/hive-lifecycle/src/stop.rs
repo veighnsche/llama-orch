@@ -8,6 +8,7 @@ use std::sync::Arc;
 use std::time::Duration;
 use tokio::time::sleep;
 
+use crate::ssh_helper::{is_remote_hive, ssh_exec};
 use crate::types::{HiveStopRequest, HiveStopResponse};
 use crate::validation::validate_hive_exists;
 
@@ -73,39 +74,64 @@ pub async fn execute_hive_stop(
         });
     }
 
-    // Stop the hive process
-    NARRATE
-        .action("hive_sigterm")
-        .job_id(job_id)
-        .human("📤 Sending SIGTERM (graceful shutdown)...")
-        .emit();
+    // Check if remote or local
+    let is_remote = is_remote_hive(hive_config);
+    let binary_name = "rbee-hive";
 
-    // Use pkill to stop the hive by binary name
-    let binary_path = hive_config
-        .binary_path
-        .as_ref()
-        .ok_or_else(|| anyhow::anyhow!("Hive '{}' has no binary_path configured", alias))?;
-
-    let binary_name = std::path::Path::new(&binary_path)
-        .file_name()
-        .and_then(|n| n.to_str())
-        .unwrap_or("rbee-hive");
-
-    // Send SIGTERM
-    let output =
-        tokio::process::Command::new("pkill").args(["-TERM", binary_name]).output().await?;
-
-    if !output.status.success() {
+    if is_remote {
+        // REMOTE STOP: Use SSH
         NARRATE
-            .action("hive_not_found")
+            .action("hive_mode")
             .job_id(job_id)
-            .context(binary_name)
-            .human("⚠️  No running process found for '{}'")
+            .context(&format!("{}@{}", hive_config.ssh_user, hive_config.hostname))
+            .human("🌐 Remote stop: {}")
             .emit();
-        return Ok(HiveStopResponse {
-            success: true,
-            message: format!("No running process found for '{}'", binary_name),
-        });
+
+        NARRATE
+            .action("hive_sigterm")
+            .job_id(job_id)
+            .human("📤 Sending remote SIGTERM...")
+            .emit();
+
+        // Send SIGTERM via SSH
+        let stop_result = ssh_exec(
+            hive_config,
+            &format!("pkill -TERM {}", binary_name),
+            job_id,
+            "hive_pkill",
+            "Stopping remote hive",
+        )
+        .await;
+
+        // pkill returns non-zero if no process found, which is fine
+        if let Err(e) = stop_result {
+            if !e.to_string().contains("no process found") {
+                return Err(e);
+            }
+        }
+    } else {
+        // LOCAL STOP: Use pkill
+        NARRATE
+            .action("hive_sigterm")
+            .job_id(job_id)
+            .human("📤 Sending SIGTERM (graceful shutdown)...")
+            .emit();
+
+        let output =
+            tokio::process::Command::new("pkill").args(["-TERM", binary_name]).output().await?;
+
+        if !output.status.success() {
+            NARRATE
+                .action("hive_not_found")
+                .job_id(job_id)
+                .context(binary_name)
+                .human("⚠️  No running process found for '{}'")
+                .emit();
+            return Ok(HiveStopResponse {
+                success: true,
+                message: format!("No running process found for '{}'", binary_name),
+            });
+        }
     }
 
     // Wait for graceful shutdown
@@ -140,7 +166,21 @@ pub async fn execute_hive_stop(
                 .human("⚠️  Graceful shutdown timed out, sending SIGKILL...")
                 .emit();
 
-            tokio::process::Command::new("pkill").args(["-KILL", binary_name]).output().await?;
+            if is_remote {
+                // Remote SIGKILL
+                ssh_exec(
+                    hive_config,
+                    &format!("pkill -KILL {}", binary_name),
+                    job_id,
+                    "hive_kill",
+                    "Force-stopping remote hive",
+                )
+                .await
+                .ok(); // Ignore errors - process might already be dead
+            } else {
+                // Local SIGKILL
+                tokio::process::Command::new("pkill").args(["-KILL", binary_name]).output().await?;
+            }
 
             sleep(Duration::from_millis(500)).await;
 

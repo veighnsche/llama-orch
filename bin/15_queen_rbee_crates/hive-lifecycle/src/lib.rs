@@ -35,6 +35,7 @@ pub mod capabilities;
 pub mod get;
 pub mod install;
 pub mod list;
+pub mod ssh_helper; // SSH utilities for remote operations
 pub mod ssh_test;
 pub mod start;
 pub mod status;

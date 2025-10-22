@@ -11,8 +11,12 @@ name = "queen_rbee_ssh_client"
 path = "src/lib.rs"
 
 [dependencies]
-ssh2 = "0.9"
-tokio = { version = "1", features = ["net", "time"] }
+# TEAM-256: Migrated from ssh2 to russh for better async support and SFTP
+russh = "0.44"
+russh-keys = "0.44"
+russh-sftp = "2.0"
+async-trait = "0.1"
+tokio = { version = "1", features = ["net", "time", "io-util", "rt"] }
 anyhow = "1.0"
 observability-narration-core = { path = "../../99_shared_crates/narration-core" }
 

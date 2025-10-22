@@ -11,6 +11,7 @@ use timeout_enforcer::TimeoutEnforcer;
 use tokio::time::sleep;
 
 use crate::hive_client::fetch_hive_capabilities;
+use crate::ssh_helper::{get_remote_binary_path, is_remote_hive, ssh_exec};
 use crate::types::{HiveStartRequest, HiveStartResponse};
 use crate::validation::validate_hive_exists;
 
@@ -75,23 +76,61 @@ pub async fn execute_hive_start(
         }
     }
 
-    // Step 2: Get binary path
-    let binary_path = resolve_binary_path(hive_config, job_id)?;
+    // Step 2: Check if remote or local
+    let is_remote = is_remote_hive(hive_config);
 
-    NARRATE
-        .action("hive_spawn")
-        .job_id(job_id)
-        .context(&binary_path)
-        .human("🔧 Spawning hive daemon: {}")
-        .emit();
+    if is_remote {
+        // REMOTE START: Use SSH
+        let binary_path = get_remote_binary_path(hive_config);
+        
+        NARRATE
+            .action("hive_mode")
+            .job_id(job_id)
+            .context(&format!("{}@{}", hive_config.ssh_user, hive_config.hostname))
+            .human("🌐 Remote start: {}")
+            .emit();
 
-    // Step 3: Spawn the hive daemon
-    let manager = DaemonManager::new(
-        std::path::PathBuf::from(&binary_path),
-        vec!["--port".to_string(), hive_config.hive_port.to_string()],
-    );
+        // Start hive daemon on remote host
+        let start_cmd = format!(
+            "nohup {} --port {} > /dev/null 2>&1 & echo $!",
+            binary_path,
+            hive_config.hive_port
+        );
 
-    let _child = manager.spawn().await?;
+        let pid_output = ssh_exec(
+            hive_config,
+            &start_cmd,
+            job_id,
+            "hive_spawn",
+            &format!("Starting remote hive: {}", binary_path),
+        )
+        .await?;
+
+        let pid = pid_output.trim();
+        NARRATE
+            .action("hive_spawned")
+            .job_id(job_id)
+            .context(pid)
+            .human("✅ Remote hive started with PID: {}")
+            .emit();
+    } else {
+        // LOCAL START: Use DaemonManager
+        let binary_path = resolve_binary_path(hive_config, job_id)?;
+
+        NARRATE
+            .action("hive_spawn")
+            .job_id(job_id)
+            .context(&binary_path)
+            .human("🔧 Spawning local hive daemon: {}")
+            .emit();
+
+        let manager = DaemonManager::new(
+            std::path::PathBuf::from(&binary_path),
+            vec!["--port".to_string(), hive_config.hive_port.to_string()],
+        );
+
+        let _child = manager.spawn().await?;
+    }
 
     // Step 4: Wait for health check
     NARRATE
