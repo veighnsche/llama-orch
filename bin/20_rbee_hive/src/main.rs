@@ -12,7 +12,8 @@
 mod narration;
 use narration::{NARRATE, ACTION_STARTUP, ACTION_HEARTBEAT, ACTION_LISTEN, ACTION_READY};
 
-use axum::{routing::get, Router};
+use axum::{routing::get, Router, Json};
+use serde::Serialize;
 use clap::Parser;
 use rbee_heartbeat::{
     start_hive_heartbeat_task, HiveHeartbeatConfig, WorkerState, WorkerStateProvider,
@@ -83,8 +84,10 @@ async fn main() -> anyhow::Result<()> {
         .human("💓 Heartbeat task started ({} interval)")
         .emit();
 
-    // Create basic router with health endpoint
-    let app = Router::new().route("/health", get(health_check));
+    // Create router with health and capabilities endpoints
+    let app = Router::new()
+        .route("/health", get(health_check))
+        .route("/capabilities", get(get_capabilities));
 
     let addr = SocketAddr::from(([127, 0, 0, 1], args.port));
 
@@ -112,4 +115,45 @@ async fn main() -> anyhow::Result<()> {
 /// TEAM-189: Returns "ok" - used by hive start/stop/status operations
 async fn health_check() -> &'static str {
     "ok"
+}
+
+/// TEAM-205: Device information for capabilities response
+#[derive(Debug, Serialize)]
+struct HiveDevice {
+    id: String,
+    name: String,
+    device_type: String,
+    vram_gb: Option<u32>,
+    compute_capability: Option<String>,
+}
+
+/// TEAM-205: Capabilities response
+#[derive(Debug, Serialize)]
+struct CapabilitiesResponse {
+    devices: Vec<HiveDevice>,
+}
+
+/// TEAM-205: Capabilities endpoint - returns detected GPU/CPU devices
+async fn get_capabilities() -> Json<CapabilitiesResponse> {
+    // Detect GPUs
+    let gpu_info = rbee_hive_device_detection::detect_gpus();
+    
+    let mut devices: Vec<HiveDevice> = gpu_info.devices.iter().map(|gpu| HiveDevice {
+        id: format!("GPU-{}", gpu.index),
+        name: gpu.name.clone(),
+        device_type: "gpu".to_string(),
+        vram_gb: Some(gpu.vram_total_gb() as u32),
+        compute_capability: Some(format!("{}.{}", gpu.compute_capability.0, gpu.compute_capability.1)),
+    }).collect();
+    
+    // Add CPU device (always available)
+    devices.push(HiveDevice {
+        id: "CPU-0".to_string(),
+        name: "CPU".to_string(),
+        device_type: "cpu".to_string(),
+        vram_gb: None,
+        compute_capability: None,
+    });
+    
+    Json(CapabilitiesResponse { devices })
 }

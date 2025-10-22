@@ -30,5 +30,10 @@ anyhow = "1.0"
 rbee-heartbeat = { path = "../99_shared_crates/heartbeat" }
 observability-narration-core = { path = "../99_shared_crates/narration-core" }
 
+# TEAM-205: Device detection for capabilities endpoint
+rbee-hive-device-detection = { path = "../25_rbee_hive_crates/device-detection" }
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+
 [dev-dependencies]
 # Add dev dependencies as needed

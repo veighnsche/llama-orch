@@ -27,8 +27,6 @@ members = [
     "bin/15_queen_rbee_crates/hive-registry/bdd",
     "bin/15_queen_rbee_crates/hive-lifecycle",
     "bin/15_queen_rbee_crates/hive-lifecycle/bdd",
-    "bin/15_queen_rbee_crates/hive-catalog",
-    "bin/15_queen_rbee_crates/scheduler",
     
     # rbee-hive crates (NO CLI!)
     "bin/25_rbee_hive_crates/worker-lifecycle",
