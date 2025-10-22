@@ -21,7 +21,9 @@ members = [
     # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
     
     # queen-rbee crates
+    "bin/05_rbee_keeper_crates/queen-lifecycle",
     "bin/15_queen_rbee_crates/ssh-client",
+    "bin/05_rbee_keeper_crates/queen-lifecycle",
     "bin/15_queen_rbee_crates/ssh-client/bdd",
     "bin/15_queen_rbee_crates/hive-registry",
     "bin/15_queen_rbee_crates/hive-registry/bdd",

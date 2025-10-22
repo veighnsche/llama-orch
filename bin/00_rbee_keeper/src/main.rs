@@ -36,7 +36,6 @@
 
 mod config;
 mod job_client;
-mod queen_lifecycle;
 
 use anyhow::Result;
 use clap::{Parser, Subcommand};

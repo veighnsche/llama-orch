@@ -43,6 +43,7 @@ timeout-enforcer = { path = "../99_shared_crates/timeout-enforcer" }
 rbee-operations = { path = "../99_shared_crates/rbee-operations" }  # TEAM-186: Shared operation types
 rbee-config = { path = "../99_shared_crates/rbee-config" }  # TEAM-195: For preflight validation
 job-client = { path = "../99_shared_crates/job-client" }  # TEAM-259: Shared job submission client
+queen-lifecycle = { path = "../05_rbee_keeper_crates/queen-lifecycle" }  # TEAM-259: Queen lifecycle management
 
 [dev-dependencies]
 # Add dev dependencies as needed

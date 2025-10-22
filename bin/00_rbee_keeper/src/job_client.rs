@@ -19,8 +19,7 @@ use job_client::JobClient;
 use rbee_operations::Operation;
 use std::time::Duration;
 use timeout_enforcer::TimeoutEnforcer;
-
-use crate::queen_lifecycle::ensure_queen_running;
+use queen_lifecycle::ensure_queen_running;
 
 // TEAM-192: Local narration factory for job_client.rs
 const NARRATE: NarrationFactory = NarrationFactory::new("keeper");

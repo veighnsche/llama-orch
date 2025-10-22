@@ -1,0 +1,25 @@
+# TEAM-259: Created by TEAM-259 (extracted from rbee-keeper)
+# Purpose: Queen-rbee lifecycle management
+
+[package]
+name = "queen-lifecycle"
+version = "0.1.0"
+edition = "2021"
+authors = ["TEAM-259"]
+description = "Queen-rbee lifecycle management for rbee-keeper"
+license = "GPL-3.0-or-later"
+
+[dependencies]
+# Core dependencies
+anyhow = "1.0"
+tokio = { version = "1", features = ["time"] }
+reqwest = { version = "0.12", features = ["json"] }
+
+# Shared crates
+daemon-lifecycle = { path = "../../99_shared_crates/daemon-lifecycle" }
+observability-narration-core = { path = "../../99_shared_crates/narration-core" }
+rbee-config = { path = "../../99_shared_crates/rbee-config" }
+timeout-enforcer = { path = "../../99_shared_crates/timeout-enforcer" }
+
+[lints]
+workspace = true
