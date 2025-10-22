@@ -101,6 +101,19 @@ fn validate_hive_exists<'a>(
     config: &'a RbeeConfig,
     alias: &str,
 ) -> Result<&'a rbee_config::HiveEntry> {
+    if alias == "localhost" {
+        // Localhost operations do not require configuration
+        static LOCALHOST_ENTRY: rbee_config::HiveEntry = rbee_config::HiveEntry {
+            alias: "localhost".to_string(),
+            hostname: "127.0.0.1".to_string(),
+            ssh_port: 22,
+            ssh_user: "user".to_string(),
+            hive_port: 8600,
+            binary_path: None,
+        };
+        return Ok(&LOCALHOST_ENTRY);
+    }
+
     config.hives.get(alias).ok_or_else(|| {
         let available_hives = config.hives.all();
         let hive_list = if available_hives.is_empty() {
@@ -113,17 +126,33 @@ fn validate_hive_exists<'a>(
                 .join("\n")
         };
 
-        anyhow::anyhow!(
-            "Hive alias '{}' not found in hives.conf.\n\
-             \n\
-             Available hives:\n\
-             {}\n\
-             \n\
-             Add '{}' to ~/.config/rbee/hives.conf to use it.",
-            alias,
-            hive_list,
-            alias
-        )
+        // Check if hives.conf exists
+        let config_dir = RbeeConfig::config_dir().unwrap_or_else(|_| PathBuf::from("~/.config/rbee"));
+        let hives_conf_path = config_dir.join("hives.conf");
+        if !hives_conf_path.exists() && alias != "localhost" {
+            // Auto-generate a template for hives.conf
+            let template_content = format!(
+                "# hives.conf - rbee hive configuration\n\nHost {}\n  HostName <hostname or IP>\n  Port 22\n  User <username>\n  HivePort 8600\n  BinaryPath /path/to/rbee-hive\n",
+                alias
+            );
+            let _ = std::fs::write(&hives_conf_path, &template_content);
+
+            anyhow::anyhow!(
+                "Hive alias '{}' not found in hives.conf.\n\nAvailable hives:\n{}\n\nA template hives.conf has been auto-generated at {}.\nPlease edit this file to configure access to '{}'.\n\nExample configuration:\n{}\n",
+                alias,
+                hive_list,
+                hives_conf_path.display(),
+                alias,
+                template_content
+            )
+        } else {
+            anyhow::anyhow!(
+                "Hive alias '{}' not found in hives.conf.\n\nAvailable hives:\n{}\n\nAdd '{}' to ~/.config/rbee/hives.conf to use it.",
+                alias,
+                hive_list,
+                alias
+            )
+        }
     })
 }
 
@@ -1003,4 +1032,3 @@ async fn route_operation(
 
     Ok(())
 }
-

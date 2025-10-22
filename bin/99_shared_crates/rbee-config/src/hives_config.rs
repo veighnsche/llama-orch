@@ -51,7 +51,7 @@ impl HivesConfig {
     /// Load from hives.conf file
     pub fn load(path: &Path) -> Result<Self> {
         if !path.exists() {
-            // Return empty config if file doesn't exist
+            // Return an empty config if file doesn't exist, as localhost doesn't require a hive entry
             return Ok(Self { hives: HashMap::new() });
         }
 
@@ -327,7 +327,7 @@ Host incomplete
     fn test_load_nonexistent_file() {
         let path = Path::new("/nonexistent/hives.conf");
         let config = HivesConfig::load(path).unwrap();
-        assert!(config.is_empty());
+        assert_eq!(config.len(), 0);
     }
 
     #[test]

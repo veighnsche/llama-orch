@@ -65,11 +65,13 @@
 
 mod builder;
 mod capture;
+pub mod context;
 pub mod correlation;
 pub mod sse_sink;
 pub mod unicode;
 
-pub use builder::{Narration, NarrationFactory};
+pub use builder::{short_job_id, Narration, NarrationFactory};
+pub use context::{with_narration_context, NarrationContext};
 pub use capture::{CaptureAdapter, CapturedNarration};
 
 /// Macro to emit narration with automatic caller crate provenance.

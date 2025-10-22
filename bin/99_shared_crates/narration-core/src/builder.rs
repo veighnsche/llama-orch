@@ -41,6 +41,7 @@ use serde_json::Value;
 ///     .human("✅ Queen started on {0}, port {1}")  // {0} or {} = first context, {1} = second
 ///     .emit();
 /// ```
+#[derive(Clone)]
 pub struct Narration {
     fields: NarrationFields,
     /// TEAM-191: Store context values for format string interpolation
@@ -75,6 +76,34 @@ impl Narration {
             // TEAM-191: Initialize context_values empty - use .context() to add values
             context_values: Vec::new(),
         }
+    }
+
+    /// Set the action for this narration.
+    ///
+    /// Useful when building narrations from a job-scoped factory.
+    ///
+    /// # Example
+    /// ```rust,ignore
+    /// let JOB = NARRATE.with_job_id("job-123");
+    /// JOB.action("hive_start").human("Starting hive").emit();
+    /// ```
+    pub fn action(mut self, action: &'static str) -> Self {
+        // Runtime check for action length (same as NarrationFactory)
+        const MAX_ACTION_LENGTH: usize = 15;
+        let char_count = action.chars().count();
+        assert!(
+            char_count <= MAX_ACTION_LENGTH,
+            "Action string is too long! Maximum 15 characters allowed. Got '{}' ({} chars)",
+            action,
+            char_count
+        );
+        
+        self.fields.action = action;
+        // If target is empty, use action as target (backwards compat)
+        if self.fields.target.is_empty() {
+            self.fields.target = action.to_string();
+        }
+        self
     }
 
     /// Add context value for format string interpolation.
@@ -341,15 +370,6 @@ impl Narration {
         self
     }
 
-    /// Emit the narration at INFO level with auto-injection.
-    ///
-    /// Automatically injects service identity and timestamp.
-    ///
-    /// Note: Use the `narrate!` macro instead to capture caller's crate name.
-    pub fn emit(self) {
-        crate::narrate(self.fields)
-    }
-
     /// Emit with explicit provenance (internal use by macro)
     #[doc(hidden)]
     pub fn emit_with_provenance(mut self, crate_name: &str, crate_version: &str) {
@@ -362,6 +382,26 @@ impl Narration {
                 SystemTime::now().duration_since(UNIX_EPOCH).unwrap_or_default().as_millis() as u64
             );
         }
+        crate::narrate(self.fields)
+    }
+
+    /// Emit the narration event to all configured outputs.
+    ///
+    /// Automatically injects service identity and timestamp.
+    /// Also automatically includes task-local context (job_id, correlation_id) if set.
+    ///
+    /// Note: Use the `narrate!` macro instead to capture caller's crate name.
+    pub fn emit(mut self) {
+        // Automatically include task-local context if available
+        if let Some(ctx) = crate::context::get_context() {
+            if self.fields.job_id.is_none() {
+                self.fields.job_id = ctx.job_id;
+            }
+            if self.fields.correlation_id.is_none() {
+                self.fields.correlation_id = ctx.correlation_id;
+            }
+        }
+        
         crate::narrate(self.fields)
     }
 
@@ -689,6 +729,54 @@ impl NarrationFactory {
     /// Get the factory's default actor.
     pub const fn actor(&self) -> &'static str {
         self.actor
+    }
+
+    /// Create a job-scoped narration builder with job_id baked in.
+    ///
+    /// Returns a `Narration` that automatically includes the job_id,
+    /// so you don't have to call `.job_id()` on every narration.
+    ///
+    /// # Example
+    /// ```rust
+    /// use observability_narration_core::NarrationFactory;
+    ///
+    /// const NARRATE: NarrationFactory = NarrationFactory::new("qn-router");
+    /// 
+    /// // Create job-scoped factory
+    /// let JOB = NARRATE.with_job_id("job-abc123");
+    /// 
+    /// // No need to call .job_id() anymore!
+    /// JOB.action("hive_start").human("Starting hive").emit();
+    /// JOB.action("hive_check").human("Checking status").emit();
+    /// ```
+    pub fn with_job_id(&self, job_id: impl Into<String>) -> Narration {
+        let mut fields = NarrationFields::default();
+        fields.actor = self.actor;
+        fields.job_id = Some(job_id.into());
+        
+        Narration {
+            fields,
+            context_values: Vec::new(),
+        }
+    }
+}
+
+/// Format a job ID to show only last 6 characters with "..." prefix.
+///
+/// Makes logs more readable by truncating long UUIDs.
+///
+/// # Example
+/// ```
+/// use observability_narration_core::short_job_id;
+///
+/// assert_eq!(short_job_id("job-abc123def456"), "...def456");
+/// assert_eq!(short_job_id("short"), "short");
+/// ```
+pub fn short_job_id(job_id: &str) -> String {
+    if job_id.len() > 6 {
+        format!("...{}", &job_id[job_id.len() - 6..])
+    } else {
+        job_id.to_string()
     }
 }
 
