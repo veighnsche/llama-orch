@@ -64,10 +64,13 @@ pub struct DeviceInfo {
 
 /// Device type classification
 /// TEAM-196: Added for Phase 4 capabilities
+/// TEAM-209: Added missing documentation
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 #[serde(rename_all = "lowercase")]
 pub enum DeviceType {
+    /// GPU device (NVIDIA, AMD, Apple Metal)
     Gpu,
+    /// CPU device (fallback compute device)
     Cpu,
 }
 

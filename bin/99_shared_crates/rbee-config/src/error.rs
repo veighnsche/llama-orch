@@ -5,16 +5,30 @@
 use std::path::PathBuf;
 
 /// Config error type
+/// TEAM-209: Added missing variant documentation
 #[derive(Debug, thiserror::Error)]
 pub enum ConfigError {
+    /// Config directory not found
     #[error("Config directory not found: {0}")]
     DirectoryNotFound(PathBuf),
 
+    /// Failed to read config file
     #[error("Failed to read config file {path}: {source}")]
-    ReadError { path: PathBuf, source: std::io::Error },
+    ReadError {
+        /// Path to the config file
+        path: PathBuf,
+        /// IO error source
+        source: std::io::Error
+    },
 
+    /// Failed to write config file
     #[error("Failed to write config file {path}: {source}")]
-    WriteError { path: PathBuf, source: std::io::Error },
+    WriteError {
+        /// Path to the config file
+        path: PathBuf,
+        /// IO error source
+        source: std::io::Error
+    },
 
     #[error("Failed to parse TOML config {path}: {source}")]
     TomlParseError { path: PathBuf, source: toml::de::Error },

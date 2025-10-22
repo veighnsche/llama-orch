@@ -34,11 +34,11 @@
 
 | Team | Phase | Document | Task | LOC | Status |
 |------|-------|----------|------|-----|--------|
-| TEAM-210 | 1 | `01_PHASE_1_FOUNDATION.md` | Foundation & Types | ~150 | 🔴 NOT STARTED |
-| TEAM-211 | 2 | `02_PHASE_2_SIMPLE_OPERATIONS.md` | List/Get/Status | ~100 | 🔴 NOT STARTED |
-| TEAM-212 | 3 | `03_PHASE_3_LIFECYCLE_CORE.md` | Start/Stop | ~350 | 🔴 NOT STARTED |
+| TEAM-210 | 1 | `01_PHASE_1_FOUNDATION.md` | Foundation & Types | ~150 | 🟢 COMPLETE |
+| TEAM-211 | 2 | `02_PHASE_2_SIMPLE_OPERATIONS.md` | List/Get/Status | ~100 | 🟢 COMPLETE |
+| TEAM-212 | 3 | `03_PHASE_3_LIFECYCLE_CORE.md` | Start/Stop | ~350 | 🟢 COMPLETE |
 | TEAM-213 | 4 | `04_PHASE_4_INSTALL_UNINSTALL.md` | Install/Uninstall | ~220 | 🔴 NOT STARTED |
-| TEAM-214 | 5 | `05_PHASE_5_CAPABILITIES.md` | Capabilities Refresh | ~100 | 🔴 NOT STARTED |
+| TEAM-214 | 5 | `05_PHASE_5_CAPABILITIES.md` | Capabilities Refresh | ~100 | 🟢 COMPLETE |
 | TEAM-215 | 6 | `06_PHASE_6_INTEGRATION.md` | Wire Everything Up | ~50 | 🔴 NOT STARTED |
 | TEAM-209 | 7 | `07_PHASE_7_PEER_REVIEW.md` | Critical Review | N/A | ✅ COMPLETE |
 
@@ -183,11 +183,11 @@ wc -l bin/10_queen_rbee/src/job_router.rs
 
 ## ✅ Completion Checklist
 
-- [ ] TEAM-210: Foundation complete
-- [ ] TEAM-211: Simple operations complete
-- [ ] TEAM-212: Lifecycle core complete
+- [x] TEAM-210: Foundation complete ✅
+- [x] TEAM-211: Simple operations complete ✅
+- [x] TEAM-212: Lifecycle core complete ✅
 - [ ] TEAM-213: Install/Uninstall complete
-- [ ] TEAM-214: Capabilities complete
+- [x] TEAM-214: Capabilities complete ✅
 - [ ] TEAM-215: Integration complete
 - [x] TEAM-209: Peer review APPROVED ✅
 - [ ] All tests passing
@@ -198,4 +198,4 @@ wc -l bin/10_queen_rbee/src/job_router.rs
 
 **Status:** 🔴 NOT STARTED → 🟡 IN PROGRESS → 🟢 COMPLETE
 
-**Next Step:** TEAM-210 starts Phase 1 (Foundation)
+**Next Step:** TEAM-211, 212, 213, 214 can start in parallel (all depend on TEAM-210 ✅)

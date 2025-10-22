@@ -174,18 +174,24 @@ async fn get_capabilities() -> Json<CapabilitiesResponse> {
         compute_capability: Some(format!("{}.{}", gpu.compute_capability.0, gpu.compute_capability.1)),
     }).collect();
     
+    // TEAM-209: Get actual CPU system information
+    let cpu_cores = rbee_hive_device_detection::get_cpu_cores();
+    let system_ram_gb = rbee_hive_device_detection::get_system_ram_gb();
+    
     // TEAM-206: Narrate CPU fallback
     NARRATE
         .action(ACTION_CAPS_CPU_ADD)
-        .human("🖥️  Adding CPU-0 as fallback device")
+        .context(cpu_cores.to_string())
+        .context(system_ram_gb.to_string())
+        .human("🖥️  Adding CPU-0: {0} cores, {1} GB RAM")
         .emit();
     
-    // Add CPU device (always available)
+    // Add CPU device (always available) with actual system info
     devices.push(HiveDevice {
         id: "CPU-0".to_string(),
-        name: "CPU".to_string(),
+        name: format!("CPU ({} cores)", cpu_cores),
         device_type: "cpu".to_string(),
-        vram_gb: None,
+        vram_gb: Some(system_ram_gb), // System RAM for CPU device
         compute_capability: None,
     });
     

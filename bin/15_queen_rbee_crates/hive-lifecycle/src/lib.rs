@@ -1,5 +1,6 @@
 // TEAM-135: Created by TEAM-135 (scaffolding)
 // TEAM-164: Implemented hive lifecycle management
+// TEAM-210: Phase 1 Foundation - Module structure and types
 // Purpose: Lifecycle management for rbee-hive instances
 
 #![warn(missing_docs)]
@@ -14,142 +15,57 @@
 //! Lifecycle management for rbee-hive instances.
 //! Queen orchestrates hive spawning - rbee-keeper does NOT.
 //!
-//! # Interface
+//! # Module Structure
 //!
-//! ## SSH Test Request Type
-//! ```rust
-//! pub struct SshTestRequest {
-//!     pub ssh_host: String,
-//!     pub ssh_port: u16,
-//!     pub ssh_user: String,
-//! }
-//! ```
-//!
-//! ## SSH Test Response Type
-//! ```rust
-//! pub struct SshTestResponse {
-//!     pub success: bool,
-//!     pub error: Option<String>,
-//!     pub test_output: Option<String>,
-//! }
-//! ```
-//!
-//! ## Entrypoint
-//! ```rust
-//! pub async fn execute_ssh_test(
-//!     request: SshTestRequest,
-//! ) -> Result<SshTestResponse>
-//! ```
+//! - `types` - Request/Response types for all operations
+//! - `validation` - Validation helpers (validate_hive_exists)
+//! - `ssh_test` - SSH connection testing
+//! - `install` - Hive installation (TEAM-213)
+//! - `uninstall` - Hive uninstallation (TEAM-213)
+//! - `start` - Hive startup (TEAM-212)
+//! - `stop` - Hive shutdown (TEAM-212)
+//! - `list` - List all hives (TEAM-211)
+//! - `get` - Get hive details (TEAM-211)
+//! - `status` - Check hive status (TEAM-211)
+//! - `capabilities` - Refresh hive capabilities (TEAM-214)
 
-use anyhow::Result;
-use observability_narration_core::Narration;
-use queen_rbee_ssh_client::{test_ssh_connection, SshConfig};
+// TEAM-210: Module declarations
+pub mod types;
+pub mod validation;
+pub mod ssh_test;
+pub mod install;
+pub mod uninstall;
+pub mod start;
+pub mod stop;
+pub mod list;
+pub mod get;
+pub mod status;
+pub mod capabilities;
 
-// Actor and action constants
-const ACTOR_HIVE_LIFECYCLE: &str = "🐝 hive-lifecycle";
-const ACTION_SSH_TEST: &str = "ssh_test";
+// TEAM-212: HTTP client for hive capabilities
+pub mod hive_client;
 
-// ============================================================================
-// REQUEST / RESPONSE TYPES (Command Pattern)
-// ============================================================================
+// TEAM-210: Re-export types for convenience
+pub use types::*;
 
-/// Request to test SSH connection
-#[derive(Debug, Clone)]
-pub struct SshTestRequest {
-    /// SSH host address
-    pub ssh_host: String,
-    /// SSH port (default: 22)
-    pub ssh_port: u16,
-    /// SSH username
-    pub ssh_user: String,
-}
+// TEAM-210: Re-export SSH test interface
+pub use ssh_test::{execute_ssh_test, SshTestRequest, SshTestResponse};
 
-/// Response from SSH connection test
-#[derive(Debug, Clone)]
-pub struct SshTestResponse {
-    /// Whether the connection was successful
-    pub success: bool,
-    /// Error message if connection failed
-    pub error: Option<String>,
-    /// Test command output (if successful)
-    pub test_output: Option<String>,
-}
+// TEAM-210: Re-export validation helpers
+pub use validation::validate_hive_exists;
 
-/// Execute SSH connection test
-///
-/// TEAM-188: Test SSH connectivity to remote host
-///
-/// This function:
-/// 1. Creates SSH client with provided credentials
-/// 2. Attempts connection with timeout (5s)
-/// 3. Runs simple test command (`echo test`)
-/// 4. Returns success/failure with details
-///
-/// # Arguments
-/// * `request` - SSH test request with host, port, and user
-///
-/// # Returns
-/// * `Ok(SshTestResponse)` - Test result with success status
-/// * `Err` - Critical error during test
-///
-/// # Example
-///
-/// ```no_run
-/// use queen_rbee_hive_lifecycle::{SshTestRequest, execute_ssh_test};
-///
-/// # async fn example() -> anyhow::Result<()> {
-/// let request = SshTestRequest {
-///     ssh_host: "192.168.1.100".to_string(),
-///     ssh_port: 22,
-///     ssh_user: "admin".to_string(),
-/// };
-///
-/// let response = execute_ssh_test(request).await?;
-/// if response.success {
-///     println!("SSH connection successful!");
-/// } else {
-///     println!("SSH connection failed: {:?}", response.error);
-/// }
-/// # Ok(())
-/// # }
-/// ```
-pub async fn execute_ssh_test(request: SshTestRequest) -> Result<SshTestResponse> {
-    let target = format!("{}@{}:{}", request.ssh_user, request.ssh_host, request.ssh_port);
+// TEAM-211: Export simple operations
+pub use list::execute_hive_list;
+pub use get::execute_hive_get;
+pub use status::execute_hive_status;
 
-    Narration::new(ACTOR_HIVE_LIFECYCLE, ACTION_SSH_TEST, &target)
-        .human(format!("🔐 Testing SSH connection to {}", target))
-        .emit();
+// TEAM-212: Export lifecycle operations
+pub use start::execute_hive_start;
+pub use stop::execute_hive_stop;
 
-    // Create SSH config from request
-    let config = SshConfig {
-        host: request.ssh_host,
-        port: request.ssh_port,
-        user: request.ssh_user,
-        timeout_secs: 5,
-    };
+// TEAM-213: Export install/uninstall operations
+pub use install::execute_hive_install;
+pub use uninstall::execute_hive_uninstall;
 
-    // Test SSH connection using ssh-client crate
-    let result = test_ssh_connection(config).await?;
-
-    // Convert SshTestResult to SshTestResponse
-    let response = SshTestResponse {
-        success: result.success,
-        error: result.error,
-        test_output: result.test_output,
-    };
-
-    if response.success {
-        Narration::new(ACTOR_HIVE_LIFECYCLE, ACTION_SSH_TEST, "success")
-            .human(format!("✅ SSH test successful: {}", target))
-            .emit();
-    } else {
-        Narration::new(ACTOR_HIVE_LIFECYCLE, ACTION_SSH_TEST, "failed")
-            .human(format!(
-                "❌ SSH test failed: {}",
-                response.error.as_deref().unwrap_or("unknown")
-            ))
-            .emit();
-    }
-
-    Ok(response)
-}
+// TEAM-214: Export capabilities operation
+pub use capabilities::execute_hive_refresh_capabilities;
