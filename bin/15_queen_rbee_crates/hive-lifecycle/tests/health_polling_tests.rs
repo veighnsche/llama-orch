@@ -216,11 +216,7 @@ async fn test_health_check_failure_responses() {
     let failure_codes = vec![404, 500, 502, 503];
 
     for code in failure_codes {
-        assert!(
-            code < 200 || code >= 300,
-            "Status {} should not be success",
-            code
-        );
+        assert!(code < 200 || code >= 300, "Status {} should not be success", code);
     }
 }
 

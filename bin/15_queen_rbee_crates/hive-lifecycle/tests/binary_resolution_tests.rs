@@ -28,10 +28,7 @@ fn test_binary_path_resolution_priority() {
     let has_debug = debug_path.exists();
     let has_release = release_path.exists();
 
-    assert!(
-        has_debug || has_release,
-        "At least one binary should exist (debug or release)"
-    );
+    assert!(has_debug || has_release, "At least one binary should exist (debug or release)");
 }
 
 #[test]
@@ -72,10 +69,7 @@ fn test_binary_path_with_spaces() {
     fs::write(&binary_with_spaces, "fake binary").unwrap();
 
     assert!(binary_with_spaces.exists(), "Binary with spaces should exist");
-    assert!(
-        binary_with_spaces.to_str().unwrap().contains(' '),
-        "Path should contain spaces"
-    );
+    assert!(binary_with_spaces.to_str().unwrap().contains(' '), "Path should contain spaces");
 }
 
 #[test]

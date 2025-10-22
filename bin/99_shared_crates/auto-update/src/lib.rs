@@ -255,11 +255,7 @@ impl AutoUpdater {
     /// * `Ok(())` - Build succeeded
     /// * `Err` - Build failed
     pub fn rebuild(&self) -> Result<()> {
-        NARRATE
-            .action("rebuild")
-            .context(&self.binary_name)
-            .human("🔨 Rebuilding {}...")
-            .emit();
+        NARRATE.action("rebuild").context(&self.binary_name).human("🔨 Rebuilding {}...").emit();
 
         let start_time = std::time::Instant::now();
 
@@ -343,17 +339,15 @@ impl AutoUpdater {
         loop {
             let cargo_toml = current.join("Cargo.toml");
             if cargo_toml.exists() {
-                let contents = std::fs::read_to_string(&cargo_toml)
-                    .context("Failed to read Cargo.toml")?;
+                let contents =
+                    std::fs::read_to_string(&cargo_toml).context("Failed to read Cargo.toml")?;
                 if contents.contains("[workspace]") {
                     return Ok(current);
                 }
             }
 
-            current = current
-                .parent()
-                .ok_or_else(|| anyhow!("Workspace root not found"))?
-                .to_path_buf();
+            current =
+                current.parent().ok_or_else(|| anyhow!("Workspace root not found"))?.to_path_buf();
         }
     }
 
@@ -449,10 +443,7 @@ impl AutoUpdater {
             return Ok(release_path);
         }
 
-        anyhow::bail!(
-            "Binary '{}' not found in target/debug or target/release",
-            self.binary_name
-        )
+        anyhow::bail!("Binary '{}' not found in target/debug or target/release", self.binary_name)
     }
 }
 

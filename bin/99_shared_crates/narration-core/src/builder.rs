@@ -97,7 +97,7 @@ impl Narration {
             action,
             char_count
         );
-        
+
         self.fields.action = action;
         // If target is empty, use action as target (backwards compat)
         if self.fields.target.is_empty() {
@@ -378,9 +378,9 @@ impl Narration {
         }
         if self.fields.emitted_at_ms.is_none() {
             use std::time::{SystemTime, UNIX_EPOCH};
-            self.fields.emitted_at_ms = Some(
-                SystemTime::now().duration_since(UNIX_EPOCH).unwrap_or_default().as_millis() as u64
-            );
+            self.fields.emitted_at_ms =
+                Some(SystemTime::now().duration_since(UNIX_EPOCH).unwrap_or_default().as_millis()
+                    as u64);
         }
         crate::narrate(self.fields)
     }
@@ -401,7 +401,7 @@ impl Narration {
                 self.fields.correlation_id = ctx.correlation_id;
             }
         }
-        
+
         crate::narrate(self.fields)
     }
 
@@ -741,10 +741,10 @@ impl NarrationFactory {
     /// use observability_narration_core::NarrationFactory;
     ///
     /// const NARRATE: NarrationFactory = NarrationFactory::new("qn-router");
-    /// 
+    ///
     /// // Create job-scoped factory
     /// let JOB = NARRATE.with_job_id("job-abc123");
-    /// 
+    ///
     /// // No need to call .job_id() anymore!
     /// JOB.action("hive_start").human("Starting hive").emit();
     /// JOB.action("hive_check").human("Checking status").emit();
@@ -753,11 +753,8 @@ impl NarrationFactory {
         let mut fields = NarrationFields::default();
         fields.actor = self.actor;
         fields.job_id = Some(job_id.into());
-        
-        Narration {
-            fields,
-            context_values: Vec::new(),
-        }
+
+        Narration { fields, context_values: Vec::new() }
     }
 }
 

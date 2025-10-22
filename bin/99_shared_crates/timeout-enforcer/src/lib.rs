@@ -69,7 +69,7 @@ pub struct TimeoutEnforcer {
     duration: Duration,
     label: Option<String>,
     show_countdown: bool,
-    job_id: Option<String>,  // TEAM-207: For SSE routing
+    job_id: Option<String>, // TEAM-207: For SSE routing
 }
 
 impl TimeoutEnforcer {
@@ -201,7 +201,7 @@ impl TimeoutEnforcer {
     }
 
     /// Enforce timeout silently (no countdown)
-    /// 
+    ///
     /// TEAM-207: Still emits narration (start/timeout events), just no progress bar.
     /// This ensures timeout enforcement is visible in SSE streams even when running as daemon.
     async fn enforce_silent<F, T>(self, future: F) -> Result<T>
@@ -307,7 +307,7 @@ impl TimeoutEnforcer {
                 // Timeout occurred
                 progress_handle.abort();
                 pb.finish_and_clear();
-                
+
                 // TEAM-197: Use narration for timeout error
                 // TEAM-207: Include job_id for SSE routing
                 let mut narration = NARRATE
@@ -322,7 +322,7 @@ impl TimeoutEnforcer {
                 }
 
                 narration.emit_error();
-                
+
                 anyhow::bail!(
                     "{} timed out after {} seconds - operation was hanging",
                     label,

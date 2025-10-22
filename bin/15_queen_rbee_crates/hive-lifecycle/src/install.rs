@@ -75,11 +75,7 @@ pub async fn execute_hive_install(
         return Err(anyhow::anyhow!("Remote installation not yet implemented"));
     } else {
         // LOCALHOST INSTALLATION
-        NARRATE
-            .action("hive_mode")
-            .job_id(job_id)
-            .human("🏠 Localhost installation")
-            .emit();
+        NARRATE.action("hive_mode").job_id(job_id).human("🏠 Localhost installation").emit();
 
         // STEP 2: Find or build the rbee-hive binary
         let binary = if let Some(provided_path) = &hive_config.binary_path {
@@ -102,11 +98,7 @@ pub async fn execute_hive_install(
                 return Err(anyhow::anyhow!("Binary not found: {}", provided_path));
             }
 
-            NARRATE
-                .action("hive_binary")
-                .job_id(job_id)
-                .human("✅ Binary found")
-                .emit();
+            NARRATE.action("hive_binary").job_id(job_id).human("✅ Binary found").emit();
 
             provided_path.clone()
         } else {

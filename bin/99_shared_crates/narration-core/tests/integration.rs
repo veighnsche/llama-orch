@@ -1,9 +1,7 @@
 // Integration tests for narration-core
 // Tests ORCH-3300..3312 requirements
 
-use observability_narration_core::{
-    narrate, CaptureAdapter, NarrationFields,
-};
+use observability_narration_core::{narrate, CaptureAdapter, NarrationFields};
 use serial_test::serial;
 use std::time::{SystemTime, UNIX_EPOCH};
 

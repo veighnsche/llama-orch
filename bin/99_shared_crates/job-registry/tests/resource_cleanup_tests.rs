@@ -17,20 +17,20 @@ async fn test_cleanup_on_normal_completion() {
 
     // Simulate job execution
     registry.update_state(&job_id, JobState::Running);
-    
+
     let (tx, rx) = mpsc::unbounded_channel();
     registry.set_token_receiver(&job_id, rx);
-    
+
     // Send completion token
     tx.send("token-1".to_string()).unwrap();
     tx.send("[DONE]".to_string()).unwrap();
     drop(tx);
-    
+
     // Cleanup: remove job
     let removed = registry.remove_job(&job_id);
     assert!(removed.is_some());
     assert_eq!(registry.job_count(), 0);
-    
+
     println!("✓ Cleanup on normal completion successful");
 }
 
@@ -42,23 +42,23 @@ async fn test_cleanup_on_client_disconnect() {
 
     let (tx, rx) = mpsc::unbounded_channel();
     registry.set_token_receiver(&job_id, rx);
-    
+
     // Send some tokens
     tx.send("token-1".to_string()).unwrap();
-    
+
     // Client disconnects (receiver dropped)
     let mut receiver = registry.take_token_receiver(&job_id).unwrap();
     drop(receiver);
-    
+
     // Sender should still work (but no one is listening)
     let result = tx.send("token-2".to_string());
     // Send may fail because receiver is gone, which is fine
     let _ = result;
-    
+
     // Cleanup: remove job
     registry.remove_job(&job_id);
     assert_eq!(registry.job_count(), 0);
-    
+
     println!("✓ Cleanup on client disconnect successful");
 }
 
@@ -70,17 +70,17 @@ async fn test_cleanup_on_timeout() {
 
     let (tx, rx) = mpsc::unbounded_channel();
     registry.set_token_receiver(&job_id, rx);
-    
+
     // Simulate timeout: operation doesn't complete
     registry.update_state(&job_id, JobState::Running);
-    
+
     // Wait a bit (simulate timeout)
     tokio::time::sleep(Duration::from_millis(100)).await;
-    
+
     // Cleanup: remove job after timeout
     registry.remove_job(&job_id);
     assert_eq!(registry.job_count(), 0);
-    
+
     println!("✓ Cleanup on timeout successful");
 }
 
@@ -92,18 +92,18 @@ async fn test_cleanup_on_error() {
 
     let (tx, rx) = mpsc::unbounded_channel();
     registry.set_token_receiver(&job_id, rx);
-    
+
     // Simulate error
     registry.update_state(&job_id, JobState::Failed("operation failed".to_string()));
-    
+
     // Send error token
     tx.send("[ERROR] operation failed".to_string()).unwrap();
     drop(tx);
-    
+
     // Cleanup: remove job
     registry.remove_job(&job_id);
     assert_eq!(registry.job_count(), 0);
-    
+
     println!("✓ Cleanup on error successful");
 }
 
@@ -125,9 +125,7 @@ async fn test_cleanup_concurrent_operations() {
     // Cleanup jobs concurrently
     for job_id in job_ids {
         let registry_clone = Arc::clone(&registry);
-        let handle = tokio::spawn(async move {
-            registry_clone.remove_job(&job_id)
-        });
+        let handle = tokio::spawn(async move { registry_clone.remove_job(&job_id) });
         handles.push(handle);
     }
 
@@ -136,7 +134,7 @@ async fn test_cleanup_concurrent_operations() {
 
     // Verify all jobs cleaned up
     assert_eq!(registry.job_count(), 0);
-    
+
     println!("✓ Concurrent cleanup successful");
 }
 
@@ -163,7 +161,7 @@ async fn test_cleanup_with_payload() {
     // Cleanup: remove job
     registry.remove_job(&job_id);
     assert_eq!(registry.job_count(), 0);
-    
+
     println!("✓ Cleanup with payload successful");
 }
 
@@ -175,10 +173,10 @@ async fn test_cleanup_prevents_memory_leaks_100_jobs() {
     // Create 100 jobs with channels
     for i in 0..100 {
         let job_id = registry.create_job();
-        
+
         let (tx, rx) = mpsc::unbounded_channel();
         registry.set_token_receiver(&job_id, rx);
-        
+
         // Send some tokens
         for j in 0..10 {
             let _ = tx.send(format!("token-{}-{}", i, j));
@@ -195,7 +193,7 @@ async fn test_cleanup_prevents_memory_leaks_100_jobs() {
 
     // Verify all cleaned up
     assert_eq!(registry.job_count(), 0);
-    
+
     println!("✓ Cleanup prevents memory leaks (100 jobs)");
 }
 
@@ -203,35 +201,35 @@ async fn test_cleanup_prevents_memory_leaks_100_jobs() {
 #[tokio::test]
 async fn test_cleanup_with_partial_state() {
     let registry = Arc::new(JobRegistry::<String>::new());
-    
+
     // Job 1: Has receiver
     let job_id_1 = registry.create_job();
     let (tx1, rx1) = mpsc::unbounded_channel();
     registry.set_token_receiver(&job_id_1, rx1);
-    
+
     // Job 2: Has payload
     let job_id_2 = registry.create_job();
     registry.set_payload(&job_id_2, serde_json::json!({"data": "test"}));
-    
+
     // Job 3: Has both
     let job_id_3 = registry.create_job();
     let (tx3, rx3) = mpsc::unbounded_channel();
     registry.set_token_receiver(&job_id_3, rx3);
     registry.set_payload(&job_id_3, serde_json::json!({"data": "test"}));
-    
+
     // Job 4: Has neither
     let job_id_4 = registry.create_job();
-    
+
     assert_eq!(registry.job_count(), 4);
-    
+
     // Cleanup all
     registry.remove_job(&job_id_1);
     registry.remove_job(&job_id_2);
     registry.remove_job(&job_id_3);
     registry.remove_job(&job_id_4);
-    
+
     assert_eq!(registry.job_count(), 0);
-    
+
     println!("✓ Cleanup with partial state successful");
 }
 
@@ -251,7 +249,7 @@ async fn test_cleanup_idempotency() {
 
     // Registry should be empty
     assert_eq!(registry.job_count(), 0);
-    
+
     println!("✓ Cleanup idempotency verified");
 }
 
@@ -263,19 +261,19 @@ async fn test_cleanup_with_active_sender() {
 
     let (tx, rx) = mpsc::unbounded_channel();
     registry.set_token_receiver(&job_id, rx);
-    
+
     // Take receiver (cleanup from client side)
     let _receiver = registry.take_token_receiver(&job_id);
-    
+
     // Sender still active
     let result = tx.send("token".to_string());
     // Send may fail, which is expected
     let _ = result;
-    
+
     // Cleanup: remove job
     registry.remove_job(&job_id);
     assert_eq!(registry.job_count(), 0);
-    
+
     println!("✓ Cleanup with active sender successful");
 }
 
@@ -288,11 +286,11 @@ async fn test_cleanup_rapid_cycles() {
     for _ in 0..100 {
         let job_id = registry.create_job();
         assert_eq!(registry.job_count(), 1);
-        
+
         registry.remove_job(&job_id);
         assert_eq!(registry.job_count(), 0);
     }
-    
+
     println!("✓ Rapid create/remove cycles successful");
 }
 
@@ -304,17 +302,17 @@ async fn test_cleanup_with_state_transitions() {
 
     // Transition through states
     assert!(matches!(registry.get_job_state(&job_id), Some(JobState::Queued)));
-    
+
     registry.update_state(&job_id, JobState::Running);
     assert!(matches!(registry.get_job_state(&job_id), Some(JobState::Running)));
-    
+
     registry.update_state(&job_id, JobState::Completed);
     assert!(matches!(registry.get_job_state(&job_id), Some(JobState::Completed)));
-    
+
     // Cleanup
     registry.remove_job(&job_id);
     assert_eq!(registry.job_count(), 0);
-    
+
     println!("✓ Cleanup with state transitions successful");
 }
 
@@ -326,21 +324,21 @@ async fn test_cleanup_prevents_dangling_references() {
 
     let (tx, rx) = mpsc::unbounded_channel();
     registry.set_token_receiver(&job_id, rx);
-    
+
     // Take receiver
     let receiver = registry.take_token_receiver(&job_id);
     assert!(receiver.is_some());
-    
+
     // Try to take again (should return None)
     let receiver2 = registry.take_token_receiver(&job_id);
     assert!(receiver2.is_none());
-    
+
     // Cleanup
     registry.remove_job(&job_id);
-    
+
     // Try to access after cleanup
     assert!(!registry.has_job(&job_id));
-    
+
     println!("✓ Cleanup prevents dangling references");
 }
 
@@ -353,7 +351,7 @@ async fn test_cleanup_mixed_operations() {
     // Create 20 jobs with mixed operations
     for i in 0..20 {
         let job_id = registry.create_job();
-        
+
         if i % 2 == 0 {
             // Set payload
             registry.set_payload(&job_id, serde_json::json!({"index": i}));
@@ -363,7 +361,7 @@ async fn test_cleanup_mixed_operations() {
             registry.set_token_receiver(&job_id, rx);
             let _ = tx.send(format!("token-{}", i));
         }
-        
+
         job_ids.push(job_id);
     }
 
@@ -375,6 +373,6 @@ async fn test_cleanup_mixed_operations() {
     }
 
     assert_eq!(registry.job_count(), 0);
-    
+
     println!("✓ Cleanup with mixed operations successful");
 }

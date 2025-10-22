@@ -9,9 +9,9 @@ fn test_bdd_help_command() {
         .args(&["run", "-p", "xtask", "--", "bdd:test", "--help"])
         .output()
         .expect("Failed to execute command");
-    
+
     let stdout = String::from_utf8_lossy(&output.stdout);
-    
+
     // Should show help text
     assert!(stdout.contains("Usage:"));
     assert!(stdout.contains("--tags"));
@@ -28,7 +28,7 @@ fn test_bdd_validates_cargo_exists() {
         .args(&["run", "-p", "xtask", "--", "bdd:test", "--help"])
         .output()
         .expect("Failed to execute command");
-    
+
     // Should succeed if cargo is available
     assert!(output.status.success() || output.status.code() == Some(0));
 }
@@ -39,9 +39,9 @@ fn test_bdd_command_exists() {
         .args(&["run", "-p", "xtask", "--", "--help"])
         .output()
         .expect("Failed to execute command");
-    
+
     let stdout = String::from_utf8_lossy(&output.stdout);
-    
+
     // Should list bdd:test as available command
     assert!(stdout.contains("bdd:test"));
 }
@@ -54,9 +54,9 @@ fn test_helpful_error_messages() {
         .args(&["run", "-p", "xtask", "--", "bdd:test", "--invalid-flag"])
         .output()
         .expect("Failed to execute command");
-    
+
     let stderr = String::from_utf8_lossy(&output.stderr);
-    
+
     // Should indicate the error
     assert!(stderr.contains("error") || stderr.contains("unexpected argument"));
 }
@@ -68,7 +68,7 @@ fn test_quiet_flag_accepted() {
         .args(&["run", "-p", "xtask", "--", "bdd:test", "--quiet", "--help"])
         .output()
         .expect("Failed to execute command");
-    
+
     // Should accept --quiet flag
     assert!(output.status.success() || output.status.code() == Some(0));
 }
@@ -80,7 +80,7 @@ fn test_tags_flag_accepted() {
         .args(&["run", "-p", "xtask", "--", "bdd:test", "--tags", "@auth", "--help"])
         .output()
         .expect("Failed to execute command");
-    
+
     // Should accept --tags flag with value
     assert!(output.status.success() || output.status.code() == Some(0));
 }
@@ -92,7 +92,7 @@ fn test_feature_flag_accepted() {
         .args(&["run", "-p", "xtask", "--", "bdd:test", "--feature", "lifecycle", "--help"])
         .output()
         .expect("Failed to execute command");
-    
+
     // Should accept --feature flag with value
     assert!(output.status.success() || output.status.code() == Some(0));
 }

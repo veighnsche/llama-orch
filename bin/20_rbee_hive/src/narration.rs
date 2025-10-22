@@ -2,7 +2,7 @@
 //!
 //! TEAM-202: Narration for rbee-hive using job-scoped SSE
 //! TEAM-218: Investigated Oct 22, 2025 - Narration constants documented
-//! 
+//!
 //! This module provides narration constants for the hive daemon.
 //! Narration flows through job-scoped SSE channels (from TEAM-200)
 //! and uses centralized formatting (from TEAM-201).

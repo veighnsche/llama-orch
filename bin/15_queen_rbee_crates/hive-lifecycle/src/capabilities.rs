@@ -12,12 +12,12 @@
 
 use anyhow::{Context, Result};
 use observability_narration_core::NarrationFactory;
-use rbee_config::{HiveCapabilities, DeviceType};
+use rbee_config::{DeviceType, HiveCapabilities};
 use std::sync::Arc;
 
+use crate::hive_client::{check_hive_health, fetch_hive_capabilities};
 use crate::types::{HiveRefreshCapabilitiesRequest, HiveRefreshCapabilitiesResponse};
 use crate::validation::validate_hive_exists;
-use crate::hive_client::{check_hive_health, fetch_hive_capabilities};
 
 const NARRATE: NarrationFactory = NarrationFactory::new("hive-life");
 
@@ -67,11 +67,7 @@ pub async fn execute_hive_refresh_capabilities(
 
     match check_hive_health(&endpoint).await {
         Ok(true) => {
-            NARRATE
-                .action("hive_healthy")
-                .job_id(job_id)
-                .human("✅ Hive is running")
-                .emit();
+            NARRATE.action("hive_healthy").job_id(job_id).human("✅ Hive is running").emit();
         }
         Ok(false) => {
             return Err(anyhow::anyhow!(
@@ -97,15 +93,10 @@ pub async fn execute_hive_refresh_capabilities(
     }
 
     // Fetch fresh capabilities
-    NARRATE
-        .action("hive_caps")
-        .job_id(job_id)
-        .human("📊 Fetching device capabilities...")
-        .emit();
+    NARRATE.action("hive_caps").job_id(job_id).human("📊 Fetching device capabilities...").emit();
 
-    let devices = fetch_hive_capabilities(&endpoint)
-        .await
-        .context("Failed to fetch capabilities")?;
+    let devices =
+        fetch_hive_capabilities(&endpoint).await.context("Failed to fetch capabilities")?;
 
     let device_count = devices.len();
 
@@ -133,20 +124,11 @@ pub async fn execute_hive_refresh_capabilities(
             }
         };
 
-        NARRATE
-            .action("hive_device")
-            .job_id(job_id)
-            .context(&device_info)
-            .human("{}")
-            .emit();
+        NARRATE.action("hive_device").job_id(job_id).context(&device_info).human("{}").emit();
     }
 
     // Update cache
-    NARRATE
-        .action("hive_cache")
-        .job_id(job_id)
-        .human("💾 Updating capabilities cache...")
-        .emit();
+    NARRATE.action("hive_cache").job_id(job_id).human("💾 Updating capabilities cache...").emit();
 
     let caps = HiveCapabilities::new(alias.clone(), devices, endpoint.clone());
 

@@ -18,7 +18,7 @@ pub enum ConfigError {
         /// Path to the config file
         path: PathBuf,
         /// IO error source
-        source: std::io::Error
+        source: std::io::Error,
     },
 
     /// Failed to write config file
@@ -27,7 +27,7 @@ pub enum ConfigError {
         /// Path to the config file
         path: PathBuf,
         /// IO error source
-        source: std::io::Error
+        source: std::io::Error,
     },
 
     #[error("Failed to parse TOML config {path}: {source}")]

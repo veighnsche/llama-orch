@@ -4,15 +4,15 @@
 use anyhow::Result;
 use daemon_lifecycle::DaemonManager;
 use observability_narration_core::NarrationFactory;
-use rbee_config::{RbeeConfig, HiveCapabilities, DeviceType};
+use rbee_config::{DeviceType, HiveCapabilities, RbeeConfig};
 use std::sync::Arc;
 use std::time::Duration;
 use timeout_enforcer::TimeoutEnforcer;
 use tokio::time::sleep;
 
+use crate::hive_client::fetch_hive_capabilities;
 use crate::types::{HiveStartRequest, HiveStartResponse};
 use crate::validation::validate_hive_exists;
-use crate::hive_client::fetch_hive_capabilities;
 
 const NARRATE: NarrationFactory = NarrationFactory::new("hive-life");
 
@@ -40,7 +40,7 @@ pub async fn execute_hive_start(
 ) -> Result<HiveStartResponse> {
     let job_id = &request.job_id;
     let alias = &request.alias;
-    
+
     let hive_config = validate_hive_exists(&config, alias)?;
 
     NARRATE
@@ -57,13 +57,8 @@ pub async fn execute_hive_start(
         .human("📋 Checking if hive is already running...")
         .emit();
 
-    let health_url = format!(
-        "http://{}:{}/health",
-        hive_config.hostname, hive_config.hive_port
-    );
-    let client = reqwest::Client::builder()
-        .timeout(Duration::from_secs(2))
-        .build()?;
+    let health_url = format!("http://{}:{}/health", hive_config.hostname, hive_config.hive_port);
+    let client = reqwest::Client::builder().timeout(Duration::from_secs(2)).build()?;
 
     if let Ok(response) = client.get(&health_url).send().await {
         if response.status().is_success() {
@@ -143,10 +138,7 @@ pub async fn execute_hive_start(
 }
 
 /// Resolve binary path from config or find in target/
-fn resolve_binary_path(
-    hive_config: &rbee_config::HiveEntry,
-    job_id: &str,
-) -> Result<String> {
+fn resolve_binary_path(hive_config: &rbee_config::HiveEntry, job_id: &str) -> Result<String> {
     if let Some(provided_path) = &hive_config.binary_path {
         NARRATE
             .action("hive_binary")
@@ -166,11 +158,7 @@ fn resolve_binary_path(
             anyhow::bail!("Binary not found: {}", provided_path);
         }
 
-        NARRATE
-            .action("hive_binary")
-            .job_id(job_id)
-            .human("✅ Binary found")
-            .emit();
+        NARRATE.action("hive_binary").job_id(job_id).human("✅ Binary found").emit();
 
         Ok(provided_path.clone())
     } else {
@@ -216,9 +204,7 @@ fn resolve_binary_path(
                        ./rbee hive install --binary-path /path/to/rbee-hive",
                 )
                 .emit();
-            anyhow::bail!(
-                "rbee-hive binary not found. Build it with: cargo build --bin rbee-hive"
-            )
+            anyhow::bail!("rbee-hive binary not found. Build it with: cargo build --bin rbee-hive")
         }
     }
 }
@@ -376,11 +362,6 @@ fn display_devices(devices: &[rbee_config::DeviceInfo], job_id: &str) {
             }
         };
 
-        NARRATE
-            .action("hive_device")
-            .job_id(job_id)
-            .context(&device_info)
-            .human("{}")
-            .emit();
+        NARRATE.action("hive_device").job_id(job_id).context(&device_info).human("{}").emit();
     }
 }

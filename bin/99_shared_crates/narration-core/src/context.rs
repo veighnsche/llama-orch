@@ -57,14 +57,10 @@ pub async fn with_narration_context<F>(ctx: NarrationContext, f: F) -> F::Output
 where
     F: std::future::Future,
 {
-    NARRATION_CONTEXT
-        .scope(RefCell::new(ctx), f)
-        .await
+    NARRATION_CONTEXT.scope(RefCell::new(ctx), f).await
 }
 
 /// Get the current narration context (internal use)
 pub(crate) fn get_context() -> Option<NarrationContext> {
-    NARRATION_CONTEXT
-        .try_with(|ctx| ctx.borrow().clone())
-        .ok()
+    NARRATION_CONTEXT.try_with(|ctx| ctx.borrow().clone()).ok()
 }

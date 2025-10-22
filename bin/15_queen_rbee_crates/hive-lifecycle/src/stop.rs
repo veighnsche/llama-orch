@@ -36,30 +36,16 @@ pub async fn execute_hive_stop(
 ) -> Result<HiveStopResponse> {
     let job_id = &request.job_id;
     let alias = &request.alias;
-    
+
     let hive_config = validate_hive_exists(&config, alias)?;
 
-    NARRATE
-        .action("hive_stop")
-        .job_id(job_id)
-        .context(alias)
-        .human("🛑 Stopping hive '{}'")
-        .emit();
+    NARRATE.action("hive_stop").job_id(job_id).context(alias).human("🛑 Stopping hive '{}'").emit();
 
     // Check if it's running
-    NARRATE
-        .action("hive_check")
-        .job_id(job_id)
-        .human("📋 Checking if hive is running...")
-        .emit();
+    NARRATE.action("hive_check").job_id(job_id).human("📋 Checking if hive is running...").emit();
 
-    let health_url = format!(
-        "http://{}:{}/health",
-        hive_config.hostname, hive_config.hive_port
-    );
-    let client = reqwest::Client::builder()
-        .timeout(Duration::from_secs(2))
-        .build()?;
+    let health_url = format!("http://{}:{}/health", hive_config.hostname, hive_config.hive_port);
+    let client = reqwest::Client::builder().timeout(Duration::from_secs(2)).build()?;
 
     if let Ok(response) = client.get(&health_url).send().await {
         if !response.status().is_success() {
@@ -106,10 +92,8 @@ pub async fn execute_hive_stop(
         .unwrap_or("rbee-hive");
 
     // Send SIGTERM
-    let output = tokio::process::Command::new("pkill")
-        .args(&["-TERM", binary_name])
-        .output()
-        .await?;
+    let output =
+        tokio::process::Command::new("pkill").args(&["-TERM", binary_name]).output().await?;
 
     if !output.status.success() {
         NARRATE
@@ -156,10 +140,7 @@ pub async fn execute_hive_stop(
                 .human("⚠️  Graceful shutdown timed out, sending SIGKILL...")
                 .emit();
 
-            tokio::process::Command::new("pkill")
-                .args(&["-KILL", binary_name])
-                .output()
-                .await?;
+            tokio::process::Command::new("pkill").args(&["-KILL", binary_name]).output().await?;
 
             sleep(Duration::from_millis(500)).await;
 
@@ -172,8 +153,5 @@ pub async fn execute_hive_stop(
         }
     }
 
-    Ok(HiveStopResponse {
-        success: true,
-        message: format!("Hive '{}' stopped", alias),
-    })
+    Ok(HiveStopResponse { success: true, message: format!("Hive '{}' stopped", alias) })
 }

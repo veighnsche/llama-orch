@@ -32,7 +32,7 @@ fn test_context_with_unicode() {
     let context = "Hello 世界 🌍";
 
     assert_eq!(context.chars().count(), 9); // 6 ASCII + 2 Chinese + 1 emoji
-    // In real code, unicode should be handled correctly
+                                            // In real code, unicode should be handled correctly
 }
 
 #[test]
@@ -41,7 +41,7 @@ fn test_context_with_emojis() {
     let emoji_context = "🚀🔥💻";
 
     assert_eq!(emoji_context.chars().count(), 3); // 3 emojis = 3 chars
-    // In real code, emojis should be counted correctly
+                                                  // In real code, emojis should be counted correctly
 }
 
 #[test]
@@ -331,8 +331,8 @@ fn test_payload_with_binary_data() {
 #[tokio::test]
 async fn test_concurrent_narration_emission() {
     // TEAM-244: Test 10 concurrent narration emissions
-    use std::sync::Arc;
     use std::sync::atomic::{AtomicU32, Ordering};
+    use std::sync::Arc;
 
     let emission_count = Arc::new(AtomicU32::new(0));
     let mut handles = vec![];
@@ -372,8 +372,8 @@ fn test_circular_reference_detection() {
     // Rust prevents circular references at compile time with Rc/RefCell
     // This is a conceptual test
 
-    use std::rc::Rc;
     use std::cell::RefCell;
+    use std::rc::Rc;
 
     #[derive(Debug)]
     struct Node {

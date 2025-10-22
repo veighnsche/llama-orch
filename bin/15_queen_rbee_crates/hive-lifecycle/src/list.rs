@@ -6,7 +6,7 @@ use observability_narration_core::NarrationFactory;
 use rbee_config::RbeeConfig;
 use std::sync::Arc;
 
-use crate::types::{HiveListRequest, HiveListResponse, HiveInfo};
+use crate::types::{HiveInfo, HiveListRequest, HiveListResponse};
 
 const NARRATE: NarrationFactory = NarrationFactory::new("hive-life");
 
@@ -28,11 +28,7 @@ pub async fn execute_hive_list(
     config: Arc<RbeeConfig>,
     job_id: &str,
 ) -> Result<HiveListResponse> {
-    NARRATE
-        .action("hive_list")
-        .job_id(job_id)
-        .human("📊 Listing all hives")
-        .emit();
+    NARRATE.action("hive_list").job_id(job_id).human("📊 Listing all hives").emit();
 
     let hives: Vec<HiveInfo> = config
         .hives

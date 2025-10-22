@@ -9,20 +9,20 @@ use std::sync::{Arc, Mutex};
 use tokio::sync::mpsc;
 
 /// Global SSE broadcaster with job-scoped channels.
-/// 
+///
 /// TEAM-200: Refactored to support per-job channels
 /// TEAM-204: CRITICAL SECURITY FIX - Removed global channel (privacy hazard)
 static SSE_BROADCASTER: once_cell::sync::Lazy<SseBroadcaster> =
     once_cell::sync::Lazy::new(|| SseBroadcaster::new());
 
 /// Broadcaster for SSE narration events with job isolation.
-/// 
+///
 /// TEAM-204: SECURITY FIX - Job-scoped channels ONLY. No global channel.
 /// If narration has no job_id, it's dropped (fail-fast).
-/// 
+///
 /// TEAM-205: SIMPLIFIED - Use MPSC instead of broadcast to eliminate race conditions.
 /// MPSC has simpler semantics (single receiver) and no "Closed" issues.
-/// 
+///
 /// CRITICAL: Global channels are a privacy hazard - inference data
 /// from Job A could leak to subscribers of Job B.
 pub struct SseBroadcaster {
@@ -33,7 +33,7 @@ pub struct SseBroadcaster {
 }
 
 /// Narration event formatted for SSE transport.
-/// 
+///
 /// TEAM-201: Added `formatted` field for centralized formatting.
 /// Consumers should use `formatted` instead of manually formatting actor/action/human.
 #[derive(Debug, Clone, serde::Serialize)]
@@ -42,7 +42,7 @@ pub struct NarrationEvent {
     /// Format: "[actor     ] action         : message"
     /// TEAM-201: This is the SINGLE source of truth for SSE display
     pub formatted: String,
-    
+
     // Keep existing fields for backward compatibility and programmatic access
     pub actor: String,
     pub action: String,
@@ -66,13 +66,13 @@ impl From<NarrationFields> for NarrationEvent {
     fn from(fields: NarrationFields) -> Self {
         // TEAM-204: No redaction needed - job isolation provides security
         // Developers need full context for debugging
-        
+
         // TEAM-201: Pre-format text (same format as stderr output)
         // Format: "[actor     ] action         : message"
         // - Actor: 10 chars (left-aligned, padded)
         // - Action: 15 chars (left-aligned, padded)
         let formatted = format!("[{:<10}] {:<15}: {}", fields.actor, fields.action, fields.human);
-        
+
         Self {
             formatted,
             actor: fields.actor.to_string(),
@@ -98,10 +98,10 @@ impl SseBroadcaster {
     }
 
     /// Create a new job-specific SSE channel.
-    /// 
+    ///
     /// TEAM-200: Call this when a job is created (before execution starts).
     /// The job's SSE stream will be isolated from other jobs.
-    /// 
+    ///
     /// TEAM-205: SIMPLIFIED - Use MPSC for predictable single-receiver semantics.
     pub fn create_job_channel(&self, job_id: String, capacity: usize) {
         let (tx, rx) = mpsc::channel(capacity);
@@ -110,7 +110,7 @@ impl SseBroadcaster {
     }
 
     /// Remove a job's SSE channel (cleanup when job completes).
-    /// 
+    ///
     /// TEAM-200: Call this when a job completes to prevent memory leaks.
     pub fn remove_job_channel(&self, job_id: &str) {
         self.senders.lock().unwrap().remove(job_id);
@@ -118,10 +118,10 @@ impl SseBroadcaster {
     }
 
     /// Send narration to a specific job's SSE stream.
-    /// 
+    ///
     /// TEAM-204: SECURITY FIX - FAIL FAST if job channel doesn't exist.
     /// Better to lose narration than leak it to wrong subscribers.
-    /// 
+    ///
     /// TEAM-205: SIMPLIFIED - Use MPSC try_send (works in both sync and async contexts).
     pub fn send_to_job(&self, job_id: &str, event: NarrationEvent) {
         let senders = self.senders.lock().unwrap();
@@ -135,10 +135,10 @@ impl SseBroadcaster {
     }
 
     /// Take the receiver for a specific job's SSE stream.
-    /// 
+    ///
     /// TEAM-200: Keeper calls this with job_id to get isolated stream.
     /// TEAM-205: SIMPLIFIED - Take receiver (can only be called once per job).
-    /// 
+    ///
     /// This can only be called once per job - the receiver is moved out.
     pub fn take_job_receiver(&self, job_id: &str) -> Option<mpsc::Receiver<NarrationEvent>> {
         self.receivers.lock().unwrap().remove(job_id)
@@ -154,13 +154,13 @@ impl SseBroadcaster {
 // All narration is job-scoped or dropped (fail-fast)
 
 /// Create a job-specific SSE channel.
-/// 
+///
 /// TEAM-200: Call this in job_router::create_job() before execution starts.
-/// 
+///
 /// # Example
 /// ```rust,ignore
 /// use observability_narration_core::sse_sink;
-/// 
+///
 /// let job_id = "job-abc123";
 /// sse_sink::create_job_channel(job_id.to_string(), 1000);
 /// // Now narration with this job_id goes to isolated channel
@@ -170,7 +170,7 @@ pub fn create_job_channel(job_id: String, capacity: usize) {
 }
 
 /// Remove a job's SSE channel (cleanup).
-/// 
+///
 /// TEAM-200: Call this when job completes to prevent memory leaks.
 pub fn remove_job_channel(job_id: &str) {
     SSE_BROADCASTER.remove_job_channel(job_id);
@@ -180,11 +180,11 @@ pub fn remove_job_channel(job_id: &str) {
 ///
 /// TEAM-204: SECURITY FIX - FAIL FAST, only job-scoped narration is sent.
 /// If no job_id, event is DROPPED (intentional).
-/// 
+///
 /// This prevents sensitive inference data from leaking to global subscribers.
 pub fn send(fields: &NarrationFields) {
     let event = NarrationEvent::from(fields.clone());
-    
+
     // SECURITY: Only send if we have a job_id
     if let Some(job_id) = &fields.job_id {
         SSE_BROADCASTER.send_to_job(job_id, event);
@@ -193,7 +193,7 @@ pub fn send(fields: &NarrationFields) {
 }
 
 /// Take the receiver for a specific job's SSE stream.
-/// 
+///
 /// TEAM-200: Keeper calls this with job_id from job creation response.
 /// TEAM-205: SIMPLIFIED - Can only be called once per job.
 ///
@@ -209,9 +209,8 @@ pub fn take_job_receiver(job_id: &str) -> Option<mpsc::Receiver<NarrationEvent>>
     SSE_BROADCASTER.take_job_receiver(job_id)
 }
 
-
 /// Check if SSE broadcasting is enabled.
-/// 
+///
 /// TEAM-204: Always returns true (job channels are created on-demand).
 pub fn is_enabled() -> bool {
     true
@@ -246,7 +245,7 @@ mod team_201_formatting_tests {
 
         // Formatted field should match: "[actor     ] action         : message"
         assert_eq!(event.formatted, "[test-actor] test-action    : Test message");
-        
+
         // Verify padding
         assert!(event.formatted.starts_with("[test-actor]"));
         assert!(event.formatted.contains("test-action    :"));
@@ -302,7 +301,7 @@ mod team_201_formatting_tests {
         assert_eq!(event.actor, "test");
         assert_eq!(event.action, "action");
         assert_eq!(event.human, "Message");
-        
+
         // But formatted is also available (new way)
         assert!(!event.formatted.is_empty());
     }
@@ -379,7 +378,7 @@ mod team_200_isolation_tests {
     async fn test_send_to_nonexistent_job_drops_event() {
         // TEAM-204: SECURITY FIX - When job channel doesn't exist, event is DROPPED (fail-fast)
         // This prevents sensitive data from leaking to wrong subscribers
-        
+
         // Send to non-existent job channel
         let fields = NarrationFields {
             actor: "test",
@@ -390,20 +389,20 @@ mod team_200_isolation_tests {
             ..Default::default()
         };
         send(&fields);
-        
+
         // Event is dropped - this is intentional and correct
         // Better to lose narration than leak sensitive inference data
         assert!(!has_job_channel("nonexistent-job"));
     }
-    
+
     #[tokio::test]
     #[serial_test::serial(capture_adapter)]
     async fn test_race_condition_narration_before_channel_creation() {
         // TEAM-204: SECURITY FIX - Race condition where narration happens before create_job_channel()
         // Event is DROPPED (fail-fast) - this is correct behavior
-        
+
         let job_id = "race-condition-job";
-        
+
         // 1. Emit narration (job channel doesn't exist yet!)
         let fields = NarrationFields {
             actor: "test",
@@ -414,14 +413,14 @@ mod team_200_isolation_tests {
             ..Default::default()
         };
         send(&fields);
-        
+
         // 2. Event is DROPPED (no channel exists) - this is intentional
         assert!(!has_job_channel(job_id));
-        
+
         // 3. Now create the job channel
         create_job_channel(job_id.to_string(), 100);
         let mut job_rx = take_job_receiver(job_id).unwrap();
-        
+
         // 4. Future narration should go to job channel
         let fields2 = NarrationFields {
             actor: "test",
@@ -432,11 +431,11 @@ mod team_200_isolation_tests {
             ..Default::default()
         };
         send(&fields2);
-        
+
         // 5. This event should be in JOB channel
         let event2 = job_rx.recv().await.expect("Should be in job channel");
         assert_eq!(event2.human, "This happened after channel was created!");
-        
+
         remove_job_channel(job_id);
     }
 }

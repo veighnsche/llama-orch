@@ -15,7 +15,7 @@ use tokio::time::timeout;
 async fn test_daemon_doesnt_hold_stdout_pipe() {
     // Create a simple test binary that exits immediately
     let test_binary = PathBuf::from("target/debug/queen-rbee");
-    
+
     // Skip test if binary doesn't exist (CI environment)
     if !test_binary.exists() {
         println!("Skipping test: queen-rbee binary not found");
@@ -36,7 +36,7 @@ async fn test_daemon_doesnt_hold_stdout_pipe() {
 #[tokio::test]
 async fn test_daemon_doesnt_hold_stderr_pipe() {
     let test_binary = PathBuf::from("target/debug/queen-rbee");
-    
+
     if !test_binary.exists() {
         println!("Skipping test: queen-rbee binary not found");
         return;
@@ -54,7 +54,7 @@ async fn test_daemon_doesnt_hold_stderr_pipe() {
 #[tokio::test]
 async fn test_parent_can_exit_immediately_after_spawn() {
     let test_binary = PathBuf::from("target/debug/queen-rbee");
-    
+
     if !test_binary.exists() {
         println!("Skipping test: queen-rbee binary not found");
         return;
@@ -76,17 +76,15 @@ async fn test_command_output_doesnt_hang_with_daemon() {
     // This test verifies the fix for TEAM-164
     // Before: Command::output() would hang indefinitely
     // After: Command::output() completes immediately
-    
+
     // Simulate what E2E tests do: run rbee-keeper which spawns queen-rbee
     // The test passes if this completes within timeout
-    let result = timeout(
-        Duration::from_secs(5),
-        async {
-            // This would hang forever without Stdio::null() fix
-            println!("✓ Command::output() completed without hanging");
-            Ok::<(), String>(())
-        }
-    ).await;
+    let result = timeout(Duration::from_secs(5), async {
+        // This would hang forever without Stdio::null() fix
+        println!("✓ Command::output() completed without hanging");
+        Ok::<(), String>(())
+    })
+    .await;
 
     assert!(result.is_ok(), "Command::output() should not hang");
 }
@@ -97,9 +95,9 @@ async fn test_command_output_doesnt_hang_with_daemon() {
 async fn test_ssh_auth_sock_propagated_to_daemon() {
     // Set SSH_AUTH_SOCK for this test
     std::env::set_var("SSH_AUTH_SOCK", "/tmp/ssh-agent-test");
-    
+
     let test_binary = PathBuf::from("target/debug/queen-rbee");
-    
+
     if !test_binary.exists() {
         println!("Skipping test: queen-rbee binary not found");
         return;
@@ -109,7 +107,7 @@ async fn test_ssh_auth_sock_propagated_to_daemon() {
     let _child = manager.spawn().await.expect("Failed to spawn daemon");
 
     println!("✓ SSH_AUTH_SOCK propagated to daemon");
-    
+
     // Cleanup
     std::env::remove_var("SSH_AUTH_SOCK");
 }
@@ -118,7 +116,7 @@ async fn test_ssh_auth_sock_propagated_to_daemon() {
 #[tokio::test]
 async fn test_daemon_spawn_missing_binary_error() {
     let missing_binary = PathBuf::from("/nonexistent/binary");
-    
+
     let manager = DaemonManager::new(missing_binary, vec![]);
     let result = manager.spawn().await;
 
@@ -130,7 +128,7 @@ async fn test_daemon_spawn_missing_binary_error() {
 #[tokio::test]
 async fn test_daemon_spawn_returns_valid_pid() {
     let test_binary = PathBuf::from("target/debug/queen-rbee");
-    
+
     if !test_binary.exists() {
         println!("Skipping test: queen-rbee binary not found");
         return;
@@ -142,7 +140,7 @@ async fn test_daemon_spawn_returns_valid_pid() {
     let pid = child.id();
     assert!(pid.is_some(), "Spawned daemon should have a PID");
     assert!(pid.unwrap() > 0, "PID should be positive");
-    
+
     println!("✓ Daemon spawned with valid PID: {:?}", pid);
 }
 

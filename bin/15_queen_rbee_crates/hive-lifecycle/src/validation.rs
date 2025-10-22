@@ -12,10 +12,7 @@ use std::path::PathBuf;
 /// Special case: "localhost" always returns a default entry.
 ///
 /// COPIED FROM: job_router.rs lines 98-160
-pub fn validate_hive_exists<'a>(
-    config: &'a RbeeConfig,
-    alias: &str,
-) -> Result<&'a HiveEntry> {
+pub fn validate_hive_exists<'a>(config: &'a RbeeConfig, alias: &str) -> Result<&'a HiveEntry> {
     if alias == "localhost" {
         // Localhost operations do not require configuration
         static LOCALHOST_ENTRY: Lazy<HiveEntry> = Lazy::new(|| HiveEntry {

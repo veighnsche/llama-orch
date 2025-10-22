@@ -100,7 +100,9 @@ async fn test_connection_to_unreachable_host() {
     assert!(result.error.is_some(), "Should have error message");
     let error = result.error.unwrap();
     assert!(
-        error.contains("TCP connection failed") || error.contains("timeout") || error.contains("Connection"),
+        error.contains("TCP connection failed")
+            || error.contains("timeout")
+            || error.contains("Connection"),
         "Error should mention TCP/connection failure: {}",
         error
     );
@@ -124,7 +126,7 @@ async fn test_connection_to_invalid_port() {
     assert!(result.error.is_some(), "Should have error message");
     let error = result.error.unwrap();
     assert!(
-        error.contains("TCP connection failed") 
+        error.contains("TCP connection failed")
             || error.contains("Connection refused")
             || error.contains("handshake"),
         "Error should mention connection/handshake failure: {}",

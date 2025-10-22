@@ -60,20 +60,12 @@ pub fn assert_stderr_contains(result: &CommandResult, text: &str) {
 
 /// Assert process is running
 pub fn assert_running(harness: &TestHarness, name: &str) {
-    assert!(
-        harness.is_running(name),
-        "{} should be running but is not",
-        name
-    );
+    assert!(harness.is_running(name), "{} should be running but is not", name);
 }
 
 /// Assert process is stopped
 pub fn assert_stopped(harness: &TestHarness, name: &str) {
-    assert!(
-        !harness.is_running(name),
-        "{} should be stopped but is running",
-        name
-    );
+    assert!(!harness.is_running(name), "{} should be stopped but is running", name);
 }
 
 /// Assert exit code matches expected

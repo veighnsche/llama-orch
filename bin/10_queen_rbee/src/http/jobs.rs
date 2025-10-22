@@ -136,7 +136,7 @@ pub async fn handle_stream_job(
                 }
             }
         }
-        
+
         // TEAM-205: Cleanup - remove sender from HashMap to prevent memory leak
         // Receiver is already dropped by moving out of this scope
         sse_sink::remove_job_channel(&job_id_for_stream);

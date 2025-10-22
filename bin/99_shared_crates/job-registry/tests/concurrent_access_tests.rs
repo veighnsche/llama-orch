@@ -17,18 +17,13 @@ async fn test_concurrent_job_creation() {
     // Create 10 concurrent job creation tasks
     for _ in 0..10 {
         let registry_clone = Arc::clone(&registry);
-        let handle = task::spawn(async move {
-            registry_clone.create_job()
-        });
+        let handle = task::spawn(async move { registry_clone.create_job() });
         handles.push(handle);
     }
 
     // Wait for all tasks to complete
-    let job_ids: Vec<String> = futures::future::join_all(handles)
-        .await
-        .into_iter()
-        .map(|r| r.unwrap())
-        .collect();
+    let job_ids: Vec<String> =
+        futures::future::join_all(handles).await.into_iter().map(|r| r.unwrap()).collect();
 
     // Verify all jobs were created
     assert_eq!(job_ids.len(), 10);
@@ -119,9 +114,7 @@ async fn test_concurrent_reads_during_writes() {
     for _ in 0..5 {
         let registry_clone = Arc::clone(&registry);
         let job_id_clone = job_id.clone();
-        let handle = task::spawn(async move {
-            registry_clone.get_job_state(&job_id_clone)
-        });
+        let handle = task::spawn(async move { registry_clone.get_job_state(&job_id_clone) });
         read_handles.push(handle);
     }
 
@@ -176,10 +169,9 @@ async fn test_concurrent_token_receiver_operations() {
     // Take receiver and verify tokens
     let mut receiver = registry.take_token_receiver(&job_id).unwrap();
     let mut tokens = vec![];
-    while let Ok(Some(token)) = tokio::time::timeout(
-        std::time::Duration::from_millis(100),
-        receiver.recv()
-    ).await {
+    while let Ok(Some(token)) =
+        tokio::time::timeout(std::time::Duration::from_millis(100), receiver.recv()).await
+    {
         tokens.push(token);
     }
 
@@ -220,18 +212,13 @@ async fn test_concurrent_payload_operations() {
     let mut handles = vec![];
     for job_id in job_ids {
         let registry_clone = Arc::clone(&registry);
-        let handle = task::spawn(async move {
-            registry_clone.take_payload(&job_id)
-        });
+        let handle = task::spawn(async move { registry_clone.take_payload(&job_id) });
         handles.push(handle);
     }
 
     // Wait for all tasks to complete
-    let payloads: Vec<_> = futures::future::join_all(handles)
-        .await
-        .into_iter()
-        .map(|r| r.unwrap())
-        .collect();
+    let payloads: Vec<_> =
+        futures::future::join_all(handles).await.into_iter().map(|r| r.unwrap()).collect();
 
     // Verify all payloads were retrieved
     assert_eq!(payloads.len(), 10);
@@ -258,9 +245,7 @@ async fn test_concurrent_job_removal() {
     // Remove jobs concurrently
     for job_id in job_ids {
         let registry_clone = Arc::clone(&registry);
-        let handle = task::spawn(async move {
-            registry_clone.remove_job(&job_id)
-        });
+        let handle = task::spawn(async move { registry_clone.remove_job(&job_id) });
         handles.push(handle);
     }
 
@@ -347,18 +332,13 @@ async fn test_has_job_with_concurrent_operations() {
     for _ in 0..10 {
         let registry_clone = Arc::clone(&registry);
         let job_id_clone = job_id.clone();
-        let handle = task::spawn(async move {
-            registry_clone.has_job(&job_id_clone)
-        });
+        let handle = task::spawn(async move { registry_clone.has_job(&job_id_clone) });
         handles.push(handle);
     }
 
     // Wait for all tasks to complete
-    let results: Vec<_> = futures::future::join_all(handles)
-        .await
-        .into_iter()
-        .map(|r| r.unwrap())
-        .collect();
+    let results: Vec<_> =
+        futures::future::join_all(handles).await.into_iter().map(|r| r.unwrap()).collect();
 
     // All checks should return true
     assert!(results.iter().all(|&r| r));
@@ -373,15 +353,13 @@ async fn test_concurrent_mixed_operations() {
     let mut handles = vec![];
 
     // Create 10 jobs
-    let job_ids: Vec<_> = (0..10)
-        .map(|_| registry.create_job())
-        .collect();
+    let job_ids: Vec<_> = (0..10).map(|_| registry.create_job()).collect();
 
     // Spawn mixed operations
     for (i, job_id) in job_ids.iter().enumerate() {
         let registry_clone = Arc::clone(&registry);
         let job_id_clone = job_id.clone();
-        
+
         let handle = task::spawn(async move {
             match i % 4 {
                 0 => {

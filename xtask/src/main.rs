@@ -1,10 +1,10 @@
 use anyhow::Result;
 use clap::Parser;
 
+mod chaos; // TEAM-252: Chaos testing infrastructure
 mod cli;
 mod e2e; // TEAM-160: End-to-end integration tests
 mod integration; // TEAM-251: Integration testing infrastructure
-mod chaos; // TEAM-252: Chaos testing infrastructure
 mod tasks;
 mod util;
 

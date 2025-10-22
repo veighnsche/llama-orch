@@ -31,7 +31,7 @@ async fn test_sigterm_success_within_5s() {
     {
         use nix::sys::signal::{kill, Signal};
         use nix::unistd::Pid;
-        
+
         kill(Pid::from_raw(pid as i32), Signal::SIGTERM).expect("Failed to send SIGTERM");
     }
 
@@ -64,7 +64,7 @@ async fn test_sigterm_timeout_sigkill_fallback() {
         // Send SIGTERM (will be ignored)
         use nix::sys::signal::{kill, Signal};
         use nix::unistd::Pid;
-        
+
         kill(Pid::from_raw(pid as i32), Signal::SIGTERM).expect("Failed to send SIGTERM");
 
         // Wait 5s (SIGTERM timeout)
@@ -78,7 +78,7 @@ async fn test_sigterm_timeout_sigkill_fallback() {
             Ok(None) => {
                 // Still running - send SIGKILL
                 kill(Pid::from_raw(pid as i32), Signal::SIGKILL).expect("Failed to send SIGKILL");
-                
+
                 // Wait for SIGKILL to take effect
                 let result = timeout(Duration::from_millis(500), child.wait()).await;
                 assert!(result.is_ok(), "Process should exit immediately after SIGKILL");
@@ -91,7 +91,7 @@ async fn test_sigterm_timeout_sigkill_fallback() {
 #[tokio::test]
 async fn test_stop_is_idempotent() {
     // TEAM-245: Test stopping already-stopped process is idempotent (no error)
-    
+
     // Spawn and immediately kill a process
     let mut child = Command::new("sleep")
         .arg("1")
@@ -107,7 +107,7 @@ async fn test_stop_is_idempotent() {
     {
         use nix::sys::signal::{kill, Signal};
         use nix::unistd::Pid;
-        
+
         kill(Pid::from_raw(pid as i32), Signal::SIGKILL).expect("Failed to send SIGKILL");
     }
 
@@ -119,12 +119,12 @@ async fn test_stop_is_idempotent() {
     {
         use nix::sys::signal::{kill, Signal};
         use nix::unistd::Pid;
-        
+
         let result = kill(Pid::from_raw(pid as i32), Signal::SIGKILL);
         // ESRCH (No such process) is expected and OK
         match result {
-            Ok(_) => {}, // Somehow succeeded
-            Err(nix::errno::Errno::ESRCH) => {}, // Expected: no such process
+            Ok(_) => {}                         // Somehow succeeded
+            Err(nix::errno::Errno::ESRCH) => {} // Expected: no such process
             Err(e) => panic!("Unexpected error: {}", e),
         }
     }
@@ -140,12 +140,12 @@ async fn test_health_check_polling_during_shutdown() {
     // Verifies the polling loop (lines 134-149 in stop.rs)
 
     let start = std::time::Instant::now();
-    
+
     // Simulate polling loop (5 attempts, 1s each)
     for attempt in 1..=5 {
         // Simulate health check
         sleep(Duration::from_secs(1)).await;
-        
+
         if attempt == 5 {
             // On last attempt, break
             break;
@@ -153,7 +153,7 @@ async fn test_health_check_polling_during_shutdown() {
     }
 
     let elapsed = start.elapsed();
-    
+
     // Should take ~5 seconds (5 attempts * 1s)
     assert!(
         elapsed.as_secs() >= 4 && elapsed.as_secs() <= 6,
@@ -168,22 +168,22 @@ async fn test_early_exit_when_health_check_fails() {
     // Should not wait full 5s if hive stops early
 
     let start = std::time::Instant::now();
-    
+
     // Simulate polling loop with early exit
     for attempt in 1..=5 {
         // Simulate health check
         let health_ok = attempt < 3; // Fails on attempt 3
-        
+
         if !health_ok {
             // Hive stopped - exit early
             break;
         }
-        
+
         sleep(Duration::from_secs(1)).await;
     }
 
     let elapsed = start.elapsed();
-    
+
     // Should take ~2 seconds (stopped on attempt 3)
     assert!(
         elapsed.as_secs() >= 1 && elapsed.as_secs() <= 3,
@@ -199,13 +199,9 @@ async fn test_early_exit_when_health_check_fails() {
 #[tokio::test]
 async fn test_pkill_command_not_found() {
     // TEAM-245: Test pkill command not found (should error gracefully)
-    
+
     // Try to run non-existent command
-    let result = Command::new("nonexistent_command_12345")
-        .arg("-TERM")
-        .arg("test")
-        .output()
-        .await;
+    let result = Command::new("nonexistent_command_12345").arg("-TERM").arg("test").output().await;
 
     assert!(result.is_err(), "Should error when command not found");
 }
@@ -219,10 +215,10 @@ async fn test_permission_denied() {
     {
         use nix::sys::signal::{kill, Signal};
         use nix::unistd::Pid;
-        
+
         // Try to kill PID 1 (init) - should fail with EPERM
         let result = kill(Pid::from_raw(1), Signal::SIGTERM);
-        
+
         match result {
             Ok(_) => {
                 // Somehow succeeded (running as root?)
@@ -261,11 +257,7 @@ async fn test_process_name_collision() {
     // Kill all "sleep" processes
     #[cfg(unix)]
     {
-        let _ = Command::new("pkill")
-            .arg("-TERM")
-            .arg("sleep")
-            .output()
-            .await;
+        let _ = Command::new("pkill").arg("-TERM").arg("sleep").output().await;
     }
 
     // Wait for all to die
@@ -308,7 +300,7 @@ async fn test_graceful_shutdown_flow() {
     {
         use nix::sys::signal::{kill, Signal};
         use nix::unistd::Pid;
-        
+
         kill(Pid::from_raw(pid as i32), Signal::SIGTERM).expect("Failed to send SIGTERM");
     }
 
@@ -316,7 +308,7 @@ async fn test_graceful_shutdown_flow() {
     let mut stopped = false;
     for _ in 1..=5 {
         sleep(Duration::from_secs(1)).await;
-        
+
         if child.try_wait().unwrap().is_some() {
             stopped = true;
             break;
@@ -329,10 +321,10 @@ async fn test_graceful_shutdown_flow() {
         {
             use nix::sys::signal::{kill, Signal};
             use nix::unistd::Pid;
-            
+
             kill(Pid::from_raw(pid as i32), Signal::SIGKILL).expect("Failed to send SIGKILL");
         }
-        
+
         sleep(Duration::from_millis(500)).await;
     }
 

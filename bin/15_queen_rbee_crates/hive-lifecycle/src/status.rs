@@ -32,10 +32,7 @@ pub async fn execute_hive_status(
 ) -> Result<HiveStatusResponse> {
     let hive_config = validate_hive_exists(&config, &request.alias)?;
 
-    let health_url = format!(
-        "http://{}:{}/health",
-        hive_config.hostname, hive_config.hive_port
-    );
+    let health_url = format!("http://{}:{}/health", hive_config.hostname, hive_config.hive_port);
 
     NARRATE
         .action("hive_check")
@@ -44,9 +41,7 @@ pub async fn execute_hive_status(
         .human("Checking hive status at {}")
         .emit();
 
-    let client = reqwest::Client::builder()
-        .timeout(Duration::from_secs(5))
-        .build()?;
+    let client = reqwest::Client::builder().timeout(Duration::from_secs(5)).build()?;
 
     let running = match client.get(&health_url).send().await {
         Ok(response) if response.status().is_success() => {
@@ -81,9 +76,5 @@ pub async fn execute_hive_status(
         }
     };
 
-    Ok(HiveStatusResponse {
-        alias: request.alias,
-        running,
-        health_url,
-    })
+    Ok(HiveStatusResponse { alias: request.alias, running, health_url })
 }

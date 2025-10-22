@@ -31,17 +31,17 @@
 //! - `capabilities` - Refresh hive capabilities (TEAM-214)
 
 // TEAM-210: Module declarations
-pub mod types;
-pub mod validation;
-pub mod ssh_test;
-pub mod install;
-pub mod uninstall;
-pub mod start;
-pub mod stop;
-pub mod list;
-pub mod get;
-pub mod status;
 pub mod capabilities;
+pub mod get;
+pub mod install;
+pub mod list;
+pub mod ssh_test;
+pub mod start;
+pub mod status;
+pub mod stop;
+pub mod types;
+pub mod uninstall;
+pub mod validation;
 
 // TEAM-212: HTTP client for hive capabilities
 pub mod hive_client;
@@ -56,8 +56,8 @@ pub use ssh_test::{execute_ssh_test, SshTestRequest, SshTestResponse};
 pub use validation::validate_hive_exists;
 
 // TEAM-211: Export simple operations
-pub use list::execute_hive_list;
 pub use get::execute_hive_get;
+pub use list::execute_hive_list;
 pub use status::execute_hive_status;
 
 // TEAM-212: Export lifecycle operations
