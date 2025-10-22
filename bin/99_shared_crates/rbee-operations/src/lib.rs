@@ -29,6 +29,26 @@ use serde::{Deserialize, Serialize};
 ///
 /// TEAM-186: Single source of truth for operation types
 /// TEAM-190: Added Status operation for live hive/worker overview
+///
+/// # Adding a New Operation (3-File Pattern)
+///
+/// When adding a new operation, you MUST update these 3 files:
+///
+/// 1. **THIS FILE** (rbee-operations/src/lib.rs):
+///    - Add variant to Operation enum (line ~34)
+///    - Add case to Operation::name() (line ~148)
+///    - Add case to Operation::hive_id() if needed (line ~173)
+///    - Add constant to constants module if needed (line ~204)
+///
+/// 2. **job_router.rs** (queen-rbee/src/job_router.rs):
+///    - Add match arm in route_operation() (line ~132)
+///    - Import any new request types from lifecycle crates
+///
+/// 3. **main.rs** (rbee-keeper/src/main.rs):
+///    - Add CLI command variant (Commands/HiveAction/WorkerAction/etc.)
+///    - Add match arm in handle_command() to construct Operation
+///
+/// See existing operations below for examples.
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 #[serde(tag = "operation", rename_all = "snake_case")]
 pub enum Operation {
@@ -77,6 +97,15 @@ pub enum Operation {
     HiveRefreshCapabilities {
         /// Alias from hives.conf
         alias: String,
+    },
+    /// Import SSH config into hives.conf
+    HiveImportSsh {
+        /// Path to SSH config file (defaults to ~/.ssh/config)
+        #[serde(default = "default_ssh_config_path")]
+        ssh_config_path: String,
+        /// Default HivePort for all imported hosts
+        #[serde(default = "default_hive_port")]
+        default_hive_port: u16,
     },
 
     // Worker operations
@@ -143,6 +172,15 @@ fn default_hive_id() -> String {
     "localhost".to_string()
 }
 
+fn default_ssh_config_path() -> String {
+    let home = std::env::var("HOME").unwrap_or_else(|_| "/root".to_string());
+    format!("{}/.ssh/config", home)
+}
+
+fn default_hive_port() -> u16 {
+    8081
+}
+
 impl Operation {
     /// Get the operation name as a string (for logging/narration)
     pub fn name(&self) -> &'static str {
@@ -157,6 +195,7 @@ impl Operation {
             Operation::HiveGet { .. } => "hive_get",
             Operation::HiveStatus { .. } => "hive_status",
             Operation::HiveRefreshCapabilities { .. } => "hive_refresh_capabilities", // TEAM-196
+            Operation::HiveImportSsh { .. } => "hive_import_ssh",
             Operation::WorkerSpawn { .. } => "worker_spawn",
             Operation::WorkerList { .. } => "worker_list",
             Operation::WorkerGet { .. } => "worker_get",

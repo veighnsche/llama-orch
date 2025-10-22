@@ -68,6 +68,20 @@ pub struct Cli {
     pub command: Commands,
 }
 
+// ============================================================================
+// CLI COMMANDS (Step 3 of 3-File Pattern)
+// ============================================================================
+//
+// When adding a new operation:
+// 1. Add Operation variant in rbee-operations/src/lib.rs (DONE)
+// 2. Add match arm in job_router.rs (DONE)
+// 3. Add CLI command HERE:
+//    a. Add variant to Commands/HiveAction/WorkerAction/etc. enum
+//    b. Add match arm in handle_command() to construct Operation
+//
+// The CLI is just a thin HTTP client - all business logic lives in queen-rbee.
+// ============================================================================
+
 #[derive(Subcommand)]
 /// TEAM-185: Added comprehensive inference parameters (top_p, top_k, device, worker_id, stream)
 /// TEAM-190: Added Status command for live hive/worker overview
@@ -238,6 +252,15 @@ pub enum HiveAction {
         #[arg(short = 'a', long = "host")]
         alias: String,
     },
+    /// Import SSH config into hives.conf
+    ImportSsh {
+        /// Path to SSH config file
+        #[arg(long, default_value = "~/.ssh/config")]
+        ssh_config: String,
+        /// Default HivePort for all imported hosts
+        #[arg(long, default_value = "8081")]
+        default_port: u16,
+    },
 }
 
 #[derive(Subcommand)]
@@ -281,6 +304,19 @@ async fn handle_command(cli: Cli) -> Result<()> {
     let config = Config::load()?;
     let queen_url = config.queen_url();
     let client = reqwest::Client::new();
+
+    // ============================================================================
+    // COMMAND ROUTING (Step 3b of 3-File Pattern)
+    // ============================================================================
+    //
+    // For each CLI command, construct the corresponding Operation and submit it.
+    // Pattern:
+    //   1. Extract CLI arguments
+    //   2. Construct Operation::Xxx { ... }
+    //   3. Call submit_and_stream_job()
+    //
+    // See existing commands below for examples.
+    // ============================================================================
 
     match cli.command {
         Commands::Status => {
@@ -396,6 +432,19 @@ async fn handle_command(cli: Cli) -> Result<()> {
                 HiveAction::Status { alias } => Operation::HiveStatus { alias },
                 HiveAction::RefreshCapabilities { alias } => {
                     Operation::HiveRefreshCapabilities { alias }
+                }
+                HiveAction::ImportSsh { ssh_config, default_port } => {
+                    // Expand ~ to home directory
+                    let ssh_config_path = if ssh_config.starts_with("~/") {
+                        let home = std::env::var("HOME").unwrap_or_else(|_| "/root".to_string());
+                        ssh_config.replacen("~", &home, 1)
+                    } else {
+                        ssh_config
+                    };
+                    Operation::HiveImportSsh {
+                        ssh_config_path,
+                        default_hive_port: default_port,
+                    }
                 }
             };
             submit_and_stream_job(&client, &queen_url, operation).await

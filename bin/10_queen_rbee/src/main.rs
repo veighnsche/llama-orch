@@ -12,7 +12,6 @@
 //! Port 8500 (default) - rbee-keeper checks GET /health to see if queen is running
 
 // TEAM-164: Migrated endpoints to dedicated modules/files
-mod hive_client; // TEAM-196: HTTP client for hive capabilities
 mod http;
 mod job_router; // TEAM-186: Job routing and operation dispatch
 mod narration; // TEAM-188: Narration constants

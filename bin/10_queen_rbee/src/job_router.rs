@@ -125,6 +125,23 @@ async fn route_operation(
         .human("Executing operation: {}")
         .emit();
 
+    // ============================================================================
+    // OPERATION ROUTING (Step 2 of 3-File Pattern)
+    // ============================================================================
+    //
+    // When adding a new operation:
+    // 1. Add Operation variant in rbee-operations/src/lib.rs (DONE)
+    // 2. Add match arm HERE to route it to handler
+    // 3. Add CLI command in rbee-keeper/src/main.rs (TODO)
+    //
+    // Pattern for hive operations:
+    //   - Create request struct (e.g., HiveXxxRequest)
+    //   - Call execute_hive_xxx() from hive-lifecycle crate
+    //   - Pass job_id for SSE routing
+    //
+    // Pattern for worker/model/infer operations:
+    //   - Forward to hive via HTTP (TODO: implement forwarding)
+    //
     // TEAM-186: Route to appropriate handler based on operation type
     // TEAM-187: Updated to handle HiveInstall/HiveUninstall/HiveUpdate operations
     // TEAM-188: Implemented SshTest operation
@@ -268,6 +285,107 @@ async fn route_operation(
             // TEAM-215: Delegate to hive-lifecycle crate
             let request = HiveRefreshCapabilitiesRequest { alias, job_id: job_id.clone() };
             execute_hive_refresh_capabilities(request, state.config.clone()).await?;
+        }
+        Operation::HiveImportSsh { ssh_config_path, default_hive_port } => {
+            // Import SSH config into hives.conf
+            NARRATE
+                .action("ssh_import")
+                .job_id(&job_id)
+                .context(&ssh_config_path)
+                .context(&default_hive_port.to_string())
+                .human("📥 Importing SSH config from {} (HivePort: {})")
+                .emit();
+
+            use std::path::PathBuf;
+            let ssh_path = PathBuf::from(&ssh_config_path);
+            
+            // Import from SSH config
+            let imported = match rbee_config::HivesConfig::import_from_ssh_config(&ssh_path, default_hive_port) {
+                Ok(config) => config,
+                Err(e) => {
+                    NARRATE
+                        .action("ssh_fail")
+                        .job_id(&job_id)
+                        .context(&ssh_config_path)
+                        .context(e.to_string())
+                        .human("❌ Failed to import SSH config from {}: {}")
+                        .error_kind("import_failed")
+                        .emit();
+                    return Err(anyhow::anyhow!("Failed to import SSH config: {}", e));
+                }
+            };
+
+            NARRATE
+                .action("ssh_parsed")
+                .job_id(&job_id)
+                .context(imported.len().to_string())
+                .human("✅ Parsed {} host(s) from SSH config")
+                .emit();
+
+            // Load existing hives.conf
+            let config_dir = match rbee_config::RbeeConfig::config_dir() {
+                Ok(dir) => dir,
+                Err(e) => {
+                    NARRATE
+                        .action("ssh_cfg_dir")
+                        .job_id(&job_id)
+                        .context(e.to_string())
+                        .human("❌ Failed to get config directory: {}")
+                        .error_kind("config_dir_failed")
+                        .emit();
+                    return Err(e.into());
+                }
+            };
+            let hives_conf_path = config_dir.join("hives.conf");
+            
+            let mut existing = match rbee_config::HivesConfig::load(&hives_conf_path) {
+                Ok(config) => config,
+                Err(e) => {
+                    NARRATE
+                        .action("ssh_load_fail")
+                        .job_id(&job_id)
+                        .context(hives_conf_path.display().to_string())
+                        .context(e.to_string())
+                        .human("❌ Failed to load existing hives.conf from {}: {}")
+                        .error_kind("load_failed")
+                        .emit();
+                    return Err(e.into());
+                }
+            };
+            let existing_count = existing.len();
+
+            // Merge (existing wins)
+            existing.merge(imported);
+            let new_count = existing.len() - existing_count;
+
+            // Save
+            if let Err(e) = existing.save(&hives_conf_path) {
+                NARRATE
+                    .action("ssh_save_fail")
+                    .job_id(&job_id)
+                    .context(hives_conf_path.display().to_string())
+                    .context(e.to_string())
+                    .human("❌ Failed to save hives.conf to {}: {}")
+                    .error_kind("save_failed")
+                    .emit();
+                return Err(e.into());
+            }
+
+            NARRATE
+                .action("ssh_complete")
+                .job_id(&job_id)
+                .context(&new_count.to_string())
+                .context(&hives_conf_path.display().to_string())
+                .human("✅ Imported {} new host(s) to {}")
+                .emit();
+
+            if new_count == 0 {
+                NARRATE
+                    .action("ssh_no_new")
+                    .job_id(&job_id)
+                    .human("ℹ️  All hosts already exist in hives.conf (no duplicates)")
+                    .emit();
+            }
         }
 
         // Worker operations

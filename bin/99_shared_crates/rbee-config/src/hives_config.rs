@@ -101,6 +101,113 @@ impl HivesConfig {
     pub fn is_empty(&self) -> bool {
         self.hives.is_empty()
     }
+
+    /// Import from SSH config file, injecting default HivePort
+    ///
+    /// Reads ~/.ssh/config format and converts to hives.conf format by:
+    /// 1. Parsing SSH config (Host, HostName, Port, User)
+    /// 2. Injecting HivePort for each host
+    /// 3. Parsing with existing hives.conf parser
+    pub fn import_from_ssh_config(
+        ssh_config_path: &Path,
+        default_hive_port: u16,
+    ) -> Result<Self> {
+        let ssh_content = std::fs::read_to_string(ssh_config_path).map_err(|e| {
+            ConfigError::ReadError { path: ssh_config_path.to_path_buf(), source: e }
+        })?;
+
+        // Inject HivePort into SSH config content
+        let hives_content = inject_hive_port(&ssh_content, default_hive_port);
+
+        // Parse with existing parser
+        let hives = parse_hives_conf(&hives_content)?;
+
+        Ok(Self { hives })
+    }
+
+    /// Merge another HivesConfig into this one
+    ///
+    /// Existing entries are NOT overwritten (existing wins)
+    pub fn merge(&mut self, other: HivesConfig) {
+        for (alias, entry) in other.hives {
+            self.hives.entry(alias).or_insert(entry);
+        }
+    }
+
+    /// Write to hives.conf file
+    pub fn save(&self, path: &Path) -> Result<()> {
+        let mut content = String::new();
+
+        for entry in self.all() {
+            content.push_str(&format!("Host {}\n", entry.alias));
+            content.push_str(&format!("    HostName {}\n", entry.hostname));
+            content.push_str(&format!("    Port {}\n", entry.ssh_port));
+            content.push_str(&format!("    User {}\n", entry.ssh_user));
+            content.push_str(&format!("    HivePort {}\n", entry.hive_port));
+            if let Some(binary_path) = &entry.binary_path {
+                content.push_str(&format!("    BinaryPath {}\n", binary_path));
+            }
+            content.push('\n');
+        }
+
+        std::fs::write(path, content)
+            .map_err(|e| ConfigError::ReadError { path: path.to_path_buf(), source: e })?;
+
+        Ok(())
+    }
+}
+
+/// Inject HivePort directive after each User directive in SSH config
+///
+/// Converts:
+/// ```
+/// Host workstation
+///     HostName 192.168.1.100
+///     User vince
+/// ```
+///
+/// To:
+/// ```
+/// Host workstation
+///     HostName 192.168.1.100
+///     User vince
+///     HivePort 8081
+/// ```
+fn inject_hive_port(ssh_content: &str, default_hive_port: u16) -> String {
+    let mut result = String::new();
+    let mut in_host_block = false;
+    let mut hive_port_injected = false;
+
+    for line in ssh_content.lines() {
+        let trimmed = line.trim();
+
+        // Track if we're in a Host block
+        if trimmed.starts_with("Host ") {
+            in_host_block = true;
+            hive_port_injected = false;
+            result.push_str(line);
+            result.push('\n');
+            continue;
+        }
+
+        // If we see another Host or empty line after User, inject HivePort
+        if in_host_block && !hive_port_injected {
+            if trimmed.starts_with("User ") {
+                result.push_str(line);
+                result.push('\n');
+                // Inject HivePort with same indentation
+                let indent = line.len() - line.trim_start().len();
+                result.push_str(&format!("{}HivePort {}\n", " ".repeat(indent), default_hive_port));
+                hive_port_injected = true;
+                continue;
+            }
+        }
+
+        result.push_str(line);
+        result.push('\n');
+    }
+
+    result
 }
 
 /// Parse hives.conf content (SSH config style)
@@ -123,25 +230,39 @@ fn parse_hives_conf(content: &str) -> Result<HashMap<String, HiveEntry>> {
         if line.starts_with("Host ") {
             // Save previous host if exists
             if let Some(alias) = current_host.take() {
-                let entry = current_entry.finalize(&alias)?;
-
-                // Check for duplicate alias
-                if hives.contains_key(&alias) {
-                    return Err(ConfigError::DuplicateAlias { alias });
+                // Try to finalize, but skip if incomplete (for SSH config import tolerance)
+                if let Some(entry) = current_entry.finalize_optional(&alias) {
+                    // Check for duplicate alias
+                    if hives.contains_key(&alias) {
+                        return Err(ConfigError::DuplicateAlias { alias });
+                    }
+                    hives.insert(alias, entry);
                 }
-
-                hives.insert(alias, entry);
                 current_entry = PartialHiveEntry::default();
             }
 
             // Start new host
-            let alias = line[5..].trim().to_string();
+            // SSH config allows multiple aliases: "Host alias1 alias2 alias3"
+            // We only take the first one
+            let alias_line = line[5..].trim();
+            let alias = alias_line
+                .split_whitespace()
+                .next()
+                .unwrap_or("")
+                .to_string();
+            
             if alias.is_empty() {
                 return Err(ConfigError::InvalidSyntax {
                     line: line_num,
                     message: "Empty host alias".to_string(),
                 });
             }
+            
+            // Skip wildcards (*, ?)
+            if alias.contains('*') || alias.contains('?') {
+                continue;
+            }
+            
             current_host = Some(alias);
         } else if current_host.is_some() {
             // Parse host properties
@@ -188,13 +309,13 @@ fn parse_hives_conf(content: &str) -> Result<HashMap<String, HiveEntry>> {
 
     // Save last host
     if let Some(alias) = current_host {
-        let entry = current_entry.finalize(&alias)?;
-
-        if hives.contains_key(&alias) {
-            return Err(ConfigError::DuplicateAlias { alias });
+        // Try to finalize, but skip if incomplete (for SSH config import tolerance)
+        if let Some(entry) = current_entry.finalize_optional(&alias) {
+            if hives.contains_key(&alias) {
+                return Err(ConfigError::DuplicateAlias { alias });
+            }
+            hives.insert(alias, entry);
         }
-
-        hives.insert(alias, entry);
     }
 
     Ok(hives)
@@ -231,6 +352,24 @@ impl PartialHiveEntry {
         })?;
 
         Ok(HiveEntry {
+            alias: alias.to_string(),
+            hostname,
+            ssh_port,
+            ssh_user,
+            hive_port,
+            binary_path: self.binary_path,
+        })
+    }
+
+    /// Finalize into HiveEntry, returning None if required fields are missing
+    /// Used for SSH config import to skip incomplete entries
+    fn finalize_optional(self, alias: &str) -> Option<HiveEntry> {
+        let hostname = self.hostname?;
+        let ssh_port = self.ssh_port.unwrap_or(22);
+        let ssh_user = self.ssh_user?;
+        let hive_port = self.hive_port?;
+
+        Some(HiveEntry {
             alias: alias.to_string(),
             hostname,
             ssh_port,
