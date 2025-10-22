@@ -1,10 +1,6 @@
 // TEAM-252: Binary failure tests
 // Purpose: Test behavior when binaries are missing or corrupt
 
-use crate::integration::assertions::*;
-use crate::integration::harness::TestHarness;
-use std::fs;
-use std::path::PathBuf;
 
 #[tokio::test]
 async fn test_binary_not_found() {

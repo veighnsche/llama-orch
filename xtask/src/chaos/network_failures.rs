@@ -1,10 +1,6 @@
 // TEAM-252: Network failure tests
 // Purpose: Test behavior with network issues
 
-use crate::integration::assertions::*;
-use crate::integration::harness::TestHarness;
-use std::net::TcpListener;
-use std::time::Duration;
 
 #[tokio::test]
 async fn test_port_already_in_use() {

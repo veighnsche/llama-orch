@@ -1,9 +1,6 @@
 // TEAM-252: Process failure tests
 // Purpose: Test behavior when processes crash
 
-use crate::integration::assertions::*;
-use crate::integration::harness::TestHarness;
-use std::time::Duration;
 
 #[tokio::test]
 async fn test_queen_crash_during_operation() {

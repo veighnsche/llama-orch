@@ -11,5 +11,3 @@ pub mod commands;
 #[cfg(test)]
 pub mod state_machine; // TEAM-252: State machine tests
 
-pub use assertions::*;
-pub use harness::TestHarness;
