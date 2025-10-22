@@ -299,6 +299,7 @@ where
             // TEAM-197: Use narration v0.5.0 pattern
             NARRATE
                 .action("execute")
+                .job_id(&job_id_clone)
                 .context(job_id_clone.clone())
                 .human("Executing job {}")
                 .emit();
@@ -307,6 +308,7 @@ where
             if let Err(e) = executor(job_id_clone.clone(), payload).await {
                 NARRATE
                     .action("failed")
+                    .job_id(&job_id_clone)
                     .context(job_id_clone.clone())
                     .context(e.to_string())
                     .human("Job {} failed: {}")
@@ -317,6 +319,7 @@ where
     } else {
         NARRATE
             .action("no_payload")
+            .job_id(&job_id)
             .context(job_id.clone())
             .human("Warning: No payload found for job {}")
             .emit();

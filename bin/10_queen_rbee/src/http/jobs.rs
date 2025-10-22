@@ -94,7 +94,7 @@ pub async fn handle_stream_job(
     
     // TEAM-204: Check if job channel exists before proceeding
     let sse_rx_opt = sse_sink::subscribe_to_job(&job_id);
-    
+
     // Trigger job execution (spawns in background) - do this even if channel missing
     let _token_stream = crate::job_router::execute_job(job_id.clone(), state.into()).await;
 

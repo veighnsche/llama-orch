@@ -88,8 +88,8 @@ pub async fn execute_job(
     let config = state.config.clone(); // TEAM-194
     let hive_registry = state.hive_registry.clone(); // TEAM-190
 
-    job_registry::execute_and_stream(job_id, registry.clone(), move |_job_id, payload| {
-        route_operation(payload, registry, config, hive_registry)
+    job_registry::execute_and_stream(job_id, registry.clone(), move |job_id, payload| {
+        route_operation(job_id, payload, registry, config, hive_registry)
     })
     .await
 }
@@ -131,6 +131,7 @@ fn validate_hive_exists<'a>(
 ///
 /// This parses the payload and dispatches to the correct operation handler.
 async fn route_operation(
+    job_id: String,
     payload: serde_json::Value,
     registry: Arc<JobRegistry<String>>,
     config: Arc<RbeeConfig>,          // TEAM-194
@@ -143,7 +144,7 @@ async fn route_operation(
 
     let operation_name = operation.name();
 
-    NARRATE.action("route_job").context(operation_name).human("Executing operation: {}").emit();
+    NARRATE.action("route_job").context(operation_name).job_id(&job_id).human("Executing operation: {}").emit();
 
     // TEAM-186: Route to appropriate handler based on operation type
     // TEAM-187: Updated to handle HiveInstall/HiveUninstall/HiveUpdate operations
@@ -154,7 +155,7 @@ async fn route_operation(
         Operation::Status => {
             // TEAM-190: Show live status of all hives and workers from registry (not catalog)
 
-            NARRATE.action("status").human("📊 Fetching live status from registry").emit();
+            NARRATE.action("status").job_id(&job_id).human("📊 Fetching live status from registry").emit();
 
             // Get all active hives (heartbeat within last 30 seconds)
             let active_hive_ids = state.hive_registry.list_active_hives(30_000);
@@ -162,6 +163,7 @@ async fn route_operation(
             if active_hive_ids.is_empty() {
                 NARRATE
                     .action("status_empty")
+                    .job_id(&job_id)
                     .human(
                         "No active hives found.\n\
                          \n\
@@ -207,6 +209,7 @@ async fn route_operation(
             // Display as table
             NARRATE
                 .action("status_result")
+                .job_id(&job_id)
                 .context(active_hive_ids.len().to_string())
                 .context(all_rows.iter().filter(|r| r["worker"] != "-").count().to_string())
                 .human("Live Status ({0} hive(s), {1} worker(s)):")
@@ -237,7 +240,7 @@ async fn route_operation(
             }
 
             NARRATE
-                .action("ssh_test_ok")
+                .action("ssh_test_ok").job_id(&job_id)
                 .context(response.test_output.unwrap_or_default())
                 .human("✅ SSH test successful: {}")
                 .emit();
@@ -247,7 +250,7 @@ async fn route_operation(
             // TEAM-195: Use validation helper for better error messages
             let hive_config = validate_hive_exists(&state.config, &alias)?;
 
-            NARRATE.action("hive_install").context(&alias).human("🔧 Installing hive '{}'").emit();
+            NARRATE.action("hive_install").context(&alias).human("🔧 Installing hive '{}'").job_id(&job_id).emit();
 
             // STEP 1: Determine if this is localhost or remote installation
             let is_remote =
@@ -260,14 +263,14 @@ async fn route_operation(
                 let user = &hive_config.ssh_user;
 
                 NARRATE
-                    .action("hive_mode")
+                    .action("hive_mode").job_id(&job_id)
                     .context(format!("{}@{}:{}", user, host, ssh_port))
                     .human("🌐 Remote installation: {}")
                     .emit();
 
                 // TODO: Implement remote SSH installation
                 NARRATE
-                    .action("hive_not_impl")
+                    .action("hive_not_impl").job_id(&job_id)
                     .human(
                         "❌ Remote SSH installation not yet implemented.\n\
                            \n\
@@ -277,12 +280,12 @@ async fn route_operation(
                 return Err(anyhow::anyhow!("Remote installation not yet implemented"));
             } else {
                 // LOCALHOST INSTALLATION
-                NARRATE.action("hive_mode").human("🏠 Localhost installation").emit();
+                NARRATE.action("hive_mode").human("🏠 Localhost installation").job_id(&job_id).emit();
 
                 // STEP 2: Find or build the rbee-hive binary
                 let binary = if let Some(provided_path) = &hive_config.binary_path {
                     NARRATE
-                        .action("hive_binary")
+                        .action("hive_binary").job_id(&job_id)
                         .context(provided_path)
                         .human("📁 Using provided binary path: {}")
                         .emit();
@@ -291,20 +294,20 @@ async fn route_operation(
                     let path = std::path::Path::new(provided_path);
                     if !path.exists() {
                         NARRATE
-                            .action("hive_bin_err")
+                            .action("hive_bin_err").job_id(&job_id)
                             .context(provided_path)
                             .human("❌ Binary not found at: {}")
                             .emit();
                         return Err(anyhow::anyhow!("Binary not found: {}", provided_path));
                     }
 
-                    NARRATE.action("hive_binary").human("✅ Binary found").emit();
+                    NARRATE.action("hive_binary").human("✅ Binary found").job_id(&job_id).emit();
 
                     provided_path.clone()
                 } else {
                     // Find binary in target directory
                     NARRATE
-                        .action("hive_binary")
+                        .action("hive_binary").job_id(&job_id)
                         .human("🔍 Looking for rbee-hive binary in target/debug...")
                         .emit();
 
@@ -313,21 +316,21 @@ async fn route_operation(
 
                     if debug_path.exists() {
                         NARRATE
-                            .action("hive_binary")
+                            .action("hive_binary").job_id(&job_id)
                             .context(debug_path.display().to_string())
                             .human("✅ Found binary at: {}")
                             .emit();
                         debug_path.display().to_string()
                     } else if release_path.exists() {
                         NARRATE
-                            .action("hive_binary")
+                            .action("hive_binary").job_id(&job_id)
                             .context(release_path.display().to_string())
                             .human("✅ Found binary at: {}")
                             .emit();
                         release_path.display().to_string()
                     } else {
                         NARRATE
-                            .action("hive_bin_err")
+                            .action("hive_bin_err").job_id(&job_id)
                             .human(
                                 "❌ rbee-hive binary not found.\n\
                                  \n\
@@ -345,7 +348,7 @@ async fn route_operation(
                 };
 
                 NARRATE
-                    .action("hive_complete")
+                    .action("hive_complete").job_id(&job_id)
                     .context(&alias)
                     .context(hive_config.hive_port.to_string())
                     .context(&binary)
@@ -370,7 +373,7 @@ async fn route_operation(
             let _hive_config = validate_hive_exists(&state.config, &alias)?;
 
             NARRATE
-                .action("hive_uninstall")
+                .action("hive_uninstall").job_id(&job_id)
                 .context(&alias)
                 .human("🗑️  Uninstalling hive '{}'")
                 .emit();
@@ -378,7 +381,7 @@ async fn route_operation(
             // TEAM-196: Remove from capabilities cache
             if state.config.capabilities.contains(&alias) {
                 NARRATE
-                    .action("hive_cache_cleanup")
+                    .action("hive_cache_cleanup").job_id(&job_id)
                     .human("🗑️  Removing from capabilities cache...")
                     .emit();
 
@@ -386,20 +389,20 @@ async fn route_operation(
                 config.capabilities.remove(&alias);
                 if let Err(e) = config.capabilities.save() {
                     NARRATE
-                        .action("hive_cache_error")
+                        .action("hive_cache_error").job_id(&job_id)
                         .context(e.to_string())
                         .human("⚠️  Failed to save capabilities cache: {}")
                         .emit();
                 } else {
                     NARRATE
-                        .action("hive_cache_removed")
+                        .action("hive_cache_removed").job_id(&job_id)
                         .human("✅ Removed from capabilities cache")
                         .emit();
                 }
             }
 
             NARRATE
-                .action("hive_complete")
+                .action("hive_complete").job_id(&job_id)
                 .context(&alias)
                 .human(
                     "✅ Hive '{}' uninstalled successfully.\n\
@@ -452,10 +455,10 @@ async fn route_operation(
             // TEAM-195: Use validation helper for better error messages
             let hive_config = validate_hive_exists(&state.config, &alias)?;
 
-            NARRATE.action("hive_start").context(&alias).human("🚀 Starting hive '{}'").emit();
+            NARRATE.action("hive_start").context(&alias).human("🚀 Starting hive '{}'").job_id(&job_id).emit();
 
             // Check if already running
-            NARRATE.action("hive_check").human("📋 Checking if hive is already running...").emit();
+            NARRATE.action("hive_check").human("📋 Checking if hive is already running...").job_id(&job_id).emit();
 
             let health_url =
                 format!("http://{}:{}/health", hive_config.hostname, hive_config.hive_port);
@@ -465,7 +468,7 @@ async fn route_operation(
             if let Ok(response) = client.get(&health_url).send().await {
                 if response.status().is_success() {
                     NARRATE
-                        .action("hive_running")
+                        .action("hive_running").job_id(&job_id)
                         .context(&alias)
                         .context(&health_url)
                         .human("✅ Hive '{0}' is already running on {1}")
@@ -481,7 +484,7 @@ async fn route_operation(
                 .ok_or_else(|| anyhow::anyhow!("Hive '{}' has no binary_path configured", alias))?;
 
             NARRATE
-                .action("hive_spawn")
+                .action("hive_spawn").job_id(&job_id)
                 .context(binary_path)
                 .human("🔧 Spawning hive daemon: {}")
                 .emit();
@@ -496,7 +499,7 @@ async fn route_operation(
             let _child = manager.spawn().await?;
 
             // Wait for health check
-            NARRATE.action("hive_health").human("⏳ Waiting for hive to be healthy...").emit();
+            NARRATE.action("hive_health").human("⏳ Waiting for hive to be healthy...").job_id(&job_id).emit();
 
             for attempt in 1..=10 {
                 tokio::time::sleep(tokio::time::Duration::from_millis(200 * attempt)).await;
@@ -504,7 +507,7 @@ async fn route_operation(
                 if let Ok(response) = client.get(&health_url).send().await {
                     if response.status().is_success() {
                         NARRATE
-                            .action("hive_success")
+                            .action("hive_success").job_id(&job_id)
                             .context(&alias)
                             .context(&health_url)
                             .human("✅ Hive '{0}' started successfully on {1}")
@@ -515,14 +518,14 @@ async fn route_operation(
                             format!("http://{}:{}", hive_config.hostname, hive_config.hive_port);
 
                         NARRATE
-                            .action("hive_capabilities")
+                            .action("hive_capabilities").job_id(&job_id)
                             .human("📊 Fetching device capabilities...")
                             .emit();
 
                         match fetch_hive_capabilities(&endpoint).await {
                             Ok(devices) => {
                                 NARRATE
-                                    .action("hive_capabilities_found")
+                                    .action("hive_capabilities_found").job_id(&job_id)
                                     .context(devices.len().to_string())
                                     .human("✅ Discovered {} device(s)")
                                     .emit();
@@ -548,7 +551,7 @@ async fn route_operation(
                                     };
 
                                     NARRATE
-                                        .action("hive_device")
+                                        .action("hive_device").job_id(&job_id)
                                         .context(&device_info)
                                         .human("{}")
                                         .emit();
@@ -556,7 +559,7 @@ async fn route_operation(
 
                                 // Update capabilities cache
                                 NARRATE
-                                    .action("hive_cache")
+                                    .action("hive_cache").job_id(&job_id)
                                     .human("💾 Updating capabilities cache...")
                                     .emit();
 
@@ -568,20 +571,20 @@ async fn route_operation(
                                 config.capabilities.update_hive(&alias, caps);
                                 if let Err(e) = config.capabilities.save() {
                                     NARRATE
-                                        .action("hive_cache_error")
+                                        .action("hive_cache_error").job_id(&job_id)
                                         .context(e.to_string())
                                         .human("⚠️  Failed to save capabilities cache: {}")
                                         .emit();
                                 } else {
                                     NARRATE
-                                        .action("hive_cache_saved")
+                                        .action("hive_cache_saved").job_id(&job_id)
                                         .human("✅ Capabilities cached")
                                         .emit();
                                 }
                             }
                             Err(e) => {
                                 NARRATE
-                                    .action("hive_capabilities_error")
+                                    .action("hive_capabilities_error").job_id(&job_id)
                                     .context(e.to_string())
                                     .human("⚠️  Failed to fetch capabilities: {}")
                                     .emit();
@@ -594,7 +597,7 @@ async fn route_operation(
             }
 
             NARRATE
-                .action("hive_timeout")
+                .action("hive_timeout").job_id(&job_id)
                 .human(
                     "⚠️  Hive started but health check timed out.\n\
                      Check if it's running:\n\
@@ -608,10 +611,10 @@ async fn route_operation(
             // TEAM-195: Use validation helper for better error messages
             let hive_config = validate_hive_exists(&state.config, &alias)?;
 
-            NARRATE.action("hive_stop").context(&alias).human("🛑 Stopping hive '{}'").emit();
+            NARRATE.action("hive_stop").context(&alias).human("🛑 Stopping hive '{}'").job_id(&job_id).emit();
 
             // Check if it's running
-            NARRATE.action("hive_check").human("📋 Checking if hive is running...").emit();
+            NARRATE.action("hive_check").human("📋 Checking if hive is running...").job_id(&job_id).emit();
 
             let health_url =
                 format!("http://{}:{}/health", hive_config.hostname, hive_config.hive_port);
@@ -621,7 +624,7 @@ async fn route_operation(
             if let Ok(response) = client.get(&health_url).send().await {
                 if !response.status().is_success() {
                     NARRATE
-                        .action("hive_not_run")
+                        .action("hive_not_run").job_id(&job_id)
                         .context(&alias)
                         .human("⚠️  Hive '{}' is not running")
                         .emit();
@@ -629,7 +632,7 @@ async fn route_operation(
                 }
             } else {
                 NARRATE
-                    .action("hive_not_run")
+                    .action("hive_not_run").job_id(&job_id)
                     .context(&alias)
                     .human("⚠️  Hive '{}' is not running")
                     .emit();
@@ -638,7 +641,7 @@ async fn route_operation(
 
             // Stop the hive process
             NARRATE
-                .action("hive_sigterm")
+                .action("hive_sigterm").job_id(&job_id)
                 .human("📤 Sending SIGTERM (graceful shutdown)...")
                 .emit();
 
@@ -661,7 +664,7 @@ async fn route_operation(
 
             if !output.status.success() {
                 NARRATE
-                    .action("hive_not_found")
+                    .action("hive_not_found").job_id(&job_id)
                     .context(binary_name)
                     .human("⚠️  No running process found for '{}'")
                     .emit();
@@ -669,7 +672,7 @@ async fn route_operation(
             }
 
             // Wait for graceful shutdown
-            NARRATE.action("hive_wait").human("⏳ Waiting for graceful shutdown (5s)...").emit();
+            NARRATE.action("hive_wait").human("⏳ Waiting for graceful shutdown (5s)...").job_id(&job_id).emit();
 
             for attempt in 1..=5 {
                 tokio::time::sleep(tokio::time::Duration::from_secs(1)).await;
@@ -677,7 +680,7 @@ async fn route_operation(
                 if let Err(_) = client.get(&health_url).send().await {
                     // Health check failed - hive stopped
                     NARRATE
-                        .action("hive_success")
+                        .action("hive_success").job_id(&job_id)
                         .context(&alias)
                         .human("✅ Hive '{}' stopped successfully")
                         .emit();
@@ -687,7 +690,7 @@ async fn route_operation(
                 if attempt == 5 {
                     // Timeout - force kill
                     NARRATE
-                        .action("hive_sigkill")
+                        .action("hive_sigkill").job_id(&job_id)
                         .human("⚠️  Graceful shutdown timed out, sending SIGKILL...")
                         .emit();
 
@@ -699,7 +702,7 @@ async fn route_operation(
                     tokio::time::sleep(tokio::time::Duration::from_millis(500)).await;
 
                     NARRATE
-                        .action("hive_forced")
+                        .action("hive_forced").job_id(&job_id)
                         .context(&alias)
                         .human("✅ Hive '{}' force-stopped")
                         .emit();
@@ -709,14 +712,14 @@ async fn route_operation(
         Operation::HiveList => {
             // TEAM-194: List all hives from config
 
-            NARRATE.action("hive_list").human("📊 Listing all hives").emit();
+            NARRATE.action("hive_list").human("📊 Listing all hives").job_id(&job_id).emit();
 
             // Query config
             let hives: Vec<_> = state.config.hives.all().iter().map(|h| (&h.alias, *h)).collect();
 
             if hives.is_empty() {
                 NARRATE
-                    .action("hive_empty")
+                    .action("hive_empty").job_id(&job_id)
                     .human(
                         "No hives registered.\n\
                          \n\
@@ -743,7 +746,7 @@ async fn route_operation(
 
             // Display as table
             NARRATE
-                .action("hive_result")
+                .action("hive_result").job_id(&job_id)
                 .context(hives.len().to_string())
                 .human("Found {} hive(s):")
                 .table(&serde_json::Value::Array(hives_json))
@@ -754,7 +757,7 @@ async fn route_operation(
             // TEAM-195: Use validation helper for better error messages
             let hive_config = validate_hive_exists(&state.config, &alias)?;
 
-            NARRATE.action("hive_get").context(&alias).human("Hive '{}' details:").emit();
+            NARRATE.action("hive_get").context(&alias).human("Hive '{}' details:").job_id(&job_id).emit();
 
             println!("Alias: {}", alias);
             println!("Host: {}", hive_config.hostname);
@@ -772,7 +775,7 @@ async fn route_operation(
                 format!("http://{}:{}/health", hive_config.hostname, hive_config.hive_port);
 
             NARRATE
-                .action("hive_check")
+                .action("hive_check").job_id(&job_id)
                 .context(&health_url)
                 .human("Checking hive status at {}")
                 .emit();
@@ -783,7 +786,7 @@ async fn route_operation(
             match client.get(&health_url).send().await {
                 Ok(response) if response.status().is_success() => {
                     NARRATE
-                        .action("hive_check")
+                        .action("hive_check").job_id(&job_id)
                         .context(&alias)
                         .context(&health_url)
                         .human("✅ Hive '{0}' is running on {1}")
@@ -791,7 +794,7 @@ async fn route_operation(
                 }
                 Ok(response) => {
                     NARRATE
-                        .action("hive_check")
+                        .action("hive_check").job_id(&job_id)
                         .context(&alias)
                         .context(response.status().to_string())
                         .human("⚠️  Hive '{0}' responded with status: {1}")
@@ -799,7 +802,7 @@ async fn route_operation(
                 }
                 Err(_) => {
                     NARRATE
-                        .action("hive_check")
+                        .action("hive_check").job_id(&job_id)
                         .context(&alias)
                         .context(&health_url)
                         .human("❌ Hive '{0}' is not running on {1}")
@@ -810,7 +813,7 @@ async fn route_operation(
         Operation::HiveRefreshCapabilities { alias } => {
             // TEAM-196: Refresh device capabilities for a running hive
             NARRATE
-                .action("hive_refresh")
+                .action("hive_refresh").job_id(&job_id)
                 .context(&alias)
                 .human("🔄 Refreshing capabilities for '{}'")
                 .emit();
@@ -821,11 +824,11 @@ async fn route_operation(
             // Check if hive is running
             let endpoint = format!("http://{}:{}", hive_config.hostname, hive_config.hive_port);
 
-            NARRATE.action("hive_health_check").human("📋 Checking if hive is running...").emit();
+            NARRATE.action("hive_health_check").human("📋 Checking if hive is running...").job_id(&job_id).emit();
 
             match check_hive_health(&endpoint).await {
                 Ok(true) => {
-                    NARRATE.action("hive_healthy").human("✅ Hive is running").emit();
+                    NARRATE.action("hive_healthy").human("✅ Hive is running").job_id(&job_id).emit();
                 }
                 Ok(false) => {
                     return Err(anyhow::anyhow!(
@@ -851,13 +854,13 @@ async fn route_operation(
             }
 
             // Fetch fresh capabilities
-            NARRATE.action("hive_capabilities").human("📊 Fetching device capabilities...").emit();
+            NARRATE.action("hive_capabilities").human("📊 Fetching device capabilities...").job_id(&job_id).emit();
 
             let devices =
                 fetch_hive_capabilities(&endpoint).await.context("Failed to fetch capabilities")?;
 
             NARRATE
-                .action("hive_capabilities_found")
+                .action("hive_capabilities_found").job_id(&job_id)
                 .context(devices.len().to_string())
                 .human("✅ Discovered {} device(s)")
                 .emit();
@@ -879,11 +882,11 @@ async fn route_operation(
                     }
                 };
 
-                NARRATE.action("hive_device").context(&device_info).human("{}").emit();
+                NARRATE.action("hive_device").context(&device_info).human("{}").job_id(&job_id).emit();
             }
 
             // Update cache
-            NARRATE.action("hive_cache").human("💾 Updating capabilities cache...").emit();
+            NARRATE.action("hive_cache").human("💾 Updating capabilities cache...").job_id(&job_id).emit();
 
             let caps = HiveCapabilities::new(alias.clone(), devices, endpoint.clone());
 
@@ -892,7 +895,7 @@ async fn route_operation(
             config.capabilities.save()?;
 
             NARRATE
-                .action("hive_refresh_complete")
+                .action("hive_refresh_complete").job_id(&job_id)
                 .context(&alias)
                 .human("✅ Capabilities refreshed for '{}'")
                 .emit();
@@ -1000,3 +1003,4 @@ async fn route_operation(
 
     Ok(())
 }
+
