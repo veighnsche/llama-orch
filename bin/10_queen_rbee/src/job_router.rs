@@ -39,6 +39,8 @@ use rbee_config::RbeeConfig;
 use rbee_operations::Operation;
 use std::sync::Arc;
 
+use super::hive_forwarder; // TEAM-258: Generic forwarding for hive-managed operations
+
 // TEAM-192: Narration factory for job router
 const NARRATE: NarrationFactory = NarrationFactory::new("qn-router");
 
@@ -436,105 +438,31 @@ async fn route_operation(
             }
         }
 
-        // Worker operations
-        Operation::WorkerSpawn { .. } => {
-            // /**
-            //  * TODO: IMPLEMENT THIS
-            //  *
-            //  * Forward operation to hive using job-based architecture:
-            //  * 1. Lookup hive in catalog by hive_id → error if not found
-            //  * 2. Get hive host:port from HiveRecord
-            //  * 3. Forward entire operation payload to: POST http://{host}:{port}/v1/jobs
-            //  * 4. Connect to SSE stream: GET http://{host}:{port}/v1/jobs/{job_id}/stream
-            //  * 5. Stream hive responses back to client
-            //  */
-        }
-        Operation::WorkerList { .. } => {
-            // /**
-            //  * TODO: IMPLEMENT THIS
-            //  *
-            //  * Forward operation to hive using job-based architecture:
-            //  * 1. Lookup hive in catalog by hive_id
-            //  * 2. POST operation to http://{host}:{port}/v1/jobs
-            //  * 3. Stream response from /v1/jobs/{job_id}/stream
-            //  */
-        }
-        Operation::WorkerGet { .. } => {
-            // /**
-            //  * TODO: IMPLEMENT THIS
-            //  *
-            //  * Forward operation to hive using job-based architecture:
-            //  * 1. Lookup hive in catalog by hive_id
-            //  * 2. POST operation to http://{host}:{port}/v1/jobs
-            //  * 3. Stream response from /v1/jobs/{job_id}/stream
-            //  */
-        }
-        Operation::WorkerDelete { .. } => {
-            // /**
-            //  * TODO: IMPLEMENT THIS
-            //  *
-            //  * Forward operation to hive using job-based architecture:
-            //  * 1. Lookup hive in catalog by hive_id
-            //  * 2. POST operation to http://{host}:{port}/v1/jobs
-            //  * 3. Stream response from /v1/jobs/{job_id}/stream
-            //  */
-        }
-
-        // Model operations
-        Operation::ModelDownload { .. } => {
-            // /**
-            //  * TODO: IMPLEMENT THIS
-            //  *
-            //  * Forward operation to hive using job-based architecture:
-            //  * 1. Lookup hive in catalog by hive_id
-            //  * 2. POST operation to http://{host}:{port}/v1/jobs
-            //  * 3. Stream response from /v1/jobs/{job_id}/stream
-            //  */
-        }
-        Operation::ModelList { .. } => {
-            // /**
-            //  * TODO: IMPLEMENT THIS
-            //  *
-            //  * Forward operation to hive using job-based architecture:
-            //  * 1. Lookup hive in catalog by hive_id
-            //  * 2. POST operation to http://{host}:{port}/v1/jobs
-            //  * 3. Stream response from /v1/jobs/{job_id}/stream
-            //  */
-        }
-        Operation::ModelGet { .. } => {
-            // /**
-            //  * TODO: IMPLEMENT THIS
-            //  *
-            //  * Forward operation to hive using job-based architecture:
-            //  * 1. Lookup hive in catalog by hive_id
-            //  * 2. POST operation to http://{host}:{port}/v1/jobs
-            //  * 3. Stream response from /v1/jobs/{job_id}/stream
-            //  */
-        }
-        Operation::ModelDelete { .. } => {
-            // /**
-            //  * TODO: IMPLEMENT THIS
-            //  *
-            //  * Forward operation to hive using job-based architecture:
-            //  * 1. Lookup hive in catalog by hive_id
-            //  * 2. POST operation to http://{host}:{port}/v1/jobs
-            //  * 3. Stream response from /v1/jobs/{job_id}/stream
-            //  */
-        }
-
-        // Inference operation
+        // Inference operation - stays in queen-rbee for scheduling
         Operation::Infer { .. } => {
-            // //
-            //  * TODO: IMPLEMENT THIS
-            //  *
-            //  * Forward operation to hive using job-based architecture:
-            //  * 1. Lookup hive in catalog by hive_id
-            //  * 2. POST operation to http://{host}:{port}/v1/jobs
-            //  * 3. Stream response from /v1/jobs/{job_id}/stream
-            //  * 4. Hive will handle worker selection, model loading, and inference
-            //
+            // TODO: IMPLEMENT INFERENCE SCHEDULING
+            // Infer operations require scheduling logic in queen-rbee:
+            // 1. Select worker based on model/device preferences
+            // 2. Forward to selected worker via hive
+            // 3. Stream inference results back to client
+            return Err(anyhow::anyhow!("Inference scheduling not yet implemented"));
+        }
+
+        // TEAM-258: All worker/model operations are forwarded to hive
+        // This allows new operations to be added to rbee-hive without modifying queen-rbee
+        op if op.should_forward_to_hive() => {
+            hive_forwarder::forward_to_hive(&job_id, op, state.config.clone()).await?
+        }
+
+        // Catch-all for any unhandled operations
+        op => {
+            return Err(anyhow::anyhow!(
+                "Operation '{}' is not implemented",
+                op.name()
+            ));
         }
     }
 
     Ok(())
 }
+

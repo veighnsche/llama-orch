@@ -1,0 +1,18 @@
+[package]
+name = "rbee-job-client"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+authors.workspace = true
+
+[dependencies]
+anyhow = "1.0"
+reqwest = { version = "0.12", features = ["json", "stream"] }
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+futures = "0.3"
+rbee-operations = { path = "../rbee-operations" }
+observability-narration-core = { path = "../narration-core" }
+
+[lints]
+workspace = true

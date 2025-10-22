@@ -89,7 +89,7 @@ members = [
     "tools/openapi-client",  # OpenAPI client generator
     "tools/readme-index",    # README index generator
     "tools/spec-extract",    # Spec extraction & validation
-    "xtask",                 # Workspace automation (cargo xtask)
+    "xtask", "bin/99_shared_crates/rbee-job-client",                 # Workspace automation (cargo xtask)
     
 ]
 

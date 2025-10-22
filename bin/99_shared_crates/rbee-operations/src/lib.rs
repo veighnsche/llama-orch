@@ -230,6 +230,26 @@ impl Operation {
             _ => None,
         }
     }
+
+    /// Check if this operation should be forwarded to a hive
+    ///
+    /// TEAM-258: Consolidate hive-forwarding operations
+    /// Worker and Model operations are handled by rbee-hive, not queen-rbee.
+    /// Infer operations stay in queen-rbee for scheduling.
+    /// This allows new operations to be added to rbee-hive without modifying queen-rbee.
+    pub fn should_forward_to_hive(&self) -> bool {
+        matches!(
+            self,
+            Operation::WorkerSpawn { .. }
+                | Operation::WorkerList { .. }
+                | Operation::WorkerGet { .. }
+                | Operation::WorkerDelete { .. }
+                | Operation::ModelDownload { .. }
+                | Operation::ModelList { .. }
+                | Operation::ModelGet { .. }
+                | Operation::ModelDelete { .. }
+        )
+    }
 }
 
 // ============================================================================

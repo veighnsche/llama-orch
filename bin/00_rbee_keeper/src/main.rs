@@ -322,7 +322,7 @@ async fn handle_command(cli: Cli) -> Result<()> {
         Commands::Status => {
             // TEAM-190: Show live status of all hives and workers from registry
             let operation = Operation::Status;
-            submit_and_stream_job(&client, &queen_url, operation).await
+            submit_and_stream_job(&queen_url, operation).await
         }
 
         Commands::Queen { action } => match action {
@@ -447,7 +447,7 @@ async fn handle_command(cli: Cli) -> Result<()> {
                     }
                 }
             };
-            submit_and_stream_job(&client, &queen_url, operation).await
+            submit_and_stream_job(&queen_url, operation).await
         }
 
         Commands::Worker { hive_id, action } => {
@@ -464,7 +464,7 @@ async fn handle_command(cli: Cli) -> Result<()> {
                 WorkerAction::Get { id } => Operation::WorkerGet { hive_id, id: id.clone() },
                 WorkerAction::Delete { id } => Operation::WorkerDelete { hive_id, id: id.clone() },
             };
-            submit_and_stream_job(&client, &queen_url, operation).await
+            submit_and_stream_job(&queen_url, operation).await
         }
 
         Commands::Model { hive_id, action } => {
@@ -478,7 +478,7 @@ async fn handle_command(cli: Cli) -> Result<()> {
                 ModelAction::Get { id } => Operation::ModelGet { hive_id, id: id.clone() },
                 ModelAction::Delete { id } => Operation::ModelDelete { hive_id, id: id.clone() },
             };
-            submit_and_stream_job(&client, &queen_url, operation).await
+            submit_and_stream_job(&queen_url, operation).await
         }
 
         Commands::Infer {
@@ -507,7 +507,7 @@ async fn handle_command(cli: Cli) -> Result<()> {
                 worker_id,
                 stream,
             };
-            submit_and_stream_job(&client, &queen_url, operation).await
+            submit_and_stream_job(&queen_url, operation).await
         }
     }
 }

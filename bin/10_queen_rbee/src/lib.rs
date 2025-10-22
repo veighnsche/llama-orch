@@ -13,6 +13,7 @@
 //! TEAM-196: Add hive_client module to lib.rs
 //! TEAM-217: Investigated Oct 22, 2025 - Behavior inventory complete
 
+pub mod hive_forwarder;
 pub mod http; // TEAM-186: Reorganized into http/ folder with mod.rs (includes health, heartbeat)
 pub mod job_router; // TEAM-186: Job routing and operation dispatch
 pub mod narration;
