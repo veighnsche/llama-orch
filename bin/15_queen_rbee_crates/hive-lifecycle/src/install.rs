@@ -3,6 +3,7 @@
 // TEAM-256: Migrated shell SSH commands to russh-based helpers
 
 use anyhow::Result;
+use daemon_lifecycle::{install_daemon, InstallConfig};
 use observability_narration_core::NarrationFactory;
 use rbee_config::RbeeConfig;
 use std::sync::Arc;
@@ -64,71 +65,16 @@ pub async fn execute_hive_install(
             .human("🌐 Remote installation: {}")
             .emit();
 
-        // STEP 1: Find local binary
-        let local_binary = if let Some(provided_path) = &hive_config.binary_path {
-            NARRATE
-                .action("hive_binary")
-                .job_id(job_id)
-                .context(provided_path)
-                .human("📁 Using provided binary path: {}")
-                .emit();
-
-            let path = std::path::Path::new(provided_path);
-            if !path.exists() {
-                NARRATE
-                    .action("hive_bin_err")
-                    .job_id(job_id)
-                    .context(provided_path)
-                    .human("❌ Binary not found at: {}")
-                    .emit();
-                return Err(anyhow::anyhow!("Binary not found: {}", provided_path));
-            }
-
-            provided_path.clone()
-        } else {
-            // Find binary in target directory
-            NARRATE
-                .action("hive_binary")
-                .job_id(job_id)
-                .human("🔍 Looking for rbee-hive binary...")
-                .emit();
-
-            let debug_path = std::path::PathBuf::from("target/debug/rbee-hive");
-            let release_path = std::path::PathBuf::from("target/release/rbee-hive");
-
-            if debug_path.exists() {
-                NARRATE
-                    .action("hive_binary")
-                    .job_id(job_id)
-                    .context(&debug_path.display().to_string())
-                    .human("✅ Found binary at: {}")
-                    .emit();
-                debug_path.display().to_string()
-            } else if release_path.exists() {
-                NARRATE
-                    .action("hive_binary")
-                    .job_id(job_id)
-                    .context(&release_path.display().to_string())
-                    .human("✅ Found binary at: {}")
-                    .emit();
-                release_path.display().to_string()
-            } else {
-                NARRATE
-                    .action("hive_bin_err")
-                    .job_id(job_id)
-                    .human(
-                        "❌ rbee-hive binary not found.\n\
-                         \n\
-                         Please build it first:\n\
-                         \n\
-                           cargo build --bin rbee-hive",
-                    )
-                    .emit();
-                return Err(anyhow::anyhow!(
-                    "rbee-hive binary not found. Build it with: cargo build --bin rbee-hive"
-                ));
-            }
+        // STEP 1: Find local binary using daemon-lifecycle
+        let install_config = InstallConfig {
+            binary_name: "rbee-hive".to_string(),
+            binary_path: hive_config.binary_path.clone(),
+            target_path: None,
+            job_id: Some(job_id.to_string()),
         };
+
+        let install_result = install_daemon(install_config).await?;
+        let local_binary = install_result.binary_path;
 
         // STEP 2: Ensure remote directory exists
         // TEAM-256: Use ssh_exec instead of shell command
@@ -203,78 +149,16 @@ pub async fn execute_hive_install(
         // LOCALHOST INSTALLATION
         NARRATE.action("hive_mode").job_id(job_id).human("🏠 Localhost installation").emit();
 
-        // STEP 2: Find or build the rbee-hive binary
-        let binary = if let Some(provided_path) = &hive_config.binary_path {
-            NARRATE
-                .action("hive_binary")
-                .job_id(job_id)
-                .context(provided_path)
-                .human("📁 Using provided binary path: {}")
-                .emit();
-
-            // Verify binary exists
-            let path = std::path::Path::new(provided_path);
-            if !path.exists() {
-                NARRATE
-                    .action("hive_bin_err")
-                    .job_id(job_id)
-                    .context(provided_path)
-                    .human("❌ Binary not found at: {}")
-                    .emit();
-                return Err(anyhow::anyhow!("Binary not found: {}", provided_path));
-            }
-
-            NARRATE.action("hive_binary").job_id(job_id).human("✅ Binary found").emit();
-
-            provided_path.clone()
-        } else {
-            // Find binary in target directory
-            NARRATE
-                .action("hive_binary")
-                .job_id(job_id)
-                .human("🔍 Looking for rbee-hive binary in target/debug...")
-                .emit();
-
-            let debug_path = std::path::PathBuf::from("target/debug/rbee-hive");
-            let release_path = std::path::PathBuf::from("target/release/rbee-hive");
-
-            if debug_path.exists() {
-                NARRATE
-                    .action("hive_binary")
-                    .job_id(job_id)
-                    .context(debug_path.display().to_string())
-                    .human("✅ Found binary at: {}")
-                    .emit();
-                debug_path.display().to_string()
-            } else if release_path.exists() {
-                NARRATE
-                    .action("hive_binary")
-                    .job_id(job_id)
-                    .context(release_path.display().to_string())
-                    .human("✅ Found binary at: {}")
-                    .emit();
-                release_path.display().to_string()
-            } else {
-                NARRATE
-                    .action("hive_bin_err")
-                    .job_id(job_id)
-                    .human(
-                        "❌ rbee-hive binary not found.\n\
-                         \n\
-                         Please build it first:\n\
-                         \n\
-                           cargo build --bin rbee-hive\n\
-                         \n\
-                         Or provide a binary path:\n\
-                         \n\
-                           ./rbee hive install --binary-path /path/to/rbee-hive",
-                    )
-                    .emit();
-                return Err(anyhow::anyhow!(
-                    "rbee-hive binary not found. Build it with: cargo build --bin rbee-hive"
-                ));
-            }
+        // STEP 2: Find or build the rbee-hive binary using daemon-lifecycle
+        let install_config = InstallConfig {
+            binary_name: "rbee-hive".to_string(),
+            binary_path: hive_config.binary_path.clone(),
+            target_path: None,
+            job_id: Some(job_id.to_string()),
         };
+
+        let install_result = install_daemon(install_config).await?;
+        let binary = install_result.binary_path;
 
         NARRATE
             .action("hive_complete")

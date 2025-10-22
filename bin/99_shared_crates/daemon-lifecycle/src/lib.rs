@@ -2,6 +2,7 @@
 // TEAM-152: Implemented core daemon spawning functionality
 // TEAM-152: Replaced tracing with narration for observability
 // TEAM-259: Split into modules for better organization
+// TEAM-259: Added CRUD operations (install, list, get, status)
 // Purpose: Shared daemon lifecycle management for rbee-keeper, queen-rbee, and rbee-hive
 
 #![warn(missing_docs)]
@@ -22,6 +23,10 @@
 //! - `manager` - DaemonManager for spawning daemon processes
 //! - `health` - HTTP health checking for daemons
 //! - `ensure` - "Ensure daemon running" pattern (TEAM-259)
+//! - `install` - Install/uninstall daemon binaries (TEAM-259)
+//! - `list` - List all daemon instances (TEAM-259)
+//! - `get` - Get daemon instance by ID (TEAM-259)
+//! - `status` - Check daemon status (TEAM-259)
 //!
 //! # Interface
 //!
@@ -82,10 +87,18 @@
 
 // TEAM-259: Module declarations
 pub mod ensure;
+pub mod get;
 pub mod health;
+pub mod install;
+pub mod list;
 pub mod manager;
+pub mod status;
 
 // TEAM-259: Re-export main types and functions
 pub use ensure::ensure_daemon_running;
+pub use get::{get_daemon, GettableConfig};
 pub use health::is_daemon_healthy;
+pub use install::{install_daemon, uninstall_daemon, InstallConfig, InstallResult};
+pub use list::{list_daemons, ListableConfig};
 pub use manager::{spawn_daemon, DaemonManager};
+pub use status::{check_daemon_status, StatusRequest, StatusResponse};

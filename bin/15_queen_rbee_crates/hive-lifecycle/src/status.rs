@@ -1,16 +1,14 @@
 // TEAM-211: Check if hive is running
 // TEAM-220: Investigated - Health check with 5s timeout documented
+// TEAM-259: Refactored to use daemon-lifecycle::check_daemon_status
 
 use anyhow::Result;
-use observability_narration_core::NarrationFactory;
+use daemon_lifecycle::{check_daemon_status, StatusRequest};
 use rbee_config::RbeeConfig;
 use std::sync::Arc;
-use tokio::time::Duration;
 
 use crate::types::{HiveStatusRequest, HiveStatusResponse};
 use crate::validation::validate_hive_exists;
-
-const NARRATE: NarrationFactory = NarrationFactory::new("hive-life");
 
 /// Check if hive is running
 ///
@@ -34,47 +32,18 @@ pub async fn execute_hive_status(
 
     let health_url = format!("http://{}:{}/health", hive_config.hostname, hive_config.hive_port);
 
-    NARRATE
-        .action("hive_check")
-        .job_id(job_id)
-        .context(&health_url)
-        .human("Checking hive status at {}")
-        .emit();
-
-    let client = reqwest::Client::builder().timeout(Duration::from_secs(5)).build()?;
-
-    let running = match client.get(&health_url).send().await {
-        Ok(response) if response.status().is_success() => {
-            NARRATE
-                .action("hive_check")
-                .job_id(job_id)
-                .context(&request.alias)
-                .context(&health_url)
-                .human("✅ Hive '{0}' is running on {1}")
-                .emit();
-            true
-        }
-        Ok(response) => {
-            NARRATE
-                .action("hive_check")
-                .job_id(job_id)
-                .context(&request.alias)
-                .context(response.status().to_string())
-                .human("⚠️  Hive '{0}' responded with status: {1}")
-                .emit();
-            false
-        }
-        Err(_) => {
-            NARRATE
-                .action("hive_check")
-                .job_id(job_id)
-                .context(&request.alias)
-                .context(&health_url)
-                .human("❌ Hive '{0}' is not running on {1}")
-                .emit();
-            false
-        }
+    // Use daemon-lifecycle's generic check_daemon_status function
+    let status_request = StatusRequest {
+        id: request.alias.clone(),
+        health_url: health_url.clone(),
+        daemon_type: Some("hive".to_string()),
     };
 
-    Ok(HiveStatusResponse { alias: request.alias, running, health_url })
+    let status = check_daemon_status(status_request, Some(job_id)).await?;
+
+    Ok(HiveStatusResponse {
+        alias: request.alias,
+        running: status.running,
+        health_url,
+    })
 }

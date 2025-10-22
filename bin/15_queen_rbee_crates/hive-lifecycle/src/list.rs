@@ -1,14 +1,37 @@
 // TEAM-211: List all configured hives
 // TEAM-220: Investigated - Simple query operation documented
+// TEAM-259: Refactored to use daemon-lifecycle::list_daemons
 
 use anyhow::Result;
-use observability_narration_core::NarrationFactory;
+use daemon_lifecycle::{list_daemons, ListableConfig};
 use rbee_config::RbeeConfig;
 use std::sync::Arc;
 
 use crate::types::{HiveInfo, HiveListRequest, HiveListResponse};
 
-const NARRATE: NarrationFactory = NarrationFactory::new("hive-life");
+// Wrapper struct to implement ListableConfig (avoids orphan rule)
+struct HiveConfigWrapper<'a>(&'a RbeeConfig);
+
+impl<'a> ListableConfig for HiveConfigWrapper<'a> {
+    type Info = HiveInfo;
+    
+    fn list_all(&self) -> Vec<Self::Info> {
+        self.0.hives
+            .all()
+            .iter()
+            .map(|h| HiveInfo {
+                alias: h.alias.clone(),
+                hostname: h.hostname.clone(),
+                hive_port: h.hive_port,
+                binary_path: h.binary_path.clone(),
+            })
+            .collect()
+    }
+    
+    fn daemon_type_name(&self) -> &'static str {
+        "hive"
+    }
+}
 
 /// List all configured hives
 ///
@@ -28,54 +51,9 @@ pub async fn execute_hive_list(
     config: Arc<RbeeConfig>,
     job_id: &str,
 ) -> Result<HiveListResponse> {
-    NARRATE.action("hive_list").job_id(job_id).human("📊 Listing all hives").emit();
-
-    let hives: Vec<HiveInfo> = config
-        .hives
-        .all()
-        .iter()
-        .map(|h| HiveInfo {
-            alias: h.alias.clone(),
-            hostname: h.hostname.clone(),
-            hive_port: h.hive_port,
-            binary_path: h.binary_path.clone(),
-        })
-        .collect();
-
-    if hives.is_empty() {
-        NARRATE
-            .action("hive_empty")
-            .job_id(job_id)
-            .human(
-                "No hives registered.\n\
-                 \n\
-                 To install a hive:\n\
-                 \n\
-                   ./rbee hive install",
-            )
-            .emit();
-    } else {
-        // Convert to JSON for table display
-        let hives_json: Vec<serde_json::Value> = hives
-            .iter()
-            .map(|h| {
-                serde_json::json!({
-                    "alias": h.alias,
-                    "host": h.hostname,
-                    "port": h.hive_port,
-                    "binary_path": h.binary_path.as_ref().unwrap_or(&"-".to_string()),
-                })
-            })
-            .collect();
-
-        NARRATE
-            .action("hive_result")
-            .job_id(job_id)
-            .context(hives.len().to_string())
-            .human("Found {} hive(s):")
-            .table(&serde_json::Value::Array(hives_json))
-            .emit();
-    }
+    // Use daemon-lifecycle's generic list_daemons function
+    let wrapper = HiveConfigWrapper(&config);
+    let hives = list_daemons(&wrapper, Some(job_id)).await?;
 
     Ok(HiveListResponse { hives })
 }
