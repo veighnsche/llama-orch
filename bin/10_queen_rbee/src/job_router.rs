@@ -30,7 +30,7 @@ use queen_rbee_hive_lifecycle::{execute_ssh_test, SshTestRequest};
 use queen_rbee_hive_registry::HiveRegistry; // TEAM-190: For Status operation
 use rbee_config::{HiveCapabilities, RbeeConfig};
 use rbee_operations::Operation;
-use std::sync::Arc;
+use std::{path::PathBuf, sync::Arc};
 
 // TEAM-196: Import hive client for capabilities fetching
 use crate::hive_client::{check_hive_health, fetch_hive_capabilities};
@@ -103,14 +103,16 @@ fn validate_hive_exists<'a>(
 ) -> Result<&'a rbee_config::HiveEntry> {
     if alias == "localhost" {
         // Localhost operations do not require configuration
-        static LOCALHOST_ENTRY: rbee_config::HiveEntry = rbee_config::HiveEntry {
+        // Use lazy_static for runtime initialization
+        use once_cell::sync::Lazy;
+        static LOCALHOST_ENTRY: Lazy<rbee_config::HiveEntry> = Lazy::new(|| rbee_config::HiveEntry {
             alias: "localhost".to_string(),
             hostname: "127.0.0.1".to_string(),
             ssh_port: 22,
             ssh_user: "user".to_string(),
-            hive_port: 8600,
-            binary_path: None,
-        };
+            hive_port: 9000,  // TEAM-205: Default hive port
+            binary_path: Some("target/debug/rbee-hive".to_string()),  // TEAM-205: Default binary path
+        });
         return Ok(&LOCALHOST_ENTRY);
     }
 
@@ -547,14 +549,14 @@ async fn route_operation(
                             format!("http://{}:{}", hive_config.hostname, hive_config.hive_port);
 
                         NARRATE
-                            .action("hive_capabilities").job_id(&job_id)
+                            .action("hive_caps").job_id(&job_id)  // TEAM-205: Shortened to fit 15-char limit
                             .human("📊 Fetching device capabilities...")
                             .emit();
 
                         match fetch_hive_capabilities(&endpoint).await {
                             Ok(devices) => {
                                 NARRATE
-                                    .action("hive_capabilities_found").job_id(&job_id)
+                                    .action("hive_caps_ok").job_id(&job_id)  // TEAM-205: Shortened
                                     .context(devices.len().to_string())
                                     .human("✅ Discovered {} device(s)")
                                     .emit();
@@ -613,7 +615,7 @@ async fn route_operation(
                             }
                             Err(e) => {
                                 NARRATE
-                                    .action("hive_capabilities_error").job_id(&job_id)
+                                    .action("hive_caps_err").job_id(&job_id)  // TEAM-205: Shortened
                                     .context(e.to_string())
                                     .human("⚠️  Failed to fetch capabilities: {}")
                                     .emit();
@@ -883,13 +885,13 @@ async fn route_operation(
             }
 
             // Fetch fresh capabilities
-            NARRATE.action("hive_capabilities").human("📊 Fetching device capabilities...").job_id(&job_id).emit();
+            NARRATE.action("hive_caps").human("📊 Fetching device capabilities...").job_id(&job_id).emit();  // TEAM-205: Shortened
 
             let devices =
                 fetch_hive_capabilities(&endpoint).await.context("Failed to fetch capabilities")?;
 
             NARRATE
-                .action("hive_capabilities_found").job_id(&job_id)
+                .action("hive_caps_ok").job_id(&job_id)  // TEAM-205: Shortened
                 .context(devices.len().to_string())
                 .human("✅ Discovered {} device(s)")
                 .emit();

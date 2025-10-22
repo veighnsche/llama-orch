@@ -6,7 +6,7 @@
 use crate::NarrationFields;
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
-use tokio::sync::broadcast;
+use tokio::sync::mpsc;
 
 /// Global SSE broadcaster with job-scoped channels.
 /// 
@@ -20,12 +20,16 @@ static SSE_BROADCASTER: once_cell::sync::Lazy<SseBroadcaster> =
 /// TEAM-204: SECURITY FIX - Job-scoped channels ONLY. No global channel.
 /// If narration has no job_id, it's dropped (fail-fast).
 /// 
+/// TEAM-205: SIMPLIFIED - Use MPSC instead of broadcast to eliminate race conditions.
+/// MPSC has simpler semantics (single receiver) and no "Closed" issues.
+/// 
 /// CRITICAL: Global channels are a privacy hazard - inference data
 /// from Job A could leak to subscribers of Job B.
 pub struct SseBroadcaster {
-    /// Per-job channels (keyed by job_id)
-    /// Each job gets isolated SSE stream - NO CROSS-CONTAMINATION
-    jobs: Arc<Mutex<HashMap<String, broadcast::Sender<NarrationEvent>>>>,
+    /// Per-job senders (keyed by job_id) - for emitting events
+    senders: Arc<Mutex<HashMap<String, mpsc::Sender<NarrationEvent>>>>,
+    /// Per-job receivers (keyed by job_id) - taken once by SSE handler
+    receivers: Arc<Mutex<HashMap<String, mpsc::Receiver<NarrationEvent>>>>,
 }
 
 /// Narration event formatted for SSE transport.
@@ -88,7 +92,8 @@ impl From<NarrationFields> for NarrationEvent {
 impl SseBroadcaster {
     fn new() -> Self {
         Self {
-            jobs: Arc::new(Mutex::new(HashMap::new())),
+            senders: Arc::new(Mutex::new(HashMap::new())),
+            receivers: Arc::new(Mutex::new(HashMap::new())),
         }
     }
 
@@ -96,44 +101,52 @@ impl SseBroadcaster {
     /// 
     /// TEAM-200: Call this when a job is created (before execution starts).
     /// The job's SSE stream will be isolated from other jobs.
+    /// 
+    /// TEAM-205: SIMPLIFIED - Use MPSC for predictable single-receiver semantics.
     pub fn create_job_channel(&self, job_id: String, capacity: usize) {
-        let (tx, _) = broadcast::channel(capacity);
-        self.jobs.lock().unwrap().insert(job_id, tx);
+        let (tx, rx) = mpsc::channel(capacity);
+        self.senders.lock().unwrap().insert(job_id.clone(), tx);
+        self.receivers.lock().unwrap().insert(job_id, rx);
     }
 
     /// Remove a job's SSE channel (cleanup when job completes).
     /// 
     /// TEAM-200: Call this when a job completes to prevent memory leaks.
     pub fn remove_job_channel(&self, job_id: &str) {
-        self.jobs.lock().unwrap().remove(job_id);
+        self.senders.lock().unwrap().remove(job_id);
+        self.receivers.lock().unwrap().remove(job_id);
     }
 
     /// Send narration to a specific job's SSE stream.
     /// 
     /// TEAM-204: SECURITY FIX - FAIL FAST if job channel doesn't exist.
     /// Better to lose narration than leak it to wrong subscribers.
+    /// 
+    /// TEAM-205: SIMPLIFIED - Use MPSC try_send (works in both sync and async contexts).
     pub fn send_to_job(&self, job_id: &str, event: NarrationEvent) {
-        let jobs = self.jobs.lock().unwrap();
-        if let Some(tx) = jobs.get(job_id) {
-            // Ignore send errors (no subscribers is OK)
-            let _ = tx.send(event);
+        let senders = self.senders.lock().unwrap();
+        if let Some(tx) = senders.get(job_id) {
+            // Use try_send which works in both sync and async contexts
+            // This will fail if channel is full or receiver is dropped (both are fine)
+            let _ = tx.try_send(event);
         }
         // If channel doesn't exist: DROP THE EVENT (fail-fast)
         // This is intentional - better to lose narration than leak sensitive data
     }
 
-    /// Subscribe to a specific job's SSE stream.
+    /// Take the receiver for a specific job's SSE stream.
     /// 
     /// TEAM-200: Keeper calls this with job_id to get isolated stream.
-    pub fn subscribe_to_job(&self, job_id: &str) -> Option<broadcast::Receiver<NarrationEvent>> {
-        self.jobs.lock().unwrap()
-            .get(job_id)
-            .map(|tx| tx.subscribe())
+    /// TEAM-205: SIMPLIFIED - Take receiver (can only be called once per job).
+    /// 
+    /// This can only be called once per job - the receiver is moved out.
+    pub fn take_job_receiver(&self, job_id: &str) -> Option<mpsc::Receiver<NarrationEvent>> {
+        self.receivers.lock().unwrap().remove(job_id)
     }
 
     /// Check if a job channel exists.
     pub fn has_job_channel(&self, job_id: &str) -> bool {
-        self.jobs.lock().unwrap().contains_key(job_id)
+        self.senders.lock().unwrap().contains_key(job_id)
     }
 }
 
@@ -179,20 +192,21 @@ pub fn send(fields: &NarrationFields) {
     // If no job_id: DROP (fail-fast, prevent privacy leaks)
 }
 
-/// Subscribe to a specific job's SSE stream.
+/// Take the receiver for a specific job's SSE stream.
 /// 
 /// TEAM-200: Keeper calls this with job_id from job creation response.
+/// TEAM-205: SIMPLIFIED - Can only be called once per job.
 ///
 /// # Example
 /// ```rust,ignore
-/// let mut rx = sse_sink::subscribe_to_job("job-abc123")
+/// let mut rx = sse_sink::take_job_receiver("job-abc123")
 ///     .expect("Job channel not found");
-/// while let Ok(event) = rx.recv().await {
+/// while let Some(event) = rx.recv().await {
 ///     println!("{}", event.formatted);
 /// }
 /// ```
-pub fn subscribe_to_job(job_id: &str) -> Option<broadcast::Receiver<NarrationEvent>> {
-    SSE_BROADCASTER.subscribe_to_job(job_id)
+pub fn take_job_receiver(job_id: &str) -> Option<mpsc::Receiver<NarrationEvent>> {
+    SSE_BROADCASTER.take_job_receiver(job_id)
 }
 
 
@@ -307,9 +321,9 @@ mod team_200_isolation_tests {
         create_job_channel("job-a".to_string(), 100);
         create_job_channel("job-b".to_string(), 100);
 
-        // Subscribe to both jobs
-        let mut rx_a = subscribe_to_job("job-a").unwrap();
-        let mut rx_b = subscribe_to_job("job-b").unwrap();
+        // Take receivers for both jobs
+        let mut rx_a = take_job_receiver("job-a").unwrap();
+        let mut rx_b = take_job_receiver("job-b").unwrap();
 
         // Send narration to job-a
         let fields_a = NarrationFields {
@@ -334,12 +348,12 @@ mod team_200_isolation_tests {
         send(&fields_b);
 
         // Job A should only receive its message
-        let event_a = rx_a.try_recv().unwrap();
+        let event_a = rx_a.recv().await.unwrap();
         assert_eq!(event_a.human, "Message for Job A");
         assert!(rx_a.try_recv().is_err()); // No more messages
 
         // Job B should only receive its message
-        let event_b = rx_b.try_recv().unwrap();
+        let event_b = rx_b.recv().await.unwrap();
         assert_eq!(event_b.human, "Message for Job B");
         assert!(rx_b.try_recv().is_err()); // No more messages
 
@@ -406,7 +420,7 @@ mod team_200_isolation_tests {
         
         // 3. Now create the job channel
         create_job_channel(job_id.to_string(), 100);
-        let mut job_rx = subscribe_to_job(job_id).unwrap();
+        let mut job_rx = take_job_receiver(job_id).unwrap();
         
         // 4. Future narration should go to job channel
         let fields2 = NarrationFields {
@@ -420,7 +434,7 @@ mod team_200_isolation_tests {
         send(&fields2);
         
         // 5. This event should be in JOB channel
-        let event2 = job_rx.try_recv().expect("Should be in job channel");
+        let event2 = job_rx.recv().await.expect("Should be in job channel");
         assert_eq!(event2.human, "This happened after channel was created!");
         
         remove_job_channel(job_id);

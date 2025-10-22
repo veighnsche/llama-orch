@@ -37,6 +37,7 @@ anyhow = "1.0"
 daemon-lifecycle = { path = "../99_shared_crates/daemon-lifecycle" }  # TEAM-189: For spawning hive daemons (hive start)
 job-registry = { path = "../99_shared_crates/job-registry" }
 observability-narration-core = { path = "../99_shared_crates/narration-core" }
+once_cell = "1.19"
 rbee-config = { path = "../99_shared_crates/rbee-config" }  # TEAM-194: File-based config (replaces hive-catalog)
 queen-rbee-hive-registry = { path = "../15_queen_rbee_crates/hive-registry" }  # TEAM-188: Runtime hive state (RAM)
 queen-rbee-hive-lifecycle = { path = "../15_queen_rbee_crates/hive-lifecycle" }  # TEAM-164: Pure hive lifecycle logic

@@ -15,6 +15,8 @@ use anyhow::Result;
 use futures::StreamExt;
 use observability_narration_core::NarrationFactory;
 use rbee_operations::Operation;
+use std::time::Duration;
+use timeout_enforcer::TimeoutEnforcer;
 
 use crate::queen_lifecycle::ensure_queen_running;
 
@@ -69,31 +71,41 @@ pub async fn submit_and_stream_job(
     }
     narration.emit();
 
-    // Stream narration from job's SSE endpoint
+    // TEAM-205: Wrap SSE streaming with 30-second timeout
+    // This prevents hanging forever if queen stops responding
+    let job_id_clone = job_id.to_string();
+    let operation_name_clone = operation_name;
+    let hive_id_clone = hive_id;
     let sse_full_url = format!("{}{}", queen_url, sse_url);
-    let response = client.get(&sse_full_url).send().await?;
+    let client_clone = client.clone();
+    
+    let stream_result = TimeoutEnforcer::new(Duration::from_secs(30))
+        .with_label("Streaming job results")
+        .silent()  // Don't show countdown - narration provides feedback
+        .enforce(async move {
+            // Stream narration from job's SSE endpoint
+            let response = client_clone.get(&sse_full_url).send().await?;
 
-    if !response.status().is_success() {
-        let error = response.text().await?;
-        std::mem::forget(queen_handle);
-        anyhow::bail!("Failed to connect to SSE stream: {}", error);
-    }
+            if !response.status().is_success() {
+                let error = response.text().await?;
+                anyhow::bail!("Failed to connect to SSE stream: {}", error);
+            }
 
-    let mut narration = NARRATE
-        .action("job_stream")
-        .context(job_id)
-        .operation(operation_name)
-        .human("📡 Streaming results...");
+            let mut narration = NARRATE
+                .action("job_stream")
+                .context(&job_id_clone)
+                .operation(operation_name_clone)
+                .human("📡 Streaming results...");
 
-    if let Some(hid) = hive_id {
-        narration = narration.hive_id(hid);
-    }
-    narration.emit();
+            if let Some(hid) = hive_id_clone {
+                narration = narration.hive_id(hid);
+            }
+            narration.emit();
 
-    let mut stream = response.bytes_stream();
-    let mut job_failed = false; // TEAM-189: Track job failures to show proper final status
+            let mut stream = response.bytes_stream();
+            let mut job_failed = false; // TEAM-189: Track job failures to show proper final status
 
-    while let Some(chunk) = stream.next().await {
+            while let Some(chunk) = stream.next().await {
         let chunk = chunk?;
         let text = String::from_utf8_lossy(&chunk);
 
@@ -126,18 +138,24 @@ pub async fn submit_and_stream_job(
                             .human("✅ Complete")
                     };
 
-                    if let Some(hid) = hive_id {
+                    if let Some(hid) = hive_id_clone {
                         narration = narration.hive_id(hid);
                     }
                     narration.emit();
-                    std::mem::forget(queen_handle);
                     return Ok(());
                 }
             }
         }
     }
 
-    // Cleanup
-    std::mem::forget(queen_handle);
+    // Should never reach here - stream should end with [DONE]
     Ok(())
+        })
+        .await;
+
+    // Cleanup queen handle
+    std::mem::forget(queen_handle);
+    
+    // Return result (timeout or success)
+    stream_result
 }

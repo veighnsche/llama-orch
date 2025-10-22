@@ -75,9 +75,10 @@ pub async fn handle_create_job(
 /// TEAM-200: Subscribe to JOB-SPECIFIC channel (not global!)
 /// TEAM-204: Proper error handling instead of panic
 /// TEAM-204: Drop guard ensures cleanup on panic/early return
+/// TEAM-205: SIMPLIFIED - Use MPSC receiver (no broadcast complexity)
 ///
 /// This handler:
-/// 1. Subscribes to the job-specific SSE narration broadcaster
+/// 1. Takes the job-specific SSE receiver (MPSC - can only be done once)
 /// 2. Triggers job execution (which emits narrations)
 /// 3. Streams narration events to the client
 /// 4. Also streams token results (for inference operations)
@@ -92,22 +93,20 @@ pub async fn handle_stream_job(
     // TEAM-204: Drop guard ensures cleanup even if we panic or return early
     let _guard = JobChannelGuard { job_id: job_id.clone() };
     
-    // TEAM-204: Check if job channel exists before proceeding
-    let sse_rx_opt = sse_sink::subscribe_to_job(&job_id);
+    // TEAM-205: Take the receiver (can only be done once per job)
+    let sse_rx_opt = sse_sink::take_job_receiver(&job_id);
 
     // Trigger job execution (spawns in background) - do this even if channel missing
     let _token_stream = crate::job_router::execute_job(job_id.clone(), state.into()).await;
 
     // Single stream that handles both error and success cases
+    let job_id_for_stream = job_id.clone();
     let combined_stream = async_stream::stream! {
-        // TEAM-204: Handle missing channel gracefully
+        // Check if channel exists
         let Some(mut sse_rx) = sse_rx_opt else {
             yield Ok(Event::default().data("ERROR: Job channel not found. This may indicate a race condition or job creation failure."));
             return;
         };
-
-        // Give the background task a moment to start executing
-        tokio::time::sleep(tokio::time::Duration::from_millis(50)).await;
 
         let mut last_event_time = std::time::Instant::now();
         let completion_timeout = std::time::Duration::from_millis(2000);
@@ -119,17 +118,17 @@ pub async fn handle_stream_job(
             tokio::pin!(timeout_fut);
 
             tokio::select! {
-                // Receive narration events from SSE broadcaster
-                result = sse_rx.recv() => {
-                    match result {
-                        Ok(event) => {
+                // TEAM-205: MPSC recv() returns Option<T> (simpler than broadcast's Result)
+                event_opt = sse_rx.recv() => {
+                    match event_opt {
+                        Some(event) => {
                             received_first_event = true;
                             last_event_time = std::time::Instant::now();
-                            // TEAM-201: Use pre-formatted text from narration-core (no manual formatting!)
+                            // TEAM-201: Use pre-formatted text from narration-core
                             yield Ok(Event::default().data(&event.formatted));
                         }
-                        Err(_) => {
-                            // Broadcaster closed (shouldn't happen)
+                        None => {
+                            // Sender dropped (job completed)
                             if received_first_event {
                                 yield Ok(Event::default().data("[DONE]"));
                             }
@@ -141,7 +140,6 @@ pub async fn handle_stream_job(
                 _ = &mut timeout_fut, if received_first_event => {
                     if last_event_time.elapsed() >= completion_timeout {
                         yield Ok(Event::default().data("[DONE]"));
-                        // TEAM-204: Cleanup happens automatically via drop guard
                         break;
                     }
                 }
