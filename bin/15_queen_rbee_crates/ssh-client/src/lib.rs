@@ -24,7 +24,7 @@ use anyhow::{Context, Result};
 use observability_narration_core::Narration;
 use ssh2::Session;
 use std::io::Read;
-use std::net::TcpStream;
+use std::net::{TcpStream, ToSocketAddrs};
 use std::time::Duration;
 
 const ACTOR_SSH_CLIENT: &str = "🔐 ssh-client";
@@ -162,11 +162,30 @@ fn test_ssh_connection_blocking(config: SshConfig) -> Result<SshTestResult> {
         return Ok(SshTestResult { success: false, error: Some(msg), test_output: None });
     }
 
-    // Step 1: Establish TCP connection with timeout
-    let tcp = match TcpStream::connect_timeout(
-        &format!("{}:{}", config.host, config.port).parse().context("Invalid host:port")?,
-        Duration::from_secs(config.timeout_secs),
-    ) {
+    // Step 1: Resolve hostname to IP address (connect_timeout requires SocketAddr)
+    let addr_str = format!("{}:{}", config.host, config.port);
+    let addr = match addr_str.to_socket_addrs() {
+        Ok(mut addrs) => match addrs.next() {
+            Some(addr) => addr,
+            None => {
+                return Ok(SshTestResult {
+                    success: false,
+                    error: Some(format!("No IP addresses found for {}", addr_str)),
+                    test_output: None,
+                });
+            }
+        },
+        Err(e) => {
+            return Ok(SshTestResult {
+                success: false,
+                error: Some(format!("Failed to resolve hostname: {}", e)),
+                test_output: None,
+            });
+        }
+    };
+
+    // Step 2: Establish TCP connection with timeout
+    let tcp = match TcpStream::connect_timeout(&addr, Duration::from_secs(config.timeout_secs)) {
         Ok(tcp) => tcp,
         Err(e) => {
             return Ok(SshTestResult {
