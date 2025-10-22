@@ -17,16 +17,9 @@ use observability_narration_core::sse_sink;
 use rbee_config::RbeeConfig;
 use std::{convert::Infallible, sync::Arc};
 
-/// TEAM-204: Drop guard ensures job channel cleanup even on panic/early return
-struct JobChannelGuard {
-    job_id: String,
-}
-
-impl Drop for JobChannelGuard {
-    fn drop(&mut self) {
-        sse_sink::remove_job_channel(&self.job_id);
-    }
-}
+// TEAM-205: Removed JobChannelGuard - it was dropping too early!
+// The receiver being taken and eventually dropped provides natural cleanup.
+// When the receiver drops, the sender's try_send will fail gracefully.
 
 /// State for HTTP job endpoints
 #[derive(Clone)]
@@ -74,8 +67,8 @@ pub async fn handle_create_job(
 /// TEAM-189: Fixed to subscribe to SSE narration broadcaster
 /// TEAM-200: Subscribe to JOB-SPECIFIC channel (not global!)
 /// TEAM-204: Proper error handling instead of panic
-/// TEAM-204: Drop guard ensures cleanup on panic/early return
 /// TEAM-205: SIMPLIFIED - Use MPSC receiver (no broadcast complexity)
+/// TEAM-205: Natural cleanup - receiver drop triggers sender cleanup
 ///
 /// This handler:
 /// 1. Takes the job-specific SSE receiver (MPSC - can only be done once)
@@ -83,16 +76,13 @@ pub async fn handle_create_job(
 /// 3. Streams narration events to the client
 /// 4. Also streams token results (for inference operations)
 /// 5. Sends [DONE] marker when complete
-/// 6. Cleans up job channel to prevent memory leaks (guaranteed by drop guard)
+/// 6. When receiver drops, sender fails gracefully (natural cleanup)
 ///
 /// Client connects here, which triggers job execution and streams results.
 pub async fn handle_stream_job(
     Path(job_id): Path<String>,
     State(state): State<SchedulerState>,
 ) -> Sse<impl Stream<Item = Result<Event, Infallible>>> {
-    // TEAM-204: Drop guard ensures cleanup even if we panic or return early
-    let _guard = JobChannelGuard { job_id: job_id.clone() };
-    
     // TEAM-205: Take the receiver (can only be done once per job)
     let sse_rx_opt = sse_sink::take_job_receiver(&job_id);
 
@@ -145,6 +135,10 @@ pub async fn handle_stream_job(
                 }
             }
         }
+        
+        // TEAM-205: Cleanup - remove sender from HashMap to prevent memory leak
+        // Receiver is already dropped by moving out of this scope
+        sse_sink::remove_job_channel(&job_id_for_stream);
     };
 
     Sse::new(combined_stream)
