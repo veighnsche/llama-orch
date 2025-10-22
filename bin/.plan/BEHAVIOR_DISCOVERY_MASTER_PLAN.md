@@ -54,9 +54,9 @@
 - **TEAM-228:** `vram-checker` behaviors
 - **TEAM-229:** `worker-catalog` + `worker-lifecycle` + `worker-registry` behaviors
 
-### Phase 4: Shared Crate Behaviors (TEAM-230 → TEAM-237)
-**Duration:** 8 teams working concurrently  
-**Output:** 8 behavior inventory documents
+### Phase 4: Shared Crate Behaviors (TEAM-230 → TEAM-238)
+**Duration:** 9 teams working concurrently  
+**Output:** 9 behavior inventory documents
 
 - **TEAM-230:** `narration-core` + `narration-macros` behaviors
 - **TEAM-231:** `daemon-lifecycle` behaviors
@@ -65,16 +65,17 @@
 - **TEAM-234:** `job-registry` + `deadline-propagation` behaviors
 - **TEAM-235:** `auth-min` + `jwt-guardian` behaviors
 - **TEAM-236:** `audit-logging` + `input-validation` behaviors
-- **TEAM-237:** `heartbeat` + `auto-update` + `hive-core` behaviors
+- **TEAM-237:** `heartbeat` + `auto-update` + `timeout-enforcer` behaviors
+- **TEAM-238:** `secrets-management` + `sse-relay` + `model-catalog` behaviors
 
-### Phase 5: Integration Behaviors (TEAM-238 → TEAM-241)
+### Phase 5: Integration Behaviors (TEAM-239 → TEAM-242)
 **Duration:** 4 teams working concurrently  
 **Output:** 4 integration flow documents
 
-- **TEAM-238:** Keeper → Queen flows
-- **TEAM-239:** Queen → Hive flows
-- **TEAM-240:** Hive → Worker flows
-- **TEAM-241:** End-to-end inference flows
+- **TEAM-239:** Keeper → Queen flows
+- **TEAM-240:** Queen → Hive flows
+- **TEAM-241:** Hive → Worker flows
+- **TEAM-242:** End-to-end inference flows
 
 ---
 
@@ -228,6 +229,18 @@ Implement tests to freeze all discovered behaviors:
 
 ---
 
+## Dead Code Exclusions
+
+### Excluded from Investigation
+The following crates are **NOT in workspace** and should **NOT be investigated**:
+
+- ❌ `bin/99_shared_crates/hive-core` - DEPRECATED (replaced by rbee-types)
+- ❌ `bin/99_shared_crates/hive-operations` - Empty stub, no Cargo.toml
+
+**Verification:** Only investigate crates listed in root `Cargo.toml` workspace members.
+
+---
+
 ## Coordination Rules
 
 ### Concurrent Work
@@ -253,7 +266,7 @@ Implement tests to freeze all discovered behaviors:
 - **Phase 1:** 4 teams × 1 day = 4 team-days (concurrent = 1 day)
 - **Phase 2:** 3 teams × 1 day = 3 team-days (concurrent = 1 day)
 - **Phase 3:** 7 teams × 1 day = 7 team-days (concurrent = 1 day)
-- **Phase 4:** 8 teams × 1 day = 8 team-days (concurrent = 1 day)
+- **Phase 4:** 9 teams × 1 day = 9 team-days (concurrent = 1 day)
 - **Phase 5:** 4 teams × 1 day = 4 team-days (concurrent = 1 day)
 
 **Total Discovery:** 5 days (with perfect parallelism)
@@ -296,12 +309,13 @@ Implement tests to freeze all discovered behaviors:
 - `.plan/TEAM_235_AUTH_JWT_BEHAVIORS.md`
 - `.plan/TEAM_236_AUDIT_VALIDATION_BEHAVIORS.md`
 - `.plan/TEAM_237_HEARTBEAT_UPDATE_BEHAVIORS.md`
+- `.plan/TEAM_238_SECRETS_SSE_MODEL_BEHAVIORS.md`
 
 ### Phase 5 (Integration Flows)
-- `.plan/TEAM_238_KEEPER_QUEEN_INTEGRATION.md`
-- `.plan/TEAM_239_QUEEN_HIVE_INTEGRATION.md`
-- `.plan/TEAM_240_HIVE_WORKER_INTEGRATION.md`
-- `.plan/TEAM_241_E2E_INFERENCE_FLOWS.md`
+- `.plan/TEAM_239_KEEPER_QUEEN_INTEGRATION.md`
+- `.plan/TEAM_240_QUEEN_HIVE_INTEGRATION.md`
+- `.plan/TEAM_241_HIVE_WORKER_INTEGRATION.md`
+- `.plan/TEAM_242_E2E_INFERENCE_FLOWS.md`
 
 ---
 

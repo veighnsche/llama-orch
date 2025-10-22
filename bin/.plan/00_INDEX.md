@@ -75,7 +75,7 @@
 
 ## Phase 4: Shared Crates
 
-**Duration:** 1 day (8 teams concurrent)  
+**Duration:** 1 day (9 teams concurrent)  
 **Depends On:** Phase 3 complete
 
 | Team | Component | Output |
@@ -87,7 +87,8 @@
 | TEAM-234 | job-registry + deadline-propagation | TEAM_234_JOB_DEADLINE_BEHAVIORS.md |
 | TEAM-235 | auth-min + jwt-guardian | TEAM_235_AUTH_JWT_BEHAVIORS.md |
 | TEAM-236 | audit-logging + input-validation | TEAM_236_AUDIT_VALIDATION_BEHAVIORS.md |
-| TEAM-237 | heartbeat + auto-update + hive-core | TEAM_237_HEARTBEAT_UPDATE_BEHAVIORS.md |
+| TEAM-237 | heartbeat + auto-update + timeout-enforcer | TEAM_237_HEARTBEAT_UPDATE_BEHAVIORS.md |
+| TEAM-238 | secrets-management + sse-relay + model-catalog | TEAM_238_SECRETS_SSE_MODEL_BEHAVIORS.md |
 
 **Guide:** [PHASE_4_GUIDES.md](PHASE_4_GUIDES.md)
 
@@ -100,10 +101,10 @@
 
 | Team | Flow | Output |
 |------|------|--------|
-| TEAM-238 | keeper ↔ queen | TEAM_238_KEEPER_QUEEN_INTEGRATION.md |
-| TEAM-239 | queen ↔ hive | TEAM_239_QUEEN_HIVE_INTEGRATION.md |
-| TEAM-240 | hive ↔ worker | TEAM_240_HIVE_WORKER_INTEGRATION.md |
-| TEAM-241 | End-to-end inference | TEAM_241_E2E_INFERENCE_FLOWS.md |
+| TEAM-239 | keeper ↔ queen | TEAM_239_KEEPER_QUEEN_INTEGRATION.md |
+| TEAM-240 | queen ↔ hive | TEAM_240_QUEEN_HIVE_INTEGRATION.md |
+| TEAM-241 | hive ↔ worker | TEAM_241_HIVE_WORKER_INTEGRATION.md |
+| TEAM-242 | End-to-end inference | TEAM_242_E2E_INFERENCE_FLOWS.md |
 
 **Guide:** [PHASE_5_GUIDES.md](PHASE_5_GUIDES.md)
 
@@ -113,7 +114,7 @@
 
 **Duration:** 3 days (~8 teams)  
 **Depends On:** Phase 5 complete  
-**Input:** 26 behavior inventory documents  
+**Input:** 27 behavior inventory documents  
 **Output:** Comprehensive test plans
 
 ### Test Plan Types
@@ -122,7 +123,7 @@
 3. **Integration Test Plans** - Cross-crate integration tests
 4. **E2E Test Plans** - Full system flows via xtask
 
-**Teams:** TEAM-242 through TEAM-249 (TBD)
+**Teams:** TEAM-243 through TEAM-250 (TBD)
 
 ---
 
@@ -139,7 +140,7 @@
 3. **Integration Tests** - Freeze component interactions
 4. **E2E Tests** - Freeze end-to-end flows
 
-**Teams:** TEAM-250 through TEAM-264 (TBD)
+**Teams:** TEAM-251 through TEAM-265 (TBD)
 
 ---
 
@@ -171,9 +172,9 @@ Weeks 3-5: Test Implementation
 | 1 | 4 | Main binaries | Discovery |
 | 2 | 3 | Queen crates | Discovery |
 | 3 | 7 | Hive crates | Discovery |
-| 4 | 8 | Shared crates | Discovery |
+| 4 | 9 | Shared crates | Discovery |
 | 5 | 4 | Integration flows | Discovery |
-| **Total Discovery** | **26** | **All components** | **5 days** |
+| **Total Discovery** | **27** | **All components** | **5 days** |
 | 6 | ~8 | Test plans | Planning |
 | 7 | ~15 | Test implementation | Implementation |
 | **Grand Total** | **~50** | **Full test suite** | **~25 days** |
@@ -215,7 +216,7 @@ Integration flow documents include:
 ## Success Metrics
 
 ### After Phase 5 (Discovery)
-- ✅ 26 behavior inventory documents
+- ✅ 27 behavior inventory documents
 - ✅ Complete understanding of ALL behaviors
 - ✅ All test coverage gaps identified
 - ✅ Ready for test planning

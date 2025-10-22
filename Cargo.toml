@@ -63,15 +63,9 @@ members = [
     "bin/99_shared_crates/narration-macros",
     "bin/99_shared_crates/secrets-management",
     "bin/99_shared_crates/secrets-management/bdd",
-    "bin/99_shared_crates/model-catalog",
-    "bin/99_shared_crates/sse-relay",
     # TEAM-135: New shared crates for consolidation
     "bin/99_shared_crates/daemon-lifecycle",
     "bin/99_shared_crates/daemon-lifecycle/bdd",
-    "bin/99_shared_crates/rbee-http-client",
-    "bin/99_shared_crates/rbee-http-client/bdd",
-    "bin/99_shared_crates/rbee-types",
-    "bin/99_shared_crates/rbee-types/bdd",
     "bin/99_shared_crates/rbee-operations",     # TEAM-186: Shared operation types for rbee-keeper ↔ queen-rbee contract
     "bin/99_shared_crates/heartbeat",           # MOVED from worker-rbee-crates (used by workers AND hives)
     "bin/99_shared_crates/job-registry",        # TEAM-154: Dual-call pattern job tracking (worker/queen/hive)
@@ -96,13 +90,6 @@ members = [
     "tools/readme-index",    # README index generator
     "tools/spec-extract",    # Spec extraction & validation
     "xtask",                 # Workspace automation (cargo xtask)
-    
-    # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-    # TEST HARNESS — BDD & Integration Tests
-    # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-    # TEAM-040: System-level BDD tests
-    
-    "test-harness/bdd",   # BDD test harness (binary: bdd-runner)
     
 ]
 

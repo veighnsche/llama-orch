@@ -1,6 +1,6 @@
 # PHASE 5: Integration Flow Discovery
 
-**Teams:** TEAM-238 to TEAM-241  
+**Teams:** TEAM-239 to TEAM-242  
 **Duration:** 1 day (all teams work concurrently)  
 **Output:** 4 integration flow documents
 
@@ -18,11 +18,11 @@ Phase 5 documents **cross-component behaviors** and **end-to-end flows**. This i
 
 ---
 
-## TEAM-238: keeper-queen Integration
+## TEAM-239: keeper-queen Integration
 
 **Components:** `rbee-keeper` ↔ `queen-rbee`  
 **Complexity:** High  
-**Output:** `.plan/TEAM_238_KEEPER_QUEEN_INTEGRATION.md`
+**Output:** `.plan/TEAM_239_KEEPER_QUEEN_INTEGRATION.md`
 
 ### Investigation Areas
 
@@ -67,11 +67,11 @@ Document complete flows for:
 
 ---
 
-## TEAM-239: queen-hive Integration
+## TEAM-240: queen-hive Integration
 
 **Components:** `queen-rbee` ↔ `rbee-hive`  
 **Complexity:** High  
-**Output:** `.plan/TEAM_239_QUEEN_HIVE_INTEGRATION.md`
+**Output:** `.plan/TEAM_240_QUEEN_HIVE_INTEGRATION.md`
 
 ### Investigation Areas
 
@@ -117,11 +117,11 @@ Document complete flows for:
 
 ---
 
-## TEAM-240: hive-worker Integration
+## TEAM-241: hive-worker Integration
 
 **Components:** `rbee-hive` ↔ `llm-worker-rbee`  
 **Complexity:** High  
-**Output:** `.plan/TEAM_240_HIVE_WORKER_INTEGRATION.md`
+**Output:** `.plan/TEAM_241_HIVE_WORKER_INTEGRATION.md`
 
 ### Investigation Areas
 
@@ -167,11 +167,11 @@ Document complete flows for:
 
 ---
 
-## TEAM-241: e2e-inference Flow
+## TEAM-242: e2e-inference Flow
 
 **Components:** Full system (keeper → queen → hive → worker)  
 **Complexity:** Very High  
-**Output:** `.plan/TEAM_241_E2E_INFERENCE_FLOWS.md`
+**Output:** `.plan/TEAM_242_E2E_INFERENCE_FLOWS.md`
 
 ### Investigation Areas
 

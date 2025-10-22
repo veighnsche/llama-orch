@@ -1,8 +1,8 @@
 # PHASE 4: Shared Crate Behavior Discovery
 
-**Teams:** TEAM-230 to TEAM-237  
+**Teams:** TEAM-230 to TEAM-238  
 **Duration:** 1 day (all teams work concurrently)  
-**Output:** 8 behavior inventory documents
+**Output:** 9 behavior inventory documents
 
 ---
 
@@ -213,9 +213,9 @@
 
 ---
 
-## TEAM-237: heartbeat-update-core
+## TEAM-237: heartbeat-update-timeout
 
-**Components:** `bin/99_shared_crates/heartbeat` + `bin/99_shared_crates/auto-update` + `bin/99_shared_crates/hive-core`  
+**Components:** `bin/99_shared_crates/heartbeat` + `bin/99_shared_crates/auto-update` + `bin/99_shared_crates/timeout-enforcer`  
 **Complexity:** Medium  
 **Output:** `.plan/TEAM_237_HEARTBEAT_UPDATE_BEHAVIORS.md`
 
@@ -232,10 +232,40 @@
 - Document update download
 - Document update application
 
-#### 3. Hive Core
-- Document shared hive types
-- Document shared hive utilities
-- Document shared hive contracts
+#### 3. Timeout Enforcer
+- Document timeout enforcement patterns
+- Document job_id integration for SSE
+- Document narration during timeouts
+- Document visual countdown behavior
+
+---
+
+## TEAM-238: secrets-sse-model
+
+**Components:** `bin/99_shared_crates/secrets-management` + `bin/99_shared_crates/sse-relay` + `bin/99_shared_crates/model-catalog`  
+**Complexity:** Medium  
+**Output:** `.plan/TEAM_238_SECRETS_SSE_MODEL_BEHAVIORS.md`
+
+### Investigation Areas
+
+#### 1. Secrets Management
+- Document secret storage patterns
+- Document secret zeroization
+- Document key derivation (HKDF)
+- Document constant-time comparison
+- Document security guarantees
+
+#### 2. SSE Relay
+- Document SSE infrastructure
+- Document event routing
+- Document client management
+- Document stream lifecycle
+
+#### 3. Model Catalog (Shared)
+- Document model metadata
+- Document catalog structure
+- Document relationship to hive model-catalog
+- Document consolidation opportunities
 
 ---
 
@@ -288,7 +318,7 @@ Each team must deliver:
 - ✅ Test gaps identified
 
 ### Phase 4
-- ✅ All 8 teams completed
+- ✅ All 9 teams completed
 - ✅ All inventories delivered
 - ✅ Ready for Phase 5
 
@@ -297,7 +327,7 @@ Each team must deliver:
 ## Coordination
 
 ### Concurrent Work
-- All 8 teams work independently
+- All 9 teams work independently
 - No dependencies between teams
 - Can start as soon as Phase 3 completes
 

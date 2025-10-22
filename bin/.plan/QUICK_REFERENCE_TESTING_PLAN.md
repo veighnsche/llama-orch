@@ -38,7 +38,7 @@ Discovery (Phases 1-5) → Test Planning (Phase 6) → Test Implementation (Phas
 - **TEAM-228:** vram-checker
 - **TEAM-229:** worker-catalog + worker-lifecycle + worker-registry
 
-### Phase 4: Shared Crates (8 teams, 1 day)
+### Phase 4: Shared Crates (9 teams, 1 day)
 - **TEAM-230:** narration-core + narration-macros
 - **TEAM-231:** daemon-lifecycle
 - **TEAM-232:** rbee-http-client
@@ -46,19 +46,20 @@ Discovery (Phases 1-5) → Test Planning (Phase 6) → Test Implementation (Phas
 - **TEAM-234:** job-registry + deadline-propagation
 - **TEAM-235:** auth-min + jwt-guardian
 - **TEAM-236:** audit-logging + input-validation
-- **TEAM-237:** heartbeat + auto-update + hive-core
+- **TEAM-237:** heartbeat + auto-update + timeout-enforcer
+- **TEAM-238:** secrets-management + sse-relay + model-catalog
 
 ### Phase 5: Integration Flows (4 teams, 1 day)
-- **TEAM-238:** keeper → queen flows
-- **TEAM-239:** queen → hive flows
-- **TEAM-240:** hive → worker flows
-- **TEAM-241:** end-to-end inference flows
+- **TEAM-239:** keeper → queen flows
+- **TEAM-240:** queen → hive flows
+- **TEAM-241:** hive → worker flows
+- **TEAM-242:** end-to-end inference flows
 
 ---
 
-## Test Planning Phase (TEAM-242+)
+## Test Planning Phase (TEAM-243+)
 
-**Input:** 26 behavior inventory documents  
+**Input:** 27 behavior inventory documents  
 **Output:** Comprehensive test plans  
 **Duration:** 3 days
 
@@ -202,9 +203,9 @@ Discovery (Phases 1-5) → Test Planning (Phase 6) → Test Implementation (Phas
 | 1 | 4 | Main binaries | 1 |
 | 2 | 3 | Queen crates | 1 |
 | 3 | 7 | Hive crates | 1 |
-| 4 | 8 | Shared crates | 1 |
+| 4 | 9 | Shared crates | 1 |
 | 5 | 4 | Integration flows | 1 |
-| **Total Discovery** | **26** | **All components** | **5** |
+| **Total Discovery** | **27** | **All components** | **5** |
 | 6 | ~8 | Test planning | 3 |
 | 7 | ~15 | Test implementation | 15 |
 | **Grand Total** | **~50** | **Full test suite** | **~25** |
@@ -214,7 +215,7 @@ Discovery (Phases 1-5) → Test Planning (Phase 6) → Test Implementation (Phas
 ## Expected Outcomes
 
 ### After Phase 5 (Discovery)
-- ✅ 26 behavior inventory documents
+- ✅ 27 behavior inventory documents
 - ✅ Complete understanding of ALL behaviors
 - ✅ All test coverage gaps identified
 - ✅ Ready for test planning
