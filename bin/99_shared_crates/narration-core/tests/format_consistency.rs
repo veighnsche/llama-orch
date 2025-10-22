@@ -64,30 +64,4 @@ async fn test_formatted_with_padding() {
     sse_sink::remove_job_channel("format-test-2");
 }
 
-#[tokio::test]
-#[serial_test::serial(capture_adapter)]
-async fn test_formatted_uses_redacted_human() {
-    sse_sink::init(100);
-    sse_sink::create_job_channel("format-test-3".to_string(), 100);
-    
-    let mut rx = sse_sink::subscribe_to_job("format-test-3").unwrap();
-    
-    let fields = NarrationFields {
-        actor: "test",
-        action: "test",
-        target: "test".to_string(),
-        human: "API key: sk-test123".to_string(),
-        job_id: Some("format-test-3".to_string()),
-        ..Default::default()
-    };
-    
-    sse_sink::send(&fields);
-    
-    let event = rx.try_recv().unwrap();
-    
-    // Formatted should use redacted human
-    assert!(event.formatted.contains("[REDACTED]") || event.formatted.contains("***REDACTED***"));
-    assert!(!event.formatted.contains("sk-test123"));
-    
-    sse_sink::remove_job_channel("format-test-3");
-}
+// TEAM-204: Removed test_formatted_uses_redacted_human - narration doesn't redact

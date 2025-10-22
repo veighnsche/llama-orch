@@ -4,6 +4,32 @@
 
 `bin/99_shared_crates/narration-core` — Emits structured logs with actor/action taxonomy and plain English descriptions.
 
+**Narration shows USERS what's happening** 🐝
+
+Users see narration in:
+- Web UI (via SSE streams)
+- CLI output (via stderr)
+- Logs (for operators)
+
+**NO redaction** - users need full context to understand what's happening.
+
+---
+
+**⚠️ NOT FOR COMPLIANCE/AUDIT LOGGING**
+
+Audit logging is completely separate:
+- Hidden from users (file-only, never in UI)
+- Redacted for compliance
+- For legal/security purposes
+
+**For compliance/audit logging, see:** `bin/99_shared_crates/audit-logging/`
+
+---
+
+**Structured observability with human-readable narration**
+
+`bin/99_shared_crates/narration-core` — Emits structured logs with actor/action taxonomy and plain English descriptions.
+
 **Version**: 0.5.0 (TEAM-192 fixed-width format & compile-time validation)  
 **Status**: ✅ Production Ready  
 **Specification**: [`.specs/00_narration-core.md`](.specs/00_narration-core.md)

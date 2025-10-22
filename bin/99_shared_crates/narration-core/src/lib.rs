@@ -1,11 +1,32 @@
-//! observability-narration-core — shared, lightweight narration helper.
+//! observability-narration-core — human-readable narration for users.
 //!
-//! Provides structured, human-readable narration for debugging and observability.
-//! Implements ORCH-3300..3312 from the narration logging proposal.
+//! **Narration shows users what's happening in the system.** 🐝
+//!
+//! Users see narration via:
+//! - SSE streams (web UI)
+//! - stderr (CLI tools)
+//! - Logs (for operators)
+//!
+//! Narration is NOT redacted - users need full context to understand what's happening.
+//!
+//! # ⚠️ NOT FOR COMPLIANCE/AUDIT LOGGING
+//!
+//! **Audit logging is completely separate!**
+//!
+//! - ❌ Don't use narration for GDPR/PCI-DSS/SOC 2
+//! - ❌ Don't use narration for security audit trails
+//! - ❌ Don't use narration for legal evidence
+//!
+//! **For compliance/audit logging, see:** `bin/99_shared_crates/audit-logging/`
+//!
+//! Audit logs are:
+//! - Hidden from users (file-only, never in UI)
+//! - Redacted for compliance
+//! - Tamper-evident
+//! - For legal/security purposes
 //!
 //! # Features
 //! - Human-readable narration with structured fields
-//! - Automatic secret redaction
 //! - Test capture adapter for BDD assertions
 //! - Correlation ID propagation
 //! - Story snapshot generation
@@ -42,20 +63,12 @@
 //! });
 //! ```
 
-pub mod auto;
-#[cfg(feature = "axum")]
-pub mod axum;
 mod builder;
 mod capture;
 pub mod correlation;
-pub mod http;
-pub mod otel;
-mod redaction;
 pub mod sse_sink;
-pub mod trace;
 pub mod unicode;
 
-pub use auto::{current_timestamp_ms, narrate_auto, narrate_full, service_identity};
 pub use builder::{Narration, NarrationFactory};
 pub use capture::{CaptureAdapter, CapturedNarration};
 
@@ -131,8 +144,6 @@ pub use correlation::{
     from_header as correlation_from_header, generate_correlation_id,
     propagate as correlation_propagate, validate_correlation_id,
 };
-pub use otel::narrate_with_otel_context;
-pub use redaction::{redact_secrets, RedactionPolicy};
 pub use unicode::{sanitize_crlf, sanitize_for_json, validate_action, validate_actor};
 
 // Trace macros are exported via #[macro_export] in trace.rs
@@ -379,16 +390,17 @@ pub struct NarrationFields {
 
 /// Internal macro to emit a narration event at a specific level.
 /// Reduces duplication across TRACE/DEBUG/INFO/WARN/ERROR levels.
+/// TEAM-204: No redaction - narration is for debugging, not compliance
 macro_rules! emit_event {
-    ($level:expr, $fields:expr, $human:expr, $cute:expr, $story:expr) => {
+    ($level:expr, $fields:expr) => {
         event!(
             $level,
             actor = $fields.actor,
             action = $fields.action,
             target = %$fields.target,
-            human = %$human,
-            cute = $cute.as_deref(),
-            story = $story.as_deref(),
+            human = %$fields.human,
+            cute = $fields.cute.as_deref(),
+            story = $fields.story.as_deref(),
             correlation_id = $fields.correlation_id.as_deref(),
             session_id = $fields.session_id.as_deref(),
             job_id = $fields.job_id.as_deref(),
@@ -397,16 +409,6 @@ macro_rules! emit_event {
             replica_id = $fields.replica_id.as_deref(),
             worker_id = $fields.worker_id.as_deref(),
             hive_id = $fields.hive_id.as_deref(),
-            operation = $fields.operation.as_deref(),
-            error_kind = $fields.error_kind.as_deref(),
-            retry_after_ms = $fields.retry_after_ms,
-            backoff_ms = $fields.backoff_ms,
-            duration_ms = $fields.duration_ms,
-            queue_position = $fields.queue_position,
-            predicted_start_ms = $fields.predicted_start_ms,
-            engine = $fields.engine.as_deref(),
-            engine_version = $fields.engine_version.as_deref(),
-            model_ref = $fields.model_ref.as_deref(),
             device = $fields.device.as_deref(),
             tokens_in = $fields.tokens_in,
             tokens_out = $fields.tokens_out,
@@ -425,19 +427,22 @@ macro_rules! emit_event {
 /// Implements ORCH-3300, ORCH-3301, ORCH-3303.
 ///
 /// TEAM-153: Outputs to both tracing (if configured) AND stderr for guaranteed visibility
+///
+/// # ⚠️ NOT FOR COMPLIANCE
+///
+/// Narration is for USERS to see what's happening!
+/// - NO redaction (users need full context)
+/// - Visible in UI/CLI (not hidden)
+/// - NOT for legal/security audit trails
+///
+/// **For compliance/audit logging, see:** `bin/99_shared_crates/audit-logging/`
 pub fn narrate_at_level(fields: NarrationFields, level: NarrationLevel) {
     let Some(tracing_level) = level.to_tracing_level() else {
         return; // MUTE - no output
     };
 
-    // Apply redaction to human text (ORCH-3302)
-    let human = redact_secrets(&fields.human, RedactionPolicy::default());
-
-    // Apply redaction to cute text if present
-    let cute = fields.cute.as_ref().map(|c| redact_secrets(c, RedactionPolicy::default()));
-
-    // Apply redaction to story text if present
-    let story = fields.story.as_ref().map(|s| redact_secrets(s, RedactionPolicy::default()));
+    // TEAM-204: No redaction - users need to see what's happening
+    // For audit logging (hidden, redacted), see: bin/99_shared_crates/audit-logging/
 
     // TEAM-153: Always output to stderr for guaranteed shell visibility
     // This works whether or not tracing subscriber is initialized
@@ -446,7 +451,7 @@ pub fn narrate_at_level(fields: NarrationFields, level: NarrationLevel) {
     // - Actor: 10 chars (left-aligned, padded with spaces)
     // - Action: 15 chars (left-aligned, padded with spaces)
     // - Total prefix: 30 chars (including brackets, spaces, and colon)
-    eprintln!("[{:<10}] {:<15}: {}", fields.actor, fields.action, human);
+    eprintln!("[{:<10}] {:<15}: {}", fields.actor, fields.action, fields.human);
 
     // TEAM-164: Send to SSE subscribers if enabled (for distributed narration)
     if sse_sink::is_enabled() {
@@ -455,22 +460,17 @@ pub fn narrate_at_level(fields: NarrationFields, level: NarrationLevel) {
 
     // Emit structured event at appropriate level using macro (for tracing subscribers if configured)
     match tracing_level {
-        Level::TRACE => emit_event!(Level::TRACE, fields, human, cute, story),
-        Level::DEBUG => emit_event!(Level::DEBUG, fields, human, cute, story),
-        Level::INFO => emit_event!(Level::INFO, fields, human, cute, story),
-        Level::WARN => emit_event!(Level::WARN, fields, human, cute, story),
-        Level::ERROR => emit_event!(Level::ERROR, fields, human, cute, story),
+        Level::TRACE => emit_event!(Level::TRACE, fields),
+        Level::DEBUG => emit_event!(Level::DEBUG, fields),
+        Level::INFO => emit_event!(Level::INFO, fields),
+        Level::WARN => emit_event!(Level::WARN, fields),
+        Level::ERROR => emit_event!(Level::ERROR, fields),
     }
 
     // Notify capture adapter if active (ORCH-3306)
     #[cfg(any(test, feature = "test-support"))]
     {
-        // Create redacted fields for capture
-        let mut redacted_fields = fields;
-        redacted_fields.human = human.to_string();
-        redacted_fields.cute = cute.map(|c| c.to_string());
-        redacted_fields.story = story.map(|s| s.to_string());
-        capture::notify(redacted_fields);
+        capture::notify(fields);
     }
 }
 

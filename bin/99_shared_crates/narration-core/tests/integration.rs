@@ -2,7 +2,7 @@
 // Tests ORCH-3300..3312 requirements
 
 use observability_narration_core::{
-    narrate, redact_secrets, CaptureAdapter, NarrationFields, RedactionPolicy,
+    narrate, CaptureAdapter, NarrationFields,
 };
 use serial_test::serial;
 use std::time::{SystemTime, UNIX_EPOCH};
@@ -69,28 +69,7 @@ fn test_correlation_id_propagation() {
     assert_eq!(captured[1].correlation_id, Some(correlation_id));
 }
 
-/// Tests NARR-1003: System MUST automatically redact secrets
-#[test]
-#[serial(capture_adapter)]
-fn test_redaction_in_narration() {
-    let adapter = CaptureAdapter::install();
-    adapter.clear();
-
-    narrate(NarrationFields {
-        actor: "test",
-        action: "test",
-        target: "test".to_string(),
-        human: "Authorization: Bearer secret123".to_string(),
-        ..Default::default()
-    });
-
-    let captured = adapter.captured();
-    assert_eq!(captured.len(), 1);
-
-    // Secret should be redacted
-    assert!(!captured[0].human.contains("secret123"));
-    assert!(captured[0].human.contains("[REDACTED]"));
-}
+// TEAM-204: Removed test_redaction_in_narration - narration doesn't redact
 
 /// Tests NARR-6002: Capture adapter MUST support assertions
 #[test]
@@ -171,19 +150,7 @@ fn test_legacy_human_function() {
     assert_eq!(captured[0].human, "message");
 }
 
-#[test]
-fn test_redaction_policy_custom() {
-    let text = "Bearer token123 and api_key=secret456";
-
-    // Default policy
-    let redacted = redact_secrets(text, RedactionPolicy::default());
-    assert!(redacted.contains("[REDACTED]"));
-
-    // Custom replacement
-    let policy = RedactionPolicy { replacement: "***".to_string(), ..Default::default() };
-    let redacted = redact_secrets(text, policy);
-    assert!(redacted.contains("***"));
-}
+// TEAM-204: Removed test_redaction_policy_custom - narration doesn't redact
 
 /// Tests multiple narration events
 #[test]

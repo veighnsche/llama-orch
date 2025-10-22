@@ -347,7 +347,7 @@ impl Narration {
     ///
     /// Note: Use the `narrate!` macro instead to capture caller's crate name.
     pub fn emit(self) {
-        crate::narrate_auto(self.fields)
+        crate::narrate(self.fields)
     }
 
     /// Emit with explicit provenance (internal use by macro)
@@ -357,7 +357,10 @@ impl Narration {
             self.fields.emitted_by = Some(format!("{}@{}", crate_name, crate_version));
         }
         if self.fields.emitted_at_ms.is_none() {
-            self.fields.emitted_at_ms = Some(crate::auto::current_timestamp_ms());
+            use std::time::{SystemTime, UNIX_EPOCH};
+            self.fields.emitted_at_ms = Some(
+                SystemTime::now().duration_since(UNIX_EPOCH).unwrap_or_default().as_millis() as u64
+            );
         }
         crate::narrate(self.fields)
     }
@@ -560,20 +563,6 @@ mod tests {
         let captured = adapter.captured();
         assert_eq!(captured.len(), 1);
         assert_eq!(captured[0].error_kind, Some("ResourceExhausted".to_string()));
-    }
-
-    #[test]
-    #[serial(capture_adapter)]
-    fn test_builder_auto_injection() {
-        let adapter = CaptureAdapter::install();
-
-        Narration::new("test", "test", "test").human("Test").emit();
-
-        let captured = adapter.captured();
-        assert_eq!(captured.len(), 1);
-        // Auto-injection should add emitted_by and emitted_at_ms
-        assert!(captured[0].emitted_by.is_some());
-        assert!(captured[0].emitted_at_ms.is_some());
     }
 }
 
