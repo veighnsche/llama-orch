@@ -145,8 +145,7 @@ impl DaemonManager {
     }
 
     /// Find a binary in the target directory (for development)
-    ///
-    /// Searches for the binary in:
+    /// Tries to find a binary in the standard Cargo target directory:
     /// - `target/debug/{name}`
     /// - `target/release/{name}`
     ///
@@ -156,8 +155,23 @@ impl DaemonManager {
     /// # Returns
     /// Path to the binary if found
     pub fn find_in_target(name: &str) -> Result<PathBuf> {
+        // TEAM-255: Find workspace root by looking for Cargo.toml
+        let mut current = std::env::current_dir()?;
+        let workspace_root = loop {
+            if current.join("Cargo.toml").exists() && 
+               (current.join("xtask").exists() || current.join("bin").exists()) {
+                break current;
+            }
+            if let Some(parent) = current.parent() {
+                current = parent.to_path_buf();
+            } else {
+                // Fallback to current dir if workspace root not found
+                break std::env::current_dir()?;
+            }
+        };
+
         // Try debug first (development mode)
-        let debug_path = PathBuf::from("target/debug").join(name);
+        let debug_path = workspace_root.join("target/debug").join(name);
         if debug_path.exists() {
             // TEAM-197: Updated to narration-core v0.5.0 pattern
             NARRATE
@@ -170,7 +184,7 @@ impl DaemonManager {
         }
 
         // Try release
-        let release_path = PathBuf::from("target/release").join(name);
+        let release_path = workspace_root.join("target/release").join(name);
         if release_path.exists() {
             // TEAM-197: Updated to narration-core v0.5.0 pattern
             NARRATE

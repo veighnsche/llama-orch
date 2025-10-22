@@ -1,5 +1,10 @@
 // TEAM-252: Process failure tests
 // Purpose: Test behavior when processes crash
+// TEAM-255: Fixed missing imports
+
+use std::time::Duration;
+use crate::integration::assertions::{assert_failure, assert_success, assert_output_contains};
+use crate::integration::harness::TestHarness;
 
 
 #[tokio::test]

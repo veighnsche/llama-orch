@@ -1,5 +1,14 @@
 // TEAM-252: Resource failure tests
 // Purpose: Test behavior with resource constraints
+// TEAM-255: Fixed missing imports
+
+use std::fs;
+use std::time::Duration;
+use crate::integration::assertions::{assert_success, assert_output_contains};
+use crate::integration::harness::TestHarness;
+
+#[cfg(unix)]
+use std::os::unix::fs::PermissionsExt;
 
 
 #[tokio::test]
@@ -20,7 +29,6 @@ async fn test_disk_full_simulation() {
     // Make directory read-only
     #[cfg(unix)]
     {
-        use std::os::unix::fs::PermissionsExt;
         let perms = fs::Permissions::from_mode(0o444);
         fs::set_permissions(&readonly_dir, perms).unwrap();
     }
@@ -32,7 +40,6 @@ async fn test_disk_full_simulation() {
     // Restore permissions
     #[cfg(unix)]
     {
-        use std::os::unix::fs::PermissionsExt;
         let perms = fs::Permissions::from_mode(0o755);
         fs::set_permissions(&readonly_dir, perms).unwrap();
     }
@@ -58,7 +65,6 @@ async fn test_permission_denied() {
     // Make directory inaccessible
     #[cfg(unix)]
     {
-        use std::os::unix::fs::PermissionsExt;
         let perms = fs::Permissions::from_mode(0o000);
         fs::set_permissions(&restricted_dir, perms).unwrap();
     }
@@ -70,7 +76,6 @@ async fn test_permission_denied() {
     // Restore permissions
     #[cfg(unix)]
     {
-        use std::os::unix::fs::PermissionsExt;
         let perms = fs::Permissions::from_mode(0o755);
         fs::set_permissions(&restricted_dir, perms).unwrap();
     }

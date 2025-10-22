@@ -53,16 +53,15 @@ impl TestHarness {
         let temp_dir = TempDir::new().context("Failed to create temp directory")?;
         let test_id = Uuid::new_v4().to_string();
 
-        // Find free ports
-        let queen_port = Self::find_free_port()?;
-        let hive_port = Self::find_free_port()?;
+        // TEAM-255: Use default ports since binaries don't respect custom port env vars
+        // This means tests cannot run in parallel, but they will work
+        let queen_port = 8500;  // Default queen port from queen-rbee/src/main.rs
+        let hive_port = 9000;   // Default hive port from rbee-hive/src/main.rs
 
         // Set up isolated environment
         env::set_var("RBEE_CONFIG_DIR", temp_dir.path().join("config"));
         env::set_var("RBEE_DATA_DIR", temp_dir.path().join("data"));
         env::set_var("RBEE_TEST_ID", &test_id);
-        env::set_var("RBEE_QUEEN_PORT", queen_port.to_string());
-        env::set_var("RBEE_HIVE_PORT", hive_port.to_string());
 
         // Create config directory
         std::fs::create_dir_all(temp_dir.path().join("config"))?;
@@ -83,13 +82,26 @@ impl TestHarness {
 
     /// Find binary path
     fn find_binary(&self, name: &str) -> Result<PathBuf> {
+        // TEAM-255: Find workspace root by looking for Cargo.toml
+        let mut current = env::current_dir()?;
+        let workspace_root = loop {
+            if current.join("Cargo.toml").exists() && current.join("xtask").exists() {
+                break current;
+            }
+            if let Some(parent) = current.parent() {
+                current = parent.to_path_buf();
+            } else {
+                bail!("Could not find workspace root");
+            }
+        };
+
         // Try debug first, then release
-        let debug_path = PathBuf::from("target/debug").join(name);
+        let debug_path = workspace_root.join("target/debug").join(name);
         if debug_path.exists() {
             return Ok(debug_path);
         }
 
-        let release_path = PathBuf::from("target/release").join(name);
+        let release_path = workspace_root.join("target/release").join(name);
         if release_path.exists() {
             return Ok(release_path);
         }
@@ -103,8 +115,12 @@ impl TestHarness {
 
         println!("🔧 Running: {} {}", binary.display(), cmd.join(" "));
 
+        // TEAM-255: Pass environment variables to child process
         let output = Command::new(binary)
             .args(cmd)
+            .env("RBEE_CONFIG_DIR", self.temp_dir.path().join("config"))
+            .env("RBEE_DATA_DIR", self.temp_dir.path().join("data"))
+            .env("RBEE_TEST_ID", &self.test_id)
             .stdout(Stdio::piped())
             .stderr(Stdio::piped())
             .output()
