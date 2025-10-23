@@ -2,11 +2,65 @@
 //!
 //! Allows narration events to be sent over Server-Sent Events (SSE) channels
 //! for remote observability in distributed systems.
+//!
+//! # Architecture
+//!
+//! This module implements job-scoped SSE channels for secure, isolated narration streaming:
+//!
+//! 1. **Job Isolation**: Each job gets its own MPSC channel (sender + receiver)
+//! 2. **Fail-Fast Security**: Events without job_id are dropped (prevents privacy leaks)
+//! 3. **Single Receiver**: MPSC semantics ensure only one consumer per job
+//! 4. **Automatic Cleanup**: Channels are removed when jobs complete
+//!
+//! # Usage Pattern
+//!
+//! ```rust,ignore
+//! // 1. Create job channel (in job_router before execution)
+//! sse_sink::create_job_channel(job_id.clone(), 1000);
+//!
+//! // 2. Take receiver (in SSE endpoint handler)
+//! let mut rx = sse_sink::take_job_receiver(&job_id)?;
+//!
+//! // 3. Stream events to client
+//! while let Some(event) = rx.recv().await {
+//!     send_sse(&event.formatted).await?;
+//! }
+//!
+//! // 4. Cleanup (when job completes)
+//! sse_sink::remove_job_channel(&job_id);
+//! ```
+//!
+//! # Security
+//!
+//! CRITICAL: Global channels are a privacy hazard. Inference data from Job A
+//! could leak to subscribers of Job B. This module enforces job isolation.
 
 use crate::NarrationFields;
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
 use tokio::sync::mpsc;
+
+// ============================================================================
+// CONSTANTS
+// ============================================================================
+// TEAM-276: Extract magic numbers for maintainability
+
+/// Default channel capacity for job-scoped SSE streams
+/// 
+/// TEAM-276: Currently unused but defined for future API improvements
+/// (e.g., create_job_channel_with_default_capacity). Kept for documentation.
+#[allow(dead_code)]
+const DEFAULT_CHANNEL_CAPACITY: usize = 1000;
+
+/// Actor field width in formatted output (characters)
+const ACTOR_WIDTH: usize = 10;
+
+/// Action field width in formatted output (characters)
+const ACTION_WIDTH: usize = 15;
+
+// ============================================================================
+// GLOBAL REGISTRY
+// ============================================================================
 
 /// Global SSE channel registry with job-scoped channels.
 ///
@@ -15,6 +69,10 @@ use tokio::sync::mpsc;
 /// TEAM-262: Renamed from SSE_BROADCASTER to SSE_CHANNEL_REGISTRY
 static SSE_CHANNEL_REGISTRY: once_cell::sync::Lazy<SseChannelRegistry> =
     once_cell::sync::Lazy::new(SseChannelRegistry::new);
+
+// ============================================================================
+// CORE TYPES
+// ============================================================================
 
 /// Job-scoped SSE channel registry.
 ///
@@ -73,9 +131,17 @@ impl From<NarrationFields> for NarrationEvent {
 
         // TEAM-201: Pre-format text (same format as stderr output)
         // Format: "[actor     ] action         : message"
-        // - Actor: 10 chars (left-aligned, padded)
-        // - Action: 15 chars (left-aligned, padded)
-        let formatted = format!("[{:<10}] {:<15}: {}", fields.actor, fields.action, fields.human);
+        // - Actor: ACTOR_WIDTH chars (left-aligned, padded)
+        // - Action: ACTION_WIDTH chars (left-aligned, padded)
+        // TEAM-276: Use constants for field widths
+        let formatted = format!(
+            "[{:<width_actor$}] {:<width_action$}: {}",
+            fields.actor,
+            fields.action,
+            fields.human,
+            width_actor = ACTOR_WIDTH,
+            width_action = ACTION_WIDTH
+        );
 
         Self {
             formatted,
@@ -93,7 +159,12 @@ impl From<NarrationFields> for NarrationEvent {
     }
 }
 
+// ============================================================================
+// REGISTRY IMPLEMENTATION
+// ============================================================================
+
 impl SseChannelRegistry {
+    /// Create a new empty registry.
     fn new() -> Self {
         Self {
             senders: Arc::new(Mutex::new(HashMap::new())),
@@ -127,14 +198,22 @@ impl SseChannelRegistry {
     /// Better to lose narration than leak it to wrong subscribers.
     ///
     /// TEAM-205: SIMPLIFIED - Use MPSC try_send (works in both sync and async contexts).
+    ///
+    /// # Behavior
+    ///
+    /// - If channel exists: Attempts to send event (may fail if full/closed)
+    /// - If channel doesn't exist: **Drops event silently** (fail-fast security)
+    /// - If channel is full: **Drops event silently** (backpressure)
+    ///
+    /// All failures are intentional - we prioritize security over completeness.
     pub fn send_to_job(&self, job_id: &str, event: NarrationEvent) {
         let senders = self.senders.lock().unwrap();
         if let Some(tx) = senders.get(job_id) {
-            // Use try_send which works in both sync and async contexts
-            // This will fail if channel is full or receiver is dropped (both are fine)
+            // TEAM-276: try_send works in both sync and async contexts
+            // Failures (full/closed) are intentionally ignored
             let _ = tx.try_send(event);
         }
-        // If channel doesn't exist: DROP THE EVENT (fail-fast)
+        // TEAM-276: If channel doesn't exist, DROP THE EVENT (fail-fast)
         // This is intentional - better to lose narration than leak sensitive data
     }
 
@@ -149,13 +228,26 @@ impl SseChannelRegistry {
     }
 
     /// Check if a job channel exists.
+    ///
+    /// Returns `true` if a channel has been created for this job_id and not yet removed.
     pub fn has_job_channel(&self, job_id: &str) -> bool {
         self.senders.lock().unwrap().contains_key(job_id)
+    }
+
+    /// Get the number of active job channels (for monitoring/debugging).
+    ///
+    /// TEAM-276: Added for observability
+    pub fn active_channel_count(&self) -> usize {
+        self.senders.lock().unwrap().len()
     }
 }
 
 // TEAM-204: REMOVED global channel initialization (security fix)
 // All narration is job-scoped or dropped (fail-fast)
+
+// ============================================================================
+// PUBLIC API
+// ============================================================================
 
 /// Create a job-specific SSE channel.
 ///
@@ -186,14 +278,24 @@ pub fn remove_job_channel(job_id: &str) {
 /// If no job_id, event is DROPPED (intentional).
 ///
 /// This prevents sensitive inference data from leaking to global subscribers.
+///
+/// # Security Guarantees
+///
+/// - **No job_id**: Event is dropped (fail-fast)
+/// - **Invalid job_id**: Event is dropped (fail-fast)
+/// - **Channel full**: Event is dropped (backpressure)
+/// - **Receiver closed**: Event is dropped (cleanup)
+///
+/// All drops are intentional - we prioritize security over completeness.
 pub fn send(fields: &NarrationFields) {
-    let event = NarrationEvent::from(fields.clone());
+    // TEAM-276: Early return for clarity
+    let Some(job_id) = &fields.job_id else {
+        // SECURITY: No job_id = DROP (fail-fast, prevent privacy leaks)
+        return;
+    };
 
-    // SECURITY: Only send if we have a job_id
-    if let Some(job_id) = &fields.job_id {
-        SSE_CHANNEL_REGISTRY.send_to_job(job_id, event);
-    }
-    // If no job_id: DROP (fail-fast, prevent privacy leaks)
+    let event = NarrationEvent::from(fields.clone());
+    SSE_CHANNEL_REGISTRY.send_to_job(job_id, event);
 }
 
 /// Take the receiver for a specific job's SSE stream.
@@ -216,24 +318,53 @@ pub fn take_job_receiver(job_id: &str) -> Option<mpsc::Receiver<NarrationEvent>>
 /// Check if SSE broadcasting is enabled.
 ///
 /// TEAM-200: Always true now (job-scoped channels are always available).
+///
+/// # Note
+///
+/// This function exists for backward compatibility. SSE channels are always
+/// available - they're created on-demand per job.
 pub fn is_enabled() -> bool {
     true
 }
 
 /// Check if a job channel exists.
+///
+/// Returns `true` if a channel has been created for this job_id and not yet removed.
 pub fn has_job_channel(job_id: &str) -> bool {
     SSE_CHANNEL_REGISTRY.has_job_channel(job_id)
+}
+
+/// Get the number of active job channels (for monitoring/debugging).
+///
+/// TEAM-276: Added for observability
+pub fn active_channel_count() -> usize {
+    SSE_CHANNEL_REGISTRY.active_channel_count()
 }
 
 // TEAM-204: Removed obsolete redaction tests
 // Redaction was a byproduct of the global channel security flaw
 // With job isolation, no redaction needed - developers need full context for debugging
 
+// ============================================================================
+// TESTS
+// ============================================================================
+
 // TEAM-201: Formatting tests for centralized formatted field
 #[cfg(test)]
 mod team_201_formatting_tests {
     use super::*;
     use crate::NarrationFields;
+
+    // TEAM-276: Test helper for creating minimal fields
+    fn minimal_fields(actor: &'static str, action: &'static str, human: &str) -> NarrationFields {
+        NarrationFields {
+            actor,
+            action,
+            target: "test-target".to_string(),
+            human: human.to_string(),
+            ..Default::default()
+        }
+    }
 
     #[test]
     fn test_formatted_field_matches_stderr_format() {
@@ -257,30 +388,18 @@ mod team_201_formatting_tests {
 
     #[test]
     fn test_formatted_with_short_actor() {
-        let fields = NarrationFields {
-            actor: "abc",
-            action: "xyz",
-            target: "test".to_string(),
-            human: "Short".to_string(),
-            ..Default::default()
-        };
-
+        // TEAM-276: Use helper for cleaner test
+        let fields = minimal_fields("abc", "xyz", "Short");
         let event = NarrationEvent::from(fields);
 
-        // Should pad to 10 chars for actor, 15 for action
+        // Should pad to ACTOR_WIDTH (10) chars for actor, ACTION_WIDTH (15) for action
         assert_eq!(event.formatted, "[abc       ] xyz            : Short");
     }
 
     #[test]
     fn test_formatted_with_long_actor() {
-        let fields = NarrationFields {
-            actor: "very-long-actor-name",
-            action: "very-long-action-name",
-            target: "test".to_string(),
-            human: "Long".to_string(),
-            ..Default::default()
-        };
-
+        // TEAM-276: Use helper for cleaner test
+        let fields = minimal_fields("very-long-actor-name", "very-long-action-name", "Long");
         let event = NarrationEvent::from(fields);
 
         // Should truncate/handle long names (Rust format! will extend if needed)
@@ -317,6 +436,18 @@ mod team_200_isolation_tests {
     use super::*;
     use crate::NarrationFields;
 
+    // TEAM-276: Test helper for creating job-scoped fields
+    fn job_fields(job_id: &str, action: &'static str, message: &str) -> NarrationFields {
+        NarrationFields {
+            actor: "test",
+            action,
+            target: format!("target-{}", job_id),
+            human: message.to_string(),
+            job_id: Some(job_id.to_string()),
+            ..Default::default()
+        }
+    }
+
     #[tokio::test]
     #[serial_test::serial(capture_adapter)]
     async fn test_job_isolation() {
@@ -328,27 +459,9 @@ mod team_200_isolation_tests {
         let mut rx_a = take_job_receiver("job-a").unwrap();
         let mut rx_b = take_job_receiver("job-b").unwrap();
 
-        // Send narration to job-a
-        let fields_a = NarrationFields {
-            actor: "test",
-            action: "action_a",
-            target: "target-a".to_string(),
-            human: "Message for Job A".to_string(),
-            job_id: Some("job-a".to_string()),
-            ..Default::default()
-        };
-        send(&fields_a);
-
-        // Send narration to job-b
-        let fields_b = NarrationFields {
-            actor: "test",
-            action: "action_b",
-            target: "target-b".to_string(),
-            human: "Message for Job B".to_string(),
-            job_id: Some("job-b".to_string()),
-            ..Default::default()
-        };
-        send(&fields_b);
+        // TEAM-276: Use helper for cleaner test
+        send(&job_fields("job-a", "action_a", "Message for Job A"));
+        send(&job_fields("job-b", "action_b", "Message for Job B"));
 
         // Job A should only receive its message
         let event_a = rx_a.recv().await.unwrap();
@@ -383,16 +496,8 @@ mod team_200_isolation_tests {
         // TEAM-204: SECURITY FIX - When job channel doesn't exist, event is DROPPED (fail-fast)
         // This prevents sensitive data from leaking to wrong subscribers
 
-        // Send to non-existent job channel
-        let fields = NarrationFields {
-            actor: "test",
-            action: "test",
-            target: "test".to_string(),
-            human: "Test message for nonexistent job".to_string(),
-            job_id: Some("nonexistent-job".to_string()),
-            ..Default::default()
-        };
-        send(&fields);
+        // TEAM-276: Use helper for cleaner test
+        send(&job_fields("nonexistent-job", "test", "Test message for nonexistent job"));
 
         // Event is dropped - this is intentional and correct
         // Better to lose narration than leak sensitive inference data
@@ -408,15 +513,8 @@ mod team_200_isolation_tests {
         let job_id = "race-condition-job";
 
         // 1. Emit narration (job channel doesn't exist yet!)
-        let fields = NarrationFields {
-            actor: "test",
-            action: "early_narration",
-            target: "test".to_string(),
-            human: "This happened before channel was created!".to_string(),
-            job_id: Some(job_id.to_string()),
-            ..Default::default()
-        };
-        send(&fields);
+        // TEAM-276: Use helper for cleaner test
+        send(&job_fields(job_id, "early_narration", "This happened before channel was created!"));
 
         // 2. Event is DROPPED (no channel exists) - this is intentional
         assert!(!has_job_channel(job_id));
@@ -426,15 +524,8 @@ mod team_200_isolation_tests {
         let mut job_rx = take_job_receiver(job_id).unwrap();
 
         // 4. Future narration should go to job channel
-        let fields2 = NarrationFields {
-            actor: "test",
-            action: "later_narration",
-            target: "test".to_string(),
-            human: "This happened after channel was created!".to_string(),
-            job_id: Some(job_id.to_string()),
-            ..Default::default()
-        };
-        send(&fields2);
+        // TEAM-276: Use helper for cleaner test
+        send(&job_fields(job_id, "later_narration", "This happened after channel was created!"));
 
         // 5. This event should be in JOB channel
         let event2 = job_rx.recv().await.expect("Should be in job channel");
@@ -443,3 +534,48 @@ mod team_200_isolation_tests {
         remove_job_channel(job_id);
     }
 }
+
+// ============================================================================
+// TEAM-276 REFACTORING SUMMARY
+// ============================================================================
+//
+// **Improvements Made:**
+//
+// 1. **Enhanced Documentation**
+//    - Added comprehensive module-level docs with architecture overview
+//    - Added usage pattern examples
+//    - Improved inline documentation for complex logic
+//    - Added security guarantees documentation
+//
+// 2. **Code Organization**
+//    - Grouped code into logical sections with clear headers
+//    - Constants section for magic numbers (ACTOR_WIDTH, ACTION_WIDTH, DEFAULT_CHANNEL_CAPACITY)
+//    - Public API section for exported functions
+//    - Tests section with clear module boundaries
+//
+// 3. **Maintainability**
+//    - Extracted magic numbers into named constants
+//    - Added test helper functions (minimal_fields, job_fields)
+//    - Improved error handling documentation
+//    - Added active_channel_count() for observability
+//
+// 4. **Code Quality**
+//    - Used early returns for clarity (send function)
+//    - Named format width parameters for readability
+//    - Improved test readability with helper functions
+//    - Enhanced behavior documentation (send_to_job)
+//
+// **Historical Context Preserved:**
+// - TEAM-200: Job-scoped channels foundation
+// - TEAM-201: Centralized formatting
+// - TEAM-204: Security fixes (fail-fast, no global channel)
+// - TEAM-205: MPSC simplification
+// - TEAM-262: Naming improvements (SSE_CHANNEL_REGISTRY)
+//
+// **No Breaking Changes:**
+// - All public API preserved
+// - All tests still pass
+// - All historical team comments preserved
+// - Backward compatibility maintained
+//
+// ============================================================================
