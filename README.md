@@ -781,64 +781,136 @@ sequenceDiagram
 
 ```mermaid
 graph TB
-    subgraph "Binaries"
+    subgraph "Main Binaries"
         Keeper[bin/00_rbee_keeper<br/>CLI Tool<br/>User Interface]
-        Queen[bin/10_queen_rbee<br/>HTTP Daemon<br/>The Brain<br/>Port 8500]
-        Hive[bin/20_rbee_hive<br/>HTTP Daemon<br/>Worker Lifecycle<br/>Port 9000]
-        Worker[bin/30_llm_worker_rbee<br/>HTTP Daemon<br/>Executor<br/>Ports 9300+]
+        Queen[bin/10_queen_rbee<br/>HTTP Daemon<br/>Orchestrator<br/>Port 8500]
+        Hive[bin/20_rbee_hive<br/>HTTP Daemon<br/>Worker Manager<br/>Port 9000]
+        Worker[bin/30_llm_worker_rbee<br/>HTTP Daemon<br/>Inference Engine<br/>Ports 9300+]
     end
     
-    subgraph "Queen Crates"
-        JobRouter[job_router.rs<br/>Operation Routing]
-        HiveForwarder[hive_forwarder.rs<br/>Forward to Hive]
-        HiveLifecycle[hive-lifecycle<br/>Hive Ops]
-        JobServer[job-server<br/>SSE Registry]
+    subgraph "Keeper Crates (05_)"
+        QueenLifecycle[queen-lifecycle<br/>Queen Spawn/Health]
     end
     
-    subgraph "Hive Crates"
-        WorkerSpawn[worker spawning]
-        ModelCatalog[model catalog]
-        DeviceDetect[gpu-info]
+    subgraph "Queen Crates (15_)"
+        SshClient[ssh-client<br/>Remote SSH Ops]
+        WorkerRegistry[worker-registry<br/>Worker Tracking]
+        HiveLifecycle[hive-lifecycle<br/>Hive Lifecycle Ops]
+        OpenAIAdapter[rbee-openai-adapter<br/>OpenAI API Compat]
     end
     
-    subgraph "Shared Infrastructure"
-        JobClient[rbee-job-client<br/>HTTP+SSE Client]
-        Narration[narration-core<br/>Observability]
-        AuthMin[auth-min<br/>Security]
-        AuditLog[audit-logging<br/>GDPR]
+    subgraph "Hive Crates (25_)"
+        WorkerLifecycle[worker-lifecycle<br/>Worker Spawn/Stop]
+        ModelCatalog[model-catalog<br/>Model Registry]
+        ModelProvisioner[model-provisioner<br/>Model Downloads]
+        Monitor[monitor<br/>Resource Monitoring]
+        DownloadTracker[download-tracker<br/>Download Progress]
+        DeviceDetection[device-detection<br/>GPU/CPU Detection]
+        VramChecker[vram-checker<br/>VRAM Validation]
+        WorkerCatalog[worker-catalog<br/>Worker Registry]
     end
     
-    %% Component dependencies
+    subgraph "Shared Infrastructure (99_)"
+        AuditLog[audit-logging<br/>GDPR Compliance]
+        AuthMin[auth-min<br/>Authentication]
+        DeadlineProp[deadline-propagation<br/>Timeout Chain]
+        InputVal[input-validation<br/>Input Sanitization]
+        JwtGuardian[jwt-guardian<br/>JWT Validation]
+        NarrationCore[narration-core<br/>Observability]
+        NarrationMacros[narration-macros<br/>Narration Macros]
+        SecretsManagement[secrets-management<br/>Secret Storage]
+        DaemonLifecycle[daemon-lifecycle<br/>Process Management]
+        RbeeOps[rbee-operations<br/>Operation Types]
+        Heartbeat[heartbeat<br/>Health Checks]
+        JobServer[job-server<br/>SSE Job Registry]
+        TimeoutEnforcer[timeout-enforcer<br/>Hard Timeouts]
+        AutoUpdate[auto-update<br/>Binary Updates]
+        RbeeConfig[rbee-config<br/>Configuration]
+        JobClient[job-client<br/>HTTP+SSE Client]
+    end
+    
+    subgraph "Consumer Libraries"
+        RbeeSdk[rbee-sdk<br/>Rust SDK]
+        RbeeUtils[rbee-utils<br/>CLI Utilities]
+    end
+    
+    subgraph "Developer Tools"
+        OpenApiClient[openapi-client<br/>API Generator]
+        ReadmeIndex[readme-index<br/>Doc Generator]
+        SpecExtract[spec-extract<br/>Spec Validator]
+        Xtask[xtask<br/>Build Automation]
+    end
+    
+    %% Binary to Binary Dependencies
     Keeper --> Queen
     Queen --> Hive
     Hive --> Worker
+    Worker -.Heartbeat.-> Queen
     
-    Queen --> JobRouter
-    Queen --> HiveForwarder
-    Queen --> HiveLifecycle
-    Queen --> JobServer
-    
-    Hive --> WorkerSpawn
-    Hive --> ModelCatalog
-    Hive --> DeviceDetect
-    
-    Queen --> JobClient
+    %% Keeper Dependencies
+    Keeper --> QueenLifecycle
     Keeper --> JobClient
-    Hive --> JobClient
+    Keeper --> NarrationCore
+    Keeper --> RbeeOps
+    Keeper --> TimeoutEnforcer
     
-    Queen --> Narration
-    Hive --> Narration
-    Worker --> Narration
-    
+    %% Queen Dependencies
+    Queen --> HiveLifecycle
+    Queen --> WorkerRegistry
+    Queen --> SshClient
+    Queen --> OpenAIAdapter
+    Queen --> JobServer
+    Queen --> JobClient
+    Queen --> NarrationCore
     Queen --> AuthMin
-    Hive --> AuthMin
-    
     Queen --> AuditLog
+    Queen --> RbeeConfig
+    Queen --> RbeeOps
+    Queen --> TimeoutEnforcer
+    Queen --> DaemonLifecycle
     
+    %% Hive Dependencies
+    Hive --> WorkerLifecycle
+    Hive --> ModelCatalog
+    Hive --> ModelProvisioner
+    Hive --> Monitor
+    Hive --> DownloadTracker
+    Hive --> DeviceDetection
+    Hive --> VramChecker
+    Hive --> WorkerCatalog
+    Hive --> JobServer
+    Hive --> JobClient
+    Hive --> NarrationCore
+    Hive --> AuthMin
+    Hive --> DaemonLifecycle
+    Hive --> Heartbeat
+    
+    %% Worker Dependencies
+    Worker --> NarrationCore
+    Worker --> Heartbeat
+    Worker --> AuthMin
+    
+    %% Shared Infrastructure Internal Dependencies
+    NarrationCore --> NarrationMacros
+    JobServer --> NarrationCore
+    TimeoutEnforcer --> NarrationCore
+    AuthMin --> JwtGuardian
+    AuditLog --> InputVal
+    
+    %% Consumer Library Dependencies
+    RbeeSdk --> RbeeOps
+    RbeeUtils --> RbeeSdk
+    
+    %% Styling
     style Queen fill:#e1f5ff,stroke:#0288d1,stroke-width:3px
     style Hive fill:#fff4e1,stroke:#f57c00,stroke-width:2px
     style Worker fill:#e8f5e9,stroke:#2e7d32,stroke-width:2px
     style Keeper fill:#f0f4c3,stroke:#827717,stroke-width:2px
+    
+    style JobServer fill:#ffe0b2,stroke:#e65100,stroke-width:2px
+    style NarrationCore fill:#ffe0b2,stroke:#e65100,stroke-width:2px
+    style AuthMin fill:#ffccbc,stroke:#bf360c,stroke-width:2px
+    style RbeeOps fill:#c5e1a5,stroke:#558b2f,stroke-width:2px
 ```
 
 ### Key Shared Crates
