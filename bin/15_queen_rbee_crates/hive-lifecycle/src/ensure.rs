@@ -70,7 +70,7 @@ async fn ensure_hive_running_inner(
     // TEAM-276: Use shared ensure pattern from daemon-lifecycle
     
     // Step 1: Get hive configuration
-    let all_hives = config.hives.all();
+    let all_hives = &config.hives.hives;
     let hive_config = all_hives
         .iter()
         .find(|h| h.alias == hive_alias)

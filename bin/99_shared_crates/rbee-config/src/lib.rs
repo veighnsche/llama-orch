@@ -75,7 +75,7 @@ pub use validation::{
     preflight_validation, validate_capabilities_sync, validate_hives_config, ValidationResult,
 };
 
-// TEAM-278: Export declarative types as primary API (no aliases needed)
+// TEAM-278: Export declarative types as primary API
 pub use declarative::{HiveConfig, HivesConfig, WorkerConfig};
 
 use std::path::{Path, PathBuf};
@@ -167,7 +167,7 @@ impl RbeeConfig {
 
     /// Get hive by alias
     pub fn get_hive(&self, alias: &str) -> Option<&HiveConfig> {
-        self.hives.get_hive(alias)
+        self.hives.hives.iter().find(|h| h.alias == alias)
     }
 
     /// Get all hives

@@ -197,7 +197,9 @@ pub async fn forward_to_hive(
     // Look up hive in config
     let hive_config = config
         .hives
-        .get(&hive_id)
+        .hives
+        .iter()
+        .find(|h| h.alias == hive_id)
         .ok_or_else(|| anyhow::anyhow!("Hive '{}' not found in configuration", hive_id))?;
 
     // Determine hive host and port

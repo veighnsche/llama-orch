@@ -56,9 +56,54 @@ pub enum Operation {
     /// TEAM-190: Show live status of all hives and workers from registry
     Status,
 
+    // Package manager operations (declarative lifecycle)
+    // TEAM-279: New operations for config-driven lifecycle management
+    /// Sync actual state to match declarative config (install/remove as needed)
+    PackageSync {
+        /// Path to config file (default: ~/.config/rbee/hives.conf)
+        config_path: Option<String>,
+        /// Dry run - show what would change without applying
+        dry_run: bool,
+        /// Remove components not in config
+        remove_extra: bool,
+        /// Force reinstall even if already installed
+        force: bool,
+    },
+    /// Check if actual state matches config (drift detection)
+    PackageStatus {
+        /// Path to config file
+        config_path: Option<String>,
+        /// Show detailed diff
+        verbose: bool,
+    },
+    /// Install all components from config (alias for PackageSync with remove_extra=false)
+    PackageInstall {
+        /// Path to config file
+        config_path: Option<String>,
+        /// Force reinstall
+        force: bool,
+    },
+    /// Uninstall components
+    PackageUninstall {
+        /// Path to config file
+        config_path: Option<String>,
+        /// Remove config files too
+        purge: bool,
+    },
+    /// Validate config without applying changes
+    PackageValidate {
+        /// Path to config file
+        config_path: Option<String>,
+    },
+    /// Generate config from current state
+    PackageMigrate {
+        /// Output path for generated config
+        output_path: String,
+    },
+
     // Hive operations
     // TEAM-278: DELETED HiveInstall, HiveUninstall, SshTest
-    // These are replaced by PackageSync/PackageInstall/PackageUninstall (TEAM-279 will add)
+    // These are replaced by PackageSync/PackageInstall/PackageUninstall (TEAM-279 added above)
     HiveStart {
         /// Alias from hives.conf (defaults to "localhost")
         #[serde(default = "default_hive_id")]
@@ -181,6 +226,13 @@ impl Operation {
     pub fn name(&self) -> &'static str {
         match self {
             Operation::Status => "status", // TEAM-190
+            // TEAM-279: Package manager operations
+            Operation::PackageSync { .. } => "package_sync",
+            Operation::PackageStatus { .. } => "package_status",
+            Operation::PackageInstall { .. } => "package_install",
+            Operation::PackageUninstall { .. } => "package_uninstall",
+            Operation::PackageValidate { .. } => "package_validate",
+            Operation::PackageMigrate { .. } => "package_migrate",
             // TEAM-278: DELETED ssh_test, hive_install, hive_uninstall
             Operation::HiveStart { .. } => "hive_start",
             Operation::HiveStop { .. } => "hive_stop",
@@ -235,13 +287,14 @@ impl Operation {
     ///
     /// TEAM-258: Consolidate hive-forwarding operations
     /// TEAM-272: Updated per corrected architecture
+    /// TEAM-279: Updated to clarify package operations handled by queen
     ///
     /// **Forwarded to Hive (hive-local operations):**
-    /// - Worker binary operations - Download/build/manage worker binaries on hive
     /// - Worker process operations - Spawn/list/kill worker processes on hive (local ps)
     /// - Model operations - Download/manage models on hive
     ///
     /// **Handled by Queen (orchestration):**
+    /// - Package operations - Config-driven lifecycle (PackageSync/Status/Install/etc.)
     /// - Active worker operations - Query heartbeat registry (ActiveWorkerList/Get/Retire)
     /// - Infer - Scheduling and routing to active workers
     /// - Hive operations - Managed by queen (install/start/stop/list)

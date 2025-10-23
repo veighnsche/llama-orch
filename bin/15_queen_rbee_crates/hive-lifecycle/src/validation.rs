@@ -3,7 +3,7 @@
 
 use anyhow::Result;
 use once_cell::sync::Lazy;
-use rbee_config::{HiveEntry, RbeeConfig};
+use rbee_config::{HiveConfig, RbeeConfig};
 use std::path::PathBuf;
 
 /// Validate that a hive alias exists in config
@@ -12,22 +12,25 @@ use std::path::PathBuf;
 /// Special case: "localhost" always returns a default entry.
 ///
 /// COPIED FROM: job_router.rs lines 98-160
-pub fn validate_hive_exists<'a>(config: &'a RbeeConfig, alias: &str) -> Result<&'a HiveEntry> {
+pub fn validate_hive_exists<'a>(config: &'a RbeeConfig, alias: &str) -> Result<&'a HiveConfig> {
     if alias == "localhost" {
         // Localhost operations do not require configuration
-        static LOCALHOST_ENTRY: Lazy<HiveEntry> = Lazy::new(|| HiveEntry {
+        // TEAM-280: Updated to include new fields from declarative config
+        static LOCALHOST_ENTRY: Lazy<HiveConfig> = Lazy::new(|| HiveConfig {
             alias: "localhost".to_string(),
             hostname: "127.0.0.1".to_string(),
             ssh_port: 22,
             ssh_user: "user".to_string(),
             hive_port: 9000,
             binary_path: Some("target/debug/rbee-hive".to_string()),
+            workers: Vec::new(), // TEAM-280: No workers for localhost default
+            auto_start: false,   // TEAM-280: Don't auto-start localhost
         });
         return Ok(&LOCALHOST_ENTRY);
     }
 
-    config.hives.get(alias).ok_or_else(|| {
-        let available_hives = config.hives.all();
+    config.get_hive(alias).ok_or_else(|| {
+        let available_hives = config.all_hives();
         let hive_list = if available_hives.is_empty() {
             "  (none configured)".to_string()
         } else {

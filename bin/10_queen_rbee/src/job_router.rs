@@ -37,10 +37,12 @@ use queen_rbee_hive_lifecycle::{
 };
 // TEAM-275: Removed unused import (using state.hive_registry which is already Arc<WorkerRegistry>)
 use rbee_config::RbeeConfig;
+use rbee_config::declarative::HivesConfig; // TEAM-280: Declarative config
 use rbee_operations::Operation;
 use std::sync::Arc;
 
 use super::hive_forwarder; // TEAM-258: Generic forwarding for hive-managed operations
+use daemon_sync; // TEAM-280: Daemon synchronization operations (moved to shared crate)
 
 // TEAM-192: Narration factory for job router
 const NARRATE: NarrationFactory = NarrationFactory::new("qn-router");
@@ -200,6 +202,122 @@ async fn route_operation(
                 .human("Live Status ({} worker(s)):")
                 .table(&serde_json::Value::Array(all_rows))
                 .emit();
+        }
+
+        // ========================================================================
+        // HIVE ORCHESTRATION OPERATIONS (TEAM-280)
+        // ========================================================================
+        //
+        // Declarative lifecycle management - config-driven sync
+        // Queen orchestrates installation across multiple hives via SSH
+        //
+        Operation::PackageSync { config_path, dry_run, remove_extra, force } => {
+            // TEAM-280: Load declarative config
+            let config = if let Some(path) = config_path {
+                HivesConfig::load_from(&std::path::Path::new(&path))?
+            } else {
+                HivesConfig::load()?
+            };
+
+            let opts = daemon_sync::sync::SyncOptions {
+                dry_run,
+                remove_extra,
+                force,
+            };
+
+            let report = daemon_sync::sync_all_hives(config, opts, &job_id).await?;
+
+            // Display report
+            NARRATE
+                .action("sync_report")
+                .job_id(&job_id)
+                .context(&serde_json::to_string_pretty(&report)?)
+                .human("📊 Sync Report:\n{}")
+                .emit();
+        }
+
+        Operation::PackageStatus { config_path, verbose } => {
+            // TEAM-280: Load declarative config
+            let config = if let Some(path) = config_path {
+                HivesConfig::load_from(&std::path::Path::new(&path))?
+            } else {
+                HivesConfig::load()?
+            };
+
+            let report = daemon_sync::check_status(config, verbose, &job_id).await?;
+
+            // Display report
+            NARRATE
+                .action("status_report")
+                .job_id(&job_id)
+                .context(&serde_json::to_string_pretty(&report)?)
+                .human("📊 Status Report:\n{}")
+                .emit();
+        }
+
+        Operation::PackageInstall { config_path, force } => {
+            // TEAM-280: Alias for PackageSync with remove_extra=false
+            let config = if let Some(path) = config_path {
+                HivesConfig::load_from(&std::path::Path::new(&path))?
+            } else {
+                HivesConfig::load()?
+            };
+
+            let opts = daemon_sync::sync::SyncOptions {
+                dry_run: false,
+                remove_extra: false,
+                force,
+            };
+
+            let report = daemon_sync::sync_all_hives(config, opts, &job_id).await?;
+
+            NARRATE
+                .action("install_report")
+                .job_id(&job_id)
+                .context(&serde_json::to_string_pretty(&report)?)
+                .human("📊 Install Report:\n{}")
+                .emit();
+        }
+
+        Operation::PackageUninstall { config_path, purge } => {
+            // TEAM-280: Uninstall components
+            NARRATE
+                .action("uninstall")
+                .job_id(&job_id)
+                .context(&purge.to_string())
+                .human("🗑️  Uninstall operation (purge: {})")
+                .emit();
+
+            // TODO: Implement uninstall logic
+            NARRATE
+                .action("uninstall_todo")
+                .job_id(&job_id)
+                .human("⚠️  Uninstall not yet implemented")
+                .emit();
+        }
+
+        Operation::PackageValidate { config_path } => {
+            // TEAM-280: Validate config
+            let config = if let Some(path) = config_path {
+                HivesConfig::load_from(&std::path::Path::new(&path))?
+            } else {
+                HivesConfig::load()?
+            };
+
+            let report = daemon_sync::validate_config(config, &job_id).await?;
+
+            NARRATE
+                .action("validate_report")
+                .job_id(&job_id)
+                .context(&serde_json::to_string_pretty(&report)?)
+                .human("📊 Validation Report:\n{}")
+                .emit();
+        }
+
+        Operation::PackageMigrate { output_path } => {
+            // TEAM-280: Generate config from current state
+            let path = std::path::Path::new(&output_path);
+            daemon_sync::migrate::migrate_to_config(path, &job_id).await?;
         }
 
         // TEAM-278: DELETED Operation::SshTest - replaced by PackageValidate

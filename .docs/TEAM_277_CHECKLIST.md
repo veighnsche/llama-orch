@@ -70,52 +70,52 @@
 **Goal:** Add new operations to Operation enum
 
 ### Step 2.1: Add to Operation enum
-- [ ] Open `bin/99_shared_crates/rbee-operations/src/lib.rs`
-- [ ] Find Operation enum (around line 54)
-- [ ] Add `PackageSync` variant with fields:
-  - [ ] `config_path: Option<String>`
-  - [ ] `dry_run: bool`
-  - [ ] `remove_extra: bool`
-  - [ ] `force: bool`
-- [ ] Add `PackageStatus` variant with fields:
-  - [ ] `config_path: Option<String>`
-  - [ ] `verbose: bool`
-- [ ] Add `PackageInstall` variant with fields:
-  - [ ] `config_path: Option<String>`
-  - [ ] `force: bool`
-- [ ] Add `PackageUninstall` variant with fields:
-  - [ ] `config_path: Option<String>`
-  - [ ] `purge: bool`
-- [ ] Add `PackageValidate` variant with field:
-  - [ ] `config_path: Option<String>`
-- [ ] Add `PackageMigrate` variant with field:
-  - [ ] `output_path: String`
+- [x] Open `bin/99_shared_crates/rbee-operations/src/lib.rs`
+- [x] Find Operation enum (around line 54)
+- [x] Add `PackageSync` variant with fields:
+  - [x] `config_path: Option<String>`
+  - [x] `dry_run: bool`
+  - [x] `remove_extra: bool`
+  - [x] `force: bool`
+- [x] Add `PackageStatus` variant with fields:
+  - [x] `config_path: Option<String>`
+  - [x] `verbose: bool`
+- [x] Add `PackageInstall` variant with fields:
+  - [x] `config_path: Option<String>`
+  - [x] `force: bool`
+- [x] Add `PackageUninstall` variant with fields:
+  - [x] `config_path: Option<String>`
+  - [x] `purge: bool`
+- [x] Add `PackageValidate` variant with field:
+  - [x] `config_path: Option<String>`
+- [x] Add `PackageMigrate` variant with field:
+  - [x] `output_path: String`
 
 ### Step 2.2: Add to Operation::name()
-- [ ] Find `Operation::name()` method (around line 148)
-- [ ] Add `Operation::PackageSync { .. } => "package_sync"`
-- [ ] Add `Operation::PackageStatus { .. } => "package_status"`
-- [ ] Add `Operation::PackageInstall { .. } => "package_install"`
-- [ ] Add `Operation::PackageUninstall { .. } => "package_uninstall"`
-- [ ] Add `Operation::PackageValidate { .. } => "package_validate"`
-- [ ] Add `Operation::PackageMigrate { .. } => "package_migrate"`
+- [x] Find `Operation::name()` method (around line 148)
+- [x] Add `Operation::PackageSync { .. } => "package_sync"`
+- [x] Add `Operation::PackageStatus { .. } => "package_status"`
+- [x] Add `Operation::PackageInstall { .. } => "package_install"`
+- [x] Add `Operation::PackageUninstall { .. } => "package_uninstall"`
+- [x] Add `Operation::PackageValidate { .. } => "package_validate"`
+- [x] Add `Operation::PackageMigrate { .. } => "package_migrate"`
 
 ### Step 2.3: Update should_forward_to_hive()
-- [ ] Find `should_forward_to_hive()` method (around line 305)
-- [ ] Update doc comment to clarify:
-  - [ ] Package operations handled by queen (orchestration)
-  - [ ] Worker/Model operations forwarded to hive (execution)
-- [ ] Verify package operations are NOT in the matches! list
+- [x] Find `should_forward_to_hive()` method (around line 305)
+- [x] Update doc comment to clarify:
+  - [x] Package operations handled by queen (orchestration)
+  - [x] Worker/Model operations forwarded to hive (execution)
+- [x] Verify package operations are NOT in the matches! list
 
 ### Step 2.4: Verify
-- [ ] Run `cargo check -p rbee-operations`
-- [ ] Run `cargo test -p rbee-operations`
-- [ ] Verify all operations compile
+- [x] Run `cargo check -p rbee-operations`
+- [x] Run `cargo test -p rbee-operations`
+- [x] Verify all operations compile
 
 **✅ Phase 2 Complete When:**
-- All operations compile
-- Tests pass
-- Documentation updated
+- [x] All operations compile
+- [x] Tests pass
+- [x] Documentation updated
 
 ---
 

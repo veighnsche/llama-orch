@@ -7,7 +7,7 @@
 use anyhow::Result;
 use observability_narration_core::NarrationFactory;
 use queen_rbee_ssh_client::RbeeSSHClient;
-use rbee_config::HiveEntry;
+use rbee_config::HiveConfig;
 
 const NARRATE: NarrationFactory = NarrationFactory::new("hive-life");
 
@@ -26,7 +26,7 @@ const NARRATE: NarrationFactory = NarrationFactory::new("hive-life");
 /// * `Ok(String)` - Command output (stdout)
 /// * `Err` - SSH command failed
 pub async fn ssh_exec(
-    hive_config: &HiveEntry,
+    hive_config: &HiveConfig,
     command: &str,
     job_id: &str,
     action: &'static str,
@@ -97,7 +97,7 @@ pub async fn ssh_exec(
 /// * `Ok(())` - File copied successfully
 /// * `Err` - SFTP failed
 pub async fn scp_copy(
-    hive_config: &HiveEntry,
+    hive_config: &HiveConfig,
     local_path: &str,
     remote_path: &str,
     job_id: &str,
@@ -128,62 +128,70 @@ pub async fn scp_copy(
 }
 
 /// Check if hive is remote (not localhost)
-pub fn is_remote_hive(hive_config: &HiveEntry) -> bool {
+pub fn is_remote_hive(hive_config: &HiveConfig) -> bool {
     hive_config.hostname != "127.0.0.1" && hive_config.hostname != "localhost"
 }
 
 /// Get remote binary path (defaults to ~/.local/bin/rbee-hive)
-pub fn get_remote_binary_path(hive_config: &HiveEntry) -> String {
+pub fn get_remote_binary_path(hive_config: &HiveConfig) -> String {
     hive_config.binary_path.clone().unwrap_or_else(|| "~/.local/bin/rbee-hive".to_string())
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use rbee_config::HiveEntry;
+    use rbee_config::HiveConfig;
 
     #[test]
     fn test_is_remote_hive() {
-        let localhost = HiveEntry {
+        let localhost = HiveConfig {
             alias: "local".to_string(),
             hostname: "127.0.0.1".to_string(),
             ssh_port: 22,
-            ssh_user: "user".to_string(),
+            ssh_user: "vince".to_string(),
             hive_port: 8081,
             binary_path: None,
+            workers: Vec::new(),
+            auto_start: false,
         };
         assert!(!is_remote_hive(&localhost));
 
-        let remote = HiveEntry {
+        let remote = HiveConfig {
             alias: "remote".to_string(),
             hostname: "192.168.1.100".to_string(),
             ssh_port: 22,
-            ssh_user: "user".to_string(),
+            ssh_user: "admin".to_string(),
             hive_port: 8081,
             binary_path: None,
+            workers: Vec::new(),
+            auto_start: false,
         };
         assert!(is_remote_hive(&remote));
     }
 
     #[test]
     fn test_get_remote_binary_path() {
-        let default = HiveEntry {
+        let default = HiveConfig {
             alias: "test".to_string(),
             hostname: "192.168.1.100".to_string(),
             ssh_port: 22,
-            ssh_user: "user".to_string(),
+            ssh_user: "admin".to_string(),
             hive_port: 8081,
             binary_path: None,
+            workers: Vec::new(),
+            auto_start: false,
         };
         assert_eq!(get_remote_binary_path(&default), "~/.local/bin/rbee-hive");
 
-        let custom = HiveEntry {
+        let custom = HiveConfig {
             alias: "test".to_string(),
             hostname: "192.168.1.100".to_string(),
             ssh_port: 22,
-            ssh_user: "user".to_string(),
+            ssh_user: "admin".to_string(),
             hive_port: 8081,
             binary_path: Some("/custom/path/rbee-hive".to_string()),
+            workers: Vec::new(),
+            auto_start: false,
         };
         assert_eq!(get_remote_binary_path(&custom), "/custom/path/rbee-hive");
     }

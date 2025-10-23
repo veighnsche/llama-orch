@@ -18,7 +18,7 @@ impl<'a> ListableConfig for HiveConfigWrapper<'a> {
     fn list_all(&self) -> Vec<Self::Info> {
         self.0
             .hives
-            .all()
+            .hives
             .iter()
             .map(|h| HiveInfo {
                 alias: h.alias.clone(),

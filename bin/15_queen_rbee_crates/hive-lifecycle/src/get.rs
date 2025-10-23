@@ -16,7 +16,7 @@ impl<'a> GettableConfig for HiveConfigWrapper<'a> {
     type Info = HiveInfo;
 
     fn get_by_id(&self, id: &str) -> Option<Self::Info> {
-        self.0.hives.all().iter().find(|h| h.alias == id).map(|h| HiveInfo {
+        self.0.hives.hives.iter().find(|h| h.alias == id).map(|h| HiveInfo {
             alias: h.alias.clone(),
             hostname: h.hostname.clone(),
             hive_port: h.hive_port,

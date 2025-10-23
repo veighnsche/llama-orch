@@ -176,7 +176,7 @@ pub async fn execute_hive_start(
 }
 
 /// Resolve binary path from config or find in target/
-fn resolve_binary_path(hive_config: &rbee_config::HiveEntry, job_id: &str) -> Result<String> {
+fn resolve_binary_path(hive_config: &rbee_config::HiveConfig, job_id: &str) -> Result<String> {
     if let Some(provided_path) = &hive_config.binary_path {
         NARRATE
             .action("hive_binary")
@@ -250,7 +250,7 @@ fn resolve_binary_path(hive_config: &rbee_config::HiveEntry, job_id: &str) -> Re
 /// Handle capabilities cache (hive already running)
 async fn handle_capabilities_cache(
     alias: &str,
-    hive_config: &rbee_config::HiveEntry,
+    hive_config: &rbee_config::HiveConfig,
     config: &Arc<RbeeConfig>,
     job_id: &str,
 ) -> Result<HiveStartResponse> {
@@ -287,7 +287,7 @@ async fn handle_capabilities_cache(
 /// Fetch and cache capabilities
 async fn fetch_and_cache_capabilities(
     alias: &str,
-    hive_config: &rbee_config::HiveEntry,
+    hive_config: &rbee_config::HiveConfig,
     config: &Arc<RbeeConfig>,
     job_id: &str,
 ) -> Result<HiveStartResponse> {
