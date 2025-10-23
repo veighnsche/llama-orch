@@ -17,6 +17,7 @@ reqwest = { version = "0.12", features = ["json"] }  # TEAM-259: For health chec
 serde = { version = "1.0", features = ["derive"] }  # TEAM-259: For CRUD operations
 serde_json = "1.0"  # TEAM-259: For CRUD operations
 observability-narration-core = { path = "../narration-core" }
+auto-update = { path = "../auto-update" }  # TEAM-259: For auto-updating daemons
 
 [dev-dependencies]
 tokio = { version = "1", features = ["full"] }

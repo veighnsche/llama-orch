@@ -5,6 +5,7 @@
 //! Provides DaemonManager for spawning and managing daemon processes.
 
 use anyhow::{Context, Result};
+use auto_update::AutoUpdater;
 use observability_narration_core::NarrationFactory;
 use std::path::{Path, PathBuf};
 use std::process::Stdio;
@@ -17,6 +18,7 @@ const NARRATE: NarrationFactory = NarrationFactory::new("dmn-life");
 pub struct DaemonManager {
     binary_path: PathBuf,
     args: Vec<String>,
+    auto_update: Option<(String, String)>, // (binary_name, source_dir)
 }
 
 impl DaemonManager {
@@ -26,10 +28,43 @@ impl DaemonManager {
     /// * `binary_path` - Path to the daemon binary
     /// * `args` - Command-line arguments for the daemon
     pub fn new(binary_path: PathBuf, args: Vec<String>) -> Self {
-        Self { binary_path, args }
+        Self { binary_path, args, auto_update: None }
+    }
+
+    /// Enable auto-update for this daemon
+    ///
+    /// When enabled, the daemon will be automatically rebuilt if any of its
+    /// dependencies have changed before spawning.
+    ///
+    /// # Arguments
+    /// * `binary_name` - Binary name (e.g., "queen-rbee")
+    /// * `source_dir` - Source directory relative to workspace root (e.g., "bin/10_queen_rbee")
+    ///
+    /// # Example
+    /// ```rust,no_run
+    /// use daemon_lifecycle::DaemonManager;
+    /// use std::path::PathBuf;
+    ///
+    /// # async fn example() -> anyhow::Result<()> {
+    /// let manager = DaemonManager::new(
+    ///     PathBuf::from("target/debug/queen-rbee"),
+    ///     vec![]
+    /// )
+    /// .enable_auto_update("queen-rbee", "bin/10_queen_rbee");
+    ///
+    /// // Will auto-rebuild if dependencies changed
+    /// let child = manager.spawn().await?;
+    /// # Ok(())
+    /// # }
+    /// ```
+    pub fn enable_auto_update(mut self, binary_name: impl Into<String>, source_dir: impl Into<String>) -> Self {
+        self.auto_update = Some((binary_name.into(), source_dir.into()));
+        self
     }
 
     /// Spawn the daemon process
+    ///
+    /// If auto-update is enabled, checks if rebuild is needed and rebuilds before spawning.
     ///
     /// Returns the spawned child process handle
     ///
@@ -37,7 +72,41 @@ impl DaemonManager {
     /// Returns error if:
     /// - Binary not found
     /// - Failed to spawn process
+    /// - Auto-update rebuild failed
     pub async fn spawn(&self) -> Result<Child> {
+        // TEAM-259: Auto-update if enabled
+        if let Some((binary_name, source_dir)) = &self.auto_update {
+            NARRATE
+                .action("auto_update")
+                .context(binary_name)
+                .human("Checking if '{}' needs rebuild...")
+                .emit();
+
+            let updater = AutoUpdater::new(binary_name, source_dir)?;
+            
+            if updater.needs_rebuild()? {
+                NARRATE
+                    .action("auto_rebuild")
+                    .context(binary_name)
+                    .human("🔨 Rebuilding '{}'...")
+                    .emit();
+                
+                updater.rebuild()?;
+                
+                NARRATE
+                    .action("auto_rebuild")
+                    .context(binary_name)
+                    .human("✅ Rebuild complete")
+                    .emit();
+            } else {
+                NARRATE
+                    .action("auto_update")
+                    .context(binary_name)
+                    .human("✅ '{}' is up to date")
+                    .emit();
+            }
+        }
+
         // TEAM-197: Updated to narration-core v0.5.0 pattern
         NARRATE
             .action("spawn")
