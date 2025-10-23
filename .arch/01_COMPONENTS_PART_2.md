@@ -6,11 +6,22 @@
 
 ---
 
+## User Interfaces
+
+rbee provides **two complementary interfaces** for managing infrastructure:
+
+1. **rbee-keeper (CLI)** - Human operators, interactive workflows
+2. **rbee-sdk (Library)** - Programmatic access, application integration
+
+Both are thin HTTP clients to queen-rbee. All business logic lives in queen.
+
+---
+
 ## rbee-keeper (CLI - User Interface)
 
 ### Purpose
 
-**rbee-keeper is the PRIMARY user interface for managing rbee infrastructure.**
+**rbee-keeper is the PRIMARY user interface for human operators managing rbee infrastructure.**
 
 NOT a testing tool - it's how operators interact with the entire system.
 
@@ -193,6 +204,146 @@ anyhow = "1.0"
 - All hive commands working
 - Basic inference working
 - SSE streaming operational
+
+---
+
+## rbee-sdk (Library - Programmatic Interface)
+
+### Purpose
+
+**rbee-sdk provides programmatic access to rbee infrastructure for application integration.**
+
+Enables developers to embed rbee capabilities into Rust and TypeScript/JavaScript applications.
+
+### Key Features
+
+1. **Single-Source Design**
+   - Rust core library
+   - Compiles to native (Rust apps)
+   - Compiles to WASM (TypeScript/JavaScript apps)
+   - TypeScript bindings auto-generated
+
+2. **Type-Safe API**
+   - Same Operation types as rbee-keeper
+   - Compile-time safety
+   - Auto-completion in IDEs
+
+3. **Async/Streaming**
+   - Built on tokio/reqwest (Rust)
+   - Async/await in TypeScript
+   - SSE streaming support
+
+4. **Cross-Platform**
+   - Native: Linux, macOS, Windows
+   - WASM: Node.js, browsers
+
+### Architecture
+
+```
+consumers/rbee-sdk/
+├── src/
+│   ├── lib.rs                 # Public API exports
+│   ├── client.rs              # HTTP client (mimics keeper)
+│   ├── types.rs               # Re-exports from rbee-operations
+│   ├── stream.rs              # SSE stream wrapper
+│   └── error.rs               # Error types
+├── ts/
+│   ├── index.ts               # TypeScript wrapper
+│   └── package.json           # npm package
+└── Cargo.toml                 # Features: native, wasm
+```
+
+### Rust API Example
+
+```rust
+use rbee_sdk::RbeeClient;
+
+#[tokio::main]
+async fn main() -> Result<()> {
+    let client = RbeeClient::new("http://localhost:8500");
+    
+    // Spawn worker
+    let mut stream = client.worker_spawn("llama-3-8b", "GPU-0").await?;
+    while let Some(event) = stream.next().await {
+        println!("{}", event);
+    }
+    
+    // Run inference
+    let mut stream = client.infer("Hello, world!", "llama-3-8b").await?;
+    while let Some(token) = stream.next().await {
+        print!("{}", token);
+    }
+    
+    Ok(())
+}
+```
+
+### TypeScript API Example
+
+```typescript
+import { RbeeClient } from '@rbee/sdk';
+
+const client = new RbeeClient('http://localhost:8500');
+
+// Spawn worker
+const stream = await client.workerSpawn('llama-3-8b', 'GPU-0');
+for await (const event of stream) {
+  console.log(event);
+}
+
+// Run inference
+const inferStream = await client.infer('Hello, world!', 'llama-3-8b');
+for await (const token of inferStream) {
+  process.stdout.write(token);
+}
+```
+
+### SDK vs CLI Comparison
+
+| Feature | rbee-keeper (CLI) | rbee-sdk (Library) |
+|---------|-------------------|-------------------|
+| **Interface** | Command-line | Rust/TypeScript API |
+| **Output** | Pretty-printed | Structured data |
+| **Auto-start** | Yes (queen lifecycle) | No (expects queen running) |
+| **Prompts** | Interactive | No prompts |
+| **Use case** | Operators, DevOps | Applications, integrations |
+
+**Both use the same HTTP API and Operation types.**
+
+### Use Cases
+
+1. **Rust Applications** - Batch processing, custom tooling, integration tests
+2. **Node.js Services** - Web servers with LLM, API gateways, background workers
+3. **Browser Applications** - Interactive UIs, chat interfaces, real-time streaming
+4. **Automation** - CI/CD pipelines, testing frameworks, monitoring tools
+
+### Dependencies
+
+```toml
+[dependencies]
+rbee-operations = { path = "../../bin/99_shared_crates/rbee-operations" }
+rbee-job-client = { path = "../../bin/99_shared_crates/rbee-job-client" }
+reqwest = { version = "0.11", features = ["json", "stream"] }
+tokio = { version = "1", features = ["full"] }
+serde = { version = "1", features = ["derive"] }
+
+# WASM support
+wasm-bindgen = { version = "0.2", optional = true }
+tsify = { version = "0.4", optional = true }
+
+[features]
+default = ["native"]
+native = []
+wasm = ["dep:tsify", "dep:wasm-bindgen"]
+```
+
+### Status
+
+- **Version:** 0.0.0 (design phase)
+- **Implementation:** Stubs only (client methods unimplemented)
+- **Effort:** 22-32 hours to complete
+
+**See:** `.arch/SDK_ARCHITECTURE.md` for complete design and implementation plan.
 
 ---
 
@@ -534,6 +685,351 @@ rbee-hive-model-provisioner = { path = "../25_rbee_hive_crates/model-provisioner
 - ❌ Inference scheduling (TODO)
 - ❌ Worker registry (TODO)
 - ❌ Load balancing (TODO)
+
+---
+
+### Rhai Programmable Scheduler (M2 - Future)
+
+**Status:** ⚠️ **OUT OF SCOPE** for current milestone (M0/M1)  
+**Planned:** M2 milestone  
+**Spec:** `bin/.specs/00_llama-orch.md` [SYS-6.1.5]
+
+#### Purpose
+
+**Rhai** is an embedded Rust scripting language that will power queen-rbee's intelligent scheduling decisions.
+
+**Think of it as:**
+- The "policy execution engine" of queen-rbee
+- User-programmable orchestration logic
+- Dynamic, scriptable decision-making without recompilation
+
+#### Architecture
+
+```
+Inference Request → Queen → Rhai Scheduler Script → Worker Selection
+                     ↓
+              [scheduler.rhai]
+                     ↓
+        evaluate(job, pools, workers)
+                     ↓
+              Selected Worker
+```
+
+#### Two Deployment Modes
+
+**1. Platform Mode (Multi-Tenant Marketplace)**
+
+**Purpose:** Secure, fair, multi-tenant GPU marketplace
+
+**Scheduler:** `platform-scheduler.rhai` (built-in, immutable)
+
+**Characteristics:**
+- ✅ **Immutable** - Cannot be modified by users
+- ✅ **Multi-tenant fairness** - Fair resource allocation
+- ✅ **SLA compliance** - Guarantees service levels
+- ✅ **Security-first** - Sandboxed execution
+- ✅ **Quota enforcement** - Per-tenant limits
+- ✅ **Capacity management** - Rejects with 429 when full
+
+**Example Logic:**
+```rhai
+// platform-scheduler.rhai (immutable)
+fn schedule_job(job, pools, workers) {
+    // 1. Check tenant quota
+    if tenant_over_quota(job.tenant_id) {
+        return reject("quota_exceeded");
+    }
+    
+    // 2. Find worker with capacity
+    let available = workers.filter(|w| w.status == "ready" && w.vram_free > job.vram_required);
+    
+    if available.is_empty() {
+        return reject_429("no_capacity");  // Queue full
+    }
+    
+    // 3. Fair scheduling (round-robin by tenant)
+    let worker = fair_select(available, job.tenant_id);
+    
+    return accept(worker.id);
+}
+```
+
+**2. Home/Lab Mode (Personal Infrastructure)**
+
+**Purpose:** Maximize hardware utilization, user-customizable
+
+**Scheduler:** `~/.config/rbee/scheduler.rhai` (user-editable)
+
+**Characteristics:**
+- ✅ **User-editable** - Full customization
+- ✅ **No quotas** - Use all available resources
+- ✅ **Best-effort** - Accept jobs if any worker available
+- ✅ **Power user features** - Custom policies (device affinity, priority, etc.)
+- ✅ **Learning-friendly** - Examples provided
+
+**Example Logic:**
+```rhai
+// ~/.config/rbee/scheduler.rhai (user-editable)
+fn schedule_job(job, pools, workers) {
+    // 1. Find workers with matching model
+    let candidates = workers.filter(|w| w.model == job.model && w.status == "ready");
+    
+    if candidates.is_empty() {
+        // No worker available, spawn one!
+        return spawn_worker(job.model, "cuda:0");
+    }
+    
+    // 2. Prefer GPU with most free VRAM
+    let worker = candidates.max_by(|w| w.vram_free);
+    
+    return accept(worker.id);
+}
+```
+
+**Advanced Example (Device Affinity):**
+```rhai
+// Custom policy: Prefer specific GPU for certain models
+fn schedule_job(job, pools, workers) {
+    // Large models → GPU-0 (24GB)
+    if job.model.contains("70b") || job.model.contains("405b") {
+        let gpu0_workers = workers.filter(|w| w.device == "cuda:0");
+        if !gpu0_workers.is_empty() {
+            return accept(gpu0_workers[0].id);
+        }
+    }
+    
+    // Small models → GPU-1 (smaller, but available)
+    if job.model.contains("7b") || job.model.contains("8b") {
+        let gpu1_workers = workers.filter(|w| w.device == "cuda:1");
+        if !gpu1_workers.is_empty() {
+            return accept(gpu1_workers[0].id);
+        }
+    }
+    
+    // Fallback: Any available worker
+    let available = workers.filter(|w| w.status == "ready");
+    if !available.is_empty() {
+        return accept(available[0].id);
+    }
+    
+    return reject("no_workers");
+}
+```
+
+#### Scheduler API
+
+**Input (provided to script):**
+```rust
+struct SchedulerInput {
+    job: JobRequest,
+    pools: Vec<WorkerPool>,
+    workers: Vec<WorkerState>,
+}
+
+struct JobRequest {
+    job_id: String,
+    tenant_id: Option<String>,  // Platform mode only
+    model: String,
+    prompt: String,
+    vram_required: u64,
+    priority: u8,
+}
+
+struct WorkerState {
+    id: String,
+    status: String,  // "ready", "busy", "error"
+    model: String,
+    device: String,
+    vram_used: u64,
+    vram_free: u64,
+    vram_total: u64,
+    requests_total: u64,
+}
+```
+
+**Output (returned from script):**
+```rust
+enum SchedulerDecision {
+    Accept { worker_id: String },
+    Reject { reason: String },
+    Reject429 { reason: String },  // Queue full (platform mode)
+    SpawnWorker { model: String, device: String },  // Home/lab mode
+}
+```
+
+#### Rhai Integration
+
+```rust
+// bin/10_queen_rbee/src/scheduler.rs (M2)
+use rhai::{Engine, AST};
+
+pub struct RhaiScheduler {
+    engine: Engine,
+    script: AST,
+}
+
+impl RhaiScheduler {
+    pub fn new(script_path: &Path) -> Result<Self> {
+        let mut engine = Engine::new();
+        
+        // Register custom functions
+        engine.register_fn("tenant_over_quota", check_tenant_quota);
+        engine.register_fn("fair_select", fair_select_worker);
+        engine.register_fn("reject", |reason: &str| SchedulerDecision::Reject(reason));
+        engine.register_fn("reject_429", |reason: &str| SchedulerDecision::Reject429(reason));
+        engine.register_fn("accept", |worker_id: &str| SchedulerDecision::Accept(worker_id));
+        engine.register_fn("spawn_worker", |model: &str, device: &str| {
+            SchedulerDecision::SpawnWorker(model, device)
+        });
+        
+        // Load and compile script
+        let script = std::fs::read_to_string(script_path)?;
+        let ast = engine.compile(&script)?;
+        
+        Ok(Self { engine, script: ast })
+    }
+    
+    pub fn schedule(&self, input: SchedulerInput) -> Result<SchedulerDecision> {
+        // Call Rhai function
+        let decision: SchedulerDecision = self.engine.call_fn(
+            &mut rhai::Scope::new(),
+            &self.script,
+            "schedule_job",
+            (input.job, input.pools, input.workers),
+        )?;
+        
+        Ok(decision)
+    }
+}
+```
+
+**Usage in job_router.rs:**
+```rust
+// M2: Inference scheduling with Rhai
+Operation::Infer { prompt, model, .. } => {
+    // 1. Load scheduler
+    let scheduler = state.scheduler.read().unwrap();
+    
+    // 2. Prepare input
+    let input = SchedulerInput {
+        job: JobRequest {
+            job_id: job_id.clone(),
+            tenant_id: None,  // Home mode
+            model: model.clone(),
+            prompt: prompt.clone(),
+            vram_required: estimate_vram(&model),
+            priority: 0,
+        },
+        pools: state.worker_registry.get_pools(),
+        workers: state.worker_registry.get_workers(),
+    };
+    
+    // 3. Run scheduler
+    let decision = scheduler.schedule(input)?;
+    
+    // 4. Execute decision
+    match decision {
+        SchedulerDecision::Accept { worker_id } => {
+            // Forward to selected worker
+            forward_to_worker(&job_id, &worker_id, prompt).await?;
+        }
+        SchedulerDecision::SpawnWorker { model, device } => {
+            // Spawn worker first, then forward
+            spawn_worker_and_infer(&job_id, &model, &device, prompt).await?;
+        }
+        SchedulerDecision::Reject { reason } => {
+            return Err(anyhow!("Scheduling failed: {}", reason));
+        }
+        SchedulerDecision::Reject429 { reason } => {
+            return Err(anyhow!("Queue full: {}", reason));
+        }
+    }
+    
+    Ok(())
+}
+```
+
+#### Benefits
+
+**For Platform Operators:**
+- ✅ Immutable, auditable scheduling policy
+- ✅ Fair resource allocation
+- ✅ Quota enforcement
+- ✅ SLA compliance
+- ✅ Predictable behavior
+
+**For Home/Lab Users:**
+- ✅ Full customization
+- ✅ No artificial limits
+- ✅ Experiment with policies
+- ✅ Device affinity
+- ✅ Priority scheduling
+
+**For Developers:**
+- ✅ No recompilation needed
+- ✅ Hot-reload scheduler scripts
+- ✅ Easy to test policies
+- ✅ Rhai is safe (sandboxed)
+
+#### Implementation Plan (M2)
+
+**Phase 1: Basic Rhai Integration (8-12 hours)**
+- Add rhai dependency
+- Create RhaiScheduler struct
+- Load and compile scripts
+- Basic function registration
+
+**Phase 2: Platform Scheduler (12-16 hours)**
+- Implement platform-scheduler.rhai
+- Quota enforcement
+- Fair scheduling (round-robin)
+- 429 rejection when full
+- SLA tracking
+
+**Phase 3: Home/Lab Scheduler (8-12 hours)**
+- User-editable scheduler.rhai
+- Example scripts
+- SpawnWorker support
+- Device affinity examples
+
+**Phase 4: Advanced Features (12-16 hours)**
+- Hot-reload support
+- Scheduler metrics
+- A/B testing (multiple schedulers)
+- Scheduler validation
+
+**Total Effort:** 40-56 hours
+
+#### Example Scheduler Scripts
+
+**Location:** `bin/10_queen_rbee/schedulers/`
+- `platform-scheduler.rhai` - Platform mode (immutable)
+- `home-basic.rhai` - Simple best-effort
+- `home-device-affinity.rhai` - GPU selection by model size
+- `home-priority.rhai` - Priority-based scheduling
+- `home-power-save.rhai` - Prefer idle workers
+
+#### Security Considerations
+
+**Platform Mode:**
+- Scheduler script is read-only (embedded in binary)
+- No file I/O from script
+- No network access from script
+- Limited CPU budget per scheduling decision
+
+**Home/Lab Mode:**
+- User has full control (their hardware)
+- Still sandboxed (no arbitrary code execution)
+- CPU limits to prevent infinite loops
+
+#### Future Enhancements
+
+1. **Scheduler Marketplace** - Users share scheduler scripts
+2. **ML-based Scheduling** - Rhai calls into ML model for predictions
+3. **Multi-objective Optimization** - Balance cost, latency, throughput
+4. **A/B Testing** - Run multiple schedulers, compare results
+
+---
 
 ### Build Info Endpoint (NEW)
 

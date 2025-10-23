@@ -9,7 +9,7 @@
 
 ## Document Structure
 
-This directory contains a complete architectural overview split into 6 parts:
+This directory contains a complete architectural overview split into 10 parts:
 
 ### [Part 1: System Design](00_OVERVIEW_PART_1.md)
 
@@ -42,6 +42,7 @@ This directory contains a complete architectural overview split into 6 parts:
 - queen-rbee (HTTP Daemon - The Brain)
   - **NEW:** Distributed vs Integrated build modes
   - **NEW:** Dual-mode hive forwarder (HTTP or direct)
+  - **M2 FUTURE:** Rhai programmable scheduler (out of scope for M0/M1)
 - rbee-hive (HTTP Daemon - Pool Manager)
 - llm-worker-rbee (HTTP Daemon - Executor)
 - Inter-Component Communication
@@ -140,7 +141,84 @@ This directory contains a complete architectural overview split into 6 parts:
 - GDPR compliance (7-year retention, data subject rights)
 - Security rating: A- (production-ready)
 
-**Read this sixth** to understand security architecture.
+**Read this sixth** to understand security architecture and pitfalls.
+
+---
+
+### [Part 7: SDK](06_SDK_PART_7.md)
+
+**Topics:**
+- rbee-sdk architecture (Rust → WASM → TypeScript)
+- Single-source design
+- API design for Rust and TypeScript
+- Use cases and examples
+- Implementation roadmap
+
+**Key Insights:**
+- SDK and CLI are complementary (not competing)
+- Both are thin HTTP clients to queen-rbee
+- Single Rust codebase compiles to native and WASM
+- Reuses `rbee-operations` and `rbee-job-client` crates
+- 22-32 hours to implement
+
+**Read this seventh** to understand programmatic access to rbee.
+
+---
+
+### [Part 8: User Interfaces](07_INTERFACES_PART_8.md)
+
+**Topics:**
+- Three user interfaces: SDK, Web UI, OpenAI Adapter
+- rbee-web-ui (React/Next.js dashboard)
+- OpenAI-compatible API adapter
+- Future: Embedded UI (RSX + HTMX)
+
+**Key Insights:**
+- **SDK:** Programmatic access (Rust/TypeScript)
+- **Web UI:** Visual dashboard using SDK
+- **OpenAI Adapter:** Compatibility layer for existing OpenAI apps
+- **Future:** Embedded UI in each binary (specialized views)
+
+**Read this eighth** to understand all user-facing interfaces.
+
+---
+
+### [Part 9: Cross-Platform](08_CROSS_PLATFORM_PART_9.md)
+
+**Topics:**
+- Platform support matrix (Linux, macOS, Windows)
+- Directory structure for each platform
+- Implementation strategy using `dirs` crate
+- Component-specific implementations
+- Testing strategy
+
+**Key Insights:**
+- Config: `~/.config/rbee/` (Linux), `~/Library/Application Support/rbee/` (macOS), `%APPDATA%\rbee\` (Windows)
+- Cache: `~/.cache/rbee/` (Linux), `~/Library/Caches/rbee/` (macOS), `%LOCALAPPDATA%\rbee\` (Windows)
+- Model catalog already cross-platform 
+- rbee-config needs update (3-4 hours)
+
+**Read this ninth** to understand cross-platform support.
+
+---
+
+### [Part 10: Worker Types & Adapters](09_WORKER_TYPES_PART_10.md)
+
+**Topics:**
+- Bespoke workers vs Adapters
+- Worker types: cuda-llm, metal-llm, metal-stable-diffusion
+- Adapters: llama.cpp, vLLM, ComfyUI, Ollama, TensorRT-LLM
+- Variable-VRAM workers (dynamic model loading)
+- Enhanced heartbeat protocol
+
+**Key Insights:**
+- **Bespoke workers:** Custom-built with Candle framework (maximum control)
+- **Adapters:** Wrappers around existing engines (llama.cpp, vLLM, ComfyUI)
+- **Variable VRAM:** ComfyUI and vLLM change models dynamically
+- **Enhanced heartbeat:** Reports loaded models, VRAM allocations, workflow progress
+- **Extensible:** Plugin system for user-written adapters (future)
+
+**Read this tenth** to understand worker diversity and adapter pattern.
 
 ---
 
@@ -395,33 +473,6 @@ Worker → Queen (direct)
 
 ---
 
-## Special Topics
-
-### [Cross-Platform Architecture](CROSS_PLATFORM_ARCHITECTURE.md)
-
-**Topics:**
-- Platform support matrix (Linux, macOS, Windows)
-- Directory structure for each platform
-- Implementation strategy using `dirs` crate
-- Component-specific implementations
-- Testing strategy
-- Migration guide
-
-**Key Insights:**
-- Config: `~/.config/rbee/` (Linux), `~/Library/Application Support/rbee/` (macOS), `%APPDATA%\rbee\` (Windows)
-- Cache: `~/.cache/rbee/` (Linux), `~/Library/Caches/rbee/` (macOS), `%LOCALAPPDATA%\rbee\` (Windows)
-- Model catalog already cross-platform ✅
-- rbee-config needs update (3-4 hours)
-
-**Implementation Plans:**
-- `bin/.plan/CROSS_PLATFORM_CONFIG_PLAN.md` - Detailed implementation
-- `bin/.plan/CROSS_PLATFORM_SUMMARY.md` - Quick reference
-- `bin/.plan/STORAGE_ARCHITECTURE.md` - Model storage (already cross-platform)
-
-**Read this** to understand cross-platform support and implementation.
-
----
-
 ## Document Maintenance
 
 ### Updating These Documents
@@ -435,12 +486,26 @@ When making significant architectural changes:
 
 ### Document History
 
-- **Oct 23, 2025 (v1.2):** Cross-platform architecture added (TEAM-266)
-  - Added CROSS_PLATFORM_ARCHITECTURE.md
-  - Updated Part 3 with cross-platform config details
-  - Updated Part 5 with cross-platform development patterns
-  - Documented platform-specific directories (Linux, macOS, Windows)
-  - Created implementation plans in bin/.plan/
+- **Oct 23, 2025 (v2.2):** Added Rhai programmable scheduler (TEAM-266)
+  - **Part 2:** Added Rhai Programmable Scheduler section (M2 future feature)
+  - Platform mode (immutable, multi-tenant) vs Home/Lab mode (user-editable)
+  - Scriptable scheduling policies without recompilation
+  - Device affinity, quota enforcement, fair scheduling
+  - Marked as OUT OF SCOPE for current milestone (M0/M1)
+
+- **Oct 23, 2025 (v2.1):** Added worker types & adapters (TEAM-266)
+  - **Part 10 (09_WORKER_TYPES_PART_10.md):** Worker types and adapter pattern
+  - Bespoke workers (Candle) vs Adapters (llama.cpp, vLLM, ComfyUI)
+  - Variable-VRAM workers with enhanced heartbeat
+  - ComfyUI workflow progress tracking
+  - Implementation roadmap for adapters
+
+- **Oct 23, 2025 (v2.0):** Consolidated into 9-part structure (TEAM-266)
+  - Consolidated all new architectures into numbered parts (00-08)
+  - **Part 7 (06_SDK_PART_7.md):** SDK architecture
+  - **Part 8 (07_INTERFACES_PART_8.md):** User interfaces (SDK, Web UI, OpenAI Adapter)
+  - **Part 9 (08_CROSS_PLATFORM_PART_9.md):** Cross-platform support
+  - Removed standalone Special Topics section
 
 - **Oct 23, 2025 (v1.1):** Queen build configurations added
   - Added distributed vs integrated queen modes
