@@ -23,26 +23,22 @@ rbee is an OpenAI-compatible AI orchestration platform that lets you build your 
 **Build your own AI infrastructure using ALL your home network hardware:**
 
 ```bash
-# Multi-machine setup (each GPU machine runs its own hive):
+# Single-machine setup (localhost - zero config):
+rbee infer -m llama-3-8b -p "Hello"  # Auto-starts queen, spawns worker, runs inference
 
-# On GPU Computer 1:
-rbee-hive  # Starts hive daemon managing THIS machine's GPUs
+# Multi-machine setup (distributed - SSH-based):
+# 1. Configure hives (like ~/.ssh/config):
+cat ~/.config/rbee/hives.conf
+# Host gpu-computer-1
+#   HostName 192.168.1.100
+#   User vince
+#   HivePort 9000
 
-# On GPU Computer 2:
-rbee-hive  # Starts hive daemon managing THIS machine's GPUs
+# 2. Install hive remotely (via SSH):
+rbee hive install gpu-computer-1  # Copies binary, starts daemon via SSH
 
-# On Mac with Metal:
-rbee-hive  # Starts hive daemon managing THIS machine's GPU
-
-# On control node (or any machine):
-rbee queen start
-rbee worker --hive gpu-computer-1 spawn --model llama-3-8b --device cuda:0
-rbee worker --hive gpu-computer-2 spawn --model llama-3-8b --device cuda:1
-rbee worker --hive mac spawn --model llama-3-8b --device metal:0
-
-# OR single-machine setup (integrated mode - localhost only):
-rbee queen start  # Queen embeds hive logic (local-hive feature)
-rbee worker spawn --model llama-3-8b --device cuda:0
+# 3. Run inference (fully automatic):
+rbee infer -a gpu-computer-1 -m llama-3-8b -p "Hello"  # Queen orchestrates everything
 
 # 2. Configure Zed IDE (or build your own AI coder)
 export OPENAI_API_BASE=http://localhost:8500/v1
@@ -122,26 +118,41 @@ export OPENAI_API_KEY=your-rbee-token
 
 ---
 
-### The Four-Binary System
-rbee (pronounced "are-bee") consists of **4 binaries** (2 daemons + 2 CLIs):
+### The Binary System
+rbee (pronounced "are-bee") consists of **3 core binaries + worker variants**:
 
-**Daemons (HTTP servers, long-running):**
-1. **`queen-rbee`** — The Brain (makes ALL intelligent decisions) [🚧 In Progress]
-   - Port 8500, routes inference requests, job-based architecture, worker registry
-2. **`rbee-hive`** — Worker Lifecycle Manager (HTTP daemon) [✅ M0 DONE]
-   - Port 9000, model catalog, worker spawning, backend detection, capabilities
-3. **`llm-worker-rbee`** — LLM Inference Workers (multiple types) [✅ M0 DONE]
-   - Ports 9300+, one per model, stateless, HTTP server
-   - **Worker types:** cuda-llm-worker-rbee, metal-llm-worker-rbee, cpu-llm-worker-rbee
-   - **Future:** comfyui-adapter, vllm-adapter, stable-diffusion-worker
+**Core Binaries:**
+1. **`rbee-keeper`** — **USER INTERFACE** [✅ M0 DONE]
+   - Thin HTTP client (talks to queen-rbee)
+   - Manages queen lifecycle (auto-start with auto-update)
+   - SSH-based hive installation (like Ansible)
+   - Worker/model/inference commands
+   - Binary crate: `rbee-keeper`, CLI command: `rbee`
 
-**CLI Tools (run on-demand, exit after command):**
-4. **`rbee`** — **USER INTERFACE** [✅ M0 DONE]
-   - Binary: `rbee-keeper` (crate name), CLI command: `rbee`
-   - Manages queen-rbee lifecycle (start/stop/status)
-   - Manages hive lifecycle (install/start/stop/uninstall)
-   - Manages workers (spawn/list/stop)
-   - Inference testing
+2. **`queen-rbee`** — **THE BRAIN** [🚧 In Progress]
+   - Port: 8500
+   - Makes ALL intelligent decisions
+   - Job-based architecture (everything is a job)
+   - Routes operations to hives (via HTTP)
+   - Inference scheduling & worker registry
+   - Can embed hive logic for localhost (local-hive feature)
+
+3. **`rbee-hive`** — **WORKER LIFECYCLE MANAGER** [✅ M0 DONE]
+   - Port: 9000 (configurable)
+   - Runs ON GPU machines (installed via SSH)
+   - Manages workers on THAT machine only
+   - Model catalog (SQLite) + backend detection
+
+**Worker Variants (extensible):**
+- **`llm-worker-rbee`** — llama.cpp-based inference [✅ M0 DONE]
+- **Future:** `llm-cuda-worker-rbee`, `llm-metal-worker-rbee`, `vllm-adapter`, `comfyui-adapter`
+
+**Key Features:**
+- **Auto-update:** Binaries rebuild automatically when dependencies change
+- **SSH-based deployment:** Install hives remotely (no manual setup)
+- **Zero-config localhost:** `rbee infer` just works
+- **Automatic orchestration:** Queen handles everything
+
 ### Intelligence Hierarchy
 
 **Single-Machine (Integrated Mode):**
@@ -211,15 +222,15 @@ rbee (pronounced "are-bee") consists of **4 binaries** (2 daemons + 2 CLIs):
 │ └─────────────────────────────────┘ │
 └─────────────────────────────────────┘
 ```
-**4 binaries total:** 3 daemons (queen-rbee, rbee-hive, llm-worker-rbee) + 1 CLI (rbee)
+**Architecture Principles:**
+- **Thin client:** `rbee` CLI is just HTTP client + queen lifecycle
+- **Smart brain:** `queen-rbee` makes ALL decisions
+- **Remote workers:** Hives run ON GPU machines, installed via SSH
+- **Automatic:** Auto-update, auto-start, auto-orchestration
+- **Extensible:** Worker variants for different backends
 
-**Key Architecture Points:**
-- **Queen:** Routes requests, makes decisions (can embed hive for localhost)
-- **Hive:** Runs ON GPU machines, manages THAT machine's workers only
-- **Workers:** Dumb executors, one per model
-- **rbee CLI:** User interface for everything
 ### Why This Architecture?
-- **4 binaries, clear separation**: 3 daemons (data plane) + 1 CLI (control plane)
+- **Clear separation**: 3 core binaries + extensible worker variants
 - **queen-rbee is THE BRAIN**: Job-based architecture, routes all operations
 - **rbee-hive IS a daemon**: HTTP server on port 9000 for worker lifecycle
 - **Workers are stateless**: Each worker loads ONE model, can be killed anytime
@@ -227,6 +238,7 @@ rbee (pronounced "are-bee") consists of **4 binaries** (2 daemons + 2 CLIs):
 - **Workers have isolated memory contexts**: Each worker owns its memory allocation
 - **Testable components**: Each binary runs standalone for testing
 - **Multi-architecture**: Worker variants for NVIDIA CUDA, Apple Metal, CPU
+
 ---
 ## VIBE CODED PROJECT
 (THIS PART IS JUST FUTURE COPY PASTA, and something human to read)
@@ -249,6 +261,7 @@ rbee (pronounced "are-bee") consists of **4 binaries** (2 daemons + 2 CLIs):
 ### ✅ What's Working
 
 **Infrastructure:**
+- ✅ Auto-update system (binaries rebuild when dependencies change)
 - ✅ Backend detection (CUDA, Metal, CPU)
 - ✅ Registry schema with backend capabilities
 - ✅ Model catalog (SQLite)
@@ -257,6 +270,7 @@ rbee (pronounced "are-bee") consists of **4 binaries** (2 daemons + 2 CLIs):
 - ✅ SSE streaming (token-by-token)
 - ✅ HTTP APIs (queen-rbee, rbee-hive, worker)
 - ✅ OpenAI-compatible API (v1 completion endpoints)
+- ✅ SSH-based hive installation (config like ~/.ssh/config)
 
 **CLI Commands:**
 - ✅ `rbee queen start` (start queen, embeds hive for localhost)
@@ -309,26 +323,6 @@ rbee (pronounced "are-bee") consists of **4 binaries** (2 daemons + 2 CLIs):
 - Embeddings
 - Multi-modal routing
 
-### 🎯 30-Day Plan to First Customer
-
-**Week 1 (Days 1-7):** Working end-to-end system  
-**Week 2 (Days 8-14):** EU compliance (GDPR endpoints, audit logs, basic web UI)  
-**Week 3 (Days 15-21):** Marketing (landing page, outreach, 10 qualified leads)  
-**Week 4 (Days 22-30):** Revenue (demos, close deal, onboard customer, €200 MRR)
-
-**Key Advantage:** 11 shared crates already built (audit-logging, auth-min, etc.) saves 5 days of development time!
-
-### 💰 Conservative Financial Projections
-
-**Year 1 (2026):** 35 customers, €10K MRR, €70K revenue  
-**Year 2 (2027):** 100 customers, €30K MRR, €360K revenue  
-**Year 3 (2028):** 200+ customers, €83K+ MRR, €1M+ revenue
-
-**Pricing Tiers:**
-- Starter: €99/mo
-- Professional: €299/mo (most popular)
-- Enterprise: Custom (€2K+/mo)
-
 ---
 
 ## Character-Driven Development (99% AI-Generated)
@@ -368,7 +362,7 @@ Instead of one AI doing everything, we created **6 specialized AI teams** that d
 **Evidence:**
 - 99% AI-generated code
 - 42/62 BDD scenarios passing (68% complete)
-- Clean architecture (4 binaries, clear separation)
+- Clean architecture (3 core binaries + extensible workers)
 - Multi-backend support (CUDA, Metal, CPU)
 - Comprehensive testing (unit, integration, BDD, property)
 
@@ -461,7 +455,7 @@ See [docs/HIVE_CONFIGURATION.md](docs/HIVE_CONFIGURATION.md) for details.
 
 > **Note:** This section provides a high-level overview. For detailed component analysis, communication patterns, and implementation details, refer to [`.arch/`](.arch/) documentation.
 
-rbee consists of **4 binaries** with clear responsibilities:
+rbee consists of **3 core binaries + worker variants** with clear responsibilities:
 
 | Binary | Type | Port | Purpose | Status |
 |--------|------|------|---------|--------|
@@ -519,23 +513,26 @@ Client → GET /v1/jobs/{job_id}/stream → SSE events
 
 **Usage:**
 ```bash
-# Single-machine (localhost integrated mode)
-rbee queen start  # Embeds hive logic
-rbee worker spawn --model llama-3-8b --device cuda:0
-rbee infer --prompt "Hello" --model llama-3-8b
+# Zero-config localhost (automatic):
+rbee infer -m llama-3-8b -p "Hello"  # Auto-starts queen, spawns worker, runs inference
 
-# Multi-machine (distributed mode)
-# On each GPU machine:
-rbee-hive  # Start hive daemon on GPU machine
+# Multi-machine (SSH-based installation):
+# 1. Configure hives (~/.config/rbee/hives.conf):
+cat ~/.config/rbee/hives.conf
+# Host gpu-computer-1
+#   HostName 192.168.1.100
+#   User vince
+#   HivePort 9000
 
-# From control node:
-rbee queen start
-rbee hive install gpu-machine-1  # Register remote hive
-rbee hive install gpu-machine-2
-rbee worker --hive gpu-machine-1 spawn --model llama-3-8b --device cuda:0
-rbee worker --hive gpu-machine-2 spawn --model llama-3-8b --device cuda:1
+# 2. Install hive remotely:
+rbee hive install gpu-computer-1  # SSH copy binary, start daemon
+
+# 3. Run inference (automatic orchestration):
+rbee infer -m llama-3-8b -p "Hello"  # Queen routes to best worker
+
+# Advanced: Manual worker management (if needed):
+rbee worker --hive gpu-computer-1 spawn --model llama-3-8b --device cuda:0
 rbee worker list
-rbee infer --prompt "Hello" --model llama-3-8b
 ```
 
 #### queen-rbee (HTTP Daemon - The Brain)
@@ -645,6 +642,9 @@ Each hive manages ONLY its own machine's workers!
 ---
 ## System Flow Diagrams
 
+> **📚 For complete end-to-end flow from clean install to inference, see [`.arch/COMPLETE_FLOW_DIAGRAM.md`](.arch/COMPLETE_FLOW_DIAGRAM.md)**  
+> This diagram shows the entire flow including hive lifecycle, model provisioning, worker spawning, and direct inference.
+
 ### Communication Patterns
 
 ```mermaid
@@ -676,12 +676,13 @@ flowchart TB
 ```
 ### Request Flow: Inference Operation
 
+> **Note:** This simplified diagram shows inference only. For the complete flow including hive setup, model provisioning, and worker spawning, see [`.arch/COMPLETE_FLOW_DIAGRAM.md`](.arch/COMPLETE_FLOW_DIAGRAM.md).
+
 ```mermaid
 sequenceDiagram
     participant User
     participant Keeper as rbee<br/>(CLI)
     participant Queen as queen-rbee<br/>(8500)
-    participant Hive as rbee-hive<br/>(9000)
     participant Worker as llm-worker<br/>(9300+)
     
     User->>Keeper: rbee infer --prompt "Hello"
@@ -693,9 +694,9 @@ sequenceDiagram
     
     Keeper->>Queen: GET /v1/jobs/uuid-123/stream
     
-    Note over Queen: Route to worker<br/>(circumvent hive)
+    Note over Queen: 1. Check if worker exists<br/>2. If not: trigger model download<br/>3. If not: spawn worker<br/>4. Direct HTTP to worker
     
-    Queen->>Worker: POST /v1/infer<br/>{prompt, params}
+    Queen->>Worker: POST /v1/infer<br/>{prompt, params}<br/>(DIRECT - bypasses hive!)
     
     Worker-->>Queen: SSE: token stream
     Queen-->>Keeper: SSE: relay tokens
@@ -705,7 +706,15 @@ sequenceDiagram
     Worker-->>Queen: SSE: [DONE]
     Queen-->>Keeper: SSE: [DONE]
 ```
+
+**Key Architecture Decisions:**
+- **Inference bypasses hive:** Queen sends requests DIRECTLY to worker for performance
+- **Worker heartbeats:** Workers send heartbeats directly to queen (TEAM-261)
+- **Model provisioning:** If model missing, queen triggers download via hive
+- **Worker spawning:** If no worker available, queen spawns via hive
 ### Worker Lifecycle: Spawn Flow
+
+> **Note:** This shows worker spawning only. For the complete flow from clean install, see [`.arch/COMPLETE_FLOW_DIAGRAM.md`](.arch/COMPLETE_FLOW_DIAGRAM.md).
 
 ```mermaid
 sequenceDiagram
@@ -722,24 +731,35 @@ sequenceDiagram
     
     Keeper->>Queen: GET /v1/jobs/uuid-456/stream
     
-    Note over Queen: Forward to hive
+    Note over Queen: Forward to hive via HTTP
     
     Queen->>Hive: POST /v1/jobs<br/>{operation: WorkerSpawn}
     Hive-->>Queen: {job_id: "hive-789"}
     
     Queen->>Hive: GET /v1/jobs/hive-789/stream
     
-    Note over Hive: 1. Check model exists<br/>2. Detect GPU<br/>3. Spawn process
+    Note over Hive: 1. Check if model exists<br/>2. If not: Download from HF<br/>3. Check if worker binary exists<br/>4. If not: Download/build binary<br/>5. Detect GPU capabilities<br/>6. Spawn worker process
     
     Hive->>Worker: spawn llm-worker-rbee<br/>--model ... --port 9300
     
-    Worker-->>Queen: Register with queen
+    Note over Worker: 1. Load model into VRAM<br/>2. Start HTTP server<br/>3. Send heartbeat to queen
+    
+    Worker->>Queen: POST /v1/worker-heartbeat<br/>(DIRECT - TEAM-261)
     
     Hive-->>Queen: SSE: Worker spawned
     Queen-->>Keeper: SSE: Worker spawned
     
     Keeper->>User: ✅ Worker active on 9300
 ```
+
+**Key Steps:**
+1. **Model Check:** Hive checks if model exists locally
+2. **Model Download:** If missing, downloads from Hugging Face
+3. **Binary Resolution:** Checks for worker binary (target/release → download → build)
+4. **GPU Detection:** Uses gpu-info crate to detect CUDA/Metal/CPU
+5. **Worker Spawn:** Spawns process with model path and device
+6. **Model Loading:** Worker loads model into VRAM/RAM
+7. **Heartbeat:** Worker sends heartbeat DIRECTLY to queen (not through hive)
 
 ### Component Architecture
 
@@ -853,7 +873,7 @@ queen-rbee (HTTP API, ground truth)
 | **`.arch/`** | **10-part architecture documentation** (comprehensive system design) |
 | `.specs/` | Feature specifications (Gherkin/BDD) |
 | `.docs/` | Guides, testing strategy, development patterns |
-| **`bin/`** | **4 binaries** (rbee CLI in rbee-keeper crate, queen-rbee, rbee-hive, llm-worker-rbee) |
+| **`bin/`** | **3 core binaries + worker variants** (rbee, queen-rbee, rbee-hive, llm-worker-rbee) |
 | `bin/99_shared_crates/` | Shared infrastructure (job-server, narration, security) |
 | `contracts/` | OpenAPI specs, API types, config schema |
 | `consumers/` | TypeScript libraries (@rbee/utils, @rbee/sdk) |
@@ -932,6 +952,8 @@ data: [DONE]
 ```
 ### Request Lifecycle (Inference)
 
+> **Complete Flow:** For the full end-to-end flow from clean install to inference completion, see [`.arch/COMPLETE_FLOW_DIAGRAM.md`](.arch/COMPLETE_FLOW_DIAGRAM.md). This includes hive lifecycle, model provisioning, worker spawning, and direct inference.
+
 ```mermaid
 sequenceDiagram
     participant CLI as rbee
@@ -943,9 +965,9 @@ sequenceDiagram
     
     CLI->>Queen: GET /v1/jobs/uuid/stream
     
-    Note over Queen: Route to worker<br/>(direct, skip hive)
+    Note over Queen: 1. Schedule to worker<br/>2. Select worker by model<br/>3. DIRECT HTTP (bypass hive!)
     
-    Queen->>Worker: POST /v1/infer
+    Queen->>Worker: POST /v1/infer<br/>(DIRECT - not through hive)
     
     loop Token Generation
         Worker-->>Queen: SSE: token
@@ -955,6 +977,11 @@ sequenceDiagram
     Worker-->>Queen: SSE: [DONE]
     Queen-->>CLI: SSE: [DONE]
 ```
+
+**Performance Optimization:**
+- **Direct inference:** Queen → Worker (bypasses hive for performance)
+- **Hot path:** Inference is critical, so we eliminate the hive hop
+- **Latency:** ~1-2ms overhead (vs ~5-10ms if going through hive)
 ---
 ## Developer Quickstart
 
@@ -1094,6 +1121,13 @@ See [`AGENTS.md`](AGENTS.md) for complete repository guidelines.
 **The Fear:** Complex codebases become unmaintainable if provider changes/shuts down  
 **The Solution:** Build your own AI infrastructure using ALL your home network hardware
 
+**Architecture Highlights:**
+- 🚀 **Clean Install to Inference:** Fully automated flow (see [`.arch/COMPLETE_FLOW_DIAGRAM.md`](.arch/COMPLETE_FLOW_DIAGRAM.md))
+- ⚡ **Direct Inference:** Queen → Worker (bypasses hive for performance)
+- 💓 **Direct Heartbeats:** Workers → Queen (simplified architecture, TEAM-261)
+- 📦 **Auto-Provisioning:** Automatic model download and worker binary resolution
+- 🔄 **SSE Everywhere:** Real-time streaming for all operations
+
 **Key Features:**
 - 🐝 OpenAI-compatible API (drop-in replacement)
 - 🐝 Agentic API (task-based streaming for building AI agents)
@@ -1108,16 +1142,6 @@ See [`AGENTS.md`](AGENTS.md) for complete repository guidelines.
 - Version: 0.1.0 (68% complete - 42/62 BDD scenarios passing)
 - 11 shared crates already built (saves 5 days of development)
 - 30-day plan to first customer
-
-**Conservative Projections:**
-- Year 1: 35 customers, €10K MRR, €70K revenue
-- Year 2: 100 customers, €30K MRR, €360K revenue
-- Year 3: 200+ customers, €83K+ MRR, €1M+ revenue
-
-**Pricing:**
-- Starter: €99/mo
-- Professional: €299/mo (most popular)
-- Enterprise: Custom (€2K+/mo)
 
 **Links:**
 - Website: https://rbee.dev
