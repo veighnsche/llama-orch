@@ -1,7 +1,24 @@
 # rbee-hive
 
-**Status:** 🚧 STUB (Created by TEAM-135)  
+**Status:** 🚧 IN DEVELOPMENT (TEAM-261)  
 **Purpose:** Daemon for managing LLM worker instances on a single machine
+
+## 🎯 Architectural Decision (Oct 23, 2025)
+
+**Decision:** Keep as HTTP daemon, remove hive heartbeat
+
+**Why Daemon?**
+- ✅ **Performance:** 1-5ms response time (vs 80-350ms for CLI)
+- ✅ **UX:** Real-time SSE streaming for progress updates
+- ✅ **Security:** No command injection risk
+- ✅ **Consistency:** Matches queen/worker patterns
+
+**Simplification:**
+- ❌ **No hive heartbeat** - Workers send heartbeats directly to queen
+- ✅ **Queen is single source of truth** for worker state
+- ✅ **Simpler architecture** - No state aggregation
+
+**See:** `bin/.plan/TEAM_261_SIMPLIFICATION_AUDIT.md` for details
 
 ## Overview
 

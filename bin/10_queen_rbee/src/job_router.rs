@@ -438,13 +438,30 @@ async fn route_operation(
             }
         }
 
-        // Inference operation - stays in queen-rbee for scheduling
+        // ========================================================================
+        // INFERENCE ROUTING - CRITICAL ARCHITECTURE NOTE (TEAM-261)
+        // ========================================================================
+        //
+        // ⚠️  UNINTUITIVE BUT CORRECT: Infer is handled in QUEEN, not forwarded to HIVE!
+        //
+        // Why?
+        // - Queen needs direct control for scheduling/load balancing
+        // - Hive only manages worker LIFECYCLE (spawn/stop/list)
+        // - Queen → Worker is DIRECT HTTP (no job-server on worker side)
+        // - This eliminates a hop and simplifies the inference hot path
+        //
+        // DO NOT use hive_forwarder::forward_to_hive() for Infer!
+        // Queen circumvents hive for performance.
+        //
+        // See: bin/.plan/TEAM_261_ARCHITECTURE_CLARITY.md
+        //
         Operation::Infer { .. } => {
             // TODO: IMPLEMENT INFERENCE SCHEDULING
-            // Infer operations require scheduling logic in queen-rbee:
-            // 1. Select worker based on model/device preferences
-            // 2. Forward to selected worker via hive
-            // 3. Stream inference results back to client
+            // 1. Query hive registry for available workers
+            // 2. Select worker based on model/load/availability
+            // 3. Direct HTTP POST to worker's /v1/inference endpoint (NOT via job-client!)
+            // 4. Stream tokens back to client via SSE
+            // 5. Worker uses job-server internally, but queen uses simple HTTP
             return Err(anyhow::anyhow!("Inference scheduling not yet implemented"));
         }
 

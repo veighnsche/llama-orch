@@ -15,7 +15,7 @@ pub const NARRATE: NarrationFactory = NarrationFactory::new("hive");
 
 // Hive-specific action constants
 pub const ACTION_STARTUP: &str = "startup";
-pub const ACTION_HEARTBEAT: &str = "heartbeat";
+// TEAM-261: Removed ACTION_HEARTBEAT (workers send heartbeats to queen directly)
 pub const ACTION_WORKER_SPAWN: &str = "worker_spawn";
 pub const ACTION_WORKER_STOP: &str = "worker_stop";
 pub const ACTION_LISTEN: &str = "listen";

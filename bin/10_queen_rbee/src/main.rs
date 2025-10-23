@@ -141,6 +141,7 @@ fn create_router(
         // TEAM-186: V1 API endpoints (matches API_REFERENCE.md)
         .route("/v1/shutdown", post(handle_shutdown))
         .route("/v1/heartbeat", post(http::handle_heartbeat))
+        .route("/v1/worker-heartbeat", post(http::handle_worker_heartbeat)) // TEAM-261: Workers send heartbeats directly to queen
         .with_state(heartbeat_state)
         .route("/v1/jobs", post(http::handle_create_job))
         .with_state(job_state.clone())

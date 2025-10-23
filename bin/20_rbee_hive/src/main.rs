@@ -10,17 +10,17 @@
 //!
 //! Daemon for managing LLM worker instances on a single machine
 
+mod http;
+mod job_router;
 mod narration;
 use narration::{
     ACTION_CAPS_CPU_ADD, ACTION_CAPS_GPU_CHECK, ACTION_CAPS_GPU_FOUND, ACTION_CAPS_REQUEST,
-    ACTION_CAPS_RESPONSE, ACTION_HEARTBEAT, ACTION_LISTEN, ACTION_READY, ACTION_STARTUP, NARRATE,
+    ACTION_CAPS_RESPONSE, ACTION_LISTEN, ACTION_READY, ACTION_STARTUP, NARRATE,
 };
 
-use axum::{routing::get, Json, Router};
+use axum::{routing::{get, post}, Json, Router};
 use clap::Parser;
-use rbee_heartbeat::{
-    start_hive_heartbeat_task, HiveHeartbeatConfig, WorkerState, WorkerStateProvider,
-};
+use job_server::JobRegistry;
 use serde::Serialize;
 use std::net::SocketAddr;
 use std::sync::Arc;
@@ -33,65 +33,37 @@ struct Args {
     /// HTTP server port
     #[arg(short, long, default_value = "9000")]
     port: u16,
-
-    /// TEAM-190: Hive ID (defaults to "localhost")
-    #[arg(long, default_value = "localhost")]
-    hive_id: String,
-
-    /// TEAM-190: Queen URL for heartbeat reporting
-    #[arg(long, default_value = "http://localhost:8500")]
-    queen_url: String,
-}
-
-/// TEAM-190: Worker state provider for heartbeat aggregation
-/// Currently returns empty list - will be populated when worker registry is implemented
-struct HiveWorkerProvider;
-
-impl WorkerStateProvider for HiveWorkerProvider {
-    fn get_worker_states(&self) -> Vec<WorkerState> {
-        // TEAM-190: Return empty list for now
-        // TODO: Query worker registry when implemented
-        vec![]
-    }
 }
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
     let args = Args::parse();
 
-    // TEAM-202: Use narration instead of println!
+    // TEAM-202: Use narration instead of println!()
     // This automatically goes through job-scoped SSE (if in job context)
     // and uses centralized formatting (TEAM-201)
+    // TEAM-261: Simplified - no hive heartbeat (workers send to queen directly)
     NARRATE
         .action(ACTION_STARTUP)
         .context(&args.port.to_string())
-        .context(&args.hive_id)
-        .context(&args.queen_url)
-        .human("🐝 Starting on port {}, hive_id: {}, queen: {}")
+        .human("🐝 Starting on port {}")
         .emit();
 
-    // TEAM-190: Start heartbeat task (5 second interval)
-    let heartbeat_config = HiveHeartbeatConfig::new(
-        args.hive_id.clone(),
-        args.queen_url.clone(),
-        "".to_string(), // Empty auth token for now
-    )
-    .with_interval(5); // 5 seconds as requested
+    // TEAM-261: Initialize job registry for dual-call pattern
+    let job_registry: Arc<JobRegistry<String>> = Arc::new(JobRegistry::new());
 
-    let worker_provider = Arc::new(HiveWorkerProvider);
-    let _heartbeat_handle = start_hive_heartbeat_task(heartbeat_config, worker_provider);
+    // TEAM-261: Create HTTP state for job endpoints
+    let job_state = http::jobs::HiveState {
+        registry: job_registry,
+    };
 
-    // TEAM-202: Narrate heartbeat startup
-    NARRATE
-        .action(ACTION_HEARTBEAT)
-        .context("5s")
-        .human("💓 Heartbeat task started ({} interval)")
-        .emit();
-
-    // Create router with health and capabilities endpoints
+    // Create router with health, capabilities, and job endpoints
     let app = Router::new()
         .route("/health", get(health_check))
-        .route("/capabilities", get(get_capabilities));
+        .route("/capabilities", get(get_capabilities))
+        .route("/v1/jobs", post(http::jobs::handle_create_job))
+        .route("/v1/jobs/:job_id/stream", get(http::jobs::handle_stream_job))
+        .with_state(job_state);
 
     let addr = SocketAddr::from(([127, 0, 0, 1], args.port));
 
