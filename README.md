@@ -416,35 +416,51 @@ See [docs/HIVE_CONFIGURATION.md](docs/HIVE_CONFIGURATION.md) for details.
 
 ---
 ## Documentation
-### Core Specifications
-- [`.specs/20_queen-rbee.md`](.specs/20_queen-rbee.md) — Control plane service
-- [`.specs/30_pool_managerd.md`](.specs/30_pool_managerd.md) — GPU worker service
-- [`.specs/metrics/otel-prom.md`](.specs/metrics/otel-prom.md) — Metrics contract
-- [`AGENTS.md`](AGENTS.md) — Repository guidelines, dev loop, coding/testing discipline
-- [`SECURITY.md`](SECURITY.md) — Security policy and Minimal Auth Hooks seam
-- **[`bin/shared-crates/secrets-management/`](bin/shared-crates/secrets-management/)** — ⚠️ **Use this for ALL credentials** (API tokens, seal keys, worker tokens)
-### Operational Guides
+
+### 📚 Architecture (Start Here!)
+
+**Complete System Design:**
+- [`.arch/README.md`](.arch/README.md) — **10-part comprehensive architecture** (read this first!)
+- [`.arch/COMPLETE_FLOW_DIAGRAM.md`](.arch/COMPLETE_FLOW_DIAGRAM.md) — **Complete flow: clean install → inference**
+- [`.arch/00_OVERVIEW_PART_1.md`](.arch/00_OVERVIEW_PART_1.md) — System design & philosophy
+- [`.arch/01_COMPONENTS_PART_2.md`](.arch/01_COMPONENTS_PART_2.md) — Component deep dive (keeper, queen, hive, worker)
+- [`.arch/02_SHARED_INFRASTRUCTURE_PART_3.md`](.arch/02_SHARED_INFRASTRUCTURE_PART_3.md) — Job client/server, security, config
+- [`.arch/03_DATA_FLOW_PART_4.md`](.arch/03_DATA_FLOW_PART_4.md) — Request flow, SSE streaming, heartbeats
+- [`.arch/04_DEVELOPMENT_PART_5.md`](.arch/04_DEVELOPMENT_PART_5.md) — BDD testing, character-driven development
+- [`.arch/05_SECURITY_PART_6.md`](.arch/05_SECURITY_PART_6.md) — Defense-in-depth, GDPR compliance
+
+**Additional Architecture:**
+- [`.arch/06_SDK_PART_7.md`](.arch/06_SDK_PART_7.md) — SDK architecture (Rust → WASM → TypeScript)
+- [`.arch/07_INTERFACES_PART_8.md`](.arch/07_INTERFACES_PART_8.md) — User interfaces (SDK, Web UI, OpenAI adapter)
+- [`.arch/08_CROSS_PLATFORM_PART_9.md`](.arch/08_CROSS_PLATFORM_PART_9.md) — Cross-platform support (Linux, macOS, Windows)
+- [`.arch/09_WORKER_TYPES_PART_10.md`](.arch/09_WORKER_TYPES_PART_10.md) — Worker types, adapters, distributed inference
+
+### ⚠️ Engineering Rules (MANDATORY)
+
+**Must Read Before Contributing:**
+- [`.windsurf/rules/engineering-rules.md`](.windsurf/rules/engineering-rules.md) — **MANDATORY engineering rules** (read first!)
+- [`.windsurf/rules/debugging-rules.md`](.windsurf/rules/debugging-rules.md) — Debugging best practices
+- [`CONTRIBUTING.md`](CONTRIBUTING.md) — How to contribute
+
+### 🛠️ Developer Guides
+
+**Getting Started:**
+- [`bin/ADDING_NEW_OPERATIONS.md`](bin/ADDING_NEW_OPERATIONS.md) — How to add new operations
+- [`.windsurf/RBEE_QUICK_START.md`](.windsurf/RBEE_QUICK_START.md) — Quick start guide
+
+### 📖 Operational Guides
+
+**Configuration & Deployment:**
+- [`docs/CONFIGURATION.md`](docs/CONFIGURATION.md) — Complete configuration reference
 - [`docs/HIVE_CONFIGURATION.md`](docs/HIVE_CONFIGURATION.md) — Hive configuration guide
-- [`docs/MIGRATION_GUIDE.md`](docs/MIGRATION_GUIDE.md) — SQLite to file-based config migration
 - [`docs/HIVE_QUICK_REFERENCE.md`](docs/HIVE_QUICK_REFERENCE.md) — Quick reference card
-- [`docs/CONFIGURATION.md`](docs/CONFIGURATION.md) — Complete environment variable reference
-- [`docs/MANUAL_MODEL_STAGING.md`](docs/MANUAL_MODEL_STAGING.md) — Model staging guide
-### Development
-- [`.docs/testing/`](.docs/testing/) — Testing strategy, BDD wiring, test types
-- [`CONSUMER_CAPABILITIES.md`](CONSUMER_CAPABILITIES.md) — Consumer-facing API guide
-- [`COMPLIANCE.md`](COMPLIANCE.md) — Requirements traceability (ORCH/OC-* IDs)
-### Security & Compliance
-- [`bin/shared-crates/audit-logging/`](bin/shared-crates/audit-logging/) — **Tamper-evident audit logging** (Security Rating: A-)
-- [`bin/shared-crates/AUDIT_LOGGING_REMINDER.md`](bin/shared-crates/AUDIT_LOGGING_REMINDER.md) — **⚠️ Required reading for all engineers**
-- Use `audit-logging` crate for all security events (auth, authz, resource ops, GDPR compliance)
-### Stakeholder Documents
-- [`.business/stakeholders/AGENTIC_AI_USE_CASE.md`](.business/stakeholders/AGENTIC_AI_USE_CASE.md) — Primary use case and value proposition
-- [`.business/stakeholders/AI_DEVELOPMENT_STORY.md`](.business/stakeholders/AI_DEVELOPMENT_STORY.md) — Character-Driven Development methodology
-- [`.business/stakeholders/ENGINEERING_GUIDE.md`](.business/stakeholders/ENGINEERING_GUIDE.md) — Engineering practices and patterns
-- [`.business/stakeholders/FINANCIAL_PROJECTIONS_UPDATE.md`](.business/stakeholders/FINANCIAL_PROJECTIONS_UPDATE.md) — Conservative financial projections
-- [`.business/stakeholders/SECURITY_ARCHITECTURE.md`](.business/stakeholders/SECURITY_ARCHITECTURE.md) — Defense-in-depth security design
-- [`.business/stakeholders/STAKEHOLDER_STORY.md`](.business/stakeholders/STAKEHOLDER_STORY.md) — Complete story for all stakeholders
-- [`.business/stakeholders/TECHNICAL_DEEP_DIVE.md`](.business/stakeholders/TECHNICAL_DEEP_DIVE.md) — Technical architecture deep dive
+- [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md) — Deployment guide
+- [`docs/SECRETS.md`](docs/SECRETS.md) — Secrets management (use `secrets-management` crate!)
+
+**Troubleshooting & Monitoring:**
+- [`docs/TROUBLESHOOTING.md`](docs/TROUBLESHOOTING.md) — Common issues and solutions
+- [`docs/MONITORING.md`](docs/MONITORING.md) — Monitoring and metrics
+- [`docs/API.md`](docs/API.md) — API reference
 ---
 ## Architecture Overview
 
