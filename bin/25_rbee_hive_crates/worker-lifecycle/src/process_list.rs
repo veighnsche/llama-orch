@@ -23,9 +23,9 @@ pub struct WorkerProcessInfo {
 /// List all worker processes on this hive
 ///
 /// This uses local `ps` command to find processes matching worker patterns.
-/// 
+///
 /// # Architecture
-/// 
+///
 /// Hive is STATELESS - this operation scans local processes, not a registry.
 /// It's useful for debugging but ActiveWorkerList (in queen) is the source of truth.
 ///
@@ -91,13 +91,7 @@ pub async fn list_worker_processes(job_id: &str) -> Result<Vec<WorkerProcessInfo
         let elapsed = parts[9].to_string();
         let command = parts[10..].join(" ");
 
-        processes.push(WorkerProcessInfo {
-            pid,
-            command,
-            memory_kb,
-            cpu_percent,
-            elapsed,
-        });
+        processes.push(WorkerProcessInfo { pid, command, memory_kb, cpu_percent, elapsed });
     }
 
     NARRATE
@@ -118,9 +112,7 @@ pub async fn list_worker_processes(job_id: &str) -> Result<Vec<WorkerProcessInfo
         .human("⚠️  Process listing not implemented for this platform")
         .emit();
 
-    Err(anyhow::anyhow!(
-        "Process listing not implemented for non-Unix platforms"
-    ))
+    Err(anyhow::anyhow!("Process listing not implemented for non-Unix platforms"))
 }
 
 #[cfg(test)]

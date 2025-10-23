@@ -26,8 +26,8 @@ pub struct HiveState {
     pub model_catalog: Arc<ModelCatalog>, // TEAM-268: Added
     /// Worker catalog for worker binary management
     pub worker_catalog: Arc<WorkerCatalog>, // TEAM-274: Added
-    // TODO: Add model_provisioner when TEAM-269 implements it
-    // TODO: Add worker_registry when implemented
+                                            // TODO: Add model_provisioner when TEAM-269 implements it
+                                            // TODO: Add worker_registry when implemented
 }
 
 /// Convert HTTP state to router state

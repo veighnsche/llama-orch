@@ -32,12 +32,7 @@ pub async fn get_worker_process(job_id: &str, pid: u32) -> Result<WorkerProcessI
     // Run ps command for specific PID
     // ps -p PID -o pid,%cpu,%mem,rss,etime,command
     let output = Command::new("ps")
-        .args(&[
-            "-p",
-            &pid.to_string(),
-            "-o",
-            "pid,%cpu,%mem,rss,etime,command",
-        ])
+        .args(&["-p", &pid.to_string(), "-o", "pid,%cpu,%mem,rss,etime,command"])
         .output()
         .await
         .map_err(|e| anyhow::anyhow!("Failed to run ps command: {}", e))?;
@@ -63,7 +58,7 @@ pub async fn get_worker_process(job_id: &str, pid: u32) -> Result<WorkerProcessI
     // Parse ps output (skip header)
     let line = lines[1];
     let parts: Vec<&str> = line.split_whitespace().collect();
-    
+
     if parts.len() < 6 {
         return Err(anyhow::anyhow!("Failed to parse ps output for PID {}", pid));
     }
@@ -73,13 +68,7 @@ pub async fn get_worker_process(job_id: &str, pid: u32) -> Result<WorkerProcessI
     let elapsed = parts[4].to_string();
     let command = parts[5..].join(" ");
 
-    let info = WorkerProcessInfo {
-        pid,
-        command: command.clone(),
-        memory_kb,
-        cpu_percent,
-        elapsed,
-    };
+    let info = WorkerProcessInfo { pid, command: command.clone(), memory_kb, cpu_percent, elapsed };
 
     NARRATE
         .action("proc_get_found")
@@ -101,9 +90,7 @@ pub async fn get_worker_process(job_id: &str, pid: u32) -> Result<WorkerProcessI
         .human("⚠️  Process query not implemented for this platform")
         .emit();
 
-    Err(anyhow::anyhow!(
-        "Process query not implemented for non-Unix platforms"
-    ))
+    Err(anyhow::anyhow!("Process query not implemented for non-Unix platforms"))
 }
 
 #[cfg(test)]
@@ -117,7 +104,7 @@ mod tests {
         let current_pid = std::process::id();
         let result = get_worker_process("test-job", current_pid).await;
         assert!(result.is_ok());
-        
+
         let info = result.unwrap();
         assert_eq!(info.pid, current_pid);
     }

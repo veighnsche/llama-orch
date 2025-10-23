@@ -48,7 +48,7 @@ const NARRATE: NarrationFactory = NarrationFactory::new("qn-router");
 #[derive(Clone)]
 pub struct JobState {
     pub registry: Arc<JobRegistry<String>>,
-    pub config: Arc<RbeeConfig>,                                     // TEAM-194: File-based config
+    pub config: Arc<RbeeConfig>, // TEAM-194: File-based config
     pub hive_registry: Arc<queen_rbee_worker_registry::WorkerRegistry>, // TEAM-190/262/275: For Status and Infer operations
 }
 
@@ -110,7 +110,7 @@ async fn route_operation(
     job_id: String,
     payload: serde_json::Value,
     registry: Arc<JobRegistry<String>>,
-    config: Arc<RbeeConfig>,                                          // TEAM-194
+    config: Arc<RbeeConfig>, // TEAM-194
     hive_registry: Arc<queen_rbee_worker_registry::WorkerRegistry>, // TEAM-190/262/275: For Status and Infer operations
 ) -> Result<()> {
     let state = JobState { registry, config, hive_registry };
@@ -440,15 +440,7 @@ async fn route_operation(
         //
         // See: bin/.plan/TEAM_261_ARCHITECTURE_CLARITY.md
         //
-        Operation::Infer {
-            model,
-            prompt,
-            max_tokens,
-            temperature,
-            top_p,
-            top_k,
-            ..
-        } => {
+        Operation::Infer { model, prompt, max_tokens, temperature, top_p, top_k, .. } => {
             // TEAM-275: Use scheduler crate (pre-wired for M2 Rhai scheduler)
             use queen_rbee_scheduler::{JobRequest, JobScheduler, SimpleScheduler};
 
@@ -474,30 +466,24 @@ async fn route_operation(
             let scheduler = SimpleScheduler::new(state.hive_registry.clone());
 
             // Schedule (find worker)
-            let schedule_result = scheduler.schedule(job_request.clone()).await.map_err(|e| {
-                anyhow::anyhow!("Scheduling failed: {}", e)
-            })?;
+            let schedule_result = scheduler
+                .schedule(job_request.clone())
+                .await
+                .map_err(|e| anyhow::anyhow!("Scheduling failed: {}", e))?;
 
             // Create line handler that emits to SSE
             let line_handler = |line: &str| -> Result<(), queen_rbee_scheduler::SchedulerError> {
-                NARRATE
-                    .action("infer_token")
-                    .job_id(&job_id)
-                    .human(line)
-                    .emit();
+                NARRATE.action("infer_token").job_id(&job_id).human(line).emit();
                 Ok(())
             };
 
             // Execute job and stream results
-            scheduler.execute_job(schedule_result, job_request, line_handler).await.map_err(|e| {
-                anyhow::anyhow!("Job execution failed: {}", e)
-            })?;
+            scheduler
+                .execute_job(schedule_result, job_request, line_handler)
+                .await
+                .map_err(|e| anyhow::anyhow!("Job execution failed: {}", e))?;
 
-            NARRATE
-                .action("infer_success")
-                .job_id(&job_id)
-                .human("✅ Inference complete")
-                .emit();
+            NARRATE.action("infer_success").job_id(&job_id).human("✅ Inference complete").emit();
         }
 
         // TEAM-272: Active worker operations (query queen's registry)

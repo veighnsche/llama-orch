@@ -15,7 +15,7 @@
 
 pub mod hive_forwarder;
 pub mod http; // TEAM-186: Reorganized into http/ folder with mod.rs (includes health, heartbeat)
-// TEAM-275: Removed inference_scheduler module - moved to queen-rbee-inference-scheduler crate
+              // TEAM-275: Removed inference_scheduler module - moved to queen-rbee-inference-scheduler crate
 pub mod job_router; // TEAM-186: Job routing and operation dispatch
 pub mod narration;
 

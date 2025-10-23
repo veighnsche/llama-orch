@@ -40,9 +40,7 @@ pub struct WorkerRegistry {
 impl WorkerRegistry {
     /// Create a new empty registry
     pub fn new() -> Self {
-        Self {
-            workers: RwLock::new(HashMap::new()),
-        }
+        Self { workers: RwLock::new(HashMap::new()) }
     }
 
     /// Update worker from heartbeat
@@ -78,11 +76,7 @@ impl WorkerRegistry {
     /// Only returns workers that sent heartbeat within timeout window.
     pub fn list_online_workers(&self) -> Vec<WorkerInfo> {
         let workers = self.workers.read().unwrap();
-        workers
-            .values()
-            .filter(|hb| hb.is_recent())
-            .map(|hb| hb.worker.clone())
-            .collect()
+        workers.values().filter(|hb| hb.is_recent()).map(|hb| hb.worker.clone()).collect()
     }
 
     /// List available workers (online + ready status)
@@ -143,10 +137,7 @@ impl WorkerRegistry {
     /// Check if worker is online
     pub fn is_worker_online(&self, worker_id: &str) -> bool {
         let workers = self.workers.read().unwrap();
-        workers
-            .get(worker_id)
-            .map(|hb| hb.is_recent())
-            .unwrap_or(false)
+        workers.get(worker_id).map(|hb| hb.is_recent()).unwrap_or(false)
     }
 
     /// Clean up stale workers
@@ -290,11 +281,9 @@ mod tests {
 
         // Add worker with old heartbeat
         let worker = create_worker("worker-1", "llama-3-8b", WorkerStatus::Ready);
-        let old_timestamp = Utc::now() - chrono::Duration::seconds(worker_contract::HEARTBEAT_TIMEOUT_SECS as i64 + 10);
-        let old_heartbeat = WorkerHeartbeat {
-            worker,
-            timestamp: old_timestamp,
-        };
+        let old_timestamp = Utc::now()
+            - chrono::Duration::seconds(worker_contract::HEARTBEAT_TIMEOUT_SECS as i64 + 10);
+        let old_heartbeat = WorkerHeartbeat { worker, timestamp: old_timestamp };
         registry.update_worker(old_heartbeat);
 
         assert_eq!(registry.total_worker_count(), 1);

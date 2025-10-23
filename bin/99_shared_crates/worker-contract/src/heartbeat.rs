@@ -83,10 +83,7 @@ pub struct HeartbeatAck {
 impl WorkerHeartbeat {
     /// Create a new heartbeat with current timestamp
     pub fn new(worker: WorkerInfo) -> Self {
-        Self {
-            worker,
-            timestamp: chrono::Utc::now(),
-        }
+        Self { worker, timestamp: chrono::Utc::now() }
     }
 
     /// Check if heartbeat is recent (within timeout window)
@@ -100,18 +97,12 @@ impl WorkerHeartbeat {
 impl HeartbeatAck {
     /// Create a success acknowledgement
     pub fn success(message: impl Into<String>) -> Self {
-        Self {
-            status: "ok".to_string(),
-            message: Some(message.into()),
-        }
+        Self { status: "ok".to_string(), message: Some(message.into()) }
     }
 
     /// Create an error acknowledgement
     pub fn error(message: impl Into<String>) -> Self {
-        Self {
-            status: "error".to_string(),
-            message: Some(message.into()),
-        }
+        Self { status: "error".to_string(), message: Some(message.into()) }
     }
 }
 
@@ -155,10 +146,7 @@ mod tests {
 
         // Old heartbeat (91 seconds ago)
         let old_timestamp = chrono::Utc::now() - chrono::Duration::seconds(91);
-        let old_heartbeat = WorkerHeartbeat {
-            worker,
-            timestamp: old_timestamp,
-        };
+        let old_heartbeat = WorkerHeartbeat { worker, timestamp: old_timestamp };
         assert!(!old_heartbeat.is_recent());
     }
 
@@ -187,7 +175,7 @@ mod tests {
 
         let heartbeat = WorkerHeartbeat::new(worker);
         let json = serde_json::to_string(&heartbeat).unwrap();
-        
+
         // Verify it can be deserialized
         let deserialized: WorkerHeartbeat = serde_json::from_str(&json).unwrap();
         assert_eq!(deserialized.worker.id, "test");

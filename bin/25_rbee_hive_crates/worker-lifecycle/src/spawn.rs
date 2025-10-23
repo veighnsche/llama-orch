@@ -42,7 +42,7 @@ pub async fn spawn_worker(config: WorkerSpawnConfig) -> Result<SpawnResult> {
 
     // Step 1: Determine worker type from device
     let worker_type = determine_worker_type(&config.device)?;
-    
+
     NARRATE
         .action("worker_type_determined")
         .job_id(&config.job_id)
@@ -53,7 +53,7 @@ pub async fn spawn_worker(config: WorkerSpawnConfig) -> Result<SpawnResult> {
 
     // Step 2: Find worker binary
     let binary_path = find_worker_binary(worker_type, &config.job_id)?;
-    
+
     NARRATE
         .action("worker_binary_found")
         .job_id(&config.job_id)
@@ -84,18 +84,15 @@ pub async fn spawn_worker(config: WorkerSpawnConfig) -> Result<SpawnResult> {
         .emit();
 
     // Step 4: Spawn worker process using daemon-lifecycle
-    let manager = DaemonManager::new(binary_path.clone(), args)
-        .enable_auto_update(
-            worker_type.binary_name(),
-            format!("bin/30_{}", worker_type.binary_name().replace("-", "_")),
-        );
+    let manager = DaemonManager::new(binary_path.clone(), args).enable_auto_update(
+        worker_type.binary_name(),
+        format!("bin/30_{}", worker_type.binary_name().replace("-", "_")),
+    );
 
     let child = manager.spawn().await.context("Failed to spawn worker process")?;
 
     // Get PID
-    let pid = child
-        .id()
-        .ok_or_else(|| anyhow!("Failed to get worker PID"))?;
+    let pid = child.id().ok_or_else(|| anyhow!("Failed to get worker PID"))?;
 
     NARRATE
         .action("worker_spawned")
@@ -125,7 +122,7 @@ pub async fn spawn_worker(config: WorkerSpawnConfig) -> Result<SpawnResult> {
 /// - "metal" → MetalLlm
 fn determine_worker_type(device: &str) -> Result<WorkerType> {
     let device_lower = device.to_lowercase();
-    
+
     if device_lower.starts_with("cpu") {
         Ok(WorkerType::CpuLlm)
     } else if device_lower.starts_with("cuda") || device_lower.starts_with("gpu") {
@@ -133,10 +130,7 @@ fn determine_worker_type(device: &str) -> Result<WorkerType> {
     } else if device_lower.starts_with("metal") {
         Ok(WorkerType::MetalLlm)
     } else {
-        Err(anyhow!(
-            "Unknown device type: '{}'. Supported: cpu, cuda:N, metal",
-            device
-        ))
+        Err(anyhow!("Unknown device type: '{}'. Supported: cpu, cuda:N, metal", device))
     }
 }
 
@@ -157,14 +151,14 @@ fn find_worker_binary(worker_type: WorkerType, job_id: &str) -> Result<PathBuf> 
                 .context(&worker.path().display().to_string())
                 .human("Found worker in catalog: {}")
                 .emit();
-            
+
             return Ok(worker.path().to_path_buf());
         }
     }
 
     // Fallback to target directory (development)
     let binary_name = worker_type.binary_name();
-    
+
     // Try debug first
     let debug_path = PathBuf::from("target/debug").join(binary_name);
     if debug_path.exists() {
@@ -174,7 +168,7 @@ fn find_worker_binary(worker_type: WorkerType, job_id: &str) -> Result<PathBuf> 
             .context(&debug_path.display().to_string())
             .human("Using debug binary: {}")
             .emit();
-        
+
         return Ok(debug_path);
     }
 
@@ -187,14 +181,11 @@ fn find_worker_binary(worker_type: WorkerType, job_id: &str) -> Result<PathBuf> 
             .context(&release_path.display().to_string())
             .human("Using release binary: {}")
             .emit();
-        
+
         return Ok(release_path);
     }
 
-    Err(anyhow!(
-        "Worker binary '{}' not found in catalog or target directory",
-        binary_name
-    ))
+    Err(anyhow!("Worker binary '{}' not found in catalog or target directory", binary_name))
 }
 
 #[cfg(test)]
@@ -203,27 +194,12 @@ mod tests {
 
     #[test]
     fn test_determine_worker_type() {
-        assert_eq!(
-            determine_worker_type("cpu").unwrap(),
-            WorkerType::CpuLlm
-        );
-        assert_eq!(
-            determine_worker_type("CPU-0").unwrap(),
-            WorkerType::CpuLlm
-        );
-        assert_eq!(
-            determine_worker_type("cuda:0").unwrap(),
-            WorkerType::CudaLlm
-        );
-        assert_eq!(
-            determine_worker_type("GPU-0").unwrap(),
-            WorkerType::CudaLlm
-        );
-        assert_eq!(
-            determine_worker_type("metal").unwrap(),
-            WorkerType::MetalLlm
-        );
-        
+        assert_eq!(determine_worker_type("cpu").unwrap(), WorkerType::CpuLlm);
+        assert_eq!(determine_worker_type("CPU-0").unwrap(), WorkerType::CpuLlm);
+        assert_eq!(determine_worker_type("cuda:0").unwrap(), WorkerType::CudaLlm);
+        assert_eq!(determine_worker_type("GPU-0").unwrap(), WorkerType::CudaLlm);
+        assert_eq!(determine_worker_type("metal").unwrap(), WorkerType::MetalLlm);
+
         assert!(determine_worker_type("unknown").is_err());
     }
 }

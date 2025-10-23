@@ -26,9 +26,9 @@
 use anyhow::Result;
 use job_server::JobRegistry;
 use observability_narration_core::NarrationFactory;
+use rbee_hive_artifact_catalog::{Artifact, ArtifactCatalog}; // TEAM-273: Traits for catalog methods
 use rbee_hive_model_catalog::ModelCatalog; // TEAM-268: Model catalog
 use rbee_hive_worker_catalog::WorkerCatalog; // TEAM-274: Worker catalog
-use rbee_hive_artifact_catalog::{Artifact, ArtifactCatalog}; // TEAM-273: Traits for catalog methods
 use rbee_operations::Operation;
 use std::sync::Arc;
 
@@ -41,8 +41,8 @@ pub struct JobState {
     pub registry: Arc<JobRegistry<String>>,
     pub model_catalog: Arc<ModelCatalog>, // TEAM-268: Model catalog
     pub worker_catalog: Arc<WorkerCatalog>, // TEAM-274: Worker catalog
-    // TODO: Add model_provisioner when TEAM-269 implements it
-    // TODO: Add worker_registry when implemented
+                                          // TODO: Add model_provisioner when TEAM-269 implements it
+                                          // TODO: Add worker_registry when implemented
 }
 
 /// Response from job creation
@@ -192,7 +192,7 @@ async fn route_operation(
             } else {
                 for binary in &binaries {
                     let size_mb = binary.size() as f64 / 1_000_000.0;
-                    
+
                     NARRATE
                         .action("worker_bin_list_entry")
                         .job_id(&job_id)
@@ -229,11 +229,7 @@ async fn route_operation(
                     let json = serde_json::to_string_pretty(&binary)
                         .unwrap_or_else(|_| "Failed to serialize".to_string());
 
-                    NARRATE
-                        .action("worker_bin_get_details")
-                        .job_id(&job_id)
-                        .human(&json)
-                        .emit();
+                    NARRATE.action("worker_bin_get_details").job_id(&job_id).human(&json).emit();
                 }
                 Err(e) => {
                     NARRATE
@@ -308,7 +304,7 @@ async fn route_operation(
             } else {
                 for proc in &processes {
                     let mem_mb = proc.memory_kb as f64 / 1024.0;
-                    
+
                     NARRATE
                         .action("worker_proc_list_entry")
                         .job_id(&job_id)
@@ -352,11 +348,7 @@ async fn route_operation(
             let json = serde_json::to_string_pretty(&proc_info)
                 .unwrap_or_else(|_| "Failed to serialize".to_string());
 
-            NARRATE
-                .action("worker_proc_get_details")
-                .job_id(&job_id)
-                .human(&json)
-                .emit();
+            NARRATE.action("worker_proc_get_details").job_id(&job_id).human(&json).emit();
         }
 
         Operation::WorkerProcessDelete { hive_id, pid } => {
@@ -401,7 +393,7 @@ async fn route_operation(
                     .context(&model)
                     .human("⚠️  Model '{}' already exists in catalog")
                     .emit();
-                
+
                 return Err(anyhow::anyhow!("Model '{}' already exists", model));
             }
 
@@ -412,8 +404,10 @@ async fn route_operation(
                 .context(&model)
                 .human("⚠️  Model download not yet implemented (waiting for TEAM-269)")
                 .emit();
-            
-            return Err(anyhow::anyhow!("Model download not yet implemented (waiting for TEAM-269)"));
+
+            return Err(anyhow::anyhow!(
+                "Model download not yet implemented (waiting for TEAM-269)"
+            ));
         }
 
         Operation::ModelList { hive_id } => {
@@ -436,11 +430,7 @@ async fn route_operation(
 
             // Format as JSON table
             if models.is_empty() {
-                NARRATE
-                    .action("model_list_empty")
-                    .job_id(&job_id)
-                    .human("No models found")
-                    .emit();
+                NARRATE.action("model_list_empty").job_id(&job_id).human("No models found").emit();
             } else {
                 for model in &models {
                     let size_gb = model.size() as f64 / 1_000_000_000.0;
@@ -488,11 +478,7 @@ async fn route_operation(
                     let json = serde_json::to_string_pretty(&model)
                         .unwrap_or_else(|_| "Failed to serialize".to_string());
 
-                    NARRATE
-                        .action("model_get_details")
-                        .job_id(&job_id)
-                        .human(&json)
-                        .emit();
+                    NARRATE.action("model_get_details").job_id(&job_id).human(&json).emit();
                 }
                 Err(e) => {
                     NARRATE

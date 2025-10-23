@@ -60,14 +60,14 @@
 //! // Send to queen: POST http://queen:8500/v1/worker-heartbeat
 //! ```
 
-/// Worker contract types
-pub mod types;
-/// Heartbeat protocol
-pub mod heartbeat;
 /// Worker HTTP API specification
 pub mod api;
+/// Heartbeat protocol
+pub mod heartbeat;
+/// Worker contract types
+pub mod types;
 
 // Re-export main types for convenience
-pub use types::{WorkerInfo, WorkerStatus};
+pub use api::{InferRequest, InferResponse, WorkerApiSpec};
 pub use heartbeat::{WorkerHeartbeat, HEARTBEAT_INTERVAL_SECS, HEARTBEAT_TIMEOUT_SECS};
-pub use api::{WorkerApiSpec, InferRequest, InferResponse};
+pub use types::{WorkerInfo, WorkerStatus};

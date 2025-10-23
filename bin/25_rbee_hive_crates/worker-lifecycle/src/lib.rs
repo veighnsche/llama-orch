@@ -42,20 +42,20 @@
 //! ```
 
 // TEAM-271: Module declarations
-/// Request/Response types
-pub mod types;
 /// Worker spawning operations
 pub mod spawn;
+/// Request/Response types
+pub mod types;
 
 // TEAM-272: Worker management operations
 /// Worker deletion (process cleanup)
 pub mod delete;
 
 // TEAM-274: Worker process operations (hive-local, stateless)
-/// List worker processes using local ps
-pub mod process_list;
 /// Get worker process details by PID
 pub mod process_get;
+/// List worker processes using local ps
+pub mod process_list;
 
 // NOTE: WorkerList and WorkerGet are NOT implemented in hive
 // According to corrected architecture (CORRECTION_269_TO_272_ARCHITECTURE_FIX.md):
@@ -77,5 +77,5 @@ pub use types::{SpawnResult, WorkerSpawnConfig};
 pub use delete::delete_worker;
 
 // TEAM-274: Re-export process operations
-pub use process_list::{list_worker_processes, WorkerProcessInfo};
 pub use process_get::get_worker_process;
+pub use process_list::{list_worker_processes, WorkerProcessInfo};

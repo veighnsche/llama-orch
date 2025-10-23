@@ -191,7 +191,7 @@ mod tests {
         };
 
         let json = serde_json::to_string(&request).unwrap();
-        
+
         // Optional fields should be omitted from JSON
         assert!(!json.contains("max_tokens"));
         assert!(!json.contains("temperature"));

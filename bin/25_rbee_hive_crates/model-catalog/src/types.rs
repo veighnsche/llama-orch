@@ -11,19 +11,19 @@ pub type ModelStatus = ArtifactStatus;
 pub struct ModelEntry {
     /// Unique model ID (e.g., "meta-llama/Llama-2-7b")
     id: String,
-    
+
     /// Human-readable name
     name: String,
-    
+
     /// Filesystem path to model files
     path: PathBuf,
-    
+
     /// Size in bytes
     size: u64,
-    
+
     /// Current status
     status: ArtifactStatus,
-    
+
     /// When the model was added
     #[serde(default = "chrono::Utc::now")]
     added_at: chrono::DateTime<chrono::Utc>,
@@ -41,12 +41,12 @@ impl ModelEntry {
             added_at: chrono::Utc::now(),
         }
     }
-    
+
     /// Get the model name
     pub fn name(&self) -> &str {
         &self.name
     }
-    
+
     /// Get when the model was added
     pub fn added_at(&self) -> chrono::DateTime<chrono::Utc> {
         self.added_at
@@ -58,23 +58,23 @@ impl Artifact for ModelEntry {
     fn id(&self) -> &str {
         &self.id
     }
-    
+
     fn path(&self) -> &Path {
         &self.path
     }
-    
+
     fn size(&self) -> u64 {
         self.size
     }
-    
+
     fn status(&self) -> &ArtifactStatus {
         &self.status
     }
-    
+
     fn set_status(&mut self, status: ArtifactStatus) {
         self.status = status;
     }
-    
+
     fn name(&self) -> &str {
         &self.name
     }

@@ -293,11 +293,11 @@ pub enum WorkerAction {
         #[arg(long)]
         device: String,
     },
-    
+
     /// Worker binary management (catalog on hive)
     #[command(subcommand)]
     Binary(WorkerBinaryAction),
-    
+
     /// Worker process management (local ps on hive)
     #[command(subcommand)]
     Process(WorkerProcessAction),
@@ -308,13 +308,9 @@ pub enum WorkerBinaryAction {
     /// List worker binaries on hive
     List,
     /// Get worker binary details
-    Get {
-        worker_type: String,
-    },
+    Get { worker_type: String },
     /// Delete worker binary
-    Delete {
-        worker_type: String,
-    },
+    Delete { worker_type: String },
 }
 
 #[derive(Subcommand)]
@@ -322,13 +318,9 @@ pub enum WorkerProcessAction {
     /// List worker processes (local ps)
     List,
     /// Get worker process details by PID
-    Get {
-        pid: u32,
-    },
+    Get { pid: u32 },
     /// Delete (kill) worker process by PID
-    Delete {
-        pid: u32,
-    },
+    Delete { pid: u32 },
 }
 
 #[derive(Subcommand)]
@@ -821,32 +813,24 @@ async fn handle_command(cli: Cli) -> Result<()> {
                         device: device_id,
                     }
                 }
-                WorkerAction::Binary(binary_action) => {
-                    match binary_action {
-                        WorkerBinaryAction::List => Operation::WorkerBinaryList { hive_id },
-                        WorkerBinaryAction::Get { worker_type } => Operation::WorkerBinaryGet {
-                            hive_id,
-                            worker_type: worker_type.clone(),
-                        },
-                        WorkerBinaryAction::Delete { worker_type } => Operation::WorkerBinaryDelete {
-                            hive_id,
-                            worker_type: worker_type.clone(),
-                        },
+                WorkerAction::Binary(binary_action) => match binary_action {
+                    WorkerBinaryAction::List => Operation::WorkerBinaryList { hive_id },
+                    WorkerBinaryAction::Get { worker_type } => {
+                        Operation::WorkerBinaryGet { hive_id, worker_type: worker_type.clone() }
                     }
-                }
-                WorkerAction::Process(process_action) => {
-                    match process_action {
-                        WorkerProcessAction::List => Operation::WorkerProcessList { hive_id },
-                        WorkerProcessAction::Get { pid } => Operation::WorkerProcessGet {
-                            hive_id,
-                            pid: *pid,
-                        },
-                        WorkerProcessAction::Delete { pid } => Operation::WorkerProcessDelete {
-                            hive_id,
-                            pid: *pid,
-                        },
+                    WorkerBinaryAction::Delete { worker_type } => {
+                        Operation::WorkerBinaryDelete { hive_id, worker_type: worker_type.clone() }
                     }
-                }
+                },
+                WorkerAction::Process(process_action) => match process_action {
+                    WorkerProcessAction::List => Operation::WorkerProcessList { hive_id },
+                    WorkerProcessAction::Get { pid } => {
+                        Operation::WorkerProcessGet { hive_id, pid: *pid }
+                    }
+                    WorkerProcessAction::Delete { pid } => {
+                        Operation::WorkerProcessDelete { hive_id, pid: *pid }
+                    }
+                },
             };
             submit_and_stream_job(&queen_url, operation).await
         }

@@ -44,14 +44,14 @@ impl Platform {
     pub fn current() -> Self {
         #[cfg(target_os = "linux")]
         return Platform::Linux;
-        
+
         #[cfg(target_os = "macos")]
         return Platform::MacOS;
-        
+
         #[cfg(target_os = "windows")]
         return Platform::Windows;
     }
-    
+
     /// Get the file extension for this platform
     pub fn extension(&self) -> &str {
         match self {
@@ -66,25 +66,25 @@ impl Platform {
 pub struct WorkerBinary {
     /// Unique worker ID (e.g., "cpu-llm-worker-rbee-v0.1.0-linux")
     id: String,
-    
+
     /// Worker type
     worker_type: WorkerType,
-    
+
     /// Platform
     platform: Platform,
-    
+
     /// Filesystem path to worker binary
     path: PathBuf,
-    
+
     /// Size in bytes
     size: u64,
-    
+
     /// Current status
     status: ArtifactStatus,
-    
+
     /// Version
     version: String,
-    
+
     /// When the worker was added
     #[serde(default = "chrono::Utc::now")]
     added_at: chrono::DateTime<chrono::Utc>,
@@ -111,22 +111,22 @@ impl WorkerBinary {
             added_at: chrono::Utc::now(),
         }
     }
-    
+
     /// Get the worker type
     pub fn worker_type(&self) -> &WorkerType {
         &self.worker_type
     }
-    
+
     /// Get the platform
     pub fn platform(&self) -> &Platform {
         &self.platform
     }
-    
+
     /// Get the version
     pub fn version(&self) -> &str {
         &self.version
     }
-    
+
     /// Get when the worker was added
     pub fn added_at(&self) -> chrono::DateTime<chrono::Utc> {
         self.added_at
@@ -138,23 +138,23 @@ impl Artifact for WorkerBinary {
     fn id(&self) -> &str {
         &self.id
     }
-    
+
     fn path(&self) -> &Path {
         &self.path
     }
-    
+
     fn size(&self) -> u64 {
         self.size
     }
-    
+
     fn status(&self) -> &ArtifactStatus {
         &self.status
     }
-    
+
     fn set_status(&mut self, status: ArtifactStatus) {
         self.status = status;
     }
-    
+
     fn name(&self) -> &str {
         &self.id
     }

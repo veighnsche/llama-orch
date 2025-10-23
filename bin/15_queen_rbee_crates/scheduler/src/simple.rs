@@ -88,10 +88,7 @@ impl SimpleScheduler {
 
         if !response.status().is_success() {
             let status = response.status().as_u16();
-            let error_text = response
-                .text()
-                .await
-                .unwrap_or_else(|_| "Unknown error".to_string());
+            let error_text = response.text().await.unwrap_or_else(|_| "Unknown error".to_string());
 
             NARRATE
                 .action("infer_post_err")
@@ -102,10 +99,7 @@ impl SimpleScheduler {
                 .error_kind("worker_error")
                 .emit();
 
-            return Err(SchedulerError::WorkerError {
-                status,
-                message: error_text,
-            });
+            return Err(SchedulerError::WorkerError { status, message: error_text });
         }
 
         let worker_job: WorkerJobResponse = response.json().await.map_err(|e| {
@@ -183,11 +177,7 @@ impl SimpleScheduler {
 
                 if !line.is_empty() {
                     // Strip SSE prefix if present
-                    let clean_line = if line.starts_with("data: ") {
-                        &line[6..]
-                    } else {
-                        &line
-                    };
+                    let clean_line = if line.starts_with("data: ") { &line[6..] } else { &line };
 
                     // Forward to client
                     line_handler(clean_line)?;
@@ -207,19 +197,11 @@ impl SimpleScheduler {
 
         // Process remaining buffer
         if !buffer.is_empty() {
-            let clean_line = if buffer.starts_with("data: ") {
-                &buffer[6..]
-            } else {
-                &buffer
-            };
+            let clean_line = if buffer.starts_with("data: ") { &buffer[6..] } else { &buffer };
             line_handler(clean_line.trim())?;
         }
 
-        NARRATE
-            .action("infer_done")
-            .job_id(job_id)
-            .human("✅ Inference streaming complete")
-            .emit();
+        NARRATE.action("infer_done").job_id(job_id).human("✅ Inference streaming complete").emit();
 
         Ok(())
     }
@@ -239,22 +221,17 @@ impl JobScheduler for SimpleScheduler {
             .emit();
 
         // Find best worker for model
-        let worker = self
-            .worker_registry
-            .find_best_worker_for_model(model)
-            .ok_or_else(|| {
-                NARRATE
-                    .action("infer_no_worker")
-                    .job_id(job_id)
-                    .context(model)
-                    .human("❌ No available worker found for model '{}'")
-                    .error_kind("no_worker")
-                    .emit();
+        let worker = self.worker_registry.find_best_worker_for_model(model).ok_or_else(|| {
+            NARRATE
+                .action("infer_no_worker")
+                .job_id(job_id)
+                .context(model)
+                .human("❌ No available worker found for model '{}'")
+                .error_kind("no_worker")
+                .emit();
 
-                SchedulerError::NoWorkersAvailable {
-                    model: model.clone(),
-                }
-            })?;
+            SchedulerError::NoWorkersAvailable { model: model.clone() }
+        })?;
 
         NARRATE
             .action("infer_worker_sel")

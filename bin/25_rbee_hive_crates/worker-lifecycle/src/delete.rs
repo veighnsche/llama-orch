@@ -120,9 +120,7 @@ async fn kill_process(job_id: &str, _pid: u32) -> Result<()> {
         .human("⚠️  Process killing not implemented for this platform")
         .emit();
 
-    Err(anyhow::anyhow!(
-        "Process killing not implemented for non-Unix platforms"
-    ))
+    Err(anyhow::anyhow!("Process killing not implemented for non-Unix platforms"))
 }
 
 #[cfg(test)]

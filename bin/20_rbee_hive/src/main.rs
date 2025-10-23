@@ -24,9 +24,9 @@ use axum::{
 };
 use clap::Parser;
 use job_server::JobRegistry;
+use rbee_hive_artifact_catalog::ArtifactCatalog; // TEAM-273: Trait for catalog methods
 use rbee_hive_model_catalog::ModelCatalog; // TEAM-268: Model catalog
 use rbee_hive_worker_catalog::WorkerCatalog; // TEAM-274: Worker catalog
-use rbee_hive_artifact_catalog::ArtifactCatalog; // TEAM-273: Trait for catalog methods
 use serde::Serialize;
 use std::net::SocketAddr;
 use std::sync::Arc;
@@ -59,9 +59,7 @@ async fn main() -> anyhow::Result<()> {
     let job_registry: Arc<JobRegistry<String>> = Arc::new(JobRegistry::new());
 
     // TEAM-268: Initialize model catalog
-    let model_catalog = Arc::new(
-        ModelCatalog::new().expect("Failed to initialize model catalog")
-    );
+    let model_catalog = Arc::new(ModelCatalog::new().expect("Failed to initialize model catalog"));
 
     NARRATE
         .action("catalog_init")
@@ -70,9 +68,8 @@ async fn main() -> anyhow::Result<()> {
         .emit();
 
     // TEAM-274: Initialize worker catalog
-    let worker_catalog = Arc::new(
-        WorkerCatalog::new().expect("Failed to initialize worker catalog")
-    );
+    let worker_catalog =
+        Arc::new(WorkerCatalog::new().expect("Failed to initialize worker catalog"));
 
     NARRATE
         .action("worker_cat_init")
@@ -85,11 +82,7 @@ async fn main() -> anyhow::Result<()> {
     // TEAM-261: Create HTTP state for job endpoints
     // TEAM-268: Added model_catalog to state
     // TEAM-274: Added worker_catalog to state
-    let job_state = http::jobs::HiveState {
-        registry: job_registry,
-        model_catalog,
-        worker_catalog,
-    };
+    let job_state = http::jobs::HiveState { registry: job_registry, model_catalog, worker_catalog };
 
     // Create router with health, capabilities, and job endpoints
     let app = Router::new()
