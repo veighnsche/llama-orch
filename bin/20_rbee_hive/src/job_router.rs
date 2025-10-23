@@ -26,7 +26,9 @@
 use anyhow::Result;
 use job_server::JobRegistry;
 use observability_narration_core::NarrationFactory;
-use rbee_hive_model_catalog::{ModelCatalog, ModelProvisioner}; // TEAM-268: Model catalog, TEAM-269: Model provisioner
+use rbee_hive_model_catalog::ModelCatalog; // TEAM-268: Model catalog
+use rbee_hive_worker_catalog::WorkerCatalog; // TEAM-274: Worker catalog
+use rbee_hive_artifact_catalog::{Artifact, ArtifactCatalog}; // TEAM-273: Traits for catalog methods
 use rbee_operations::Operation;
 use std::sync::Arc;
 
@@ -38,7 +40,8 @@ const NARRATE: NarrationFactory = NarrationFactory::new("hv-router");
 pub struct JobState {
     pub registry: Arc<JobRegistry<String>>,
     pub model_catalog: Arc<ModelCatalog>, // TEAM-268: Model catalog
-    pub model_provisioner: Arc<ModelProvisioner>, // TEAM-269: Model provisioner
+    pub worker_catalog: Arc<WorkerCatalog>, // TEAM-274: Worker catalog
+    // TODO: Add model_provisioner when TEAM-269 implements it
     // TODO: Add worker_registry when implemented
 }
 
@@ -120,62 +123,263 @@ async fn route_operation(
     match operation {
         // Worker operations
         Operation::WorkerSpawn { hive_id, model, worker, device } => {
+            // TEAM-272: Implemented worker spawning using worker-lifecycle
+            use rbee_hive_worker_lifecycle::{spawn_worker, WorkerSpawnConfig};
+
             NARRATE
-                .action("worker_spawn")
+                .action("worker_spawn_start")
                 .job_id(&job_id)
                 .context(&hive_id)
                 .context(&model)
                 .context(&worker)
-                .context(device.to_string())
-                .human("TODO: Spawn worker on hive '{}' with model '{}', worker '{}', device {}")
+                .context(&device.to_string())
+                .human("🚀 Spawning worker '{}' with model '{}' on device {}")
                 .emit();
 
-            // TODO: Implement worker spawning
-            // - Validate model exists
-            // - Validate device exists
-            // - Spawn worker process
-            // - Register in worker_registry
+            // Allocate port (simple sequential allocation for now)
+            // TODO: Implement proper port allocation
+            let port = 9000 + (rand::random::<u16>() % 1000);
+
+            // Queen URL for heartbeat (hardcoded for now)
+            // TODO: Get from config
+            let queen_url = "http://localhost:8500".to_string();
+
+            let config = WorkerSpawnConfig {
+                worker_id: worker.clone(),
+                model_id: model.clone(),
+                device: device.to_string(),
+                port,
+                queen_url,
+                job_id: job_id.clone(),
+            };
+
+            let result = spawn_worker(config).await?;
+
+            NARRATE
+                .action("worker_spawn_complete")
+                .job_id(&job_id)
+                .context(&result.worker_id)
+                .context(&result.pid.to_string())
+                .context(&result.port.to_string())
+                .human("✅ Worker '{}' spawned (PID: {}, port: {})")
+                .emit();
         }
 
-        Operation::WorkerList { hive_id } => {
+        // TEAM-274: Worker binary operations (catalog management)
+        Operation::WorkerBinaryList { hive_id } => {
             NARRATE
-                .action("worker_list")
+                .action("worker_bin_list_start")
                 .job_id(&job_id)
                 .context(&hive_id)
-                .human("TODO: List workers on hive '{}'")
+                .human("📋 Listing worker binaries on hive '{}'")
                 .emit();
 
-            // TODO: Implement worker listing
-            // - Query worker_registry
-            // - Format as JSON table
+            let binaries = state.worker_catalog.list();
+
+            NARRATE
+                .action("worker_bin_list_result")
+                .job_id(&job_id)
+                .context(&binaries.len().to_string())
+                .human("Found {} worker binary(ies)")
+                .emit();
+
+            if binaries.is_empty() {
+                NARRATE
+                    .action("worker_bin_list_empty")
+                    .job_id(&job_id)
+                    .human("No worker binaries found")
+                    .emit();
+            } else {
+                for binary in &binaries {
+                    let size_mb = binary.size() as f64 / 1_000_000.0;
+                    
+                    NARRATE
+                        .action("worker_bin_list_entry")
+                        .job_id(&job_id)
+                        .context(binary.id())
+                        .context(binary.name())
+                        .context(&format!("{:.2} MB", size_mb))
+                        .human("  {} | {} | {}")
+                        .emit();
+                }
+            }
         }
 
-        Operation::WorkerGet { hive_id, id } => {
+        Operation::WorkerBinaryGet { hive_id, worker_type } => {
             NARRATE
-                .action("worker_get")
+                .action("worker_bin_get_start")
                 .job_id(&job_id)
                 .context(&hive_id)
-                .context(&id)
-                .human("TODO: Get worker '{}' on hive '{}'")
+                .context(&worker_type)
+                .human("🔍 Getting worker binary '{}' on hive '{}'")
                 .emit();
 
-            // TODO: Implement worker get
-            // - Query worker_registry
-            // - Return worker details
+            match state.worker_catalog.get(&worker_type) {
+                Ok(binary) => {
+                    NARRATE
+                        .action("worker_bin_get_found")
+                        .job_id(&job_id)
+                        .context(binary.id())
+                        .context(binary.name())
+                        .context(&binary.path().display().to_string())
+                        .human("✅ Worker: {} | Name: {} | Path: {}")
+                        .emit();
+
+                    // Emit binary details as JSON
+                    let json = serde_json::to_string_pretty(&binary)
+                        .unwrap_or_else(|_| "Failed to serialize".to_string());
+
+                    NARRATE
+                        .action("worker_bin_get_details")
+                        .job_id(&job_id)
+                        .human(&json)
+                        .emit();
+                }
+                Err(e) => {
+                    NARRATE
+                        .action("worker_bin_get_error")
+                        .job_id(&job_id)
+                        .context(&worker_type)
+                        .context(&e.to_string())
+                        .human("❌ Worker binary '{}' not found: {}")
+                        .emit();
+                    return Err(e);
+                }
+            }
         }
 
-        Operation::WorkerDelete { hive_id, id } => {
+        Operation::WorkerBinaryDelete { hive_id, worker_type } => {
             NARRATE
-                .action("worker_delete")
+                .action("worker_bin_del_start")
                 .job_id(&job_id)
                 .context(&hive_id)
-                .context(&id)
-                .human("TODO: Delete worker '{}' on hive '{}'")
+                .context(&worker_type)
+                .human("🗑️  Deleting worker binary '{}' on hive '{}'")
                 .emit();
 
-            // TODO: Implement worker deletion
-            // - Stop worker process
-            // - Remove from worker_registry
+            match state.worker_catalog.remove(&worker_type) {
+                Ok(()) => {
+                    NARRATE
+                        .action("worker_bin_del_ok")
+                        .job_id(&job_id)
+                        .context(&worker_type)
+                        .human("✅ Worker binary '{}' deleted successfully")
+                        .emit();
+                }
+                Err(e) => {
+                    NARRATE
+                        .action("worker_bin_del_err")
+                        .job_id(&job_id)
+                        .context(&worker_type)
+                        .context(&e.to_string())
+                        .human("❌ Failed to delete worker binary '{}': {}")
+                        .emit();
+                    return Err(e);
+                }
+            }
+        }
+
+        // TEAM-274: Worker process operations (local ps-based)
+        Operation::WorkerProcessList { hive_id } => {
+            use rbee_hive_worker_lifecycle::list_worker_processes;
+
+            NARRATE
+                .action("worker_proc_list_start")
+                .job_id(&job_id)
+                .context(&hive_id)
+                .human("📋 Listing worker processes on hive '{}'")
+                .emit();
+
+            let processes = list_worker_processes(&job_id).await?;
+
+            NARRATE
+                .action("worker_proc_list_result")
+                .job_id(&job_id)
+                .context(&processes.len().to_string())
+                .human("Found {} worker process(es)")
+                .emit();
+
+            if processes.is_empty() {
+                NARRATE
+                    .action("worker_proc_list_empty")
+                    .job_id(&job_id)
+                    .human("No worker processes found")
+                    .emit();
+            } else {
+                for proc in &processes {
+                    let mem_mb = proc.memory_kb as f64 / 1024.0;
+                    
+                    NARRATE
+                        .action("worker_proc_list_entry")
+                        .job_id(&job_id)
+                        .context(&proc.pid.to_string())
+                        .context(&format!("{:.1} MB", mem_mb))
+                        .context(&format!("{:.1}%", proc.cpu_percent))
+                        .context(&proc.elapsed)
+                        .context(&proc.command)
+                        .human("  PID {} | {:.1} MB | {:.1}% CPU | {} | {}")
+                        .emit();
+                }
+            }
+        }
+
+        Operation::WorkerProcessGet { hive_id, pid } => {
+            use rbee_hive_worker_lifecycle::get_worker_process;
+
+            NARRATE
+                .action("worker_proc_get_start")
+                .job_id(&job_id)
+                .context(&hive_id)
+                .context(&pid.to_string())
+                .human("🔍 Getting worker process PID {} on hive '{}'")
+                .emit();
+
+            let proc_info = get_worker_process(&job_id, pid).await?;
+
+            let mem_mb = proc_info.memory_kb as f64 / 1024.0;
+            NARRATE
+                .action("worker_proc_get_found")
+                .job_id(&job_id)
+                .context(&proc_info.pid.to_string())
+                .context(&proc_info.command)
+                .context(&format!("{:.1} MB", mem_mb))
+                .context(&format!("{:.1}%", proc_info.cpu_percent))
+                .context(&proc_info.elapsed)
+                .human("✅ PID {}: {} | {:.1} MB | {:.1}% CPU | {}")
+                .emit();
+
+            // Emit process details as JSON
+            let json = serde_json::to_string_pretty(&proc_info)
+                .unwrap_or_else(|_| "Failed to serialize".to_string());
+
+            NARRATE
+                .action("worker_proc_get_details")
+                .job_id(&job_id)
+                .human(&json)
+                .emit();
+        }
+
+        Operation::WorkerProcessDelete { hive_id, pid } => {
+            use rbee_hive_worker_lifecycle::delete_worker;
+
+            NARRATE
+                .action("worker_proc_del_start")
+                .job_id(&job_id)
+                .context(&hive_id)
+                .context(&pid.to_string())
+                .human("🗑️  Deleting worker process PID {} on hive '{}'")
+                .emit();
+
+            // Worker ID is not known (hive is stateless), so use generic ID
+            let worker_id = format!("pid-{}", pid);
+            delete_worker(&job_id, &worker_id, pid).await?;
+
+            NARRATE
+                .action("worker_proc_del_ok")
+                .job_id(&job_id)
+                .context(&pid.to_string())
+                .human("✅ Worker process PID {} deleted successfully")
+                .emit();
         }
 
         // Model operations
@@ -201,43 +405,15 @@ async fn route_operation(
                 return Err(anyhow::anyhow!("Model '{}' already exists", model));
             }
 
-            // Check if vendor supports this model
-            if !state.model_provisioner.is_supported(&model) {
-                NARRATE
-                    .action("model_download_unsupported")
-                    .job_id(&job_id)
-                    .context(&model)
-                    .human("❌ No vendor supports model '{}'. Supported formats: HuggingFace (contains '/')")
-                    .emit();
-                
-                return Err(anyhow::anyhow!(
-                    "No vendor supports model '{}'. Supported formats: HuggingFace (contains '/')",
-                    model
-                ));
-            }
-
-            // Download model using provisioner
-            match state.model_provisioner.download_model(&job_id, &model).await {
-                Ok(model_id) => {
-                    NARRATE
-                        .action("model_download_complete")
-                        .job_id(&job_id)
-                        .context(&model_id)
-                        .human("✅ Model '{}' downloaded successfully")
-                        .emit();
-                }
-                Err(e) => {
-                    NARRATE
-                        .action("model_download_failed")
-                        .job_id(&job_id)
-                        .context(&model)
-                        .context(&e.to_string())
-                        .human("❌ Failed to download model '{}': {}")
-                        .emit();
-                    
-                    return Err(e);
-                }
-            }
+            // TODO: TEAM-269 will implement model provisioner
+            NARRATE
+                .action("model_download_not_implemented")
+                .job_id(&job_id)
+                .context(&model)
+                .human("⚠️  Model download not yet implemented (waiting for TEAM-269)")
+                .emit();
+            
+            return Err(anyhow::anyhow!("Model download not yet implemented (waiting for TEAM-269)"));
         }
 
         Operation::ModelList { hive_id } => {
@@ -267,20 +443,18 @@ async fn route_operation(
                     .emit();
             } else {
                 for model in &models {
-                    let size_gb = model.size_bytes as f64 / 1_000_000_000.0;
-                    let status = match &model.status {
-                        rbee_hive_model_catalog::ModelStatus::Ready => "ready",
-                        rbee_hive_model_catalog::ModelStatus::Downloading { progress } => {
-                            &format!("downloading ({:.0}%)", progress * 100.0)
-                        }
-                        rbee_hive_model_catalog::ModelStatus::Failed { .. } => "failed",
+                    let size_gb = model.size() as f64 / 1_000_000_000.0;
+                    let status = match model.status() {
+                        rbee_hive_artifact_catalog::ArtifactStatus::Available => "available",
+                        rbee_hive_artifact_catalog::ArtifactStatus::Downloading => "downloading",
+                        rbee_hive_artifact_catalog::ArtifactStatus::Failed { .. } => "failed",
                     };
 
                     NARRATE
                         .action("model_list_entry")
                         .job_id(&job_id)
-                        .context(&model.id)
-                        .context(&model.name)
+                        .context(model.id())
+                        .context(model.name())
                         .context(&format!("{:.2} GB", size_gb))
                         .context(status)
                         .human("  {} | {} | {} | {}")
@@ -304,9 +478,9 @@ async fn route_operation(
                     NARRATE
                         .action("model_get_found")
                         .job_id(&job_id)
-                        .context(&model.id)
-                        .context(&model.name)
-                        .context(&model.path.display().to_string())
+                        .context(model.id())
+                        .context(model.name())
+                        .context(&model.path().display().to_string())
                         .human("✅ Model: {} | Name: {} | Path: {}")
                         .emit();
 
@@ -344,20 +518,12 @@ async fn route_operation(
                 .emit();
 
             match state.model_catalog.remove(&id) {
-                Ok(model) => {
+                Ok(()) => {
                     NARRATE
-                        .action("model_delete_catalog")
+                        .action("model_delete_complete")
                         .job_id(&job_id)
                         .context(&id)
-                        .human("✅ Removed '{}' from catalog")
-                        .emit();
-
-                    // NOTE: Catalog remove() already deletes the directory
-                    NARRATE
-                        .action("model_delete_files")
-                        .job_id(&job_id)
-                        .context(&model.path.display().to_string())
-                        .human("✅ Deleted model directory: {}")
+                        .human("✅ Model '{}' deleted successfully")
                         .emit();
                 }
                 Err(e) => {

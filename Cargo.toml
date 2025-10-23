@@ -31,18 +31,12 @@ members = [
     "bin/15_queen_rbee_crates/hive-lifecycle/bdd",
     
     # rbee-hive crates (NO CLI!)
+    "bin/25_rbee_hive_crates/artifact-catalog",  # TEAM-273: Shared catalog abstraction
     "bin/25_rbee_hive_crates/worker-lifecycle",
-    "bin/25_rbee_hive_crates/worker-lifecycle/bdd",
-    "bin/25_rbee_hive_crates/model-catalog",
-    "bin/25_rbee_hive_crates/model-catalog/bdd",
-    "bin/25_rbee_hive_crates/model-provisioner",
-    "bin/25_rbee_hive_crates/model-provisioner/bdd",
+    "bin/25_rbee_hive_crates/model-catalog",     # TEAM-267: Uses artifact-catalog
     "bin/25_rbee_hive_crates/monitor",
-    "bin/25_rbee_hive_crates/monitor/bdd",
     "bin/25_rbee_hive_crates/download-tracker",
-    "bin/25_rbee_hive_crates/download-tracker/bdd",
     "bin/25_rbee_hive_crates/device-detection",
-    "bin/25_rbee_hive_crates/device-detection/bdd",
     "bin/25_rbee_hive_crates/vram-checker",
     "bin/25_rbee_hive_crates/worker-catalog",
     

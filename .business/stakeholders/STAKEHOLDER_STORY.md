@@ -49,20 +49,16 @@ Developers are scared of building heavy, complicated codebases with AI assistanc
 
 
 **Current Status (Oct 2025):**
-- ✅ **42/62 BDD scenarios passing** (68% complete)
-- ✅ **11 shared crates already built** (audit-logging, auth-min, input-validation, secrets-management, narration-core, deadline-propagation, gpu-info, and more)
-- ✅ **GDPR compliance ready** (895 lines of audit-logging docs, 32 pre-defined event types)
-- ✅ **Dual registry system operational** (persistent beehive registry + ephemeral worker registry)
-- ✅ Backend detection system operational (CUDA, Metal, CPU)
-- ✅ Multi-backend worker support
-- ✅ **API endpoints implemented:**
-  - **queen-rbee (Orchestrator):** health, beehive registry (add/list/remove), worker registry (list/health/shutdown), task submission
-  - **rbee-hive (Pool Manager):** health, worker spawn, worker ready callback, model download + SSE progress
-  - **llm-worker-rbee (Worker):** health, readiness check, inference (SSE), model loading progress (SSE)
-- ✅ llama-orch-utils (TypeScript library for agentic AI)
-- ✅ **Cascading shutdown guarantee** (Ctrl+C propagates: rbee-keeper → queen-rbee → all rbee-hive → all workers)
-- 🚧 **30-day plan to first revenue** (detailed day-by-day execution plan)
-- 🚧 Lifecycle management in progress (daemon/hive/worker commands)
+- ✅ **Architecture complete** - 4-binary system fully designed
+- ✅ **Hive lifecycle crate** - 1,629 LOC implementing all hive operations (TEAM-210 through TEAM-215)
+- ✅ **Job client/server pattern** - Unified pattern for job submission and SSE streaming
+- ✅ **11 shared crates** - audit-logging, auth-min, input-validation, secrets-management, narration-core, deadline-propagation, timeout-enforcer, job-server, job-client, rbee-operations, rbee-config
+- ✅ **Heartbeat simplified** - Direct worker → queen communication (TEAM-261)
+- ✅ **Operation consolidation** - Generic forwarding pattern (TEAM-258)
+- ✅ **GDPR compliance ready** - Immutable audit logging, 7-year retention
+- ✅ **rbee-sdk design** - Single-source Rust/TypeScript SDK (22-32 hours to complete)
+- 🚧 **M0 Implementation** - Core orchestration features in progress
+- 🚧 **Local-hive feature** - Integrated queen build mode (planned)
 
 ---
 
@@ -216,21 +212,27 @@ const result = await client.enqueue({
 - **All three** use the same queen-rbee HTTP API
 
 ### 8. **Clean Intelligence Hierarchy (The Bee Metaphor) 🐝**
-- **👑🐝 queen-rbee (The Brain):** Makes ALL intelligent decisions (scheduling, routing, admission)
-  - SQLite registries: workers + beehives (with SSH details)
-  - Rhai scripting engine for custom routing
-  - Cascading shutdown coordinator
-- **🍯🏠 rbee-hive (Hive Manager):** Executes commands, reports state (no policy decisions)
-  - SQLite model catalog
-  - Backend detection (CUDA, Metal, CPU)
-  - Worker lifecycle management
-- **🐝💪 [ai-type]-[backend]-worker-rbee (Worker Bees):** Load models, generate tokens
-  - Examples: llm-cuda-worker-rbee, sd-cuda-worker-rbee
-  - Stateless executors with isolated memory contexts
-- **🧑‍🌾🐝 rbee-keeper (Keeper Interface):** Web UI + CLI for managing the entire system
-  - Configuration mode: setup add-node, install, list-nodes
-  - Daemon mode: start/stop/status (in progress)
-  - Inference mode: infer command
+- **👑 queen-rbee (The Brain):** Makes ALL intelligent decisions (scheduling, routing, load balancing)
+  - Port 8500 (HTTP daemon)
+  - Job registry (track all operations with SSE)
+  - Hive registry (persistent - track remote hives)
+  - Worker registry (ephemeral - track active workers) [TODO]
+  - Two build modes: Distributed (default) or Integrated (--features local-hive)
+- **🍯 rbee-hive (Pool Manager):** Manages worker lifecycle on ONE machine
+  - Port 9000 (HTTP daemon)
+  - Worker spawning, model catalog, device detection
+  - Capabilities reporting to queen
+  - LOCAL daemon, not global orchestrator
+- **🐝 llm-worker-rbee (Worker Bee):** Dumb execution of inference
+  - Ports 9300+ (HTTP daemon)
+  - Load ONE model, execute inference, stream tokens
+  - Stateless, can be killed anytime
+  - Heartbeat directly to queen (not through hive)
+- **🧑‍🌾 rbee-keeper (CLI):** PRIMARY user interface for operators
+  - NOT a testing tool - it's how users interact with rbee
+  - Hive lifecycle: install, start, stop, status, uninstall
+  - Worker/model management via queen
+  - Inference testing with real-time SSE feedback
 
 ---
 
@@ -265,41 +267,39 @@ const result = await client.enqueue({
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│ queen-rbee (THE BRAIN - HTTP Daemon) [M1 - Not Built Yet]  │
-│ • User-scriptable orchestration (Rhai scripting)            │
-│ • Worker registry (SQLite)                                  │
-│ • Routes inference requests via HTTP                        │
-│ • Relays SSE token streams                                  │
-│ Port: 8080                                                  │
+│ rbee-keeper (CLI - PRIMARY USER INTERFACE)                 │
+│ • Hive lifecycle: install, start, stop, status, uninstall  │
+│ • Worker management: spawn, list, get, delete              │
+│ • Model management: download, list, get, delete            │
+│ • Inference: infer (test inference)                         │
+│ • Real-time SSE streaming output                            │
 └────────────────────┬────────────────────────────────────────┘
-                     │ HTTP POST /execute (direct to worker)
+                     │ POST /v1/jobs, GET /v1/jobs/{job_id}/stream
                      ↓
 ┌─────────────────────────────────────────────────────────────┐
-│ worker-rbee (EXECUTORS - HTTP Daemons) [M0 ✅ DONE]    │
-│ • One worker per model (keeps model in VRAM/memory)        │
-│ • Generates tokens via SSE streaming                        │
-│ • Variants: cuda, metal, cpu                                │
-│ Ports: 8001+                                                │
-└─────────────────────────────────────────────────────────────┘
-
-Control Plane (CLIs):
-
-┌─────────────────────────────────────────────────────────────┐
-│ rbee-keeper (USER INTERFACE - CLI) [M0 ✅ DONE]            │
-│ • Manages queen-rbee lifecycle (start/stop/status)          │
-│ • Configures SSH for remote machines                        │
-│ • Manages hives and workers                                 │
-│ • Future: Web UI                                            │
-└────────────────────┬────────────────────────────────────────┘
-                     │ SSH control commands
-                     ↓
-┌─────────────────────────────────────────────────────────────┐
-│ rbee-hive (POOL MANAGER - CLI) [M0 ✅ DONE]                │
-│ • Model catalog (tracks downloaded models)                  │
-│ • Worker spawning and lifecycle management                  │
-│ • Backend detection (CUDA, Metal, CPU)                      │
-│ • Orphan cleanup (detects and kills dead workers)          │
-└─────────────────────────────────────────────────────────────┘
+│ queen-rbee (THE BRAIN - HTTP Daemon) [🚧 In Progress]     │
+│ • Port 8500                                                 │
+│ • Operation routing (hive ops → execute, worker ops →      │
+│   forward to hive, infer → schedule to worker [TODO])      │
+│ • Job registry (track all operations, SSE streaming)       │
+│ • Hive registry (track available hives)                    │
+│ • Worker registry (track available workers) [TODO]         │
+│                                                             │
+│ Build modes:                                                │
+│ • Default: HTTP forwarding to remote hives                 │
+│ • --features local-hive: Direct Rust calls for localhost   │
+└─────┬───────────────────────────────────┬───────────────────┘
+      │ Hive operations                   │ Infer operations
+      │ (WorkerSpawn, ModelDownload)      │ (direct to worker)
+      ↓                                   ↓
+┌─────────────────────────────────┐  ┌────────────────────────────┐
+│ rbee-hive (HTTP Daemon)         │  │ llm-worker-rbee (HTTP)    │
+│ • Port 9000                     │  │ • Ports 9300+             │
+│ • Worker lifecycle              │  │ • Load ONE model          │
+│ • Model catalog                 │  │ • Execute inference       │
+│ • Device detection              │  │ • Stream tokens via SSE   │
+│ • Capabilities reporting        │  │ • Heartbeat to queen      │
+└─────────────────────────────────┘  └────────────────────────────┘
 ```
 
 ### Critical Design Principle: Cascading Shutdown

@@ -447,6 +447,84 @@ async fn route_operation(
         //
         // ⚠️  UNINTUITIVE BUT CORRECT: Infer is handled in QUEEN, not forwarded to HIVE!
         //
+        // TEAM-272: Active worker operations (query queen's registry)
+        // These operations query the worker registry maintained by queen via heartbeats
+        Operation::ActiveWorkerList => {
+            NARRATE
+                .action("active_worker_list_start")
+                .job_id(&job_id)
+                .human("📋 Listing active workers")
+                .emit();
+
+            // TODO: Query worker registry
+            NARRATE
+                .action("active_worker_list_empty")
+                .job_id(&job_id)
+                .human("No active workers found (worker registry not yet implemented)")
+                .emit();
+
+            // Future implementation:
+            // let workers = state.worker_registry.list_active();
+            // for worker in &workers {
+            //     NARRATE
+            //         .action("active_worker_entry")
+            //         .job_id(&job_id)
+            //         .context(&worker.id)
+            //         .context(&worker.model_id)
+            //         .context(&worker.hive_id)
+            //         .human("  {} | {} | {}")
+            //         .emit();
+            // }
+        }
+
+        Operation::ActiveWorkerGet { worker_id } => {
+            NARRATE
+                .action("active_worker_get_start")
+                .job_id(&job_id)
+                .context(&worker_id)
+                .human("🔍 Getting active worker '{}'")
+                .emit();
+
+            // TODO: Query worker registry
+            return Err(anyhow::anyhow!(
+                "ActiveWorkerGet not yet implemented (worker registry needed). Worker ID: {}",
+                worker_id
+            ));
+
+            // Future implementation:
+            // let worker = state.worker_registry.get(&worker_id)?;
+            // let json = serde_json::to_string_pretty(&worker)?;
+            // NARRATE
+            //     .action("active_worker_found")
+            //     .job_id(&job_id)
+            //     .human(&json)
+            //     .emit();
+        }
+
+        Operation::ActiveWorkerRetire { worker_id } => {
+            NARRATE
+                .action("active_worker_retire_start")
+                .job_id(&job_id)
+                .context(&worker_id)
+                .human("🛑 Retiring active worker '{}'")
+                .emit();
+
+            // TODO: Mark worker as retired in registry
+            return Err(anyhow::anyhow!(
+                "ActiveWorkerRetire not yet implemented (worker registry needed). Worker ID: {}",
+                worker_id
+            ));
+
+            // Future implementation:
+            // state.worker_registry.retire(&worker_id)?;
+            // NARRATE
+            //     .action("active_worker_retired")
+            //     .job_id(&job_id)
+            //     .context(&worker_id)
+            //     .human("✅ Worker '{}' retired")
+            //     .emit();
+        }
+
         // Why?
         // - Queen needs direct control for scheduling/load balancing
         // - Hive only manages worker LIFECYCLE (spawn/stop/list)

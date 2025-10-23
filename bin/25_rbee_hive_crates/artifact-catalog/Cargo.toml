@@ -1,5 +1,5 @@
 [package]
-name = "rbee-hive-model-catalog"
+name = "rbee-hive-artifact-catalog"
 version = "0.1.0"
 edition = "2021"
 
@@ -7,11 +7,13 @@ edition = "2021"
 anyhow = "1.0"
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
+tokio = { workspace = true, features = ["full"] }
 dirs = "5.0"
 chrono = { version = "0.4", features = ["serde"] }
+async-trait = "0.1"
 
-# Shared catalog abstraction
-rbee-hive-artifact-catalog = { path = "../artifact-catalog" }
+# Narration
+observability-narration-core = { path = "../../99_shared_crates/narration-core" }
 
 [dev-dependencies]
 tempfile = "3.8"

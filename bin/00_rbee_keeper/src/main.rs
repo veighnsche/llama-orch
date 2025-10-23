@@ -284,6 +284,7 @@ pub enum HiveAction {
 
 #[derive(Subcommand)]
 pub enum WorkerAction {
+    /// Spawn a worker process on hive
     Spawn {
         /// Model identifier
         #[arg(long)]
@@ -292,12 +293,41 @@ pub enum WorkerAction {
         #[arg(long)]
         device: String,
     },
+    
+    /// Worker binary management (catalog on hive)
+    #[command(subcommand)]
+    Binary(WorkerBinaryAction),
+    
+    /// Worker process management (local ps on hive)
+    #[command(subcommand)]
+    Process(WorkerProcessAction),
+}
+
+#[derive(Subcommand)]
+pub enum WorkerBinaryAction {
+    /// List worker binaries on hive
     List,
+    /// Get worker binary details
     Get {
-        id: String,
+        worker_type: String,
     },
+    /// Delete worker binary
     Delete {
-        id: String,
+        worker_type: String,
+    },
+}
+
+#[derive(Subcommand)]
+pub enum WorkerProcessAction {
+    /// List worker processes (local ps)
+    List,
+    /// Get worker process details by PID
+    Get {
+        pid: u32,
+    },
+    /// Delete (kill) worker process by PID
+    Delete {
+        pid: u32,
     },
 }
 
@@ -769,8 +799,7 @@ async fn handle_command(cli: Cli) -> Result<()> {
         }
 
         Commands::Worker { hive_id, action } => {
-            // TEAM-186: Use typed Operation enum instead of JSON strings
-            // TEAM-187: Match on &action to avoid cloning hive_id multiple times
+            // TEAM-274: Updated worker actions for new architecture
             let operation = match &action {
                 WorkerAction::Spawn { model, device } => {
                     // Parse device string (e.g., "cuda:0" -> worker="cuda", device=0)
@@ -792,9 +821,32 @@ async fn handle_command(cli: Cli) -> Result<()> {
                         device: device_id,
                     }
                 }
-                WorkerAction::List => Operation::WorkerList { hive_id },
-                WorkerAction::Get { id } => Operation::WorkerGet { hive_id, id: id.clone() },
-                WorkerAction::Delete { id } => Operation::WorkerDelete { hive_id, id: id.clone() },
+                WorkerAction::Binary(binary_action) => {
+                    match binary_action {
+                        WorkerBinaryAction::List => Operation::WorkerBinaryList { hive_id },
+                        WorkerBinaryAction::Get { worker_type } => Operation::WorkerBinaryGet {
+                            hive_id,
+                            worker_type: worker_type.clone(),
+                        },
+                        WorkerBinaryAction::Delete { worker_type } => Operation::WorkerBinaryDelete {
+                            hive_id,
+                            worker_type: worker_type.clone(),
+                        },
+                    }
+                }
+                WorkerAction::Process(process_action) => {
+                    match process_action {
+                        WorkerProcessAction::List => Operation::WorkerProcessList { hive_id },
+                        WorkerProcessAction::Get { pid } => Operation::WorkerProcessGet {
+                            hive_id,
+                            pid: *pid,
+                        },
+                        WorkerProcessAction::Delete { pid } => Operation::WorkerProcessDelete {
+                            hive_id,
+                            pid: *pid,
+                        },
+                    }
+                }
             };
             submit_and_stream_job(&queen_url, operation).await
         }

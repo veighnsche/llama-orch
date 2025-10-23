@@ -24,7 +24,9 @@ use axum::{
 };
 use clap::Parser;
 use job_server::JobRegistry;
-use rbee_hive_model_catalog::{ModelCatalog, ModelProvisioner}; // TEAM-268: Model catalog, TEAM-269: Model provisioner
+use rbee_hive_model_catalog::ModelCatalog; // TEAM-268: Model catalog
+use rbee_hive_worker_catalog::WorkerCatalog; // TEAM-274: Worker catalog
+use rbee_hive_artifact_catalog::ArtifactCatalog; // TEAM-273: Trait for catalog methods
 use serde::Serialize;
 use std::net::SocketAddr;
 use std::sync::Arc;
@@ -67,21 +69,26 @@ async fn main() -> anyhow::Result<()> {
         .human("📚 Model catalog initialized ({} models)")
         .emit();
 
-    // TEAM-269: Initialize model provisioner
-    let model_provisioner = Arc::new(ModelProvisioner::new(model_catalog.clone()));
+    // TEAM-274: Initialize worker catalog
+    let worker_catalog = Arc::new(
+        WorkerCatalog::new().expect("Failed to initialize worker catalog")
+    );
 
     NARRATE
-        .action("provisioner_init")
-        .human("📦 Model provisioner initialized (HuggingFace vendor ready)")
+        .action("worker_cat_init")
+        .context(&worker_catalog.len().to_string())
+        .human("🔧 Worker catalog initialized ({} binaries)")
         .emit();
+
+    // TODO: TEAM-269 will add model provisioner initialization here
 
     // TEAM-261: Create HTTP state for job endpoints
     // TEAM-268: Added model_catalog to state
-    // TEAM-269: Added model_provisioner to state
+    // TEAM-274: Added worker_catalog to state
     let job_state = http::jobs::HiveState {
         registry: job_registry,
         model_catalog,
-        model_provisioner,
+        worker_catalog,
     };
 
     // Create router with health, capabilities, and job endpoints

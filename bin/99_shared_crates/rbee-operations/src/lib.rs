@@ -108,23 +108,68 @@ pub enum Operation {
         default_hive_port: u16,
     },
 
-    // Worker operations
+    // Worker binary operations (hive-local)
+    // TEAM-272: These manage worker BINARIES on the hive, not running workers
+    /// Download worker binary to hive
+    WorkerDownload {
+        hive_id: String,
+        worker_type: String, // e.g., "cuda-llm-worker", "cpu-llm-worker"
+    },
+    /// Build worker binary on hive
+    WorkerBuild {
+        hive_id: String,
+        worker_type: String,
+    },
+    /// List worker binaries available on hive
+    WorkerBinaryList {
+        hive_id: String,
+    },
+    /// Get details of a worker binary on hive
+    WorkerBinaryGet {
+        hive_id: String,
+        worker_type: String,
+    },
+    /// Delete worker binary from hive
+    WorkerBinaryDelete {
+        hive_id: String,
+        worker_type: String,
+    },
+
+    // Worker process operations (hive-local)
+    // TEAM-272: These manage worker PROCESSES on the hive
+    /// Spawn a worker process on hive
     WorkerSpawn {
         hive_id: String,
         model: String,
         worker: String,
         device: u32,
     },
-    WorkerList {
+    /// List worker processes running on hive (local ps, not registry)
+    WorkerProcessList {
         hive_id: String,
     },
-    WorkerGet {
+    /// Get details of a worker process on hive (local ps, not registry)
+    WorkerProcessGet {
         hive_id: String,
-        id: String,
+        pid: u32,
     },
-    WorkerDelete {
+    /// Delete (kill) a worker process on hive
+    WorkerProcessDelete {
         hive_id: String,
-        id: String,
+        pid: u32,
+    },
+
+    // Active worker operations (queen-tracked)
+    // TEAM-272: These query queen's registry of workers sending heartbeats
+    /// List active workers (from queen's heartbeat registry)
+    ActiveWorkerList,
+    /// Get details of an active worker (from queen's registry)
+    ActiveWorkerGet {
+        worker_id: String,
+    },
+    /// Retire an active worker (stop accepting new requests)
+    ActiveWorkerRetire {
+        worker_id: String,
     },
 
     // Model operations
@@ -196,10 +241,21 @@ impl Operation {
             Operation::HiveStatus { .. } => "hive_status",
             Operation::HiveRefreshCapabilities { .. } => "hive_refresh_capabilities", // TEAM-196
             Operation::HiveImportSsh { .. } => "hive_import_ssh",
+            // Worker binary operations
+            Operation::WorkerDownload { .. } => "worker_download",
+            Operation::WorkerBuild { .. } => "worker_build",
+            Operation::WorkerBinaryList { .. } => "worker_binary_list",
+            Operation::WorkerBinaryGet { .. } => "worker_binary_get",
+            Operation::WorkerBinaryDelete { .. } => "worker_binary_delete",
+            // Worker process operations
             Operation::WorkerSpawn { .. } => "worker_spawn",
-            Operation::WorkerList { .. } => "worker_list",
-            Operation::WorkerGet { .. } => "worker_get",
-            Operation::WorkerDelete { .. } => "worker_delete",
+            Operation::WorkerProcessList { .. } => "worker_process_list",
+            Operation::WorkerProcessGet { .. } => "worker_process_get",
+            Operation::WorkerProcessDelete { .. } => "worker_process_delete",
+            // Active worker operations
+            Operation::ActiveWorkerList => "active_worker_list",
+            Operation::ActiveWorkerGet { .. } => "active_worker_get",
+            Operation::ActiveWorkerRetire { .. } => "active_worker_retire",
             Operation::ModelDownload { .. } => "model_download",
             Operation::ModelList { .. } => "model_list",
             Operation::ModelGet { .. } => "model_get",
@@ -218,10 +274,18 @@ impl Operation {
             Operation::HiveGet { alias } => Some(alias),
             Operation::HiveStatus { alias } => Some(alias),
             Operation::HiveRefreshCapabilities { alias } => Some(alias), // TEAM-196
+            // Worker binary operations
+            Operation::WorkerDownload { hive_id, .. } => Some(hive_id),
+            Operation::WorkerBuild { hive_id, .. } => Some(hive_id),
+            Operation::WorkerBinaryList { hive_id } => Some(hive_id),
+            Operation::WorkerBinaryGet { hive_id, .. } => Some(hive_id),
+            Operation::WorkerBinaryDelete { hive_id, .. } => Some(hive_id),
+            // Worker process operations
             Operation::WorkerSpawn { hive_id, .. } => Some(hive_id),
-            Operation::WorkerList { hive_id } => Some(hive_id),
-            Operation::WorkerGet { hive_id, .. } => Some(hive_id),
-            Operation::WorkerDelete { hive_id, .. } => Some(hive_id),
+            Operation::WorkerProcessList { hive_id } => Some(hive_id),
+            Operation::WorkerProcessGet { hive_id, .. } => Some(hive_id),
+            Operation::WorkerProcessDelete { hive_id, .. } => Some(hive_id),
+            // Model operations
             Operation::ModelDownload { hive_id, .. } => Some(hive_id),
             Operation::ModelList { hive_id } => Some(hive_id),
             Operation::ModelGet { hive_id, .. } => Some(hive_id),
@@ -234,16 +298,34 @@ impl Operation {
     /// Check if this operation should be forwarded to a hive
     ///
     /// TEAM-258: Consolidate hive-forwarding operations
-    /// Worker and Model operations are handled by rbee-hive, not queen-rbee.
-    /// Infer operations stay in queen-rbee for scheduling.
+    /// TEAM-272: Updated per corrected architecture
+    ///
+    /// **Forwarded to Hive (hive-local operations):**
+    /// - Worker binary operations - Download/build/manage worker binaries on hive
+    /// - Worker process operations - Spawn/list/kill worker processes on hive (local ps)
+    /// - Model operations - Download/manage models on hive
+    ///
+    /// **Handled by Queen (orchestration):**
+    /// - Active worker operations - Query heartbeat registry (ActiveWorkerList/Get/Retire)
+    /// - Infer - Scheduling and routing to active workers
+    /// - Hive operations - Managed by queen (install/start/stop/list)
+    ///
     /// This allows new operations to be added to rbee-hive without modifying queen-rbee.
     pub fn should_forward_to_hive(&self) -> bool {
         matches!(
             self,
-            Operation::WorkerSpawn { .. }
-                | Operation::WorkerList { .. }
-                | Operation::WorkerGet { .. }
-                | Operation::WorkerDelete { .. }
+            // Worker binary operations (hive-local)
+            Operation::WorkerDownload { .. }
+                | Operation::WorkerBuild { .. }
+                | Operation::WorkerBinaryList { .. }
+                | Operation::WorkerBinaryGet { .. }
+                | Operation::WorkerBinaryDelete { .. }
+                // Worker process operations (hive-local)
+                | Operation::WorkerSpawn { .. }
+                | Operation::WorkerProcessList { .. }
+                | Operation::WorkerProcessGet { .. }
+                | Operation::WorkerProcessDelete { .. }
+                // Model operations (hive-local)
                 | Operation::ModelDownload { .. }
                 | Operation::ModelList { .. }
                 | Operation::ModelGet { .. }

@@ -21,12 +21,12 @@
 This document provides a comprehensive technical overview of rbee's architecture for stakeholders who want to understand **how the system actually works** under the hood.
 
 **Current Development Status (October 2025):**
-- ✅ **42/62 BDD scenarios passing** (68% complete)
-- ✅ Backend detection system operational (CUDA, Metal, CPU)
-- ✅ Registry schema with backend capabilities
-- ✅ OpenAI-compatible API (v1 completion endpoints)
-- 🚧 Lifecycle management in progress (TEAM-057)
-- 🚧 Cascading shutdown implementation pending
+- ✅ **Architecture complete** - 4-binary system fully designed
+- ✅ **Hive lifecycle crate** - 1,629 LOC (TEAM-210 through TEAM-215)
+- ✅ **Job client/server pattern** - Unified SSE streaming
+- ✅ **11 shared crates** - Security, observability, configuration
+- ✅ **Heartbeat simplified** - Direct worker → queen (TEAM-261)
+- 🚧 **M0 Implementation** - Core features in progress
 
 **What You'll Learn:**
 - Complete component architecture (4 binaries + their roles)
@@ -40,71 +40,81 @@ This document provides a comprehensive technical overview of rbee's architecture
 
 ## System Architecture Overview
 
-### The Bee Metaphor (Component Hierarchy) 🐝
+### The Four-Binary System 🐝
 
 ```
 ┌──────────────────────────────────────────────────────────┐
-│ 👑🐝 queen-rbee (THE BRAIN)                              │
-│ • Makes ALL intelligent decisions                        │
-│ • Scheduling, routing, admission control                 │
-│ • Rhai scripting engine for custom logic                 │
-│ • HTTP daemon on port 8080                               │
+│ 🧑‍🌾 rbee-keeper (PRIMARY USER INTERFACE)                │
+│ • Command-line interface for operators                   │
+│ • Hive lifecycle: install, start, stop, status          │
+│ • Worker management: spawn, list, stop                  │
+│ • Model management: download, list, delete               │
+│ • Inference testing                                      │
+│ • SSE streaming output                                   │
 └────────────────────┬─────────────────────────────────────┘
-                     │ SSH control + HTTP inference
+                     │ POST /v1/jobs (HTTP)
                      ↓
 ┌──────────────────────────────────────────────────────────┐
-│### 2. 🍯🏠 rbee-hive (Hive Manager)                            │
-│ • Executes commands from queen-rbee                      │
-│ • Model catalog (SQLite)                                 │
+│ 👑 queen-rbee (THE BRAIN - HTTP Daemon)                 │
+│ • Port 8500                                              │
+│ • Makes ALL intelligent decisions                        │
+│ • Operation routing (hive ops, worker ops, infer)       │
+│ • Job registry (track all operations)                   │
+│ • SSE streaming (real-time feedback)                    │
+│ • Hive registry (track available hives)                 │
+│ • Worker registry (track available workers) [TODO]      │
+│                                                           │
+│ Two build modes:                                         │
+│ • Default: Distributed (HTTP forwarding)                │
+│ • --features local-hive: Integrated (direct calls)      │
+└────────────────────┬─────────────────────────────────────┘
+                     │ HTTP forwarding OR direct calls
+                     ↓
+┌──────────────────────────────────────────────────────────┐
+│ 🍯 rbee-hive (POOL MANAGER - HTTP Daemon)               │
+│ • Port 9000                                              │
 │ • Worker lifecycle management                            │
-│ • Health monitoring (30s heartbeat)                      │
-│ • HTTP daemon on port 9200                               │
-│ • SSH control (spawn workers, monitor health)          │
+│ • Model catalog (track local models)                    │
+│ • Device detection (GPU/CPU enumeration)                │
+│ • Capabilities reporting                                 │
+│ • Manages ONE machine                                    │
 └────────────────────┬─────────────────────────────────────┘
                      │ Spawns processes
                      ↓
 ┌──────────────────────────────────────────────────────────┐
-│ 🐝💪 [ai-type]-[backend]-worker-rbee (WORKER BEES)       │
-│ • Load models into VRAM/memory                           │
-│ • Execute inference (text, image, audio, embeddings)     │
-│ • Stateless executors                                    │
-│ • HTTP daemons on ports 8001+                            │
-│ Examples:                                                 │
-│   - llm-cuda-worker-rbee (LLM on CUDA)                   │
-│   - llm-metal-worker-rbee (LLM on Apple Metal)           │
-│   - sd-cuda-worker-rbee (Stable Diffusion on CUDA)       │
-└──────────────────────────────────────────────────────────┘
-
-┌──────────────────────────────────────────────────────────┐
-│ 🧑‍🌾🐝 rbee-keeper (USER INTERFACE)                        │
-│ • Web UI (primary interface)                             │
-│ • CLI (power users)                                      │
-│ • Manages queen-rbee lifecycle                           │
-│ • Configures SSH for remote machines                     │
+│ 🐝 llm-worker-rbee (EXECUTOR - HTTP Daemon)             │
+│ • Ports 9300+                                            │
+│ • Load ONE model into VRAM/RAM                          │
+│ • Execute inference (generate tokens)                    │
+│ • Stream tokens via SSE                                  │
+│ • Report health (heartbeat to queen)                    │
+│ • Stateless, can be killed anytime                      │
 └──────────────────────────────────────────────────────────┘
 ```
 
 ### Key Design Principles
 
 **1. Smart/Dumb Separation**
-- queen-rbee: Makes ALL decisions (smart)
-- rbee-hive: Executes commands (dumb)
-- worker-rbee: Generates tokens (dumb)
+- **queen-rbee:** Makes ALL intelligent decisions (routing, scheduling, load balancing)
+- **rbee-hive:** Executes commands (spawn worker, report status)
+- **llm-worker-rbee:** Dumb execution (load model, generate tokens)
 
-**2. Cascading Shutdown**
-- When queen-rbee dies → ALL rbee-hives die (via SSH SIGTERM)
-- When rbee-hive dies → ALL workers die (via HTTP shutdown)
-- Result: No orphaned processes, no leaked VRAM
+**2. Job-Based Architecture**
+- All operations are jobs with unique IDs and SSE streams
+- Client: POST /v1/jobs → job_id
+- Client: GET /v1/jobs/{job_id}/stream → SSE events
+- Real-time feedback, job isolation, audit trail
 
 **3. Process Isolation**
-- Each worker runs in separate process
-- Each worker owns its memory context (CUDA context, Metal context, etc.)
+- Each worker runs in separate process with isolated memory
+- Worker 1 (Process A) → 8GB VRAM → llama-3-8b
+- Worker 2 (Process B) → 8GB VRAM → mistral-7b
+- Memory safety, resource accounting, kill safety
 
-**4. Protocol-Aware Orchestration**
-- Text: SSE streaming
-- Images: JSON response
-- Audio: Binary stream
-- Embeddings: JSON response
+**4. Daemon vs CLI Separation**
+- **Daemons** (long-running, HTTP servers): queen-rbee (8500), rbee-hive (9000), llm-worker-rbee (9300+)
+- **CLIs** (run on-demand, exit after command): rbee-keeper
+- Performance (daemons are fast, 1-5ms), UX (real-time SSE streaming)
 
 ---
 

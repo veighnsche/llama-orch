@@ -1,4 +1,4 @@
-# TEAM-135: Created by TEAM-135 (scaffolding)
+# TEAM-271: Worker lifecycle implementation using daemon-lifecycle
 
 [package]
 name = "rbee-hive-worker-lifecycle"
@@ -11,10 +11,26 @@ name = "rbee_hive_worker_lifecycle"
 path = "src/lib.rs"
 
 [dependencies]
+anyhow = "1.0"
+tokio = { workspace = true, features = ["full", "process"] }
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+
 # Shared lifecycle management
 daemon-lifecycle = { path = "../../99_shared_crates/daemon-lifecycle" }
 
-# Add other dependencies as needed
+# Worker catalog for finding binaries
+rbee-hive-worker-catalog = { path = "../worker-catalog" }
+
+# Artifact catalog for Artifact trait
+rbee-hive-artifact-catalog = { path = "../artifact-catalog" }
+
+# Narration
+observability-narration-core = { path = "../../99_shared_crates/narration-core" }
 
 [dev-dependencies]
-# Add dev dependencies as needed
+tempfile = "3.8"
+
+# TEAM-272: For process management (Unix only)
+[target.'cfg(unix)'.dependencies]
+nix = { version = "0.27", features = ["signal"] }
