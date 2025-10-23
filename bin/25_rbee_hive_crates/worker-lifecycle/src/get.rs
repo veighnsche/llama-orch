@@ -1,12 +1,15 @@
 // TEAM-274: Get worker process details by PID
+// TEAM-276: Renamed from process_get.rs to get.rs for consistency
 use anyhow::Result;
 use observability_narration_core::NarrationFactory;
 
-use crate::process_list::WorkerProcessInfo;
+use crate::types::WorkerInfo;
 
 const NARRATE: NarrationFactory = NarrationFactory::new("worker-lc");
 
 /// Get details of a specific worker process by PID
+///
+/// TEAM-276: Renamed from get_worker_process to get_worker for consistency
 ///
 /// This uses local `ps` command to get process details.
 ///
@@ -17,9 +20,9 @@ const NARRATE: NarrationFactory = NarrationFactory::new("worker-lc");
 ///
 /// # Returns
 ///
-/// WorkerProcessInfo for the specified PID, or error if not found
+/// WorkerInfo for the specified PID, or error if not found
 #[cfg(unix)]
-pub async fn get_worker_process(job_id: &str, pid: u32) -> Result<WorkerProcessInfo> {
+pub async fn get_worker(job_id: &str, pid: u32) -> Result<WorkerInfo> {
     use tokio::process::Command;
 
     NARRATE
@@ -68,7 +71,12 @@ pub async fn get_worker_process(job_id: &str, pid: u32) -> Result<WorkerProcessI
     let elapsed = parts[4].to_string();
     let command = parts[5..].join(" ");
 
-    let info = WorkerProcessInfo { pid, command: command.clone(), memory_kb, cpu_percent, elapsed };
+    // TEAM-276: Simplified to WorkerInfo
+    let info = WorkerInfo {
+        pid,
+        command: command.clone(),
+        args: vec![], // TODO: Parse args from command if needed
+    };
 
     NARRATE
         .action("proc_get_found")

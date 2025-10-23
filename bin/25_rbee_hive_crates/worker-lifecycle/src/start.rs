@@ -1,5 +1,6 @@
 // TEAM-271: Worker spawning implementation
-use crate::types::{SpawnResult, WorkerSpawnConfig};
+// TEAM-276: Renamed from spawn.rs to start.rs for consistency
+use crate::types::{StartResult, WorkerStartConfig};
 use anyhow::{anyhow, Context, Result};
 use daemon_lifecycle::DaemonManager;
 use observability_narration_core::NarrationFactory;
@@ -9,7 +10,9 @@ use std::path::PathBuf;
 
 const NARRATE: NarrationFactory = NarrationFactory::new("worker-lc");
 
-/// Spawn a worker process
+/// Start a worker process
+///
+/// TEAM-276: Renamed from spawn_worker to start_worker for consistency
 ///
 /// This is a STATELESS operation - it just spawns the process and returns.
 /// The worker will send heartbeats to the queen (not the hive).
@@ -19,17 +22,17 @@ const NARRATE: NarrationFactory = NarrationFactory::new("worker-lc");
 /// 1. Determine worker type from device
 /// 2. Find worker binary in catalog (or fallback to target/debug)
 /// 3. Spawn worker process using daemon-lifecycle
-/// 4. Return spawn result (PID, port, etc.)
+/// 4. Return start result (PID, port, etc.)
 /// 5. Worker sends heartbeat to queen (hive doesn't track it)
 ///
 /// # Arguments
 ///
-/// * `config` - Worker spawn configuration
+/// * `config` - Worker start configuration
 ///
 /// # Returns
 ///
-/// SpawnResult with worker_id, pid, port, binary_path
-pub async fn spawn_worker(config: WorkerSpawnConfig) -> Result<SpawnResult> {
+/// StartResult with worker_id, pid, port, binary_path
+pub async fn start_worker(config: WorkerStartConfig) -> Result<StartResult> {
     NARRATE
         .action("worker_spawn_start")
         .job_id(&config.job_id)
@@ -103,9 +106,9 @@ pub async fn spawn_worker(config: WorkerSpawnConfig) -> Result<SpawnResult> {
         .human("✅ Worker '{}' spawned (PID: {}, port: {})")
         .emit();
 
-    // Step 5: Return spawn result
+    // Step 5: Return start result
     // NOTE: We do NOT track the worker in hive - it will send heartbeat to queen
-    Ok(SpawnResult {
+    Ok(StartResult {
         worker_id: config.worker_id,
         pid,
         port: config.port,

@@ -13,11 +13,15 @@
 //!
 //! # Module Structure
 //!
+//! TEAM-276: Standardized file naming for consistency across lifecycle crates
+//!
 //! - `types` - Request/Response types for all operations
-//! - `spawn` - Worker spawning operations (TEAM-271)
-//! - `list` - List workers (TEAM-272) - queries queen
-//! - `get` - Get worker details (TEAM-272) - queries queen
-//! - `delete` - Delete worker (TEAM-272) - kills process
+//! - `start` - Start worker operations (TEAM-271, renamed from spawn)
+//! - `stop` - Stop worker operations (TEAM-272, renamed from delete)
+//! - `list` - List worker processes (TEAM-274, renamed from process_list)
+//! - `get` - Get worker process details (TEAM-274, renamed from process_get)
+//! - `install` - Install worker binary (TEAM-276, stub for consistency)
+//! - `uninstall` - Uninstall worker binary (TEAM-276, stub for consistency)
 //!
 //! # Interface
 //!
@@ -42,20 +46,21 @@
 //! ```
 
 // TEAM-271: Module declarations
-/// Worker spawning operations
-pub mod spawn;
+// TEAM-276: Renamed modules for consistency across lifecycle crates
+/// Worker start operations (renamed from spawn)
+pub mod start;
+/// Worker stop operations (renamed from delete)
+pub mod stop;
+/// List worker processes (renamed from process_list)
+pub mod list;
+/// Get worker process details (renamed from process_get)
+pub mod get;
+/// Install worker binary (stub for consistency)
+pub mod install;
+/// Uninstall worker binary (stub for consistency)
+pub mod uninstall;
 /// Request/Response types
 pub mod types;
-
-// TEAM-272: Worker management operations
-/// Worker deletion (process cleanup)
-pub mod delete;
-
-// TEAM-274: Worker process operations (hive-local, stateless)
-/// Get worker process details by PID
-pub mod process_get;
-/// List worker processes using local ps
-pub mod process_list;
 
 // NOTE: WorkerList and WorkerGet are NOT implemented in hive
 // According to corrected architecture (CORRECTION_269_TO_272_ARCHITECTURE_FIX.md):
@@ -70,12 +75,11 @@ pub mod process_list;
 // - WorkerProcessXxx = local process management, ActiveWorkerXxx = distributed tracking
 
 // TEAM-271: Re-export main types and functions
-pub use spawn::spawn_worker;
-pub use types::{SpawnResult, WorkerSpawnConfig};
-
-// TEAM-272: Re-export worker deletion
-pub use delete::delete_worker;
-
-// TEAM-274: Re-export process operations
-pub use process_get::get_worker_process;
-pub use process_list::{list_worker_processes, WorkerProcessInfo};
+// TEAM-276: Updated exports for renamed modules and added install/uninstall stubs
+pub use start::start_worker;
+pub use stop::stop_worker;
+pub use list::list_workers;
+pub use get::get_worker;
+pub use install::install_worker;
+pub use uninstall::uninstall_worker;
+pub use types::{StartResult, WorkerStartConfig, WorkerInfo};

@@ -1,17 +1,20 @@
 // TEAM-272: Worker deletion (process cleanup)
+// TEAM-276: Renamed from delete.rs to stop.rs for consistency
 use anyhow::Result;
 use observability_narration_core::NarrationFactory;
 
 const NARRATE: NarrationFactory = NarrationFactory::new("worker-lc");
 
-/// Delete a worker by killing its process
+/// Stop a worker by killing its process
+///
+/// TEAM-276: Renamed from delete_worker to stop_worker for consistency
 ///
 /// This is a STATELESS operation - it just kills the process by PID.
 /// The PID should be obtained from queen's worker registry.
 ///
 /// # Architecture
 ///
-/// 1. Hive receives WorkerDelete operation with PID
+/// 1. Hive receives WorkerStop operation with PID
 /// 2. Kill process using SIGTERM (graceful)
 /// 3. Wait briefly, then SIGKILL if needed
 /// 4. Return success
@@ -26,22 +29,22 @@ const NARRATE: NarrationFactory = NarrationFactory::new("worker-lc");
 ///
 /// - **Unix:** Uses SIGTERM/SIGKILL via nix crate
 /// - **Windows:** Not yet implemented
-pub async fn delete_worker(job_id: &str, worker_id: &str, pid: u32) -> Result<()> {
+pub async fn stop_worker(job_id: &str, worker_id: &str, pid: u32) -> Result<()> {
     NARRATE
-        .action("worker_delete_start")
+        .action("worker_stop_start")
         .job_id(job_id)
         .context(worker_id)
         .context(&pid.to_string())
-        .human("🗑️  Deleting worker '{}' (PID: {})")
+        .human("🛑 Stopping worker '{}' (PID: {})")
         .emit();
 
     kill_process(job_id, pid).await?;
 
     NARRATE
-        .action("worker_delete_complete")
+        .action("worker_stop_complete")
         .job_id(job_id)
         .context(worker_id)
-        .human("✅ Worker '{}' deleted")
+        .human("✅ Worker '{}' stopped")
         .emit();
 
     Ok(())

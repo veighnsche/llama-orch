@@ -1,26 +1,16 @@
 // TEAM-274: Worker process listing using local ps commands
+// TEAM-276: Renamed from process_list.rs to list.rs for consistency
 use anyhow::Result;
 use observability_narration_core::NarrationFactory;
-use serde::{Deserialize, Serialize};
+
+// TEAM-276: Import WorkerInfo from types
+use crate::types::WorkerInfo;
 
 const NARRATE: NarrationFactory = NarrationFactory::new("worker-lc");
 
-/// Information about a running worker process
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct WorkerProcessInfo {
-    /// Process ID
-    pub pid: u32,
-    /// Command line
-    pub command: String,
-    /// Memory usage (RSS) in KB
-    pub memory_kb: u64,
-    /// CPU usage percentage
-    pub cpu_percent: f32,
-    /// Elapsed time (format: HH:MM:SS)
-    pub elapsed: String,
-}
-
 /// List all worker processes on this hive
+///
+/// TEAM-276: Renamed from list_worker_processes to list_workers for consistency
 ///
 /// This uses local `ps` command to find processes matching worker patterns.
 ///
@@ -35,9 +25,9 @@ pub struct WorkerProcessInfo {
 ///
 /// # Returns
 ///
-/// Vector of WorkerProcessInfo for all found worker processes
+/// Vector of WorkerInfo for all found worker processes
 #[cfg(unix)]
-pub async fn list_worker_processes(job_id: &str) -> Result<Vec<WorkerProcessInfo>> {
+pub async fn list_workers(job_id: &str) -> Result<Vec<WorkerInfo>> {
     use tokio::process::Command;
 
     NARRATE
@@ -91,7 +81,12 @@ pub async fn list_worker_processes(job_id: &str) -> Result<Vec<WorkerProcessInfo
         let elapsed = parts[9].to_string();
         let command = parts[10..].join(" ");
 
-        processes.push(WorkerProcessInfo { pid, command, memory_kb, cpu_percent, elapsed });
+        // TEAM-276: Simplified to WorkerInfo (removed memory/cpu/elapsed - can add back if needed)
+        processes.push(WorkerInfo {
+            pid,
+            command: command.clone(),
+            args: vec![], // TODO: Parse args from command if needed
+        });
     }
 
     NARRATE

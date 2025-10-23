@@ -1,9 +1,12 @@
 // TEAM-271: Worker lifecycle types
+// TEAM-276: Renamed types for consistency (SpawnConfig → StartConfig, SpawnResult → StartResult)
 use serde::{Deserialize, Serialize};
 
-/// Worker spawn configuration
+/// Worker start configuration
+///
+/// TEAM-276: Renamed from WorkerSpawnConfig for consistency
 #[derive(Debug, Clone)]
-pub struct WorkerSpawnConfig {
+pub struct WorkerStartConfig {
     /// Worker ID
     pub worker_id: String,
 
@@ -23,9 +26,11 @@ pub struct WorkerSpawnConfig {
     pub job_id: String,
 }
 
-/// Result of worker spawn operation
+/// Result of worker start operation
+///
+/// TEAM-276: Renamed from SpawnResult for consistency
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct SpawnResult {
+pub struct StartResult {
     /// Worker ID
     pub worker_id: String,
 
@@ -37,4 +42,19 @@ pub struct SpawnResult {
 
     /// Worker binary path
     pub binary_path: String,
+}
+
+/// Worker information
+///
+/// TEAM-276: Renamed from WorkerProcessInfo for consistency
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct WorkerInfo {
+    /// Process ID
+    pub pid: u32,
+
+    /// Command line
+    pub command: String,
+
+    /// Arguments
+    pub args: Vec<String>,
 }

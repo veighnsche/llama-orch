@@ -1,15 +1,15 @@
 //! Ensure queen-rbee is running
 //!
 //! TEAM-259: Extracted from rbee-keeper/src/queen_lifecycle.rs
+//! TEAM-276: Refactored to use daemon-lifecycle::ensure_daemon_with_handle
 
 use anyhow::{Context, Result};
-use daemon_lifecycle::DaemonManager;
+use daemon_lifecycle::{ensure_daemon_with_handle, poll_until_healthy, DaemonManager, HealthPollConfig};
 use observability_narration_core::NarrationFactory;
 use rbee_config::RbeeConfig;
 use std::time::Duration;
 use timeout_enforcer::TimeoutEnforcer;
 
-use crate::health::{is_queen_healthy, poll_until_healthy};
 use crate::types::QueenHandle;
 
 // TEAM-192: Local narration factory for queen lifecycle
@@ -47,15 +47,28 @@ pub async fn ensure_queen_running(base_url: &str) -> Result<QueenHandle> {
 }
 
 async fn ensure_queen_running_inner(base_url: &str) -> Result<QueenHandle> {
-    let start_time = std::time::Instant::now();
+    // TEAM-276: Use shared ensure pattern from daemon-lifecycle
+    let health_url = format!("{}/health", base_url);
+    
+    ensure_daemon_with_handle(
+        "queen-rbee",
+        &health_url,
+        None,
+        || async {
+            // Spawn logic: preflight + start
+            spawn_queen_with_preflight(base_url).await
+        },
+        || QueenHandle::already_running(base_url.to_string()),
+        || QueenHandle::started_by_us(base_url.to_string(), None),
+    )
+    .await
+}
 
-    // Step 1: Check if queen is already running
-    if is_queen_healthy(base_url).await? {
-        NARRATE.action("queen_check").human("Queen is already running and healthy").emit();
-        return Ok(QueenHandle::already_running(base_url.to_string()));
-    }
-
-    // Step 2: TEAM-195: Preflight validation before starting queen
+/// Spawn queen with preflight checks
+///
+/// TEAM-276: Extracted spawn logic to use with ensure_daemon_with_handle
+async fn spawn_queen_with_preflight(base_url: &str) -> Result<()> {
+    // Step 1: TEAM-195: Preflight validation before starting queen
     NARRATE.action("queen_preflight").human("📋 Loading rbee configuration...").emit();
 
     let config = RbeeConfig::load().context("Failed to load rbee config")?;
@@ -109,10 +122,7 @@ async fn ensure_queen_running_inner(base_url: &str) -> Result<QueenHandle> {
 
     NARRATE.action("queen_preflight").human("✅ All preflight checks passed").emit();
 
-    // Step 3: Queen is not running, start it
-    NARRATE.action("queen_start").human("⚠️  Queen is asleep, waking queen").emit();
-
-    // Step 4: Find queen-rbee binary in target directory
+    // Step 2: Find queen-rbee binary in target directory
     let queen_binary = DaemonManager::find_in_target("queen-rbee")
         .context("Failed to find queen-rbee binary in target directory")?;
 
@@ -122,30 +132,28 @@ async fn ensure_queen_running_inner(base_url: &str) -> Result<QueenHandle> {
         .human("Found queen-rbee binary at {}")
         .emit();
 
-    // Step 5: Spawn queen process
+    // Step 3: Spawn queen process
     let args = vec!["--port".to_string(), "8500".to_string()];
     let manager = DaemonManager::new(queen_binary, args);
 
-    let mut _child = manager.spawn().await.context("Failed to spawn queen-rbee process")?;
+    let mut child = manager.spawn().await.context("Failed to spawn queen-rbee process")?;
 
     NARRATE
-        .action("queen_start")
-        .human("Queen-rbee process spawned, waiting for health check")
+        .action("queen_spawned")
+        .human("Queen-rbee process spawned, polling health...")
         .emit();
 
-    // Step 6: Poll health until ready (30 second timeout)
-    poll_until_healthy(base_url, Duration::from_secs(30))
-        .await
-        .context("Queen failed to become healthy within timeout")?;
+    // Step 4: Poll health until ready
+    poll_until_healthy(
+        HealthPollConfig::new(base_url)
+            .with_daemon_name("queen-rbee")
+            .with_max_attempts(30)
+    )
+    .await
+    .context("Queen failed to become healthy within timeout")?;
 
-    // Step 7: Success!
-    let elapsed_ms = start_time.elapsed().as_millis() as u64;
-    let pid = _child.id();
-    NARRATE
-        .action("queen_ready")
-        .human("✅ Queen is awake and healthy")
-        .duration_ms(elapsed_ms)
-        .emit();
+    // Keep child alive
+    std::mem::forget(child);
 
-    Ok(QueenHandle::started_by_us(base_url.to_string(), pid))
+    Ok(())
 }

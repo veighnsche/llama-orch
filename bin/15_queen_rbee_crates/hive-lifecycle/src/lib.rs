@@ -25,14 +25,18 @@
 //! - `uninstall` - Hive uninstallation (TEAM-213)
 //! - `start` - Hive startup (TEAM-212)
 //! - `stop` - Hive shutdown (TEAM-212)
+//! - `ensure` - Ensure hive running (TEAM-276)
 //! - `list` - List all hives (TEAM-211)
 //! - `get` - Get hive details (TEAM-211)
 //! - `status` - Check hive status (TEAM-211)
 //! - `capabilities` - Refresh hive capabilities (TEAM-214)
 
 // TEAM-210: Module declarations
+// TEAM-276: Added ensure module
 /// Hive capabilities refresh operations
 pub mod capabilities;
+/// Ensure hive is running (auto-start if needed)
+pub mod ensure;
 /// Get hive details operations
 pub mod get;
 /// Hive installation operations
@@ -84,3 +88,6 @@ pub use uninstall::execute_hive_uninstall;
 
 // TEAM-214: Export capabilities operation
 pub use capabilities::execute_hive_refresh_capabilities;
+
+// TEAM-276: Export ensure operation and HiveHandle
+pub use ensure::ensure_hive_running;

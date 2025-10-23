@@ -174,7 +174,8 @@ pub mod timeout;
 // TEAM-276: Added health polling with exponential backoff
 // TEAM-276: Added timeout enforcement and graceful shutdown
 // TEAM-276: Added high-level lifecycle operations
-pub use ensure::ensure_daemon_running;
+// TEAM-276: Added ensure pattern with handle support
+pub use ensure::{ensure_daemon_running, ensure_daemon_with_handle};
 pub use get::{get_daemon, GettableConfig};
 pub use health::{is_daemon_healthy, poll_until_healthy, HealthPollConfig};
 pub use install::{install_daemon, uninstall_daemon, InstallConfig, InstallResult, UninstallConfig};
