@@ -18,6 +18,7 @@ pub struct Cli {
 #[derive(Subcommand)]
 /// TEAM-185: Added comprehensive inference parameters (top_p, top_k, device, worker_id, stream)
 /// TEAM-190: Added Status command for live hive/worker overview
+/// TEAM-282: Added package manager commands (Sync, PackageStatus, Validate, Migrate)
 pub enum Commands {
     /// Show live status of all hives and workers
     /// TEAM-190: Queries hive-registry for runtime state (not catalog)
@@ -84,5 +85,52 @@ pub enum Commands {
         /// Stream tokens as generated
         #[arg(long, default_value = "true")]
         stream: bool,
+    },
+
+    // ============================================================================
+    // PACKAGE MANAGER COMMANDS (TEAM-282)
+    // ============================================================================
+    /// Sync all hives to match declarative config
+    /// TEAM-282: Declarative lifecycle management
+    Sync {
+        /// Show what would be done without making changes
+        #[arg(long)]
+        dry_run: bool,
+
+        /// Remove components not in config
+        #[arg(long)]
+        remove_extra: bool,
+
+        /// Force reinstall even if already installed
+        #[arg(long)]
+        force: bool,
+
+        /// Optional: sync only this hive
+        #[arg(long)]
+        hive: Option<String>,
+    },
+
+    /// Check package status and detect drift from config
+    /// TEAM-282: Declarative lifecycle management
+    PackageStatus {
+        /// Show detailed status information
+        #[arg(long)]
+        verbose: bool,
+    },
+
+    /// Validate declarative config file
+    /// TEAM-282: Declarative lifecycle management
+    Validate {
+        /// Optional: path to config file (default: ~/.config/rbee/hives.conf)
+        #[arg(long)]
+        config: Option<String>,
+    },
+
+    /// Generate declarative config from current state
+    /// TEAM-282: Declarative lifecycle management
+    Migrate {
+        /// Path where config should be written
+        #[arg(long)]
+        output: String,
     },
 }

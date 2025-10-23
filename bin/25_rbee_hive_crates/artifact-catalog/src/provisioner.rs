@@ -88,6 +88,39 @@ impl<T: Artifact + Send + Sync> ArtifactProvisioner<T> for MultiVendorProvisione
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::ArtifactStatus;
+    use serde::{Deserialize, Serialize};
+    use std::path::PathBuf;
+
+    #[derive(Clone, Serialize, Deserialize)]
+    struct MockArtifact {
+        id: String,
+        path: PathBuf,
+        size: u64,
+        status: ArtifactStatus,
+    }
+
+    impl Artifact for MockArtifact {
+        fn id(&self) -> &str {
+            &self.id
+        }
+
+        fn path(&self) -> &Path {
+            &self.path
+        }
+
+        fn size(&self) -> u64 {
+            self.size
+        }
+
+        fn status(&self) -> &ArtifactStatus {
+            &self.status
+        }
+
+        fn set_status(&mut self, status: ArtifactStatus) {
+            self.status = status;
+        }
+    }
 
     struct MockVendor {
         name: String,
@@ -116,7 +149,7 @@ mod tests {
             Box::new(MockVendor { name: "GitHub".to_string(), prefix: "GH:".to_string() }),
         ];
 
-        let provisioner = MultiVendorProvisioner::<()>::new(vendors);
+        let provisioner = MultiVendorProvisioner::<MockArtifact>::new(vendors);
 
         assert!(provisioner.supports("HF:meta-llama/Llama-2-7b"));
         assert!(provisioner.supports("GH:owner/repo"));

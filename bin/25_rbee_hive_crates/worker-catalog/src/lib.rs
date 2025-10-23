@@ -6,6 +6,12 @@
 //!
 //! Worker catalog for managing worker binaries.
 //! Built on top of artifact-catalog for consistency with model-catalog.
+//!
+//! # TEAM-277 Architecture Update
+//!
+//! Worker catalog is READ ONLY from hive's perspective.
+//! Hive discovers workers installed by queen-rbee via SSH.
+//! Hive never installs workers itself - only manages their processes.
 
 mod types;
 

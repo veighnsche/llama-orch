@@ -1,9 +1,16 @@
 //! Worker binary uninstallation
 //!
 //! TEAM-276: Added stub for lifecycle consistency
+//! TEAM-277: Worker uninstallation now handled by queen-rbee via SSH
 //!
 //! NOTE: Worker binaries are managed by worker-catalog, not uninstalled like queen/hive.
 //! This module exists for API consistency across lifecycle crates.
+//!
+//! # TEAM-277 Architecture Change
+//!
+//! Worker uninstallation is now handled by queen-rbee's package_manager module via SSH.
+//! Queen orchestrates uninstallation of both hive AND workers across remote hosts.
+//! This stub remains for API consistency but delegates to worker-catalog.
 
 use anyhow::Result;
 use observability_narration_core::NarrationFactory;

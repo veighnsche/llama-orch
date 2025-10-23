@@ -136,7 +136,7 @@ async fn spawn_queen_with_preflight(base_url: &str) -> Result<()> {
     let args = vec!["--port".to_string(), "8500".to_string()];
     let manager = DaemonManager::new(queen_binary, args);
 
-    let mut child = manager.spawn().await.context("Failed to spawn queen-rbee process")?;
+    let child = manager.spawn().await.context("Failed to spawn queen-rbee process")?;
 
     NARRATE
         .action("queen_spawned")
@@ -152,8 +152,9 @@ async fn spawn_queen_with_preflight(base_url: &str) -> Result<()> {
     .await
     .context("Queen failed to become healthy within timeout")?;
 
-    // Keep child alive
-    std::mem::forget(child);
+    // Keep child alive - detach from parent process
+    // The child process will continue running independently
+    drop(child);
 
     Ok(())
 }

@@ -12,7 +12,7 @@
 use anyhow::{Context, Result};
 use observability_narration_core::NarrationFactory;
 use queen_rbee_ssh_client::RbeeSSHClient;
-use rbee_config::declarative::{HiveConfig, WorkerConfig};
+use rbee_config::declarative::{HiveConfig, InstallMethod, WorkerConfig};
 use std::sync::Arc;
 
 const NARRATE: NarrationFactory = NarrationFactory::new("pkg-inst");
@@ -56,35 +56,20 @@ pub async fn install_hive_binary(hive: &HiveConfig, job_id: &str) -> Result<()> 
         return Err(anyhow::anyhow!("Failed to create directories: {}", stderr));
     }
 
-    // Determine binary path
+    // Determine binary path based on install method
     let binary_path = if let Some(path) = &hive.binary_path {
         // Use custom path
         path.clone()
     } else {
-        // Download from releases (placeholder - adjust URL as needed)
-        let version = "latest"; // TODO: Make configurable
-        let download_url =
-            format!("https://github.com/your-org/rbee/releases/download/{}/rbee-hive", version);
-
-        let download_cmd = format!(
-            "curl -L {} -o ~/.local/bin/rbee-hive && chmod +x ~/.local/bin/rbee-hive",
-            download_url
-        );
-
-        NARRATE
-            .action("download_hive")
-            .job_id(job_id)
-            .context(&hive.alias)
-            .human("⬇️  Downloading hive binary for '{}'")
-            .emit();
-
-        let (_, stderr, exit_code) = client.exec(&download_cmd).await?;
-        if exit_code != 0 {
-            client.close().await?;
-            return Err(anyhow::anyhow!("Failed to download hive binary: {}", stderr));
+        match &hive.install_method {
+            InstallMethod::Git { repo, branch } => {
+                install_hive_from_git(&mut client, repo, branch, job_id, &hive.alias).await?
+            }
+            InstallMethod::Release { repo, tag } => {
+                install_hive_from_release(&mut client, repo, tag, job_id, &hive.alias).await?
+            }
+            InstallMethod::Local { path } => path.clone(),
         }
-
-        "~/.local/bin/rbee-hive".to_string()
     };
 
     // Verify installation
@@ -159,38 +144,37 @@ pub async fn install_worker_binary(
         return Err(anyhow::anyhow!("Failed to create worker directory: {}", stderr));
     }
 
-    // Determine binary path
-    let binary_name = format!("rbee-worker-{}", worker.worker_type);
+    // Determine binary path based on install method
     let binary_path = if let Some(path) = &worker.binary_path {
         // Use custom path
         path.clone()
     } else {
-        // Download from releases
-        let download_url = format!(
-            "https://github.com/your-org/rbee/releases/download/{}/{}",
-            worker.version, binary_name
-        );
-
-        let target_path = format!("~/.local/share/rbee/workers/{}", binary_name);
-        let download_cmd = format!(
-            "curl -L {} -o {} && chmod +x {}",
-            download_url, target_path, target_path
-        );
-
-        NARRATE
-            .action("download_worker")
-            .job_id(job_id)
-            .context(&worker.worker_type)
-            .human("⬇️  Downloading worker '{}'")
-            .emit();
-
-        let (_, stderr, exit_code) = client.exec(&download_cmd).await?;
-        if exit_code != 0 {
-            client.close().await?;
-            return Err(anyhow::anyhow!("Failed to download worker binary: {}", stderr));
+        match &worker.install_method {
+            InstallMethod::Git { repo, branch } => {
+                install_worker_from_git(
+                    &mut client,
+                    repo,
+                    branch,
+                    &worker.worker_type,
+                    &worker.features,
+                    job_id,
+                    &hive.alias,
+                )
+                .await?
+            }
+            InstallMethod::Release { repo, tag } => {
+                install_worker_from_release(
+                    &mut client,
+                    repo,
+                    tag,
+                    &worker.worker_type,
+                    job_id,
+                    &hive.alias,
+                )
+                .await?
+            }
+            InstallMethod::Local { path } => path.clone(),
         }
-
-        target_path
     };
 
     // Verify installation
@@ -298,4 +282,253 @@ pub async fn install_all(hive: Arc<HiveConfig>, job_id: String) -> Result<()> {
         .emit();
 
     Ok(())
+}
+
+/// Install hive binary from git repository
+///
+/// Clones repo (shallow), builds rbee-hive, and installs to ~/.local/bin
+///
+/// # Arguments
+/// * `client` - SSH client connection
+/// * `repo` - Git repository URL
+/// * `branch` - Git branch/tag/commit
+/// * `job_id` - Job ID for SSE routing
+/// * `alias` - Hive alias for logging
+async fn install_hive_from_git(
+    client: &mut RbeeSSHClient,
+    repo: &str,
+    branch: &str,
+    job_id: &str,
+    alias: &str,
+) -> Result<String> {
+    NARRATE
+        .action("git_clone_hive")
+        .job_id(job_id)
+        .context(alias)
+        .context(repo)
+        .human("📥 Cloning repository for hive '{}': {}")
+        .emit();
+
+    // Clone repository (shallow, no history for speed)
+    let clone_dir = "~/.local/share/rbee/build";
+    let clone_cmd = format!(
+        "rm -rf {} && mkdir -p {} && git clone --depth 1 --branch {} {} {}",
+        clone_dir, clone_dir, branch, repo, clone_dir
+    );
+
+    let (_, stderr, exit_code) = client.exec(&clone_cmd).await?;
+    if exit_code != 0 {
+        return Err(anyhow::anyhow!("Failed to clone repository: {}", stderr));
+    }
+
+    NARRATE
+        .action("build_hive")
+        .job_id(job_id)
+        .context(alias)
+        .human("🔨 Building hive binary for '{}'")
+        .emit();
+
+    // Build rbee-hive binary
+    let build_cmd = format!(
+        "cd {} && cargo build --release --bin rbee-hive",
+        clone_dir
+    );
+
+    let (_, stderr, exit_code) = client.exec(&build_cmd).await?;
+    if exit_code != 0 {
+        return Err(anyhow::anyhow!("Failed to build hive binary: {}", stderr));
+    }
+
+    // Copy binary to ~/.local/bin
+    let install_cmd = format!(
+        "cp {}/target/release/rbee-hive ~/.local/bin/rbee-hive && chmod +x ~/.local/bin/rbee-hive",
+        clone_dir
+    );
+
+    let (_, stderr, exit_code) = client.exec(&install_cmd).await?;
+    if exit_code != 0 {
+        return Err(anyhow::anyhow!("Failed to install hive binary: {}", stderr));
+    }
+
+    NARRATE
+        .action("hive_built")
+        .job_id(job_id)
+        .context(alias)
+        .human("✅ Hive binary built and installed for '{}'")
+        .emit();
+
+    Ok("~/.local/bin/rbee-hive".to_string())
+}
+
+/// Install worker binary from git repository
+///
+/// Clones repo (shallow), builds worker with features, and installs to ~/.local/share/rbee/workers
+///
+/// # Arguments
+/// * `client` - SSH client connection
+/// * `repo` - Git repository URL
+/// * `branch` - Git branch/tag/commit
+/// * `worker_type` - Worker type (e.g., "vllm", "llama-cpp")
+/// * `features` - Cargo feature flags (e.g., ["cuda"], ["metal"], ["cpu"])
+/// * `job_id` - Job ID for SSE routing
+/// * `alias` - Hive alias for logging
+async fn install_worker_from_git(
+    client: &mut RbeeSSHClient,
+    repo: &str,
+    branch: &str,
+    worker_type: &str,
+    features: &[String],
+    job_id: &str,
+    alias: &str,
+) -> Result<String> {
+    NARRATE
+        .action("git_clone_worker")
+        .job_id(job_id)
+        .context(worker_type)
+        .context(alias)
+        .context(repo)
+        .human("📥 Cloning repository for worker '{}' on '{}': {}")
+        .emit();
+
+    // Clone repository (shallow, no history for speed)
+    let clone_dir = "~/.local/share/rbee/build";
+    let clone_cmd = format!(
+        "rm -rf {} && mkdir -p {} && git clone --depth 1 --branch {} {} {}",
+        clone_dir, clone_dir, branch, repo, clone_dir
+    );
+
+    let (_, stderr, exit_code) = client.exec(&clone_cmd).await?;
+    if exit_code != 0 {
+        return Err(anyhow::anyhow!("Failed to clone repository: {}", stderr));
+    }
+
+    NARRATE
+        .action("build_worker")
+        .job_id(job_id)
+        .context(worker_type)
+        .context(alias)
+        .human("🔨 Building worker '{}' for '{}' with features: {:?}")
+        .context(&format!("{:?}", features))
+        .emit();
+
+    // Build worker binary with features
+    let features_flag = if features.is_empty() {
+        String::new()
+    } else {
+        format!("--features {}", features.join(","))
+    };
+
+    let build_cmd = format!(
+        "cd {} && cargo build --release --bin llm-worker-rbee {}",
+        clone_dir, features_flag
+    );
+
+    let (_, stderr, exit_code) = client.exec(&build_cmd).await?;
+    if exit_code != 0 {
+        return Err(anyhow::anyhow!("Failed to build worker binary: {}", stderr));
+    }
+
+    // Copy binary to ~/.local/share/rbee/workers with type-specific name
+    let binary_name = format!("rbee-worker-{}", worker_type);
+    let target_path = format!("~/.local/share/rbee/workers/{}", binary_name);
+    let install_cmd = format!(
+        "cp {}/target/release/llm-worker-rbee {} && chmod +x {}",
+        clone_dir, target_path, target_path
+    );
+
+    let (_, stderr, exit_code) = client.exec(&install_cmd).await?;
+    if exit_code != 0 {
+        return Err(anyhow::anyhow!("Failed to install worker binary: {}", stderr));
+    }
+
+    NARRATE
+        .action("worker_built")
+        .job_id(job_id)
+        .context(worker_type)
+        .context(alias)
+        .human("✅ Worker '{}' built and installed for '{}'")
+        .emit();
+
+    Ok(target_path)
+}
+
+/// Install hive binary from GitHub release
+///
+/// Downloads pre-built binary from GitHub releases
+async fn install_hive_from_release(
+    client: &mut RbeeSSHClient,
+    repo: &str,
+    tag: &str,
+    job_id: &str,
+    alias: &str,
+) -> Result<String> {
+    NARRATE
+        .action("download_hive_release")
+        .job_id(job_id)
+        .context(alias)
+        .context(repo)
+        .context(tag)
+        .human("⬇️  Downloading hive release for '{}': {} @ {}")
+        .emit();
+
+    let download_url = format!(
+        "https://github.com/{}/releases/download/{}/rbee-hive",
+        repo, tag
+    );
+
+    let download_cmd = format!(
+        "curl -L {} -o ~/.local/bin/rbee-hive && chmod +x ~/.local/bin/rbee-hive",
+        download_url
+    );
+
+    let (_, stderr, exit_code) = client.exec(&download_cmd).await?;
+    if exit_code != 0 {
+        return Err(anyhow::anyhow!("Failed to download hive release: {}", stderr));
+    }
+
+    Ok("~/.local/bin/rbee-hive".to_string())
+}
+
+/// Install worker binary from GitHub release
+///
+/// Downloads pre-built binary from GitHub releases
+async fn install_worker_from_release(
+    client: &mut RbeeSSHClient,
+    repo: &str,
+    tag: &str,
+    worker_type: &str,
+    job_id: &str,
+    alias: &str,
+) -> Result<String> {
+    NARRATE
+        .action("download_worker_release")
+        .job_id(job_id)
+        .context(worker_type)
+        .context(alias)
+        .context(repo)
+        .context(tag)
+        .human("⬇️  Downloading worker '{}' release for '{}': {} @ {}")
+        .emit();
+
+    let binary_name = format!("rbee-worker-{}", worker_type);
+    let download_url = format!(
+        "https://github.com/{}/releases/download/{}/{}",
+        repo, tag, binary_name
+    );
+
+    let target_path = format!("~/.local/share/rbee/workers/{}", binary_name);
+    let download_cmd = format!(
+        "curl -L {} -o {} && chmod +x {}",
+        download_url, target_path, target_path
+    );
+
+    let (_, stderr, exit_code) = client.exec(&download_cmd).await?;
+    if exit_code != 0 {
+        return Err(anyhow::anyhow!(
+            "Failed to download worker release: {}",
+            stderr
+        ));
+    }
+
+    Ok(target_path)
 }

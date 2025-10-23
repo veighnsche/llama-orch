@@ -18,7 +18,11 @@ const NARRATE: NarrationFactory = NarrationFactory::new("queen-life");
 ///
 /// # Returns
 /// * `Ok(())` - Queen started successfully
-/// * `Err` - Failed to start queen
+///
+/// # Errors
+/// * Returns error if queen binary not found
+/// * Returns error if queen fails to spawn
+/// * Returns error if queen fails health check
 pub async fn start_queen(queen_url: &str) -> Result<()> {
     let queen_handle = ensure_queen_running(queen_url).await?;
     
@@ -28,8 +32,9 @@ pub async fn start_queen(queen_url: &str) -> Result<()> {
         .human("✅ Queen started on {}")
         .emit();
     
-    // Keep queen alive (don't drop the handle)
-    std::mem::forget(queen_handle);
+    // Keep queen alive - detach the handle
+    // The queen process will continue running independently
+    drop(queen_handle);
     
     Ok(())
 }

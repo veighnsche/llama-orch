@@ -11,6 +11,12 @@
 //! Lifecycle management for LLM worker instances.
 //! Uses daemon-lifecycle for process spawning and worker-catalog for binary resolution.
 //!
+//! # TEAM-277 Architecture Update
+//!
+//! Worker installation is now handled by queen-rbee via SSH (see package_manager module).
+//! Hive only manages worker PROCESSES (start/stop/list/get).
+//! The install/uninstall modules are API stubs for consistency.
+//!
 //! # Module Structure
 //!
 //! TEAM-276: Standardized file naming for consistency across lifecycle crates

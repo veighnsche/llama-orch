@@ -45,7 +45,10 @@ use clap::Parser;
 use config::Config;
 
 use cli::{Cli, Commands};
-use handlers::{handle_hive, handle_infer, handle_model, handle_queen, handle_status, handle_worker};
+use handlers::{
+    handle_hive, handle_infer, handle_migrate, handle_model, handle_package_status, handle_queen,
+    handle_status, handle_sync, handle_validate, handle_worker,
+};
 
 #[tokio::main]
 async fn main() -> Result<()> {
@@ -103,5 +106,21 @@ async fn handle_command(cli: Cli) -> Result<()> {
             )
             .await
         }
+
+        // ========================================================================
+        // PACKAGE MANAGER COMMANDS (TEAM-282)
+        // ========================================================================
+        Commands::Sync {
+            dry_run,
+            remove_extra,
+            force,
+            hive,
+        } => handle_sync(&queen_url, dry_run, remove_extra, force, hive).await,
+
+        Commands::PackageStatus { verbose } => handle_package_status(&queen_url, verbose).await,
+
+        Commands::Validate { config } => handle_validate(&queen_url, config).await,
+
+        Commands::Migrate { output } => handle_migrate(&queen_url, output).await,
     }
 }

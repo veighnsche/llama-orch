@@ -1,5 +1,7 @@
 # Adding New Operations - Quick Reference
 
+**Last Updated:** Oct 24, 2025 (TEAM-283)
+
 ## The 3-File Pattern
 
 Every new operation requires updates to exactly **3 files** in this order:
@@ -7,8 +9,27 @@ Every new operation requires updates to exactly **3 files** in this order:
 ```
 1. rbee-operations/src/lib.rs  (Contract)
 2. queen-rbee/src/job_router.rs (Router)
-3. rbee-keeper/src/main.rs      (CLI)
+3. rbee-keeper/src/handlers/    (CLI Handler)
 ```
+
+## TEAM-277 Update: Package Operations
+
+**New declarative operations added:**
+- `PackageSync` - Sync all hives to match config (uses daemon-sync crate)
+- `PackageStatus` - Check package status and detect drift
+- `PackageInstall` - Install all components
+- `PackageUninstall` - Uninstall components
+- `PackageValidate` - Validate declarative config
+- `PackageMigrate` - Generate config from current state
+
+**Removed imperative operations:**
+- ~~`HiveInstall`~~ - Replaced by PackageSync
+- ~~`HiveUninstall`~~ - Replaced by PackageUninstall
+- ~~`WorkerDownload`~~ - Replaced by PackageSync
+- ~~`WorkerBuild`~~ - Replaced by PackageSync
+- ~~`WorkerBinaryList`~~ - Replaced by PackageStatus
+- ~~`WorkerBinaryGet`~~ - Replaced by PackageStatus
+- ~~`WorkerBinaryDelete`~~ - Replaced by PackageUninstall
 
 ---
 

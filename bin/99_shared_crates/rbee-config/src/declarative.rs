@@ -97,6 +97,10 @@ pub struct HiveConfig {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub binary_path: Option<String>,
 
+    /// Installation method for hive binary (default: git clone + build)
+    #[serde(default)]
+    pub install_method: InstallMethod,
+
     /// Workers to install on this hive
     #[serde(default)]
     pub workers: Vec<WorkerConfig>,
@@ -104,6 +108,47 @@ pub struct HiveConfig {
     /// Auto-start hive after installation (default: true)
     #[serde(default = "default_true")]
     pub auto_start: bool,
+}
+
+/// Installation method for binaries
+///
+/// Defines how binaries should be obtained and installed.
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[serde(rename_all = "lowercase")]
+pub enum InstallMethod {
+    /// Git clone + cargo build (development)
+    Git {
+        /// Git repository URL
+        repo: String,
+        /// Git branch/tag/commit (default: main)
+        #[serde(default = "default_git_branch")]
+        branch: String,
+    },
+    /// Download from GitHub releases (production)
+    Release {
+        /// GitHub org/repo
+        repo: String,
+        /// Release tag
+        tag: String,
+    },
+    /// Use local binary path
+    Local {
+        /// Path to binary on remote system
+        path: String,
+    },
+}
+
+fn default_git_branch() -> String {
+    "main".to_string()
+}
+
+impl Default for InstallMethod {
+    fn default() -> Self {
+        InstallMethod::Git {
+            repo: "git@github.com:veighnsche/llama-orch".to_string(),
+            branch: "main".to_string(),
+        }
+    }
 }
 
 /// Worker configuration
@@ -121,6 +166,14 @@ pub struct WorkerConfig {
     /// Optional custom binary path (if not using standard download)
     #[serde(skip_serializing_if = "Option::is_none")]
     pub binary_path: Option<String>,
+
+    /// Installation method (default: git clone + build)
+    #[serde(default)]
+    pub install_method: InstallMethod,
+
+    /// Feature flags for cargo build (e.g., ["cuda"], ["metal"], ["cpu"])
+    #[serde(default)]
+    pub features: Vec<String>,
 }
 
 // Default value functions for serde
