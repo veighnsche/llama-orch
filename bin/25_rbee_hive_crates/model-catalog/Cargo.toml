@@ -11,7 +11,12 @@ name = "rbee_hive_model_catalog"
 path = "src/lib.rs"
 
 [dependencies]
-# Add dependencies as needed
+# TEAM-267: Dependencies for filesystem-based model catalog
+anyhow = "1.0"
+chrono = { version = "0.4", features = ["serde"] }
+dirs = "5.0"  # For cross-platform cache directory
+serde = { version = "1.0", features = ["derive"] }
+serde_yaml = "0.9"  # For metadata.yaml files
 
 [dev-dependencies]
-# Add dev dependencies as needed
+tempfile = "3.8"  # For isolated test directories
