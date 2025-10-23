@@ -64,6 +64,22 @@
 //! # }
 //! ```
 //!
+//! ## Health Polling with Exponential Backoff (TEAM-276)
+//! ```rust,no_run
+//! use daemon_lifecycle::{poll_until_healthy, HealthPollConfig};
+//!
+//! # async fn example() -> anyhow::Result<()> {
+//! // Poll until daemon is healthy (for startup synchronization)
+//! let config = HealthPollConfig::new("http://localhost:8500")
+//!     .with_max_attempts(10)
+//!     .with_job_id("job-123")
+//!     .with_daemon_name("queen-rbee");
+//!
+//! poll_until_healthy(config).await?;
+//! # Ok(())
+//! # }
+//! ```
+//!
 //! ## Ensure Daemon Running
 //! ```rust,no_run
 //! use daemon_lifecycle::ensure_daemon_running;
@@ -84,21 +100,87 @@
 //! # Ok(())
 //! # }
 //! ```
+//!
+//! ## Timeout Enforcement (TEAM-276)
+//! ```rust,no_run
+//! use daemon_lifecycle::{with_timeout, TimeoutConfig};
+//! use std::time::Duration;
+//!
+//! # async fn example() -> anyhow::Result<()> {
+//! let config = TimeoutConfig::new("fetch_data", Duration::from_secs(30))
+//!     .with_job_id("job-123");
+//!
+//! let result = with_timeout(config, async {
+//!     // Your operation here
+//!     Ok(42)
+//! }).await?;
+//! # Ok(())
+//! # }
+//! ```
+//!
+//! ## Graceful Shutdown (TEAM-276)
+//! ```rust,no_run
+//! use daemon_lifecycle::{graceful_shutdown, ShutdownConfig};
+//!
+//! # async fn example() -> anyhow::Result<()> {
+//! let config = ShutdownConfig::new(
+//!     "queen-rbee",
+//!     "http://localhost:8500",
+//!     "http://localhost:8500/v1/shutdown",
+//! ).with_job_id("job-123");
+//!
+//! graceful_shutdown(config).await?;
+//! # Ok(())
+//! # }
+//! ```
+//!
+//! ## High-Level Lifecycle (TEAM-276)
+//! ```rust,no_run
+//! use daemon_lifecycle::{start_http_daemon, stop_http_daemon, HttpDaemonConfig};
+//! use std::path::PathBuf;
+//!
+//! # async fn example() -> anyhow::Result<()> {
+//! // Start daemon (spawn + health poll)
+//! let config = HttpDaemonConfig::new(
+//!     "queen-rbee",
+//!     PathBuf::from("target/release/queen-rbee"),
+//!     "http://localhost:8500",
+//! ).with_job_id("job-123");
+//!
+//! let child = start_http_daemon(config.clone()).await?;
+//! std::mem::forget(child); // Keep daemon alive
+//!
+//! // Stop daemon gracefully
+//! stop_http_daemon(config).await?;
+//! # Ok(())
+//! # }
+//! ```
 
 // TEAM-259: Module declarations
+// TEAM-276: Added timeout, shutdown, and lifecycle modules
 pub mod ensure;
 pub mod get;
 pub mod health;
 pub mod install;
+pub mod lifecycle;
 pub mod list;
 pub mod manager;
+pub mod shutdown;
 pub mod status;
+pub mod timeout;
 
 // TEAM-259: Re-export main types and functions
+// TEAM-276: Added UninstallConfig export
+// TEAM-276: Added health polling with exponential backoff
+// TEAM-276: Added timeout enforcement and graceful shutdown
+// TEAM-276: Added high-level lifecycle operations
 pub use ensure::ensure_daemon_running;
 pub use get::{get_daemon, GettableConfig};
-pub use health::is_daemon_healthy;
-pub use install::{install_daemon, uninstall_daemon, InstallConfig, InstallResult};
+pub use health::{is_daemon_healthy, poll_until_healthy, HealthPollConfig};
+pub use install::{install_daemon, uninstall_daemon, InstallConfig, InstallResult, UninstallConfig};
+pub use lifecycle::{start_http_daemon, stop_http_daemon, HttpDaemonConfig};
 pub use list::{list_daemons, ListableConfig};
 pub use manager::{spawn_daemon, DaemonManager};
+pub use shutdown::{force_shutdown, graceful_shutdown, ShutdownConfig};
 pub use status::{check_daemon_status, StatusRequest, StatusResponse};
+pub use timeout::{timeout_after, with_timeout, TimeoutConfig};

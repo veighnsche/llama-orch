@@ -138,45 +138,120 @@ pub async fn install_daemon(config: InstallConfig) -> Result<InstallResult> {
     }
 }
 
-/// Uninstall a daemon
+/// Configuration for daemon uninstallation
+pub struct UninstallConfig {
+    /// Name of the daemon (e.g., "queen-rbee", "rbee-hive")
+    pub daemon_name: String,
+
+    /// Path to the installed binary
+    pub install_path: PathBuf,
+
+    /// Optional: Health check URL to verify daemon is not running
+    pub health_url: Option<String>,
+
+    /// Optional: Timeout for health check (default: 2 seconds)
+    pub health_timeout_secs: Option<u64>,
+
+    /// Optional: Job ID for narration routing
+    pub job_id: Option<String>,
+}
+
+/// Uninstall a daemon binary
 ///
-/// This is a placeholder for future uninstallation logic.
-/// Currently just validates that the daemon is not running.
+/// Steps:
+/// 1. Check if binary exists at install_path
+/// 2. If health_url provided, check if daemon is running (error if yes)
+/// 3. Remove binary file
+/// 4. Emit success narration
 ///
 /// # Arguments
-/// * `daemon_name` - Name of the daemon to uninstall
-/// * `job_id` - Optional job ID for narration routing
+/// * `config` - Uninstallation configuration
 ///
 /// # Returns
 /// * `Ok(())` - Uninstallation successful
-/// * `Err` - Daemon is still running or other error
+/// * `Err` - Daemon is still running or removal failed
 ///
 /// # Example
 /// ```rust,no_run
-/// use daemon_lifecycle::uninstall_daemon;
+/// use daemon_lifecycle::{UninstallConfig, uninstall_daemon};
+/// use std::path::PathBuf;
 ///
 /// # async fn example() -> anyhow::Result<()> {
-/// uninstall_daemon("rbee-hive", Some("job_123")).await?;
+/// let config = UninstallConfig {
+///     daemon_name: "queen-rbee".to_string(),
+///     install_path: PathBuf::from("/home/user/.local/bin/queen-rbee"),
+///     health_url: Some("http://localhost:8500".to_string()),
+///     health_timeout_secs: Some(2),
+///     job_id: None,
+/// };
+///
+/// uninstall_daemon(config).await?;
 /// # Ok(())
 /// # }
 /// ```
-pub async fn uninstall_daemon(daemon_name: &str, job_id: Option<&str>) -> Result<()> {
-    let mut narration = NARRATE.action("daemon_uninstall").context(daemon_name);
-    if let Some(jid) = job_id {
-        narration = narration.job_id(jid);
+pub async fn uninstall_daemon(config: UninstallConfig) -> Result<()> {
+    let mut narration = NARRATE.action("daemon_uninstall").context(&config.daemon_name);
+    if let Some(ref job_id) = config.job_id {
+        narration = narration.job_id(job_id);
     }
     narration.human("🗑️  Uninstalling daemon '{}'").emit();
 
-    // TODO: Add actual uninstallation logic
-    // - Check if daemon is running (error if yes)
-    // - Remove configuration
-    // - Cleanup resources
-
-    let mut narration = NARRATE.action("daemon_uninstall").context(daemon_name);
-    if let Some(jid) = job_id {
-        narration = narration.job_id(jid);
+    // Step 1: Check if binary exists
+    if !config.install_path.exists() {
+        let mut narration = NARRATE
+            .action("daemon_not_installed")
+            .context(&config.daemon_name)
+            .context(config.install_path.display().to_string());
+        if let Some(ref job_id) = config.job_id {
+            narration = narration.job_id(job_id);
+        }
+        narration.human("⚠️  Daemon '{}' not installed at: {}").emit();
+        return Ok(());
     }
-    narration.human("✅ Daemon '{}' uninstalled").emit();
+
+    // Step 2: Check if daemon is running (if health_url provided)
+    if let Some(health_url) = config.health_url {
+        let timeout_secs = config.health_timeout_secs.unwrap_or(2);
+        let is_running = crate::health::is_daemon_healthy(
+            &health_url,
+            None, // Use default /health endpoint
+            Some(std::time::Duration::from_secs(timeout_secs)),
+        )
+        .await;
+
+        if is_running {
+            let mut narration = NARRATE
+                .action("daemon_still_running")
+                .context(&config.daemon_name)
+                .human("⚠️  Daemon '{}' is currently running. Stop it first.")
+                .error_kind("daemon_running");
+            if let Some(ref job_id) = config.job_id {
+                narration = narration.job_id(job_id);
+            }
+            narration.emit_error();
+            anyhow::bail!("Daemon {} is still running", config.daemon_name);
+        }
+    }
+
+    // Step 3: Remove binary file
+    std::fs::remove_file(&config.install_path)?;
+
+    let mut narration = NARRATE
+        .action("daemon_uninstalled")
+        .context(&config.daemon_name)
+        .context(config.install_path.display().to_string());
+    if let Some(ref job_id) = config.job_id {
+        narration = narration.job_id(job_id);
+    }
+    narration.human("✅ Daemon '{}' uninstalled successfully!").emit();
+
+    let mut narration = NARRATE
+        .action("daemon_removed")
+        .context(config.install_path.display().to_string());
+    if let Some(ref job_id) = config.job_id {
+        narration = narration.job_id(job_id);
+    }
+    narration.human("🗑️  Removed: {}").emit();
 
     Ok(())
 }

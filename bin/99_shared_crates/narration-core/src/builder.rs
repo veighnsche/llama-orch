@@ -172,6 +172,38 @@ impl Narration {
         self
     }
 
+    /// Set the job ID if provided (handles Option).
+    ///
+    /// TEAM-276: Convenience method for optional job_id pattern to reduce boilerplate
+    ///
+    /// # Example
+    /// ```rust
+    /// use observability_narration_core::{Narration, NarrationFactory};
+    ///
+    /// const NARRATE: NarrationFactory = NarrationFactory::new("dmn-life");
+    ///
+    /// let job_id: Option<String> = Some("job-123".to_string());
+    ///
+    /// // Before (7 lines):
+    /// // let mut narration = NARRATE.action("start").human("Starting");
+    /// // if let Some(ref job_id) = job_id {
+    /// //     narration = narration.job_id(job_id);
+    /// // }
+    /// // narration.emit();
+    ///
+    /// // After (3 lines):
+    /// NARRATE.action("start")
+    ///     .human("Starting daemon")
+    ///     .maybe_job_id(job_id.as_deref())
+    ///     .emit();
+    /// ```
+    pub fn maybe_job_id(self, id: Option<&str>) -> Self {
+        match id {
+            Some(jid) => self.job_id(jid),
+            None => self,
+        }
+    }
+
     /// Set the task ID.
     pub fn task_id(mut self, id: impl Into<String>) -> Self {
         self.fields.task_id = Some(id.into());

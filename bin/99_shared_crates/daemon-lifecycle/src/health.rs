@@ -4,20 +4,23 @@
 //!
 //! Provides HTTP-based health checking for daemons.
 
+use observability_narration_core::NarrationFactory;
+use reqwest::Client;
 use std::time::Duration;
+use tokio::time::sleep;
 
-/// Check if daemon is healthy via HTTP health endpoint
-///
-/// TEAM-259: Extracted from is_queen_healthy and is_hive_healthy
+const NARRATE: NarrationFactory = NarrationFactory::new("dmn-life");
+
+/// Check if daemon is healthy by querying its health endpoint
 ///
 /// # Arguments
 /// * `base_url` - Base URL of daemon (e.g., "http://localhost:8500")
-/// * `health_endpoint` - Health endpoint path (default: "/health")
-/// * `timeout` - HTTP timeout (default: 2 seconds)
+/// * `health_endpoint` - Optional health endpoint path (default: "/health")
+/// * `timeout` - Optional timeout duration (default: 2 seconds)
 ///
 /// # Returns
-/// * `true` - Daemon is healthy
-/// * `false` - Daemon is not responding or unhealthy
+/// * `true` if daemon responds with 2xx status
+/// * `false` if daemon is unreachable or returns error status
 pub async fn is_daemon_healthy(
     base_url: &str,
     health_endpoint: Option<&str>,
@@ -26,7 +29,7 @@ pub async fn is_daemon_healthy(
     let endpoint = health_endpoint.unwrap_or("/health");
     let timeout = timeout.unwrap_or(Duration::from_secs(2));
 
-    let client = match reqwest::Client::builder().timeout(timeout).build() {
+    let client = match Client::builder().timeout(timeout).build() {
         Ok(c) => c,
         Err(_) => return false,
     };
@@ -34,7 +37,182 @@ pub async fn is_daemon_healthy(
     let url = format!("{}{}", base_url, endpoint);
 
     match client.get(&url).send().await {
-        Ok(response) if response.status().is_success() => true,
-        _ => false,
+        Ok(response) => response.status().is_success(),
+        Err(_) => false,
     }
+}
+
+/// Configuration for health polling with exponential backoff
+///
+/// TEAM-276: Added for daemon startup synchronization
+pub struct HealthPollConfig {
+    /// Base URL of daemon (e.g., "http://localhost:8500")
+    pub base_url: String,
+
+    /// Optional health endpoint path (default: "/health")
+    pub health_endpoint: Option<String>,
+
+    /// Maximum number of polling attempts (default: 10)
+    pub max_attempts: usize,
+
+    /// Initial delay in milliseconds (default: 200ms)
+    pub initial_delay_ms: u64,
+
+    /// Backoff multiplier for exponential backoff (default: 1.5)
+    pub backoff_multiplier: f64,
+
+    /// Optional job_id for narration routing
+    pub job_id: Option<String>,
+
+    /// Optional daemon name for narration (default: "daemon")
+    pub daemon_name: Option<String>,
+}
+
+impl Default for HealthPollConfig {
+    fn default() -> Self {
+        Self {
+            base_url: String::new(),
+            health_endpoint: None,
+            max_attempts: 10,
+            initial_delay_ms: 200,
+            backoff_multiplier: 1.5,
+            job_id: None,
+            daemon_name: None,
+        }
+    }
+}
+
+impl HealthPollConfig {
+    /// Create a new config with just the base URL
+    pub fn new(base_url: impl Into<String>) -> Self {
+        Self {
+            base_url: base_url.into(),
+            ..Default::default()
+        }
+    }
+
+    /// Set the health endpoint
+    pub fn with_endpoint(mut self, endpoint: impl Into<String>) -> Self {
+        self.health_endpoint = Some(endpoint.into());
+        self
+    }
+
+    /// Set the maximum attempts
+    pub fn with_max_attempts(mut self, attempts: usize) -> Self {
+        self.max_attempts = attempts;
+        self
+    }
+
+    /// Set the job_id for narration
+    pub fn with_job_id(mut self, job_id: impl Into<String>) -> Self {
+        self.job_id = Some(job_id.into());
+        self
+    }
+
+    /// Set the daemon name for narration
+    pub fn with_daemon_name(mut self, name: impl Into<String>) -> Self {
+        self.daemon_name = Some(name.into());
+        self
+    }
+}
+
+/// Poll daemon health endpoint until healthy or max attempts reached
+///
+/// TEAM-276: Added for daemon startup synchronization with exponential backoff
+///
+/// Uses exponential backoff:
+/// - Attempt 1: 200ms
+/// - Attempt 2: 300ms
+/// - Attempt 3: 450ms
+/// - Attempt 4: 675ms
+/// - ...
+///
+/// # Arguments
+/// * `config` - Health polling configuration
+///
+/// # Returns
+/// * `Ok(())` - Daemon is healthy
+/// * `Err` - Daemon failed to become healthy after max attempts
+///
+/// # Example
+/// ```rust,no_run
+/// use daemon_lifecycle::{poll_until_healthy, HealthPollConfig};
+///
+/// # async fn example() -> anyhow::Result<()> {
+/// let config = HealthPollConfig::new("http://localhost:8500")
+///     .with_max_attempts(10)
+///     .with_job_id("job-123");
+///
+/// poll_until_healthy(config).await?;
+/// # Ok(())
+/// # }
+/// ```
+pub async fn poll_until_healthy(config: HealthPollConfig) -> anyhow::Result<()> {
+    let daemon_name = config.daemon_name.as_deref().unwrap_or("daemon");
+
+    // Emit start narration
+    // TEAM-276: Using .maybe_job_id() to reduce boilerplate
+    NARRATE
+        .action("daemon_health_poll")
+        .context(&config.base_url)
+        .human(format!("⏳ Waiting for {} to become healthy at {}", daemon_name, config.base_url))
+        .maybe_job_id(config.job_id.as_deref())
+        .emit();
+
+    for attempt in 1..=config.max_attempts {
+        // Check health
+        if is_daemon_healthy(
+            &config.base_url,
+            config.health_endpoint.as_deref(),
+            Some(Duration::from_secs(2)),
+        )
+        .await
+        {
+            // Success!
+            // TEAM-276: Using .maybe_job_id() to reduce boilerplate
+            NARRATE
+                .action("daemon_healthy")
+                .context(attempt.to_string())
+                .human(format!("✅ {} is healthy (attempt {})", daemon_name, attempt))
+                .maybe_job_id(config.job_id.as_deref())
+                .emit();
+            return Ok(());
+        }
+
+        // Not healthy yet, calculate delay with exponential backoff
+        if attempt < config.max_attempts {
+            let delay_ms = (config.initial_delay_ms as f64
+                * config.backoff_multiplier.powi((attempt - 1) as i32))
+                as u64;
+            let delay = Duration::from_millis(delay_ms);
+
+            // Emit progress narration
+            // TEAM-276: Using .maybe_job_id() to reduce boilerplate
+            NARRATE
+                .action("daemon_poll_retry")
+                .context(format!("{}/{}", attempt, config.max_attempts))
+                .human(format!("🔄 Attempt {}/{}, retrying in {}ms...", attempt, config.max_attempts, delay_ms))
+                .maybe_job_id(config.job_id.as_deref())
+                .emit();
+
+            sleep(delay).await;
+        }
+    }
+
+    // Failed after max attempts
+    // TEAM-276: Using .maybe_job_id() to reduce boilerplate
+    NARRATE
+        .action("daemon_not_healthy")
+        .context(&config.base_url)
+        .human(format!("❌ {} failed to become healthy after {} attempts", daemon_name, config.max_attempts))
+        .error_kind("health_timeout")
+        .maybe_job_id(config.job_id.as_deref())
+        .emit_error();
+
+    anyhow::bail!(
+        "{} at {} failed to become healthy after {} attempts",
+        daemon_name,
+        config.base_url,
+        config.max_attempts
+    )
 }
