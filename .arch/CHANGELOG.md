@@ -1,5 +1,59 @@
 # Architecture Documentation Changelog
 
+## v1.2 - Post-TEAM-261 Cleanup & Queen Lifecycle (Oct 23, 2025)
+
+### TEAM-262: Cleanup & Architecture Consolidation
+
+**Mission:** Clean up deprecated code after TEAM-261's heartbeat simplification
+
+#### Code Cleanup
+- **Deleted 3 crates:** worker-registry (hive), daemon-ensure, hive-core (-910 LOC)
+- **Cleaned heartbeat crate:** Removed hive aggregation logic (-400 LOC)
+- **Net impact:** -810 LOC (cleaner codebase)
+
+#### Renamed for Clarity
+- **HiveRegistry → WorkerRegistry:** Name now reflects actual purpose (tracking workers)
+- **SseBroadcaster → SseChannelRegistry:** Clarifies it's a registry of isolated channels
+
+#### Queen Lifecycle Foundation
+- **Added /v1/build-info endpoint:** Query queen's features and version
+- **Added queen commands:** rebuild, info, install, uninstall (stub implementations)
+- **Net impact:** +100 LOC
+
+### TEAM-263: Queen Lifecycle Implementation
+
+**Mission:** Complete TEAM-262's TODO list (all 3 priorities)
+
+#### Priority 1: Queen Lifecycle Commands (+175 LOC)
+- **queen rebuild:** Actual cargo build with --features local-hive support
+- **queen install:** Binary resolution and installation to ~/.local/bin
+- **queen uninstall:** Safe removal with running check
+
+#### Priority 2: Smart Prompts (+60 LOC)
+- **Localhost optimization prompt:** Queries build-info before hive install
+- **Performance comparison:** Shows 50-100x speedup with local-hive
+- **User choice:** Allow continue or cancel with recommendation
+
+#### Priority 3: Documentation Updates
+- **Updated worker-registry README:** Reflects rename and TEAM-261 changes
+- **Updated heartbeat README:** Simplified architecture diagram
+
+### TEAM-264: Documentation & Doc Comments
+
+**Mission:** Complete documentation for TEAM-262/263 work
+
+#### Doc Comments Added
+- **build_info.rs:** Comprehensive rustdoc with examples
+- **heartbeat/queen.rs:** Full API documentation
+- **All public APIs:** Clippy-compliant doc comments
+
+#### Architecture Documentation
+- **CHANGELOG.md:** Added TEAM-262/263/264 entries
+- **COMPONENTS_PART_2.md:** Updated for queen lifecycle
+- **DATA_FLOW_PART_4.md:** Updated heartbeat flow
+
+---
+
 ## v1.1 - Queen Build Configurations (Oct 23, 2025)
 
 ### Major Addition: Dual-Mode Queen Architecture

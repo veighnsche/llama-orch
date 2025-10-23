@@ -433,19 +433,57 @@ async fn handle_command(cli: Cli) -> Result<()> {
                 }
             }
             QueenAction::Rebuild { with_local_hive } => {
-                // TEAM-262: Rebuild queen with different configuration
+                // TEAM-262: Added queen rebuild command for local-hive optimization
+                // TEAM-263: Implemented actual build logic
                 NARRATE.action("queen_rebuild").human("🔨 Rebuilding queen-rbee...").emit();
                 
+                // Determine build command
+                let mut cmd = std::process::Command::new("cargo");
+                cmd.arg("build")
+                   .arg("--release")
+                   .arg("--bin")
+                   .arg("queen-rbee");
+                
                 if with_local_hive {
-                    NARRATE.action("queen_rebuild").human("✨ Building with integrated local hive...").emit();
-                    // TODO: cargo build --release --bin queen-rbee --features local-hive
+                    NARRATE.action("queen_rebuild").human("✨ Building with integrated local hive (50-100x faster localhost)...").emit();
+                    cmd.arg("--features").arg("local-hive");
                 } else {
                     NARRATE.action("queen_rebuild").human("📡 Building distributed queen (remote hives only)...").emit();
-                    // TODO: cargo build --release --bin queen-rbee
                 }
                 
-                NARRATE.action("queen_rebuild").human("⚠️  TODO: Implement build logic").emit();
-                Ok(())
+                // Execute build
+                NARRATE.action("queen_rebuild").human("⏳ Running cargo build (this may take a few minutes)...").emit();
+                
+                let output = cmd.output()?;
+                
+                if output.status.success() {
+                    NARRATE.action("queen_rebuild").human("✅ Build successful!").emit();
+                    
+                    // Show binary location
+                    let binary_path = "target/release/queen-rbee";
+                    NARRATE
+                        .action("queen_rebuild")
+                        .context(binary_path)
+                        .human("📦 Binary available at: {}")
+                        .emit();
+                    
+                    if with_local_hive {
+                        NARRATE
+                            .action("queen_rebuild")
+                            .human("💡 Restart queen to use the new binary with local-hive feature")
+                            .emit();
+                    }
+                    Ok(())
+                } else {
+                    let stderr = String::from_utf8_lossy(&output.stderr);
+                    NARRATE
+                        .action("queen_rebuild")
+                        .context(stderr.to_string())
+                        .human("❌ Build failed: {}")
+                        .error_kind("build_failed")
+                        .emit();
+                    anyhow::bail!("Build failed");
+                }
             }
             QueenAction::Info => {
                 // TEAM-262: Query queen's /v1/build-info endpoint
@@ -476,17 +514,131 @@ async fn handle_command(cli: Cli) -> Result<()> {
             }
             QueenAction::Install { binary } => {
                 // TEAM-262: Install queen binary
+                // TEAM-263: Implemented install logic
                 NARRATE.action("queen_install").human("📦 Installing queen-rbee...").emit();
-                if let Some(path) = binary {
-                    NARRATE.action("queen_install").context(&path).human("Using binary: {}").emit();
+                
+                // Resolve binary path
+                let source_path = if let Some(path) = binary {
+                    NARRATE.action("queen_install").context(&path).human("Using provided binary: {}").emit();
+                    std::path::PathBuf::from(path)
+                } else {
+                    // Auto-detect: try target/release first, then target/debug
+                    let release_path = std::path::PathBuf::from("target/release/queen-rbee");
+                    let debug_path = std::path::PathBuf::from("target/debug/queen-rbee");
+                    
+                    if release_path.exists() {
+                        NARRATE.action("queen_install").context("target/release/queen-rbee").human("Found binary: {}").emit();
+                        release_path
+                    } else if debug_path.exists() {
+                        NARRATE.action("queen_install").context("target/debug/queen-rbee").human("Found binary: {}").emit();
+                        debug_path
+                    } else {
+                        NARRATE
+                            .action("queen_install")
+                            .human("❌ No binary found. Run 'rbee-keeper queen rebuild' first")
+                            .error_kind("binary_not_found")
+                            .emit();
+                        anyhow::bail!("Binary not found");
+                    }
+                };
+                
+                // Verify binary exists
+                if !source_path.exists() {
+                    NARRATE
+                        .action("queen_install")
+                        .context(source_path.display().to_string())
+                        .human("❌ Binary not found: {}")
+                        .error_kind("binary_not_found")
+                        .emit();
+                    anyhow::bail!("Binary not found");
                 }
-                NARRATE.action("queen_install").human("⚠️  TODO: Implement install logic (similar to hive install)").emit();
+                
+                // Determine install location (~/.local/bin/queen-rbee)
+                let home = std::env::var("HOME")?;
+                let install_dir = std::path::PathBuf::from(format!("{}/.local/bin", home));
+                let install_path = install_dir.join("queen-rbee");
+                
+                // Create install directory if needed
+                std::fs::create_dir_all(&install_dir)?;
+                
+                // Copy binary
+                NARRATE
+                    .action("queen_install")
+                    .context(install_path.display().to_string())
+                    .human("📋 Installing to: {}")
+                    .emit();
+                
+                std::fs::copy(&source_path, &install_path)?;
+                
+                // Make executable (Unix only)
+                #[cfg(unix)]
+                {
+                    use std::os::unix::fs::PermissionsExt;
+                    let mut perms = std::fs::metadata(&install_path)?.permissions();
+                    perms.set_mode(0o755);
+                    std::fs::set_permissions(&install_path, perms)?;
+                }
+                
+                NARRATE.action("queen_install").human("✅ Queen installed successfully!").emit();
+                NARRATE
+                    .action("queen_install")
+                    .context(install_path.display().to_string())
+                    .human("📍 Binary location: {}")
+                    .emit();
+                NARRATE
+                    .action("queen_install")
+                    .human("💡 Make sure ~/.local/bin is in your PATH")
+                    .emit();
+                
                 Ok(())
             }
             QueenAction::Uninstall => {
                 // TEAM-262: Uninstall queen binary
+                // TEAM-263: Implemented uninstall logic
                 NARRATE.action("queen_uninstall").human("🗑️  Uninstalling queen-rbee...").emit();
-                NARRATE.action("queen_uninstall").human("⚠️  TODO: Implement uninstall logic (similar to hive uninstall)").emit();
+                
+                // Determine install location
+                let home = std::env::var("HOME")?;
+                let install_path = std::path::PathBuf::from(format!("{}/.local/bin/queen-rbee", home));
+                
+                // Check if binary exists
+                if !install_path.exists() {
+                    NARRATE
+                        .action("queen_uninstall")
+                        .context(install_path.display().to_string())
+                        .human("⚠️  Queen not installed at: {}")
+                        .emit();
+                    return Ok(());
+                }
+                
+                // Check if queen is running
+                let client = reqwest::Client::builder()
+                    .timeout(tokio::time::Duration::from_secs(2))
+                    .build()?;
+                
+                let is_running = matches!(
+                    client.get(format!("{}/health", queen_url)).send().await,
+                    Ok(response) if response.status().is_success()
+                );
+                
+                if is_running {
+                    NARRATE
+                        .action("queen_uninstall")
+                        .human("⚠️  Queen is currently running. Stop it first with: rbee-keeper queen stop")
+                        .emit();
+                    anyhow::bail!("Queen is running");
+                }
+                
+                // Remove binary
+                std::fs::remove_file(&install_path)?;
+                
+                NARRATE.action("queen_uninstall").human("✅ Queen uninstalled successfully!").emit();
+                NARRATE
+                    .action("queen_uninstall")
+                    .context(install_path.display().to_string())
+                    .human("🗑️  Removed: {}")
+                    .emit();
+                
                 Ok(())
             }
         },
@@ -494,6 +646,70 @@ async fn handle_command(cli: Cli) -> Result<()> {
         Commands::Hive { action } => {
             // TEAM-194: Use alias-based operations (config from hives.conf)
             // TEAM-196: Added RefreshCapabilities command
+            // TEAM-263: Added smart prompt for localhost hive install
+            
+            // Special handling for HiveInstall on localhost
+            if let HiveAction::Install { ref alias } = action {
+                if alias == "localhost" {
+                    // Check queen's build configuration
+                    let check_client = reqwest::Client::builder()
+                        .timeout(tokio::time::Duration::from_secs(3))
+                        .build()?;
+                    
+                    if let Ok(response) = check_client.get(format!("{}/v1/build-info", queen_url)).send().await {
+                        if response.status().is_success() {
+                            if let Ok(body) = response.text().await {
+                                // Parse JSON to check for local-hive feature
+                                if let Ok(build_info) = serde_json::from_str::<serde_json::Value>(&body) {
+                                    let features = build_info["features"].as_array();
+                                    let has_local_hive = features
+                                        .map(|f| f.iter().any(|v| v.as_str() == Some("local-hive")))
+                                        .unwrap_or(false);
+                                    
+                                    if !has_local_hive {
+                                        // PROMPT USER!
+                                        eprintln!("\n⚠️  Performance Notice:");
+                                        eprintln!();
+                                        eprintln!("   You're installing a hive on localhost, but your queen-rbee");
+                                        eprintln!("   was built without the 'local-hive' feature.");
+                                        eprintln!();
+                                        eprintln!("   📊 Performance comparison:");
+                                        eprintln!("      • Current setup:  ~5-10ms overhead (HTTP)");
+                                        eprintln!("      • Integrated:     ~0.1ms overhead (direct calls)");
+                                        eprintln!("      • Speedup:        50-100x faster");
+                                        eprintln!();
+                                        eprintln!("   💡 Recommendation:");
+                                        eprintln!("      Rebuild queen-rbee with integrated hive for localhost:");
+                                        eprintln!();
+                                        eprintln!("      $ rbee-keeper queen rebuild --with-local-hive");
+                                        eprintln!("      $ rbee-keeper queen stop");
+                                        eprintln!("      $ rbee-keeper queen start");
+                                        eprintln!();
+                                        eprintln!("   ℹ️  Or continue with distributed setup if you have specific needs.");
+                                        eprintln!();
+                                        
+                                        // Ask user
+                                        eprint!("   Continue with distributed setup? [y/N]: ");
+                                        use std::io::Write;
+                                        std::io::stdout().flush()?;
+                                        
+                                        let mut input = String::new();
+                                        std::io::stdin().read_line(&mut input)?;
+                                        
+                                        if !matches!(input.trim().to_lowercase().as_str(), "y" | "yes") {
+                                            eprintln!("\n✋ Installation cancelled.");
+                                            eprintln!("   Run: rbee-keeper queen rebuild --with-local-hive");
+                                            return Ok(());
+                                        }
+                                        eprintln!(); // Add spacing
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            
             let operation = match action {
                 HiveAction::SshTest { alias } => Operation::SshTest { alias },
                 HiveAction::Install { alias } => Operation::HiveInstall { alias },

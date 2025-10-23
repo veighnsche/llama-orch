@@ -25,6 +25,7 @@ static SSE_CHANNEL_REGISTRY: once_cell::sync::Lazy<SseChannelRegistry> =
 /// MPSC has simpler semantics (single receiver) and no "Closed" issues.
 ///
 /// TEAM-262: RENAMED - "Broadcaster" was misleading (it's a registry of isolated channels)
+/// TEAM-262: Renamed struct and static, updated all references (8 locations)
 ///
 /// CRITICAL: Global channels are a privacy hazard - inference data
 /// from Job A could leak to subscribers of Job B.

@@ -13,14 +13,46 @@ use serde::Serialize;
 // ============================================================================
 
 /// Response sent back to worker after receiving heartbeat
+///
+/// Simple acknowledgement indicating the heartbeat was received and processed.
+/// Workers use this to confirm the queen is reachable.
+///
+/// # Example
+///
+/// ```rust
+/// use rbee_heartbeat::HeartbeatAcknowledgement;
+///
+/// let ack = HeartbeatAcknowledgement::success();
+/// assert!(ack.acknowledged);
+/// ```
+///
+/// # TEAM-262
+///
+/// After TEAM-261 simplified heartbeat flow, this is now used for
+/// Worker → Queen acknowledgements (not Hive → Queen).
 #[derive(Debug, Clone, Serialize)]
 pub struct HeartbeatAcknowledgement {
     /// Whether the heartbeat was acknowledged
+    ///
+    /// Always `true` for successful responses. Errors are returned as HTTP errors.
     pub acknowledged: bool,
 }
 
 impl HeartbeatAcknowledgement {
     /// Create a successful acknowledgement
+    ///
+    /// # Returns
+    ///
+    /// A new `HeartbeatAcknowledgement` with `acknowledged: true`
+    ///
+    /// # Example
+    ///
+    /// ```rust
+    /// use rbee_heartbeat::HeartbeatAcknowledgement;
+    ///
+    /// let ack = HeartbeatAcknowledgement::success();
+    /// assert!(ack.acknowledged);
+    /// ```
     pub fn success() -> Self {
         Self { acknowledged: true }
     }

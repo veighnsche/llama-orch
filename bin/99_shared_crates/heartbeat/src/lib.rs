@@ -49,6 +49,7 @@
 //! Cleaned by: TEAM-262 (removed obsolete hive logic)
 
 // Modules
+// TEAM-262: Removed hive, hive_receiver, queen_receiver modules (obsolete after TEAM-261)
 pub mod queen;
 pub mod traits; // TEAM-159: Trait abstractions for receivers
 pub mod types;

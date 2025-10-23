@@ -1,11 +1,15 @@
-# queen-rbee-hive-registry
+# queen-rbee-worker-registry
 
 **Status:** ✅ IMPLEMENTED  
-**Purpose:** In-memory registry for tracking real-time runtime state of all hives
+**Purpose:** In-memory registry for tracking real-time runtime state of all workers
+
+**History:**
+- TEAM-262: Renamed from `hive-registry` to `worker-registry`
+- TEAM-261: Simplified - workers send heartbeats directly to queen
 
 ## Overview
 
-In-memory (RAM) registry for tracking real-time runtime state of all hives.
+In-memory (RAM) registry for tracking real-time runtime state of all workers across all hives.
 
 This is DIFFERENT from `hive-catalog` (SQLite - persistent storage):
 - **Catalog** = Persistent config (host, port, SSH, device capabilities)
@@ -23,17 +27,18 @@ This is DIFFERENT from `hive-catalog` (SQLite - persistent storage):
 ## Usage
 
 ```rust
-use queen_rbee_hive_registry::HiveRegistry;
-use rbee_heartbeat::HiveHeartbeatPayload;
+use queen_rbee_worker_registry::WorkerRegistry;
+use rbee_heartbeat::WorkerHeartbeatPayload;
 
-let registry = HiveRegistry::new();
+let registry = WorkerRegistry::new();
 
-// Update from heartbeat
-let payload = HiveHeartbeatPayload {
-    hive_id: "localhost".to_string(),
+// Update from worker heartbeat (TEAM-261: workers send directly to queen)
+let payload = WorkerHeartbeatPayload {
+    worker_id: "worker-123".to_string(),
     timestamp: "2025-10-21T10:00:00Z".to_string(),
-    workers: vec![],
+    health_status: HealthStatus::Healthy,
 };
+// Note: Internal API still uses hive_id for grouping
 registry.update_hive_state("localhost", payload);
 
 // Check if hive is online (heartbeat in last 30 seconds)
@@ -69,11 +74,29 @@ if let Some(resources) = registry.get_available_resources("localhost") {
 - ✅ Documentation
 - ✅ Thread safety
 
+## Architecture Changes (TEAM-261/262)
+
+**Before TEAM-261:**
+```
+Worker → Hive: POST /v1/heartbeat
+Hive → Queen: POST /v1/heartbeat (aggregated)
+```
+
+**After TEAM-261:**
+```
+Worker → Queen: POST /v1/worker-heartbeat (direct)
+```
+
+**TEAM-262 Rename:**
+- Struct: `HiveRegistry` → `WorkerRegistry`
+- Crate: `queen-rbee-hive-registry` → `queen-rbee-worker-registry`
+- Rationale: Name now reflects actual purpose (tracking workers, not hives)
+
 ## Dependencies
 
 - `serde` - Serialization
 - `chrono` - Timestamp handling
-- `rbee-heartbeat` - Heartbeat types
+- `rbee-heartbeat` - Heartbeat types (TEAM-262: simplified)
 
 ## See Also
 

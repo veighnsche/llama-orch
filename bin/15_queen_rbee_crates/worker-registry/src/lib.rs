@@ -47,6 +47,7 @@ use std::sync::RwLock;
 /// Optimized for read-heavy workload (scheduling queries).
 ///
 /// TEAM-262: Renamed from HiveRegistry - tracks workers directly after TEAM-261
+/// TEAM-262: Struct name changed, internal logic unchanged
 pub struct WorkerRegistry {
     hives: RwLock<HashMap<String, HiveRuntimeState>>,
 }

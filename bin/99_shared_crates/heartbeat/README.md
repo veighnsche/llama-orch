@@ -1,46 +1,55 @@
 # rbee-heartbeat
 
-**Status:** 🚧 STUB (Created by TEAM-135)  
-**Purpose:** Generic heartbeat protocol for health monitoring  
-**Location:** `bin/shared-crates/heartbeat/` (SHARED - used by multiple binaries)
+**Status:** ✅ IMPLEMENTED (Simplified by TEAM-261/262)  
+**Purpose:** Worker heartbeat protocol for health monitoring  
+**Location:** `bin/99_shared_crates/heartbeat/` (SHARED)
+
+**History:**
+- TEAM-115: Original implementation
+- TEAM-151: Extended with hive aggregation
+- TEAM-261: **SIMPLIFIED** - Removed hive aggregation, workers send directly to queen
+- TEAM-262: **CLEANED** - Removed obsolete hive heartbeat code (~400 LOC)
 
 ---
 
 ## Overview
 
-The `rbee-heartbeat` crate provides a **generic heartbeat mechanism** for health monitoring in the llama-orch system. It is used by both **workers** and **hives** to send periodic heartbeat messages to their parent components.
+The `rbee-heartbeat` crate provides a **worker heartbeat mechanism** for health monitoring in the rbee system.
 
-### System Context
+### System Context (After TEAM-261)
 
-In the llama-orch architecture, there is a **two-level heartbeat chain**:
+**SIMPLIFIED ARCHITECTURE:**
 
 ```
 ┌─────────────────┐
 │ llm-worker-rbee │  ← Worker process (USES THIS CRATE)
-│  (worker-orcd)  │
 └────────┬────────┘
          │
-         │ Heartbeat #1: Worker → Hive (30s interval)
-         │ POST /v1/heartbeat
+         │ Worker → Queen: POST /v1/worker-heartbeat (30s interval)
          │ Payload: { worker_id, timestamp, health_status }
          ↓
 ┌─────────────────┐
-│   rbee-hive     │  ← Pool manager (USES THIS CRATE)
-│ (pool-managerd) │  ← Receives worker heartbeats + sends own heartbeat
-└────────┬────────┘
-         │
-         │ Heartbeat #2: Hive → Queen (15s interval)
-         │ POST /v2/pools/{id}/heartbeat
-         │ Payload: { pool_id, gpus[], workers[], timestamp }
-         │ (aggregates ALL worker heartbeats + GPU state)
-         ↓
-┌─────────────────┐
-│   queen-rbee    │  ← Orchestrator (receives aggregated heartbeats)
-│ (orchestratord) │  ← Uses for scheduling decisions
+│   queen-rbee    │  ← Receives worker heartbeats directly
+│                 │  ← Uses for scheduling decisions
 └─────────────────┘
-         
-         NO heartbeat to rbee-keeper (not needed)
 ```
+
+**BEFORE TEAM-261 (REMOVED):**
+```
+Worker → Hive: POST /v1/heartbeat (30s)
+Hive → Queen: POST /v1/heartbeat (15s, aggregated)
+```
+
+**AFTER TEAM-261 (CURRENT):**
+```
+Worker → Queen: POST /v1/worker-heartbeat (30s, direct)
+```
+
+**Why the change:**
+- Simpler architecture (one hop instead of two)
+- Lower latency (no aggregation delay)
+- Less code to maintain (~400 LOC removed)
+- Queen tracks workers directly
 
 ### Key Insight: Two Different Use Cases
 

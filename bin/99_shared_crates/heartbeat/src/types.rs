@@ -38,6 +38,7 @@ pub enum HealthStatus {
 // ============================================================================
 // After TEAM-261, workers send heartbeats directly to queen.
 // Hive no longer aggregates worker state.
+// TEAM-262: Deleted ~250 LOC of obsolete types and tests
 
 #[cfg(test)]
 mod tests {
