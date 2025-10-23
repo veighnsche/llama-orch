@@ -25,8 +25,8 @@
 //! // Access queen settings
 //! println!("Queen port: {}", config.queen.queen.port);
 //!
-//! // Access hive by alias
-//! if let Some(hive) = config.hives.get("localhost") {
+//! // TEAM-278: Access hive by alias (new declarative API)
+//! if let Some(hive) = config.hives.get_hive("localhost") {
 //!     println!("Hive: {}@{}", hive.ssh_user, hive.hostname);
 //! }
 //!
@@ -58,26 +58,37 @@
 
 mod capabilities;
 mod error;
-mod hives_config;
+// TEAM-278: DELETED old SSH-style hives_config module - REPLACED with declarative
+// mod hives_config; // DELETED - v0.1.0 breaking change
 mod queen_config;
 mod validation;
 
+// TEAM-278: Declarative configuration for lifecycle management
+pub mod declarative;
+
 pub use capabilities::{CapabilitiesCache, DeviceInfo, DeviceType, HiveCapabilities};
 pub use error::{ConfigError, Result};
-pub use hives_config::{HiveEntry, HivesConfig};
+// TEAM-278: DELETED old SSH-style exports - REPLACED with declarative
+// pub use hives_config::{HiveEntry, HivesConfig}; // DELETED
 pub use queen_config::{QueenConfig, QueenSettings, RuntimeSettings};
 pub use validation::{
     preflight_validation, validate_capabilities_sync, validate_hives_config, ValidationResult,
 };
 
+// TEAM-278: Export declarative types as primary API (no aliases needed)
+pub use declarative::{HiveConfig, HivesConfig, WorkerConfig};
+
 use std::path::{Path, PathBuf};
 
 /// Main configuration structure
+/// 
+/// TEAM-278: BREAKING CHANGE - hives field now uses declarative::HivesConfig (Vec-based)
+/// instead of old SSH-style HivesConfig (HashMap-based)
 #[derive(Debug, Clone)]
 pub struct RbeeConfig {
     /// Queen-level configuration
     pub queen: QueenConfig,
-    /// Hives configuration
+    /// Hives configuration (TEAM-278: Now uses declarative::HivesConfig)
     pub hives: HivesConfig,
     /// Capabilities cache
     pub capabilities: CapabilitiesCache,
@@ -96,12 +107,15 @@ impl RbeeConfig {
 
     /// Load from specific directory
     ///
+    /// TEAM-278: BREAKING CHANGE - now loads declarative TOML config instead of SSH config
+    ///
     /// # Errors
     ///
     /// Returns an error if config files cannot be read or parsed
     pub fn load_from_dir(dir: &Path) -> Result<Self> {
         let queen = QueenConfig::load(&dir.join("config.toml"))?;
-        let hives = HivesConfig::load(&dir.join("hives.conf"))?;
+        // TEAM-278: Load declarative TOML config (not SSH config)
+        let hives = HivesConfig::load_from(&dir.join("hives.conf"))?;
         let capabilities = CapabilitiesCache::load(&dir.join("capabilities.yaml"))?;
 
         Ok(Self { queen, hives, capabilities })
@@ -147,6 +161,19 @@ impl RbeeConfig {
     pub fn save_capabilities(&self) -> Result<()> {
         self.capabilities.save()
     }
+
+    // TEAM-278: Helper methods for backward API compatibility
+    // (but using new declarative HivesConfig internally)
+
+    /// Get hive by alias
+    pub fn get_hive(&self, alias: &str) -> Option<&HiveConfig> {
+        self.hives.get_hive(alias)
+    }
+
+    /// Get all hives
+    pub fn all_hives(&self) -> &[HiveConfig] {
+        &self.hives.hives
+    }
 }
 
 #[cfg(test)]
@@ -169,18 +196,20 @@ max_concurrent_operations = 10
 "#;
         fs::write(dir.path().join("config.toml"), config_toml).unwrap();
 
-        // Create hives.conf
+        // TEAM-278: Create hives.conf (TOML format, not SSH config)
         let hives_conf = r#"
-Host localhost
-    HostName 127.0.0.1
-    Port 22
-    User vince
-    HivePort 8081
+[[hive]]
+alias = "localhost"
+hostname = "127.0.0.1"
+ssh_user = "vince"
+ssh_port = 22
+hive_port = 8081
 
-Host workstation
-    HostName 192.168.1.100
-    User admin
-    HivePort 8081
+[[hive]]
+alias = "workstation"
+hostname = "192.168.1.100"
+ssh_user = "admin"
+hive_port = 8081
 "#;
         fs::write(dir.path().join("hives.conf"), hives_conf).unwrap();
 
@@ -200,9 +229,10 @@ hives: {}
         let config = RbeeConfig::load_from_dir(dir.path()).unwrap();
 
         assert_eq!(config.queen.queen.port, 8080);
+        // TEAM-278: Use new declarative API
         assert_eq!(config.hives.len(), 2);
-        assert!(config.hives.contains("localhost"));
-        assert!(config.hives.contains("workstation"));
+        assert!(config.get_hive("localhost").is_some());
+        assert!(config.get_hive("workstation").is_some());
     }
 
     #[test]
@@ -252,5 +282,7 @@ hives: {}
         assert!(reloaded.capabilities.contains("localhost"));
         let caps = reloaded.capabilities.get("localhost").unwrap();
         assert_eq!(caps.devices.len(), 1);
+        // TEAM-278: Verify hives still load correctly
+        assert_eq!(reloaded.hives.len(), 2);
     }
 }

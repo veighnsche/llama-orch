@@ -27,12 +27,13 @@
 use anyhow::Result;
 use job_server::JobRegistry;
 use observability_narration_core::NarrationFactory;
+// TEAM-278: DELETED execute_hive_install, execute_hive_uninstall, execute_ssh_test
+// TEAM-278: DELETED HiveInstallRequest, HiveUninstallRequest, SshTestRequest
 use queen_rbee_hive_lifecycle::{
-    execute_hive_get, execute_hive_install, execute_hive_list, execute_hive_refresh_capabilities,
-    execute_hive_start, execute_hive_status, execute_hive_stop, execute_hive_uninstall,
-    execute_ssh_test, validate_hive_exists, HiveGetRequest, HiveInstallRequest, HiveListRequest,
+    execute_hive_get, execute_hive_list, execute_hive_refresh_capabilities,
+    execute_hive_start, execute_hive_status, execute_hive_stop,
+    HiveGetRequest, HiveListRequest,
     HiveRefreshCapabilitiesRequest, HiveStartRequest, HiveStatusRequest, HiveStopRequest,
-    HiveUninstallRequest, SshTestRequest,
 };
 // TEAM-275: Removed unused import (using state.hive_registry which is already Arc<WorkerRegistry>)
 use rbee_config::RbeeConfig;
@@ -201,93 +202,10 @@ async fn route_operation(
                 .emit();
         }
 
+        // TEAM-278: DELETED Operation::SshTest - replaced by PackageValidate
         // Hive operations
-        Operation::SshTest { alias } => {
-            // TEAM-188: Test SSH connection using config from hives.conf
-            // TEAM-194: Lookup SSH details from config by alias
-            // TEAM-195: Use validation helper for better error messages
-            let hive_config = validate_hive_exists(&state.config, &alias)?;
-
-            let request = SshTestRequest {
-                ssh_host: hive_config.hostname.clone(),
-                ssh_port: hive_config.ssh_port,
-                ssh_user: hive_config.ssh_user.clone(),
-            };
-
-            let response = execute_ssh_test(request).await?;
-
-            if !response.success {
-                return Err(anyhow::anyhow!(
-                    "SSH connection failed: {}",
-                    response.error.unwrap_or_else(|| "Unknown error".to_string())
-                ));
-            }
-
-            NARRATE
-                .action("ssh_test_ok")
-                .job_id(&job_id)
-                .context(response.test_output.unwrap_or_default())
-                .human("✅ SSH test successful: {}")
-                .emit();
-        }
-        Operation::HiveInstall { alias } => {
-            // TEAM-215: Delegate to hive-lifecycle crate
-            let request = HiveInstallRequest { alias };
-            execute_hive_install(request, state.config.clone(), &job_id).await?;
-        }
-        Operation::HiveUninstall { alias } => {
-            // ============================================================
-            // BUG FIX: TEAM-257 | Hive uninstall message not shown
-            // ============================================================
-            // SUSPICION:
-            // - TEAM-256 suspected SSE stream was closing early
-            // - TEAM-256 added response message in uninstall.rs but it wasn't shown
-            //
-            // INVESTIGATION:
-            // - Added debug output to trace execution flow
-            // - Discovered action name "hive_cache_cleanup" (18 chars) exceeded 15-char limit
-            // - This caused panic in builder.rs:719, stopping all narration
-            // - Panic only occurred when had_capabilities=true (first uninstall)
-            // - When had_capabilities=false (second uninstall), no panic, message showed
-            //
-            // ROOT CAUSE:
-            // - Action names in uninstall.rs exceeded 15-character limit:
-            //   * "hive_cache_cleanup" (18 chars) → panic at line 58
-            //   * "hive_cache_error" (16 chars) → would panic at line 67
-            //   * "hive_cache_removed" (18 chars) → would panic at line 74
-            // - Panic prevented function from completing and returning response
-            // - User never saw any messages after initial "Uninstalling" narration
-            //
-            // FIX:
-            // 1. Shortened action names in uninstall.rs to ≤15 chars:
-            //    * "hive_cache_cleanup" → "hive_cache_rm" (13 chars)
-            //    * "hive_cache_error" → "hive_cache_err" (14 chars)
-            //    * "hive_cache_removed" → "hive_cache_ok" (13 chars)
-            // 2. Capture response from execute_hive_uninstall() and emit in job_router
-            //    This adds redundancy - user sees message from both uninstall.rs and job_router
-            //
-            // TESTING:
-            // - Run `./rbee hive uninstall -a localhost` twice
-            // - First run shows: "Removing from capabilities cache", "Removed from capabilities cache",
-            //   "Hive 'localhost' uninstalled successfully" (from uninstall.rs + job_router)
-            // - Second run shows: "Hive 'localhost' already uninstalled (no cached capabilities)"
-            //   (from uninstall.rs + job_router)
-            // - Verified all messages appear in output, no panics
-            // ============================================================
-
-            // TEAM-215: Delegate to hive-lifecycle crate
-            let request = HiveUninstallRequest { alias };
-            let response = execute_hive_uninstall(request, state.config.clone(), &job_id).await?;
-
-            // TEAM-257: Emit final status message from response
-            // This ensures the message is shown even if SSE stream closed early
-            NARRATE
-                .action("hive_uninst_ok")
-                .job_id(&job_id)
-                .context(&response.message)
-                .human("{}")
-                .emit();
-        }
+        // TEAM-278: DELETED Operation::HiveInstall - replaced by PackageSync/PackageInstall
+        // TEAM-278: DELETED Operation::HiveUninstall - replaced by PackageUninstall
         Operation::HiveStart { alias } => {
             // TEAM-215: Delegate to hive-lifecycle crate
             let request = HiveStartRequest { alias, job_id: job_id.clone() };
@@ -317,110 +235,6 @@ async fn route_operation(
             // TEAM-215: Delegate to hive-lifecycle crate
             let request = HiveRefreshCapabilitiesRequest { alias, job_id: job_id.clone() };
             execute_hive_refresh_capabilities(request, state.config.clone()).await?;
-        }
-        Operation::HiveImportSsh { ssh_config_path, default_hive_port } => {
-            // Import SSH config into hives.conf
-            NARRATE
-                .action("ssh_import")
-                .job_id(&job_id)
-                .context(&ssh_config_path)
-                .context(&default_hive_port.to_string())
-                .human("📥 Importing SSH config from {} (HivePort: {})")
-                .emit();
-
-            use std::path::PathBuf;
-            let ssh_path = PathBuf::from(&ssh_config_path);
-
-            // Import from SSH config
-            let imported = match rbee_config::HivesConfig::import_from_ssh_config(
-                &ssh_path,
-                default_hive_port,
-            ) {
-                Ok(config) => config,
-                Err(e) => {
-                    NARRATE
-                        .action("ssh_fail")
-                        .job_id(&job_id)
-                        .context(&ssh_config_path)
-                        .context(e.to_string())
-                        .human("❌ Failed to import SSH config from {}: {}")
-                        .error_kind("import_failed")
-                        .emit();
-                    return Err(anyhow::anyhow!("Failed to import SSH config: {}", e));
-                }
-            };
-
-            NARRATE
-                .action("ssh_parsed")
-                .job_id(&job_id)
-                .context(imported.len().to_string())
-                .human("✅ Parsed {} host(s) from SSH config")
-                .emit();
-
-            // Load existing hives.conf
-            let config_dir = match rbee_config::RbeeConfig::config_dir() {
-                Ok(dir) => dir,
-                Err(e) => {
-                    NARRATE
-                        .action("ssh_cfg_dir")
-                        .job_id(&job_id)
-                        .context(e.to_string())
-                        .human("❌ Failed to get config directory: {}")
-                        .error_kind("config_dir_failed")
-                        .emit();
-                    return Err(e.into());
-                }
-            };
-            let hives_conf_path = config_dir.join("hives.conf");
-
-            let mut existing = match rbee_config::HivesConfig::load(&hives_conf_path) {
-                Ok(config) => config,
-                Err(e) => {
-                    NARRATE
-                        .action("ssh_load_fail")
-                        .job_id(&job_id)
-                        .context(hives_conf_path.display().to_string())
-                        .context(e.to_string())
-                        .human("❌ Failed to load existing hives.conf from {}: {}")
-                        .error_kind("load_failed")
-                        .emit();
-                    return Err(e.into());
-                }
-            };
-            let existing_count = existing.len();
-
-            // Merge (existing wins)
-            existing.merge(imported);
-            let new_count = existing.len() - existing_count;
-
-            // Save
-            if let Err(e) = existing.save(&hives_conf_path) {
-                NARRATE
-                    .action("ssh_save_fail")
-                    .job_id(&job_id)
-                    .context(hives_conf_path.display().to_string())
-                    .context(e.to_string())
-                    .human("❌ Failed to save hives.conf to {}: {}")
-                    .error_kind("save_failed")
-                    .emit();
-                return Err(e.into());
-            }
-
-            NARRATE
-                .action("ssh_complete")
-                .job_id(&job_id)
-                .context(&new_count.to_string())
-                .context(&hives_conf_path.display().to_string())
-                .human("✅ Imported {} new host(s) to {}")
-                .emit();
-
-            if new_count == 0 {
-                NARRATE
-                    .action("ssh_no_new")
-                    .job_id(&job_id)
-                    .human("ℹ️  All hosts already exist in hives.conf (no duplicates)")
-                    .emit();
-            }
         }
 
         // ========================================================================

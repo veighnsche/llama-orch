@@ -57,20 +57,8 @@ pub enum Operation {
     Status,
 
     // Hive operations
-    // TEAM-186: Renamed create→install, delete→uninstall
-    // TEAM-194: Simplified to alias-based lookups (config from hives.conf)
-    SshTest {
-        /// Alias from hives.conf
-        alias: String,
-    },
-    HiveInstall {
-        /// Alias from hives.conf (must exist before install)
-        alias: String,
-    },
-    HiveUninstall {
-        /// Alias from hives.conf
-        alias: String,
-    },
+    // TEAM-278: DELETED HiveInstall, HiveUninstall, SshTest
+    // These are replaced by PackageSync/PackageInstall/PackageUninstall (TEAM-279 will add)
     HiveStart {
         /// Alias from hives.conf (defaults to "localhost")
         #[serde(default = "default_hive_id")]
@@ -98,42 +86,11 @@ pub enum Operation {
         /// Alias from hives.conf
         alias: String,
     },
-    /// Import SSH config into hives.conf
-    HiveImportSsh {
-        /// Path to SSH config file (defaults to ~/.ssh/config)
-        #[serde(default = "default_ssh_config_path")]
-        ssh_config_path: String,
-        /// Default HivePort for all imported hosts
-        #[serde(default = "default_hive_port")]
-        default_hive_port: u16,
-    },
+    // TEAM-278: DELETED HiveImportSsh - not needed in declarative arch
 
-    // Worker binary operations (hive-local)
-    // TEAM-272: These manage worker BINARIES on the hive, not running workers
-    /// Download worker binary to hive
-    WorkerDownload {
-        hive_id: String,
-        worker_type: String, // e.g., "cuda-llm-worker", "cpu-llm-worker"
-    },
-    /// Build worker binary on hive
-    WorkerBuild {
-        hive_id: String,
-        worker_type: String,
-    },
-    /// List worker binaries available on hive
-    WorkerBinaryList {
-        hive_id: String,
-    },
-    /// Get details of a worker binary on hive
-    WorkerBinaryGet {
-        hive_id: String,
-        worker_type: String,
-    },
-    /// Delete worker binary from hive
-    WorkerBinaryDelete {
-        hive_id: String,
-        worker_type: String,
-    },
+    // TEAM-278: DELETED all worker binary operations
+    // WorkerDownload, WorkerBuild, WorkerBinaryList, WorkerBinaryGet, WorkerBinaryDelete
+    // These are replaced by PackageSync (TEAM-279 will add)
 
     // Worker process operations (hive-local)
     // TEAM-272: These manage worker PROCESSES on the hive
@@ -217,36 +174,21 @@ fn default_hive_id() -> String {
     "localhost".to_string()
 }
 
-fn default_ssh_config_path() -> String {
-    let home = std::env::var("HOME").unwrap_or_else(|_| "/root".to_string());
-    format!("{}/.ssh/config", home)
-}
-
-fn default_hive_port() -> u16 {
-    8081
-}
+// TEAM-278: DELETED default_ssh_config_path() and default_hive_port() - not needed
 
 impl Operation {
     /// Get the operation name as a string (for logging/narration)
     pub fn name(&self) -> &'static str {
         match self {
             Operation::Status => "status", // TEAM-190
-            Operation::SshTest { .. } => "ssh_test",
-            Operation::HiveInstall { .. } => "hive_install",
-            Operation::HiveUninstall { .. } => "hive_uninstall",
+            // TEAM-278: DELETED ssh_test, hive_install, hive_uninstall
             Operation::HiveStart { .. } => "hive_start",
             Operation::HiveStop { .. } => "hive_stop",
             Operation::HiveList => "hive_list",
             Operation::HiveGet { .. } => "hive_get",
             Operation::HiveStatus { .. } => "hive_status",
             Operation::HiveRefreshCapabilities { .. } => "hive_refresh_capabilities", // TEAM-196
-            Operation::HiveImportSsh { .. } => "hive_import_ssh",
-            // Worker binary operations
-            Operation::WorkerDownload { .. } => "worker_download",
-            Operation::WorkerBuild { .. } => "worker_build",
-            Operation::WorkerBinaryList { .. } => "worker_binary_list",
-            Operation::WorkerBinaryGet { .. } => "worker_binary_get",
-            Operation::WorkerBinaryDelete { .. } => "worker_binary_delete",
+            // TEAM-278: DELETED hive_import_ssh, worker_download, worker_build, worker_binary_*
             // Worker process operations
             Operation::WorkerSpawn { .. } => "worker_spawn",
             Operation::WorkerProcessList { .. } => "worker_process_list",
@@ -267,19 +209,13 @@ impl Operation {
     /// Get the hive_id if the operation targets a specific hive
     pub fn hive_id(&self) -> Option<&str> {
         match self {
-            Operation::HiveInstall { alias } => Some(alias),
-            Operation::HiveUninstall { alias } => Some(alias),
+            // TEAM-278: DELETED HiveInstall, HiveUninstall
             Operation::HiveStart { alias } => Some(alias),
             Operation::HiveStop { alias } => Some(alias),
             Operation::HiveGet { alias } => Some(alias),
             Operation::HiveStatus { alias } => Some(alias),
             Operation::HiveRefreshCapabilities { alias } => Some(alias), // TEAM-196
-            // Worker binary operations
-            Operation::WorkerDownload { hive_id, .. } => Some(hive_id),
-            Operation::WorkerBuild { hive_id, .. } => Some(hive_id),
-            Operation::WorkerBinaryList { hive_id } => Some(hive_id),
-            Operation::WorkerBinaryGet { hive_id, .. } => Some(hive_id),
-            Operation::WorkerBinaryDelete { hive_id, .. } => Some(hive_id),
+            // TEAM-278: DELETED worker binary operations
             // Worker process operations
             Operation::WorkerSpawn { hive_id, .. } => Some(hive_id),
             Operation::WorkerProcessList { hive_id } => Some(hive_id),
@@ -314,14 +250,9 @@ impl Operation {
     pub fn should_forward_to_hive(&self) -> bool {
         matches!(
             self,
-            // Worker binary operations (hive-local)
-            Operation::WorkerDownload { .. }
-                | Operation::WorkerBuild { .. }
-                | Operation::WorkerBinaryList { .. }
-                | Operation::WorkerBinaryGet { .. }
-                | Operation::WorkerBinaryDelete { .. }
-                // Worker process operations (hive-local)
-                | Operation::WorkerSpawn { .. }
+            // TEAM-278: DELETED worker binary operations
+            // Worker process operations (hive-local)
+            Operation::WorkerSpawn { .. }
                 | Operation::WorkerProcessList { .. }
                 | Operation::WorkerProcessGet { .. }
                 | Operation::WorkerProcessDelete { .. }
@@ -343,9 +274,7 @@ impl Operation {
 /// TEAM-186: Kept for backward compatibility with string-based code
 /// TEAM-194: Removed OP_HIVE_UPDATE (operation removed)
 pub mod constants {
-    // TEAM-186: Renamed create→install, delete→uninstall
-    pub const OP_HIVE_INSTALL: &str = "hive_install";
-    pub const OP_HIVE_UNINSTALL: &str = "hive_uninstall";
+    // TEAM-278: DELETED OP_HIVE_INSTALL, OP_HIVE_UNINSTALL
     pub const OP_HIVE_START: &str = "hive_start";
     pub const OP_HIVE_STOP: &str = "hive_stop";
     pub const OP_HIVE_LIST: &str = "hive_list";
@@ -376,32 +305,7 @@ mod tests {
         assert_eq!(json, r#"{"operation":"hive_list"}"#);
     }
 
-    #[test]
-    fn test_serialize_hive_install() {
-        // TEAM-194: Test alias-based install
-        let op = Operation::HiveInstall { alias: "localhost".to_string() };
-        let json = serde_json::to_string(&op).unwrap();
-        assert!(json.contains(r#""operation":"hive_install"#));
-        assert!(json.contains(r#""alias":"localhost"#));
-    }
-
-    #[test]
-    fn test_serialize_hive_install_remote() {
-        // TEAM-194: Test remote alias install
-        let op = Operation::HiveInstall { alias: "workstation".to_string() };
-        let json = serde_json::to_string(&op).unwrap();
-        assert!(json.contains(r#""operation":"hive_install"#));
-        assert!(json.contains(r#""alias":"workstation"#));
-    }
-
-    #[test]
-    fn test_serialize_hive_uninstall() {
-        // TEAM-194: Test alias-based uninstall
-        let op = Operation::HiveUninstall { alias: "localhost".to_string() };
-        let json = serde_json::to_string(&op).unwrap();
-        assert!(json.contains(r#""operation":"hive_uninstall"#));
-        assert!(json.contains(r#""alias":"localhost"#));
-    }
+    // TEAM-278: DELETED tests for HiveInstall, HiveUninstall
 
     #[test]
     fn test_serialize_hive_start() {
@@ -490,9 +394,7 @@ mod tests {
     fn test_operation_name() {
         assert_eq!(Operation::HiveList.name(), "hive_list");
         assert_eq!(Operation::HiveStart { alias: "test".to_string() }.name(), "hive_start");
-        // TEAM-194: Test alias-based operation names
-        assert_eq!(Operation::HiveInstall { alias: "test".to_string() }.name(), "hive_install");
-        assert_eq!(Operation::HiveUninstall { alias: "test".to_string() }.name(), "hive_uninstall");
+        // TEAM-278: DELETED tests for deleted operations
     }
 
     #[test]
@@ -503,8 +405,6 @@ mod tests {
         let op = Operation::HiveList;
         assert_eq!(op.hive_id(), None);
 
-        // TEAM-194: Test alias extraction for new operations
-        let op = Operation::HiveInstall { alias: "hive-prod".to_string() };
-        assert_eq!(op.hive_id(), Some("hive-prod"));
+        // TEAM-278: DELETED test for HiveInstall
     }
 }

@@ -4,7 +4,8 @@
 
 use crate::capabilities::CapabilitiesCache;
 use crate::error::Result;
-use crate::hives_config::HivesConfig;
+// TEAM-278: Use new declarative HivesConfig
+use crate::declarative::HivesConfig;
 
 /// Validation results
 #[derive(Debug, Clone)]
@@ -61,8 +62,8 @@ pub fn validate_hives_config(hives: &HivesConfig) -> ValidationResult {
         return result;
     }
 
-    // Validate each hive entry
-    for entry in hives.all() {
+    // TEAM-278: Validate each hive entry (using new Vec-based API)
+    for entry in &hives.hives {
         // Validate hostname
         if entry.hostname.is_empty() {
             result.add_error(format!("Hive '{}': hostname is empty", entry.alias));
@@ -148,23 +149,29 @@ pub fn preflight_validation(
 mod tests {
     use super::*;
     use crate::capabilities::HiveCapabilities;
-    use crate::hives_config::HiveEntry;
+    // TEAM-278: Use new declarative types
+    use crate::declarative::HiveConfig;
     use std::collections::HashMap;
 
-    fn create_test_hive(alias: &str) -> HiveEntry {
-        HiveEntry {
+    // TEAM-278: Helper to create test hive using new declarative API
+    fn create_test_hive(alias: &str) -> HiveConfig {
+        HiveConfig {
             alias: alias.to_string(),
             hostname: "192.168.1.100".to_string(),
             ssh_port: 22,
             ssh_user: "user".to_string(),
             hive_port: 8081,
             binary_path: None,
+            workers: vec![],
+            auto_start: true,
         }
     }
 
+    // TEAM-278: All tests updated to use new declarative API
+
     #[test]
     fn test_validate_empty_hives() {
-        let hives = HivesConfig::new_empty();
+        let hives = HivesConfig { hives: vec![] };
         let result = validate_hives_config(&hives);
         assert!(result.is_valid());
         assert!(result.has_warnings());
@@ -173,9 +180,9 @@ mod tests {
 
     #[test]
     fn test_validate_valid_hive() {
-        let mut hives_map = HashMap::new();
-        hives_map.insert("test".to_string(), create_test_hive("test"));
-        let hives = HivesConfig::from_map(hives_map);
+        let hives = HivesConfig {
+            hives: vec![create_test_hive("test")],
+        };
 
         let result = validate_hives_config(&hives);
         assert!(result.is_valid());
@@ -184,12 +191,12 @@ mod tests {
 
     #[test]
     fn test_validate_invalid_hive() {
-        let mut hives_map = HashMap::new();
         let mut invalid_hive = create_test_hive("invalid");
         invalid_hive.hostname = "".to_string();
         invalid_hive.ssh_port = 0;
-        hives_map.insert("invalid".to_string(), invalid_hive);
-        let hives = HivesConfig::from_map(hives_map);
+        let hives = HivesConfig {
+            hives: vec![invalid_hive],
+        };
 
         let result = validate_hives_config(&hives);
         assert!(!result.is_valid());
@@ -198,12 +205,12 @@ mod tests {
 
     #[test]
     fn test_validate_port_conflict() {
-        let mut hives_map = HashMap::new();
         let mut hive = create_test_hive("test");
         hive.ssh_port = 8081;
         hive.hive_port = 8081;
-        hives_map.insert("test".to_string(), hive);
-        let hives = HivesConfig::from_map(hives_map);
+        let hives = HivesConfig {
+            hives: vec![hive],
+        };
 
         let result = validate_hives_config(&hives);
         assert!(result.is_valid()); // Valid but has warning
@@ -212,10 +219,12 @@ mod tests {
 
     #[test]
     fn test_validate_capabilities_sync() {
-        let mut hives_map = HashMap::new();
-        hives_map.insert("hive1".to_string(), create_test_hive("hive1"));
-        hives_map.insert("hive2".to_string(), create_test_hive("hive2"));
-        let hives = HivesConfig::from_map(hives_map);
+        let hives = HivesConfig {
+            hives: vec![
+                create_test_hive("hive1"),
+                create_test_hive("hive2"),
+            ],
+        };
 
         let mut cap_map = HashMap::new();
         cap_map.insert(
@@ -239,9 +248,9 @@ mod tests {
 
     #[test]
     fn test_preflight_validation() {
-        let mut hives_map = HashMap::new();
-        hives_map.insert("test".to_string(), create_test_hive("test"));
-        let hives = HivesConfig::from_map(hives_map);
+        let hives = HivesConfig {
+            hives: vec![create_test_hive("test")],
+        };
 
         let capabilities = CapabilitiesCache::from_map(
             std::path::PathBuf::new(),
@@ -257,11 +266,11 @@ mod tests {
     // TEAM-195: Port validation tests
     #[test]
     fn test_validate_zero_ssh_port() {
-        let mut hives_map = HashMap::new();
         let mut hive = create_test_hive("test");
         hive.ssh_port = 0; // Invalid port
-        hives_map.insert("test".to_string(), hive);
-        let hives = HivesConfig::from_map(hives_map);
+        let hives = HivesConfig {
+            hives: vec![hive],
+        };
 
         let result = validate_hives_config(&hives);
         assert!(!result.is_valid());
@@ -270,11 +279,11 @@ mod tests {
 
     #[test]
     fn test_validate_zero_hive_port() {
-        let mut hives_map = HashMap::new();
         let mut hive = create_test_hive("test");
         hive.hive_port = 0; // Invalid port
-        hives_map.insert("test".to_string(), hive);
-        let hives = HivesConfig::from_map(hives_map);
+        let hives = HivesConfig {
+            hives: vec![hive],
+        };
 
         let result = validate_hives_config(&hives);
         assert!(!result.is_valid());

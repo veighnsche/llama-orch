@@ -20,9 +20,6 @@
 //!
 //! - `types` - Request/Response types for all operations
 //! - `validation` - Validation helpers (validate_hive_exists)
-//! - `ssh_test` - SSH connection testing
-//! - `install` - Hive installation (TEAM-213)
-//! - `uninstall` - Hive uninstallation (TEAM-213)
 //! - `start` - Hive startup (TEAM-212)
 //! - `stop` - Hive shutdown (TEAM-212)
 //! - `ensure` - Ensure hive running (TEAM-276)
@@ -39,14 +36,11 @@ pub mod capabilities;
 pub mod ensure;
 /// Get hive details operations
 pub mod get;
-/// Hive installation operations
-pub mod install;
 /// List all hives operations
 pub mod list;
 /// SSH utilities for remote operations
 pub mod ssh_helper;
-/// SSH connection testing
-pub mod ssh_test;
+// TEAM-278: DELETED pub mod ssh_test, install, uninstall
 /// Hive startup operations
 pub mod start;
 /// Hive status check operations
@@ -55,8 +49,6 @@ pub mod status;
 pub mod stop;
 /// Request/Response types for all operations
 pub mod types;
-/// Hive uninstallation operations
-pub mod uninstall;
 /// Validation helpers
 pub mod validation;
 
@@ -67,9 +59,7 @@ pub mod hive_client;
 // TEAM-210: Re-export types for convenience
 pub use types::*;
 
-// TEAM-210: Re-export SSH test interface
-pub use ssh_test::{execute_ssh_test, SshTestRequest, SshTestResponse};
-
+// TEAM-278: DELETED ssh_test exports
 // TEAM-210: Re-export validation helpers
 pub use validation::validate_hive_exists;
 
@@ -82,9 +72,7 @@ pub use status::execute_hive_status;
 pub use start::execute_hive_start;
 pub use stop::execute_hive_stop;
 
-// TEAM-213: Export install/uninstall operations
-pub use install::execute_hive_install;
-pub use uninstall::execute_hive_uninstall;
+// TEAM-278: DELETED install/uninstall exports
 
 // TEAM-214: Export capabilities operation
 pub use capabilities::execute_hive_refresh_capabilities;

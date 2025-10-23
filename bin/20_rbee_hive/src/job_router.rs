@@ -124,7 +124,7 @@ async fn route_operation(
         // Worker operations
         Operation::WorkerSpawn { hive_id, model, worker, device } => {
             // TEAM-272: Implemented worker spawning using worker-lifecycle
-            use rbee_hive_worker_lifecycle::{spawn_worker, WorkerSpawnConfig};
+            use rbee_hive_worker_lifecycle::{start_worker, WorkerStartConfig};
 
             NARRATE
                 .action("worker_spawn_start")
@@ -144,7 +144,7 @@ async fn route_operation(
             // TODO: Get from config
             let queen_url = "http://localhost:8500".to_string();
 
-            let config = WorkerSpawnConfig {
+            let config = WorkerStartConfig {
                 worker_id: worker.clone(),
                 model_id: model.clone(),
                 device: device.to_string(),
@@ -153,7 +153,7 @@ async fn route_operation(
                 job_id: job_id.clone(),
             };
 
-            let result = spawn_worker(config).await?;
+            let result = start_worker(config).await?;
 
             NARRATE
                 .action("worker_spawn_complete")
@@ -165,119 +165,12 @@ async fn route_operation(
                 .emit();
         }
 
-        // TEAM-274: Worker binary operations (catalog management)
-        Operation::WorkerBinaryList { hive_id } => {
-            NARRATE
-                .action("worker_bin_list_start")
-                .job_id(&job_id)
-                .context(&hive_id)
-                .human("📋 Listing worker binaries on hive '{}'")
-                .emit();
-
-            let binaries = state.worker_catalog.list();
-
-            NARRATE
-                .action("worker_bin_list_result")
-                .job_id(&job_id)
-                .context(&binaries.len().to_string())
-                .human("Found {} worker binary(ies)")
-                .emit();
-
-            if binaries.is_empty() {
-                NARRATE
-                    .action("worker_bin_list_empty")
-                    .job_id(&job_id)
-                    .human("No worker binaries found")
-                    .emit();
-            } else {
-                for binary in &binaries {
-                    let size_mb = binary.size() as f64 / 1_000_000.0;
-
-                    NARRATE
-                        .action("worker_bin_list_entry")
-                        .job_id(&job_id)
-                        .context(binary.id())
-                        .context(binary.name())
-                        .context(&format!("{:.2} MB", size_mb))
-                        .human("  {} | {} | {}")
-                        .emit();
-                }
-            }
-        }
-
-        Operation::WorkerBinaryGet { hive_id, worker_type } => {
-            NARRATE
-                .action("worker_bin_get_start")
-                .job_id(&job_id)
-                .context(&hive_id)
-                .context(&worker_type)
-                .human("🔍 Getting worker binary '{}' on hive '{}'")
-                .emit();
-
-            match state.worker_catalog.get(&worker_type) {
-                Ok(binary) => {
-                    NARRATE
-                        .action("worker_bin_get_found")
-                        .job_id(&job_id)
-                        .context(binary.id())
-                        .context(binary.name())
-                        .context(&binary.path().display().to_string())
-                        .human("✅ Worker: {} | Name: {} | Path: {}")
-                        .emit();
-
-                    // Emit binary details as JSON
-                    let json = serde_json::to_string_pretty(&binary)
-                        .unwrap_or_else(|_| "Failed to serialize".to_string());
-
-                    NARRATE.action("worker_bin_get_details").job_id(&job_id).human(&json).emit();
-                }
-                Err(e) => {
-                    NARRATE
-                        .action("worker_bin_get_error")
-                        .job_id(&job_id)
-                        .context(&worker_type)
-                        .context(&e.to_string())
-                        .human("❌ Worker binary '{}' not found: {}")
-                        .emit();
-                    return Err(e);
-                }
-            }
-        }
-
-        Operation::WorkerBinaryDelete { hive_id, worker_type } => {
-            NARRATE
-                .action("worker_bin_del_start")
-                .job_id(&job_id)
-                .context(&hive_id)
-                .context(&worker_type)
-                .human("🗑️  Deleting worker binary '{}' on hive '{}'")
-                .emit();
-
-            match state.worker_catalog.remove(&worker_type) {
-                Ok(()) => {
-                    NARRATE
-                        .action("worker_bin_del_ok")
-                        .job_id(&job_id)
-                        .context(&worker_type)
-                        .human("✅ Worker binary '{}' deleted successfully")
-                        .emit();
-                }
-                Err(e) => {
-                    NARRATE
-                        .action("worker_bin_del_err")
-                        .job_id(&job_id)
-                        .context(&worker_type)
-                        .context(&e.to_string())
-                        .human("❌ Failed to delete worker binary '{}': {}")
-                        .emit();
-                    return Err(e);
-                }
-            }
-        }
+        // TEAM-278: DELETED WorkerBinaryList, WorkerBinaryGet, WorkerBinaryDelete (~110 LOC)
+        // Worker binary management is now handled by PackageSync in queen-rbee
 
         // TEAM-274: Worker process operations (local ps-based)
         Operation::WorkerProcessList { hive_id } => {
-            use rbee_hive_worker_lifecycle::list_worker_processes;
+            use rbee_hive_worker_lifecycle::list_workers;
 
             NARRATE
                 .action("worker_proc_list_start")
@@ -286,7 +179,7 @@ async fn route_operation(
                 .human("📋 Listing worker processes on hive '{}'")
                 .emit();
 
-            let processes = list_worker_processes(&job_id).await?;
+            let processes = list_workers(&job_id).await?;
 
             NARRATE
                 .action("worker_proc_list_result")
@@ -303,24 +196,20 @@ async fn route_operation(
                     .emit();
             } else {
                 for proc in &processes {
-                    let mem_mb = proc.memory_kb as f64 / 1024.0;
-
+                    // TEAM-278: WorkerInfo only has pid, command, args
                     NARRATE
                         .action("worker_proc_list_entry")
                         .job_id(&job_id)
                         .context(&proc.pid.to_string())
-                        .context(&format!("{:.1} MB", mem_mb))
-                        .context(&format!("{:.1}%", proc.cpu_percent))
-                        .context(&proc.elapsed)
                         .context(&proc.command)
-                        .human("  PID {} | {:.1} MB | {:.1}% CPU | {} | {}")
+                        .human("  PID {} | {}")
                         .emit();
                 }
             }
         }
 
         Operation::WorkerProcessGet { hive_id, pid } => {
-            use rbee_hive_worker_lifecycle::get_worker_process;
+            use rbee_hive_worker_lifecycle::get_worker;
 
             NARRATE
                 .action("worker_proc_get_start")
@@ -330,18 +219,15 @@ async fn route_operation(
                 .human("🔍 Getting worker process PID {} on hive '{}'")
                 .emit();
 
-            let proc_info = get_worker_process(&job_id, pid).await?;
+            let proc_info = get_worker(&job_id, pid).await?;
 
-            let mem_mb = proc_info.memory_kb as f64 / 1024.0;
+            // TEAM-278: WorkerInfo only has pid, command, args
             NARRATE
                 .action("worker_proc_get_found")
                 .job_id(&job_id)
                 .context(&proc_info.pid.to_string())
                 .context(&proc_info.command)
-                .context(&format!("{:.1} MB", mem_mb))
-                .context(&format!("{:.1}%", proc_info.cpu_percent))
-                .context(&proc_info.elapsed)
-                .human("✅ PID {}: {} | {:.1} MB | {:.1}% CPU | {}")
+                .human("✅ PID {}: {}")
                 .emit();
 
             // Emit process details as JSON
@@ -352,7 +238,7 @@ async fn route_operation(
         }
 
         Operation::WorkerProcessDelete { hive_id, pid } => {
-            use rbee_hive_worker_lifecycle::delete_worker;
+            use rbee_hive_worker_lifecycle::stop_worker;
 
             NARRATE
                 .action("worker_proc_del_start")
@@ -364,7 +250,7 @@ async fn route_operation(
 
             // Worker ID is not known (hive is stateless), so use generic ID
             let worker_id = format!("pid-{}", pid);
-            delete_worker(&job_id, &worker_id, pid).await?;
+            stop_worker(&job_id, &worker_id, pid).await?;
 
             NARRATE
                 .action("worker_proc_del_ok")

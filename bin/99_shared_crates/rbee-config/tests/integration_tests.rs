@@ -48,7 +48,8 @@ fn test_load_complete_config() {
     assert!(config.hives.contains("workstation"));
     assert!(config.hives.contains("gpu-cloud"));
 
-    let localhost = config.hives.get("localhost").unwrap();
+    // TEAM-278: Use new declarative API
+    let localhost = config.hives.get_hive("localhost").unwrap();
     assert_eq!(localhost.hostname, "127.0.0.1");
     assert_eq!(localhost.ssh_port, 22);
     assert_eq!(localhost.ssh_user, "vince");
@@ -150,12 +151,12 @@ fn test_hive_entry_access() {
     let dir = create_complete_config();
     let config = RbeeConfig::load_from_dir(dir.path()).unwrap();
 
-    // Test get
-    let localhost = config.hives.get("localhost").unwrap();
+    // TEAM-278: Test new declarative API
+    let localhost = config.hives.get_hive("localhost").unwrap();
     assert_eq!(localhost.alias, "localhost");
 
-    // Test all
-    let all_hives = config.hives.all();
+    // Test all (direct access to hives vec)
+    let all_hives = &config.hives.hives;
     assert_eq!(all_hives.len(), 3);
 
     // Test aliases

@@ -12,6 +12,8 @@ serde_yaml = "0.9"
 toml = "0.8"
 chrono = "0.4"
 thiserror = "1.0"
+# TEAM-278: Added for declarative config support
+dirs = "5.0"
 
 [dev-dependencies]
 tempfile = "3.8"

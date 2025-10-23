@@ -12,4 +12,5 @@ pub use commands::{Cli, Commands};
 pub use hive::HiveAction;
 pub use model::ModelAction;
 pub use queen::QueenAction;
-pub use worker::{WorkerAction, WorkerBinaryAction, WorkerProcessAction};
+// TEAM-278: DELETED WorkerBinaryAction - no longer exists
+pub use worker::{WorkerAction, WorkerProcessAction};

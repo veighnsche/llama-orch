@@ -8,47 +8,7 @@ use serde::{Deserialize, Serialize};
 
 const NARRATE: NarrationFactory = NarrationFactory::new("hive-lc");
 
-// ============================================================================
-// INSTALL
-// ============================================================================
-
-/// Request to install a hive
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct HiveInstallRequest {
-    /// Hive alias from configuration
-    pub alias: String,
-}
-
-/// Response from hive installation
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct HiveInstallResponse {
-    /// Whether installation was successful
-    pub success: bool,
-    /// Status message
-    pub message: String,
-    /// Path to the hive binary (if found)
-    pub binary_path: Option<String>,
-}
-
-// ============================================================================
-// UNINSTALL
-// ============================================================================
-
-/// Request to uninstall a hive
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct HiveUninstallRequest {
-    /// Hive alias from configuration
-    pub alias: String,
-}
-
-/// Response from hive uninstallation
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct HiveUninstallResponse {
-    /// Whether uninstallation was successful
-    pub success: bool,
-    /// Status message
-    pub message: String,
-}
+// TEAM-278: DELETED HiveInstallRequest, HiveInstallResponse, HiveUninstallRequest, HiveUninstallResponse
 
 // ============================================================================
 // START

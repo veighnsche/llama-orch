@@ -40,24 +40,9 @@ use clap::Subcommand;
 // - ./rbee hive start --host localhost (should work)
 // ============================================================
 pub enum HiveAction {
-    /// Test SSH connection using config from hives.conf
-    SshTest {
-        /// Hive alias from ~/.config/rbee/hives.conf
-        #[arg(short = 'a', long = "host")]
-        alias: String,
-    },
-    /// Install a hive (must be configured in hives.conf first)
-    Install {
-        /// Hive alias from ~/.config/rbee/hives.conf
-        #[arg(short = 'a', long = "host")]
-        alias: String,
-    },
-    /// Uninstall a hive
-    Uninstall {
-        /// Hive alias from ~/.config/rbee/hives.conf
-        #[arg(short = 'a', long = "host")]
-        alias: String,
-    },
+    // TEAM-278: DELETED SshTest, Install, Uninstall
+    // These are replaced by package commands (sync, install, uninstall)
+    
     /// List all hives
     List,
     /// Start a hive
@@ -92,13 +77,5 @@ pub enum HiveAction {
         #[arg(short = 'a', long = "host")]
         alias: String,
     },
-    /// Import SSH config into hives.conf
-    ImportSsh {
-        /// Path to SSH config file
-        #[arg(long, default_value = "~/.ssh/config")]
-        ssh_config: String,
-        /// Default HivePort for all imported hosts
-        #[arg(long, default_value = "8081")]
-        default_port: u16,
-    },
+    // TEAM-278: DELETED ImportSsh - not needed in declarative arch
 }

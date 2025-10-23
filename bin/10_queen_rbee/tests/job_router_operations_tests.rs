@@ -57,18 +57,7 @@ fn test_parse_valid_status_operation() {
     assert_eq!(payload["type"], "Status");
 }
 
-#[test]
-fn test_parse_valid_ssh_test_operation() {
-    // TEAM-247: Test SshTest operation parses correctly
-
-    let payload = json!({
-        "type": "SshTest",
-        "alias": "remote-hive"
-    });
-
-    assert_eq!(payload["type"], "SshTest");
-    assert_eq!(payload["alias"], "remote-hive");
-}
+// TEAM-278: DELETED test_parse_valid_ssh_test_operation - SshTest operation deleted
 
 #[test]
 fn test_parse_invalid_operation_missing_type() {
@@ -417,7 +406,7 @@ fn test_operation_name_extraction() {
         ("HiveStart", "HiveStart"),
         ("HiveStop", "HiveStop"),
         ("Status", "Status"),
-        ("SshTest", "SshTest"),
+        // TEAM-278: DELETED ("SshTest", "SshTest")
     ];
 
     for (op_type, expected_name) in operations {

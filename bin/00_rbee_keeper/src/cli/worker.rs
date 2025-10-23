@@ -16,24 +16,16 @@ pub enum WorkerAction {
         device: String,
     },
 
-    /// Worker binary management (catalog on hive)
-    #[command(subcommand)]
-    Binary(WorkerBinaryAction),
+    // TEAM-278: DELETED WorkerBinaryAction subcommand
+    // Worker binary management (download, build, list, get, delete) is now handled by PackageSync
 
     /// Worker process management (local ps on hive)
     #[command(subcommand)]
     Process(WorkerProcessAction),
 }
 
-#[derive(Subcommand)]
-pub enum WorkerBinaryAction {
-    /// List worker binaries on hive
-    List,
-    /// Get worker binary details
-    Get { worker_type: String },
-    /// Delete worker binary
-    Delete { worker_type: String },
-}
+// TEAM-278: DELETED WorkerBinaryAction enum entirely
+// Replaced by package commands (sync, install, uninstall)
 
 #[derive(Subcommand)]
 pub enum WorkerProcessAction {

@@ -6,7 +6,8 @@
 use anyhow::Result;
 use rbee_operations::Operation;
 
-use crate::cli::{WorkerAction, WorkerBinaryAction, WorkerProcessAction};
+// TEAM-278: DELETED WorkerBinaryAction import - no longer exists
+use crate::cli::{WorkerAction, WorkerProcessAction};
 use crate::job_client::submit_and_stream_job;
 
 pub async fn handle_worker(hive_id: String, action: WorkerAction, queen_url: &str) -> Result<()> {
@@ -30,15 +31,8 @@ pub async fn handle_worker(hive_id: String, action: WorkerAction, queen_url: &st
                 device: device_id,
             }
         }
-        WorkerAction::Binary(binary_action) => match binary_action {
-            WorkerBinaryAction::List => Operation::WorkerBinaryList { hive_id },
-            WorkerBinaryAction::Get { worker_type } => {
-                Operation::WorkerBinaryGet { hive_id, worker_type: worker_type.clone() }
-            }
-            WorkerBinaryAction::Delete { worker_type } => {
-                Operation::WorkerBinaryDelete { hive_id, worker_type: worker_type.clone() }
-            }
-        },
+        // TEAM-278: DELETED WorkerAction::Binary match arm
+        // Worker binary management is now handled by PackageSync
         WorkerAction::Process(process_action) => match process_action {
             WorkerProcessAction::List => Operation::WorkerProcessList { hive_id },
             WorkerProcessAction::Get { pid } => Operation::WorkerProcessGet { hive_id, pid: *pid },
