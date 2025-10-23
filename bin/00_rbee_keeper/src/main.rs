@@ -103,8 +103,8 @@ pub enum Commands {
 
     /// Worker management
     Worker {
-        /// Hive ID to operate on (defaults to localhost)
-        #[arg(long, default_value = "localhost")]
+        /// Hive alias to operate on (defaults to localhost)
+        #[arg(long = "hive", default_value = "localhost")]
         hive_id: String,
         #[command(subcommand)]
         action: WorkerAction,
@@ -112,8 +112,8 @@ pub enum Commands {
 
     /// Model management
     Model {
-        /// Hive ID to operate on (defaults to localhost)
-        #[arg(long, default_value = "localhost")]
+        /// Hive alias to operate on (defaults to localhost)
+        #[arg(long = "hive", default_value = "localhost")]
         hive_id: String,
         #[command(subcommand)]
         action: ModelAction,
@@ -121,8 +121,8 @@ pub enum Commands {
 
     /// Run inference
     Infer {
-        /// Hive ID to run inference on
-        #[arg(long, default_value = "localhost")]
+        /// Hive alias to run inference on
+        #[arg(long = "hive", default_value = "localhost")]
         hive_id: String,
         /// Model identifier
         #[arg(long)]
@@ -288,13 +288,9 @@ pub enum WorkerAction {
         /// Model identifier
         #[arg(long)]
         model: String,
-        /// Worker type: cpu, cuda, or metal
-        /// TEAM-185: Renamed from 'backend' to 'worker' for clarity
+        /// Device specification: cpu, cuda:0, cuda:1, metal:0, etc.
         #[arg(long)]
-        worker: String,
-        /// Device ID (GPU index for cuda/metal, ignored for cpu)
-        #[arg(long, default_value = "0")]
-        device: u32,
+        device: String,
     },
     List,
     Get {
@@ -743,11 +739,26 @@ async fn handle_command(cli: Cli) -> Result<()> {
             // TEAM-186: Use typed Operation enum instead of JSON strings
             // TEAM-187: Match on &action to avoid cloning hive_id multiple times
             let operation = match &action {
-                WorkerAction::Spawn { model, worker, device } => Operation::WorkerSpawn {
-                    hive_id,
-                    model: model.clone(),
-                    worker: worker.clone(),
-                    device: *device,
+                WorkerAction::Spawn { model, device } => {
+                    // Parse device string (e.g., "cuda:0" -> worker="cuda", device=0)
+                    let (worker, device_id) = if device.contains(':') {
+                        let parts: Vec<&str> = device.split(':').collect();
+                        let worker_type = parts[0].to_string();
+                        let device_num = parts.get(1)
+                            .and_then(|s| s.parse::<u32>().ok())
+                            .unwrap_or(0);
+                        (worker_type, device_num)
+                    } else {
+                        // If no colon, assume device 0
+                        (device.clone(), 0)
+                    };
+                    
+                    Operation::WorkerSpawn {
+                        hive_id,
+                        model: model.clone(),
+                        worker,
+                        device: device_id,
+                    }
                 },
                 WorkerAction::List => Operation::WorkerList { hive_id },
                 WorkerAction::Get { id } => Operation::WorkerGet { hive_id, id: id.clone() },

@@ -169,17 +169,21 @@ This directory contains a complete architectural overview split into 10 parts:
 
 **Topics:**
 - Three user interfaces: SDK, Web UI, OpenAI Adapter
-- rbee-web-ui (React/Next.js dashboard)
+- rbee-web-ui (React/Next.js dashboard) - bee-based terminology
+- **Direct-to-worker pattern** (connect to worker interfaces directly)
+- Worker-specific interfaces (each worker serves its own specialized UI)
 - OpenAI-compatible API adapter
-- Future: Embedded UI (RSX + HTMX)
 
 **Key Insights:**
 - **SDK:** Programmatic access (Rust/TypeScript)
-- **Web UI:** Visual dashboard using SDK
+- **Web UI:** Management dashboard (hive catalog, worker pool, cell monitoring)
+- **Bee terminology:** Workers, Cells (GPUs), Swarm (multi-worker), Spawn (deploy)
+- **NOT centralized chat** - dashboard has [Connect →] buttons that link to workers
+- **Direct-to-worker:** Connect directly to worker's interface (zero proxy overhead)
+- **Workers serve themselves:** Each worker has specialized embedded interface
 - **OpenAI Adapter:** Compatibility layer for existing OpenAI apps
-- **Future:** Embedded UI in each binary (specialized views)
 
-**Read this eighth** to understand all user-facing interfaces.
+**Read this eighth** to understand the direct-to-worker architecture.
 
 ---
 
@@ -206,6 +210,7 @@ This directory contains a complete architectural overview split into 10 parts:
 
 **Topics:**
 - Bespoke workers vs Adapters
+- **Distributed inference** (multi-worker GGUF with Candle)
 - Worker types: cuda-llm, metal-llm, metal-stable-diffusion
 - Adapters: llama.cpp, vLLM, ComfyUI, Ollama, TensorRT-LLM
 - Variable-VRAM workers (dynamic model loading)
@@ -213,12 +218,14 @@ This directory contains a complete architectural overview split into 10 parts:
 
 **Key Insights:**
 - **Bespoke workers:** Custom-built with Candle framework (maximum control)
+- **Distributed inference:** Split large models across multiple GPUs (70B, 405B models)
+- **Worker groups:** Coordinator + shards pattern, transparent to client
+- **Candle support:** Tensor parallelism, pipeline parallelism (minimal code changes)
 - **Adapters:** Wrappers around existing engines (llama.cpp, vLLM, ComfyUI)
 - **Variable VRAM:** ComfyUI and vLLM change models dynamically
-- **Enhanced heartbeat:** Reports loaded models, VRAM allocations, workflow progress
-- **Extensible:** Plugin system for user-written adapters (future)
+- **Enhanced heartbeat:** Reports loaded models, VRAM allocations, workflow progress, group health
 
-**Read this tenth** to understand worker diversity and adapter pattern.
+**Read this tenth** to understand worker diversity, distributed inference, and adapter pattern.
 
 ---
 
@@ -485,6 +492,17 @@ When making significant architectural changes:
 4. Reference TEAM-XXX that made the change
 
 ### Document History
+
+- **Oct 23, 2025 (v2.3):** Added distributed inference and direct-to-worker UI pattern (TEAM-266)
+  - **Part 10:** Added distributed inference (multi-worker GGUF with Candle)
+  - Worker group pattern (coordinator + shards)
+  - Transparent client interaction, group health heartbeat
+  - **Part 7:** Rewritten with bee-based terminology
+  - Bee-branded UI: Hive Catalog, Worker Pool, Cells, Swarm, Spawn
+  - Terminology: Workers (instances), Cells (GPUs), Swarm (multi-worker), Connect (not "chat")
+  - Workers serve their own specialized interfaces
+  - Dashboard has [Connect →] buttons → direct worker links
+  - ComfyUI pattern documentation
 
 - **Oct 23, 2025 (v2.2):** Added Rhai programmable scheduler (TEAM-266)
   - **Part 2:** Added Rhai Programmable Scheduler section (M2 future feature)

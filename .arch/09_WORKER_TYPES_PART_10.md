@@ -113,6 +113,245 @@ worker.start_heartbeat(hive_url).await?; // Report status every 5s
 
 ---
 
+## 1.5 Distributed Inference (Multi-Worker GGUF)
+
+### Purpose
+
+**Distributed inference** allows a single large model to be split across multiple workers, enabling inference on models larger than a single GPU's VRAM.
+
+**Use case:** Running 70B or 405B models across multiple GPUs (e.g., 4x 24GB GPUs for a 70B model).
+
+### Candle Support
+
+Candle provides native support for distributed inference with GGUF models:
+- **Tensor parallelism** - Split model layers across GPUs
+- **Pipeline parallelism** - Split model depth across GPUs
+- **Minimal code changes** - Candle handles distribution
+
+### Architecture
+
+```
+Hive spawns worker group → Workers coordinate → Model sharded across GPUs
+                                    ↓
+                            Worker 0: Layers 0-19 (GPU-0)
+                            Worker 1: Layers 20-39 (GPU-1)
+                            Worker 2: Layers 40-59 (GPU-2)
+                            Worker 3: Layers 60-79 (GPU-3)
+                                    ↓
+                            Inference coordinated via shared memory/NCCL
+```
+
+**Key Properties:**
+- **Single inference endpoint** - Client talks to coordinator worker
+- **Transparent distribution** - Client doesn't know model is distributed
+- **Automatic load balancing** - Candle handles inter-GPU communication
+- **Fault tolerance** - If one GPU fails, entire group stops
+
+### Worker Group Pattern
+
+**Spawn Command:**
+```rust
+Operation::WorkerSpawnGroup {
+    model: "meta-llama/Llama-3-70b",
+    devices: vec!["cuda:0", "cuda:1", "cuda:2", "cuda:3"],
+    coordinator_port: 9001,
+}
+```
+
+**Hive Response:**
+```json
+{
+  "group_id": "worker-group-abc",
+  "coordinator": {
+    "worker_id": "worker-abc-0",
+    "device": "cuda:0",
+    "port": 9001,
+    "role": "coordinator"
+  },
+  "workers": [
+    {"worker_id": "worker-abc-1", "device": "cuda:1", "role": "shard"},
+    {"worker_id": "worker-abc-2", "device": "cuda:2", "role": "shard"},
+    {"worker_id": "worker-abc-3", "device": "cuda:3", "role": "shard"}
+  ],
+  "total_vram": 103079215104,  // 96 GB (4x 24GB)
+  "model_vram": 70000000000     // 70 GB (model size)
+}
+```
+
+### Heartbeat (Group Coordinator)
+
+**Coordinator reports group health:**
+```json
+{
+  "worker_id": "worker-abc-0",
+  "group_id": "worker-group-abc",
+  "status": "ready",
+  "role": "coordinator",
+  "model": "meta-llama/Llama-3-70b",
+  "devices": ["cuda:0", "cuda:1", "cuda:2", "cuda:3"],
+  "vram_per_device": {
+    "cuda:0": 20000000000,  // Coordinator + first shard
+    "cuda:1": 18000000000,  // Shard
+    "cuda:2": 18000000000,  // Shard
+    "cuda:3": 14000000000   // Shard + overhead
+  },
+  "vram_total": 103079215104,
+  "group_health": "healthy",
+  "shard_workers": [
+    {"worker_id": "worker-abc-1", "status": "healthy"},
+    {"worker_id": "worker-abc-2", "status": "healthy"},
+    {"worker_id": "worker-abc-3", "status": "healthy"}
+  ]
+}
+```
+
+**Individual shards also send heartbeats:**
+```json
+{
+  "worker_id": "worker-abc-1",
+  "group_id": "worker-group-abc",
+  "status": "ready",
+  "role": "shard",
+  "coordinator": "worker-abc-0",
+  "device": "cuda:1",
+  "vram_used": 18000000000,
+  "vram_total": 25769803776
+}
+```
+
+### Client Interaction
+
+**Client connects to coordinator only:**
+```rust
+// Client perspective
+let response = reqwest::post("http://localhost:9001/v1/infer")
+    .json(&InferRequest {
+        prompt: "Hello!",
+        max_tokens: 100,
+    })
+    .send()
+    .await?;
+
+// Coordinator distributes work across shards transparently
+```
+
+**Client doesn't need to know about distribution!**
+
+### Candle Implementation
+
+```rust
+// bin/30_llm_worker_rbee/src/distributed.rs
+use candle_core::Device;
+use candle_nn::VarBuilder;
+
+pub struct DistributedWorkerGroup {
+    coordinator: WorkerId,
+    shards: Vec<WorkerId>,
+    devices: Vec<Device>,
+    model: DistributedModel,
+}
+
+impl DistributedWorkerGroup {
+    pub async fn spawn(
+        model: &str,
+        devices: Vec<String>,
+        coordinator_port: u16,
+    ) -> Result<Self> {
+        // 1. Parse devices
+        let devices: Vec<Device> = devices.iter()
+            .map(|d| Device::new_cuda(parse_cuda_index(d)?))
+            .collect::<Result<Vec<_>>>()?;
+        
+        // 2. Load model with tensor parallelism
+        let vb = VarBuilder::from_gguf(model_path, &devices)?;
+        let model = LlamaModel::load_distributed(vb, &devices)?;
+        
+        // 3. Spawn coordinator worker
+        let coordinator = spawn_coordinator_worker(
+            model.clone(),
+            devices[0].clone(),
+            coordinator_port,
+        ).await?;
+        
+        // 4. Spawn shard workers
+        let mut shards = vec![];
+        for (i, device) in devices[1..].iter().enumerate() {
+            let shard = spawn_shard_worker(
+                model.get_shard(i + 1),
+                device.clone(),
+                coordinator.clone(),
+            ).await?;
+            shards.push(shard);
+        }
+        
+        Ok(Self {
+            coordinator,
+            shards,
+            devices,
+            model,
+        })
+    }
+    
+    pub async fn infer(&self, prompt: String) -> Result<String> {
+        // Candle handles distribution automatically
+        let tokens = self.model.generate(&prompt, 100)?;
+        Ok(tokens)
+    }
+}
+```
+
+**Key Insight:** Candle abstracts away distribution complexity!
+
+### Benefits
+
+**For Users:**
+- ✅ Run models larger than single GPU VRAM
+- ✅ Transparent - same API as single-worker
+- ✅ Better hardware utilization
+
+**For rbee:**
+- ✅ Candle handles complexity
+- ✅ Standard worker pattern (coordinator is just another worker)
+- ✅ Heartbeat tracks group health
+
+### Failure Handling
+
+**If one shard fails:**
+1. Shard stops sending heartbeats
+2. Coordinator detects missing heartbeat
+3. Coordinator reports `group_health: "degraded"`
+4. Hive marks entire group as unhealthy
+5. New inference requests rejected
+6. Option: Auto-respawn failed shard (M2 feature)
+
+### Implementation Status
+
+- ❌ Not implemented (M1/M2)
+- ✅ Candle supports distributed inference
+- ⚠️ Requires NCCL for multi-node (single-node first)
+
+### Implementation Plan
+
+**Phase 1: Single-Machine Multi-GPU (16-24 hours)**
+- Implement WorkerSpawnGroup operation
+- Coordinator/shard worker pattern
+- Group heartbeat tracking
+- Candle distributed model loading
+
+**Phase 2: Fault Tolerance (8-12 hours)**
+- Group health monitoring
+- Graceful degradation
+- Auto-respawn (optional)
+
+**Phase 3: Multi-Node (M2 - 24-32 hours)**
+- NCCL support for multi-machine
+- Network-based shard communication
+- Cross-machine group coordination
+
+**Total Effort:** 48-68 hours (single-machine first, multi-node M2)
+
+---
+
 ## 2. Adapters (Existing Inference Engines)
 
 ### Purpose

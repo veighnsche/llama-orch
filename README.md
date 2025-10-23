@@ -23,15 +23,29 @@ rbee is an OpenAI-compatible AI orchestration platform that lets you build your 
 **Build your own AI infrastructure using ALL your home network hardware:**
 
 ```bash
-# 1. Start rbee infrastructure on your homelab
-rbee-keeper daemon start
-rbee-keeper hive start --pool default
-rbee-keeper worker start --gpu 0 --backend cuda  # Computer 1
-rbee-keeper worker start --gpu 1 --backend cuda  # Computer 2
-rbee-keeper worker start --gpu 0 --backend metal # Mac
+# Multi-machine setup (each GPU machine runs its own hive):
+
+# On GPU Computer 1:
+rbee-hive  # Starts hive daemon managing THIS machine's GPUs
+
+# On GPU Computer 2:
+rbee-hive  # Starts hive daemon managing THIS machine's GPUs
+
+# On Mac with Metal:
+rbee-hive  # Starts hive daemon managing THIS machine's GPU
+
+# On control node (or any machine):
+rbee queen start
+rbee worker --hive gpu-computer-1 spawn --model llama-3-8b --device cuda:0
+rbee worker --hive gpu-computer-2 spawn --model llama-3-8b --device cuda:1
+rbee worker --hive mac spawn --model llama-3-8b --device metal:0
+
+# OR single-machine setup (integrated mode - localhost only):
+rbee queen start  # Queen embeds hive logic (local-hive feature)
+rbee worker spawn --model llama-3-8b --device cuda:0
 
 # 2. Configure Zed IDE (or build your own AI coder)
-export OPENAI_API_BASE=http://localhost:8080/v1
+export OPENAI_API_BASE=http://localhost:8500/v1
 export OPENAI_API_KEY=your-rbee-token
 
 # 3. Now your AI tooling runs on YOUR infrastructure!
@@ -112,70 +126,104 @@ export OPENAI_API_KEY=your-rbee-token
 rbee (pronounced "are-bee") consists of **4 binaries** (2 daemons + 2 CLIs):
 
 **Daemons (HTTP servers, long-running):**
-1. **`queen-rbee`** — The Brain (makes ALL intelligent decisions) [M1 - not built]
-   - Port 8080, routes inference requests, Rhai scripting, worker registry (SQLite)
-2. **`llm-worker-rbee`** — Workers (load one model, execute inference) [M0 ✅ DONE]
-   - Ports 8001+, one per model, stateless, HTTP server
-   - Variants: llorch-cpu-candled, llorch-cuda-candled, llorch-metal-candled
+1. **`queen-rbee`** — The Brain (makes ALL intelligent decisions) [🚧 In Progress]
+   - Port 8500, routes inference requests, job-based architecture, worker registry
+2. **`rbee-hive`** — Worker Lifecycle Manager (HTTP daemon) [✅ M0 DONE]
+   - Port 9000, model catalog, worker spawning, backend detection, capabilities
+3. **`llm-worker-rbee`** — LLM Inference Workers (multiple types) [✅ M0 DONE]
+   - Ports 9300+, one per model, stateless, HTTP server
+   - **Worker types:** cuda-llm-worker-rbee, metal-llm-worker-rbee, cpu-llm-worker-rbee
+   - **Future:** comfyui-adapter, vllm-adapter, stable-diffusion-worker
 
 **CLI Tools (run on-demand, exit after command):**
-3. **`rbee-keeper`** (from rbee-keeper crate) — **USER INTERFACE** [M0 ✅ DONE]
-   - **Updated by TEAM-051:** This is the CLI UI, not a testing tool
-   - Manages queen-rbee lifecycle (start/stop)
-   - Configures SSH for remote machines
-   - Manages rbee-hive and worker lifecycle
-   - **Future:** Web UI will be added alongside CLI
-4. **`rbee-hive`** (from rbee-hive crate) — Local pool management [M0 ✅ DONE]
-   - Model catalog, worker spawning, backend detection, orphan cleanup
-
-**Note:** pool-managerd daemon is NOT NEEDED - pool management is CLI-based!
+4. **`rbee`** — **USER INTERFACE** [✅ M0 DONE]
+   - Binary: `rbee-keeper` (crate name), CLI command: `rbee`
+   - Manages queen-rbee lifecycle (start/stop/status)
+   - Manages hive lifecycle (install/start/stop/uninstall)
+   - Manages workers (spawn/list/stop)
+   - Inference testing
 ### Intelligence Hierarchy
-```
-┌─────────────────────────────────────┐
-│ queen-rbee (THE BRAIN - daemon)  │
-│ - Rhai scripting (user-defined)     │
-│ - Worker registry (SQLite)          │
-│ - Scheduling, routing, admission    │
-└──────────┬──────────────────────────┘
-           │ HTTP POST /execute
-           ↓
-┌─────────────────────────────────────┐
-│ llm-worker-rbee (EXECUTOR - daemon)  │
-│ - Loads ONE model                   │
-│ - Generates tokens                  │
-│ - Stateless                         │
-└─────────────────────────────────────┘
 
+**Single-Machine (Integrated Mode):**
+```
 ┌─────────────────────────────────────┐
 │ Operator (Human)                    │
 └──────────┬──────────────────────────┘
            │ runs
            ↓
 ┌─────────────────────────────────────┐
-│ rbee-keeper (USER INTERFACE)      │
+│ rbee CLI (USER INTERFACE)           │
 │ - Manages queen-rbee lifecycle      │
-│ - Configures SSH                    │
-│ - Manages hives and workers         │
-│ - Future: Web UI                    │
+│ - Spawns workers                    │
+│ - Submits inference                 │
 └──────────┬──────────────────────────┘
-           │ controls
+           │ HTTP to queen
            ↓
 ┌─────────────────────────────────────┐
-│ rbee-hive (LOCAL CLI)             │
-│ - Model catalog                     │
-│ - Worker spawning                   │
-│ - Backend detection                 │
+│ queen-rbee (THE BRAIN - daemon)     │
+│ - Embedded hive logic (localhost)   │
+│ - Job registry, routing             │
+│ - Spawns workers directly           │
+└──────────┬──────────────────────────┘
+           │ spawns
+           ↓
+┌─────────────────────────────────────┐
+│ llm-worker-rbee (EXECUTOR - daemon) │
+│ - Loads ONE model                   │
+│ - Generates tokens                  │
+│ - Stateless                         │
 └─────────────────────────────────────┘
 ```
-**4 binaries total:** 2 daemons (queen-rbee, llm-worker-rbee) + 2 CLIs (rbee-keeper, rbee-hive)
 
-**Decision boundary**: queen-rbee makes ALL intelligent decisions. Workers are dumb executors. rbee-keeper is the UI that manages everything.
+**Multi-Machine (Distributed Mode):**
+```
+┌─────────────────────────────────────┐
+│ Operator (Human)                    │
+└──────────┬──────────────────────────┘
+           │ runs
+           ↓
+┌─────────────────────────────────────┐
+│ rbee CLI (USER INTERFACE)           │
+│ - Manages queen-rbee lifecycle      │
+│ - Registers remote hives            │
+│ - Spawns workers on hives           │
+└──────────┬──────────────────────────┘
+           │ HTTP to queen
+           ↓
+┌─────────────────────────────────────┐
+│ queen-rbee (THE BRAIN - daemon)     │
+│ - Job registry, routing             │
+│ - Routes ops to remote hives        │
+└──────────┬──────────────────────────┘
+           │ HTTP to hives
+           ↓
+┌─────────────────────────────────────┐
+│ GPU Machine 1                       │
+│ ┌─────────────────────────────────┐ │
+│ │ rbee-hive (DAEMON on GPU box)   │ │
+│ │ - Manages THIS machine's GPUs   │ │
+│ └──────────┬──────────────────────┘ │
+│            │ spawns                  │
+│            ↓                         │
+│ ┌─────────────────────────────────┐ │
+│ │ llm-worker-rbee (EXECUTOR)      │ │
+│ │ - Uses THIS machine's GPU       │ │
+│ └─────────────────────────────────┘ │
+└─────────────────────────────────────┘
+```
+**4 binaries total:** 3 daemons (queen-rbee, rbee-hive, llm-worker-rbee) + 1 CLI (rbee)
+
+**Key Architecture Points:**
+- **Queen:** Routes requests, makes decisions (can embed hive for localhost)
+- **Hive:** Runs ON GPU machines, manages THAT machine's workers only
+- **Workers:** Dumb executors, one per model
+- **rbee CLI:** User interface for everything
 ### Why This Architecture?
-- **4 binaries, clear separation**: 2 daemons (data plane) + 2 CLIs (control plane)
-- **queen-rbee is THE BRAIN**: Rhai scripting for user-defined orchestration logic
-- **rbee-hive is NOT a daemon**: CLI-based pool management (no HTTP server needed)
+- **4 binaries, clear separation**: 3 daemons (data plane) + 1 CLI (control plane)
+- **queen-rbee is THE BRAIN**: Job-based architecture, routes all operations
+- **rbee-hive IS a daemon**: HTTP server on port 9000 for worker lifecycle
 - **Workers are stateless**: Each worker loads ONE model, can be killed anytime
-- **Orchestratord can run without GPUs**: Routes to remote workers via HTTP
+- **Queen can run without GPUs**: Routes to remote workers via HTTP
 - **Workers have isolated memory contexts**: Each worker owns its memory allocation
 - **Testable components**: Each binary runs standalone for testing
 - **Multi-architecture**: Worker variants for NVIDIA CUDA, Apple Metal, CPU
@@ -211,11 +259,11 @@ rbee (pronounced "are-bee") consists of **4 binaries** (2 daemons + 2 CLIs):
 - ✅ OpenAI-compatible API (v1 completion endpoints)
 
 **CLI Commands:**
-- ✅ `rbee-keeper setup add-node`
-- ✅ `rbee-keeper setup install`
-- ✅ `rbee-keeper setup list-nodes`
-- ✅ `rbee-keeper infer` (basic inference)
-- ✅ `rbee-hive detect` (backend detection)
+- ✅ `rbee queen start` (start queen, embeds hive for localhost)
+- ✅ `rbee worker spawn --model <model> --device <device>` (localhost mode)
+- ✅ `rbee worker --hive <alias> spawn --model <model> --device <device>` (distributed mode)
+- ✅ `rbee infer --prompt "..." --model <model>`
+- ✅ `cargo run --bin rbee-hive` (on GPU machines - starts hive daemon on port 9000)
 
 **Testing:**
 - ✅ 42/62 BDD scenarios passing (68% complete)
@@ -404,417 +452,595 @@ See [docs/HIVE_CONFIGURATION.md](docs/HIVE_CONFIGURATION.md) for details.
 - [`.business/stakeholders/STAKEHOLDER_STORY.md`](.business/stakeholders/STAKEHOLDER_STORY.md) — Complete story for all stakeholders
 - [`.business/stakeholders/TECHNICAL_DEEP_DIVE.md`](.business/stakeholders/TECHNICAL_DEEP_DIVE.md) — Technical architecture deep dive
 ---
-## Architecture (SIMPLIFIED 2025-10-09)
+## Architecture Overview
 
-### queen-rbee (The Brain) - HTTP Daemon [M1]
-**Responsibilities**:
-- Accept client requests (HTTP API on port 8080)
-- Task admission, queueing, and placement decisions
-- SSE streaming to clients
-- Worker registry (tracks available workers)
-- Routes requests directly to workers
+> **📚 For comprehensive architecture documentation, see [`.arch/README.md`](.arch/README.md)**  
+> The `.arch/` folder contains a complete 10-part architectural overview covering system design, components, data flow, security, and more.
 
-**Requirements**: No GPU needed
+### The Four-Binary System
 
-**Configuration**:
-```bash
-# Bind address
-ORCHD_BIND_ADDR=0.0.0.0:8080
-# Worker endpoints (discovered dynamically or configured)
-ORCHD_WORKERS=http://mac.home.arpa:8001,http://workstation.home.arpa:8002
-# Optional: Bearer token for authentication
-LLORCH_API_TOKEN=$(openssl rand -hex 32)
+> **Note:** This section provides a high-level overview. For detailed component analysis, communication patterns, and implementation details, refer to [`.arch/`](.arch/) documentation.
+
+rbee consists of **4 binaries** with clear responsibilities:
+
+| Binary | Type | Port | Purpose | Status |
+|--------|------|------|---------|--------|
+| **rbee** | CLI | - | User interface, manages infrastructure | ✅ M0 |
+| **queen-rbee** | Daemon | 8500 | Brain, routes all requests | 🚧 In Progress |
+| **rbee-hive** | Daemon | 9000 | Worker lifecycle management | ✅ M0 |
+| **llm-worker-rbee** | Daemon | 9300+ | LLM inference (multiple worker types) | ✅ M0 | 
+
+### Architectural Philosophy
+
+#### 1. Smart/Dumb Architecture
+**Principle:** Clear separation between decision-making and execution.
+
+- **queen-rbee (BRAIN)** → Makes ALL intelligent decisions (routing, scheduling, load balancing)
+- **llm-worker-rbee (EXECUTOR)** → Dumb execution (load model, execute inference, stream tokens)
+
+**Why?** Testable components, scalable, maintainable, debuggable.
+
+#### 2. Process Isolation
+**Principle:** Each worker runs in a separate process with isolated memory.
+
+```
+Worker 1 (Process A) → 8GB VRAM → llama-3-8b
+Worker 2 (Process B) → 8GB VRAM → mistral-7b
+Worker 3 (Process C) → 16GB RAM → qwen-0.5b (CPU)
 ```
 
-**Status:** M1 (not built yet)
+**Why?** Memory safety, resource accounting, kill safety, multi-model support.
 
----
+#### 3. Job-Based Architecture
+**Principle:** All operations are jobs with unique IDs and SSE streams.
 
-### llm-worker-rbee (Workers) - HTTP Daemons [M0 ✅]
-**Responsibilities**:
+```
+Client → POST /v1/jobs → job_id
+Client → GET /v1/jobs/{job_id}/stream → SSE events
+```
+
+**Why?** Real-time feedback, job isolation, audit trail, cancellation support.
+
+### Binary Responsibilities
+
+#### rbee (CLI - User Interface)
+**Status:** ✅ M0 COMPLETE
+
+**Purpose:** Primary user interface for human operators managing rbee infrastructure.
+
+**Note:** Binary crate is `rbee-keeper`, but CLI command is `rbee` (configured via clap).
+
+**Responsibilities:**
+- Queen lifecycle management (start/stop/status/rebuild)
+- Hive lifecycle management (install/start/stop/uninstall)
+- Worker management (spawn/list/stop)
+- Model management (download/list/delete)
+- Inference testing
+
+**Usage:**
+```bash
+# Single-machine (localhost integrated mode)
+rbee queen start  # Embeds hive logic
+rbee worker spawn --model llama-3-8b --device cuda:0
+rbee infer --prompt "Hello" --model llama-3-8b
+
+# Multi-machine (distributed mode)
+# On each GPU machine:
+rbee-hive  # Start hive daemon on GPU machine
+
+# From control node:
+rbee queen start
+rbee hive install gpu-machine-1  # Register remote hive
+rbee hive install gpu-machine-2
+rbee worker --hive gpu-machine-1 spawn --model llama-3-8b --device cuda:0
+rbee worker --hive gpu-machine-2 spawn --model llama-3-8b --device cuda:1
+rbee worker list
+rbee infer --prompt "Hello" --model llama-3-8b
+```
+
+#### queen-rbee (HTTP Daemon - The Brain)
+**Status:** 🚧 In Progress  
+**Port:** 8500
+
+**Purpose:** Makes ALL intelligent decisions for the system.
+
+**Responsibilities:**
+- Job registry (track all operations)
+- Operation routing (forwards to hive or worker)
+- SSE streaming (real-time feedback)
+- Hive registry (track available hives)
+- Worker registry (track available workers)
+
+**Requirements:** No GPU needed
+
+**Key Features:**
+- Job-based architecture (everything is a job with SSE stream)
+- Dual-mode hive forwarder (HTTP or embedded)
+- Real-time narration to clients
+
+#### rbee-hive (HTTP Daemon - Worker Lifecycle)
+**Status:** ✅ M0 COMPLETE  
+**Port:** 9000
+
+**Purpose:** Worker lifecycle manager that runs ON THE GPU MACHINE.
+
+**Key Insight:** Each GPU machine runs its own hive daemon. The hive manages workers ON THAT MACHINE ONLY.
+
+**Responsibilities:**
+- Worker spawning/stopping ON THIS MACHINE
+- Model catalog and download FOR THIS MACHINE
+- Device detection (CUDA/Metal/CPU) ON THIS MACHINE
+- Capabilities reporting FOR THIS MACHINE
+- Local job registry
+
+**Requirements:** Runs on the GPU machine itself (NOT centrally managed)
+
+#### llm-worker-rbee (HTTP Daemon - Executor)
+**Status:** ✅ M0 COMPLETE  
+**Ports:** 9300+
+
+**Purpose:** Dumb executor for LLM inference.
+
+**Responsibilities:**
 - Load ONE model into VRAM/RAM
 - Execute inference requests
 - Stream tokens via SSE
-- Report health and VRAM usage
+- Report health status
 
-**Requirements**: GPU (CUDA/Metal) or CPU
+**Requirements:** GPU (CUDA/Metal) or CPU
 
-**Configuration**:
-```bash
-# Spawned by rbee-hive with these args:
-llm-worker-rbee \
-  --worker-id <uuid> \
-  --model .test-models/qwen-0.5b \
-  --port 8001 \
-  --callback-url http://orchestrator:8080/callback
+**Key Properties:**
+- Stateless (can be killed anytime)
+- Process isolated (separate memory)
+- Single model per worker
+- Direct HTTP API
+
+### Deployment Topologies
+
+#### Single Machine (Localhost - Integrated Mode)
+```
+┌─────────────────────────────────────┐
+│ Machine: localhost                  │
+│                                     │
+│  queen-rbee (8500)                 │
+│  ├─ Embedded hive logic            │
+│  │  (local-hive feature)           │
+│  └─ Spawns workers directly        │
+│                                     │
+│  llm-worker-rbee (9300+)           │
+│  - worker-1: llama-3-8b            │
+│  - worker-2: mistral-7b            │
+└─────────────────────────────────────┘
+
+No separate hive daemon needed!
+Queen embeds hive logic for localhost.
 ```
 
-**Status:** M0 COMPLETE and WORKING ✅
-
----
-
-### rbee-hive (Pool Manager) - CLI Tool [M0 ✅]
-**Responsibilities**:
-- Model management (download, catalog, register)
-- Worker lifecycle (spawn, list, stop)
-- Local pool operations
-
-**Requirements**: Runs on pool machines
-
-**Usage**:
-```bash
-# Download model
-rbee-hive models download qwen-0.5b
-
-# Spawn worker
-rbee-hive worker spawn metal --model qwen-0.5b --gpu 0
-
-# List workers
-rbee-hive worker list
+#### Multi-Machine (Distributed)
 ```
+┌─────────────────────────────────────┐
+│ Control Node (can have GPU or not)  │
+│  queen-rbee (8500)                 │
+│  - Routes requests to hives        │
+└──────────┬──────────────────────────┘
+           │ HTTP
+     ┌─────┴─────────┬────────────┐
+     ↓               ↓            ↓
+┌─────────────┐ ┌─────────────┐ ┌─────────────┐
+│ GPU Node 1  │ │ GPU Node 2  │ │ GPU Node N  │
+│             │ │             │ │             │
+│ rbee-hive   │ │ rbee-hive   │ │ rbee-hive   │
+│ (9000)      │ │ (9000)      │ │ (9000)      │
+│ ↓           │ │ ↓           │ │ ↓           │
+│ workers     │ │ workers     │ │ workers     │
+│ (9300+)     │ │ (9300+)     │ │ (9300+)     │
+│             │ │             │ │             │
+│ THIS        │ │ THIS        │ │ THIS        │
+│ MACHINE'S   │ │ MACHINE'S   │ │ MACHINE'S   │
+│ GPUs        │ │ GPUs        │ │ GPUs        │
+└─────────────┘ └─────────────┘ └─────────────┘
 
-**Status:** M0 COMPLETE and WORKING ✅
-
-**Note:** This REPLACES pool-managerd daemon! No HTTP daemon needed for pool management.
-
----
-
-### rbee (Orchestrator CLI) - Remote Control Tool [M0 ✅]
-**Responsibilities**:
-- Remote pool control via SSH
-- Model management on remote pools
-- Worker management on remote pools
-- Git operations on remote pools
-- Inference testing
-
-**Requirements**: SSH access to pools
-
-**Usage**:
-```bash
-# Remote model download
-llorch pool models download qwen-0.5b --host mac.home.arpa
-
-# Remote worker spawn
-llorch pool worker spawn metal --host mac.home.arpa --model qwen-0.5b --gpu 0
-
-# Test inference
-llorch infer --worker mac.home.arpa:8001 --prompt "Hello" --max-tokens 50
+Each hive manages ONLY its own machine's workers!
 ```
-
-**Status:** M0 COMPLETE and WORKING ✅
-
----
-
-### Deployment Flexibility
-**Single machine** (orchestrator + workers on localhost):
-```
-Client → queen-rbee (localhost:8080) → llm-worker-rbee (localhost:8001)
-```
-
-**Multiple machines** (distributed):
-```
-Control Node:  queen-rbee (no GPU)
-     ↓ HTTP
-GPU Node 1:    llm-worker-rbee workers (ports 8001, 8002, ...)
-GPU Node 2:    llm-worker-rbee workers (ports 8001, 8002, ...)
-GPU Node N:    llm-worker-rbee workers (ports 8001, 8002, ...)
-
-Operator uses SSH + rbee CLI to manage pools:
-  rbee pool worker spawn metal --host gpu-node-1 --model qwen
-```
-The architecture is the same—only the URLs change.
 ---
 ## System Flow Diagrams
-### Single-Machine Deployment
+
+### Communication Patterns
+
 ```mermaid
 flowchart TB
-    Client[Client] -->|POST /v2/tasks| OD[queen-rbee]
-    Client -->|GET /v2/tasks/:id/events| OD
-    subgraph "Single Machine"
-        OD -->|POST /v2/nodes/register| SR[service-registry<br/>localhost]
-        OD -->|enqueue| OC[orchestrator-core<br/>Queue]
-        OD -->|check nodes| SR
-        OD -->|dispatch HTTP| AH[adapter-host]
-        PM[pool-managerd<br/>localhost:9200] -->|register + heartbeat| SR
-        PM -->|manages| EP[engine-provisioner]
-        EP -->|writes local| HF[handoff.json]
-        HF -.->|watches locally| HW[handoff-watcher<br/>pool-managerd]
-        HW -->|updates| PM
-        EP -->|spawns| ENG[llama.cpp]
-        AH -->|HTTP| ENG
-        ENG -->|SSE tokens| AH
-        AH -->|relay| OD
-    end
-    OD -->|text/event-stream| Client
-    style OD fill:#e1f5ff
-    style SR fill:#e8eaf6
-    style PM fill:#fff4e1
-    style ENG fill:#e8f5e9
+    User[User/Operator] -->|CLI Commands| Keeper[rbee<br/>CLI Tool]
+    
+    Keeper -->|POST /v1/jobs| Queen[queen-rbee<br/>Port 8500<br/>The Brain]
+    Keeper -->|GET /v1/jobs/id/stream| Queen
+    
+    Queen -->|Operation Routing| Router{Job Router}
+    
+    Router -->|Hive Ops<br/>WorkerSpawn<br/>ModelDownload| Hive[rbee-hive<br/>Port 9000<br/>Worker Lifecycle]
+    
+    Router -->|Infer Ops<br/>Direct| Worker1[llm-worker-rbee<br/>Port 9300+<br/>Executor]
+    
+    Hive -->|Spawn/Manage| Worker1
+    Hive -->|Spawn/Manage| Worker2[llm-worker-rbee<br/>Port 9301<br/>Executor]
+    
+    Worker1 -.->|SSE Stream| Queen
+    Worker2 -.->|SSE Stream| Queen
+    Queen -.->|SSE Stream| Keeper
+    
+    style Queen fill:#e1f5ff,stroke:#0288d1,stroke-width:3px
+    style Keeper fill:#f0f4c3,stroke:#827717,stroke-width:2px
+    style Hive fill:#fff4e1,stroke:#f57c00,stroke-width:2px
+    style Worker1 fill:#e8f5e9,stroke:#2e7d32,stroke-width:2px
+    style Worker2 fill:#e8f5e9,stroke:#2e7d32,stroke-width:2px
+    style Router fill:#f3e5f5,stroke:#6a1b9a,stroke-width:2px
 ```
-### Multi-Machine Deployment
+### Request Flow: Inference Operation
+
 ```mermaid
-flowchart TB
-    Client[Client] -->|POST /v2/tasks| OD[queen-rbee<br/>Control Node]
-    Client -->|GET /v2/tasks/:id/events| OD
-    subgraph "Control Node (no GPU)"
-        OD -->|enqueue| OC[orchestrator-core<br/>Queue]
-        OD -->|check nodes| SR[service-registry<br/>Node Tracking]
-        OD -->|model-aware<br/>placement| PV2[placement_v2<br/>Least-Loaded]
-        OD -->|dispatch via HTTP| AH[adapter-host]
-    end
-    subgraph "GPU Worker Node 1"
-        PM1[pool-managerd] -->|POST /v2/nodes/register| OD
-        PM1 -->|POST /v2/nodes/:id/heartbeat| SR
-        PM1 -->|manages| EP1[engine-provisioner]
-        EP1 -->|writes local| HF1[handoff.json]
-        HF1 -.->|watches locally| HW1[handoff-watcher<br/>libs/gpu-node]
-        HW1 -->|updates| PM1
-        EP1 -->|spawns| ENG1[llama.cpp<br/>GPU 0]
-    end
-    subgraph "GPU Worker Node 2"
-        PM2[pool-managerd] -->|POST /v2/nodes/register| OD
-        PM2 -->|POST /v2/nodes/:id/heartbeat| SR
-        PM2 -->|manages| EP2[engine-provisioner]
-        EP2 -->|writes local| HF2[handoff.json]
-        HF2 -.->|watches locally| HW2[handoff-watcher]
-        HW2 -->|updates| PM2
-        EP2 -->|spawns| ENG2[llama.cpp<br/>GPU 1]
-    end
-    AH -->|HTTP + Bearer| ENG1
-    AH -->|HTTP + Bearer| ENG2
-    ENG1 -->|SSE tokens| AH
-    ENG2 -->|SSE tokens| AH
-    AH -->|relay SSE| OD
-    OD -->|text/event-stream| Client
-    style OD fill:#e1f5ff
-    style SR fill:#e1f5ff
-    style PM1 fill:#fff4e1
-    style PM2 fill:#fff4e1
-    style ENG1 fill:#e8f5e9
-    style ENG2 fill:#e8f5e9
+sequenceDiagram
+    participant User
+    participant Keeper as rbee<br/>(CLI)
+    participant Queen as queen-rbee<br/>(8500)
+    participant Hive as rbee-hive<br/>(9000)
+    participant Worker as llm-worker<br/>(9300+)
+    
+    User->>Keeper: rbee infer --prompt "Hello"
+    
+    Note over Keeper: Create Operation::Infer
+    
+    Keeper->>Queen: POST /v1/jobs<br/>{operation: Infer}
+    Queen-->>Keeper: {job_id: "uuid-123"}
+    
+    Keeper->>Queen: GET /v1/jobs/uuid-123/stream
+    
+    Note over Queen: Route to worker<br/>(circumvent hive)
+    
+    Queen->>Worker: POST /v1/infer<br/>{prompt, params}
+    
+    Worker-->>Queen: SSE: token stream
+    Queen-->>Keeper: SSE: relay tokens
+    
+    Keeper->>User: Display tokens<br/>in real-time
+    
+    Worker-->>Queen: SSE: [DONE]
+    Queen-->>Keeper: SSE: [DONE]
 ```
-### Binaries and Libraries Dependency Map
+### Worker Lifecycle: Spawn Flow
+
+```mermaid
+sequenceDiagram
+    participant User
+    participant Keeper as rbee
+    participant Queen as queen-rbee
+    participant Hive as rbee-hive
+    participant Worker as llm-worker
+    
+    User->>Keeper: rbee worker spawn<br/>--model llama-3-8b --device cuda:0
+    
+    Keeper->>Queen: POST /v1/jobs<br/>{operation: WorkerSpawn}
+    Queen-->>Keeper: {job_id: "uuid-456"}
+    
+    Keeper->>Queen: GET /v1/jobs/uuid-456/stream
+    
+    Note over Queen: Forward to hive
+    
+    Queen->>Hive: POST /v1/jobs<br/>{operation: WorkerSpawn}
+    Hive-->>Queen: {job_id: "hive-789"}
+    
+    Queen->>Hive: GET /v1/jobs/hive-789/stream
+    
+    Note over Hive: 1. Check model exists<br/>2. Detect GPU<br/>3. Spawn process
+    
+    Hive->>Worker: spawn llm-worker-rbee<br/>--model ... --port 9300
+    
+    Worker-->>Queen: Register with queen
+    
+    Hive-->>Queen: SSE: Worker spawned
+    Queen-->>Keeper: SSE: Worker spawned
+    
+    Keeper->>User: ✅ Worker active on 9300
+```
+
+### Component Architecture
+
 ```mermaid
 graph TB
     subgraph "Binaries"
-        ORCHD[bin/queen-rbee<br/>HTTP API · SSE · Placement]
-        POOLD[bin/pool-managerd<br/>Pool Lifecycle · Registry]
+        Keeper[bin/00_rbee_keeper<br/>CLI Tool<br/>User Interface]
+        Queen[bin/10_queen_rbee<br/>HTTP Daemon<br/>The Brain<br/>Port 8500]
+        Hive[bin/20_rbee_hive<br/>HTTP Daemon<br/>Worker Lifecycle<br/>Port 9000]
+        Worker[bin/30_llm_worker_rbee<br/>HTTP Daemon<br/>Executor<br/>Ports 9300+]
     end
-    subgraph "Core Libraries"
-        ORCHCORE[libs/orchestrator-core<br/>Queue · Admission]
-        CATALOG[libs/catalog-core<br/>Model Registry]
-        ADHOST[libs/adapter-host<br/>Adapter Registry]
+    
+    subgraph "Queen Crates"
+        JobRouter[job_router.rs<br/>Operation Routing]
+        HiveForwarder[hive_forwarder.rs<br/>Forward to Hive]
+        HiveLifecycle[hive-lifecycle<br/>Hive Ops]
+        JobServer[job-server<br/>SSE Registry]
     end
-    subgraph "Multi-Node Libraries"
-        SREG[libs/control-plane/<br/>service-registry<br/>Node Tracking]
-        NODEREG[libs/gpu-node/<br/>node-registration]
-        HANDOFF[libs/gpu-node/<br/>handoff-watcher]
-        POOLTYPES[libs/shared/<br/>pool-registry-types]
+    
+    subgraph "Hive Crates"
+        WorkerSpawn[worker spawning]
+        ModelCatalog[model catalog]
+        DeviceDetect[gpu-info]
     end
-    subgraph "Worker Adapters"
-        ADAPIAPI[libs/worker-adapters/<br/>adapter-api<br/>Trait]
-        LLAMA[libs/worker-adapters/<br/>llamacpp-http]
-        VLLM[libs/worker-adapters/<br/>vllm-http]
-        TGI[libs/worker-adapters/<br/>tgi-http]
-        MOCK[libs/worker-adapters/<br/>mock]
-        HTTPUTIL[libs/worker-adapters/<br/>http-util]
+    
+    subgraph "Shared Infrastructure"
+        JobClient[rbee-job-client<br/>HTTP+SSE Client]
+        Narration[narration-core<br/>Observability]
+        AuthMin[auth-min<br/>Security]
+        AuditLog[audit-logging<br/>GDPR]
     end
-    subgraph "Provisioners"
-        ENGPROV[libs/provisioners/<br/>engine-provisioner]
-        MODPROV[libs/provisioners/<br/>model-provisioner]
-    end
-    subgraph "Cross-Cutting"
-        AUTH[libs/auth-min<br/>Bearer Token]
-        NARR[libs/observability/<br/>narration-core]
-        APITYPES[contracts/api-types]
-    end
-    %% queen-rbee dependencies
-    ORCHD --> ORCHCORE
-    ORCHD --> CATALOG
-    ORCHD --> ADHOST
-    ORCHD --> SREG
-    ORCHD --> POOLTYPES
-    ORCHD --> AUTH
-    ORCHD --> NARR
-    ORCHD --> APITYPES
-    ORCHD -.->|optional| LLAMA
-    ORCHD -.->|optional| MOCK
-    %% pool-managerd dependencies
-    POOLD --> ENGPROV
-    POOLD --> AUTH
-    POOLD --> POOLTYPES
-    POOLD -.->|multi-node| NODEREG
-    POOLD -.->|multi-node| HANDOFF
-    %% adapter-host dependencies
-    ADHOST --> ADAPIAPI
-    %% adapter implementations
-    LLAMA --> ADAPIAPI
-    LLAMA --> HTTPUTIL
-    VLLM --> ADAPIAPI
-    VLLM --> HTTPUTIL
-    TGI --> ADAPIAPI
-    TGI --> HTTPUTIL
-    MOCK --> ADAPIAPI
-    %% provisioner dependencies
-    ENGPROV --> MODPROV
-    MODPROV --> CATALOG
-    %% multi-node dependencies
-    SREG --> POOLTYPES
-    NODEREG --> POOLTYPES
-    HANDOFF --> POOLTYPES
-    style ORCHD fill:#e1f5ff,stroke:#0288d1,stroke-width:3px
-    style POOLD fill:#fff4e1,stroke:#f57c00,stroke-width:3px
-    style ORCHCORE fill:#f3e5f5
-    style SREG fill:#e8eaf6
-    style LLAMA fill:#e8f5e9
-    style ENGPROV fill:#f0f0f0
+    
+    %% Component dependencies
+    Keeper --> Queen
+    Queen --> Hive
+    Hive --> Worker
+    
+    Queen --> JobRouter
+    Queen --> HiveForwarder
+    Queen --> HiveLifecycle
+    Queen --> JobServer
+    
+    Hive --> WorkerSpawn
+    Hive --> ModelCatalog
+    Hive --> DeviceDetect
+    
+    Queen --> JobClient
+    Keeper --> JobClient
+    Hive --> JobClient
+    
+    Queen --> Narration
+    Hive --> Narration
+    Worker --> Narration
+    
+    Queen --> AuthMin
+    Hive --> AuthMin
+    
+    Queen --> AuditLog
+    
+    style Queen fill:#e1f5ff,stroke:#0288d1,stroke-width:3px
+    style Hive fill:#fff4e1,stroke:#f57c00,stroke-width:2px
+    style Worker fill:#e8f5e9,stroke:#2e7d32,stroke-width:2px
+    style Keeper fill:#f0f4c3,stroke:#827717,stroke-width:2px
 ```
-### Key Libraries
-#### Core Orchestration
-- `orchestrator-core/` — Queue, placement logic, domain types
-- `bin/queen-rbee/` — HTTP server, API routes, streaming
-- `bin/pool-managerd/` — Pool lifecycle, readiness, health checks (binary + lib)
-- `libs/catalog-core/` — Model catalog, verification, lifecycle states
-#### Worker Adapters
-- `libs/adapter-host/` — Adapter registry and dispatch facade
-- `libs/worker-adapters/` — Adapter implementations (llamacpp, vllm, tgi, openai-http, triton, mock)
-- `libs/worker-adapters/http-util/` — Shared HTTP client utilities
-#### Multi-Node Support
-- `libs/control-plane/service-registry/` — Node tracking, health management
-- `libs/gpu-node/node-registration/` — Node registration with control plane
-- `libs/gpu-node/handoff-watcher/` — Handoff detection on GPU nodes
-- `libs/shared/pool-registry-types/` — Shared types for node communication
-#### Observability & Testing
-- `libs/observability/narration-core/` — Human-readable event narration
-- `libs//` — Test artifact standardization (NDJSON, JSON, Markdown)
-- `test-harness/bdd/` — Cucumber BDD tests
-- `test-harness/determinism-suite/` — Determinism validation
-- `test-harness/chaos/` — Chaos engineering tests
-#### Contracts & Tools
-- `contracts/api-types/` — Shared API types
-- `contracts/openapi/` — OpenAPI specifications (data, control, artifacts)
-- `tools/spec-extract/` — Requirement extraction
-- `tools/openapi-client/` — Generated HTTP client
-### Consumer Layering
+
+### Key Shared Crates
+
+#### Job Infrastructure
+- **`bin/99_shared_crates/job-server/`** — SSE job registry, event broadcasting
+- **`bin/99_shared_crates/rbee-job-client/`** — Unified HTTP+SSE client for job submission
+- **`bin/99_shared_crates/timeout-enforcer/`** — Deadline enforcement with narration
+
+#### Hive Management
+- **`bin/15_queen_rbee_crates/hive-lifecycle/`** — Hive operations (install/start/stop/uninstall)
+- **`bin/15_queen_rbee_crates/hive-forwarder/`** — Forward operations to hive via HTTP
+
+#### Observability
+- **`bin/99_shared_crates/narration-core/`** — Human-readable event narration with SSE routing
+- Event types: action, status, error, warning
+- Secret redaction for audit trails
+
+#### Security (5 Crates)
+- **`bin/99_shared_crates/auth-min/`** — Authentication primitives, timing-safe comparison
+- **`bin/99_shared_crates/audit-logging/`** — Immutable audit trail, GDPR compliance
+- **`bin/99_shared_crates/input-validation/`** — Injection prevention
+- **`bin/99_shared_crates/secrets-management/`** — File-based credentials, zeroization
+- **`bin/99_shared_crates/deadline-propagation/`** — Resource protection, timeout handling
+
+#### Platform Support
+- **`bin/99_shared_crates/gpu-info/`** — Multi-backend detection (CUDA, Metal, CPU)
+- **`bin/99_shared_crates/rbee-config/`** — Cross-platform configuration paths
+
+### Consumer Libraries
+
 ```
-@rbee/utils (applets, guardrails)
+@rbee/utils (TypeScript utilities, guardrails)
      ↓
-@rbee/sdk (typed API, transport)
+@rbee/sdk (TypeScript SDK, typed API)
      ↓
 queen-rbee (HTTP API, ground truth)
 ```
-- **Utils** drives requirements; SDK exposes orchestrator capabilities
-- **SDK** mirrors OpenAPI contracts with minimal logic
-- **Orchestrator** defines API ground truth via specs
-See [`consumers/.docs/.adr/006-library-split.md`](consumers/.docs/.adr/006-library-split.md) for layering details.
+
+- **`consumers/rbee-utils/`** — TypeScript utilities for building AI agents
+- **`consumers/rbee-sdk/`** — TypeScript SDK (future)
+- OpenAI-compatible API adapter
 ---
 ## Repository Structure
+
 | Path | Contents |
 |------|----------|
-| `.specs/` | Normative specifications (ORCH-3xxx requirements) |
-| `.docs/` | Guides, ADRs, testing strategy, archived TODOs |
-| `bin/` | Binaries: `queen-rbee`, `pool-managerd` |
-| `libs/` | Core libraries (45+ crates) |
+| **`.arch/`** | **10-part architecture documentation** (comprehensive system design) |
+| `.specs/` | Feature specifications (Gherkin/BDD) |
+| `.docs/` | Guides, testing strategy, development patterns |
+| **`bin/`** | **4 binaries** (rbee CLI in rbee-keeper crate, queen-rbee, rbee-hive, llm-worker-rbee) |
+| `bin/99_shared_crates/` | Shared infrastructure (job-server, narration, security) |
 | `contracts/` | OpenAPI specs, API types, config schema |
-| `test-harness/` | BDD, determinism, chaos, E2E test suites |
+| `consumers/` | TypeScript libraries (@rbee/utils, @rbee/sdk) |
 | `tools/` | Code generation, spec extraction, README indexing |
-| `consumers/` | SDK (`@rbee/sdk`), Utils (`@rbee/utils`) |
-| `ci/` | Metrics linting, dashboards, alerts, link checking |
+| `ci/` | Metrics linting, dashboards, alerts |
 ---
 ## API Overview
+
+### Job-Based Architecture
+
+rbee uses a **job-based architecture** where ALL operations (hive management, worker spawning, inference) are jobs with SSE streams.
+
 ### HTTP Endpoints
-**Data Plane** (`contracts/openapi/data.yaml`):
-- `POST /v2/tasks` — Enqueue task, returns 202 with `job_id`
-- `GET /v2/tasks/{id}/events` — SSE stream: `started → token → metrics → end`
-- `POST /v2/tasks/{id}/cancel` — Cancel running task
-- `GET /v2/sessions/{id}` — Session status (TTL, budgets, KV warmth)
-- `DELETE /v2/sessions/{id}` — Delete session
-**Control Plane** (`contracts/openapi/control.yaml`):
-- `GET /v2/meta/capabilities` — Orchestrator capabilities
-- `GET /v2/pools/{id}/health` — Pool health and readiness
-- `POST /v2/pools/{id}/{drain|reload|purge}` — Pool lifecycle management
-**Catalog** (`contracts/openapi/control.yaml`):
-- `POST /v2/catalog/models` — Register model
-- `GET /v2/catalog/models/{id}` — Model metadata
-- `POST /v2/catalog/models/{id}/verify` — Verify model integrity
-- `POST /v2/catalog/models/{id}/state` — Update lifecycle state (Active/Retired)
-**Multi-Node Management** (`contracts/openapi/control.yaml`):
-- `POST /v2/nodes/register` — Register GPU node
-- `POST /v2/nodes/{id}/heartbeat` — Heartbeat with pool status
-- `DELETE /v2/nodes/{id}` — Deregister node
-- `GET /v2/catalog/availability` — Model distribution across nodes
-**Observability**:
-- `GET /metrics` — Prometheus metrics endpoint
-### SSE Streaming Format
-```typescript
-// Event: started
-{type: "started", job_id: "...", queue_position: 0, predicted_start_ms: 50}
-// Event: token
-{type: "token", t: "hello", i: 0}
-// Event: metrics (optional)
-{type: "metrics", queue_depth: 0, on_time_probability: 0.95}
-// Event: end
-{type: "end", tokens_in: 10, tokens_out: 50, decode_time_ms: 150}
-// Event: error (on failure)
-{type: "error", code: "POOL_UNAVAILABLE", message: "..."}
+
+#### queen-rbee (Port 8500)
+
+**Job Submission:**
+- `POST /v1/jobs` — Submit operation, returns `{job_id}`
+- `GET /v1/jobs/{job_id}/stream` — SSE stream of job events
+
+**Operations:**
+```json
+// Hive operations
+{"operation": {"HiveInstall": {"alias": "localhost", ...}}}
+{"operation": {"HiveStart": {"alias": "localhost"}}}
+{"operation": {"HiveStop": {"alias": "localhost"}}}
+{"operation": {"HiveStatus": {"alias": "localhost"}}}
+{"operation": {"HiveUninstall": {"alias": "localhost"}}}
+
+// Worker operations (forwarded to hive)
+{"operation": {"WorkerSpawn": {"hive_id": "localhost", "model": "llama-3-8b", ...}}}
+{"operation": {"WorkerList": {"hive_id": "localhost"}}}
+{"operation": {"WorkerStop": {"worker_id": "uuid"}}}
+
+// Model operations (forwarded to hive)
+{"operation": {"ModelDownload": {"hive_id": "localhost", "model": "llama-3-8b"}}}
+{"operation": {"ModelList": {"hive_id": "localhost"}}}
+
+// Inference operations (direct to worker)
+{"operation": {"Infer": {"prompt": "Hello", "model": "llama-3-8b", ...}}}
 ```
-### Request Lifecycle
+
+#### rbee-hive (Port 9000)
+
+**Same API structure:**
+- `POST /v1/jobs` — Submit operation (worker/model ops only)
+- `GET /v1/jobs/{job_id}/stream` — SSE stream
+
+#### llm-worker-rbee (Ports 9300+)
+
+**Direct Inference:**
+- `POST /v1/infer` — Submit inference request, SSE stream response
+- `GET /health` — Worker health check
+### SSE Streaming Format
+
+**Narration Events:**
+```
+data: {"event": "hive_health_check", "message": "Checking hive health...", "timestamp": "..."}
+data: {"event": "hive_start", "message": "🚀 Starting hive...", "timestamp": "..."}
+data: {"event": "hive_start", "message": "✅ Hive started", "timestamp": "..."}
+data: [DONE]
+```
+
+**Inference Stream:**
+```
+data: Hello
+data:  world
+data: !
+data: [DONE]
+```
+
+**Error Events:**
+```json
+data: {"error": "Hive not found: unknown-hive", "timestamp": "..."}
+data: [DONE]
+```
+### Request Lifecycle (Inference)
+
 ```mermaid
 sequenceDiagram
-  Client->>queen-rbee: POST /v2/tasks
-  queen-rbee->>orchestrator-core: Admission check
-  orchestrator-core-->>queen-rbee: Accepted (job_id) or 429
-  queen-rbee-->>Client: 202 AdmissionResponse
-  Client->>queen-rbee: GET /v2/tasks/{id}/events
-  queen-rbee->>WorkerAdapter: Dispatch when slot available
-  WorkerAdapter->>Engine: generate()
-  WorkerAdapter-->>queen-rbee: SSE frames
-  queen-rbee-->>Client: text/event-stream
+    participant CLI as rbee
+    participant Queen as queen-rbee
+    participant Worker as llm-worker
+    
+    CLI->>Queen: POST /v1/jobs<br/>{operation: Infer}
+    Queen-->>CLI: {job_id: "uuid"}
+    
+    CLI->>Queen: GET /v1/jobs/uuid/stream
+    
+    Note over Queen: Route to worker<br/>(direct, skip hive)
+    
+    Queen->>Worker: POST /v1/infer
+    
+    loop Token Generation
+        Worker-->>Queen: SSE: token
+        Queen-->>CLI: SSE: token
+    end
+    
+    Worker-->>Queen: SSE: [DONE]
+    Queen-->>CLI: SSE: [DONE]
 ```
 ---
 ## Developer Quickstart
+
 ### Prerequisites
-- Rust toolchain (stable)
-- NVIDIA GPU with drivers + CUDA runtime
-- Linux (Ubuntu 22.04+ recommended)
-### Build & Run
+- Rust toolchain (1.70+)
+- NVIDIA GPU with drivers + CUDA runtime (for GPU workers)
+- OR Apple Silicon (for Metal workers)
+- Linux (Ubuntu 22.04+) or macOS
+
+### Build & Test
+
 ```bash
 # Clone repository
-git clone https://github.com/your-org/llama-orch
+git clone https://github.com/veighnsche/llama-orch
 cd llama-orch
+
 # Format check
 cargo fmt --all -- --check
+
 # Lint
 cargo clippy --all-targets --all-features -- -D warnings
-# Run all tests
-cargo test --workspace --all-features -- --nocapture
-# Run queen-rbee
-cargo run -p queen-rbee
-# Binds to 127.0.0.1:8080 by default
+
+# Run BDD tests
+cargo test --bin bdd-runner -- --nocapture
+
+# Build all binaries
+cargo build --release
 ```
-### Developer Loop
+
+### Run rbee System
+
+**Single-Machine (Localhost Integrated Mode):**
 ```bash
-# Full dev loop: fmt, clippy, regen, tests, linkcheck
-cargo xtask dev:loop
+# 1. Start queen (embeds hive logic for localhost)
+cargo run --bin queen-rbee
+# Listening on http://localhost:8500
+
+# 2. Spawn worker (queen uses embedded hive)
+rbee worker spawn \
+  --model qwen-0.5b \
+  --device cuda:0
+
+# 3. Test inference
+rbee infer \
+  --prompt "Hello!" \
+  --model qwen-0.5b \
+  --max-tokens 50
 ```
-### Regenerate Contracts
+
+**Multi-Machine (Distributed Mode):**
 ```bash
-# Regenerate OpenAPI and config schema
-cargo xtask regen-openapi
-cargo xtask regen-schema
-# Extract requirements from specs
-cargo run -p tools-spec-extract --quiet
+# On GPU machine (e.g., 192.168.1.100):
+cargo run --bin rbee-hive
+# Hive listening on 0.0.0.0:9000
+
+# On control node:
+cargo run --bin queen-rbee
+# Queen listening on http://localhost:8500
+
+# Register remote hive:
+rbee hive install gpu-machine-1 \
+  --url http://192.168.1.100:9000
+
+# Spawn worker on remote machine:
+rbee worker --hive gpu-machine-1 spawn \
+  --model qwen-0.5b \
+  --device cuda:0
+
+# Test inference:
+rbee infer \
+  --prompt "Hello!" \
+  --model qwen-0.5b \
+  --max-tokens 50
 ```
-### Run Specific Tests
+
+### BDD Testing
+
 ```bash
-# BDD harness
-cargo test -p test-harness-bdd -- --nocapture
-# Run determinism suite
-cargo test -p test-harness-determinism-suite -- --nocapture
-# Run service registry integration tests
-cargo test -p queen-rbee --test service_registry_integration -- --nocapture
-# Run metrics contract validation
-cargo test -p test-harness-metrics-contract -- --nocapture
+# Run all BDD scenarios
+cargo test --bin bdd-runner -- --nocapture
+
+# Run specific scenario
+cargo test --bin bdd-runner -- --nocapture "scenario name"
+
+# Check BDD progress
+# 42/62 scenarios passing (68% complete)
 ```
 ---
 ## Development Workflow
@@ -856,138 +1082,6 @@ See [`AGENTS.md`](AGENTS.md) for complete repository guidelines.
 - Multi-node deployments require Bearer token authentication
 - See [`SECURITY.md`](SECURITY.md) for security policy
 - See [`.specs/11_min_auth_hooks.md`](.specs/11_min_auth_hooks.md) for Minimal Auth Hooks seam
----
-<!-- BEGIN WORKSPACE MAP (AUTO-GENERATED) -->
-## Workspace Map
-| Path | Crate | Role | Key APIs/Contracts | Tests | Spec Refs |
-|------|------|------|---------------------|-------|-----------|
-| [`bin/queen-rbee/`](bin/queen-rbee/README.md) | `queen-rbee` | core | OpenAPI |
-admission_metrics, api_types, domain_error_mapping, middleware, provider_verify, session_service,
-storage, streaming | ORCH-3004, ORCH-3005, ORCH-3008, ORCH-3010, ORCH-3011, ORCH-3016, ORCH-3017,
-ORCH-3027, ORCH-3028, ORCH-3044, ORCH-3045, ORCH-2002, ORCH-2101, ORCH-2102, ORCH-2103, ORCH-2104 |
-| [`bin/queen-rbee/bdd/`](bin/queen-rbee/bdd/README.md) | `queen-rbee-bdd` | core |
-OpenAPI | bdd, features, steps | ORCH-3004, ORCH-3005, ORCH-3008, ORCH-3010, ORCH-3011, ORCH-3016,
-ORCH-3017, ORCH-3027, ORCH-3028, ORCH-3044, ORCH-3045 |
-| [`consumers/rbee-sdk/`](consumers/rbee-sdk/README.md) | `rbee-sdk` | tool | — |
-— | — |
-| [`consumers/rbee-utils/`](consumers/rbee-utils/README.md) | `rbee-utils` | tool
-| — | — | — |
-| [`contracts/api-types/`](contracts/api-types/README.md) | `contracts-api-types` | contracts | — |
-— | ORCH-3044, ORCH-3030 |
-| [`contracts/config-schema/`](contracts/config-schema/README.md) | `contracts-config-schema` |
-contracts | Schema | validate_examples, validate_v32_fields | ORCH-3044, ORCH-3030 |
-| [`libs/adapter-host/`](libs/adapter-host/README.md) | `adapter-host` | adapter | — | — |
-ORCH-3054, ORCH-3055, ORCH-3056, ORCH-3057, ORCH-3058 |
-| [`libs/auth-min/`](libs/auth-min/README.md) | `auth-min` | tool | — | — | — |
-| [`libs/catalog-core/`](libs/catalog-core/README.md) | `catalog-core` | core | — | — | ORCH-3004,
-ORCH-3005, ORCH-3008, ORCH-3010, ORCH-3011, ORCH-3016, ORCH-3017, ORCH-3027, ORCH-3028, ORCH-3044,
-ORCH-3045 |
-| [`libs/catalog-core/bdd/`](libs/catalog-core/bdd/README.md) | `catalog-core-bdd` | core | — |
-features | ORCH-3004, ORCH-3005, ORCH-3008, ORCH-3010, ORCH-3011, ORCH-3016, ORCH-3017, ORCH-3027,
-ORCH-3028, ORCH-3044, ORCH-3045 |
-| [`libs/observability/narration-core/`](libs/observability/narration-core/README.md) |
-`observability-narration-core` | tool | — | — | — |
-| [`libs/orchestrator-core/`](libs/orchestrator-core/README.md) | `orchestrator-core` | core | — |
-props_queue | ORCH-3004, ORCH-3005, ORCH-3008, ORCH-3010, ORCH-3011, ORCH-3016, ORCH-3017,
-ORCH-3027, ORCH-3028, ORCH-3044, ORCH-3045 |
-| [`libs/orchestrator-core/bdd/`](libs/orchestrator-core/bdd/README.md) | `orchestrator-core-bdd` |
-core | — | features | ORCH-3004, ORCH-3005, ORCH-3008, ORCH-3010, ORCH-3011, ORCH-3016, ORCH-3017,
-ORCH-3027, ORCH-3028, ORCH-3044, ORCH-3045 |
-| [`libs/pool-managerd/`](libs/pool-managerd/README.md) | `pool-managerd` | core | — | — |
-ORCH-3004, ORCH-3005, ORCH-3008, ORCH-3010, ORCH-3011, ORCH-3016, ORCH-3017, ORCH-3027, ORCH-3028,
-ORCH-3044, ORCH-3045, ORCH-3038, ORCH-3002 |
-| [`libs/pool-managerd/bdd/`](libs/pool-managerd/bdd/README.md) | `pool-managerd-bdd` | core | — |
-features | ORCH-3004, ORCH-3005, ORCH-3008, ORCH-3010, ORCH-3011, ORCH-3016, ORCH-3017, ORCH-3027,
-ORCH-3028, ORCH-3044, ORCH-3045 |
-| [`libs/provisioners/engine-provisioner/`](libs/provisioners/engine-provisioner/README.md) |
-`provisioners-engine-provisioner` | tool | — | llamacpp_smoke | — |
-| [`libs/provisioners/engine-provisioner/bdd/`](libs/provisioners/engine-provisioner/bdd/README.md)
-| `engine-provisioner-bdd` | tool | — | features | — |
-| [`libs/provisioners/model-provisioner/`](libs/provisioners/model-provisioner/README.md) |
-`model-provisioner` | tool | — | — | — |
-| [`libs/provisioners/model-provisioner/bdd/`](libs/provisioners/model-provisioner/bdd/README.md) |
-`model-provisioner-bdd` | tool | — | features | — |
-| [`libs/worker-adapters/adapter-api/`](libs/worker-adapters/adapter-api/README.md) |
-`worker-adapters-adapter-api` | adapter | — | — | ORCH-3054, ORCH-3055, ORCH-3056, ORCH-3057,
-ORCH-3058 |
-| [`libs/worker-adapters/http-util/`](libs/worker-adapters/http-util/README.md) |
-`worker-adapters-http-util` | adapter | — | — | ORCH-3054, ORCH-3055, ORCH-3056, ORCH-3057,
-ORCH-3058 |
-| [`libs/worker-adapters/llamacpp-http/`](libs/worker-adapters/llamacpp-http/README.md) |
-`worker-adapters-llamacpp-http` | adapter | — | — | ORCH-3054, ORCH-3055, ORCH-3056, ORCH-3057,
-ORCH-3058 |
-| [`libs/worker-adapters/mock/`](libs/worker-adapters/mock/README.md) | `worker-adapters-mock` |
-adapter | — | — | ORCH-3054, ORCH-3055, ORCH-3056, ORCH-3057, ORCH-3058 |
-| [`libs/worker-adapters/openai-http/`](libs/worker-adapters/openai-http/README.md) |
-`worker-adapters-openai-http` | adapter | — | — | ORCH-3054, ORCH-3055, ORCH-3056, ORCH-3057,
-ORCH-3058 |
-| [`libs/worker-adapters/tgi-http/`](libs/worker-adapters/tgi-http/README.md) |
-`worker-adapters-tgi-http` | adapter | — | — | ORCH-3054, ORCH-3055, ORCH-3056, ORCH-3057,
-ORCH-3058 |
-| [`libs/worker-adapters/triton/`](libs/worker-adapters/triton/README.md) |
-`worker-adapters-triton` | adapter | — | — | ORCH-3054, ORCH-3055, ORCH-3056, ORCH-3057, ORCH-3058 |
-| [`libs/worker-adapters/vllm-http/`](libs/worker-adapters/vllm-http/README.md) |
-`worker-adapters-vllm-http` | adapter | — | — | ORCH-3054, ORCH-3055, ORCH-3056, ORCH-3057,
-ORCH-3058 |
-| [`test-harness/bdd/`](test-harness/bdd/README.md) | `test-harness-bdd` | test-harness | — | bdd,
-features, traceability | ORCH-3050, ORCH-3051 |
-| [`test-harness/chaos/`](test-harness/chaos/README.md) | `test-harness-chaos` | test-harness | — |
-— | ORCH-3050, ORCH-3051 |
-| [`test-harness/determinism-suite/`](test-harness/determinism-suite/README.md) |
-`test-harness-determinism-suite` | test-harness | — | byte_exact, placeholder | ORCH-3050,
-ORCH-3051 |
-| [`test-harness/e2e-haiku/`](test-harness/e2e-haiku/README.md) | `test-harness-e2e-haiku` |
-test-harness | — | e2e_client, placeholder | ORCH-3050, ORCH-3051 |
-| [`test-harness/metrics-contract/`](test-harness/metrics-contract/README.md) |
-`test-harness-metrics-contract` | test-harness | — | metrics_lint, spec_alignment | ORCH-3050,
-ORCH-3051 |
-| [`tools/openapi-client/`](tools/openapi-client/README.md) | `tools-openapi-client` | tool |
-OpenAPI | trybuild, ui | — |
-| [`tools/readme-index/`](tools/readme-index/README.md) | `tools-readme-index` | tool | — | — | — |
-| [`tools/spec-extract/`](tools/spec-extract/README.md) | `tools-spec-extract` | tool | — | — | — |
-| [`xtask/`](xtask/README.md) | `xtask` | tool | — | — | — |
-### Glossary
-- `queen-rbee` — queen-rbee (core)
-- `queen-rbee-bdd` — queen-rbee-bdd (core)
-- `rbee-sdk` — Single-source SDK for rbee (Rust core, optional WASM for npm)
-- `rbee-utils` — Utils applets for composing Blueprint pipelines for rbee (M2).
-- `contracts-api-types` — contracts-api-types (contracts)
-- `contracts-config-schema` — contracts-config-schema (contracts)
-- `adapter-host` — adapter-host (adapter)
-- `auth-min` — auth-min (tool)
-- `catalog-core` — Model catalog: resolve/verify/cache and lifecycle for rbee
-- `catalog-core-bdd` — catalog-core-bdd (core)
-- `observability-narration-core` — observability-narration-core (tool)
-- `orchestrator-core` — orchestrator-core (core)
-- `orchestrator-core-bdd` — orchestrator-core-bdd (core)
-- `pool-managerd` — pool-managerd (core)
-- `pool-managerd-bdd` — pool-managerd-bdd (core)
-- `provisioners-engine-provisioner` — provisioners-engine-provisioner (tool)
-- `engine-provisioner-bdd` — engine-provisioner-bdd (tool)
-- `model-provisioner` — Model provisioner: orchestrates resolve/verify/cache via catalog-core
-- `model-provisioner-bdd` — model-provisioner-bdd (tool)
-- `worker-adapters-adapter-api` — worker-adapters-adapter-api (adapter)
-- `worker-adapters-http-util` — worker-adapters-http-util (adapter)
-- `worker-adapters-llamacpp-http` — worker-adapters-llamacpp-http (adapter)
-- `worker-adapters-mock` — worker-adapters-mock (adapter)
-- `worker-adapters-openai-http` — worker-adapters-openai-http (adapter)
-- `worker-adapters-tgi-http` — worker-adapters-tgi-http (adapter)
-- `worker-adapters-triton` — worker-adapters-triton (adapter)
-- `worker-adapters-vllm-http` — worker-adapters-vllm-http (adapter)
-- `test-harness-bdd` — test-harness-bdd (test-harness)
-- `test-harness-chaos` — test-harness-chaos (test-harness)
-- `test-harness-determinism-suite` — test-harness-determinism-suite (test-harness)
-- `test-harness-e2e-haiku` — test-harness-e2e-haiku (test-harness)
-- `test-harness-metrics-contract` — test-harness-metrics-contract (test-harness)
-- `tools-openapi-client` — tools-openapi-client (tool)
-- `tools-readme-index` — tools-readme-index (tool)
-- `tools-spec-extract` — tools-spec-extract (tool)
-- `xtask` — xtask (tool)
-### Getting Started
-- Adapter work: see `libs/worker-adapters/*` crates.
-- Contracts: see `contracts/*`.
-- Core scheduling: see `libs/orchestrator-core/` and `bin/queen-rbee/`.
-<!-- END WORKSPACE MAP (AUTO-GENERATED) -->
 
 ---
 
