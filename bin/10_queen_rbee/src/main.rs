@@ -142,7 +142,7 @@ fn create_router(
         // TEAM-186: V1 API endpoints (matches API_REFERENCE.md)
         .route("/v1/shutdown", post(handle_shutdown))
         .route("/v1/build-info", get(http::handle_build_info)) // TEAM-262: Build information
-        .route("/v1/heartbeat", post(http::handle_heartbeat))
+        // TEAM-275: Removed /v1/heartbeat endpoint (deprecated, use /v1/worker-heartbeat instead)
         .route("/v1/worker-heartbeat", post(http::handle_worker_heartbeat)) // TEAM-261: Workers send heartbeats directly to queen
         .with_state(heartbeat_state)
         .route("/v1/jobs", post(http::handle_create_job))

@@ -8,7 +8,7 @@
 
 ## 📋 Implementation Checklist
 
-### ✅ COMPLETED (11 operations)
+### ✅ COMPLETED (12 operations)
 
 **TEAM-272:**
 - [x] **WorkerSpawn** - Spawn worker process on hive
@@ -24,6 +24,9 @@
 - [x] **WorkerProcessList** - List worker processes (local ps)
 - [x] **WorkerProcessGet** - Get worker process details by PID
 - [x] **WorkerProcessDelete** - Kill worker process by PID
+
+**TEAM-275:**
+- [x] **Infer** - Inference scheduling (simple scheduler, no complex load balancing)
 
 ---
 
@@ -416,8 +419,8 @@
 
 ### Overall Progress
 - **Total Operations:** 28
-- **Completed:** 11 (39%) ⬆️ +6 from TEAM-274
-- **Remaining:** 17 (61%)
+- **Completed:** 12 (43%) ⬆️ +7 from TEAM-274/275
+- **Remaining:** 16 (57%)
 
 ### By Component
 **Hive Operations:**
@@ -425,11 +428,11 @@
 - Remaining: 3/13 (23%)
 
 **Queen Operations:**
-- Completed: 11/15 (73%)
-- Remaining: 4/15 (27%)
+- Completed: 12/15 (80%) ⬆️ +1 from TEAM-275
+- Remaining: 3/15 (20%)
 
 ### By Priority
-**CRITICAL:** 1 operation (Infer - deferred)  
+**CRITICAL:** ✅ 1 complete (Infer - TEAM-275 simple scheduler)  
 **HIGH:** 3 operations (WorkerDownload, ModelDownload, ActiveWorkerList) - ✅ 3 complete (WorkerProcessList, WorkerProcessDelete)  
 **MEDIUM:** 1 operation (WorkerBuild, ActiveWorkerGet) - ✅ 2 complete (WorkerBinaryGet, WorkerProcessGet)  
 **LOW:** 1 operation (ActiveWorkerRetire) - ✅ 1 complete (WorkerBinaryDelete)

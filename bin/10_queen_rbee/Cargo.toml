@@ -41,6 +41,7 @@ once_cell = "1.19"
 rbee-config = { path = "../99_shared_crates/rbee-config" }  # TEAM-194: File-based config (replaces hive-catalog)
 queen-rbee-worker-registry = { path = "../15_queen_rbee_crates/worker-registry" }  # TEAM-188/262: Runtime worker state (RAM)
 queen-rbee-hive-lifecycle = { path = "../15_queen_rbee_crates/hive-lifecycle" }  # TEAM-164: Pure hive lifecycle logic
+queen-rbee-scheduler = { path = "../15_queen_rbee_crates/scheduler" }  # TEAM-275: Job scheduler (stub for M2 Rhai)
 rbee-heartbeat = { path = "../99_shared_crates/heartbeat" }  # TEAM-158: Shared heartbeat types
 rbee-operations = { path = "../99_shared_crates/rbee-operations" }  # TEAM-186: Shared operation types
 job-client = { path = "../99_shared_crates/job-client" }  # TEAM-259: Shared job submission client

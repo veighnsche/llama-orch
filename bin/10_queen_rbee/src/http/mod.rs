@@ -28,6 +28,6 @@ pub mod jobs; // TEAM-262
 pub use build_info::handle_build_info;
 pub use health::handle_health;
 pub use heartbeat::{
-    handle_heartbeat, handle_worker_heartbeat, HeartbeatState, HttpHeartbeatAcknowledgement,
+    handle_worker_heartbeat, HeartbeatState, HttpHeartbeatAcknowledgement, // TEAM-275: Removed handle_heartbeat (deprecated)
 };
 pub use jobs::{handle_create_job, handle_stream_job, SchedulerState}; // TEAM-262

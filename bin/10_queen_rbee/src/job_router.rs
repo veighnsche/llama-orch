@@ -34,7 +34,7 @@ use queen_rbee_hive_lifecycle::{
     HiveRefreshCapabilitiesRequest, HiveStartRequest, HiveStatusRequest, HiveStopRequest,
     HiveUninstallRequest, SshTestRequest,
 };
-use queen_rbee_worker_registry::WorkerRegistry; // TEAM-190/262: For Status operation
+// TEAM-275: Removed unused import (using state.hive_registry which is already Arc<WorkerRegistry>)
 use rbee_config::RbeeConfig;
 use rbee_operations::Operation;
 use std::sync::Arc;
@@ -48,8 +48,8 @@ const NARRATE: NarrationFactory = NarrationFactory::new("qn-router");
 #[derive(Clone)]
 pub struct JobState {
     pub registry: Arc<JobRegistry<String>>,
-    pub config: Arc<RbeeConfig>,          // TEAM-194: File-based config
-    pub hive_registry: Arc<HiveRegistry>, // TEAM-190: For Status operation
+    pub config: Arc<RbeeConfig>,                                     // TEAM-194: File-based config
+    pub hive_registry: Arc<queen_rbee_worker_registry::WorkerRegistry>, // TEAM-190/262/275: For Status and Infer operations
 }
 
 /// Response from job creation
@@ -110,8 +110,8 @@ async fn route_operation(
     job_id: String,
     payload: serde_json::Value,
     registry: Arc<JobRegistry<String>>,
-    config: Arc<RbeeConfig>,          // TEAM-194
-    hive_registry: Arc<HiveRegistry>, // TEAM-190: Added for Status operation
+    config: Arc<RbeeConfig>,                                          // TEAM-194
+    hive_registry: Arc<queen_rbee_worker_registry::WorkerRegistry>, // TEAM-190/262/275: For Status and Infer operations
 ) -> Result<()> {
     let state = JobState { registry, config, hive_registry };
     // Parse payload into typed Operation enum
@@ -151,70 +151,52 @@ async fn route_operation(
     match operation {
         // System-wide operations
         Operation::Status => {
-            // TEAM-190: Show live status of all hives and workers from registry (not catalog)
+            // TEAM-190/275: Show live status of workers from registry
 
             NARRATE
                 .action("status")
                 .job_id(&job_id)
-                .human("📊 Fetching live status from registry")
+                .human("📊 Fetching live status from worker registry")
                 .emit();
 
-            // Get all active hives (heartbeat within last 30 seconds)
-            let active_hive_ids = state.hive_registry.list_active_hives(30_000);
+            // Get all online workers (workers with recent heartbeats)
+            let online_workers = state.hive_registry.list_online_workers();
 
-            if active_hive_ids.is_empty() {
+            if online_workers.is_empty() {
                 NARRATE
                     .action("status_empty")
                     .job_id(&job_id)
                     .human(
-                        "No active hives found.\n\
+                        "No online workers found.\n\
                          \n\
-                         Hives must send heartbeats to appear here.\n\
+                         Workers must send heartbeats to appear here.\n\
                          \n\
-                         To start a hive:\n\
+                         To spawn a worker:\n\
                          \n\
-                           ./rbee hive start",
+                           ./rbee worker spawn --model <model> --device <device>",
                     )
                     .emit();
                 return Ok(());
             }
 
-            // Collect all hives and their workers
+            // Display workers
             let mut all_rows = Vec::new();
-
-            for hive_id in &active_hive_ids {
-                if let Some(hive_state) = state.hive_registry.get_hive_state(hive_id) {
-                    if hive_state.workers.is_empty() {
-                        // Hive with no workers
-                        all_rows.push(serde_json::json!({
-                            "hive": hive_id,
-                            "worker": "-",
-                            "state": "-",
-                            "model": "-",
-                            "url": "-",
-                        }));
-                    } else {
-                        // Hive with workers
-                        for worker in &hive_state.workers {
-                            all_rows.push(serde_json::json!({
-                                "hive": hive_id,
-                                "worker": worker.worker_id,
-                                "state": worker.state,
-                                "model": worker.model_id.as_ref().unwrap_or(&"-".to_string()),
-                                "url": worker.url,
-                            }));
-                        }
-                    }
-                }
+            for worker in &online_workers {
+                all_rows.push(serde_json::json!({
+                    "worker_id": worker.id,
+                    "model": worker.model_id,
+                    "device": worker.device,
+                    "port": worker.port,
+                    "status": format!("{:?}", worker.status),
+                }));
             }
 
             // Display as table
             NARRATE
                 .action("status_result")
                 .job_id(&job_id)
-                .context(active_hive_ids.len().to_string())
-                .context(all_rows.iter().filter(|r| r["worker"] != "-").count().to_string())
-                .human("Live Status ({0} hive(s), {1} worker(s)):")
+                .context(&online_workers.len().to_string())
+                .human("Live Status ({} worker(s)):")
                 .table(&serde_json::Value::Array(all_rows))
                 .emit();
         }
@@ -447,6 +429,77 @@ async fn route_operation(
         //
         // ⚠️  UNINTUITIVE BUT CORRECT: Infer is handled in QUEEN, not forwarded to HIVE!
         //
+        // Why?
+        // - Queen needs direct control for scheduling/load balancing
+        // - Hive only manages worker LIFECYCLE (spawn/stop/list)
+        // - Queen → Worker is DIRECT HTTP (no job-server on worker side)
+        // - This eliminates a hop and simplifies the inference hot path
+        //
+        // DO NOT use hive_forwarder::forward_to_hive() for Infer!
+        // Queen circumvents hive for performance.
+        //
+        // See: bin/.plan/TEAM_261_ARCHITECTURE_CLARITY.md
+        //
+        Operation::Infer {
+            model,
+            prompt,
+            max_tokens,
+            temperature,
+            top_p,
+            top_k,
+            ..
+        } => {
+            // TEAM-275: Use scheduler crate (pre-wired for M2 Rhai scheduler)
+            use queen_rbee_scheduler::{JobRequest, JobScheduler, SimpleScheduler};
+
+            NARRATE
+                .action("infer_start")
+                .job_id(&job_id)
+                .context(&model)
+                .human("🤖 Starting inference for model '{}'")
+                .emit();
+
+            let job_request = JobRequest {
+                job_id: job_id.clone(),
+                model: model.clone(),
+                prompt: prompt.clone(),
+                max_tokens,
+                temperature,
+                top_p,
+                top_k,
+            };
+
+            // TEAM-275: Use SimpleScheduler (M0/M1)
+            // TODO M2: Replace with RhaiScheduler for programmable routing
+            let scheduler = SimpleScheduler::new(state.hive_registry.clone());
+
+            // Schedule (find worker)
+            let schedule_result = scheduler.schedule(job_request.clone()).await.map_err(|e| {
+                anyhow::anyhow!("Scheduling failed: {}", e)
+            })?;
+
+            // Create line handler that emits to SSE
+            let line_handler = |line: &str| -> Result<(), queen_rbee_scheduler::SchedulerError> {
+                NARRATE
+                    .action("infer_token")
+                    .job_id(&job_id)
+                    .human(line)
+                    .emit();
+                Ok(())
+            };
+
+            // Execute job and stream results
+            scheduler.execute_job(schedule_result, job_request, line_handler).await.map_err(|e| {
+                anyhow::anyhow!("Job execution failed: {}", e)
+            })?;
+
+            NARRATE
+                .action("infer_success")
+                .job_id(&job_id)
+                .human("✅ Inference complete")
+                .emit();
+        }
+
         // TEAM-272: Active worker operations (query queen's registry)
         // These operations query the worker registry maintained by queen via heartbeats
         Operation::ActiveWorkerList => {
@@ -523,27 +576,6 @@ async fn route_operation(
             //     .context(&worker_id)
             //     .human("✅ Worker '{}' retired")
             //     .emit();
-        }
-
-        // Why?
-        // - Queen needs direct control for scheduling/load balancing
-        // - Hive only manages worker LIFECYCLE (spawn/stop/list)
-        // - Queen → Worker is DIRECT HTTP (no job-server on worker side)
-        // - This eliminates a hop and simplifies the inference hot path
-        //
-        // DO NOT use hive_forwarder::forward_to_hive() for Infer!
-        // Queen circumvents hive for performance.
-        //
-        // See: bin/.plan/TEAM_261_ARCHITECTURE_CLARITY.md
-        //
-        Operation::Infer { .. } => {
-            // TODO: IMPLEMENT INFERENCE SCHEDULING
-            // 1. Query hive registry for available workers
-            // 2. Select worker based on model/load/availability
-            // 3. Direct HTTP POST to worker's /v1/inference endpoint (NOT via job-client!)
-            // 4. Stream tokens back to client via SSE
-            // 5. Worker uses job-server internally, but queen uses simple HTTP
-            return Err(anyhow::anyhow!("Inference scheduling not yet implemented"));
         }
 
         // TEAM-258: All worker/model operations are forwarded to hive

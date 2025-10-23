@@ -1,0 +1,33 @@
+# TEAM-275: Scheduler crate (stub for future Rhai scheduler)
+
+[package]
+name = "queen-rbee-scheduler"
+version = "0.1.0"
+edition = "2021"
+license = "GPL-3.0-or-later"
+
+[lib]
+name = "queen_rbee_scheduler"
+path = "src/lib.rs"
+
+[dependencies]
+anyhow = "1.0"
+async-trait = "0.1"
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+thiserror = "1.0"
+tokio = { workspace = true, features = ["full"] }
+reqwest = { version = "0.12", features = ["json", "stream"] }
+futures = "0.3"
+
+# Narration
+observability-narration-core = { path = "../../99_shared_crates/narration-core" }
+
+# Worker registry for finding workers
+queen-rbee-worker-registry = { path = "../worker-registry" }
+
+# TODO M2: Add Rhai for programmable scheduler
+# rhai = "1.16"
+
+[dev-dependencies]
+tempfile = "3.8"
