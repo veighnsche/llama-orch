@@ -222,16 +222,46 @@ NARRATE
 
 **Location:** `bin/99_shared_crates/rbee-config/`
 
-**Purpose:** Unified configuration for queen.
+**Purpose:** Unified configuration for queen with cross-platform support.
 
-### File Structure
+### Cross-Platform Directory Structure
 
+**Linux:**
 ```
 ~/.config/rbee/
 ├── config.toml           # Queen settings
 ├── hives.conf            # Hive definitions (SSH config style)
 └── capabilities.yaml     # Auto-generated device info
+
+~/.cache/rbee/
+└── models/               # Model storage
 ```
+
+**macOS:**
+```
+~/Library/Application Support/rbee/
+├── config.toml
+├── hives.conf
+└── capabilities.yaml
+
+~/Library/Caches/rbee/
+└── models/
+```
+
+**Windows:**
+```
+%APPDATA%\rbee\
+├── config.toml
+├── hives.conf
+└── capabilities.yaml
+
+%LOCALAPPDATA%\rbee\
+└── models\
+```
+
+**Implementation:** Uses `dirs` crate for platform-appropriate directories.
+
+**See:** `bin/.plan/CROSS_PLATFORM_CONFIG_PLAN.md` for implementation details.
 
 ### config.toml
 
@@ -261,7 +291,20 @@ pub struct RbeeConfig {
 }
 
 impl RbeeConfig {
+    /// Load config from platform-specific directory
     pub fn load() -> Result<Self>
+    
+    /// Get platform-specific config directory
+    /// - Linux: ~/.config/rbee/
+    /// - macOS: ~/Library/Application Support/rbee/
+    /// - Windows: %APPDATA%\rbee\
+    pub fn config_dir() -> Result<PathBuf>
+    
+    /// Get platform-specific cache directory
+    /// - Linux: ~/.cache/rbee/
+    /// - macOS: ~/Library/Caches/rbee/
+    /// - Windows: %LOCALAPPDATA%\rbee\
+    pub fn cache_dir() -> Result<PathBuf>
     
     pub fn get_hive(&self, alias: &str) -> Option<&HiveConfig>
     

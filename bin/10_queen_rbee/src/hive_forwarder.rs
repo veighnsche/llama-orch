@@ -161,11 +161,26 @@ pub async fn forward_to_hive(
         .emit();
 
     // TEAM-265: TODO - Implement integrated mode
+    // TEAM-266: Investigation complete - See bin/.plan/TEAM_266_MODE_3_INVESTIGATION_FINDINGS.md
+    //
+    // CRITICAL: Mode 3 implementation is BLOCKED by missing rbee-hive crate implementations.
+    // All worker-lifecycle, model-catalog, and model-provisioner crates are empty stubs.
+    // 
+    // Prerequisites before Mode 3 implementation:
+    // 1. Implement worker-lifecycle crate functions (spawn, list, get, delete)
+    // 2. Implement model-catalog crate functions (list, get, delete)
+    // 3. Implement model-provisioner crate functions (download)
+    // 4. Test HTTP mode (Mode 2) thoroughly
+    // 5. Document public APIs
+    // 
+    // Expected effort: 180+ hours for prerequisites, 30-58 hours for Mode 3
+    // Expected speedup: 110x for list/get operations, minimal for spawn/download
+    //
     // When local-hive feature is enabled and hive_id == "localhost",
     // we should call rbee-hive crates directly instead of HTTP.
     // This requires:
     // 1. Add rbee-hive crates as optional dependencies
-    // 2. Implement direct function calls for each operation
+    // 2. Implement execute_integrated() function with direct calls
     // 3. Convert results to narration events (no HTTP/SSE needed)
     // 
     // For now, we always use HTTP (modes 1 & 2).

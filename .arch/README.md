@@ -65,7 +65,7 @@ This directory contains a complete architectural overview split into 6 parts:
 - Job Client/Server Pattern
 - Observability (Narration System)
 - Security Crates (5 total)
-- Configuration Management
+- Configuration Management (Cross-Platform)
 - Shared Utilities
 
 **Key Insights:**
@@ -73,6 +73,7 @@ This directory contains a complete architectural overview split into 6 parts:
 - Narration requires `.job_id()` for SSE routing (CRITICAL!)
 - 5 security crates for defense-in-depth
 - File-based configuration (not environment variables)
+- **Cross-platform support:** Linux, macOS, Windows with platform-appropriate directories
 
 **Read this third** to understand shared infrastructure.
 
@@ -394,6 +395,33 @@ Worker → Queen (direct)
 
 ---
 
+## Special Topics
+
+### [Cross-Platform Architecture](CROSS_PLATFORM_ARCHITECTURE.md)
+
+**Topics:**
+- Platform support matrix (Linux, macOS, Windows)
+- Directory structure for each platform
+- Implementation strategy using `dirs` crate
+- Component-specific implementations
+- Testing strategy
+- Migration guide
+
+**Key Insights:**
+- Config: `~/.config/rbee/` (Linux), `~/Library/Application Support/rbee/` (macOS), `%APPDATA%\rbee\` (Windows)
+- Cache: `~/.cache/rbee/` (Linux), `~/Library/Caches/rbee/` (macOS), `%LOCALAPPDATA%\rbee\` (Windows)
+- Model catalog already cross-platform ✅
+- rbee-config needs update (3-4 hours)
+
+**Implementation Plans:**
+- `bin/.plan/CROSS_PLATFORM_CONFIG_PLAN.md` - Detailed implementation
+- `bin/.plan/CROSS_PLATFORM_SUMMARY.md` - Quick reference
+- `bin/.plan/STORAGE_ARCHITECTURE.md` - Model storage (already cross-platform)
+
+**Read this** to understand cross-platform support and implementation.
+
+---
+
 ## Document Maintenance
 
 ### Updating These Documents
@@ -406,6 +434,13 @@ When making significant architectural changes:
 4. Reference TEAM-XXX that made the change
 
 ### Document History
+
+- **Oct 23, 2025 (v1.2):** Cross-platform architecture added (TEAM-266)
+  - Added CROSS_PLATFORM_ARCHITECTURE.md
+  - Updated Part 3 with cross-platform config details
+  - Updated Part 5 with cross-platform development patterns
+  - Documented platform-specific directories (Linux, macOS, Windows)
+  - Created implementation plans in bin/.plan/
 
 - **Oct 23, 2025 (v1.1):** Queen build configurations added
   - Added distributed vs integrated queen modes

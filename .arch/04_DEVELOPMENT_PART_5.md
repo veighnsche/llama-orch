@@ -484,19 +484,28 @@ pub async fn execute_long_operation(
 - Debuggable (see exactly what's happening)
 - Cancellable (can interrupt mid-operation)
 
-### 4. Config-File Based
+### 4. Config-File Based (Cross-Platform)
 
-**Principle:** Use files for config, not environment variables.
+**Principle:** Use files for config, not environment variables. Support all platforms.
 
 **Why Files?**
 - Version controllable (git-trackable)
 - Easier to edit (no shell syntax)
 - Hierarchical (TOML/YAML structure)
 - Validatable (schema checking)
+- Cross-platform (same format everywhere)
+
+**Platform-Specific Locations:**
+
+| Platform | Config | Cache |
+|----------|--------|-------|
+| Linux | `~/.config/rbee/` | `~/.cache/rbee/` |
+| macOS | `~/Library/Application Support/rbee/` | `~/Library/Caches/rbee/` |
+| Windows | `%APPDATA%\rbee\` | `%LOCALAPPDATA%\rbee\` |
 
 **Implementation:**
 ```toml
-# ~/.config/rbee/config.toml
+# config.toml (same format on all platforms)
 [queen]
 port = 8500
 
@@ -512,9 +521,11 @@ pub struct RbeeConfig {
 }
 
 impl RbeeConfig {
+    /// Load config from platform-specific directory
     pub fn load() -> Result<Self> {
+        // Uses dirs crate for cross-platform support
         let path = dirs::config_dir()
-            .ok_or_else(|| anyhow!("No config dir"))?
+            .ok_or_else(|| anyhow!("Cannot determine config directory"))?
             .join("rbee/config.toml");
         
         let content = fs::read_to_string(path)?;
@@ -523,6 +534,8 @@ impl RbeeConfig {
     }
 }
 ```
+
+**See:** `bin/.plan/CROSS_PLATFORM_CONFIG_PLAN.md` for full implementation details.
 
 ### 5. Error Context
 
