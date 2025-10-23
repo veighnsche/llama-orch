@@ -430,21 +430,23 @@ impl AutoUpdater {
                     //          and path = "../99_shared_crates/narration-core"
                     // We need to resolve: workspace_root/bin/00_rbee_keeper/../99_shared_crates/narration-core
                     // Then make it relative to workspace_root again
-                    
+
                     let crate_dir = workspace_root.join(source_dir);
                     let dep_absolute = crate_dir.join(path);
-                    
+
                     // Canonicalize to resolve ".." components
-                    let dep_canonical = dep_absolute
-                        .canonicalize()
-                        .with_context(|| format!("Failed to resolve dependency path: {}", dep_absolute.display()))?;
-                    
+                    let dep_canonical = dep_absolute.canonicalize().with_context(|| {
+                        format!("Failed to resolve dependency path: {}", dep_absolute.display())
+                    })?;
+
                     // Convert back to relative path from workspace_root
                     let dep_relative = dep_canonical
                         .strip_prefix(workspace_root)
-                        .with_context(|| format!("Dependency {} is outside workspace", dep_canonical.display()))?
+                        .with_context(|| {
+                            format!("Dependency {} is outside workspace", dep_canonical.display())
+                        })?
                         .to_path_buf();
-                    
+
                     all_deps.push(dep_relative.clone());
 
                     // Recursively check this dependency's dependencies

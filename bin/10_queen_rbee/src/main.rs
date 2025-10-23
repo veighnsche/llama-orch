@@ -123,7 +123,7 @@ async fn main() -> Result<()> {
 fn create_router(
     job_server: Arc<JobRegistry<String>>,
     config: Arc<RbeeConfig>,
-    worker_registry: Arc<queen_rbee_worker_registry::WorkerRegistry>,  // TEAM-262: Renamed
+    worker_registry: Arc<queen_rbee_worker_registry::WorkerRegistry>, // TEAM-262: Renamed
 ) -> axum::Router {
     // TEAM-164: Create states for HTTP endpoints
     // TEAM-190: Added hive_registry to job_state for Status operation
@@ -131,7 +131,7 @@ fn create_router(
     let job_state = http::SchedulerState {
         registry: job_server,
         config: config.clone(),
-        hive_registry: worker_registry.clone(),  // TEAM-262: Still named hive_registry in struct
+        hive_registry: worker_registry.clone(), // TEAM-262: Still named hive_registry in struct
     };
 
     let heartbeat_state = http::HeartbeatState { hive_registry: worker_registry };
@@ -141,7 +141,7 @@ fn create_router(
         .route("/health", get(http::handle_health))
         // TEAM-186: V1 API endpoints (matches API_REFERENCE.md)
         .route("/v1/shutdown", post(handle_shutdown))
-        .route("/v1/build-info", get(http::handle_build_info))  // TEAM-262: Build information
+        .route("/v1/build-info", get(http::handle_build_info)) // TEAM-262: Build information
         .route("/v1/heartbeat", post(http::handle_heartbeat))
         .route("/v1/worker-heartbeat", post(http::handle_worker_heartbeat)) // TEAM-261: Workers send heartbeats directly to queen
         .with_state(heartbeat_state)

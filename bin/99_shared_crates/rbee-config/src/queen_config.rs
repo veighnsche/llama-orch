@@ -7,8 +7,7 @@ use serde::{Deserialize, Serialize};
 use std::path::Path;
 
 /// Queen-level configuration
-#[derive(Debug, Clone, Serialize, Deserialize)]
-#[derive(Default)]
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct QueenConfig {
     /// Queen daemon settings
     #[serde(default)]
@@ -50,7 +49,6 @@ impl Default for RuntimeSettings {
         Self { max_concurrent_operations: default_max_concurrent() }
     }
 }
-
 
 impl QueenConfig {
     /// Validate queen configuration

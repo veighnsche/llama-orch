@@ -18,10 +18,10 @@ const NARRATE: NarrationFactory = NarrationFactory::new("dmn-life");
 pub struct StatusRequest {
     /// ID of the daemon instance (e.g., alias, worker ID)
     pub id: String,
-    
+
     /// Health check URL (e.g., "http://localhost:8081/health")
     pub health_url: String,
-    
+
     /// Optional: Daemon type name for narration (e.g., "hive", "worker")
     pub daemon_type: Option<String>,
 }
@@ -31,10 +31,10 @@ pub struct StatusRequest {
 pub struct StatusResponse {
     /// ID of the daemon instance
     pub id: String,
-    
+
     /// Whether the daemon is running
     pub running: bool,
-    
+
     /// Health check URL that was checked
     pub health_url: String,
 }
@@ -73,19 +73,15 @@ pub async fn check_daemon_status(
     job_id: Option<&str>,
 ) -> Result<StatusResponse> {
     let daemon_type = request.daemon_type.as_deref().unwrap_or("daemon");
-    
-    let mut narration = NARRATE
-        .action("daemon_check")
-        .context(daemon_type)
-        .context(&request.health_url);
+
+    let mut narration =
+        NARRATE.action("daemon_check").context(daemon_type).context(&request.health_url);
     if let Some(jid) = job_id {
         narration = narration.job_id(jid);
     }
     narration.human(&format!("Checking {} status at {{}}", daemon_type)).emit();
 
-    let client = reqwest::Client::builder()
-        .timeout(Duration::from_secs(5))
-        .build()?;
+    let client = reqwest::Client::builder().timeout(Duration::from_secs(5)).build()?;
 
     let running = match client.get(&request.health_url).send().await {
         Ok(response) if response.status().is_success() => {
@@ -109,7 +105,9 @@ pub async fn check_daemon_status(
             if let Some(jid) = job_id {
                 narration = narration.job_id(jid);
             }
-            narration.human(&format!("⚠️  {} '{{0}}' responded with status: {{1}}", daemon_type)).emit();
+            narration
+                .human(&format!("⚠️  {} '{{0}}' responded with status: {{1}}", daemon_type))
+                .emit();
             false
         }
         Err(_) => {
@@ -126,9 +124,5 @@ pub async fn check_daemon_status(
         }
     };
 
-    Ok(StatusResponse {
-        id: request.id,
-        running,
-        health_url: request.health_url,
-    })
+    Ok(StatusResponse { id: request.id, running, health_url: request.health_url })
 }

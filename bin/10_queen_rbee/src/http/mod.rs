@@ -19,13 +19,15 @@
 //! - `jobs` - Job creation and SSE streaming endpoints
 //! - `build_info` - Build information endpoint (TEAM-262)
 
+pub mod build_info;
 pub mod health;
 pub mod heartbeat;
-pub mod jobs;
-pub mod build_info;  // TEAM-262
+pub mod jobs; // TEAM-262
 
 // Re-export commonly used types
+pub use build_info::handle_build_info;
 pub use health::handle_health;
-pub use heartbeat::{handle_heartbeat, handle_worker_heartbeat, HeartbeatState, HttpHeartbeatAcknowledgement};
-pub use jobs::{handle_create_job, handle_stream_job, SchedulerState};
-pub use build_info::handle_build_info;  // TEAM-262
+pub use heartbeat::{
+    handle_heartbeat, handle_worker_heartbeat, HeartbeatState, HttpHeartbeatAcknowledgement,
+};
+pub use jobs::{handle_create_job, handle_stream_job, SchedulerState}; // TEAM-262

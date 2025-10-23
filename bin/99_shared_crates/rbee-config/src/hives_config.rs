@@ -120,10 +120,7 @@ impl HivesConfig {
     /// # Errors
     ///
     /// Returns an error if the SSH config file cannot be read or parsed
-    pub fn import_from_ssh_config(
-        ssh_config_path: &Path,
-        default_hive_port: u16,
-    ) -> Result<Self> {
+    pub fn import_from_ssh_config(ssh_config_path: &Path, default_hive_port: u16) -> Result<Self> {
         let ssh_content = std::fs::read_to_string(ssh_config_path).map_err(|e| {
             ConfigError::ReadError { path: ssh_config_path.to_path_buf(), source: e }
         })?;
@@ -261,24 +258,20 @@ fn parse_hives_conf(content: &str) -> Result<HashMap<String, HiveEntry>> {
             // SSH config allows multiple aliases: "Host alias1 alias2 alias3"
             // We only take the first one
             let alias_line = line[5..].trim();
-            let alias = alias_line
-                .split_whitespace()
-                .next()
-                .unwrap_or("")
-                .to_string();
-            
+            let alias = alias_line.split_whitespace().next().unwrap_or("").to_string();
+
             if alias.is_empty() {
                 return Err(ConfigError::InvalidSyntax {
                     line: line_num,
                     message: "Empty host alias".to_string(),
                 });
             }
-            
+
             // Skip wildcards (*, ?)
             if alias.contains('*') || alias.contains('?') {
                 continue;
             }
-            
+
             current_host = Some(alias);
         } else if current_host.is_some() {
             // Parse host properties

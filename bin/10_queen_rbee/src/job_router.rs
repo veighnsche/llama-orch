@@ -292,11 +292,11 @@ async fn route_operation(
             //   (from uninstall.rs + job_router)
             // - Verified all messages appear in output, no panics
             // ============================================================
-            
+
             // TEAM-215: Delegate to hive-lifecycle crate
             let request = HiveUninstallRequest { alias };
             let response = execute_hive_uninstall(request, state.config.clone(), &job_id).await?;
-            
+
             // TEAM-257: Emit final status message from response
             // This ensures the message is shown even if SSE stream closed early
             NARRATE
@@ -348,9 +348,12 @@ async fn route_operation(
 
             use std::path::PathBuf;
             let ssh_path = PathBuf::from(&ssh_config_path);
-            
+
             // Import from SSH config
-            let imported = match rbee_config::HivesConfig::import_from_ssh_config(&ssh_path, default_hive_port) {
+            let imported = match rbee_config::HivesConfig::import_from_ssh_config(
+                &ssh_path,
+                default_hive_port,
+            ) {
                 Ok(config) => config,
                 Err(e) => {
                     NARRATE
@@ -387,7 +390,7 @@ async fn route_operation(
                 }
             };
             let hives_conf_path = config_dir.join("hives.conf");
-            
+
             let mut existing = match rbee_config::HivesConfig::load(&hives_conf_path) {
                 Ok(config) => config,
                 Err(e) => {
@@ -473,13 +476,9 @@ async fn route_operation(
 
         // Catch-all for any unhandled operations
         op => {
-            return Err(anyhow::anyhow!(
-                "Operation '{}' is not implemented",
-                op.name()
-            ));
+            return Err(anyhow::anyhow!("Operation '{}' is not implemented", op.name()));
         }
     }
 
     Ok(())
 }
-

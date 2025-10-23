@@ -116,12 +116,7 @@ async fn route_operation(
     //
     match operation {
         // Worker operations
-        Operation::WorkerSpawn {
-            hive_id,
-            model,
-            worker,
-            device,
-        } => {
+        Operation::WorkerSpawn { hive_id, model, worker, device } => {
             NARRATE
                 .action("worker_spawn")
                 .job_id(&job_id)

@@ -27,9 +27,7 @@ pub struct HiveState {
 /// Convert HTTP state to router state
 impl From<HiveState> for crate::job_router::JobState {
     fn from(state: HiveState) -> Self {
-        Self {
-            registry: state.registry,
-        }
+        Self { registry: state.registry }
     }
 }
 

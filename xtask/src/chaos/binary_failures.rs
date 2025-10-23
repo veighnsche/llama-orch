@@ -2,11 +2,11 @@
 // Purpose: Test behavior when binaries are missing or corrupt
 // TEAM-255: Fixed missing imports
 
+use crate::integration::assertions::{assert_failure, assert_output_contains};
+use crate::integration::harness::TestHarness;
 use std::env;
 use std::fs;
 use std::path::PathBuf;
-use crate::integration::assertions::{assert_failure, assert_output_contains};
-use crate::integration::harness::TestHarness;
 
 #[cfg(unix)]
 use std::os::unix::fs::PermissionsExt;
@@ -21,7 +21,6 @@ fn workspace_root() -> PathBuf {
         current = current.parent().unwrap().to_path_buf();
     }
 }
-
 
 #[tokio::test]
 async fn test_binary_not_found() {

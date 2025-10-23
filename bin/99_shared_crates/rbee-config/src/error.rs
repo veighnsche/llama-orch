@@ -36,7 +36,7 @@ pub enum ConfigError {
         /// Path to the config file
         path: PathBuf,
         /// TOML deserialization error
-        source: toml::de::Error
+        source: toml::de::Error,
     },
 
     /// Failed to parse YAML config
@@ -45,7 +45,7 @@ pub enum ConfigError {
         /// Path to the config file
         path: PathBuf,
         /// YAML deserialization error
-        source: serde_yaml::Error
+        source: serde_yaml::Error,
     },
 
     /// Failed to serialize YAML
@@ -58,7 +58,7 @@ pub enum ConfigError {
         /// Line number where the error occurred
         line: usize,
         /// Error message
-        message: String
+        message: String,
     },
 
     /// Missing required field in config
@@ -67,7 +67,7 @@ pub enum ConfigError {
         /// Host name
         host: String,
         /// Missing field name
-        field: String
+        field: String,
     },
 
     /// Invalid port number
@@ -76,21 +76,21 @@ pub enum ConfigError {
         /// Host name
         host: String,
         /// Invalid port value
-        value: String
+        value: String,
     },
 
     /// Duplicate hive alias
     #[error("Duplicate hive alias: '{alias}'")]
     DuplicateAlias {
         /// Duplicate alias name
-        alias: String
+        alias: String,
     },
 
     /// Hive not found
     #[error("Hive not found: '{alias}'")]
     HiveNotFound {
         /// Hive alias that was not found
-        alias: String
+        alias: String,
     },
 
     /// Invalid configuration

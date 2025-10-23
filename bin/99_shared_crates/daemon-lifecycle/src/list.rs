@@ -46,10 +46,10 @@ const NARRATE: NarrationFactory = NarrationFactory::new("dmn-life");
 pub trait ListableConfig {
     /// The info type returned for each daemon instance
     type Info: Serialize;
-    
+
     /// List all daemon instances
     fn list_all(&self) -> Vec<Self::Info>;
-    
+
     /// Name of the daemon type (e.g., "hive", "worker")
     fn daemon_type_name(&self) -> &'static str;
 }
@@ -82,7 +82,7 @@ pub async fn list_daemons<T: ListableConfig>(
     job_id: Option<&str>,
 ) -> Result<Vec<T::Info>> {
     let daemon_type = config.daemon_type_name();
-    
+
     let mut narration = NARRATE.action("daemon_list").context(daemon_type);
     if let Some(jid) = job_id {
         narration = narration.job_id(jid);

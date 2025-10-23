@@ -78,10 +78,10 @@
 //! ```
 
 use anyhow::Result;
+use job_client::JobClient;
 use observability_narration_core::NarrationFactory;
 use queen_rbee_hive_lifecycle::{execute_hive_start, HiveStartRequest};
 use rbee_config::RbeeConfig;
-use job_client::JobClient;
 use rbee_operations::Operation;
 use std::sync::Arc;
 use std::time::Duration;
@@ -142,7 +142,7 @@ pub async fn forward_to_hive(
     // TEAM-265: Detect communication mode
     let is_localhost = hive_id == "localhost";
     let has_integrated = cfg!(feature = "local-hive");
-    
+
     let mode = if is_localhost && has_integrated {
         "integrated"
     } else if is_localhost {
@@ -165,14 +165,14 @@ pub async fn forward_to_hive(
     //
     // CRITICAL: Mode 3 implementation is BLOCKED by missing rbee-hive crate implementations.
     // All worker-lifecycle, model-catalog, and model-provisioner crates are empty stubs.
-    // 
+    //
     // Prerequisites before Mode 3 implementation:
     // 1. Implement worker-lifecycle crate functions (spawn, list, get, delete)
     // 2. Implement model-catalog crate functions (list, get, delete)
     // 3. Implement model-provisioner crate functions (download)
     // 4. Test HTTP mode (Mode 2) thoroughly
     // 5. Document public APIs
-    // 
+    //
     // Expected effort: 180+ hours for prerequisites, 30-58 hours for Mode 3
     // Expected speedup: 110x for list/get operations, minimal for spawn/download
     //
@@ -182,10 +182,10 @@ pub async fn forward_to_hive(
     // 1. Add rbee-hive crates as optional dependencies
     // 2. Implement execute_integrated() function with direct calls
     // 3. Convert results to narration events (no HTTP/SSE needed)
-    // 
+    //
     // For now, we always use HTTP (modes 1 & 2).
     // This is correct but not optimal for localhost with local-hive feature.
-    
+
     if is_localhost && has_integrated {
         NARRATE
             .action("forward_mode")
@@ -232,23 +232,14 @@ pub async fn forward_to_hive(
 /// Stream responses from hive back to client
 ///
 /// TEAM-259: Extracted to separate function for clarity (mirrors job_client.rs)
-async fn stream_from_hive(
-    job_id: &str,
-    hive_url: &str,
-    operation: Operation,
-) -> Result<()> {
+async fn stream_from_hive(job_id: &str, hive_url: &str, operation: Operation) -> Result<()> {
     // TEAM-259: Use shared JobClient for submission and streaming
     let client = JobClient::new(hive_url);
 
     client
         .submit_and_stream(operation, |line| {
             // Forward each line to client via narration
-            NARRATE
-                .action("forward_data")
-                .job_id(job_id)
-                .context(line)
-                .human("{}")
-                .emit();
+            NARRATE.action("forward_data").job_id(job_id).context(line).human("{}").emit();
             Ok(())
         })
         .await?;
@@ -259,7 +250,7 @@ async fn stream_from_hive(
 /// Ensure hive is running before forwarding operations
 ///
 /// TEAM-259: Mirrors rbee-keeper's ensure_queen_running pattern
-/// 
+///
 /// 1. Check if hive is healthy
 /// 2. If not running, start hive daemon
 /// 3. Wait for health check to pass
@@ -289,10 +280,7 @@ async fn ensure_hive_running(
         .emit();
 
     // Use hive-lifecycle to start the hive
-    let request = HiveStartRequest {
-        alias: hive_id.to_string(),
-        job_id: job_id.to_string(),
-    };
+    let request = HiveStartRequest { alias: hive_id.to_string(), job_id: job_id.to_string() };
     execute_hive_start(request, config).await?;
 
     // Wait for hive to become healthy (with timeout)
@@ -325,10 +313,7 @@ async fn ensure_hive_running(
 ///
 /// TEAM-259: Mirrors rbee-keeper's is_queen_healthy pattern
 async fn is_hive_healthy(hive_url: &str) -> bool {
-    let client = reqwest::Client::builder()
-        .timeout(Duration::from_secs(2))
-        .build()
-        .ok();
+    let client = reqwest::Client::builder().timeout(Duration::from_secs(2)).build().ok();
 
     if let Some(client) = client {
         if let Ok(response) = client.get(format!("{}/health", hive_url)).send().await {

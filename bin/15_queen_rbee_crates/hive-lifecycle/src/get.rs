@@ -14,20 +14,16 @@ struct HiveConfigWrapper<'a>(&'a RbeeConfig);
 
 impl<'a> GettableConfig for HiveConfigWrapper<'a> {
     type Info = HiveInfo;
-    
+
     fn get_by_id(&self, id: &str) -> Option<Self::Info> {
-        self.0.hives
-            .all()
-            .iter()
-            .find(|h| h.alias == id)
-            .map(|h| HiveInfo {
-                alias: h.alias.clone(),
-                hostname: h.hostname.clone(),
-                hive_port: h.hive_port,
-                binary_path: h.binary_path.clone(),
-            })
+        self.0.hives.all().iter().find(|h| h.alias == id).map(|h| HiveInfo {
+            alias: h.alias.clone(),
+            hostname: h.hostname.clone(),
+            hive_port: h.hive_port,
+            binary_path: h.binary_path.clone(),
+        })
     }
-    
+
     fn daemon_type_name(&self) -> &'static str {
         "hive"
     }

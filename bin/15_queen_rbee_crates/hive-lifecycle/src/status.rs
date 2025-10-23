@@ -41,9 +41,5 @@ pub async fn execute_hive_status(
 
     let status = check_daemon_status(status_request, Some(job_id)).await?;
 
-    Ok(HiveStatusResponse {
-        alias: request.alias,
-        running: status.running,
-        health_url,
-    })
+    Ok(HiveStatusResponse { alias: request.alias, running: status.running, health_url })
 }

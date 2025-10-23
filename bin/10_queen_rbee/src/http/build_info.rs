@@ -79,10 +79,10 @@ pub struct BuildInfo {
 /// to check if queen has the `local-hive` feature enabled.
 pub async fn handle_build_info() -> Json<BuildInfo> {
     let mut features = vec![];
-    
+
     #[cfg(feature = "local-hive")]
     features.push("local-hive".to_string());
-    
+
     Json(BuildInfo {
         version: env!("CARGO_PKG_VERSION").to_string(),
         features,

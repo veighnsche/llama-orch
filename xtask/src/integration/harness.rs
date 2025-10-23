@@ -55,8 +55,8 @@ impl TestHarness {
 
         // TEAM-255: Use default ports since binaries don't respect custom port env vars
         // This means tests cannot run in parallel, but they will work
-        let queen_port = 8500;  // Default queen port from queen-rbee/src/main.rs
-        let hive_port = 9000;   // Default hive port from rbee-hive/src/main.rs
+        let queen_port = 8500; // Default queen port from queen-rbee/src/main.rs
+        let hive_port = 9000; // Default hive port from rbee-hive/src/main.rs
 
         // Set up isolated environment
         env::set_var("RBEE_CONFIG_DIR", temp_dir.path().join("config"));

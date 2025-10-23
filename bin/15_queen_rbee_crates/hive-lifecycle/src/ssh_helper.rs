@@ -32,12 +32,7 @@ pub async fn ssh_exec(
     action: &'static str,
     description: &str,
 ) -> Result<String> {
-    NARRATE
-        .action(action)
-        .job_id(job_id)
-        .context(description)
-        .human("🔧 {}")
-        .emit();
+    NARRATE.action(action).job_id(job_id).context(description).human("🔧 {}").emit();
 
     // TEAM-256: Connect using russh
     let mut client = match RbeeSSHClient::connect(
@@ -45,7 +40,8 @@ pub async fn ssh_exec(
         hive_config.ssh_port,
         &hive_config.ssh_user,
     )
-    .await {
+    .await
+    {
         Ok(c) => c,
         Err(e) => {
             let error_msg = format!("SSH connection failed: {}", e);
@@ -72,7 +68,7 @@ pub async fn ssh_exec(
         } else {
             stderr.trim().to_string()
         };
-        
+
         NARRATE
             .action("ssh_err")
             .job_id(job_id)
@@ -116,12 +112,9 @@ pub async fn scp_copy(
         .emit();
 
     // TEAM-256: Connect using russh
-    let mut client = RbeeSSHClient::connect(
-        &hive_config.hostname,
-        hive_config.ssh_port,
-        &hive_config.ssh_user,
-    )
-    .await?;
+    let mut client =
+        RbeeSSHClient::connect(&hive_config.hostname, hive_config.ssh_port, &hive_config.ssh_user)
+            .await?;
 
     // TEAM-256: Copy file via SFTP
     client.copy_file(local_path, remote_path).await?;
@@ -129,11 +122,7 @@ pub async fn scp_copy(
     // TEAM-256: Close connection
     client.close().await?;
 
-    NARRATE
-        .action("hive_scp")
-        .job_id(job_id)
-        .human("✅ File copied successfully")
-        .emit();
+    NARRATE.action("hive_scp").job_id(job_id).human("✅ File copied successfully").emit();
 
     Ok(())
 }
@@ -145,10 +134,7 @@ pub fn is_remote_hive(hive_config: &HiveEntry) -> bool {
 
 /// Get remote binary path (defaults to ~/.local/bin/rbee-hive)
 pub fn get_remote_binary_path(hive_config: &HiveEntry) -> String {
-    hive_config
-        .binary_path
-        .clone()
-        .unwrap_or_else(|| "~/.local/bin/rbee-hive".to_string())
+    hive_config.binary_path.clone().unwrap_or_else(|| "~/.local/bin/rbee-hive".to_string())
 }
 
 #[cfg(test)]

@@ -355,7 +355,8 @@ async fn handle_command(cli: Cli) -> Result<()> {
                 // First check if queen is running
                 let health_check = client.get(format!("{}/health", queen_url)).send().await;
 
-                let is_running = matches!(health_check, Ok(response) if response.status().is_success());
+                let is_running =
+                    matches!(health_check, Ok(response) if response.status().is_success());
 
                 if !is_running {
                     NARRATE.action("queen_stop").human("⚠️  Queen not running").emit();
@@ -432,29 +433,37 @@ async fn handle_command(cli: Cli) -> Result<()> {
                 // TEAM-262: Added queen rebuild command for local-hive optimization
                 // TEAM-263: Implemented actual build logic
                 NARRATE.action("queen_rebuild").human("🔨 Rebuilding queen-rbee...").emit();
-                
+
                 // Determine build command
                 let mut cmd = std::process::Command::new("cargo");
-                cmd.arg("build")
-                   .arg("--release")
-                   .arg("--bin")
-                   .arg("queen-rbee");
-                
+                cmd.arg("build").arg("--release").arg("--bin").arg("queen-rbee");
+
                 if with_local_hive {
-                    NARRATE.action("queen_rebuild").human("✨ Building with integrated local hive (50-100x faster localhost)...").emit();
+                    NARRATE
+                        .action("queen_rebuild")
+                        .human(
+                            "✨ Building with integrated local hive (50-100x faster localhost)...",
+                        )
+                        .emit();
                     cmd.arg("--features").arg("local-hive");
                 } else {
-                    NARRATE.action("queen_rebuild").human("📡 Building distributed queen (remote hives only)...").emit();
+                    NARRATE
+                        .action("queen_rebuild")
+                        .human("📡 Building distributed queen (remote hives only)...")
+                        .emit();
                 }
-                
+
                 // Execute build
-                NARRATE.action("queen_rebuild").human("⏳ Running cargo build (this may take a few minutes)...").emit();
-                
+                NARRATE
+                    .action("queen_rebuild")
+                    .human("⏳ Running cargo build (this may take a few minutes)...")
+                    .emit();
+
                 let output = cmd.output()?;
-                
+
                 if output.status.success() {
                     NARRATE.action("queen_rebuild").human("✅ Build successful!").emit();
-                    
+
                     // Show binary location
                     let binary_path = "target/release/queen-rbee";
                     NARRATE
@@ -462,7 +471,7 @@ async fn handle_command(cli: Cli) -> Result<()> {
                         .context(binary_path)
                         .human("📦 Binary available at: {}")
                         .emit();
-                    
+
                     if with_local_hive {
                         NARRATE
                             .action("queen_rebuild")
@@ -512,21 +521,33 @@ async fn handle_command(cli: Cli) -> Result<()> {
                 // TEAM-262: Install queen binary
                 // TEAM-263: Implemented install logic
                 NARRATE.action("queen_install").human("📦 Installing queen-rbee...").emit();
-                
+
                 // Resolve binary path
                 let source_path = if let Some(path) = binary {
-                    NARRATE.action("queen_install").context(&path).human("Using provided binary: {}").emit();
+                    NARRATE
+                        .action("queen_install")
+                        .context(&path)
+                        .human("Using provided binary: {}")
+                        .emit();
                     std::path::PathBuf::from(path)
                 } else {
                     // Auto-detect: try target/release first, then target/debug
                     let release_path = std::path::PathBuf::from("target/release/queen-rbee");
                     let debug_path = std::path::PathBuf::from("target/debug/queen-rbee");
-                    
+
                     if release_path.exists() {
-                        NARRATE.action("queen_install").context("target/release/queen-rbee").human("Found binary: {}").emit();
+                        NARRATE
+                            .action("queen_install")
+                            .context("target/release/queen-rbee")
+                            .human("Found binary: {}")
+                            .emit();
                         release_path
                     } else if debug_path.exists() {
-                        NARRATE.action("queen_install").context("target/debug/queen-rbee").human("Found binary: {}").emit();
+                        NARRATE
+                            .action("queen_install")
+                            .context("target/debug/queen-rbee")
+                            .human("Found binary: {}")
+                            .emit();
                         debug_path
                     } else {
                         NARRATE
@@ -537,7 +558,7 @@ async fn handle_command(cli: Cli) -> Result<()> {
                         anyhow::bail!("Binary not found");
                     }
                 };
-                
+
                 // Verify binary exists
                 if !source_path.exists() {
                     NARRATE
@@ -548,24 +569,24 @@ async fn handle_command(cli: Cli) -> Result<()> {
                         .emit();
                     anyhow::bail!("Binary not found");
                 }
-                
+
                 // Determine install location (~/.local/bin/queen-rbee)
                 let home = std::env::var("HOME")?;
                 let install_dir = std::path::PathBuf::from(format!("{}/.local/bin", home));
                 let install_path = install_dir.join("queen-rbee");
-                
+
                 // Create install directory if needed
                 std::fs::create_dir_all(&install_dir)?;
-                
+
                 // Copy binary
                 NARRATE
                     .action("queen_install")
                     .context(install_path.display().to_string())
                     .human("📋 Installing to: {}")
                     .emit();
-                
+
                 std::fs::copy(&source_path, &install_path)?;
-                
+
                 // Make executable (Unix only)
                 #[cfg(unix)]
                 {
@@ -574,7 +595,7 @@ async fn handle_command(cli: Cli) -> Result<()> {
                     perms.set_mode(0o755);
                     std::fs::set_permissions(&install_path, perms)?;
                 }
-                
+
                 NARRATE.action("queen_install").human("✅ Queen installed successfully!").emit();
                 NARRATE
                     .action("queen_install")
@@ -585,18 +606,19 @@ async fn handle_command(cli: Cli) -> Result<()> {
                     .action("queen_install")
                     .human("💡 Make sure ~/.local/bin is in your PATH")
                     .emit();
-                
+
                 Ok(())
             }
             QueenAction::Uninstall => {
                 // TEAM-262: Uninstall queen binary
                 // TEAM-263: Implemented uninstall logic
                 NARRATE.action("queen_uninstall").human("🗑️  Uninstalling queen-rbee...").emit();
-                
+
                 // Determine install location
                 let home = std::env::var("HOME")?;
-                let install_path = std::path::PathBuf::from(format!("{}/.local/bin/queen-rbee", home));
-                
+                let install_path =
+                    std::path::PathBuf::from(format!("{}/.local/bin/queen-rbee", home));
+
                 // Check if binary exists
                 if !install_path.exists() {
                     NARRATE
@@ -606,17 +628,17 @@ async fn handle_command(cli: Cli) -> Result<()> {
                         .emit();
                     return Ok(());
                 }
-                
+
                 // Check if queen is running
                 let client = reqwest::Client::builder()
                     .timeout(tokio::time::Duration::from_secs(2))
                     .build()?;
-                
+
                 let is_running = matches!(
                     client.get(format!("{}/health", queen_url)).send().await,
                     Ok(response) if response.status().is_success()
                 );
-                
+
                 if is_running {
                     NARRATE
                         .action("queen_uninstall")
@@ -624,17 +646,20 @@ async fn handle_command(cli: Cli) -> Result<()> {
                         .emit();
                     anyhow::bail!("Queen is running");
                 }
-                
+
                 // Remove binary
                 std::fs::remove_file(&install_path)?;
-                
-                NARRATE.action("queen_uninstall").human("✅ Queen uninstalled successfully!").emit();
+
+                NARRATE
+                    .action("queen_uninstall")
+                    .human("✅ Queen uninstalled successfully!")
+                    .emit();
                 NARRATE
                     .action("queen_uninstall")
                     .context(install_path.display().to_string())
                     .human("🗑️  Removed: {}")
                     .emit();
-                
+
                 Ok(())
             }
         },
@@ -643,7 +668,7 @@ async fn handle_command(cli: Cli) -> Result<()> {
             // TEAM-194: Use alias-based operations (config from hives.conf)
             // TEAM-196: Added RefreshCapabilities command
             // TEAM-263: Added smart prompt for localhost hive install
-            
+
             // Special handling for HiveInstall on localhost
             if let HiveAction::Install { ref alias } = action {
                 if alias == "localhost" {
@@ -651,17 +676,21 @@ async fn handle_command(cli: Cli) -> Result<()> {
                     let check_client = reqwest::Client::builder()
                         .timeout(tokio::time::Duration::from_secs(3))
                         .build()?;
-                    
-                    if let Ok(response) = check_client.get(format!("{}/v1/build-info", queen_url)).send().await {
+
+                    if let Ok(response) =
+                        check_client.get(format!("{}/v1/build-info", queen_url)).send().await
+                    {
                         if response.status().is_success() {
                             if let Ok(body) = response.text().await {
                                 // Parse JSON to check for local-hive feature
-                                if let Ok(build_info) = serde_json::from_str::<serde_json::Value>(&body) {
+                                if let Ok(build_info) =
+                                    serde_json::from_str::<serde_json::Value>(&body)
+                                {
                                     let features = build_info["features"].as_array();
                                     let has_local_hive = features
                                         .map(|f| f.iter().any(|v| v.as_str() == Some("local-hive")))
                                         .unwrap_or(false);
-                                    
+
                                     if !has_local_hive {
                                         // PROMPT USER!
                                         eprintln!("\n⚠️  Performance Notice:");
@@ -670,29 +699,36 @@ async fn handle_command(cli: Cli) -> Result<()> {
                                         eprintln!("   was built without the 'local-hive' feature.");
                                         eprintln!();
                                         eprintln!("   📊 Performance comparison:");
-                                        eprintln!("      • Current setup:  ~5-10ms overhead (HTTP)");
+                                        eprintln!(
+                                            "      • Current setup:  ~5-10ms overhead (HTTP)"
+                                        );
                                         eprintln!("      • Integrated:     ~0.1ms overhead (direct calls)");
                                         eprintln!("      • Speedup:        50-100x faster");
                                         eprintln!();
                                         eprintln!("   💡 Recommendation:");
                                         eprintln!("      Rebuild queen-rbee with integrated hive for localhost:");
                                         eprintln!();
-                                        eprintln!("      $ rbee-keeper queen rebuild --with-local-hive");
+                                        eprintln!(
+                                            "      $ rbee-keeper queen rebuild --with-local-hive"
+                                        );
                                         eprintln!("      $ rbee-keeper queen stop");
                                         eprintln!("      $ rbee-keeper queen start");
                                         eprintln!();
                                         eprintln!("   ℹ️  Or continue with distributed setup if you have specific needs.");
                                         eprintln!();
-                                        
+
                                         // Ask user
                                         eprint!("   Continue with distributed setup? [y/N]: ");
                                         use std::io::Write;
                                         std::io::stdout().flush()?;
-                                        
+
                                         let mut input = String::new();
                                         std::io::stdin().read_line(&mut input)?;
-                                        
-                                        if !matches!(input.trim().to_lowercase().as_str(), "y" | "yes") {
+
+                                        if !matches!(
+                                            input.trim().to_lowercase().as_str(),
+                                            "y" | "yes"
+                                        ) {
                                             eprintln!("\n✋ Installation cancelled.");
                                             eprintln!("   Run: rbee-keeper queen rebuild --with-local-hive");
                                             return Ok(());
@@ -705,7 +741,7 @@ async fn handle_command(cli: Cli) -> Result<()> {
                     }
                 }
             }
-            
+
             let operation = match action {
                 HiveAction::SshTest { alias } => Operation::SshTest { alias },
                 HiveAction::Install { alias } => Operation::HiveInstall { alias },
@@ -726,10 +762,7 @@ async fn handle_command(cli: Cli) -> Result<()> {
                     } else {
                         ssh_config
                     };
-                    Operation::HiveImportSsh {
-                        ssh_config_path,
-                        default_hive_port: default_port,
-                    }
+                    Operation::HiveImportSsh { ssh_config_path, default_hive_port: default_port }
                 }
             };
             submit_and_stream_job(&queen_url, operation).await
@@ -744,22 +777,21 @@ async fn handle_command(cli: Cli) -> Result<()> {
                     let (worker, device_id) = if device.contains(':') {
                         let parts: Vec<&str> = device.split(':').collect();
                         let worker_type = parts[0].to_string();
-                        let device_num = parts.get(1)
-                            .and_then(|s| s.parse::<u32>().ok())
-                            .unwrap_or(0);
+                        let device_num =
+                            parts.get(1).and_then(|s| s.parse::<u32>().ok()).unwrap_or(0);
                         (worker_type, device_num)
                     } else {
                         // If no colon, assume device 0
                         (device.clone(), 0)
                     };
-                    
+
                     Operation::WorkerSpawn {
                         hive_id,
                         model: model.clone(),
                         worker,
                         device: device_id,
                     }
-                },
+                }
                 WorkerAction::List => Operation::WorkerList { hive_id },
                 WorkerAction::Get { id } => Operation::WorkerGet { hive_id, id: id.clone() },
                 WorkerAction::Delete { id } => Operation::WorkerDelete { hive_id, id: id.clone() },

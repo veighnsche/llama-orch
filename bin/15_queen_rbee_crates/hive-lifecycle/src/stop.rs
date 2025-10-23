@@ -87,11 +87,7 @@ pub async fn execute_hive_stop(
             .human("🌐 Remote stop: {}")
             .emit();
 
-        NARRATE
-            .action("hive_sigterm")
-            .job_id(job_id)
-            .human("📤 Sending remote SIGTERM...")
-            .emit();
+        NARRATE.action("hive_sigterm").job_id(job_id).human("📤 Sending remote SIGTERM...").emit();
 
         // Send SIGTERM via SSH
         let stop_result = ssh_exec(

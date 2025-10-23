@@ -16,13 +16,13 @@ const NARRATE: NarrationFactory = NarrationFactory::new("dmn-life");
 pub struct InstallConfig {
     /// Name of the daemon binary (e.g., "rbee-hive", "vllm-worker")
     pub binary_name: String,
-    
+
     /// Optional: Provided binary path (if user specifies custom path)
     pub binary_path: Option<String>,
-    
+
     /// Optional: Target installation path (if copying binary)
     pub target_path: Option<String>,
-    
+
     /// Optional: Job ID for narration routing
     pub job_id: Option<String>,
 }
@@ -31,7 +31,7 @@ pub struct InstallConfig {
 pub struct InstallResult {
     /// Path to the installed binary
     pub binary_path: String,
-    
+
     /// Whether the binary was found in target directory
     pub found_in_target: bool,
 }
@@ -97,10 +97,7 @@ pub async fn install_daemon(config: InstallConfig) -> Result<InstallResult> {
             anyhow::bail!("Binary not found at: {}", provided_path);
         }
 
-        return Ok(InstallResult {
-            binary_path: provided_path,
-            found_in_target: false,
-        });
+        return Ok(InstallResult { binary_path: provided_path, found_in_target: false });
     }
 
     // Step 2: Try to find in target directory

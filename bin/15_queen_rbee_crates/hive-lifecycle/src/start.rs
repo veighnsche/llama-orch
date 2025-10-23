@@ -82,7 +82,7 @@ pub async fn execute_hive_start(
     if is_remote {
         // REMOTE START: Use SSH
         let binary_path = get_remote_binary_path(hive_config);
-        
+
         NARRATE
             .action("hive_mode")
             .job_id(job_id)
@@ -93,8 +93,7 @@ pub async fn execute_hive_start(
         // Start hive daemon on remote host
         let start_cmd = format!(
             "nohup {} --port {} > /dev/null 2>&1 & echo $!",
-            binary_path,
-            hive_config.hive_port
+            binary_path, hive_config.hive_port
         );
 
         let pid_output = ssh_exec(

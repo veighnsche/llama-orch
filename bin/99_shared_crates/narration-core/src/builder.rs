@@ -488,10 +488,8 @@ fn format_array_table(items: &[Value]) -> String {
                 .iter()
                 .enumerate()
                 .map(|(i, k)| {
-                    let val = map
-                        .get(k)
-                        .map(format_value_compact)
-                        .unwrap_or_else(|| String::from("-"));
+                    let val =
+                        map.get(k).map(format_value_compact).unwrap_or_else(|| String::from("-"));
                     format!("{:width$}", val, width = widths[i])
                 })
                 .collect();
@@ -702,7 +700,7 @@ impl NarrationFactory {
     ///
     /// # Panics
     /// Creates a narration with the given action.
-    /// 
+    ///
     /// Note: Action names longer than 15 characters may affect formatting aesthetics
     /// but will not cause errors.
     pub fn action(&self, action: &'static str) -> Narration {

@@ -14,9 +14,10 @@ struct HiveConfigWrapper<'a>(&'a RbeeConfig);
 
 impl<'a> ListableConfig for HiveConfigWrapper<'a> {
     type Info = HiveInfo;
-    
+
     fn list_all(&self) -> Vec<Self::Info> {
-        self.0.hives
+        self.0
+            .hives
             .all()
             .iter()
             .map(|h| HiveInfo {
@@ -27,7 +28,7 @@ impl<'a> ListableConfig for HiveConfigWrapper<'a> {
             })
             .collect()
     }
-    
+
     fn daemon_type_name(&self) -> &'static str {
         "hive"
     }

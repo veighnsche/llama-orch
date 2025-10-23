@@ -57,7 +57,11 @@ impl DaemonManager {
     /// # Ok(())
     /// # }
     /// ```
-    pub fn enable_auto_update(mut self, binary_name: impl Into<String>, source_dir: impl Into<String>) -> Self {
+    pub fn enable_auto_update(
+        mut self,
+        binary_name: impl Into<String>,
+        source_dir: impl Into<String>,
+    ) -> Self {
         self.auto_update = Some((binary_name.into(), source_dir.into()));
         self
     }
@@ -83,16 +87,16 @@ impl DaemonManager {
                 .emit();
 
             let updater = AutoUpdater::new(binary_name, source_dir)?;
-            
+
             if updater.needs_rebuild()? {
                 NARRATE
                     .action("auto_rebuild")
                     .context(binary_name)
                     .human("🔨 Rebuilding '{}'...")
                     .emit();
-                
+
                 updater.rebuild()?;
-                
+
                 NARRATE
                     .action("auto_rebuild")
                     .context(binary_name)
@@ -188,8 +192,9 @@ impl DaemonManager {
         // TEAM-255: Find workspace root by looking for Cargo.toml
         let mut current = std::env::current_dir()?;
         let workspace_root = loop {
-            if current.join("Cargo.toml").exists() && 
-               (current.join("xtask").exists() || current.join("bin").exists()) {
+            if current.join("Cargo.toml").exists()
+                && (current.join("xtask").exists() || current.join("bin").exists())
+            {
                 break current;
             }
             if let Some(parent) = current.parent() {

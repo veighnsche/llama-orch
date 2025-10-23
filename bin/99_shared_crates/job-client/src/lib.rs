@@ -51,20 +51,14 @@ impl JobClient {
     /// let client = JobClient::new("http://localhost:8500");
     /// ```
     pub fn new(base_url: impl Into<String>) -> Self {
-        Self {
-            base_url: base_url.into(),
-            client: reqwest::Client::new(),
-        }
+        Self { base_url: base_url.into(), client: reqwest::Client::new() }
     }
 
     /// Create a new job client with a custom reqwest client
     ///
     /// Useful for setting timeouts, custom headers, etc.
     pub fn with_client(base_url: impl Into<String>, client: reqwest::Client) -> Self {
-        Self {
-            base_url: base_url.into(),
-            client,
-        }
+        Self { base_url: base_url.into(), client }
     }
 
     /// Submit a job and stream its SSE responses
@@ -138,7 +132,7 @@ impl JobClient {
             for line in text.lines() {
                 // Strip "data: " prefix if present (SSE format)
                 let data = line.strip_prefix("data: ").unwrap_or(line);
-                
+
                 // Skip empty lines
                 if data.is_empty() {
                     continue;

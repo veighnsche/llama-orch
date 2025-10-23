@@ -18,7 +18,10 @@ use narration::{
     ACTION_CAPS_RESPONSE, ACTION_LISTEN, ACTION_READY, ACTION_STARTUP, NARRATE,
 };
 
-use axum::{routing::{get, post}, Json, Router};
+use axum::{
+    routing::{get, post},
+    Json, Router,
+};
 use clap::Parser;
 use job_server::JobRegistry;
 use serde::Serialize;
@@ -53,9 +56,7 @@ async fn main() -> anyhow::Result<()> {
     let job_registry: Arc<JobRegistry<String>> = Arc::new(JobRegistry::new());
 
     // TEAM-261: Create HTTP state for job endpoints
-    let job_state = http::jobs::HiveState {
-        registry: job_registry,
-    };
+    let job_state = http::jobs::HiveState { registry: job_registry };
 
     // Create router with health, capabilities, and job endpoints
     let app = Router::new()

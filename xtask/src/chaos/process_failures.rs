@@ -2,10 +2,9 @@
 // Purpose: Test behavior when processes crash
 // TEAM-255: Fixed missing imports
 
-use std::time::Duration;
-use crate::integration::assertions::{assert_failure, assert_success, assert_output_contains};
+use crate::integration::assertions::{assert_failure, assert_output_contains, assert_success};
 use crate::integration::harness::TestHarness;
-
+use std::time::Duration;
 
 #[tokio::test]
 async fn test_queen_crash_during_operation() {

@@ -48,10 +48,10 @@ const NARRATE: NarrationFactory = NarrationFactory::new("dmn-life");
 pub trait GettableConfig {
     /// The info type returned for the daemon instance
     type Info: Serialize;
-    
+
     /// Get daemon instance by ID
     fn get_by_id(&self, id: &str) -> Option<Self::Info>;
-    
+
     /// Name of the daemon type (e.g., "hive", "worker")
     fn daemon_type_name(&self) -> &'static str;
 }
@@ -85,7 +85,7 @@ pub async fn get_daemon<T: GettableConfig>(
     job_id: Option<&str>,
 ) -> Result<T::Info> {
     let daemon_type = config.daemon_type_name();
-    
+
     let mut narration = NARRATE.action("daemon_get").context(daemon_type).context(id);
     if let Some(jid) = job_id {
         narration = narration.job_id(jid);
@@ -95,20 +95,13 @@ pub async fn get_daemon<T: GettableConfig>(
     match config.get_by_id(id) {
         Some(info) => {
             // Convert to JSON for display
-            let info_json = serde_json::to_value(&info)
-                .unwrap_or(serde_json::Value::Null);
+            let info_json = serde_json::to_value(&info).unwrap_or(serde_json::Value::Null);
 
-            let mut narration = NARRATE
-                .action("daemon_found")
-                .context(daemon_type)
-                .context(id);
+            let mut narration = NARRATE.action("daemon_found").context(daemon_type).context(id);
             if let Some(jid) = job_id {
                 narration = narration.job_id(jid);
             }
-            narration
-                .human(&format!("✅ Found {} '{{}}':", daemon_type))
-                .table(&info_json)
-                .emit();
+            narration.human(&format!("✅ Found {} '{{}}':", daemon_type)).table(&info_json).emit();
 
             Ok(info)
         }
@@ -123,7 +116,7 @@ pub async fn get_daemon<T: GettableConfig>(
                 narration = narration.job_id(jid);
             }
             narration.emit_error();
-            
+
             anyhow::bail!("{} '{}' not found", daemon_type, id)
         }
     }

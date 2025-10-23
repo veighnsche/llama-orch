@@ -60,11 +60,11 @@ pub async fn execute_hive_uninstall(
         Err(_) => (*config).clone(),
     };
     let had_capabilities = fresh_config.capabilities.contains(alias);
-    
+
     if had_capabilities {
         // TEAM-257: Action names must be ≤15 chars (narration system limit)
         NARRATE
-            .action("hive_cache_rm")  // Was: hive_cache_cleanup (18 chars)
+            .action("hive_cache_rm") // Was: hive_cache_cleanup (18 chars)
             .job_id(job_id)
             .human("🗑️  Removing from capabilities cache...")
             .emit();
@@ -73,14 +73,14 @@ pub async fn execute_hive_uninstall(
         config_mut.capabilities.remove(alias);
         if let Err(e) = config_mut.capabilities.save() {
             NARRATE
-                .action("hive_cache_err")  // Was: hive_cache_error (16 chars)
+                .action("hive_cache_err") // Was: hive_cache_error (16 chars)
                 .job_id(job_id)
                 .context(e.to_string())
                 .human("⚠️  Failed to save capabilities cache: {}")
                 .emit();
         } else {
             NARRATE
-                .action("hive_cache_ok")  // Was: hive_cache_removed (18 chars)
+                .action("hive_cache_ok") // Was: hive_cache_removed (18 chars)
                 .job_id(job_id)
                 .human("✅ Removed from capabilities cache")
                 .emit();
@@ -117,9 +117,6 @@ pub async fn execute_hive_uninstall(
     } else {
         format!("Hive '{}' already uninstalled (no cached capabilities)", alias)
     };
-    
-    Ok(HiveUninstallResponse {
-        success: true,
-        message,
-    })
+
+    Ok(HiveUninstallResponse { success: true, message })
 }

@@ -105,13 +105,9 @@ impl RbeeSSHClient {
     /// Internal connection logic (for timeout wrapping)
     async fn connect_internal(host: &str, port: u16, user: &str) -> Result<Self> {
         let config = russh::client::Config::default();
-        let mut session = russh::client::connect(
-            Arc::new(config),
-            (host, port),
-            RbeeSSHHandler,
-        )
-        .await
-        .context("Failed to connect to SSH server")?;
+        let mut session = russh::client::connect(Arc::new(config), (host, port), RbeeSSHHandler)
+            .await
+            .context("Failed to connect to SSH server")?;
 
         // TEAM-256: Load SSH keys from standard locations
         // Matches standard ssh client behavior (~/.ssh/id_*)
@@ -144,9 +140,7 @@ impl RbeeSSHClient {
             };
 
             // Try to authenticate
-            let auth_result = session
-                .authenticate_publickey(user, Arc::new(key_pair))
-                .await;
+            let auth_result = session.authenticate_publickey(user, Arc::new(key_pair)).await;
 
             if let Ok(true) = auth_result {
                 authenticated = true;
@@ -174,19 +168,17 @@ impl RbeeSSHClient {
 
     /// Execute command on remote host
     pub async fn exec(&mut self, command: &str) -> Result<(String, String, i32)> {
-        let mut channel = self.session.channel_open_session().await
-            .context("Failed to open SSH channel")?;
-        
-        channel.exec(true, command).await
-            .context("Failed to execute command")?;
+        let mut channel =
+            self.session.channel_open_session().await.context("Failed to open SSH channel")?;
+
+        channel.exec(true, command).await.context("Failed to execute command")?;
 
         let mut stdout = String::new();
         let mut stderr = String::new();
         let mut code = None;
 
         loop {
-            let msg = channel.wait().await
-                .context("Failed to wait for channel message")?;
+            let msg = channel.wait().await.context("Failed to wait for channel message")?;
             match msg {
                 russh::ChannelMsg::Data { ref data } => {
                     stdout.push_str(&String::from_utf8_lossy(data));
@@ -212,27 +204,27 @@ impl RbeeSSHClient {
 
     /// Copy file to remote host via SFTP
     pub async fn copy_file(&mut self, local_path: &str, remote_path: &str) -> Result<()> {
-        let channel = self.session.channel_open_session().await
-            .context("Failed to open SFTP channel")?;
-        channel.request_subsystem(true, "sftp").await
+        let channel =
+            self.session.channel_open_session().await.context("Failed to open SFTP channel")?;
+        channel
+            .request_subsystem(true, "sftp")
+            .await
             .context("Failed to request SFTP subsystem")?;
-        
-        let sftp = SftpSession::new(channel.into_stream()).await
+
+        let sftp = SftpSession::new(channel.into_stream())
+            .await
             .context("Failed to create SFTP session")?;
-        
+
         // Read local file
-        let local_data = tokio::fs::read(local_path).await
-            .context("Failed to read local file")?;
-        
+        let local_data = tokio::fs::read(local_path).await.context("Failed to read local file")?;
+
         // Write to remote
-        let mut remote_file = sftp.create(remote_path).await
-            .context("Failed to create remote file")?;
-        
-        remote_file.write_all(&local_data).await
-            .context("Failed to write to remote file")?;
-        remote_file.sync_all().await
-            .context("Failed to sync remote file")?;
-        
+        let mut remote_file =
+            sftp.create(remote_path).await.context("Failed to create remote file")?;
+
+        remote_file.write_all(&local_data).await.context("Failed to write to remote file")?;
+        remote_file.sync_all().await.context("Failed to sync remote file")?;
+
         Ok(())
     }
 
@@ -308,16 +300,14 @@ pub async fn test_ssh_connection(config: SshConfig) -> Result<SshTestResult> {
 
     // TEAM-256: Pre-flight check - verify SSH agent is running
     if let Err(msg) = check_ssh_agent() {
-        Narration::new(ACTOR_SSH_CLIENT, ACTION_TEST, "failed")
-            .human(format!("❌ {}", msg))
-            .emit();
+        Narration::new(ACTOR_SSH_CLIENT, ACTION_TEST, "failed").human(format!("❌ {}", msg)).emit();
         return Ok(SshTestResult { success: false, error: Some(msg), test_output: None });
     }
 
     // TEAM-256: Use async russh API with timeout
     let result = tokio::time::timeout(
         Duration::from_secs(config.timeout_secs),
-        test_ssh_connection_async(config.clone())
+        test_ssh_connection_async(config.clone()),
     )
     .await;
 
@@ -411,9 +401,5 @@ async fn test_ssh_connection_async(config: SshConfig) -> Result<SshTestResult> {
     }
 
     // Success!
-    Ok(SshTestResult {
-        success: true,
-        error: None,
-        test_output: Some(stdout.trim().to_string()),
-    })
+    Ok(SshTestResult { success: true, error: None, test_output: Some(stdout.trim().to_string()) })
 }

@@ -11,8 +11,8 @@
 //! 2. Worker heartbeat (NEW - workers send directly to queen)
 
 use axum::{extract::State, http::StatusCode, Json};
-use queen_rbee_worker_registry::WorkerRegistry;  // TEAM-262: Renamed
-use rbee_heartbeat::WorkerHeartbeatPayload;  // TEAM-262: Removed HiveHeartbeatPayload
+use queen_rbee_worker_registry::WorkerRegistry; // TEAM-262: Renamed
+use rbee_heartbeat::WorkerHeartbeatPayload; // TEAM-262: Removed HiveHeartbeatPayload
 use serde::{Deserialize, Serialize};
 use std::sync::Arc;
 
@@ -118,7 +118,7 @@ pub async fn handle_worker_heartbeat(
     // TEAM-261: Update worker state in registry
     // TODO: Implement worker registry update
     // For now, just log and acknowledge
-    
+
     eprintln!(
         "💓 Worker heartbeat: worker_id={}, timestamp={}, health_status={:?}",
         payload.worker_id, payload.timestamp, payload.health_status
