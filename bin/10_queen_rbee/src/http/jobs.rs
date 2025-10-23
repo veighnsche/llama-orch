@@ -30,7 +30,8 @@ pub struct SchedulerState {
     /// TEAM-194: File-based config (replaces hive_catalog)
     pub config: Arc<RbeeConfig>,
     /// TEAM-190: Runtime registry for live hive/worker state
-    pub hive_registry: Arc<queen_rbee_hive_registry::HiveRegistry>,
+    /// TEAM-262: Renamed to WorkerRegistry (field name kept for compatibility)
+    pub hive_registry: Arc<queen_rbee_worker_registry::WorkerRegistry>,
 }
 
 /// Convert HTTP state to router state

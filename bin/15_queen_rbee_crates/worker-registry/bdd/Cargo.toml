@@ -1,7 +1,8 @@
 # TEAM-135: Created by TEAM-135 (BDD scaffolding)
+# TEAM-262: Renamed from hive-registry-bdd to worker-registry-bdd
 
 [package]
-name = "queen-rbee-hive-registry-bdd"
+name = "queen-rbee-worker-registry-bdd"
 version = "0.0.0"
 edition = "2021"
 license = "GPL-3.0-or-later"
@@ -15,7 +16,7 @@ anyhow = { workspace = true }
 cucumber = { version = "0.20", features = ["macros"] }
 tokio = { version = "1", features = ["macros", "rt-multi-thread"] }
 futures = { workspace = true }
-queen-rbee-hive-registry = { path = ".." }
+queen-rbee-worker-registry = { path = ".." }
 
 [[bin]]
 name = "bdd-runner"

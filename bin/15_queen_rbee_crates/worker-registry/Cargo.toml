@@ -1,13 +1,14 @@
 # TEAM-135: Created by TEAM-135 (scaffolding)
+# TEAM-262: Renamed from hive-registry to worker-registry
 
 [package]
-name = "queen-rbee-hive-registry"
+name = "queen-rbee-worker-registry"
 version = "0.1.0"
 edition = "2021"
 license = "GPL-3.0-or-later"
 
 [lib]
-name = "queen_rbee_hive_registry"
+name = "queen_rbee_worker_registry"
 path = "src/lib.rs"
 
 [dependencies]

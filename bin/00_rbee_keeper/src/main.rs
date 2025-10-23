@@ -161,6 +161,26 @@ pub enum QueenAction {
     Stop,
     /// Check queen-rbee daemon status
     Status,
+    /// Rebuild queen with different configuration
+    /// TEAM-262: Added for local-hive optimization
+    Rebuild {
+        /// Include local hive for localhost operations (50-100x faster)
+        #[arg(long)]
+        with_local_hive: bool,
+    },
+    /// Show queen build configuration
+    /// TEAM-262: Query /v1/build-info endpoint
+    Info,
+    /// Install queen binary
+    /// TEAM-262: Similar to hive install
+    Install {
+        /// Binary path (optional, auto-detect from target/)
+        #[arg(short, long)]
+        binary: Option<String>,
+    },
+    /// Uninstall queen binary
+    /// TEAM-262: Similar to hive uninstall
+    Uninstall,
 }
 
 #[derive(Subcommand)]
@@ -411,6 +431,63 @@ async fn handle_command(cli: Cli) -> Result<()> {
                         Ok(())
                     }
                 }
+            }
+            QueenAction::Rebuild { with_local_hive } => {
+                // TEAM-262: Rebuild queen with different configuration
+                NARRATE.action("queen_rebuild").human("🔨 Rebuilding queen-rbee...").emit();
+                
+                if with_local_hive {
+                    NARRATE.action("queen_rebuild").human("✨ Building with integrated local hive...").emit();
+                    // TODO: cargo build --release --bin queen-rbee --features local-hive
+                } else {
+                    NARRATE.action("queen_rebuild").human("📡 Building distributed queen (remote hives only)...").emit();
+                    // TODO: cargo build --release --bin queen-rbee
+                }
+                
+                NARRATE.action("queen_rebuild").human("⚠️  TODO: Implement build logic").emit();
+                Ok(())
+            }
+            QueenAction::Info => {
+                // TEAM-262: Query queen's /v1/build-info endpoint
+                let client = reqwest::Client::builder()
+                    .timeout(tokio::time::Duration::from_secs(5))
+                    .build()?;
+
+                match client.get(format!("{}/v1/build-info", queen_url)).send().await {
+                    Ok(response) if response.status().is_success() => {
+                        NARRATE.action("queen_info").human("📋 Queen build information:").emit();
+                        if let Ok(body) = response.text().await {
+                            println!("{}", body);
+                        }
+                        Ok(())
+                    }
+                    Err(_) => {
+                        NARRATE
+                            .action("queen_info")
+                            .human("❌ Queen is not running or /v1/build-info not available")
+                            .emit();
+                        Ok(())
+                    }
+                    _ => {
+                        NARRATE.action("queen_info").human("⚠️  Failed to get build info").emit();
+                        Ok(())
+                    }
+                }
+            }
+            QueenAction::Install { binary } => {
+                // TEAM-262: Install queen binary
+                NARRATE.action("queen_install").human("📦 Installing queen-rbee...").emit();
+                if let Some(path) = binary {
+                    NARRATE.action("queen_install").context(&path).human("Using binary: {}").emit();
+                }
+                NARRATE.action("queen_install").human("⚠️  TODO: Implement install logic (similar to hive install)").emit();
+                Ok(())
+            }
+            QueenAction::Uninstall => {
+                // TEAM-262: Uninstall queen binary
+                NARRATE.action("queen_uninstall").human("🗑️  Uninstalling queen-rbee...").emit();
+                NARRATE.action("queen_uninstall").human("⚠️  TODO: Implement uninstall logic (similar to hive uninstall)").emit();
+                Ok(())
             }
         },
 

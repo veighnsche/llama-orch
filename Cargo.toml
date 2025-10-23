@@ -25,16 +25,14 @@ members = [
     "bin/15_queen_rbee_crates/ssh-client",
     "bin/05_rbee_keeper_crates/queen-lifecycle",
     "bin/15_queen_rbee_crates/ssh-client/bdd",
-    "bin/15_queen_rbee_crates/hive-registry",
-    "bin/15_queen_rbee_crates/hive-registry/bdd",
+    "bin/15_queen_rbee_crates/worker-registry",  # TEAM-262: Renamed from hive-registry
+    "bin/15_queen_rbee_crates/worker-registry/bdd",
     "bin/15_queen_rbee_crates/hive-lifecycle",
     "bin/15_queen_rbee_crates/hive-lifecycle/bdd",
     
     # rbee-hive crates (NO CLI!)
     "bin/25_rbee_hive_crates/worker-lifecycle",
     "bin/25_rbee_hive_crates/worker-lifecycle/bdd",
-    "bin/25_rbee_hive_crates/worker-registry",
-    "bin/25_rbee_hive_crates/worker-registry/bdd",
     "bin/25_rbee_hive_crates/model-catalog",
     "bin/25_rbee_hive_crates/model-catalog/bdd",
     "bin/25_rbee_hive_crates/model-provisioner",

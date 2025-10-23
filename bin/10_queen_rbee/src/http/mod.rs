@@ -17,12 +17,15 @@
 //! - `health` - Health check endpoint
 //! - `heartbeat` - Hive heartbeat endpoint
 //! - `jobs` - Job creation and SSE streaming endpoints
+//! - `build_info` - Build information endpoint (TEAM-262)
 
 pub mod health;
 pub mod heartbeat;
 pub mod jobs;
+pub mod build_info;  // TEAM-262
 
 // Re-export commonly used types
 pub use health::handle_health;
 pub use heartbeat::{handle_heartbeat, handle_worker_heartbeat, HeartbeatState, HttpHeartbeatAcknowledgement};
 pub use jobs::{handle_create_job, handle_stream_job, SchedulerState};
+pub use build_info::handle_build_info;  // TEAM-262

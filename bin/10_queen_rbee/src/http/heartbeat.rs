@@ -11,19 +11,21 @@
 //! 2. Worker heartbeat (NEW - workers send directly to queen)
 
 use axum::{extract::State, http::StatusCode, Json};
-use queen_rbee_hive_registry::HiveRegistry;
-use rbee_heartbeat::{HiveHeartbeatPayload, WorkerHeartbeatPayload};
+use queen_rbee_worker_registry::WorkerRegistry;  // TEAM-262: Renamed
+use rbee_heartbeat::WorkerHeartbeatPayload;  // TEAM-262: Removed HiveHeartbeatPayload
 use serde::{Deserialize, Serialize};
 use std::sync::Arc;
 
 /// State for the heartbeat endpoint
 ///
 /// TEAM-186: Changed from HiveCatalog to HiveRegistry
+/// TEAM-262: Renamed to WorkerRegistry
 #[derive(Clone)]
 pub struct HeartbeatState {
-    /// Registry for runtime hive state (RAM)
+    /// Registry for runtime worker state (RAM)
     /// TEAM-186: Heartbeat data goes to registry, not catalog
-    pub hive_registry: Arc<HiveRegistry>,
+    /// TEAM-262: Renamed to WorkerRegistry (field name kept for compatibility)
+    pub hive_registry: Arc<WorkerRegistry>,
 }
 
 /// HTTP response for heartbeat acknowledgement

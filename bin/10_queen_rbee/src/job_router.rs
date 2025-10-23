@@ -34,7 +34,7 @@ use queen_rbee_hive_lifecycle::{
     HiveRefreshCapabilitiesRequest, HiveStartRequest, HiveStatusRequest, HiveStopRequest,
     HiveUninstallRequest, SshTestRequest,
 };
-use queen_rbee_hive_registry::HiveRegistry; // TEAM-190: For Status operation
+use queen_rbee_worker_registry::WorkerRegistry; // TEAM-190/262: For Status operation
 use rbee_config::RbeeConfig;
 use rbee_operations::Operation;
 use std::sync::Arc;

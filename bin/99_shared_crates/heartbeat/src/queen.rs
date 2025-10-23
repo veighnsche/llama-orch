@@ -1,17 +1,18 @@
-//! Queen heartbeat receiver logic (Hive → Queen)
+//! Queen heartbeat receiver logic (Worker → Queen)
 //!
-//! Provides endpoint handler for receiving heartbeats from hives.
+//! Provides types for receiving heartbeats from workers.
 //!
 //! Created by: TEAM-158
+//! Simplified by: TEAM-261 (workers send directly to queen)
+//! Cleaned by: TEAM-262 (removed hive heartbeat handling)
 
-use crate::types::HiveHeartbeatPayload;
 use serde::Serialize;
 
 // ============================================================================
 // Queen Heartbeat Response
 // ============================================================================
 
-/// Response sent back to hive after receiving heartbeat
+/// Response sent back to worker after receiving heartbeat
 #[derive(Debug, Clone, Serialize)]
 pub struct HeartbeatAcknowledgement {
     /// Whether the heartbeat was acknowledged
@@ -28,25 +29,8 @@ impl HeartbeatAcknowledgement {
 // ============================================================================
 // Heartbeat Handler Trait
 // ============================================================================
-
-/// Trait for handling received heartbeats
-///
-/// The queen must implement this to process heartbeats from hives.
-/// This allows the queen to update its catalog and registries.
-pub trait HeartbeatHandler: Send + Sync {
-    /// Handle a heartbeat from a hive
-    ///
-    /// # Arguments
-    /// * `payload` - The heartbeat payload from the hive
-    ///
-    /// # Returns
-    /// * `Ok(())` if heartbeat was processed successfully
-    /// * `Err(String)` if there was an error processing the heartbeat
-    fn handle_heartbeat(
-        &self,
-        payload: HiveHeartbeatPayload,
-    ) -> impl std::future::Future<Output = Result<(), String>> + Send;
-}
+// TEAM-262: Removed HeartbeatHandler trait - queen handles worker heartbeats
+// directly via HTTP endpoint, no trait abstraction needed
 
 #[cfg(test)]
 mod tests {

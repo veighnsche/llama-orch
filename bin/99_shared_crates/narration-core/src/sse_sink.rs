@@ -8,14 +8,15 @@ use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
 use tokio::sync::mpsc;
 
-/// Global SSE broadcaster with job-scoped channels.
+/// Global SSE channel registry with job-scoped channels.
 ///
 /// TEAM-200: Refactored to support per-job channels
 /// TEAM-204: CRITICAL SECURITY FIX - Removed global channel (privacy hazard)
-static SSE_BROADCASTER: once_cell::sync::Lazy<SseBroadcaster> =
-    once_cell::sync::Lazy::new(SseBroadcaster::new);
+/// TEAM-262: Renamed from SSE_BROADCASTER to SSE_CHANNEL_REGISTRY
+static SSE_CHANNEL_REGISTRY: once_cell::sync::Lazy<SseChannelRegistry> =
+    once_cell::sync::Lazy::new(SseChannelRegistry::new);
 
-/// Broadcaster for SSE narration events with job isolation.
+/// Job-scoped SSE channel registry.
 ///
 /// TEAM-204: SECURITY FIX - Job-scoped channels ONLY. No global channel.
 /// If narration has no job_id, it's dropped (fail-fast).
@@ -23,9 +24,11 @@ static SSE_BROADCASTER: once_cell::sync::Lazy<SseBroadcaster> =
 /// TEAM-205: SIMPLIFIED - Use MPSC instead of broadcast to eliminate race conditions.
 /// MPSC has simpler semantics (single receiver) and no "Closed" issues.
 ///
+/// TEAM-262: RENAMED - "Broadcaster" was misleading (it's a registry of isolated channels)
+///
 /// CRITICAL: Global channels are a privacy hazard - inference data
 /// from Job A could leak to subscribers of Job B.
-pub struct SseBroadcaster {
+pub struct SseChannelRegistry {
     /// Per-job senders (keyed by job_id) - for emitting events
     senders: Arc<Mutex<HashMap<String, mpsc::Sender<NarrationEvent>>>>,
     /// Per-job receivers (keyed by job_id) - taken once by SSE handler
@@ -89,7 +92,7 @@ impl From<NarrationFields> for NarrationEvent {
     }
 }
 
-impl SseBroadcaster {
+impl SseChannelRegistry {
     fn new() -> Self {
         Self {
             senders: Arc::new(Mutex::new(HashMap::new())),
@@ -166,14 +169,14 @@ impl SseBroadcaster {
 /// // Now narration with this job_id goes to isolated channel
 /// ```
 pub fn create_job_channel(job_id: String, capacity: usize) {
-    SSE_BROADCASTER.create_job_channel(job_id, capacity);
+    SSE_CHANNEL_REGISTRY.create_job_channel(job_id, capacity);
 }
 
 /// Remove a job's SSE channel (cleanup).
 ///
 /// TEAM-200: Call this when job completes to prevent memory leaks.
 pub fn remove_job_channel(job_id: &str) {
-    SSE_BROADCASTER.remove_job_channel(job_id);
+    SSE_CHANNEL_REGISTRY.remove_job_channel(job_id);
 }
 
 /// Send a narration event to job-specific channel.
@@ -187,7 +190,7 @@ pub fn send(fields: &NarrationFields) {
 
     // SECURITY: Only send if we have a job_id
     if let Some(job_id) = &fields.job_id {
-        SSE_BROADCASTER.send_to_job(job_id, event);
+        SSE_CHANNEL_REGISTRY.send_to_job(job_id, event);
     }
     // If no job_id: DROP (fail-fast, prevent privacy leaks)
 }
@@ -206,19 +209,19 @@ pub fn send(fields: &NarrationFields) {
 /// }
 /// ```
 pub fn take_job_receiver(job_id: &str) -> Option<mpsc::Receiver<NarrationEvent>> {
-    SSE_BROADCASTER.take_job_receiver(job_id)
+    SSE_CHANNEL_REGISTRY.take_job_receiver(job_id)
 }
 
 /// Check if SSE broadcasting is enabled.
 ///
-/// TEAM-204: Always returns true (job channels are created on-demand).
+/// TEAM-200: Always true now (job-scoped channels are always available).
 pub fn is_enabled() -> bool {
     true
 }
 
 /// Check if a job channel exists.
 pub fn has_job_channel(job_id: &str) -> bool {
-    SSE_BROADCASTER.has_job_channel(job_id)
+    SSE_CHANNEL_REGISTRY.has_job_channel(job_id)
 }
 
 // TEAM-204: Removed obsolete redaction tests

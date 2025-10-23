@@ -1,8 +1,10 @@
-//! queen-rbee-hive-registry
+//! queen-rbee-worker-registry
 //!
-//! In-memory registry for tracking real-time runtime state of all hives.
+//! In-memory registry for tracking real-time runtime state of all workers.
 //!
 //! TEAM-221: Investigated 2025-10-22 - Comprehensive behavior inventory complete
+//! TEAM-261: Simplified - workers send heartbeats directly to queen
+//! TEAM-262: Renamed from hive-registry to worker-registry
 //!
 //! This is DIFFERENT from `hive-catalog` (SQLite - persistent storage):
 //! - **Catalog** = Persistent config (host, port, SSH, device capabilities)
@@ -11,10 +13,10 @@
 //! ## Usage
 //!
 //! ```rust
-//! use queen_rbee_hive_registry::HiveRegistry;
-//! use rbee_heartbeat::HiveHeartbeatPayload;
+//! use queen_rbee_worker_registry::WorkerRegistry;
+//! use rbee_heartbeat::WorkerHeartbeatPayload;
 //!
-//! let registry = HiveRegistry::new();
+//! let registry = WorkerRegistry::new();
 //!
 //! // Update from heartbeat
 //! let payload = HiveHeartbeatPayload {
@@ -39,15 +41,17 @@ use rbee_heartbeat::HiveHeartbeatPayload;
 use std::collections::HashMap;
 use std::sync::RwLock;
 
-/// In-memory registry for tracking hive runtime state
+/// In-memory registry for tracking worker runtime state
 ///
 /// Thread-safe registry using RwLock for concurrent access.
 /// Optimized for read-heavy workload (scheduling queries).
-pub struct HiveRegistry {
+///
+/// TEAM-262: Renamed from HiveRegistry - tracks workers directly after TEAM-261
+pub struct WorkerRegistry {
     hives: RwLock<HashMap<String, HiveRuntimeState>>,
 }
 
-impl HiveRegistry {
+impl WorkerRegistry {
     /// Create a new empty hive registry
     pub fn new() -> Self {
         Self { hives: RwLock::new(HashMap::new()) }

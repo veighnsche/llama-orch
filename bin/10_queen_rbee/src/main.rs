@@ -85,15 +85,16 @@ async fn main() -> Result<()> {
     // Generic over String for now (will stream text tokens)
     let job_server: Arc<JobRegistry<String>> = Arc::new(JobRegistry::new());
 
-    // TEAM-188: Initialize hive registry (RAM) for runtime state
-    let hive_registry = Arc::new(queen_rbee_hive_registry::HiveRegistry::new());
+    // TEAM-188: Initialize worker registry (RAM) for runtime state
+    // TEAM-262: Renamed from hive_registry to worker_registry
+    let worker_registry = Arc::new(queen_rbee_worker_registry::WorkerRegistry::new());
 
     // TODO: Initialize other registries when migrated
     // - beehive_registry (SQLite catalog + RAM registry)
     // - worker_registry (RAM)
     // - Load config from args.config
 
-    let app = create_router(job_server, Arc::new(config), hive_registry);
+    let app = create_router(job_server, Arc::new(config), worker_registry);
     let addr = SocketAddr::from(([127, 0, 0, 1], args.port));
 
     NARRATE.action("listen").context(addr.to_string()).human("Listening on http://{}").emit();
@@ -122,7 +123,7 @@ async fn main() -> Result<()> {
 fn create_router(
     job_server: Arc<JobRegistry<String>>,
     config: Arc<RbeeConfig>,
-    hive_registry: Arc<queen_rbee_hive_registry::HiveRegistry>,
+    worker_registry: Arc<queen_rbee_worker_registry::WorkerRegistry>,  // TEAM-262: Renamed
 ) -> axum::Router {
     // TEAM-164: Create states for HTTP endpoints
     // TEAM-190: Added hive_registry to job_state for Status operation
@@ -130,16 +131,17 @@ fn create_router(
     let job_state = http::SchedulerState {
         registry: job_server,
         config: config.clone(),
-        hive_registry: hive_registry.clone(),
+        hive_registry: worker_registry.clone(),  // TEAM-262: Still named hive_registry in struct
     };
 
-    let heartbeat_state = http::HeartbeatState { hive_registry };
+    let heartbeat_state = http::HeartbeatState { hive_registry: worker_registry };
 
     axum::Router::new()
         // Health check (no /v1 prefix for compatibility)
         .route("/health", get(http::handle_health))
         // TEAM-186: V1 API endpoints (matches API_REFERENCE.md)
         .route("/v1/shutdown", post(handle_shutdown))
+        .route("/v1/build-info", get(http::handle_build_info))  // TEAM-262: Build information
         .route("/v1/heartbeat", post(http::handle_heartbeat))
         .route("/v1/worker-heartbeat", post(http::handle_worker_heartbeat)) // TEAM-261: Workers send heartbeats directly to queen
         .with_state(heartbeat_state)
