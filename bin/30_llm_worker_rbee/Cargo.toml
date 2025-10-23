@@ -198,9 +198,10 @@ uuid = { version = "1.0", features = ["v4"] }  # TEAM-154: For job_id generation
 # TEAM-014: Removed rand = "0.8" (no longer needed, using Candle's LogitsProcessor)
 
 # TEAM-102: Security shared crates
-auth-min = { path = "../99_shared_crates/auth-min" }
-secrets-management = { path = "../99_shared_crates/secrets-management" }
-input-validation = { path = "../99_shared_crates/input-validation" }
+# TEAM-270: Moved to 98_security_crates
+auth-min = { path = "../98_security_crates/auth-min" }
+secrets-management = { path = "../98_security_crates/secrets-management" }
+input-validation = { path = "../98_security_crates/input-validation" }
 
 # TEAM-135: Heartbeat shared crate
 rbee-heartbeat = { path = "../99_shared_crates/heartbeat" }

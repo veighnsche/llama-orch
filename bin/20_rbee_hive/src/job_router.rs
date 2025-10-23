@@ -26,6 +26,7 @@
 use anyhow::Result;
 use job_server::JobRegistry;
 use observability_narration_core::NarrationFactory;
+use rbee_hive_model_catalog::{ModelCatalog, ModelProvisioner}; // TEAM-268: Model catalog, TEAM-269: Model provisioner
 use rbee_operations::Operation;
 use std::sync::Arc;
 
@@ -36,8 +37,9 @@ const NARRATE: NarrationFactory = NarrationFactory::new("hv-router");
 #[derive(Clone)]
 pub struct JobState {
     pub registry: Arc<JobRegistry<String>>,
+    pub model_catalog: Arc<ModelCatalog>, // TEAM-268: Model catalog
+    pub model_provisioner: Arc<ModelProvisioner>, // TEAM-269: Model provisioner
     // TODO: Add worker_registry when implemented
-    // TODO: Add model_catalog when implemented
 }
 
 /// Response from job creation
@@ -79,9 +81,10 @@ pub async fn execute_job(
     state: JobState,
 ) -> impl futures::stream::Stream<Item = String> {
     let registry = state.registry.clone();
+    let state_clone = state.clone(); // TEAM-268: Clone full state for closure
 
     job_server::execute_and_stream(job_id, registry.clone(), move |job_id, payload| {
-        route_operation(job_id, payload, registry)
+        route_operation(job_id, payload, state_clone.clone())
     })
     .await
 }
@@ -92,7 +95,7 @@ pub async fn execute_job(
 async fn route_operation(
     job_id: String,
     payload: serde_json::Value,
-    _registry: Arc<JobRegistry<String>>,
+    state: JobState, // TEAM-268: Changed from _registry to full state
 ) -> Result<()> {
     // Parse payload into typed Operation enum
     let operation: Operation = serde_json::from_value(payload)
@@ -177,58 +180,197 @@ async fn route_operation(
 
         // Model operations
         Operation::ModelDownload { hive_id, model } => {
+            // TEAM-269: Implemented model download with provisioner
             NARRATE
-                .action("model_download")
+                .action("model_download_start")
                 .job_id(&job_id)
                 .context(&hive_id)
                 .context(&model)
-                .human("TODO: Download model '{}' on hive '{}'")
+                .human("📥 Downloading model '{}' on hive '{}'")
                 .emit();
 
-            // TODO: Implement model download
-            // - Download model files
-            // - Register in model_catalog
+            // Check if model already exists
+            if state.model_catalog.contains(&model) {
+                NARRATE
+                    .action("model_download_exists")
+                    .job_id(&job_id)
+                    .context(&model)
+                    .human("⚠️  Model '{}' already exists in catalog")
+                    .emit();
+                
+                return Err(anyhow::anyhow!("Model '{}' already exists", model));
+            }
+
+            // Check if vendor supports this model
+            if !state.model_provisioner.is_supported(&model) {
+                NARRATE
+                    .action("model_download_unsupported")
+                    .job_id(&job_id)
+                    .context(&model)
+                    .human("❌ No vendor supports model '{}'. Supported formats: HuggingFace (contains '/')")
+                    .emit();
+                
+                return Err(anyhow::anyhow!(
+                    "No vendor supports model '{}'. Supported formats: HuggingFace (contains '/')",
+                    model
+                ));
+            }
+
+            // Download model using provisioner
+            match state.model_provisioner.download_model(&job_id, &model).await {
+                Ok(model_id) => {
+                    NARRATE
+                        .action("model_download_complete")
+                        .job_id(&job_id)
+                        .context(&model_id)
+                        .human("✅ Model '{}' downloaded successfully")
+                        .emit();
+                }
+                Err(e) => {
+                    NARRATE
+                        .action("model_download_failed")
+                        .job_id(&job_id)
+                        .context(&model)
+                        .context(&e.to_string())
+                        .human("❌ Failed to download model '{}': {}")
+                        .emit();
+                    
+                    return Err(e);
+                }
+            }
         }
 
         Operation::ModelList { hive_id } => {
+            // TEAM-268: Implemented model list
             NARRATE
-                .action("model_list")
+                .action("model_list_start")
                 .job_id(&job_id)
                 .context(&hive_id)
-                .human("TODO: List models on hive '{}'")
+                .human("📋 Listing models on hive '{}'")
                 .emit();
 
-            // TODO: Implement model listing
-            // - Query model_catalog
-            // - Format as JSON table
+            let models = state.model_catalog.list();
+
+            NARRATE
+                .action("model_list_result")
+                .job_id(&job_id)
+                .context(&models.len().to_string())
+                .human("Found {} model(s)")
+                .emit();
+
+            // Format as JSON table
+            if models.is_empty() {
+                NARRATE
+                    .action("model_list_empty")
+                    .job_id(&job_id)
+                    .human("No models found")
+                    .emit();
+            } else {
+                for model in &models {
+                    let size_gb = model.size_bytes as f64 / 1_000_000_000.0;
+                    let status = match &model.status {
+                        rbee_hive_model_catalog::ModelStatus::Ready => "ready",
+                        rbee_hive_model_catalog::ModelStatus::Downloading { progress } => {
+                            &format!("downloading ({:.0}%)", progress * 100.0)
+                        }
+                        rbee_hive_model_catalog::ModelStatus::Failed { .. } => "failed",
+                    };
+
+                    NARRATE
+                        .action("model_list_entry")
+                        .job_id(&job_id)
+                        .context(&model.id)
+                        .context(&model.name)
+                        .context(&format!("{:.2} GB", size_gb))
+                        .context(status)
+                        .human("  {} | {} | {} | {}")
+                        .emit();
+                }
+            }
         }
 
         Operation::ModelGet { hive_id, id } => {
+            // TEAM-268: Implemented model get
             NARRATE
-                .action("model_get")
+                .action("model_get_start")
                 .job_id(&job_id)
                 .context(&hive_id)
                 .context(&id)
-                .human("TODO: Get model '{}' on hive '{}'")
+                .human("🔍 Getting model '{}' on hive '{}'")
                 .emit();
 
-            // TODO: Implement model get
-            // - Query model_catalog
-            // - Return model details
+            match state.model_catalog.get(&id) {
+                Ok(model) => {
+                    NARRATE
+                        .action("model_get_found")
+                        .job_id(&job_id)
+                        .context(&model.id)
+                        .context(&model.name)
+                        .context(&model.path.display().to_string())
+                        .human("✅ Model: {} | Name: {} | Path: {}")
+                        .emit();
+
+                    // Emit model details as JSON
+                    let json = serde_json::to_string_pretty(&model)
+                        .unwrap_or_else(|_| "Failed to serialize".to_string());
+
+                    NARRATE
+                        .action("model_get_details")
+                        .job_id(&job_id)
+                        .human(&json)
+                        .emit();
+                }
+                Err(e) => {
+                    NARRATE
+                        .action("model_get_error")
+                        .job_id(&job_id)
+                        .context(&id)
+                        .context(&e.to_string())
+                        .human("❌ Model '{}' not found: {}")
+                        .emit();
+                    return Err(e);
+                }
+            }
         }
 
         Operation::ModelDelete { hive_id, id } => {
+            // TEAM-268: Implemented model delete
             NARRATE
-                .action("model_delete")
+                .action("model_delete_start")
                 .job_id(&job_id)
                 .context(&hive_id)
                 .context(&id)
-                .human("TODO: Delete model '{}' on hive '{}'")
+                .human("🗑️  Deleting model '{}' on hive '{}'")
                 .emit();
 
-            // TODO: Implement model deletion
-            // - Delete model files
-            // - Remove from model_catalog
+            match state.model_catalog.remove(&id) {
+                Ok(model) => {
+                    NARRATE
+                        .action("model_delete_catalog")
+                        .job_id(&job_id)
+                        .context(&id)
+                        .human("✅ Removed '{}' from catalog")
+                        .emit();
+
+                    // NOTE: Catalog remove() already deletes the directory
+                    NARRATE
+                        .action("model_delete_files")
+                        .job_id(&job_id)
+                        .context(&model.path.display().to_string())
+                        .human("✅ Deleted model directory: {}")
+                        .emit();
+                }
+                Err(e) => {
+                    NARRATE
+                        .action("model_delete_error")
+                        .job_id(&job_id)
+                        .context(&id)
+                        .context(&e.to_string())
+                        .human("❌ Failed to delete model '{}': {}")
+                        .emit();
+                    return Err(e);
+                }
+            }
         }
 
         // ========================================================================

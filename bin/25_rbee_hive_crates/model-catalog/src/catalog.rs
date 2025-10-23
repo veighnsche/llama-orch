@@ -38,7 +38,9 @@ impl ModelCatalog {
     }
 
     /// Get path for a specific model
-    fn model_path(&self, id: &str) -> PathBuf {
+    ///
+    /// TEAM-269: Made public for provisioner access
+    pub fn model_path(&self, id: &str) -> PathBuf {
         self.models_dir.join(id)
     }
 

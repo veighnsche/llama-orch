@@ -50,7 +50,11 @@
 pub mod catalog;
 /// Model catalog types
 pub mod types;
+/// Model provisioner (TEAM-269: download/install with vendor support)
+pub mod provisioner;
 
 // Re-export main types for convenience
 pub use catalog::ModelCatalog;
 pub use types::{ModelEntry, ModelMetadata, ModelStatus};
+// TEAM-269: Re-export provisioner types
+pub use provisioner::{ModelProvisioner, ModelVendor, HuggingFaceVendor};

@@ -48,21 +48,26 @@ members = [
     
 
     # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    # SECURITY CRATES — Security & Compliance (TEAM-270: Reorganized)
+    # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    
+    "bin/98_security_crates/audit-logging",
+    "bin/98_security_crates/audit-logging/bdd",
+    "bin/98_security_crates/auth-min",
+    "bin/98_security_crates/deadline-propagation",
+    "bin/98_security_crates/input-validation",
+    "bin/98_security_crates/input-validation/bdd",
+    "bin/98_security_crates/jwt-guardian",
+    "bin/98_security_crates/secrets-management",
+    "bin/98_security_crates/secrets-management/bdd",
+
+    # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
     # SHARED CRATES — Cross-Service Utilities (TEAM-135: Added new shared crates)
     # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
     
-    "bin/99_shared_crates/audit-logging",
-    "bin/99_shared_crates/audit-logging/bdd",
-    "bin/99_shared_crates/auth-min",
-    "bin/99_shared_crates/deadline-propagation",
-    "bin/99_shared_crates/input-validation",
-    "bin/99_shared_crates/input-validation/bdd",
-    "bin/99_shared_crates/jwt-guardian",
     "bin/99_shared_crates/narration-core",
     "bin/99_shared_crates/narration-core/bdd",
     "bin/99_shared_crates/narration-macros",
-    "bin/99_shared_crates/secrets-management",
-    "bin/99_shared_crates/secrets-management/bdd",
     # TEAM-135: New shared crates for consolidation
     "bin/99_shared_crates/daemon-lifecycle",
     "bin/99_shared_crates/daemon-lifecycle/bdd",
@@ -72,6 +77,15 @@ members = [
     "bin/99_shared_crates/timeout-enforcer",    # TEAM-163: Hard timeout enforcement with visual countdown
     "bin/99_shared_crates/auto-update",         # TEAM-193: Dependency-aware auto-update for binaries
     "bin/99_shared_crates/rbee-config",         # TEAM-194: File-based config for queen
+    "bin/99_shared_crates/worker-contract",     # TEAM-270: Worker contract types and API spec
+
+    # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    # CONTRACTS — API Specifications & Types
+    # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    # Contract definitions for cross-service communication.
+    
+    "contracts/api-types",       # Shared API types
+    "contracts/config-schema",   # Configuration schema
 
     # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
     # CONSUMER LIBRARIES — External SDKs

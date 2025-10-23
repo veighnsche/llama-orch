@@ -24,6 +24,7 @@ use axum::{
 };
 use clap::Parser;
 use job_server::JobRegistry;
+use rbee_hive_model_catalog::{ModelCatalog, ModelProvisioner}; // TEAM-268: Model catalog, TEAM-269: Model provisioner
 use serde::Serialize;
 use std::net::SocketAddr;
 use std::sync::Arc;
@@ -55,8 +56,33 @@ async fn main() -> anyhow::Result<()> {
     // TEAM-261: Initialize job registry for dual-call pattern
     let job_registry: Arc<JobRegistry<String>> = Arc::new(JobRegistry::new());
 
+    // TEAM-268: Initialize model catalog
+    let model_catalog = Arc::new(
+        ModelCatalog::new().expect("Failed to initialize model catalog")
+    );
+
+    NARRATE
+        .action("catalog_init")
+        .context(&model_catalog.len().to_string())
+        .human("📚 Model catalog initialized ({} models)")
+        .emit();
+
+    // TEAM-269: Initialize model provisioner
+    let model_provisioner = Arc::new(ModelProvisioner::new(model_catalog.clone()));
+
+    NARRATE
+        .action("provisioner_init")
+        .human("📦 Model provisioner initialized (HuggingFace vendor ready)")
+        .emit();
+
     // TEAM-261: Create HTTP state for job endpoints
-    let job_state = http::jobs::HiveState { registry: job_registry };
+    // TEAM-268: Added model_catalog to state
+    // TEAM-269: Added model_provisioner to state
+    let job_state = http::jobs::HiveState {
+        registry: job_registry,
+        model_catalog,
+        model_provisioner,
+    };
 
     // Create router with health, capabilities, and job endpoints
     let app = Router::new()

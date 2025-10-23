@@ -13,6 +13,7 @@ use axum::{
 use futures::stream::Stream;
 use job_server::JobRegistry;
 use observability_narration_core::sse_sink;
+use rbee_hive_model_catalog::{ModelCatalog, ModelProvisioner}; // TEAM-268: Model catalog, TEAM-269: Model provisioner
 use std::{convert::Infallible, sync::Arc};
 
 /// State for HTTP job endpoints
@@ -20,14 +21,21 @@ use std::{convert::Infallible, sync::Arc};
 pub struct HiveState {
     /// Registry for managing job lifecycle and payloads
     pub registry: Arc<JobRegistry<String>>,
+    /// Model catalog for model management
+    pub model_catalog: Arc<ModelCatalog>, // TEAM-268: Added
+    /// Model provisioner for downloading models
+    pub model_provisioner: Arc<ModelProvisioner>, // TEAM-269: Added
     // TODO: Add worker_registry when implemented
-    // TODO: Add model_catalog when implemented
 }
 
 /// Convert HTTP state to router state
 impl From<HiveState> for crate::job_router::JobState {
     fn from(state: HiveState) -> Self {
-        Self { registry: state.registry }
+        Self {
+            registry: state.registry,
+            model_catalog: state.model_catalog, // TEAM-268: Added
+            model_provisioner: state.model_provisioner, // TEAM-269: Added
+        }
     }
 }
 

@@ -25,7 +25,7 @@ serde_json = { workspace = true }
 serde_yaml = { workspace = true }
 openapiv3 = { workspace = true }
 contracts-config-schema = { path = "../contracts/config-schema" }
-auth-min = { path = "../bin/99_shared_crates/auth-min" }
+auth-min = { path = "../bin/98_security_crates/auth-min" }  # TEAM-270: Moved to security crates
 # TEAM-111: Added for BDD test runner
 regex = "1.10"
 chrono = "0.4"

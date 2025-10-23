@@ -3,6 +3,27 @@
 **Phases:** 3-6 of 9  
 **Teams:** 269 (Model Provisioner), 270 (Worker Registry), 271 (Worker Spawn), 272 (Worker Management)
 
+**Status:** ✅ Individual guides created
+
+---
+
+## 📋 Individual Team Guides
+
+Each team now has a dedicated implementation guide:
+
+1. **TEAM_269_MODEL_PROVISIONER.md** - Model downloading (24-32h)
+2. **TEAM_270_WORKER_REGISTRY.md** - Worker registry & types (20-24h)
+3. **TEAM_271_WORKER_LIFECYCLE_SPAWN.md** - Worker spawning (32-40h) ⚠️ Most complex
+4. **TEAM_272_WORKER_LIFECYCLE_MGMT.md** - Worker management (24-32h)
+
+**Total Effort:** 100-128 hours for phases 3-6
+
+---
+
+## Quick Reference
+
+Below is a consolidated overview. **See individual guides for full details.**
+
 ---
 
 ## TEAM-269: Model Provisioner (Phase 3)

@@ -18,5 +18,8 @@ dirs = "5.0"  # For cross-platform cache directory
 serde = { version = "1.0", features = ["derive"] }
 serde_yaml = "0.9"  # For metadata.yaml files
 
+# TEAM-269: Dependencies for model provisioner
+async-trait = "0.1"  # For async trait methods in ModelVendor
+
 [dev-dependencies]
 tempfile = "3.8"  # For isolated test directories
