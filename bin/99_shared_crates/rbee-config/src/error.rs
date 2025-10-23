@@ -30,35 +30,77 @@ pub enum ConfigError {
         source: std::io::Error,
     },
 
+    /// Failed to parse TOML config
     #[error("Failed to parse TOML config {path}: {source}")]
-    TomlParseError { path: PathBuf, source: toml::de::Error },
+    TomlParseError {
+        /// Path to the config file
+        path: PathBuf,
+        /// TOML deserialization error
+        source: toml::de::Error
+    },
 
+    /// Failed to parse YAML config
     #[error("Failed to parse YAML config {path}: {source}")]
-    YamlParseError { path: PathBuf, source: serde_yaml::Error },
+    YamlParseError {
+        /// Path to the config file
+        path: PathBuf,
+        /// YAML deserialization error
+        source: serde_yaml::Error
+    },
 
+    /// Failed to serialize YAML
     #[error("Failed to serialize YAML: {0}")]
     YamlSerializeError(#[from] serde_yaml::Error),
 
+    /// Invalid hives.conf syntax
     #[error("Invalid hives.conf syntax at line {line}: {message}")]
-    InvalidSyntax { line: usize, message: String },
+    InvalidSyntax {
+        /// Line number where the error occurred
+        line: usize,
+        /// Error message
+        message: String
+    },
 
+    /// Missing required field in config
     #[error("Missing required field '{field}' for host '{host}'")]
-    MissingField { host: String, field: String },
+    MissingField {
+        /// Host name
+        host: String,
+        /// Missing field name
+        field: String
+    },
 
+    /// Invalid port number
     #[error("Invalid port number '{value}' for host '{host}'")]
-    InvalidPort { host: String, value: String },
+    InvalidPort {
+        /// Host name
+        host: String,
+        /// Invalid port value
+        value: String
+    },
 
+    /// Duplicate hive alias
     #[error("Duplicate hive alias: '{alias}'")]
-    DuplicateAlias { alias: String },
+    DuplicateAlias {
+        /// Duplicate alias name
+        alias: String
+    },
 
+    /// Hive not found
     #[error("Hive not found: '{alias}'")]
-    HiveNotFound { alias: String },
+    HiveNotFound {
+        /// Hive alias that was not found
+        alias: String
+    },
 
+    /// Invalid configuration
     #[error("Invalid config: {0}")]
     InvalidConfig(String),
 
+    /// IO error
     #[error("IO error: {0}")]
     IoError(#[from] std::io::Error),
 }
 
+/// Result type alias for config operations
 pub type Result<T> = std::result::Result<T, ConfigError>;

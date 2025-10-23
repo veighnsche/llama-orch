@@ -9,8 +9,11 @@ use crate::hives_config::HivesConfig;
 /// Validation results
 #[derive(Debug, Clone)]
 pub struct ValidationResult {
+    /// Whether the validation passed
     pub valid: bool,
+    /// List of validation errors
     pub errors: Vec<String>,
+    /// List of validation warnings
     pub warnings: Vec<String>,
 }
 
@@ -118,6 +121,10 @@ pub fn validate_capabilities_sync(
 }
 
 /// Preflight validation - run before queen-rbee starts
+///
+/// # Errors
+///
+/// Returns an error if validation fails critically
 pub fn preflight_validation(
     hives: &HivesConfig,
     capabilities: &CapabilitiesCache,

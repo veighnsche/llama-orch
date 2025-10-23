@@ -9,7 +9,9 @@
 //!
 //! Model catalog management for tracking available models
 
+/// Model catalog implementation
 pub mod catalog;
+/// Model catalog types
 pub mod types;
 
 // TODO: Implement model catalog functionality

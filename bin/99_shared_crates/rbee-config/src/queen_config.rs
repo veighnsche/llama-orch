@@ -10,9 +10,11 @@ use std::path::Path;
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[derive(Default)]
 pub struct QueenConfig {
+    /// Queen daemon settings
     #[serde(default)]
     pub queen: QueenSettings,
 
+    /// Runtime settings
     #[serde(default)]
     pub runtime: RuntimeSettings,
 }
@@ -52,6 +54,10 @@ impl Default for RuntimeSettings {
 
 impl QueenConfig {
     /// Validate queen configuration
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the port is 0
     pub fn validate(&self) -> Result<()> {
         // TEAM-195: u16 max is 65535, so only check for 0
         if self.queen.port == 0 {
@@ -64,6 +70,10 @@ impl QueenConfig {
     }
 
     /// Load from config.toml file
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the file cannot be read or parsed
     pub fn load(path: &Path) -> Result<Self> {
         if !path.exists() {
             // Return default config if file doesn't exist
@@ -78,6 +88,10 @@ impl QueenConfig {
     }
 
     /// Save to config.toml file
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the file cannot be written or serialization fails
     pub fn save(&self, path: &Path) -> Result<()> {
         let content = toml::to_string_pretty(self).map_err(|e| {
             ConfigError::InvalidConfig(format!("Failed to serialize config: {}", e))

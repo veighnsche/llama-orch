@@ -27,6 +27,10 @@ pub fn detect_gpus() -> GpuInfo {
 }
 
 /// Detect GPUs or fail if none found
+///
+/// # Errors
+///
+/// Returns an error if no GPU is detected
 pub fn detect_gpus_or_fail() -> Result<GpuInfo> {
     let info = detect_gpus();
     if !info.available {
@@ -46,11 +50,19 @@ pub fn gpu_count() -> usize {
 }
 
 /// Assert GPU is available (fail fast if not)
+///
+/// # Errors
+///
+/// Returns an error if no GPU is available
 pub fn assert_gpu_available() -> Result<()> {
     detect_gpus_or_fail().map(|_| ())
 }
 
 /// Get GPU info for specific device
+///
+/// # Errors
+///
+/// Returns an error if no GPU is detected or device ID is invalid
 pub fn get_device_info(device: u32) -> Result<GpuDevice> {
     let info = detect_gpus_or_fail()?;
     info.validate_device(device).cloned()

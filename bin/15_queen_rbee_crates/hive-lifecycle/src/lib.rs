@@ -31,20 +31,33 @@
 //! - `capabilities` - Refresh hive capabilities (TEAM-214)
 
 // TEAM-210: Module declarations
+/// Hive capabilities refresh operations
 pub mod capabilities;
+/// Get hive details operations
 pub mod get;
+/// Hive installation operations
 pub mod install;
+/// List all hives operations
 pub mod list;
-pub mod ssh_helper; // SSH utilities for remote operations
+/// SSH utilities for remote operations
+pub mod ssh_helper;
+/// SSH connection testing
 pub mod ssh_test;
+/// Hive startup operations
 pub mod start;
+/// Hive status check operations
 pub mod status;
+/// Hive shutdown operations
 pub mod stop;
+/// Request/Response types for all operations
 pub mod types;
+/// Hive uninstallation operations
 pub mod uninstall;
+/// Validation helpers
 pub mod validation;
 
 // TEAM-212: HTTP client for hive capabilities
+/// HTTP client for hive capabilities discovery
 pub mod hive_client;
 
 // TEAM-210: Re-export types for convenience

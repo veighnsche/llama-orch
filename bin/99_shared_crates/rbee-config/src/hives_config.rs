@@ -49,6 +49,10 @@ impl HivesConfig {
     }
 
     /// Load from hives.conf file
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the file cannot be read or parsed
     pub fn load(path: &Path) -> Result<Self> {
         if !path.exists() {
             // Return an empty config if file doesn't exist, as localhost doesn't require a hive entry
@@ -87,6 +91,10 @@ impl HivesConfig {
     }
 
     /// Validate unique aliases (should already be enforced by HashMap)
+    ///
+    /// # Errors
+    ///
+    /// Currently always returns Ok as HashMap enforces uniqueness
     pub const fn validate_unique_aliases(&self) -> Result<()> {
         // HashMap already enforces uniqueness, but we check during parsing
         Ok(())
@@ -108,6 +116,10 @@ impl HivesConfig {
     /// 1. Parsing SSH config (Host, HostName, Port, User)
     /// 2. Injecting HivePort for each host
     /// 3. Parsing with existing hives.conf parser
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the SSH config file cannot be read or parsed
     pub fn import_from_ssh_config(
         ssh_config_path: &Path,
         default_hive_port: u16,
@@ -135,6 +147,10 @@ impl HivesConfig {
     }
 
     /// Write to hives.conf file
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the file cannot be written
     pub fn save(&self, path: &Path) -> Result<()> {
         let mut content = String::new();
 

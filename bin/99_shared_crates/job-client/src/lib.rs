@@ -77,7 +77,10 @@ impl JobClient {
     ///
     /// # Returns
     /// * `Ok(job_id)` - The job ID returned by the server
-    /// * `Err(_)` - If submission or streaming fails
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if submission or streaming fails
     pub async fn submit_and_stream<F>(
         &self,
         operation: Operation,
@@ -158,6 +161,10 @@ impl JobClient {
     /// Submit a job without streaming (fire and forget)
     ///
     /// Returns the job_id immediately without waiting for completion.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if submission fails
     pub async fn submit(&self, operation: Operation) -> Result<String> {
         let payload = serde_json::to_value(&operation)
             .map_err(|e| anyhow::anyhow!("Failed to serialize operation: {}", e))?;

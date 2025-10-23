@@ -85,12 +85,20 @@ pub struct RbeeConfig {
 
 impl RbeeConfig {
     /// Load all config files from ~/.config/rbee/
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if config files cannot be read or parsed
     pub fn load() -> Result<Self> {
         let config_dir = Self::config_dir()?;
         Self::load_from_dir(&config_dir)
     }
 
     /// Load from specific directory
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if config files cannot be read or parsed
     pub fn load_from_dir(dir: &Path) -> Result<Self> {
         let queen = QueenConfig::load(&dir.join("config.toml"))?;
         let hives = HivesConfig::load(&dir.join("hives.conf"))?;
@@ -100,6 +108,10 @@ impl RbeeConfig {
     }
 
     /// Get config directory path (~/.config/rbee/)
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if HOME environment variable is not set or directory cannot be created
     pub fn config_dir() -> Result<PathBuf> {
         let home = std::env::var("HOME").map_err(|_| {
             ConfigError::InvalidConfig("HOME environment variable not set".to_string())
@@ -116,6 +128,10 @@ impl RbeeConfig {
     }
 
     /// Validate all config files
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if validation fails critically
     pub fn validate(&self) -> Result<ValidationResult> {
         // TEAM-195: Validate queen config first
         self.queen.validate()?;
@@ -124,6 +140,10 @@ impl RbeeConfig {
     }
 
     /// Save capabilities cache
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the file cannot be written
     pub fn save_capabilities(&self) -> Result<()> {
         self.capabilities.save()
     }

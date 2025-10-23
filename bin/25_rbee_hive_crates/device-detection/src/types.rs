@@ -44,6 +44,10 @@ impl GpuInfo {
     }
 
     /// Validate device index and return device
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the device index is invalid
     pub fn validate_device(&self, device: u32) -> Result<&GpuDevice> {
         self.devices.get(device as usize).ok_or(GpuError::InvalidDevice(device, self.count))
     }

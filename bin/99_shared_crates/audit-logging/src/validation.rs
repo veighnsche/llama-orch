@@ -25,6 +25,10 @@ use std::borrow::Cow;
 /// - Control character injection
 /// - Unicode directional override attacks
 /// - Null byte injection
+///
+/// # Errors
+///
+/// Returns an error if validation fails for any field
 pub fn validate_event(event: &mut AuditEvent) -> Result<()> {
     match event {
         // Authentication events

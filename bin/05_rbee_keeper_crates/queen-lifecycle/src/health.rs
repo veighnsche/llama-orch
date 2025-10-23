@@ -18,7 +18,10 @@ const NARRATE: NarrationFactory = NarrationFactory::new("kpr-life");
 /// # Returns
 /// * `Ok(true)` - Queen is running and healthy
 /// * `Ok(false)` - Queen is not running (connection refused)
-/// * `Err` - Other errors (timeout, invalid response, etc.)
+///
+/// # Errors
+///
+/// Returns an error for timeout, invalid response, or other network errors
 pub async fn is_queen_healthy(base_url: &str) -> Result<bool> {
     let health_url = format!("{}/health", base_url);
 
@@ -53,7 +56,10 @@ pub async fn is_queen_healthy(base_url: &str) -> Result<bool> {
 ///
 /// # Returns
 /// * `Ok(())` - Queen became healthy
-/// * `Err` - Timeout or other error
+///
+/// # Errors
+///
+/// Returns an error if timeout is reached or other errors occur
 pub async fn poll_until_healthy(base_url: &str, timeout: Duration) -> Result<()> {
     let start = std::time::Instant::now();
     let mut delay = Duration::from_millis(100);

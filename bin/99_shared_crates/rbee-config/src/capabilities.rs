@@ -91,6 +91,10 @@ impl CapabilitiesCache {
     }
 
     /// Load from capabilities.yaml file
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the file cannot be read or parsed
     pub fn load(path: &Path) -> Result<Self> {
         if !path.exists() {
             // Return empty cache if file doesn't exist
@@ -108,6 +112,10 @@ impl CapabilitiesCache {
     }
 
     /// Save to disk
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the file cannot be written or serialization fails
     pub fn save(&self) -> Result<()> {
         // Add header comment
         let mut content = String::from(

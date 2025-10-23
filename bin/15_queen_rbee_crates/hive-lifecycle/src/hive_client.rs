@@ -13,16 +13,22 @@ use serde::Deserialize;
 /// Response from hive's /capabilities endpoint
 #[derive(Debug, Deserialize)]
 pub struct HiveCapabilitiesResponse {
+    /// List of devices available on the hive
     pub devices: Vec<HiveDevice>,
 }
 
 /// Device information from hive
 #[derive(Debug, Deserialize)]
 pub struct HiveDevice {
+    /// Device ID
     pub id: String,
+    /// Device name
     pub name: String,
-    pub device_type: String, // "gpu" or "cpu"
+    /// Device type ("gpu" or "cpu")
+    pub device_type: String,
+    /// VRAM in GB (for GPUs)
     pub vram_gb: Option<u32>,
+    /// Compute capability (for GPUs)
     pub compute_capability: Option<String>,
 }
 

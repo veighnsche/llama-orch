@@ -52,6 +52,10 @@ impl QueenHandle {
     ///
     /// # Returns
     /// * `Ok(())` - Always succeeds (queen stays alive)
+    ///
+    /// # Errors
+    ///
+    /// Currently never returns an error
     pub async fn shutdown(self) -> Result<()> {
         NARRATE
             .action("queen_stop")

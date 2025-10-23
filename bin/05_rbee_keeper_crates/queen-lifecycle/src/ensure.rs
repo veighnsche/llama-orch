@@ -31,7 +31,10 @@ const NARRATE: NarrationFactory = NarrationFactory::new("kpr-life");
 ///
 /// # Returns
 /// * `Ok(QueenHandle)` - Handle to queen (tracks if we started it for cleanup)
-/// * `Err` - Failed to start queen or timeout waiting for health
+///
+/// # Errors
+///
+/// Returns an error if queen fails to start or timeout waiting for health
 ///
 /// TEAM-163: Added 30-second total timeout with visual countdown
 pub async fn ensure_queen_running(base_url: &str) -> Result<QueenHandle> {

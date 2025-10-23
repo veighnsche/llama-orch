@@ -81,6 +81,10 @@ impl BackendCapabilities {
     }
 
     /// Parse from JSON strings
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if JSON parsing fails
     pub fn from_json_strings(backends_json: &str, devices_json: &str) -> Result<Self> {
         let backends: Vec<Backend> = serde_json::from_str(backends_json).map_err(|e| {
             crate::error::GpuError::Other(format!("Failed to parse backends: {}", e))
