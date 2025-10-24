@@ -1,0 +1,50 @@
+# TEAM-282: Empty target system for daemon-sync testing
+# Purpose: Simulate a remote server that queen-rbee will deploy to
+# Architecture: HOST runs queen-rbee → SSH → THIS CONTAINER
+# 
+# This container has NO rbee binaries pre-installed.
+# daemon-sync will git clone, cargo build, and install rbee-hive.
+
+FROM archlinux:latest
+
+# Install SSH server, Rust toolchain, Git, and build tools
+RUN pacman -Syu --noconfirm \
+    openssh \
+    rust \
+    git \
+    base-devel \
+    curl \
+    && pacman -Scc --noconfirm
+
+# Setup SSH server
+RUN ssh-keygen -A
+RUN mkdir -p /var/run/sshd
+
+# Create rbee user (matches production deployment)
+RUN useradd -m -s /bin/bash rbee
+
+# Setup SSH keys for passwordless authentication
+RUN mkdir -p /home/rbee/.ssh
+COPY keys/test_id_rsa.pub /home/rbee/.ssh/authorized_keys
+RUN chown -R rbee:rbee /home/rbee/.ssh
+RUN chmod 700 /home/rbee/.ssh
+RUN chmod 600 /home/rbee/.ssh/authorized_keys
+
+# Create directory structure that daemon-sync will use
+RUN mkdir -p /home/rbee/.local/bin /home/rbee/.local/share/rbee /home/rbee/.config/rbee
+RUN chown -R rbee:rbee /home/rbee/.local /home/rbee/.config
+
+# CRITICAL: NO RBEE BINARIES
+# This container is an EMPTY target system.
+# daemon-sync will:
+#   1. SSH into this container
+#   2. git clone the repo
+#   3. cargo build the binaries
+#   4. Install rbee-hive
+#   5. Start the daemon
+
+# Expose SSH port (22 inside container, mapped to 2222 on host)
+EXPOSE 22
+
+# Start SSH daemon
+CMD ["/usr/sbin/sshd", "-D"]

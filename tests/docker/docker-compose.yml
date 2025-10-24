@@ -1,0 +1,43 @@
+# TEAM-282: Correct architecture - single empty target container
+# 
+# Architecture:
+#   HOST (bare metal) → runs queen-rbee
+#                    → SSH to localhost:2222
+#                    → THIS CONTAINER (empty target)
+#
+# This is NOT a multi-container setup.
+# queen-rbee runs on the HOST, not in a container.
+
+version: '3.8'
+
+services:
+  target:
+    build:
+      context: .
+      dockerfile: Dockerfile.target
+    container_name: rbee-test-target
+    hostname: rbee-target
+    ports:
+      # SSH: Container port 22 → Host port 2222
+      - "2222:22"
+      # Hive HTTP (after daemon-sync installs it): Container 9000 → Host 9000
+      - "9000:9000"
+    environment:
+      # Target system environment
+      - RUST_LOG=debug
+    healthcheck:
+      # Check if SSH is responding
+      test: ["CMD", "pgrep", "-x", "sshd"]
+      interval: 5s
+      timeout: 3s
+      retries: 3
+
+# NOTE: There is NO queen service here.
+# queen-rbee runs on the HOST machine.
+# 
+# To use:
+#   1. docker-compose up -d
+#   2. cargo run --bin queen-rbee (on HOST)
+#   3. Send install command: curl http://localhost:8500/v1/hives/install ...
+#   4. queen-rbee SSHs to localhost:2222 (this container)
+#   5. daemon-sync does git clone + cargo build + install

@@ -178,23 +178,31 @@ impl RbeeSSHClient {
         let mut code = None;
 
         loop {
-            let msg = channel.wait().await.context("Failed to wait for channel message")?;
+            let msg = channel.wait().await;
             match msg {
-                russh::ChannelMsg::Data { ref data } => {
+                Some(russh::ChannelMsg::Data { ref data }) => {
                     stdout.push_str(&String::from_utf8_lossy(data));
                 }
-                russh::ChannelMsg::ExtendedData { ref data, ext } => {
+                Some(russh::ChannelMsg::ExtendedData { ref data, ext }) => {
                     if ext == 1 {
                         stderr.push_str(&String::from_utf8_lossy(data));
                     }
                 }
-                russh::ChannelMsg::ExitStatus { exit_status } => {
+                Some(russh::ChannelMsg::ExitStatus { exit_status }) => {
                     code = Some(exit_status);
-                }
-                russh::ChannelMsg::Eof => {
+                    // Send EOF to acknowledge, then break
+                    let _ = channel.eof().await;
                     break;
                 }
-                _ => {}
+                Some(russh::ChannelMsg::Eof) => {
+                    // Don't break on EOF - wait for ExitStatus
+                    // The server sends EOF before ExitStatus
+                }
+                Some(_) => {}
+                None => {
+                    // Channel closed
+                    break;
+                }
             }
         }
 

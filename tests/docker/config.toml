@@ -1,0 +1,4 @@
+# TEAM-282: Minimal queen config for testing
+
+[queen]
+# Empty queen settings - use defaults

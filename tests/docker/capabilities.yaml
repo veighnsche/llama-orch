@@ -1,0 +1,4 @@
+# TEAM-282: Empty capabilities cache for testing
+last_updated: "2025-01-01T00:00:00Z"
+hives: {}
+capabilities: {}

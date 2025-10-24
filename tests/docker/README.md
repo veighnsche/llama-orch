@@ -1,314 +1,230 @@
-# Docker Network Testing Infrastructure
+# Docker SSH Integration Tests
 
-**Purpose:** Comprehensive Docker-based testing for queen-rbee → rbee-hive communication
+**Status:** ✅ ARCHITECTURE FIXED  
+**Created:** Oct 24, 2025  
+**Team:** TEAM-282
+
+---
+
+## Overview
+
+These tests verify that `queen-rbee` can deploy `rbee-hive` to a remote system via SSH, using `daemon-sync` for git clone + cargo build + installation.
+
+**Correct Architecture:**
+```
+┌─────────────────┐
+│  HOST MACHINE   │  ← You are here
+│                 │
+│  queen-rbee     │ ──SSH──> Docker Container
+│  (bare metal)   │          (empty Arch Linux)
+└─────────────────┘
+```
+
+**NOT this (old, wrong architecture):**
+```
+Container #1 (queen) ──SSH──> Container #2 (hive)
+❌ This was deleted. It tested nothing useful.
+```
+
+---
+
+## Files
+
+### Container Infrastructure
+- `Dockerfile.target` - Empty Arch Linux with SSH + Rust + Git (NO rbee binaries)
+- `docker-compose.yml` - Single target container with SSH on port 2222
+- `keys/test_id_rsa` - SSH private key for authentication
+- `keys/test_id_rsa.pub` - SSH public key (installed in container)
+
+### Configuration
+- `hives.conf` - Configuration for HOST queen-rbee to connect to container
+
+### Documentation
+- `ARCHITECTURE_FIX.md` - Full explanation of why the old architecture was wrong
+- `README.md` - This file
 
 ---
 
 ## Quick Start
 
-### 1. Build Everything (First Time)
+### 1. Build and Start Target Container
+
 ```bash
-./tests/docker/scripts/build-all.sh
+cd tests/docker
+docker-compose up -d
 ```
 
-This will:
-- Build `queen-rbee` and `rbee-hive` binaries
-- Generate SSH keys
-- Build Docker images
+**Verifies:** Container with SSH is running on localhost:2222
 
-### 2. Start Environment
+### 2. Test SSH Connection from Host
+
 ```bash
-./tests/docker/scripts/start.sh
+ssh -i keys/test_id_rsa -p 2222 rbee@localhost
 ```
 
-Services will be available at:
-- **Queen:** http://localhost:8500
-- **Hive:** http://localhost:9000
-- **SSH:** `ssh -i tests/docker/keys/test_id_rsa -p 2222 rbee@localhost`
+**Expected:** You should be able to SSH into the container  
+**If it fails:** Check SSH keys are correct, container is running
 
-### 3. Run Tests
+### 3. Build queen-rbee on Host
+
 ```bash
-# Run all tests
-./tests/docker/scripts/test-all.sh
-
-# Or run specific test categories
-cargo test --package xtask --test docker_smoke_test --ignored
-cargo test --package xtask --test http_communication_tests --ignored
-cargo test --package xtask --test ssh_communication_tests --ignored
-cargo test --package xtask --test failure_tests --ignored
+cd /home/vince/Projects/llama-orch
+cargo build --bin queen-rbee
 ```
 
-### 4. Stop Environment
+**Why:** queen-rbee runs on HOST, not in container
+
+### 4. Run queen-rbee on Host
+
 ```bash
-./tests/docker/scripts/stop.sh
+export HIVES_CONF=tests/docker/hives.conf
+cargo run --bin queen-rbee
+```
+
+**Verifies:** queen-rbee starts and reads hives.conf
+
+### 5. Send Install Command
+
+```bash
+curl -X POST http://localhost:8500/v1/hives/install \
+  -H "Content-Type: application/json" \
+  -d '{"alias": "docker-test"}'
+```
+
+**Expected workflow:**
+1. queen-rbee receives install request
+2. daemon-sync SSHs to localhost:2222 (container)
+3. daemon-sync runs `git clone` on container
+4. daemon-sync runs `cargo build --bin rbee-hive` on container
+5. daemon-sync installs binary to `~/.local/bin/rbee-hive`
+6. daemon-sync starts rbee-hive daemon
+7. Response: Installation successful
+
+### 6. Verify Installation in Container
+
+```bash
+docker exec rbee-test-target test -f /home/rbee/.local/bin/rbee-hive && echo "✅ Binary installed"
+docker exec rbee-test-target pgrep -f rbee-hive && echo "✅ Daemon running"
 ```
 
 ---
 
-## Test Categories
+## What This Tests
 
-### Smoke Tests (`docker_smoke_test.rs`)
-Basic connectivity and health checks:
-- Queen health check
-- Hive health check
-- Hive capabilities
-- SSH connection
-- Binary existence
+### ✅ Real Product Workflow
+- SSH from host to remote system
+- Git clone on remote system
+- Cargo build on remote system
+- Binary installation via daemon-sync
+- Daemon lifecycle management
 
-### HTTP Communication Tests (`http_communication_tests.rs`)
-HTTP communication patterns:
-- Health checks
-- Capabilities discovery
-- Connection timeouts
-- Connection refused scenarios
-- Concurrent requests
-- Large responses
+### ✅ Real Deployment Scenarios
+- SSH key authentication
+- Build environment setup
+- Dependency resolution
+- Binary deployment
+- Daemon startup
 
-### SSH Communication Tests (`ssh_communication_tests.rs`)
-SSH operations:
-- Connection establishment
-- Command execution
-- Binary checks
-- File operations
-- Concurrent connections
-- Environment variables
-
-### Failure Tests (`failure_tests.rs`)
-Failure scenarios and recovery:
-- Hive crash during operation
-- Hive restart recovery
-- Queen restart recovery
-- Concurrent operations
-- Rapid restart cycles
-- Service logs after failure
+### ❌ Does NOT Test
+- Container-to-container networking (irrelevant)
+- Pre-copied binaries (not how it works)
+- Docker Compose orchestration (not the product)
 
 ---
 
-## Architecture
+## Test Development
 
-### Network Topology
-```
-Docker Network: rbee-test-net (172.20.0.0/16)
-├─ queen-rbee (172.20.0.10:8500)
-└─ rbee-hive (172.20.0.20:9000, :22)
-```
+### Create New Test
 
-### Container Details
+1. Create test file: `xtask/tests/daemon_sync_integration.rs`
+2. Test runs on HOST (not in container)
+3. Test starts target container
+4. Test runs queen-rbee on HOST
+5. Test verifies installation in container
 
-**Base Image (`rbee-base:latest`)**
-- Rust 1.75 slim
-- SSH server
-- Git + build tools
-- Test user: `rbee:rbee`
-- SSH keys configured
-
-**Queen Image (`rbee-queen:latest`)**
-- Based on rbee-base
-- Pre-built queen-rbee binary
-- Default hives.conf
-- Exposed port: 8500
-
-**Hive Image (`rbee-hive:latest`)**
-- Based on rbee-base
-- Pre-built rbee-hive binary
-- Supervisor (runs SSH + hive)
-- Exposed ports: 22, 9000
-
----
-
-## Directory Structure
-
-```
-tests/docker/
-├── Dockerfile.base          # Base image with Rust + SSH
-├── Dockerfile.queen         # Queen image
-├── Dockerfile.hive          # Hive image
-├── docker-compose.localhost.yml
-├── docker-compose.multi-hive.yml
-├── keys/
-│   ├── test_id_rsa         # SSH private key
-│   └── test_id_rsa.pub     # SSH public key
-├── configs/
-│   ├── hives.conf          # Hive configuration
-│   └── supervisord.conf    # Supervisor config for hive
-└── scripts/
-    ├── generate-keys.sh    # Generate SSH keys
-    ├── build-all.sh        # Build everything
-    ├── start.sh            # Start environment
-    ├── stop.sh             # Stop environment
-    ├── test-all.sh         # Run all tests
-    └── cleanup.sh          # Clean up Docker resources
-```
-
----
-
-## Manual Testing
-
-### Check Service Health
-```bash
-# Queen
-curl http://localhost:8500/health
-
-# Hive
-curl http://localhost:9000/health
-
-# Hive capabilities
-curl http://localhost:9000/capabilities | jq
-```
-
-### SSH into Hive
-```bash
-ssh -i tests/docker/keys/test_id_rsa -p 2222 rbee@localhost
-```
-
-### View Logs
-```bash
-# Queen logs
-docker logs rbee-queen-localhost
-
-# Hive logs
-docker logs rbee-hive-localhost
-
-# Follow logs
-docker logs -f rbee-hive-localhost
-```
-
-### Execute Commands in Containers
-```bash
-# Execute in hive
-docker exec rbee-hive-localhost ls -la /home/rbee/.local/bin
-
-# Execute in queen
-docker exec rbee-queen-localhost ps aux
+**Example:**
+```rust
+#[tokio::test]
+#[ignore] // Run with: cargo test --ignored
+async fn test_daemon_sync_install() {
+    // 1. Start target container
+    start_target_container().await;
+    
+    // 2. Build queen-rbee on HOST
+    build_queen_rbee().await;
+    
+    // 3. Run queen-rbee on HOST
+    let queen = start_queen_rbee().await;
+    
+    // 4. Send install command
+    send_install_command("docker-test").await;
+    
+    // 5. Verify installation in container
+    assert!(container_has_binary("/home/rbee/.local/bin/rbee-hive"));
+    assert!(container_daemon_running("rbee-hive"));
+}
 ```
 
 ---
 
 ## Troubleshooting
 
-### Containers won't start
+### SSH connection refused
 ```bash
-# Check logs
-docker-compose -f tests/docker/docker-compose.localhost.yml logs
+# Check container is running
+docker ps | grep rbee-test-target
 
-# Rebuild images
-./tests/docker/scripts/cleanup.sh
-./tests/docker/scripts/build-all.sh
+# Check SSH is running in container
+docker exec rbee-test-target pgrep sshd
+
+# Check port mapping
+docker port rbee-test-target
 ```
 
-### Port conflicts
+### Permission denied (publickey)
 ```bash
-# Check what's using ports
-sudo lsof -i :8500
-sudo lsof -i :9000
+# Check SSH key permissions
+ls -la tests/docker/keys/
 
-# Kill processes or change ports in docker-compose.yml
+# Should be:
+# -rw------- test_id_rsa (600)
+# -rw-r--r-- test_id_rsa.pub (644)
+
+chmod 600 tests/docker/keys/test_id_rsa
+chmod 644 tests/docker/keys/test_id_rsa.pub
 ```
 
-### SSH connection fails
+### Git clone fails in container
 ```bash
-# Check SSH is running
-docker exec rbee-hive-localhost ps aux | grep sshd
+# SSH into container
+ssh -i tests/docker/keys/test_id_rsa -p 2222 rbee@localhost
 
-# Restart hive
-docker restart rbee-hive-localhost
+# Check git is installed
+which git
+
+# Check network connectivity
+ping -c 3 github.com
 ```
 
-### Tests fail
+### Cargo build fails in container
 ```bash
-# Ensure containers are running
-docker ps
+# SSH into container
+ssh -i tests/docker/keys/test_id_rsa -p 2222 rbee@localhost
 
-# Check service health
-curl http://localhost:8500/health
-curl http://localhost:9000/health
+# Check Rust toolchain
+rustc --version
+cargo --version
 
-# View test output with details
-cargo test --package xtask --test docker_smoke_test --ignored -- --nocapture
+# Check disk space
+df -h
 ```
 
 ---
 
-## Development Workflow
+## Architecture Decision
 
-### After Code Changes
-```bash
-# 1. Rebuild binaries
-cargo build --bin queen-rbee --bin rbee-hive
+See `ARCHITECTURE_FIX.md` for full explanation of why the old architecture was wrong and how this fixes it.
 
-# 2. Rebuild Docker images
-docker build -f tests/docker/Dockerfile.queen -t rbee-queen:latest .
-docker build -f tests/docker/Dockerfile.hive -t rbee-hive:latest .
-
-# 3. Restart environment
-./tests/docker/scripts/stop.sh
-./tests/docker/scripts/start.sh
-
-# 4. Run tests
-cargo test --package xtask --test docker_smoke_test --ignored
-```
-
-### Adding New Tests
-1. Create test file in `xtask/tests/docker/`
-2. Use `DockerTestHarness` for setup/teardown
-3. Mark tests with `#[ignore]` (Docker tests are opt-in)
-4. Run with `cargo test --package xtask --test <test_name> --ignored`
-
----
-
-## CI/CD Integration
-
-### GitHub Actions Example
-```yaml
-name: Docker Tests
-on: [push, pull_request]
-jobs:
-  docker-tests:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-      - uses: actions-rs/toolchain@v1
-      - run: ./tests/docker/scripts/build-all.sh
-      - run: ./tests/docker/scripts/test-all.sh
-```
-
----
-
-## Test Coverage
-
-| Category | Tests | Status |
-|----------|-------|--------|
-| Smoke Tests | 6 | ✅ Implemented |
-| HTTP Communication | 6 | ✅ Implemented |
-| SSH Communication | 6 | ✅ Implemented |
-| Failure Scenarios | 6 | ✅ Implemented |
-| **Total** | **24** | **✅ Ready** |
-
----
-
-## Next Steps
-
-1. ✅ Basic infrastructure complete
-2. ✅ Smoke tests implemented
-3. ✅ HTTP communication tests implemented
-4. ✅ SSH communication tests implemented
-5. ✅ Failure scenario tests implemented
-6. 🔄 Add heartbeat tests
-7. 🔄 Add lifecycle tests (hive start/stop)
-8. 🔄 Add worker lifecycle tests
-9. 🔄 Add E2E workflow tests
-10. 🔄 Add multi-hive topology tests
-
----
-
-## Resources
-
-- **Planning Docs:**
-  - `.docs/DOCKER_NETWORK_TESTING_PLAN.md` - Comprehensive test strategy
-  - `.docs/DOCKER_TEST_IMPLEMENTATION_GUIDE.md` - Detailed implementation guide
-  - `.docs/DOCKER_TEST_QUICK_START.md` - 15-minute quick start
-
-- **Related Tests:**
-  - `xtask/src/integration/` - Integration test harness
-  - `xtask/src/chaos/` - Chaos testing
-  - `bin/15_queen_rbee_crates/ssh-client/tests/` - SSH client tests
+**TL;DR:**
+- **Old:** Container → SSH → Container (tested Docker networking, useless)
+- **New:** Host → SSH → Container (tests actual deployment, valuable)

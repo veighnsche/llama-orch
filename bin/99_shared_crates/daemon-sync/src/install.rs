@@ -49,11 +49,15 @@ pub async fn install_hive_binary(hive: &HiveConfig, job_id: &str) -> Result<()> 
         .context(format!("Failed to connect to {}", hive.hostname))?;
 
     // Create directory structure
+    // Note: russh exec doesn't use a login shell, so we need absolute paths or $HOME
     let setup_cmd = "mkdir -p ~/.local/bin ~/.local/share/rbee/hives";
-    let (_, stderr, exit_code) = client.exec(setup_cmd).await?;
+    let (stdout, stderr, exit_code) = client.exec(setup_cmd).await?;
     if exit_code != 0 {
         client.close().await?;
-        return Err(anyhow::anyhow!("Failed to create directories: {}", stderr));
+        return Err(anyhow::anyhow!(
+            "Failed to create directories (exit {}): stdout='{}' stderr='{}'",
+            exit_code, stdout, stderr
+        ));
     }
 
     // Determine binary path based on install method
@@ -310,10 +314,20 @@ async fn install_hive_from_git(
         clone_dir, clone_dir, branch, repo, clone_dir
     );
 
-    let (_, stderr, exit_code) = client.exec(&clone_cmd).await?;
+    let (stdout, stderr, exit_code) = client.exec(&clone_cmd).await?;
     if exit_code != 0 {
-        return Err(anyhow::anyhow!("Failed to clone repository: {}", stderr));
+        return Err(anyhow::anyhow!(
+            "Failed to clone repository (exit {}): stdout='{}' stderr='{}'",
+            exit_code, stdout, stderr
+        ));
     }
+
+    NARRATE
+        .action("git_clone_complete")
+        .job_id(job_id)
+        .context(alias)
+        .human("✅ Repository cloned")
+        .emit();
 
     NARRATE
         .action("build_hive")
@@ -325,10 +339,20 @@ async fn install_hive_from_git(
     // Build rbee-hive binary
     let build_cmd = format!("cd {} && cargo build --release --bin rbee-hive", clone_dir);
 
-    let (_, stderr, exit_code) = client.exec(&build_cmd).await?;
+    let (stdout, stderr, exit_code) = client.exec(&build_cmd).await?;
     if exit_code != 0 {
-        return Err(anyhow::anyhow!("Failed to build hive binary: {}", stderr));
+        return Err(anyhow::anyhow!(
+            "Failed to build hive binary (exit {}): stdout='{}' stderr='{}'",
+            exit_code, stdout, stderr
+        ));
     }
+
+    NARRATE
+        .action("build_complete")
+        .job_id(job_id)
+        .context(alias)
+        .human("✅ Binary built successfully")
+        .emit();
 
     // Copy binary to ~/.local/bin
     let install_cmd = format!(
