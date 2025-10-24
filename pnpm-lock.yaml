@@ -18,31 +18,6 @@ importers:
         specifier: ^2.5.8
         version: 2.5.8
 
-  consumers/.examples/M002-pnpm:
-    dependencies:
-      '@rbee/utils':
-        specifier: workspace:*
-        version: link:../../rbee-utils
-      typescript:
-        specifier: ^5
-        version: 5.9.3
-    devDependencies:
-      '@types/node':
-        specifier: ^24.7.2
-        version: 24.7.2
-      tsx:
-        specifier: ^4.20.6
-        version: 4.20.6
-
-  consumers/rbee-utils:
-    devDependencies:
-      '@types/node':
-        specifier: ^24.7.2
-        version: 24.7.2
-      typescript:
-        specifier: ^5.9.3
-        version: 5.9.3
-
   frontend/apps/commercial:
     dependencies:
       '@hookform/resolvers':
@@ -414,6 +389,8 @@ importers:
       typescript:
         specifier: ^5.9.3
         version: 5.9.3
+
+  frontend/packages/rbee-sdk: {}
 
   frontend/packages/rbee-ui:
     dependencies:
@@ -20067,6 +20044,7 @@ snapshots:
       get-tsconfig: 4.12.0
     optionalDependencies:
       fsevents: 2.3.3
+    optional: true
 
   tty-browserify@0.0.1: {}
 
