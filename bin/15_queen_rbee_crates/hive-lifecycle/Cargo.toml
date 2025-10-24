@@ -25,7 +25,7 @@ daemon-lifecycle = { path = "../../99_shared_crates/daemon-lifecycle" }
 observability-narration-core = { path = "../../99_shared_crates/narration-core" }
 timeout-enforcer = { path = "../../99_shared_crates/timeout-enforcer" }
 rbee-config = { path = "../../99_shared_crates/rbee-config" }
-queen-rbee-ssh-client = { path = "../../99_shared_crates/ssh-client" }
+# TEAM-284: DELETED queen-rbee-ssh-client dependency (SSH/remote operations removed)
 
 [dev-dependencies]
 tempfile = "3.8"

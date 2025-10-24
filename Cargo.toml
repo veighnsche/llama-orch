@@ -24,6 +24,7 @@ members = [
     "bin/05_rbee_keeper_crates/queen-lifecycle",
     "bin/15_queen_rbee_crates/worker-registry",  # TEAM-262: Renamed from hive-registry
     "bin/15_queen_rbee_crates/worker-registry/bdd",
+    "bin/15_queen_rbee_crates/hive-registry",    # TEAM-284: New hive registry
     "bin/15_queen_rbee_crates/hive-lifecycle",
     "bin/15_queen_rbee_crates/hive-lifecycle/bdd",
     
@@ -63,15 +64,14 @@ members = [
     "bin/99_shared_crates/daemon-lifecycle",
     "bin/99_shared_crates/daemon-lifecycle/bdd",
     "bin/99_shared_crates/rbee-operations",     # TEAM-186: Shared operation types for rbee-keeper ↔ queen-rbee contract
-    "bin/99_shared_crates/heartbeat",           # MOVED from worker-rbee-crates (used by workers AND hives)
     "bin/99_shared_crates/job-server",        # TEAM-154: Dual-call pattern job tracking (worker/queen/hive)
     "bin/99_shared_crates/timeout-enforcer",    # TEAM-163: Hard timeout enforcement with visual countdown
     "bin/99_shared_crates/auto-update",         # TEAM-193: Dependency-aware auto-update for binaries
     "bin/99_shared_crates/rbee-config",         # TEAM-194: File-based config for queen
+    "bin/99_shared_crates/shared-contract",     # TEAM-284: Shared contract types (workers + hives)
     "bin/99_shared_crates/worker-contract",     # TEAM-270: Worker contract types and API spec
-    "bin/99_shared_crates/daemon-sync",         # TEAM-280: Daemon synchronization and validation
-    "bin/99_shared_crates/ssh-client",          # TEAM-260: SSH client for remote operations (daemon-sync, hive-lifecycle)
-    "bin/99_shared_crates/ssh-client/bdd",
+    "bin/99_shared_crates/hive-contract",       # TEAM-284: Hive contract types and API spec
+    # TEAM-284: DELETED daemon-sync and ssh-client (SSH/remote operations removed)
 
     # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
     # CONTRACTS — API Specifications & Types

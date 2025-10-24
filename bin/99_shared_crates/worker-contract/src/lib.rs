@@ -71,3 +71,6 @@ pub mod types;
 pub use api::{InferRequest, InferResponse, WorkerApiSpec};
 pub use heartbeat::{WorkerHeartbeat, HEARTBEAT_INTERVAL_SECS, HEARTBEAT_TIMEOUT_SECS};
 pub use types::{WorkerInfo, WorkerStatus};
+
+// TEAM-284: Re-export shared-contract types for convenience
+pub use shared_contract::{HealthStatus, HeartbeatTimestamp, OperationalStatus};

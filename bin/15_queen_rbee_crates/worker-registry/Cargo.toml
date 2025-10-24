@@ -14,8 +14,7 @@ path = "src/lib.rs"
 [dependencies]
 serde = { version = "1.0", features = ["derive"] }
 chrono = "0.4"
-rbee-heartbeat = { path = "../../99_shared_crates/heartbeat" }
-# TEAM-270: Worker contract types for direct worker heartbeats
+# TEAM-270/284: Worker contract types (includes heartbeat)
 worker-contract = { path = "../../99_shared_crates/worker-contract" }
 
 [dev-dependencies]

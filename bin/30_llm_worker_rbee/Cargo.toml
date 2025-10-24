@@ -203,8 +203,8 @@ auth-min = { path = "../98_security_crates/auth-min" }
 secrets-management = { path = "../98_security_crates/secrets-management" }
 input-validation = { path = "../98_security_crates/input-validation" }
 
-# TEAM-135: Heartbeat shared crate
-rbee-heartbeat = { path = "../99_shared_crates/heartbeat" }
+# TEAM-284: Worker contract types (includes heartbeat)
+worker-contract = { path = "../99_shared_crates/worker-contract" }
 
 # TEAM-154: Job registry shared crate (dual-call pattern)
 job-server = { path = "../99_shared_crates/job-server" }

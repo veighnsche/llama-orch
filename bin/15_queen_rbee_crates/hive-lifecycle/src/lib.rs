@@ -38,9 +38,8 @@ pub mod ensure;
 pub mod get;
 /// List all hives operations
 pub mod list;
-/// SSH utilities for remote operations
-pub mod ssh_helper;
 // TEAM-278: DELETED pub mod ssh_test, install, uninstall
+// TEAM-284: DELETED pub mod ssh_helper (SSH/remote operations removed)
 /// Hive startup operations
 pub mod start;
 /// Hive status check operations

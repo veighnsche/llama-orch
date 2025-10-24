@@ -46,9 +46,10 @@ use config::Config;
 
 use cli::{Cli, Commands};
 use handlers::{
-    handle_hive, handle_infer, handle_migrate, handle_model, handle_package_status, handle_queen,
-    handle_status, handle_sync, handle_validate, handle_worker,
+    handle_hive, handle_infer, handle_model, handle_queen,
+    handle_status, handle_worker,
 };
+// TEAM-284: DELETED handle_migrate, handle_package_status, handle_sync, handle_validate
 
 #[tokio::main]
 async fn main() -> Result<()> {
@@ -108,16 +109,8 @@ async fn handle_command(cli: Cli) -> Result<()> {
         }
 
         // ========================================================================
-        // PACKAGE MANAGER COMMANDS (TEAM-282)
+        // TEAM-284: DELETED PACKAGE MANAGER COMMANDS
         // ========================================================================
-        Commands::Sync { config, dry_run, remove_extra, force, hive } => {
-            handle_sync(&queen_url, config, dry_run, remove_extra, force, hive).await
-        }
-
-        Commands::PackageStatus { config, verbose } => handle_package_status(&queen_url, config, verbose).await,
-
-        Commands::Validate { config } => handle_validate(&queen_url, config).await,
-
-        Commands::Migrate { output } => handle_migrate(&queen_url, output).await,
+        // Sync, PackageStatus, Validate, Migrate removed (SSH/remote operations)
     }
 }

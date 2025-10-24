@@ -15,7 +15,7 @@
 
 use anyhow::Result;
 use observability_narration_core::Narration;
-use rbee_heartbeat::{HealthStatus, WorkerHeartbeatPayload};
+use worker_contract::{WorkerHeartbeat, WorkerInfo}; // TEAM-284: Use worker-contract types
 
 const ACTOR_WORKER_HEARTBEAT: &str = "👷 worker-heartbeat";
 const ACTION_SEND: &str = "send_heartbeat";
@@ -23,30 +23,31 @@ const ACTION_SEND: &str = "send_heartbeat";
 /// Send heartbeat to queen
 ///
 /// TEAM-261: Changed to send directly to queen (not hive)
+/// TEAM-284: Updated to use worker-contract types
 ///
 /// **Flow:**
-/// 1. Build WorkerHeartbeatPayload with current status
+/// 1. Build WorkerHeartbeat with full WorkerInfo
 /// 2. Send POST /v1/worker-heartbeat to queen
 /// 3. Return acknowledgement
 ///
 /// This is called periodically (e.g., every 30s) to signal worker is alive
 pub async fn send_heartbeat_to_queen(
-    worker_id: &str,
+    worker_info: &WorkerInfo,  // TEAM-284: Pass full worker info
     queen_url: &str,
-    health_status: HealthStatus,
 ) -> Result<()> {
-    Narration::new(ACTOR_WORKER_HEARTBEAT, ACTION_SEND, worker_id)
+    Narration::new(ACTOR_WORKER_HEARTBEAT, ACTION_SEND, &worker_info.id)
         .human(format!("Sending heartbeat to queen at {}", queen_url))
         .emit();
 
-    let payload = WorkerHeartbeatPayload {
-        worker_id: worker_id.to_string(),
-        timestamp: chrono::Utc::now().to_rfc3339(),
-        health_status,
-    };
+    let heartbeat = WorkerHeartbeat::new(worker_info.clone());
 
     // TODO: Implement HTTP POST to queen
-    // POST {queen_url}/v1/worker-heartbeat with payload
+    // POST {queen_url}/v1/worker-heartbeat with heartbeat
+    // let client = reqwest::Client::new();
+    // client.post(format!("{}/v1/worker-heartbeat", queen_url))
+    //     .json(&heartbeat)
+    //     .send()
+    //     .await?;
 
     Ok(())
 }
@@ -54,15 +55,16 @@ pub async fn send_heartbeat_to_queen(
 /// Start periodic heartbeat task
 ///
 /// TEAM-261: Changed to send heartbeats to queen (not hive)
+/// TEAM-284: Updated to use worker-contract types
 ///
 /// **Flow:**
 /// 1. Spawn tokio task
-/// 2. Every 30 seconds, send heartbeat to queen
+/// 2. Every 30 seconds, send heartbeat to queen with full WorkerInfo
 /// 3. Continue until task is cancelled
 ///
 /// This runs in the background for the lifetime of the worker
 pub fn start_heartbeat_task(
-    worker_id: String,
+    worker_info: WorkerInfo,  // TEAM-284: Pass full worker info
     queen_url: String,
 ) -> tokio::task::JoinHandle<()> {
     tokio::spawn(async move {
@@ -72,10 +74,10 @@ pub fn start_heartbeat_task(
             interval.tick().await;
             
             // TEAM-261: Send heartbeat to queen (not hive)
+            // TEAM-284: Send full WorkerInfo
             if let Err(e) = send_heartbeat_to_queen(
-                &worker_id,
+                &worker_info,
                 &queen_url,
-                HealthStatus::Healthy,
             ).await {
                 eprintln!("Failed to send heartbeat: {}", e);
             }

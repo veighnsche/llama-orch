@@ -33,5 +33,5 @@ pub use common::{InferenceResult, SamplingConfig, StopReason, WorkerError};
 pub use error::LlorchError;
 pub use http::{create_router, HttpServer, InferenceBackend};
 
-// TEAM-135: Re-export heartbeat from shared crate (migrated from local module)
-pub use rbee_heartbeat as heartbeat;
+// TEAM-284: Heartbeat now handled by worker-contract
+pub mod heartbeat;

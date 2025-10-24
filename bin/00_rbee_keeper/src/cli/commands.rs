@@ -19,6 +19,7 @@ pub struct Cli {
 /// TEAM-185: Added comprehensive inference parameters (top_p, top_k, device, worker_id, stream)
 /// TEAM-190: Added Status command for live hive/worker overview
 /// TEAM-282: Added package manager commands (Sync, PackageStatus, Validate, Migrate)
+/// TEAM-284: DELETED package manager commands (SSH/remote operations removed)
 pub enum Commands {
     /// Show live status of all hives and workers
     /// TEAM-190: Queries hive-registry for runtime state (not catalog)
@@ -88,61 +89,7 @@ pub enum Commands {
     },
 
     // ============================================================================
-    // PACKAGE MANAGER COMMANDS (TEAM-282)
+    // TEAM-284: DELETED PACKAGE MANAGER COMMANDS
     // ============================================================================
-    /// Sync all hives to match declarative config
-    /// TEAM-282: Declarative lifecycle management
-    /// TEAM-260: Added --config parameter for testing different scenarios
-    Sync {
-        /// Optional: path to config file (default: ~/.config/rbee/hives.conf)
-        /// TEAM-260: Allows testing with different TOML files
-        #[arg(long)]
-        config: Option<String>,
-
-        /// Show what would be done without making changes
-        #[arg(long)]
-        dry_run: bool,
-
-        /// Remove components not in config
-        #[arg(long)]
-        remove_extra: bool,
-
-        /// Force reinstall even if already installed
-        #[arg(long)]
-        force: bool,
-
-        /// Optional: sync only this hive
-        #[arg(long)]
-        hive: Option<String>,
-    },
-
-    /// Check package status and detect drift from config
-    /// TEAM-282: Declarative lifecycle management
-    /// TEAM-260: Added --config parameter for testing different scenarios
-    PackageStatus {
-        /// Optional: path to config file (default: ~/.config/rbee/hives.conf)
-        /// TEAM-260: Allows testing with different TOML files
-        #[arg(long)]
-        config: Option<String>,
-
-        /// Show detailed status information
-        #[arg(long)]
-        verbose: bool,
-    },
-
-    /// Validate declarative config file
-    /// TEAM-282: Declarative lifecycle management
-    Validate {
-        /// Optional: path to config file (default: ~/.config/rbee/hives.conf)
-        #[arg(long)]
-        config: Option<String>,
-    },
-
-    /// Generate declarative config from current state
-    /// TEAM-282: Declarative lifecycle management
-    Migrate {
-        /// Path where config should be written
-        #[arg(long)]
-        output: String,
-    },
+    // Sync, PackageStatus, Validate, Migrate removed (SSH/remote operations)
 }

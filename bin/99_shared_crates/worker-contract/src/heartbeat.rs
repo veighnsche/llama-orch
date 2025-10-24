@@ -1,17 +1,11 @@
 // TEAM-270: Heartbeat protocol
+// TEAM-284: Updated to use shared-contract types
 
 use crate::types::WorkerInfo;
 use serde::{Deserialize, Serialize};
 
-/// Heartbeat interval in seconds
-///
-/// Workers send heartbeats to queen every 30 seconds.
-pub const HEARTBEAT_INTERVAL_SECS: u64 = 30;
-
-/// Heartbeat timeout in seconds
-///
-/// Queen marks worker as unavailable after 90 seconds (3 missed heartbeats).
-pub const HEARTBEAT_TIMEOUT_SECS: u64 = 90;
+// TEAM-284: Re-export constants from shared-contract
+pub use shared_contract::{HEARTBEAT_INTERVAL_SECS, HEARTBEAT_TIMEOUT_SECS};
 
 /// Worker heartbeat message
 ///
@@ -64,8 +58,9 @@ pub struct WorkerHeartbeat {
     /// Complete worker information
     pub worker: WorkerInfo,
 
-    /// Timestamp when heartbeat was sent (ISO 8601)
-    pub timestamp: chrono::DateTime<chrono::Utc>,
+    /// Timestamp when heartbeat was sent
+    /// TEAM-284: Using shared HeartbeatTimestamp
+    pub timestamp: shared_contract::HeartbeatTimestamp,
 }
 
 /// Heartbeat acknowledgement from queen
@@ -83,14 +78,26 @@ pub struct HeartbeatAck {
 impl WorkerHeartbeat {
     /// Create a new heartbeat with current timestamp
     pub fn new(worker: WorkerInfo) -> Self {
-        Self { worker, timestamp: chrono::Utc::now() }
+        Self {
+            worker,
+            timestamp: shared_contract::HeartbeatTimestamp::now(),
+        }
     }
 
     /// Check if heartbeat is recent (within timeout window)
     pub fn is_recent(&self) -> bool {
-        let now = chrono::Utc::now();
-        let elapsed = now.signed_duration_since(self.timestamp);
-        elapsed.num_seconds() < HEARTBEAT_TIMEOUT_SECS as i64
+        self.timestamp.is_recent(HEARTBEAT_TIMEOUT_SECS)
+    }
+}
+
+// TEAM-284: Implement HeartbeatPayload trait
+impl shared_contract::HeartbeatPayload for WorkerHeartbeat {
+    fn component_id(&self) -> &str {
+        &self.worker.id
+    }
+
+    fn timestamp(&self) -> &shared_contract::HeartbeatTimestamp {
+        &self.timestamp
     }
 }
 

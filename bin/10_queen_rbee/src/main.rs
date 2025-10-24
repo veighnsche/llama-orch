@@ -134,7 +134,12 @@ fn create_router(
         hive_registry: worker_registry.clone(), // TEAM-262: Still named hive_registry in struct
     };
 
-    let heartbeat_state = http::HeartbeatState { hive_registry: worker_registry };
+    // TEAM-284: Initialize both worker and hive registries
+    let hive_registry = Arc::new(queen_rbee_hive_registry::HiveRegistry::new());
+    let heartbeat_state = http::HeartbeatState {
+        worker_registry: worker_registry.clone(),
+        hive_registry,
+    };
 
     axum::Router::new()
         // Health check (no /v1 prefix for compatibility)

@@ -8,7 +8,7 @@ use std::sync::Arc;
 use std::time::Duration;
 use tokio::time::sleep;
 
-use crate::ssh_helper::{is_remote_hive, ssh_exec};
+// TEAM-284: DELETED ssh_helper imports (SSH/remote operations removed)
 use crate::types::{HiveStopRequest, HiveStopResponse};
 use crate::validation::validate_hive_exists;
 
@@ -74,38 +74,10 @@ pub async fn execute_hive_stop(
         });
     }
 
-    // Check if remote or local
-    let is_remote = is_remote_hive(hive_config);
+    // TEAM-284: Localhost-only stop (remote SSH removed)
     let binary_name = "rbee-hive";
 
-    if is_remote {
-        // REMOTE STOP: Use SSH
-        NARRATE
-            .action("hive_mode")
-            .job_id(job_id)
-            .context(&format!("{}@{}", hive_config.ssh_user, hive_config.hostname))
-            .human("🌐 Remote stop: {}")
-            .emit();
-
-        NARRATE.action("hive_sigterm").job_id(job_id).human("📤 Sending remote SIGTERM...").emit();
-
-        // Send SIGTERM via SSH
-        let stop_result = ssh_exec(
-            hive_config,
-            &format!("pkill -TERM {}", binary_name),
-            job_id,
-            "hive_pkill",
-            "Stopping remote hive",
-        )
-        .await;
-
-        // pkill returns non-zero if no process found, which is fine
-        if let Err(e) = stop_result {
-            if !e.to_string().contains("no process found") {
-                return Err(e);
-            }
-        }
-    } else {
+    {
         // LOCAL STOP: Use pkill
         NARRATE
             .action("hive_sigterm")
@@ -162,20 +134,18 @@ pub async fn execute_hive_stop(
                 .human("⚠️  Graceful shutdown timed out, sending SIGKILL...")
                 .emit();
 
-            if is_remote {
-                // Remote SIGKILL
-                ssh_exec(
-                    hive_config,
-                    &format!("pkill -KILL {}", binary_name),
-                    job_id,
-                    "hive_kill",
-                    "Force-stopping remote hive",
-                )
-                .await
-                .ok(); // Ignore errors - process might already be dead
-            } else {
-                // Local SIGKILL
-                tokio::process::Command::new("pkill").args(["-KILL", binary_name]).output().await?;
+            // Local SIGKILL (TEAM-284: Remote SSH removed)
+            let kill_result = std::process::Command::new("pkill")
+                .args(["-KILL", binary_name])
+                .output();
+
+            if let Err(e) = kill_result {
+                NARRATE
+                    .action("hive_sigkill_err")
+                    .job_id(job_id)
+                    .context(&e.to_string())
+                    .human("⚠️  SIGKILL failed: {}")
+                    .emit();
             }
 
             sleep(Duration::from_millis(500)).await;

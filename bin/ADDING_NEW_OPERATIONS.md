@@ -1,6 +1,16 @@
 # Adding New Operations - Quick Reference
 
-**Last Updated:** Oct 24, 2025 (TEAM-283)
+**Last Updated:** Oct 24, 2025 (TEAM-284)
+
+## TEAM-284: SSH and Remote Operations Removed
+
+**All SSH and remote installation functionality has been removed:**
+- ❌ PackageSync, PackageStatus, PackageInstall, PackageUninstall, PackageValidate, PackageMigrate
+- ❌ daemon-sync crate (SSH-based remote operations)
+- ❌ ssh-client crate
+- ❌ Remote hive installation
+
+**rbee is now localhost-only.** All operations target the local machine.
 
 ## The 3-File Pattern
 
@@ -12,24 +22,24 @@ Every new operation requires updates to exactly **3 files** in this order:
 3. rbee-keeper/src/handlers/    (CLI Handler)
 ```
 
-## TEAM-277 Update: Package Operations
+## TEAM-277/278/284: Operation History
 
-**New declarative operations added:**
-- `PackageSync` - Sync all hives to match config (uses daemon-sync crate)
-- `PackageStatus` - Check package status and detect drift
-- `PackageInstall` - Install all components
-- `PackageUninstall` - Uninstall components
-- `PackageValidate` - Validate declarative config
-- `PackageMigrate` - Generate config from current state
+**TEAM-284 (Oct 24, 2025): SSH and Remote Operations Removed**
+- ❌ All Package operations deleted (PackageSync, PackageStatus, PackageInstall, PackageUninstall, PackageValidate, PackageMigrate)
+- ❌ daemon-sync crate removed
+- ❌ ssh-client crate removed
+- ❌ Remote installation removed
 
-**Removed imperative operations:**
-- ~~`HiveInstall`~~ - Replaced by PackageSync
-- ~~`HiveUninstall`~~ - Replaced by PackageUninstall
-- ~~`WorkerDownload`~~ - Replaced by PackageSync
-- ~~`WorkerBuild`~~ - Replaced by PackageSync
-- ~~`WorkerBinaryList`~~ - Replaced by PackageStatus
-- ~~`WorkerBinaryGet`~~ - Replaced by PackageStatus
-- ~~`WorkerBinaryDelete`~~ - Replaced by PackageUninstall
+**TEAM-278: Imperative Operations Removed**
+- ~~`HiveInstall`~~ - Removed (was replaced by PackageSync, now all removed)
+- ~~`HiveUninstall`~~ - Removed (was replaced by PackageUninstall, now all removed)
+- ~~`WorkerDownload`~~ - Removed
+- ~~`WorkerBuild`~~ - Removed
+- ~~`WorkerBinaryList`~~ - Removed
+- ~~`WorkerBinaryGet`~~ - Removed
+- ~~`WorkerBinaryDelete`~~ - Removed
+
+**Current State:** rbee is localhost-only. No remote operations.
 
 ---
 

@@ -1,6 +1,10 @@
 // TEAM-270: Worker contract types
+// TEAM-284: Updated to use shared-contract types
 
 use serde::{Deserialize, Serialize};
+
+// TEAM-284: Re-export OperationalStatus as WorkerStatus for backward compatibility
+pub use shared_contract::OperationalStatus as WorkerStatus;
 
 /// Worker information
 ///
@@ -61,46 +65,11 @@ pub struct WorkerInfo {
     pub version: String,
 }
 
-/// Worker status
-///
-/// Represents the current state of a worker in its lifecycle.
-///
-/// # States
-///
-/// - `Starting`: Worker is loading model into memory
-/// - `Ready`: Worker is ready to accept inference requests
-/// - `Busy`: Worker is currently processing a request
-/// - `Stopped`: Worker has been stopped (graceful shutdown)
-///
-/// # State Transitions
-///
-/// ```text
-/// Starting → Ready → Busy → Ready → ... → Stopped
-///    ↓                ↓
-///  Stopped         Stopped
-/// ```
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
-#[serde(rename_all = "lowercase")]
-pub enum WorkerStatus {
-    /// Worker is loading model into memory
-    Starting,
-
-    /// Worker is ready to accept inference requests
-    Ready,
-
-    /// Worker is currently processing a request
-    Busy,
-
-    /// Worker has been stopped (graceful shutdown)
-    Stopped,
-}
-
 impl WorkerInfo {
-    /// Check if worker is available for inference
-    ///
-    /// A worker is available if its status is `Ready`.
+    /// Check if worker is available (ready or busy, not stopped)
+    /// TEAM-284: Updated to use shared-contract helper methods
     pub fn is_available(&self) -> bool {
-        self.status == WorkerStatus::Ready
+        self.status.is_available()
     }
 
     /// Check if worker is serving a specific model

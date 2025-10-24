@@ -25,9 +25,10 @@ clap = { version = "4", features = ["derive"] }
 
 # Error handling
 anyhow = "1.0"
+tracing = "0.1"  # TEAM-284: For heartbeat logging
 
-# TEAM-190: Heartbeat functionality
-rbee-heartbeat = { path = "../99_shared_crates/heartbeat" }
+# TEAM-284: Hive contract types (includes heartbeat)
+hive-contract = { path = "../99_shared_crates/hive-contract" }
 observability-narration-core = { path = "../99_shared_crates/narration-core" }
 
 # TEAM-205: Device detection for capabilities endpoint

@@ -1,0 +1,25 @@
+# TEAM-284: Hive registry for queen-rbee
+#
+# Tracks hive state based on heartbeats.
+# Mirrors worker-registry but for hives.
+
+[package]
+name = "queen-rbee-hive-registry"
+version = "0.1.0"
+edition = "2021"
+license = "GPL-3.0-or-later"
+
+[lib]
+name = "queen_rbee_hive_registry"
+path = "src/lib.rs"
+
+[dependencies]
+# Contract types
+hive-contract = { path = "../../99_shared_crates/hive-contract" }
+shared-contract = { path = "../../99_shared_crates/shared-contract" }
+
+# Time handling
+chrono = "0.4"
+
+[dev-dependencies]
+# Testing

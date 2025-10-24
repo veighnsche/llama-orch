@@ -1,0 +1,31 @@
+# TEAM-284: Shared contract types for both workers and hives
+#
+# This crate provides common types and traits that are shared between:
+# - worker-contract (worker-specific types)
+# - hive-contract (hive-specific types)
+#
+# Purpose: DRY principle - shared types in one place
+
+[package]
+name = "shared-contract"
+version = "0.1.0"
+edition = "2021"
+license = "GPL-3.0-or-later"
+
+[lib]
+name = "shared_contract"
+path = "src/lib.rs"
+
+[dependencies]
+# Serialization
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+
+# Time handling
+chrono = { version = "0.4", features = ["serde"] }
+
+# Error handling
+thiserror = "1.0"
+
+[dev-dependencies]
+# Testing

@@ -1,5 +1,6 @@
 // TEAM-135: Created by TEAM-135 (scaffolding)
 // TEAM-218: Investigated Oct 22, 2025 - STUB with no implementation
+// TEAM-284: Added hive heartbeat to queen
 // Purpose: rbee-hive library code
 // Status: STUB - Awaiting implementation
 
@@ -9,5 +10,7 @@
 //! rbee-hive library
 //!
 //! Core library code for rbee-hive daemon
+
+pub mod heartbeat; // TEAM-284: Hive heartbeat to queen
 
 // TODO: Implement library functionality
