@@ -1,27 +1,25 @@
+# rbee-sdk
+#
+# TEAM-286: TypeScript/JavaScript SDK for rbee
+#
+# NOTE: This Cargo.toml is kept for workspace compatibility but is not actively used.
+# The SDK is now pure TypeScript (no Rust/WASM).
+# See TEAM_286_MISSION.md for details.
+
 [package]
 name = "rbee-sdk"
 version = "0.0.0"
 edition = "2021"
-license = "Apache-2.0"
+license = "GPL-3.0-or-later"
 repository = "https://github.com/veighnsche/rbee"
-description = "Single-source SDK for rbee (Rust core, optional WASM for npm)"
+description = "TypeScript/JavaScript SDK for rbee (pure TS, no WASM)"
+publish = false
 
-[features]
-default = ["native"]
-# Native build: HTTP client via reqwest + tokio (to be implemented later)
-native = []
-# WASM build: enable tsify + wasm-bindgen
-wasm = ["dep:tsify", "dep:wasm-bindgen"]
-
+# No dependencies - pure TypeScript SDK
 [dependencies]
-serde = { version = "1", features = ["derive"] }
-futures-core = "0.3"
-# Optional dependencies for WASM/TS bindings
-wasm-bindgen = { version = "0.2", optional = true }
-tsify = { version = "0.4", optional = true }
 
+# Placeholder lib to satisfy cargo workspace
 [lib]
 name = "rbee_sdk"
 path = "src/lib.rs"
-# Provide both rlib and cdylib to support wasm-pack output
-crate-type = ["rlib", "cdylib"]
+crate-type = ["rlib"]

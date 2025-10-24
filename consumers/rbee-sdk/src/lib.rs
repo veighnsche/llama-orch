@@ -1,20 +1,20 @@
-//! Single-source SDK for llama-orch: Rust core with optional WASM build for npm.
-//! This library exposes typed models and a minimal client surface.
+//! rbee-sdk
 //!
-//! # Security Notice
+//! TEAM-286: TypeScript/JavaScript SDK for rbee
 //!
-//! ⚠️ **API Token Handling**: If you need to handle API tokens or credentials in the SDK,
-//! use the `secrets-management` crate (server-side only, not available in WASM):
+//! **This Rust crate is a placeholder for workspace compatibility.**
 //!
-//! ```rust,ignore
-//! #[cfg(not(target_arch = "wasm32"))]
-//! use secrets_management::Secret;
+//! The actual SDK is implemented in TypeScript in the `ts/` directory.
 //!
-//! // Load token securely (server-side only)
-//! let token = Secret::load_from_file("/path/to/token")?;
-//! ```
-//!
-//! For WASM/browser: Tokens should be provided by the application, never embedded.
+//! See `TEAM_286_MISSION.md` for complete documentation.
 
-pub mod client;
-pub mod types;
+#![allow(dead_code)]
+
+/// Placeholder module to satisfy cargo workspace
+pub mod placeholder {
+    /// This crate is not used. The SDK is pure TypeScript.
+    /// See ../TEAM_286_MISSION.md for details.
+    pub fn not_used() {
+        // This is intentionally empty
+    }
+}
