@@ -1,9 +1,9 @@
 # rbee-sdk
 
-**TypeScript/JavaScript SDK for rbee**
+**Rust SDK that compiles to WASM for browser/Node.js**
 
-> ⚠️ **Status:** Under development by TEAM-286  
-> **Version:** 0.0.0 (not yet functional)
+> ✅ **Status:** Phase 2 in progress - `submit_and_stream()` implemented!  
+> **Version:** 0.1.0 (functional, under development)
 
 ---
 
@@ -13,128 +13,167 @@ Provide a production-ready TypeScript/JavaScript SDK for building web UIs and No
 
 ---
 
-## For TEAM-286
+## Quick Start
 
-**👉 START HERE:** Read `TEAM_286_MISSION.md` for complete instructions.
+### Prerequisites
 
-### Quick Start for Development
+1. **Install wasm-pack:**
+   ```bash
+   curl https://rustwasm.github.io/wasm-pack/installer/init.sh -sSf | sh
+   ```
 
-1. **Read required materials** (listed in TEAM_286_MISSION.md)
-2. **Study rbee-keeper** (`/bin/00_rbee_keeper/`) - this is your reference implementation
-3. **Review contracts** (`/bin/97_contracts/`) - these define the API
-4. **Test heartbeat example** (`/bin/10_queen_rbee/examples/heartbeat_monitor.html`)
-5. **Set up TypeScript project** in `ts/` directory
-6. **Start with basic HTTP client**
-7. **Add SSE streaming support**
-8. **Implement operations one by one**
+2. **Build the WASM:**
+   ```bash
+   cd consumers/rbee-sdk
+   wasm-pack build --target web
+   ```
 
-### Key Files to Study
+3. **Test it:**
+   ```bash
+   # Start a local server
+   python3 -m http.server 8000
+   
+   # Open http://localhost:8000/test.html
+   ```
 
-**Must Read:**
-- `/bin/CONTRACT_DEPENDENCY_ANALYSIS.md` - Contract hierarchy
-- `/bin/97_contracts/operations-contract/src/lib.rs` - All operations
-- `/bin/00_rbee_keeper/src/job_client.rs` - Reference implementation
-- `/bin/TEAM_285_HEARTBEAT_MONITOR_READY.md` - Heartbeat system
-- `/bin/ADDING_NEW_OPERATIONS.md` - API documentation
+### What's Implemented
 
-**Reference Code:**
-- `/bin/99_shared_crates/job-client/src/lib.rs` - Job submission pattern
-- `/bin/10_queen_rbee/src/http/heartbeat_stream.rs` - SSE streaming
-- `/bin/10_queen_rbee/examples/heartbeat_monitor.html` - Working example
+**✅ Phase 1 Complete:**
+- WASM project setup
+- Dependencies configured
+- Module structure in place
+
+**✅ Phase 2 In Progress:**
+- `RbeeClient` class
+- `submitAndStream()` method - **WORKING!**
+- `submit()` method - **WORKING!**
+- Type conversions (JS ↔ Rust)
+
+**📋 Next:**
+- Operation builders
+- Convenience methods
+- All 17 operations
 
 ---
 
-## Planned API (Not Yet Implemented)
+## Current API (Working!)
 
-### Installation (Future)
+### Installation (when published)
 
 ```bash
 npm install @rbee/sdk
 ```
 
-### Basic Usage (Future)
+### Basic Usage (Works Now!)
 
-```typescript
-import { RbeeClient } from '@rbee/sdk';
+```javascript
+import init, { RbeeClient } from '@rbee/sdk';
+
+// Initialize WASM
+await init();
 
 const client = new RbeeClient('http://localhost:8500');
 
-// Run inference
-const result = await client.infer({
-  model: 'llama-3-8b',
-  prompt: 'Hello, world!',
-  stream: true,
-});
+// Submit a job and stream results
+const jobId = await client.submitAndStream(
+  { operation: 'status' },
+  (line) => console.log(line)
+);
 
-// Stream tokens
-for await (const token of result.stream()) {
-  console.log(token);
-}
+console.log('Job ID:', jobId);
 
-// Monitor heartbeats
-const monitor = client.heartbeats.stream();
-monitor.on('update', (data) => {
-  console.log('Workers:', data.workers_online);
-});
+// Or just submit without streaming
+const jobId2 = await client.submit({ operation: 'hive_list' });
 ```
 
 ---
 
-## Current Status
+## Implementation Status
 
-**Completed:**
-- ✅ Mission document created (TEAM_286_MISSION.md)
-- ✅ Old code removed
-- ✅ Clean slate for TEAM-286
+**✅ Phase 1 - Foundation (COMPLETE):**
+- Cargo.toml configured for WASM
+- Dependencies on shared crates (job-client, operations-contract)
+- Module structure (client, types, utils)
+- Compiles successfully
 
-**TODO (TEAM-286):**
-- [ ] Set up TypeScript project structure
-- [ ] Generate types from contracts
-- [ ] Implement HTTP client
-- [ ] Implement SSE streaming
-- [ ] Implement operations
-- [ ] Add React hooks
-- [ ] Write examples
-- [ ] Write tests
-- [ ] Publish to npm
+**✅ Phase 2 - Core Bindings (IN PROGRESS):**
+- RbeeClient wrapper around JobClient
+- submitAndStream() - **WORKING!**
+- submit() - **WORKING!**
+- Type conversions (JS ↔ Rust)
+- Test HTML page
+
+**📋 Phase 3 - All Operations (TODO):**
+- Operation builders for all 17 operations
+- Convenience methods
+- Examples
+
+**📋 Phase 4 - Publishing (TODO):**
+- Build optimization
+- npm package
+- Documentation
 
 ---
 
 ## Architecture
 
-### Planned Structure
+### How It Works
 
 ```
-rbee-sdk/
-├── ts/                    - TypeScript source
-│   ├── client.ts         - Main RbeeClient
-│   ├── operations.ts     - Operation builders
-│   ├── types.ts          - TypeScript types
-│   ├── sse.ts            - SSE utilities
-│   ├── heartbeat.ts      - Heartbeat monitor
-│   └── index.ts          - Public API
-├── examples/             - Usage examples
-├── tests/                - Tests
-└── TEAM_286_MISSION.md   - Complete instructions
+Existing Rust Crates (REUSE!)
+├── job-client (HTTP + SSE)
+├── operations-contract (all types)
+└── rbee-config
+         ↓
+    rbee-sdk (thin wrapper)
+    ├── src/lib.rs
+    ├── src/client.rs (wraps JobClient)
+    ├── src/types.rs (JS ↔ Rust)
+    └── src/utils.rs
+         ↓
+    wasm-pack build
+         ↓
+    pkg/
+    ├── rbee_sdk.wasm (~150-250KB)
+    ├── rbee_sdk.js (glue code)
+    └── rbee_sdk.d.ts (TypeScript types!)
 ```
+
+**Key Insight:** We reuse 90%+ of existing Rust code!
 
 ---
 
 ## Development
 
-### Prerequisites
-
-- Node.js 18+
-- TypeScript 5+
-- Understanding of rbee architecture
-
-### Setup
+### Build Commands
 
 ```bash
-cd consumers/rbee-sdk
-npm install
-npm run build
-npm test
+# Build for web
+wasm-pack build --target web
+
+# Build for Node.js
+wasm-pack build --target nodejs
+
+# Build for bundlers
+wasm-pack build --target bundler
+
+# Build all targets
+./build-wasm.sh
+
+# Check Rust code
+cargo check -p rbee-sdk
+```
+
+### Testing
+
+```bash
+# Start queen-rbee
+cargo run --bin queen-rbee
+
+# In another terminal, serve test.html
+python3 -m http.server 8000
+
+# Open http://localhost:8000/test.html
 ```
 
 ---
@@ -145,15 +184,25 @@ GPL-3.0-or-later
 
 ---
 
-## For Questions
+## Documentation
 
-See `TEAM_286_MISSION.md` for:
-- Complete architecture guide
-- Required reading list
-- Implementation phases
-- Design decisions
-- Example code
-- Testing strategy
-- Success criteria
+- **TEAM_286_PLAN_OVERVIEW.md** - Master plan
+- **TEAM_286_PHASE_1_FOUNDATION.md** - WASM setup (COMPLETE)
+- **TEAM_286_PHASE_2_IMPLEMENTATION.md** - Core bindings (IN PROGRESS)
+- **TEAM_286_PHASE_3_ALL_OPERATIONS.md** - All operations (TODO)
+- **TEAM_286_PHASE_4_PUBLISHING.md** - Publishing (TODO)
+- **TEAM_286_IMPLEMENTATION_SUMMARY.md** - Overview
 
-**Good luck, TEAM-286!** 🚀
+## Why Rust + WASM?
+
+- ✅ **Code reuse:** 90%+ from existing shared crates
+- ✅ **Type safety:** Auto-generated TypeScript types
+- ✅ **Zero drift:** Same code as backend
+- ✅ **Fix once:** Bug fixes propagate everywhere
+- ✅ **Performance:** Near-native speed
+
+**vs TypeScript:** Would require rewriting everything, manual type sync, permanent duplication.
+
+---
+
+**Status:** `submit_and_stream()` is working! 🚀

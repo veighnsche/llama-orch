@@ -1,25 +1,85 @@
 # rbee-sdk
 #
-# TEAM-286: TypeScript/JavaScript SDK for rbee
-#
-# NOTE: This Cargo.toml is kept for workspace compatibility but is not actively used.
-# The SDK is now pure TypeScript (no Rust/WASM).
-# See TEAM_286_MISSION.md for details.
+# TEAM-286: Rust SDK that compiles to WASM for browser/Node.js usage
 
 [package]
 name = "rbee-sdk"
-version = "0.0.0"
+version = "0.1.0"
 edition = "2021"
+authors = ["rbee Team"]
 license = "GPL-3.0-or-later"
+description = "Rust SDK for rbee that compiles to WASM for browser/Node.js usage"
 repository = "https://github.com/veighnsche/rbee"
-description = "TypeScript/JavaScript SDK for rbee (pure TS, no WASM)"
-publish = false
+homepage = "https://github.com/veighnsche/rbee/tree/main/consumers/rbee-sdk"
+keywords = ["rbee", "llm", "wasm", "inference", "ai"]
+categories = ["wasm", "api-bindings", "web-programming"]
+readme = "README.md"
 
-# No dependencies - pure TypeScript SDK
-[dependencies]
-
-# Placeholder lib to satisfy cargo workspace
 [lib]
-name = "rbee_sdk"
-path = "src/lib.rs"
-crate-type = ["rlib"]
+crate-type = ["cdylib", "rlib"]  # cdylib = WASM, rlib = for tests
+
+[dependencies]
+# ============================================================================
+# EXISTING SHARED CRATES (REUSE!)
+# ============================================================================
+
+# TEAM-286: Reuse job-client for all HTTP + SSE logic
+job-client = { path = "../../bin/99_shared_crates/job-client" }
+
+# TEAM-286: Reuse operations-contract for all operation types
+operations-contract = { path = "../../bin/97_contracts/operations-contract" }
+
+# TEAM-286: Reuse rbee-config for configuration
+rbee-config = { path = "../../bin/99_shared_crates/rbee-config" }
+
+# ============================================================================
+# WASM DEPENDENCIES
+# ============================================================================
+
+# TEAM-286: Core WASM bindings
+wasm-bindgen = "0.2"
+wasm-bindgen-futures = "0.4"
+
+# TEAM-286: Serde for JS ↔ Rust conversion
+serde = { version = "1.0", features = ["derive"] }
+serde-wasm-bindgen = "0.6"
+
+# TEAM-286: JavaScript types
+js-sys = "0.3"
+
+# TEAM-286: Web APIs
+web-sys = { version = "0.3", features = [
+    "Window",
+    "Headers",
+    "Request",
+    "RequestInit",
+    "RequestMode",
+    "Response",
+    "console",
+    "EventSource",
+    "MessageEvent",
+] }
+
+# TEAM-286: Async runtime (required for WASM)
+tokio = { version = "1", features = ["sync"], default-features = false }
+
+# TEAM-286: Error handling
+anyhow = "1.0"
+thiserror = "1.0"
+
+[dev-dependencies]
+wasm-bindgen-test = "0.3"
+
+[profile.release]
+# TEAM-286: Optimize for small WASM size
+opt-level = "z"           # Optimize for size
+lto = true                # Link-time optimization
+codegen-units = 1         # Better optimization
+panic = "abort"           # Smaller binary
+strip = true              # Strip symbols
+
+[profile.release.package."*"]
+opt-level = "z"
+
+[package.metadata.wasm-pack.profile.release]
+wasm-opt = ["-Oz", "--enable-mutable-globals"]

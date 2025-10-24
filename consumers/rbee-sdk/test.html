@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>rbee SDK - submit_and_stream() Test</title>
+    <style>
+        body {
+            font-family: monospace;
+            padding: 20px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        h1 { color: #333; }
+        button {
+            padding: 10px 20px;
+            margin: 5px;
+            font-size: 14px;
+            cursor: pointer;
+        }
+        #output {
+            background: #f5f5f5;
+            padding: 15px;
+            border-radius: 5px;
+            margin-top: 20px;
+            min-height: 200px;
+            white-space: pre-wrap;
+            font-family: monospace;
+        }
+        .success { color: green; }
+        .error { color: red; }
+        .info { color: blue; }
+    </style>
+</head>
+<body>
+    <h1>🐝 rbee SDK - Complete Test</h1>
+    
+    <p>This tests the WASM SDK's ability to submit jobs and monitor heartbeats.</p>
+    
+    <div>
+        <h3>Job Operations</h3>
+        <button onclick="testStatus()">Test Status</button>
+        <button onclick="testHiveList()">Test Hive List</button>
+        <button onclick="clearOutput()">Clear Output</button>
+    </div>
+    
+    <div>
+        <h3>Heartbeat Monitoring</h3>
+        <button onclick="startHeartbeat()">Start Heartbeat Monitor</button>
+        <button onclick="stopHeartbeat()">Stop Heartbeat Monitor</button>
+        <div id="heartbeat-status" style="margin-top: 10px; padding: 10px; background: #e0e0e0; border-radius: 5px;">
+            <strong>Heartbeat Status:</strong> <span id="hb-state">Not started</span>
+        </div>
+    </div>
+    
+    <div id="output">Loading WASM...</div>
+    
+    <script type="module">
+        // TEAM-286: Test submit_and_stream() and heartbeat monitoring
+        import init, { RbeeClient, HeartbeatMonitor } from './pkg/web/rbee_sdk.js';
+        
+        const output = document.getElementById('output');
+        
+        function log(msg, type = 'info') {
+            const span = document.createElement('span');
+            span.className = type;
+            span.textContent = msg + '\n';
+            output.appendChild(span);
+        }
+        
+        function clear() {
+            output.innerHTML = '';
+        }
+        
+        // Initialize WASM
+        try {
+            await init();
+            clear();
+            log('✅ WASM loaded successfully!', 'success');
+            log('');
+            log('Click a button above to test operations.');
+            log('');
+            log('Note: Make sure queen-rbee is running on http://localhost:8500');
+        } catch (error) {
+            clear();
+            log('❌ Failed to load WASM: ' + error, 'error');
+        }
+        
+        // Create client
+        const client = new RbeeClient('http://localhost:8500');
+        window.client = client;  // Make available globally
+        
+        // Test status operation
+        window.testStatus = async function() {
+            clear();
+            log('📋 Testing Status Operation', 'info');
+            log('='.repeat(50));
+            log('');
+            
+            try {
+                const operation = { operation: 'status' };
+                log('Submitting operation: ' + JSON.stringify(operation));
+                log('');
+                
+                const jobId = await client.submitAndStream(
+                    operation,
+                    (line) => {
+                        log(line);
+                    }
+                );
+                
+                log('');
+                log('✅ Job completed! Job ID: ' + jobId, 'success');
+            } catch (error) {
+                log('');
+                log('❌ Error: ' + error, 'error');
+            }
+        };
+        
+        // Test hive list operation
+        window.testHiveList = async function() {
+            clear();
+            log('🏠 Testing Hive List Operation', 'info');
+            log('='.repeat(50));
+            log('');
+            
+            try {
+                const operation = { operation: 'hive_list' };
+                log('Submitting operation: ' + JSON.stringify(operation));
+                log('');
+                
+                const jobId = await client.submitAndStream(
+                    operation,
+                    (line) => {
+                        log(line);
+                    }
+                );
+                
+                log('');
+                log('✅ Job completed! Job ID: ' + jobId, 'success');
+            } catch (error) {
+                log('');
+                log('❌ Error: ' + error, 'error');
+            }
+        };
+        
+        window.clearOutput = function() {
+            clear();
+            log('Output cleared.');
+        };
+        
+        // TEAM-286: Heartbeat monitoring
+        let heartbeatMonitor = null;
+        
+        window.startHeartbeat = function() {
+            const hbState = document.getElementById('hb-state');
+            
+            try {
+                // Stop existing monitor if any
+                if (heartbeatMonitor) {
+                    heartbeatMonitor.stop();
+                }
+                
+                // Create new monitor
+                heartbeatMonitor = new HeartbeatMonitor('http://localhost:8500');
+                
+                // Start monitoring
+                heartbeatMonitor.start((snapshot) => {
+                    // Update status display
+                    hbState.innerHTML = `
+                        🟢 Connected<br>
+                        Workers Online: ${snapshot.workers_online || 0}<br>
+                        Workers Available: ${snapshot.workers_available || 0}<br>
+                        Hives Online: ${snapshot.hives_online || 0}<br>
+                        Hives Available: ${snapshot.hives_available || 0}<br>
+                        Worker IDs: ${snapshot.worker_ids ? snapshot.worker_ids.join(', ') : 'None'}<br>
+                        Hive IDs: ${snapshot.hive_ids ? snapshot.hive_ids.join(', ') : 'None'}
+                    `;
+                    
+                    // Also log to output
+                    console.log('Heartbeat:', snapshot);
+                });
+                
+                hbState.textContent = '🟡 Connecting...';
+                
+                // Check connection after a moment
+                setTimeout(() => {
+                    if (heartbeatMonitor && heartbeatMonitor.isConnected()) {
+                        console.log('✅ Heartbeat monitor connected');
+                    }
+                }, 1000);
+                
+            } catch (error) {
+                hbState.textContent = '❌ Error: ' + error;
+                console.error('Heartbeat error:', error);
+            }
+        };
+        
+        window.stopHeartbeat = function() {
+            const hbState = document.getElementById('hb-state');
+            
+            if (heartbeatMonitor) {
+                heartbeatMonitor.stop();
+                heartbeatMonitor = null;
+                hbState.textContent = '⚫ Stopped';
+                console.log('✅ Heartbeat monitor stopped');
+            } else {
+                hbState.textContent = 'Not running';
+            }
+        };
+        
+        console.log('✅ rbee SDK test page loaded');
+        console.log('Client:', client);
+        console.log('Base URL:', client.base_url);
+    </script>
+</body>
+</html>
