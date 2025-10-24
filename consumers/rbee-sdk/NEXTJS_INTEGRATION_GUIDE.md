@@ -1,24 +1,88 @@
 # TEAM-286: Next.js Integration Guide for rbee-sdk
 
 **Date:** Oct 24, 2025  
-**Target:** web-ui (Next.js 15)  
-**SDK:** rbee-sdk (Rust + WASM)
+**Target:** `frontend/apps/web-ui` (Next.js 15.5.5 + React 19)  
+**SDK:** `consumers/rbee-sdk` (Rust + WASM)  
+**Status:** ✅ **SDK READY** - WASM builds successfully!
+
+---
+
+## Executive Summary
+
+### What We Have
+
+**rbee-sdk (Rust + WASM):**
+- ✅ **Compiles to WASM** (593 KB bundle)
+- ✅ **All 17 operations** implemented
+- ✅ **HeartbeatMonitor** for live updates
+- ✅ **TypeScript types** auto-generated
+- ✅ **job-client** WASM-compatible (unified reqwest)
+
+**web-ui (Next.js):**
+- ✅ **Stub app** with placeholder UI
+- ✅ **SDK dependency** configured
+- ✅ **shadcn/ui** components ready
+- ⏳ **SDK integration** pending (this guide)
+
+### What You'll Build
+
+A production-ready dashboard that:
+- 🔥 **Real-time monitoring** (HeartbeatMonitor)
+- 📊 **Live worker/hive status**
+- 🚀 **Streaming inference** (token-by-token)
+- 📦 **Model management** (download, list, delete)
+- 🐝 **Worker control** (spawn, list, retire)
+
+**Total integration time:** ~4-6 hours
 
 ---
 
 ## Current State
 
-**web-ui package.json already has:**
+### SDK Status (consumers/rbee-sdk)
+
+**✅ COMPLETE:**
+```rust
+// All 17 operations work
+RbeeClient::new(base_url)
+  .submitAndStream(operation, callback)
+  .await
+
+// Heartbeat monitoring
+HeartbeatMonitor::new(base_url)
+  .start(callback)
+```
+
+**WASM Build:**
+```bash
+cd consumers/rbee-sdk
+wasm-pack build --target bundler
+# Output: pkg/bundler/rbee_sdk.wasm (593 KB)
+```
+
+### web-ui Status (frontend/apps/web-ui)
+
+**package.json:**
 ```json
 {
+  "name": "@rbee/web-ui",
   "dependencies": {
     "@rbee/sdk": "../../consumers/rbee-sdk",
-    // ... other deps
+    "@rbee/ui": "workspace:*",
+    "next": "15.5.5",
+    "react": "19.2.0"
   }
 }
 ```
 
-✅ **Good news:** The dependency is already configured!
+**Current page.tsx:**
+```tsx
+// Stub with placeholder cards
+// TODO: Connect to rbee SDK (line 10)
+```
+
+✅ **Dependency configured!**  
+⏳ **Integration needed!**
 
 ---
 
