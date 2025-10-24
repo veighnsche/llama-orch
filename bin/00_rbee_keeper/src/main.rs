@@ -32,7 +32,7 @@
 //! ```
 //!
 //! TEAM-185: Consolidated queen-lifecycle crate into this binary
-//! TEAM-185: Renamed actions module to operations
+//! TEAM-185: Renamed actions module to operations_contract
 //! TEAM-185: Updated all operation strings to use constants
 
 mod cli;

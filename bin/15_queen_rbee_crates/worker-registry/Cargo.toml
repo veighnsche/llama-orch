@@ -15,7 +15,7 @@ path = "src/lib.rs"
 serde = { version = "1.0", features = ["derive"] }
 chrono = "0.4"
 # TEAM-270/284: Worker contract types (includes heartbeat)
-worker-contract = { path = "../../99_shared_crates/worker-contract" }
+worker-contract = { path = "../../97_contracts/worker-contract" }
 
 [dev-dependencies]
 tokio = { version = "1", features = ["macros", "rt-multi-thread"] }

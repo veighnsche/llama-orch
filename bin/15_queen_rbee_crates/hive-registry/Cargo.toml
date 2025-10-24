@@ -15,8 +15,8 @@ path = "src/lib.rs"
 
 [dependencies]
 # Contract types
-hive-contract = { path = "../../99_shared_crates/hive-contract" }
-shared-contract = { path = "../../99_shared_crates/shared-contract" }
+hive-contract = { path = "../../97_contracts/hive-contract" }
+shared-contract = { path = "../../97_contracts/shared-contract" }
 
 # Time handling
 chrono = "0.4"

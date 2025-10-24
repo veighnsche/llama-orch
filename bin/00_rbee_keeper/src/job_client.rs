@@ -17,7 +17,7 @@ use anyhow::Result;
 use job_client::JobClient;
 use observability_narration_core::NarrationFactory;
 use queen_lifecycle::ensure_queen_running;
-use rbee_operations::Operation;
+use operations_contract::Operation; // TEAM-284: Renamed from rbee_operations
 use std::time::Duration;
 use timeout_enforcer::TimeoutEnforcer;
 

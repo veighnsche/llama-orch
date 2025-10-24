@@ -11,7 +11,7 @@ reqwest = { version = "0.12", features = ["json", "stream"] }
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 futures = "0.3"
-rbee-operations = { path = "../rbee-operations" }
+operations-contract = { path = "../../97_contracts/operations-contract" }  # TEAM-284/285: Moved to 97_contracts
 observability-narration-core = { path = "../narration-core" }
 
 [lints]

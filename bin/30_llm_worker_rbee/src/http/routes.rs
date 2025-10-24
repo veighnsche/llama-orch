@@ -26,12 +26,16 @@
 use crate::backend::request_queue::{RequestQueue, TokenResponse};
 use crate::http::{execute, middleware::auth_middleware, stream};
 use axum::{
-    middleware,
+    extract::State,
+    middleware::{self, Next},
+    response::Response,
     routing::{get, post},
     Json, Router,
 };
 use job_server::JobRegistry;
-use observability_narration_core::axum::correlation_middleware;
+// TEAM-285: correlation_middleware removed from narration-core
+// TODO: Re-implement if needed for request tracing
+// use observability_narration_core::axum::correlation_middleware;
 use serde::Serialize;
 use std::sync::Arc;
 
@@ -99,11 +103,13 @@ pub fn create_router(
         worker_routes.layer(middleware::from_fn_with_state(auth_state, auth_middleware))
     };
 
-    // TEAM-154: Merge public and protected routes, apply correlation middleware
+    // TEAM-154: Merge public and protected routes
+    // TEAM-285: correlation_middleware removed (narration-core no longer provides axum module)
     Router::new()
         .merge(public_routes)
         .merge(protected_routes)
-        .layer(middleware::from_fn(correlation_middleware))
+        // TODO: Re-implement correlation_middleware if needed for request tracing
+        // .layer(middleware::from_fn(correlation_middleware))
 }
 
 #[cfg(test)]

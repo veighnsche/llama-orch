@@ -82,7 +82,7 @@ use job_client::JobClient;
 use observability_narration_core::NarrationFactory;
 use queen_rbee_hive_lifecycle::{execute_hive_start, HiveStartRequest};
 use rbee_config::RbeeConfig;
-use rbee_operations::Operation;
+use operations_contract::Operation; // TEAM-284: Renamed from rbee_operations
 use std::sync::Arc;
 use std::time::Duration;
 

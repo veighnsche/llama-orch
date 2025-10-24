@@ -6,7 +6,7 @@
 //! TEAM-263: Added smart prompt for localhost hive install
 
 use anyhow::Result;
-use rbee_operations::Operation;
+use operations_contract::Operation; // TEAM-284: Renamed from rbee_operations
 
 use crate::cli::HiveAction;
 use crate::job_client::submit_and_stream_job;

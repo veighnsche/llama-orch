@@ -4,7 +4,10 @@
 //! TEAM-274: Updated worker actions for new architecture
 
 use anyhow::Result;
-use rbee_operations::Operation;
+use operations_contract::{
+    Operation, WorkerProcessDeleteRequest, WorkerProcessGetRequest, WorkerProcessListRequest,
+    WorkerSpawnRequest,
+}; // TEAM-284: Renamed from rbee_operations
 
 // TEAM-278: DELETED WorkerBinaryAction import - no longer exists
 use crate::cli::{WorkerAction, WorkerProcessAction};
@@ -24,15 +27,32 @@ pub async fn handle_worker(hive_id: String, action: WorkerAction, queen_url: &st
                 (device.clone(), 0)
             };
 
-            Operation::WorkerSpawn { hive_id, model: model.clone(), worker, device: device_id }
+            // TEAM-284: Use typed WorkerSpawnRequest
+            Operation::WorkerSpawn(WorkerSpawnRequest {
+                hive_id: hive_id.clone(),
+                model: model.clone(),
+                worker: worker.to_string(),
+                device: device_id,
+            })
         }
         // TEAM-278: DELETED WorkerAction::Binary match arm
         // Worker binary management is now handled by PackageSync
-        WorkerAction::Process(process_action) => match process_action {
-            WorkerProcessAction::List => Operation::WorkerProcessList { hive_id },
-            WorkerProcessAction::Get { pid } => Operation::WorkerProcessGet { hive_id, pid: *pid },
+        // TEAM-284: Use typed requests
+        WorkerAction::Process(proc_action) => match proc_action {
+            WorkerProcessAction::List => {
+                Operation::WorkerProcessList(WorkerProcessListRequest { hive_id })
+            }
+            WorkerProcessAction::Get { pid } => {
+                Operation::WorkerProcessGet(WorkerProcessGetRequest {
+                    hive_id,
+                    pid: *pid,
+                })
+            }
             WorkerProcessAction::Delete { pid } => {
-                Operation::WorkerProcessDelete { hive_id, pid: *pid }
+                Operation::WorkerProcessDelete(WorkerProcessDeleteRequest {
+                    hive_id,
+                    pid: *pid,
+                })
             }
         },
     };

@@ -28,6 +28,7 @@ pub mod jobs; // TEAM-262
 pub use build_info::handle_build_info;
 pub use health::handle_health;
 pub use heartbeat::{
+    handle_hive_heartbeat, // TEAM-284/285: Hive heartbeat handler
     handle_worker_heartbeat,
     HeartbeatState,
     HttpHeartbeatAcknowledgement, // TEAM-275: Removed handle_heartbeat (deprecated)

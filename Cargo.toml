@@ -63,15 +63,20 @@ members = [
     # TEAM-135: New shared crates for consolidation
     "bin/99_shared_crates/daemon-lifecycle",
     "bin/99_shared_crates/daemon-lifecycle/bdd",
-    "bin/99_shared_crates/rbee-operations",     # TEAM-186: Shared operation types for rbee-keeper ↔ queen-rbee contract
     "bin/99_shared_crates/job-server",        # TEAM-154: Dual-call pattern job tracking (worker/queen/hive)
     "bin/99_shared_crates/timeout-enforcer",    # TEAM-163: Hard timeout enforcement with visual countdown
     "bin/99_shared_crates/auto-update",         # TEAM-193: Dependency-aware auto-update for binaries
     "bin/99_shared_crates/rbee-config",         # TEAM-194: File-based config for queen
-    "bin/99_shared_crates/shared-contract",     # TEAM-284: Shared contract types (workers + hives)
-    "bin/99_shared_crates/worker-contract",     # TEAM-270: Worker contract types and API spec
-    "bin/99_shared_crates/hive-contract",       # TEAM-284: Hive contract types and API spec
     # TEAM-284: DELETED daemon-sync and ssh-client (SSH/remote operations removed)
+    
+    # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    # CONTRACT CRATES — Type-safe contracts (TEAM-285: Moved from 99 to 97)
+    # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    
+    "bin/97_contracts/shared-contract",     # TEAM-284: Shared contract types (workers + hives)
+    "bin/97_contracts/worker-contract",     # TEAM-270/284: Worker contract types and API spec
+    "bin/97_contracts/hive-contract",       # TEAM-284: Hive contract types and API spec
+    "bin/97_contracts/operations-contract", # TEAM-186/284: Operations contract (queen ↔ hive)
 
     # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
     # CONTRACTS — API Specifications & Types

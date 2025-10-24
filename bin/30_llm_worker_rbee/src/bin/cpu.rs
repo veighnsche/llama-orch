@@ -29,6 +29,10 @@ struct Args {
     #[arg(long)]
     model: String,
 
+    /// Model reference (e.g., "hf:tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf")
+    #[arg(long)]
+    model_ref: String,
+
     /// HTTP server port - assigned by pool-managerd
     #[arg(long)]
     port: u16,
@@ -73,13 +77,23 @@ async fn main() -> Result<()> {
     // ============================================================
     // STEP 3: Start heartbeat task
     // ============================================================
+    // TEAM-285: Updated to use WorkerInfo (TEAM-284 contract changes)
     tracing::info!("Starting heartbeat task");
 
-    let heartbeat_config = llm_worker_rbee::heartbeat::HeartbeatConfig::new(
-        args.worker_id.clone(),
+    let worker_info = worker_contract::WorkerInfo {
+        id: args.worker_id.clone(),
+        model_id: args.model_ref.clone(),
+        device: "cpu:0".to_string(),
+        port: args.port,
+        status: worker_contract::WorkerStatus::Ready,
+        implementation: "llm-worker-rbee-cpu".to_string(),
+        version: env!("CARGO_PKG_VERSION").to_string(),
+    };
+    
+    let _heartbeat_handle = llm_worker_rbee::heartbeat::start_heartbeat_task(
+        worker_info,
         args.hive_url.clone(),
     );
-    let _heartbeat_handle = llm_worker_rbee::heartbeat::start_heartbeat_task(heartbeat_config);
     tracing::info!("Heartbeat task started (30s interval)");
 
     // ============================================================

@@ -216,15 +216,24 @@ async fn main() -> anyhow::Result<()> {
     // ============================================================
     // STEP 3: Start heartbeat task
     // ============================================================
-    // Send periodic heartbeats to rbee-hive to indicate worker is alive
+    // Send periodic heartbeats to queen to indicate worker is alive
+    // TEAM-285: Updated to use WorkerInfo (TEAM-284 contract changes)
     tracing::info!("Starting heartbeat task");
 
-    let heartbeat_config = llm_worker_rbee::heartbeat::WorkerHeartbeatConfig::new(
-        args.worker_id.clone(),
-        args.hive_url.clone(),
+    let worker_info = worker_contract::WorkerInfo {
+        id: args.worker_id.clone(),
+        model_id: args.model_ref.clone(),
+        device: format!("{}:{}", args.backend, args.device),
+        port: args.port,
+        status: worker_contract::WorkerStatus::Ready,
+        implementation: "llm-worker-rbee".to_string(),
+        version: env!("CARGO_PKG_VERSION").to_string(),
+    };
+    
+    let _heartbeat_handle = llm_worker_rbee::heartbeat::start_heartbeat_task(
+        worker_info,
+        args.hive_url.clone(), // Actually queen URL (TEAM-261)
     );
-    let _heartbeat_handle =
-        llm_worker_rbee::heartbeat::start_worker_heartbeat_task(heartbeat_config);
     tracing::info!("Heartbeat task started (30s interval)");
 
     // ============================================================

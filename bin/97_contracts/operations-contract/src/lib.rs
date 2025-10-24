@@ -1,6 +1,8 @@
-//! Shared operation types for rbee-keeper ↔ queen-rbee contract
+//! Operations contract for queen-rbee ↔ rbee-hive communication
 //!
 //! TEAM-186: Created to ensure type safety between client (rbee-keeper) and server (queen-rbee)
+//! TEAM-284: Renamed from rbee-operations to operations-contract
+//! TEAM-284: Added request/response types and API specification
 //!
 //! This crate defines:
 //! - Operation enum (all supported operations)
@@ -20,6 +22,24 @@
 //! ```
 
 use serde::{Deserialize, Serialize};
+
+// ============================================================================
+// MODULES
+// ============================================================================
+
+/// Request types for operations
+pub mod requests;
+
+/// Response types for operations
+pub mod responses;
+
+/// API specification
+pub mod api;
+
+// Re-export commonly used types
+pub use api::{HealthResponse, HiveApiSpec, JobResponse};
+pub use requests::*;
+pub use responses::*;
 
 // ============================================================================
 // OPERATION ENUM
@@ -94,27 +114,15 @@ pub enum Operation {
 
     // Worker process operations (hive-local)
     // TEAM-272: These manage worker PROCESSES on the hive
+    // TEAM-284: Updated to use typed requests
     /// Spawn a worker process on hive
-    WorkerSpawn {
-        hive_id: String,
-        model: String,
-        worker: String,
-        device: u32,
-    },
+    WorkerSpawn(WorkerSpawnRequest),
     /// List worker processes running on hive (local ps, not registry)
-    WorkerProcessList {
-        hive_id: String,
-    },
+    WorkerProcessList(WorkerProcessListRequest),
     /// Get details of a worker process on hive (local ps, not registry)
-    WorkerProcessGet {
-        hive_id: String,
-        pid: u32,
-    },
+    WorkerProcessGet(WorkerProcessGetRequest),
     /// Delete (kill) a worker process on hive
-    WorkerProcessDelete {
-        hive_id: String,
-        pid: u32,
-    },
+    WorkerProcessDelete(WorkerProcessDeleteRequest),
 
     // Active worker operations (queen-tracked)
     // TEAM-272: These query queen's registry of workers sending heartbeats
@@ -130,44 +138,15 @@ pub enum Operation {
     },
 
     // Model operations
-    ModelDownload {
-        hive_id: String,
-        model: String,
-    },
-    ModelList {
-        hive_id: String,
-    },
-    ModelGet {
-        hive_id: String,
-        id: String,
-    },
-    ModelDelete {
-        hive_id: String,
-        id: String,
-    },
+    // TEAM-284: Updated to use typed requests
+    ModelDownload(ModelDownloadRequest),
+    ModelList(ModelListRequest),
+    ModelGet(ModelGetRequest),
+    ModelDelete(ModelDeleteRequest),
 
     // Inference operation
-    Infer {
-        hive_id: String,
-        model: String,
-        prompt: String,
-        max_tokens: u32,
-        temperature: f32,
-        #[serde(skip_serializing_if = "Option::is_none")]
-        top_p: Option<f32>,
-        #[serde(skip_serializing_if = "Option::is_none")]
-        top_k: Option<u32>,
-        #[serde(skip_serializing_if = "Option::is_none")]
-        device: Option<String>,
-        #[serde(skip_serializing_if = "Option::is_none")]
-        worker_id: Option<String>,
-        #[serde(default = "default_stream")]
-        stream: bool,
-    },
-}
-
-fn default_stream() -> bool {
-    true
+    // TEAM-284: Updated to use typed request
+    Infer(InferRequest),
 }
 
 fn default_hive_id() -> String {
@@ -208,6 +187,7 @@ impl Operation {
     }
 
     /// Get the hive_id if the operation targets a specific hive
+    /// TEAM-284: Updated to work with typed requests
     pub fn hive_id(&self) -> Option<&str> {
         match self {
             // TEAM-278: DELETED HiveInstall, HiveUninstall
@@ -217,17 +197,17 @@ impl Operation {
             Operation::HiveStatus { alias } => Some(alias),
             Operation::HiveRefreshCapabilities { alias } => Some(alias), // TEAM-196
             // TEAM-278: DELETED worker binary operations
-            // Worker process operations
-            Operation::WorkerSpawn { hive_id, .. } => Some(hive_id),
-            Operation::WorkerProcessList { hive_id } => Some(hive_id),
-            Operation::WorkerProcessGet { hive_id, .. } => Some(hive_id),
-            Operation::WorkerProcessDelete { hive_id, .. } => Some(hive_id),
-            // Model operations
-            Operation::ModelDownload { hive_id, .. } => Some(hive_id),
-            Operation::ModelList { hive_id } => Some(hive_id),
-            Operation::ModelGet { hive_id, .. } => Some(hive_id),
-            Operation::ModelDelete { hive_id, .. } => Some(hive_id),
-            Operation::Infer { hive_id, .. } => Some(hive_id),
+            // Worker process operations (TEAM-284: typed requests)
+            Operation::WorkerSpawn(req) => Some(&req.hive_id),
+            Operation::WorkerProcessList(req) => Some(&req.hive_id),
+            Operation::WorkerProcessGet(req) => Some(&req.hive_id),
+            Operation::WorkerProcessDelete(req) => Some(&req.hive_id),
+            // Model operations (TEAM-284: typed requests)
+            Operation::ModelDownload(req) => Some(&req.hive_id),
+            Operation::ModelList(req) => Some(&req.hive_id),
+            Operation::ModelGet(req) => Some(&req.hive_id),
+            Operation::ModelDelete(req) => Some(&req.hive_id),
+            Operation::Infer(req) => Some(&req.hive_id),
             _ => None,
         }
     }
@@ -254,15 +234,16 @@ impl Operation {
             self,
             // TEAM-278: DELETED worker binary operations
             // Worker process operations (hive-local)
-            Operation::WorkerSpawn { .. }
-                | Operation::WorkerProcessList { .. }
-                | Operation::WorkerProcessGet { .. }
-                | Operation::WorkerProcessDelete { .. }
+            // TEAM-284: Updated to match typed requests
+            Operation::WorkerSpawn(_)
+                | Operation::WorkerProcessList(_)
+                | Operation::WorkerProcessGet(_)
+                | Operation::WorkerProcessDelete(_)
                 // Model operations (hive-local)
-                | Operation::ModelDownload { .. }
-                | Operation::ModelList { .. }
-                | Operation::ModelGet { .. }
-                | Operation::ModelDelete { .. }
+                | Operation::ModelDownload(_)
+                | Operation::ModelList(_)
+                | Operation::ModelGet(_)
+                | Operation::ModelDelete(_)
         )
     }
 }
@@ -331,12 +312,13 @@ mod tests {
 
     #[test]
     fn test_serialize_worker_spawn() {
-        let op = Operation::WorkerSpawn {
+        // TEAM-285: Updated to use typed request
+        let op = Operation::WorkerSpawn(WorkerSpawnRequest {
             hive_id: "localhost".to_string(),
             model: "test-model".to_string(),
             worker: "cpu".to_string(),
             device: 0,
-        };
+        });
         let json = serde_json::to_string(&op).unwrap();
         assert!(json.contains(r#""operation":"worker_spawn"#));
         assert!(json.contains(r#""hive_id":"localhost"#));
@@ -345,7 +327,8 @@ mod tests {
 
     #[test]
     fn test_serialize_infer() {
-        let op = Operation::Infer {
+        // TEAM-285: Updated to use typed request
+        let op = Operation::Infer(InferRequest {
             hive_id: "localhost".to_string(),
             model: "test-model".to_string(),
             prompt: "hello".to_string(),
@@ -356,7 +339,7 @@ mod tests {
             device: None,
             worker_id: None,
             stream: true,
-        };
+        });
         let json = serde_json::to_string(&op).unwrap();
         assert!(json.contains(r#""operation":"infer"#));
         assert!(json.contains(r#""prompt":"hello"#));
@@ -381,12 +364,13 @@ mod tests {
             "device": 0
         }"#;
         let op: Operation = serde_json::from_str(json).unwrap();
+        // TEAM-285: Updated to match typed request
         match op {
-            Operation::WorkerSpawn { hive_id, model, worker, device } => {
-                assert_eq!(hive_id, "localhost");
-                assert_eq!(model, "test-model");
-                assert_eq!(worker, "cpu");
-                assert_eq!(device, 0);
+            Operation::WorkerSpawn(req) => {
+                assert_eq!(req.hive_id, "localhost");
+                assert_eq!(req.model, "test-model");
+                assert_eq!(req.worker, "cpu");
+                assert_eq!(req.device, 0);
             }
             _ => panic!("Wrong operation type"),
         }

@@ -42,11 +42,11 @@ rbee-config = { path = "../99_shared_crates/rbee-config" }  # TEAM-194: File-bas
 queen-rbee-worker-registry = { path = "../15_queen_rbee_crates/worker-registry" }  # TEAM-188/262: Runtime worker state (RAM)
 queen-rbee-hive-registry = { path = "../15_queen_rbee_crates/hive-registry" }  # TEAM-284: Runtime hive state (RAM)
 queen-rbee-hive-lifecycle = { path = "../15_queen_rbee_crates/hive-lifecycle" }  # TEAM-164: Pure hive lifecycle logic
-hive-contract = { path = "../99_shared_crates/hive-contract" }  # TEAM-284: Hive contract types
-worker-contract = { path = "../99_shared_crates/worker-contract" }  # TEAM-270/284: Worker contract types
+hive-contract = { path = "../97_contracts/hive-contract" }  # TEAM-284: Hive contract types
+worker-contract = { path = "../97_contracts/worker-contract" }  # TEAM-270/284: Worker contract types
 queen-rbee-scheduler = { path = "../15_queen_rbee_crates/scheduler" }  # TEAM-275: Job scheduler (stub for M2 Rhai)
 # TEAM-284: DELETED daemon-sync, ssh-client, and rbee-heartbeat (replaced by contracts)
-rbee-operations = { path = "../99_shared_crates/rbee-operations" }  # TEAM-186: Shared operation types
+operations-contract = { path = "../97_contracts/operations-contract" }  # TEAM-186/284: Operations contract
 job-client = { path = "../99_shared_crates/job-client" }  # TEAM-259: Shared job submission client
 timeout-enforcer = { path = "../99_shared_crates/timeout-enforcer" }  # TEAM-207: Timeout enforcement
 

@@ -28,7 +28,7 @@ anyhow = "1.0"
 tracing = "0.1"  # TEAM-284: For heartbeat logging
 
 # TEAM-284: Hive contract types (includes heartbeat)
-hive-contract = { path = "../99_shared_crates/hive-contract" }
+hive-contract = { path = "../97_contracts/hive-contract" }
 observability-narration-core = { path = "../99_shared_crates/narration-core" }
 
 # TEAM-205: Device detection for capabilities endpoint
@@ -38,7 +38,7 @@ serde_json = "1.0"
 
 # TEAM-261: Job server pattern (mirrors queen-rbee)
 job-server = { path = "../99_shared_crates/job-server" }
-rbee-operations = { path = "../99_shared_crates/rbee-operations" }
+operations-contract = { path = "../97_contracts/operations-contract" }  # TEAM-284: Renamed from rbee-operations
 futures = "0.3"
 async-stream = "0.3"
 

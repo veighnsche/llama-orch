@@ -29,7 +29,7 @@ use observability_narration_core::NarrationFactory;
 use rbee_hive_artifact_catalog::{Artifact, ArtifactCatalog}; // TEAM-273: Traits for catalog methods
 use rbee_hive_model_catalog::ModelCatalog; // TEAM-268: Model catalog
 use rbee_hive_worker_catalog::WorkerCatalog; // TEAM-274: Worker catalog
-use rbee_operations::Operation;
+use operations_contract::Operation; // TEAM-284: Renamed from rbee_operations
 use std::sync::Arc;
 
 // TEAM-261: Narration factory for hive job router
@@ -122,17 +122,18 @@ async fn route_operation(
     //
     match operation {
         // Worker operations
-        Operation::WorkerSpawn { hive_id, model, worker, device } => {
+        // TEAM-284: Updated to use typed requests
+        Operation::WorkerSpawn(request) => {
             // TEAM-272: Implemented worker spawning using worker-lifecycle
             use rbee_hive_worker_lifecycle::{start_worker, WorkerStartConfig};
 
             NARRATE
                 .action("worker_spawn_start")
                 .job_id(&job_id)
-                .context(&hive_id)
-                .context(&model)
-                .context(&worker)
-                .context(&device.to_string())
+                .context(&request.hive_id)
+                .context(&request.model)
+                .context(&request.worker)
+                .context(&request.device.to_string())
                 .human("🚀 Spawning worker '{}' with model '{}' on device {}")
                 .emit();
 
@@ -145,9 +146,9 @@ async fn route_operation(
             let queen_url = "http://localhost:8500".to_string();
 
             let config = WorkerStartConfig {
-                worker_id: worker.clone(),
-                model_id: model.clone(),
-                device: device.to_string(),
+                worker_id: request.worker.clone(),
+                model_id: request.model.clone(),
+                device: request.device.to_string(),
                 port,
                 queen_url,
                 job_id: job_id.clone(),
@@ -169,7 +170,8 @@ async fn route_operation(
         // Worker binary management is now handled by PackageSync in queen-rbee
 
         // TEAM-274: Worker process operations (local ps-based)
-        Operation::WorkerProcessList { hive_id } => {
+        Operation::WorkerProcessList(request) => {
+            let hive_id = request.hive_id.clone();
             use rbee_hive_worker_lifecycle::list_workers;
 
             NARRATE
@@ -208,7 +210,9 @@ async fn route_operation(
             }
         }
 
-        Operation::WorkerProcessGet { hive_id, pid } => {
+        Operation::WorkerProcessGet(request) => {
+            let hive_id = request.hive_id.clone();
+            let pid = request.pid;
             use rbee_hive_worker_lifecycle::get_worker;
 
             NARRATE
@@ -237,7 +241,9 @@ async fn route_operation(
             NARRATE.action("worker_proc_get_details").job_id(&job_id).human(&json).emit();
         }
 
-        Operation::WorkerProcessDelete { hive_id, pid } => {
+        Operation::WorkerProcessDelete(request) => {
+            let hive_id = request.hive_id.clone();
+            let pid = request.pid;
             use rbee_hive_worker_lifecycle::stop_worker;
 
             NARRATE
@@ -261,7 +267,9 @@ async fn route_operation(
         }
 
         // Model operations
-        Operation::ModelDownload { hive_id, model } => {
+        Operation::ModelDownload(request) => {
+            let hive_id = request.hive_id.clone();
+            let model = request.model.clone();
             // TEAM-269: Implemented model download with provisioner
             NARRATE
                 .action("model_download_start")
@@ -296,7 +304,8 @@ async fn route_operation(
             ));
         }
 
-        Operation::ModelList { hive_id } => {
+        Operation::ModelList(request) => {
+            let hive_id = request.hive_id.clone();
             // TEAM-268: Implemented model list
             NARRATE
                 .action("model_list_start")
@@ -339,7 +348,9 @@ async fn route_operation(
             }
         }
 
-        Operation::ModelGet { hive_id, id } => {
+        Operation::ModelGet(request) => {
+            let hive_id = request.hive_id.clone();
+            let id = request.id.clone();
             // TEAM-268: Implemented model get
             NARRATE
                 .action("model_get_start")
@@ -379,7 +390,9 @@ async fn route_operation(
             }
         }
 
-        Operation::ModelDelete { hive_id, id } => {
+        Operation::ModelDelete(request) => {
+            let hive_id = request.hive_id.clone();
+            let id = request.id.clone();
             // TEAM-268: Implemented model delete
             NARRATE
                 .action("model_delete_start")

@@ -5,7 +5,7 @@
 //! TEAM-187: Eliminated all clones by moving owned values directly
 
 use anyhow::Result;
-use rbee_operations::Operation;
+use operations_contract::{InferRequest, Operation}; // TEAM-284: Renamed from rbee_operations
 
 use crate::job_client::submit_and_stream_job;
 
@@ -23,7 +23,8 @@ pub async fn handle_infer(
     stream: bool,
     queen_url: &str,
 ) -> Result<()> {
-    let operation = Operation::Infer {
+    // TEAM-284: Use typed InferRequest
+    let operation = Operation::Infer(InferRequest {
         hive_id,
         model,
         prompt,
@@ -34,6 +35,6 @@ pub async fn handle_infer(
         device,
         worker_id,
         stream,
-    };
+    });
     submit_and_stream_job(queen_url, operation).await
 }

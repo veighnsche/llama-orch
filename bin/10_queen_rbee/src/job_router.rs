@@ -37,7 +37,7 @@ use queen_rbee_hive_lifecycle::{
 // TEAM-275: Removed unused import (using state.hive_registry which is already Arc<WorkerRegistry>)
 // TEAM-284: DELETED HivesConfig import (no longer needed without daemon-sync)
 use rbee_config::RbeeConfig;
-use rbee_operations::Operation;
+use operations_contract::Operation; // TEAM-284: Renamed from rbee_operations
 use std::sync::Arc;
 
 use super::hive_forwarder; // TEAM-258: Generic forwarding for hive-managed operations
@@ -257,25 +257,26 @@ async fn route_operation(
         //
         // See: bin/.plan/TEAM_261_ARCHITECTURE_CLARITY.md
         //
-        Operation::Infer { model, prompt, max_tokens, temperature, top_p, top_k, .. } => {
+        // TEAM-285: Fixed to match TEAM-284's typed request pattern
+        Operation::Infer(req) => {
             // TEAM-275: Use scheduler crate (pre-wired for M2 Rhai scheduler)
             use queen_rbee_scheduler::{JobRequest, JobScheduler, SimpleScheduler};
 
             NARRATE
                 .action("infer_start")
                 .job_id(&job_id)
-                .context(&model)
+                .context(&req.model)
                 .human("🤖 Starting inference for model '{}'")
                 .emit();
 
             let job_request = JobRequest {
                 job_id: job_id.clone(),
-                model: model.clone(),
-                prompt: prompt.clone(),
-                max_tokens,
-                temperature,
-                top_p,
-                top_k,
+                model: req.model.clone(),
+                prompt: req.prompt.clone(),
+                max_tokens: req.max_tokens,
+                temperature: req.temperature,
+                top_p: req.top_p,
+                top_k: req.top_k,
             };
 
             // TEAM-275: Use SimpleScheduler (M0/M1)

@@ -11,7 +11,7 @@
 //!
 //! ```rust,no_run
 //! use job_client::JobClient;
-//! use rbee_operations::Operation;
+//! use operations_contract::Operation;
 //!
 //! # async fn example() -> anyhow::Result<()> {
 //! let client = JobClient::new("http://localhost:8500");
@@ -28,7 +28,7 @@
 
 use anyhow::Result;
 use futures::stream::StreamExt;
-use rbee_operations::Operation;
+use operations_contract::Operation;
 
 /// HTTP client for job submission and SSE streaming
 ///

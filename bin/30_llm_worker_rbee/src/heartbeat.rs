@@ -39,13 +39,14 @@ pub async fn send_heartbeat_to_queen(
         .human(format!("Sending heartbeat to queen at {}", queen_url))
         .emit();
 
-    let heartbeat = WorkerHeartbeat::new(worker_info.clone());
+    // TEAM-285: Fixed unused variable warning
+    let _heartbeat = WorkerHeartbeat::new(worker_info.clone());
 
     // TODO: Implement HTTP POST to queen
     // POST {queen_url}/v1/worker-heartbeat with heartbeat
     // let client = reqwest::Client::new();
     // client.post(format!("{}/v1/worker-heartbeat", queen_url))
-    //     .json(&heartbeat)
+    //     .json(&_heartbeat)
     //     .send()
     //     .await?;
 
