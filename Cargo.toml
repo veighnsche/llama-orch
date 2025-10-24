@@ -22,9 +22,6 @@ members = [
     
     # queen-rbee crates
     "bin/05_rbee_keeper_crates/queen-lifecycle",
-    "bin/15_queen_rbee_crates/ssh-client",
-    "bin/05_rbee_keeper_crates/queen-lifecycle",
-    "bin/15_queen_rbee_crates/ssh-client/bdd",
     "bin/15_queen_rbee_crates/worker-registry",  # TEAM-262: Renamed from hive-registry
     "bin/15_queen_rbee_crates/worker-registry/bdd",
     "bin/15_queen_rbee_crates/hive-lifecycle",
@@ -72,6 +69,9 @@ members = [
     "bin/99_shared_crates/auto-update",         # TEAM-193: Dependency-aware auto-update for binaries
     "bin/99_shared_crates/rbee-config",         # TEAM-194: File-based config for queen
     "bin/99_shared_crates/worker-contract",     # TEAM-270: Worker contract types and API spec
+    "bin/99_shared_crates/daemon-sync",         # TEAM-280: Daemon synchronization and validation
+    "bin/99_shared_crates/ssh-client",          # TEAM-260: SSH client for remote operations (daemon-sync, hive-lifecycle)
+    "bin/99_shared_crates/ssh-client/bdd",
 
     # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
     # CONTRACTS — API Specifications & Types

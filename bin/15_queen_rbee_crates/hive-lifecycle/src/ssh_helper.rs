@@ -35,7 +35,7 @@ pub async fn ssh_exec(
     NARRATE.action(action).job_id(job_id).context(description).human("🔧 {}").emit();
 
     // TEAM-256: Connect using russh
-    let mut client = match RbeeSSHClient::connect(
+    let client = match RbeeSSHClient::connect(
         &hive_config.hostname,
         hive_config.ssh_port,
         &hive_config.ssh_user,
@@ -112,7 +112,7 @@ pub async fn scp_copy(
         .emit();
 
     // TEAM-256: Connect using russh
-    let mut client =
+    let client =
         RbeeSSHClient::connect(&hive_config.hostname, hive_config.ssh_port, &hive_config.ssh_user)
             .await?;
 

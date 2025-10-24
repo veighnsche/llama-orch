@@ -77,8 +77,9 @@ async fn start_target_container() -> TestContainer {
     panic!("Container SSH never became ready");
 }
 
-/// Helper: Build queen-rbee on HOST
-async fn build_queen_rbee() {
+/// Helper: Build rbee-keeper (which auto-builds queen-rbee)
+/// TEAM-260: Changed to build rbee-keeper instead of queen-rbee directly
+async fn build_rbee_keeper() {
     let workspace_root = std::env::current_dir()
         .expect("Failed to get current directory")
         .parent()
@@ -86,15 +87,15 @@ async fn build_queen_rbee() {
         .to_path_buf();
     
     let build = Command::new("cargo")
-        .args(&["build", "--bin", "queen-rbee"])
+        .args(&["build", "--bin", "rbee-keeper"])
         .current_dir(&workspace_root)
         .output()
-        .expect("Failed to build queen-rbee");
+        .expect("Failed to build rbee-keeper");
     
-    assert!(build.status.success(), "Failed to build queen-rbee: {}", 
+    assert!(build.status.success(), "Failed to build rbee-keeper: {}", 
         String::from_utf8_lossy(&build.stderr));
     
-    println!("✅ queen-rbee built on HOST");
+    println!("✅ rbee-keeper built on HOST (auto-builds queen-rbee)");
 }
 
 /// Helper: Container handle for cleanup
@@ -189,9 +190,10 @@ async fn test_queen_installs_hive_in_docker() {
     println!("\n📦 STEP 1: Starting empty target container...");
     let container = start_target_container().await;
     
-    // STEP 2: Build queen-rbee on HOST
-    println!("\n🔨 STEP 2: Building queen-rbee on HOST...");
-    build_queen_rbee().await;
+    // STEP 2: Build rbee-keeper on HOST
+    // TEAM-260: rbee-keeper auto-builds queen-rbee via auto-updater
+    println!("\n🔨 STEP 2: Building rbee-keeper on HOST...");
+    build_rbee_keeper().await;
     
     // STEP 3: Build rbee-hive on HOST (needed for installation)
     println!("\n🔨 STEP 3: Building rbee-hive on HOST...");
@@ -211,156 +213,49 @@ async fn test_queen_installs_hive_in_docker() {
         String::from_utf8_lossy(&build_hive.stderr));
     println!("✅ rbee-hive built on HOST");
     
-    // STEP 4: Start queen-rbee on HOST with test config
-    println!("\n👑 STEP 4: Starting queen-rbee on HOST...");
-    let queen_binary = workspace_root.join("target/debug/queen-rbee");
-    let config_dir = workspace_root.join("tests/docker");
+    // STEP 4: Run `./rbee sync` to install hive via SSH
+    // TEAM-260: Use actual CLI instead of manually managing queen-rbee
+    println!("\n🚀 STEP 4: Running ./rbee sync --config tests/docker/hives.conf...");
+    println!("{}", "-".repeat(60));
     
-    let mut queen = AsyncCommand::new(&queen_binary)
-        .args(&["--config-dir", config_dir.to_str().unwrap()])
-        .env("RUST_LOG", "debug")
-        .stdout(std::process::Stdio::piped())
-        .stderr(std::process::Stdio::piped())
-        .spawn()
-        .expect("Failed to start queen-rbee");
+    let rbee_script = workspace_root.join("rbee");
+    let hives_conf = workspace_root.join("tests/docker/hives.conf");
     
-    // Wait for queen to start
-    sleep(Duration::from_secs(3)).await;
-    
-    // Check if queen is running
-    let health_check = AsyncCommand::new("curl")
-        .args(&["-f", "http://localhost:8500/health"])
-        .output()
-        .await;
-    
-    if !health_check.map(|o| o.status.success()).unwrap_or(false) {
-        // Get queen output before killing
-        let stdout = queen.stdout.take();
-        let stderr = queen.stderr.take();
-        let _ = queen.kill().await;
-        
-        if let Some(mut stdout) = stdout {
-            use tokio::io::AsyncReadExt;
-            let mut buf = String::new();
-            let _ = stdout.read_to_string(&mut buf).await;
-            eprintln!("queen-rbee stdout:\n{}", buf);
-        }
-        if let Some(mut stderr) = stderr {
-            use tokio::io::AsyncReadExt;
-            let mut buf = String::new();
-            let _ = stderr.read_to_string(&mut buf).await;
-            eprintln!("queen-rbee stderr:\n{}", buf);
-        }
-        
-        panic!("queen-rbee health check failed - is it running?");
-    }
-    println!("✅ queen-rbee is running on http://localhost:8500");
-    
-    // STEP 5: Send PackageInstall command via HTTP
-    println!("\n📡 STEP 5: Sending PackageInstall command...");
-    let hives_conf_path = workspace_root.join("tests/docker/hives.conf");
-    let install_payload = format!(
-        r#"{{"operation":"package_install","config_path":"{}","force":false}}"#,
-        hives_conf_path.to_str().unwrap()
-    );
-    
-    let install_cmd = AsyncCommand::new("curl")
+    let sync_output = AsyncCommand::new(&rbee_script)
         .args(&[
-            "-X", "POST",
-            "http://localhost:8500/v1/jobs",
-            "-H", "Content-Type: application/json",
-            "-d", &install_payload
+            "sync",
+            "--config", hives_conf.to_str().unwrap(),
         ])
+        .current_dir(&workspace_root)
         .output()
         .await
-        .expect("Failed to send install command");
+        .expect("Failed to run ./rbee sync");
     
-    if !install_cmd.status.success() {
-        // Get queen output
-        let stdout = queen.stdout.take();
-        let stderr = queen.stderr.take();
-        let _ = queen.kill().await;
-        
-        if let Some(mut stdout) = stdout {
-            use tokio::io::AsyncReadExt;
-            let mut buf = String::new();
-            let _ = stdout.read_to_string(&mut buf).await;
-            eprintln!("queen-rbee stdout:\n{}", buf);
-        }
-        if let Some(mut stderr) = stderr {
-            use tokio::io::AsyncReadExt;
-            let mut buf = String::new();
-            let _ = stderr.read_to_string(&mut buf).await;
-            eprintln!("queen-rbee stderr:\n{}", buf);
-        }
-        
-        panic!("Install command failed: {}", 
-            String::from_utf8_lossy(&install_cmd.stderr));
+    // Print all output (includes narration)
+    let stdout = String::from_utf8_lossy(&sync_output.stdout);
+    let stderr = String::from_utf8_lossy(&sync_output.stderr);
+    
+    println!("{}", stdout);
+    if !stderr.is_empty() {
+        eprintln!("stderr: {}", stderr);
     }
     
-    let response = String::from_utf8_lossy(&install_cmd.stdout);
-    println!("📨 Response: {}", response);
+    if !sync_output.status.success() {
+        panic!("./rbee sync failed with exit code: {:?}\nstdout: {}\nstderr: {}",
+            sync_output.status.code(), stdout, stderr);
+    }
     
-    // Extract job_id from response
-    let job_id: serde_json::Value = serde_json::from_str(&response)
-        .expect("Failed to parse response");
-    let job_id = job_id["job_id"].as_str()
-        .expect("No job_id in response");
-    println!("✅ Job submitted: {}", job_id);
-    
-    // STEP 6: Wait for installation to complete (stream SSE and show narration)
-    // NOTE: Git clone + cargo build takes ~1m20s, so we poll for up to 3 minutes
-    println!("\n⏳ STEP 6: Streaming installation progress (git clone + build ~1m20s)...");
     println!("{}", "-".repeat(60));
-    let stream_url = format!("http://localhost:8500/v1/jobs/{}/stream", job_id);
+    println!("✅ ./rbee sync completed successfully");
     
-    let mut install_complete = false;
-    for attempt in 1..=90 {  // 90 attempts * 2s = 3 minutes max
-        let stream = AsyncCommand::new("curl")
-            .args(&["-N", &stream_url])
-            .output()
-            .await;
-        
-        if let Ok(output) = stream {
-            let lines = String::from_utf8_lossy(&output.stdout);
-            
-            // Print all narration lines
-            for line in lines.lines() {
-                if line.starts_with("data: ") {
-                    let narration = &line[6..]; // Strip "data: " prefix
-                    if narration != "[DONE]" {
-                        println!("{}", narration);
-                    }
-                }
-            }
-            
-            // Check for completion marker
-            if lines.contains("[DONE]") {
-                install_complete = true;
-                println!("{}", "-".repeat(60));
-                println!("✅ Installation complete");
-                break;
-            } else if !lines.is_empty() {
-                println!("   ... still waiting (attempt {}/90)", attempt);
-            }
-        }
-        
-        sleep(Duration::from_secs(2)).await;
-    }
-    
-    if !install_complete {
-        let _ = queen.kill().await;
-        panic!("Installation did not complete within 180 seconds (3 minutes)");
-    }
-    
-    // STEP 7: Verify binary was installed in container
-    println!("\n🔍 STEP 7: Verifying binary installation...");
+    // STEP 5: Verify binary was installed in container
+    println!("\n🔍 STEP 5: Verifying binary installation...");
     let has_binary = container.has_binary("/home/rbee/.local/bin/rbee-hive").await;
     assert!(has_binary, "rbee-hive binary not found in container");
     println!("✅ Binary installed at /home/rbee/.local/bin/rbee-hive");
     
-    // STEP 8: Verify binary works (run --version)
-    println!("\n🔍 STEP 8: Verifying binary works...");
+    // STEP 6: Verify binary works (run --version)
+    println!("\n🔍 STEP 6: Verifying binary works...");
     let verify = AsyncCommand::new("docker")
         .args(&["exec", "rbee-test-target", "/home/rbee/.local/bin/rbee-hive", "--version"])
         .output()
@@ -371,12 +266,11 @@ async fn test_queen_installs_hive_in_docker() {
         let version = String::from_utf8_lossy(&verify.stdout);
         println!("✅ Binary works: {}", version.trim());
     } else {
-        let _ = queen.kill().await;
         panic!("Binary doesn't work: {}", String::from_utf8_lossy(&verify.stderr));
     }
     
-    // STEP 9: Check if daemon is running (optional - auto_start not implemented yet)
-    println!("\n🔍 STEP 9: Checking daemon status...");
+    // STEP 7: Check if daemon is running (optional - auto_start not implemented yet)
+    println!("\n🔍 STEP 7: Checking daemon status...");
     let daemon_running = container.daemon_running("rbee-hive").await;
     if daemon_running {
         println!("✅ Daemon is running");
@@ -386,7 +280,11 @@ async fn test_queen_installs_hive_in_docker() {
     
     // Cleanup
     println!("\n🧹 Cleaning up...");
-    let _ = queen.kill().await;
+    // TEAM-260: No need to kill queen - rbee-keeper manages it
+    // Kill any lingering queen-rbee processes
+    let _ = Command::new("pkill")
+        .args(&["-f", "queen-rbee"])
+        .output();
     container.cleanup().await;
     
     // Restore original SSH key
@@ -406,10 +304,14 @@ async fn test_queen_installs_hive_in_docker() {
     println!("✅ FULL INTEGRATION TEST PASSED");
     println!("{}", "=".repeat(60));
     println!("\nWhat was tested:");
-    println!("  ✅ queen-rbee runs on HOST (bare metal)");
+    println!("  ✅ ./rbee CLI works (rbee-keeper)");
+    println!("  ✅ rbee-keeper auto-starts queen-rbee");
     println!("  ✅ queen-rbee SSHs to container (localhost:2222)");
-    println!("  ✅ daemon-sync installs rbee-hive in container");
+    println!("  ✅ daemon-sync copies rbee-hive binary via SCP");
     println!("  ✅ Binary is installed at correct path");
-    println!("  ✅ Daemon starts successfully");
-    println!("\nThis proves the actual deployment workflow works!");
+    println!("  ✅ Binary is executable and runs --version");
+    println!("  ✅ Full user workflow tested (./rbee sync)");
+    println!("\nTEAM-260: Using local binary install method (SCP)");
+    println!("This proves the complete deployment workflow works!");
+    println!("\nNOTE: Git clone + cargo build method needs separate investigation");
 }

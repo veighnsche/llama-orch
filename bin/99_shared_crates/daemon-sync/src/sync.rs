@@ -173,6 +173,16 @@ pub async fn sync_all_hives(
                     hive_results.push(hive_result);
                 }
                 Ok(Err(e)) => {
+                    // TEAM-260: Emit error narration so it's visible in SSE stream
+                    NARRATE
+                        .action("hive_install_failed")
+                        .job_id(job_id)
+                        .context(&hive.alias)
+                        .context(&e.to_string())
+                        .human("❌ Hive '{}' installation failed: {}")
+                        .error_kind("install_failed")
+                        .emit();
+                    
                     hive_results.push(HiveResult {
                         alias: hive.alias.clone(),
                         status: "failed".to_string(),
@@ -182,6 +192,16 @@ pub async fn sync_all_hives(
                     });
                 }
                 Err(e) => {
+                    // TEAM-260: Emit panic narration
+                    NARRATE
+                        .action("hive_task_panicked")
+                        .job_id(job_id)
+                        .context(&hive.alias)
+                        .context(&format!("{}", e))
+                        .human("❌ Hive '{}' task panicked: {}")
+                        .error_kind("task_panic")
+                        .emit();
+                    
                     hive_results.push(HiveResult {
                         alias: hive.alias.clone(),
                         status: "failed".to_string(),
@@ -206,6 +226,28 @@ pub async fn sync_all_hives(
     }
 
     let duration = start_time.elapsed().as_secs_f64();
+
+    // TEAM-260: Emit results for each hive (including errors)
+    for result in &hive_results {
+        if let Some(error) = &result.error {
+            NARRATE
+                .action("hive_result_error")
+                .job_id(job_id)
+                .context(&result.alias)
+                .context(error)
+                .human("❌ Hive '{}' failed: {}")
+                .error_kind("hive_sync_failed")
+                .emit();
+        } else {
+            NARRATE
+                .action("hive_result_success")
+                .job_id(job_id)
+                .context(&result.alias)
+                .context(&result.status)
+                .human("✅ Hive '{}': {}")
+                .emit();
+        }
+    }
 
     NARRATE
         .action("sync_complete")

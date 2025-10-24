@@ -213,7 +213,7 @@ async fn check_ssh_connectivity(
     }
 
     // Try to connect
-    let mut client = RbeeSSHClient::connect(&hive.hostname, hive.ssh_port, &hive.ssh_user)
+    let client = RbeeSSHClient::connect(&hive.hostname, hive.ssh_port, &hive.ssh_user)
         .await
         .map_err(|e| anyhow::anyhow!("Connection failed: {}", e))?;
 
@@ -285,7 +285,7 @@ async fn check_worker_binary_exists(
     }
 
     // For remote hosts, check via SSH
-    let mut client = RbeeSSHClient::connect(&hive.hostname, hive.ssh_port, &hive.ssh_user)
+    let client = RbeeSSHClient::connect(&hive.hostname, hive.ssh_port, &hive.ssh_user)
         .await
         .map_err(|e| anyhow::anyhow!("SSH connection failed: {}", e))?;
 

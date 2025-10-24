@@ -72,7 +72,10 @@ pub async fn install_hive_binary(hive: &HiveConfig, job_id: &str) -> Result<()> 
             InstallMethod::Release { repo, tag } => {
                 install_hive_from_release(&mut client, repo, tag, job_id, &hive.alias).await?
             }
-            InstallMethod::Local { path } => path.clone(),
+            InstallMethod::Local { path } => {
+                // TEAM-260: Install from local path (copy binary via SCP)
+                install_hive_from_local(&mut client, path, job_id, &hive.alias).await?
+            }
         }
     };
 
@@ -314,8 +317,83 @@ async fn install_hive_from_git(
         clone_dir, clone_dir, branch, repo, clone_dir
     );
 
-    let (stdout, stderr, exit_code) = client.exec(&clone_cmd).await?;
+    // ============================================================
+    // TEAM-260: INVESTIGATION - SSH exec fails silently
+    // ============================================================
+    // SUSPICION:
+    // - SSH exec call hangs or fails immediately
+    // - Error is propagated with ? but never visible to user
+    // - Spawned task catches error but narration doesn't reach SSE stream
+    //
+    // INVESTIGATION:
+    // - Manual SSH command works perfectly
+    // - Product code fails at client.exec().await?
+    // - Narration shows git_clone_exec but NOT git_clone_result
+    // - This means the await? never returns (either hangs or errors)
+    // 
+    // DEBUGGING:
+    // - Adding synchronous eprintln! to capture actual error
+    // - This will show in queen-rbee stderr even if narration is lost
+    // ============================================================
+    
+    NARRATE
+        .action("git_clone_exec")
+        .job_id(job_id)
+        .context(alias)
+        .context(&clone_cmd)
+        .human("🔧 Executing clone command for '{}': {}")
+        .emit();
+
+    eprintln!("[TEAM-260 DEBUG] About to execute SSH command for hive '{}'", alias);
+    eprintln!("[TEAM-260 DEBUG] Command: {}", clone_cmd);
+    
+    let exec_result = client.exec(&clone_cmd).await;
+    
+    eprintln!("[TEAM-260 DEBUG] SSH exec returned for hive '{}'", alias);
+    
+    let (stdout, stderr, exit_code) = match exec_result {
+        Ok(result) => {
+            eprintln!("[TEAM-260 DEBUG] SSH exec SUCCESS: exit={}", result.2);
+            result
+        }
+        Err(e) => {
+            eprintln!("[TEAM-260 DEBUG] SSH exec FAILED: {}", e);
+            eprintln!("[TEAM-260 DEBUG] Error details: {:?}", e);
+            
+            // Emit error narration
+            NARRATE
+                .action("ssh_exec_error")
+                .job_id(job_id)
+                .context(alias)
+                .context(&format!("{}", e))
+                .human("❌ SSH exec failed for '{}': {}")
+                .error_kind("ssh_exec_failed")
+                .emit();
+            
+            return Err(e);
+        }
+    };
+    
+    NARRATE
+        .action("git_clone_result")
+        .job_id(job_id)
+        .context(alias)
+        .context(&format!("exit={}", exit_code))
+        .human("📊 Clone command completed for '{}': exit={}")
+        .emit();
     if exit_code != 0 {
+        // TEAM-260: Emit detailed error narration
+        NARRATE
+            .action("git_clone_failed")
+            .job_id(job_id)
+            .context(alias)
+            .context(&format!("exit_code={}", exit_code))
+            .context(&format!("stdout={}", stdout))
+            .context(&format!("stderr={}", stderr))
+            .human("❌ Git clone failed for '{}': exit={}, stdout={}, stderr={}")
+            .error_kind("git_clone_failed")
+            .emit();
+        
         return Err(anyhow::anyhow!(
             "Failed to clone repository (exit {}): stdout='{}' stderr='{}'",
             exit_code, stdout, stderr
@@ -337,13 +415,27 @@ async fn install_hive_from_git(
         .emit();
 
     // Build rbee-hive binary
-    let build_cmd = format!("cd {} && cargo build --release --bin rbee-hive", clone_dir);
+    // TEAM-260: Redirect output to log file to prevent SSH buffer issues during long builds
+    let build_log = format!("{}/.build.log", clone_dir);
+    let build_cmd = format!(
+        "cd {} && cargo build --release --bin rbee-hive > {} 2>&1; echo $?",
+        clone_dir, build_log
+    );
 
     let (stdout, stderr, exit_code) = client.exec(&build_cmd).await?;
-    if exit_code != 0 {
+    
+    // The command should always succeed (we capture exit code with echo $?)
+    // Parse the actual build exit code from stdout
+    let build_exit_code: i32 = stdout.trim().parse().unwrap_or(255);
+    
+    if build_exit_code != 0 {
+        // Read the build log to get error details
+        let log_cmd = format!("tail -100 {}", build_log);
+        let (log_output, _, _) = client.exec(&log_cmd).await.unwrap_or_default();
+        
         return Err(anyhow::anyhow!(
-            "Failed to build hive binary (exit {}): stdout='{}' stderr='{}'",
-            exit_code, stdout, stderr
+            "Failed to build hive binary (exit {}): {}",
+            build_exit_code, log_output
         ));
     }
 
@@ -370,6 +462,86 @@ async fn install_hive_from_git(
         .job_id(job_id)
         .context(alias)
         .human("✅ Hive binary built and installed for '{}'")
+        .emit();
+
+    Ok("~/.local/bin/rbee-hive".to_string())
+}
+
+/// Install hive binary from local path (copy via SCP)
+///
+/// TEAM-260: Added for robust testing and local development
+///
+/// # Arguments
+/// * `client` - SSH client connection
+/// * `local_path` - Path to local binary on HOST
+/// * `job_id` - Job ID for SSE routing
+/// * `alias` - Hive alias for logging
+async fn install_hive_from_local(
+    client: &mut RbeeSSHClient,
+    local_path: &str,
+    job_id: &str,
+    alias: &str,
+) -> Result<String> {
+    NARRATE
+        .action("local_install_hive")
+        .job_id(job_id)
+        .context(alias)
+        .context(local_path)
+        .human("📦 Installing hive from local path '{}': {}")
+        .emit();
+
+    // TEAM-260: Resolve relative paths to absolute paths
+    // SCP requires absolute paths or paths relative to current working directory
+    let absolute_path = if std::path::Path::new(local_path).is_absolute() {
+        local_path.to_string()
+    } else {
+        std::env::current_dir()
+            .context("Failed to get current directory")?
+            .join(local_path)
+            .to_str()
+            .context("Path contains invalid UTF-8")?
+            .to_string()
+    };
+    
+    // Verify local file exists
+    if !std::path::Path::new(&absolute_path).exists() {
+        return Err(anyhow::anyhow!(
+            "Local binary not found: {} (resolved from: {})",
+            absolute_path, local_path
+        ));
+    }
+
+    NARRATE
+        .action("local_binary_found")
+        .job_id(job_id)
+        .context(alias)
+        .context(&absolute_path)
+        .human("✅ Local binary found for '{}': {}")
+        .emit();
+
+    // Create directory
+    let mkdir_cmd = "mkdir -p ~/.local/bin";
+    let (_, stderr, exit_code) = client.exec(mkdir_cmd).await?;
+    if exit_code != 0 {
+        return Err(anyhow::anyhow!("Failed to create directory: {}", stderr));
+    }
+
+    // Copy binary via SCP
+    let remote_path = "~/.local/bin/rbee-hive";
+    client.copy_file(&absolute_path, remote_path).await?;
+
+    // Make executable
+    let chmod_cmd = "chmod +x ~/.local/bin/rbee-hive";
+    let (_, stderr, exit_code) = client.exec(chmod_cmd).await?;
+    if exit_code != 0 {
+        return Err(anyhow::anyhow!("Failed to chmod: {}", stderr));
+    }
+
+    NARRATE
+        .action("local_install_complete")
+        .job_id(job_id)
+        .context(alias)
+        .human("✅ Hive binary installed from local path for '{}'")
         .emit();
 
     Ok("~/.local/bin/rbee-hive".to_string())

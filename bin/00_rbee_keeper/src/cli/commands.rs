@@ -92,7 +92,13 @@ pub enum Commands {
     // ============================================================================
     /// Sync all hives to match declarative config
     /// TEAM-282: Declarative lifecycle management
+    /// TEAM-260: Added --config parameter for testing different scenarios
     Sync {
+        /// Optional: path to config file (default: ~/.config/rbee/hives.conf)
+        /// TEAM-260: Allows testing with different TOML files
+        #[arg(long)]
+        config: Option<String>,
+
         /// Show what would be done without making changes
         #[arg(long)]
         dry_run: bool,
@@ -112,7 +118,13 @@ pub enum Commands {
 
     /// Check package status and detect drift from config
     /// TEAM-282: Declarative lifecycle management
+    /// TEAM-260: Added --config parameter for testing different scenarios
     PackageStatus {
+        /// Optional: path to config file (default: ~/.config/rbee/hives.conf)
+        /// TEAM-260: Allows testing with different TOML files
+        #[arg(long)]
+        config: Option<String>,
+
         /// Show detailed status information
         #[arg(long)]
         verbose: bool,

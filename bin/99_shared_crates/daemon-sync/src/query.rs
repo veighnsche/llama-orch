@@ -153,7 +153,7 @@ pub async fn query_installed_workers(
 /// * `Err` - Query failed (SSH connection, etc.)
 async fn query_single_hive(hive: &HiveConfig, _job_id: &str) -> Result<bool> {
     // Connect via SSH
-    let mut client = RbeeSSHClient::connect(&hive.hostname, hive.ssh_port, &hive.ssh_user)
+    let client = RbeeSSHClient::connect(&hive.hostname, hive.ssh_port, &hive.ssh_user)
         .await
         .context(format!("Failed to connect to {}", hive.hostname))?;
 
@@ -180,7 +180,7 @@ async fn query_single_hive(hive: &HiveConfig, _job_id: &str) -> Result<bool> {
 /// * `Err` - Query failed
 async fn query_hive_workers(hive: &HiveConfig, _job_id: &str) -> Result<Vec<String>> {
     // Connect via SSH
-    let mut client = RbeeSSHClient::connect(&hive.hostname, hive.ssh_port, &hive.ssh_user)
+    let client = RbeeSSHClient::connect(&hive.hostname, hive.ssh_port, &hive.ssh_user)
         .await
         .context(format!("Failed to connect to {}", hive.hostname))?;
 
