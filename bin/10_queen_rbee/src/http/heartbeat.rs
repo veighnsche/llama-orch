@@ -14,15 +14,45 @@ use axum::{extract::State, http::StatusCode, Json};
 use hive_contract::HiveHeartbeat; // TEAM-284: Hive heartbeat types
 use queen_rbee_hive_registry::HiveRegistry; // TEAM-284: Hive registry
 use queen_rbee_worker_registry::WorkerRegistry; // TEAM-262: Renamed
-use serde::Serialize; // TEAM-284: Removed unused Deserialize
+use serde::{Deserialize, Serialize}; // TEAM-288: Added Deserialize for HeartbeatEvent
 use std::sync::Arc;
+use tokio::sync::broadcast; // TEAM-288: Broadcast channel for real-time events
 use worker_contract::WorkerHeartbeat; // TEAM-284: Worker heartbeat types
+
+/// TEAM-288: Heartbeat event types for real-time broadcasting
+#[derive(Clone, Debug, Serialize, Deserialize)]
+#[serde(tag = "type", rename_all = "snake_case")]
+pub enum HeartbeatEvent {
+    /// Worker heartbeat received
+    Worker {
+        worker_id: String,
+        status: String,
+        timestamp: String,
+    },
+    /// Hive heartbeat received
+    Hive {
+        hive_id: String,
+        status: String,
+        timestamp: String,
+    },
+    /// Queen's own heartbeat (sent every 2.5 seconds)
+    Queen {
+        workers_online: usize,
+        workers_available: usize,
+        hives_online: usize,
+        hives_available: usize,
+        worker_ids: Vec<String>,
+        hive_ids: Vec<String>,
+        timestamp: String,
+    },
+}
 
 /// State for the heartbeat endpoint
 ///
 /// TEAM-186: Changed from HiveCatalog to HiveRegistry
 /// TEAM-262: Renamed to WorkerRegistry
 /// TEAM-284: Added HiveRegistry
+/// TEAM-288: Added broadcast channel for real-time event streaming
 #[derive(Clone)]
 pub struct HeartbeatState {
     /// Registry for runtime worker state (RAM)
@@ -32,6 +62,10 @@ pub struct HeartbeatState {
     /// Registry for runtime hive state (RAM)
     /// TEAM-284: Added hive registry
     pub hive_registry: Arc<HiveRegistry>,
+    
+    /// TEAM-288: Broadcast channel for real-time heartbeat events
+    /// All heartbeats (worker, hive, queen) are broadcast here
+    pub event_tx: broadcast::Sender<HeartbeatEvent>,
 }
 
 /// HTTP response for heartbeat acknowledgement
@@ -77,6 +111,14 @@ pub async fn handle_worker_heartbeat(
     // TEAM-284: Update worker registry
     state.worker_registry.update_worker(heartbeat.clone());
 
+    // TEAM-288: Broadcast worker heartbeat event for real-time streaming
+    let event = HeartbeatEvent::Worker {
+        worker_id: heartbeat.worker.id.clone(),
+        status: format!("{:?}", heartbeat.worker.status),
+        timestamp: chrono::Utc::now().to_rfc3339(),
+    };
+    let _ = state.event_tx.send(event); // Ignore error if no subscribers
+
     Ok(Json(HttpHeartbeatAcknowledgement {
         status: "ok".to_string(),
         message: format!("Heartbeat received from worker {}", heartbeat.worker.id),
@@ -115,6 +157,14 @@ pub async fn handle_hive_heartbeat(
 
     // TEAM-284: Update hive registry
     state.hive_registry.update_hive(heartbeat.clone());
+
+    // TEAM-288: Broadcast hive heartbeat event for real-time streaming
+    let event = HeartbeatEvent::Hive {
+        hive_id: heartbeat.hive.id.clone(),
+        status: format!("{:?}", heartbeat.hive.operational_status),
+        timestamp: chrono::Utc::now().to_rfc3339(),
+    };
+    let _ = state.event_tx.send(event); // Ignore error if no subscribers
 
     Ok(Json(HttpHeartbeatAcknowledgement {
         status: "ok".to_string(),

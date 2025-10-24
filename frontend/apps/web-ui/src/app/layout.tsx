@@ -1,8 +1,7 @@
 import type { Metadata } from 'next';
-import { Inter } from 'next/font/google';
-import '@rbee/ui/styles/globals.css';
-
-const inter = Inter({ subsets: ['latin'] });
+// TEAM-288: Import order matches commercial app - app CSS first, then UI CSS
+import './globals.css';
+import '@rbee/ui/styles.css';
 
 export const metadata: Metadata = {
   title: 'rbee Web UI',
@@ -16,7 +15,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={inter.className}>{children}</body>
+      <body>{children}</body>
     </html>
   );
 }

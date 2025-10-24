@@ -58,26 +58,52 @@ impl HeartbeatMonitor {
 
         // TEAM-286: Connect to heartbeat stream
         let url = format!("{}/v1/heartbeats/stream", self.base_url);
+        web_sys::console::log_1(&JsValue::from_str(&format!("🐝 [SDK] Connecting to SSE: {}", url)));
+        
         let event_source = EventSource::new(&url)
             .map_err(|e| JsValue::from_str(&format!("Failed to create EventSource: {:?}", e)))?;
+
+        web_sys::console::log_1(&JsValue::from_str(&format!("🐝 [SDK] EventSource created, ready_state: {}", event_source.ready_state())));
+
+        // TEAM-288: Add open event listener
+        let open_closure = Closure::wrap(Box::new(move |_event: web_sys::Event| {
+            web_sys::console::log_1(&JsValue::from_str("🐝 [SDK] SSE connection OPENED"));
+        }) as Box<dyn FnMut(web_sys::Event)>);
+        event_source.add_event_listener_with_callback("open", open_closure.as_ref().unchecked_ref())?;
+        open_closure.forget();
+
+        // TEAM-288: Add error event listener
+        let error_closure = Closure::wrap(Box::new(move |event: web_sys::Event| {
+            web_sys::console::error_1(&JsValue::from_str(&format!("🐝 [SDK] SSE ERROR: {:?}", event)));
+        }) as Box<dyn FnMut(web_sys::Event)>);
+        event_source.add_event_listener_with_callback("error", error_closure.as_ref().unchecked_ref())?;
+        error_closure.forget();
 
         // TEAM-286: Set up event listener for 'heartbeat' events
         // Port from: heartbeat_monitor.html lines 290-302
         let callback = on_update.clone();
         let closure = Closure::wrap(Box::new(move |event: MessageEvent| {
+            web_sys::console::log_1(&JsValue::from_str("🐝 [SDK] Received 'heartbeat' event"));
+            
             // Parse the event data
             if let Some(data) = event.data().as_string() {
+                web_sys::console::log_1(&JsValue::from_str(&format!("🐝 [SDK] Event data: {}", data)));
+                
                 // Try to parse as JSON
                 match js_sys::JSON::parse(&data) {
                     Ok(json_value) => {
+                        web_sys::console::log_1(&JsValue::from_str("🐝 [SDK] JSON parsed successfully, calling callback"));
                         // Call the JavaScript callback with the parsed data
                         let _ = callback.call1(&JsValue::null(), &json_value);
                     }
-                    Err(_) => {
+                    Err(e) => {
+                        web_sys::console::error_1(&JsValue::from_str(&format!("🐝 [SDK] JSON parse error: {:?}", e)));
                         // If parsing fails, just pass the string
                         let _ = callback.call1(&JsValue::null(), &JsValue::from_str(&data));
                     }
                 }
+            } else {
+                web_sys::console::warn_1(&JsValue::from_str("🐝 [SDK] Event has no data"));
             }
         }) as Box<dyn FnMut(MessageEvent)>);
 
@@ -86,12 +112,15 @@ impl HeartbeatMonitor {
             closure.as_ref().unchecked_ref()
         )?;
 
+        web_sys::console::log_1(&JsValue::from_str("🐝 [SDK] 'heartbeat' event listener registered"));
+
         // TEAM-286: Keep the closure alive
         closure.forget();
 
         // TEAM-286: Store the event source
         self.event_source = Some(event_source);
 
+        web_sys::console::log_1(&JsValue::from_str("🐝 [SDK] HeartbeatMonitor.start() complete"));
         Ok(())
     }
 

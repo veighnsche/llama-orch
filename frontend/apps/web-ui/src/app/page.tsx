@@ -2,9 +2,9 @@
 
 'use client';
 
-import { useHeartbeat } from '@/hooks/useHeartbeat';
-import { Button } from '@rbee/ui/components/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@rbee/ui/components/card';
+import { useHeartbeat } from '@/src/hooks/useHeartbeat';
+import { Button } from '@rbee/ui/atoms';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@rbee/ui/atoms';
 
 export default function HomePage() {
   const { heartbeat, connected, loading, error } = useHeartbeat();

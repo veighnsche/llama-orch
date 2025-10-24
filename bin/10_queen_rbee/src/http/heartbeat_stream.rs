@@ -15,75 +15,68 @@
 use axum::{
     extract::State,
     response::sse::{Event, KeepAlive, Sse},
-    response::IntoResponse,
 };
-use futures::stream::{self, Stream};
-use serde::Serialize;
+use futures::stream::Stream;
 use std::convert::Infallible;
-use std::sync::Arc;
 use std::time::Duration;
+use tokio::time::interval;
 
-use super::heartbeat::HeartbeatState;
+use super::heartbeat::{HeartbeatEvent, HeartbeatState};
 
-/// Combined heartbeat status for SSE streaming
-#[derive(Serialize, Clone)]
-pub struct HeartbeatSnapshot {
-    /// Timestamp of this snapshot
-    pub timestamp: String,
-    /// Number of online workers
-    pub workers_online: usize,
-    /// Number of available workers
-    pub workers_available: usize,
-    /// Number of online hives
-    pub hives_online: usize,
-    /// Number of available hives
-    pub hives_available: usize,
-    /// List of all worker IDs (online)
-    pub worker_ids: Vec<String>,
-    /// List of all hive IDs (online)
-    pub hive_ids: Vec<String>,
-}
+// TEAM-288: Removed HeartbeatSnapshot - now using HeartbeatEvent from heartbeat.rs
 
 /// GET /v1/heartbeats/stream - SSE endpoint for live heartbeat updates
 ///
-/// TEAM-285: Real-time heartbeat streaming
+/// TEAM-288: Event-driven architecture with real-time forwarding
 ///
 /// **Flow:**
-/// 1. Send initial snapshot
-/// 2. Send updates every 5 seconds
-/// 3. Keep connection alive with periodic pings
+/// 1. Subscribe to broadcast channel for real-time events
+/// 2. Queen sends her own heartbeat every 2.5 seconds
+/// 3. Worker/Hive heartbeats are forwarded immediately when received
+/// 4. All events sent as SSE to connected clients
 ///
 /// **SSE Format:**
 /// ```text
 /// event: heartbeat
-/// data: {"timestamp":"2025-10-24T19:00:00Z","workers_online":3,"hives_online":1,...}
+/// data: {"type":"queen","workers_online":3,"hives_online":1,...}
+/// data: {"type":"worker","worker_id":"w1","status":"ready",...}
+/// data: {"type":"hive","hive_id":"h1","status":"online",...}
 /// ```
 pub async fn handle_heartbeat_stream(
     State(state): State<HeartbeatState>,
 ) -> Sse<impl Stream<Item = Result<Event, Infallible>>> {
-    let stream = stream::unfold(state, |state| async move {
-        // Create snapshot
-        let snapshot = create_snapshot(&state);
-        
-        // Serialize to JSON
-        let json = serde_json::to_string(&snapshot).unwrap_or_else(|_| "{}".to_string());
-        
-        // Create SSE event
-        let event = Event::default()
-            .event("heartbeat")
-            .data(json);
-        
-        // Wait 5 seconds before next update
-        tokio::time::sleep(Duration::from_secs(5)).await;
-        
-        Some((Ok(event), state))
-    });
+    // TEAM-288: Subscribe to broadcast channel for real-time events
+    let mut event_rx = state.event_tx.subscribe();
+    
+    // TEAM-288: Create interval for queen's own heartbeat (every 2.5 seconds)
+    let mut queen_interval = interval(Duration::from_millis(2500));
+    queen_interval.set_missed_tick_behavior(tokio::time::MissedTickBehavior::Skip);
+    
+    // TEAM-288: Create stream that merges queen heartbeats and broadcast events
+    let stream = async_stream::stream! {
+        loop {
+            tokio::select! {
+                // TEAM-288: Queen's own heartbeat every 2.5 seconds
+                _ = queen_interval.tick() => {
+                    let event = create_queen_heartbeat(&state);
+                    let json = serde_json::to_string(&event).unwrap_or_else(|_| "{}".to_string());
+                    yield Ok(Event::default().event("heartbeat").data(json));
+                }
+                
+                // TEAM-288: Forward worker/hive heartbeats immediately
+                Ok(event) = event_rx.recv() => {
+                    let json = serde_json::to_string(&event).unwrap_or_else(|_| "{}".to_string());
+                    yield Ok(Event::default().event("heartbeat").data(json));
+                }
+            }
+        }
+    };
 
     Sse::new(stream).keep_alive(KeepAlive::default())
 }
 
-/// Create heartbeat snapshot from current registry state
-fn create_snapshot(state: &HeartbeatState) -> HeartbeatSnapshot {
+/// TEAM-288: Create queen's own heartbeat with current system status
+fn create_queen_heartbeat(state: &HeartbeatState) -> HeartbeatEvent {
     let workers_online = state.worker_registry.count_online();
     let workers_available = state.worker_registry.count_available();
     let hives_online = state.hive_registry.count_online();
@@ -103,14 +96,14 @@ fn create_snapshot(state: &HeartbeatState) -> HeartbeatSnapshot {
         .map(|h| h.id)
         .collect();
     
-    HeartbeatSnapshot {
-        timestamp: chrono::Utc::now().to_rfc3339(),
+    HeartbeatEvent::Queen {
         workers_online,
         workers_available,
         hives_online,
         hives_available,
         worker_ids,
         hive_ids,
+        timestamp: chrono::Utc::now().to_rfc3339(),
     }
 }
 

@@ -15,6 +15,7 @@ path = "src/main.rs"
 # HTTP framework
 axum = { workspace = true }
 tokio = { workspace = true, features = ["full"] }
+tower-http = { version = "0.6", features = ["cors"] } # TEAM-288: CORS support for web UI
 reqwest = { version = "0.12", features = ["json"] }  # TEAM-158: For device detection HTTP calls
 async-trait = "0.1"  # TEAM-161: For DeviceDetector trait implementation
 
@@ -28,7 +29,7 @@ serde_json = "1.0"
 # Time and streaming
 chrono = { version = "0.4", features = ["serde"] }
 futures = "0.3"
-async-stream = "0.3"
+async-stream = "0.3" # TEAM-288: For async stream! macro in heartbeat_stream
 
 # Error handling
 anyhow = "1.0"

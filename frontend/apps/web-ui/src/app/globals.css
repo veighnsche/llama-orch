@@ -1,0 +1,12 @@
+/**
+ * TEAM-288: Web UI - Global Styles
+ * Mirroring commercial app's configuration
+ */
+
+@import "tailwindcss";
+@import "@repo/tailwind-config";
+
+/**
+ * Tailwind v4 JIT: Scan app files for arbitrary values
+ */
+@source "../src/**/*.{ts,tsx}";

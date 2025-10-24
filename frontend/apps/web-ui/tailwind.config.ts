@@ -1,12 +1,3 @@
-import type { Config } from 'tailwindcss';
-import sharedConfig from '@repo/tailwind-config';
-
-const config: Config = {
-  ...sharedConfig,
-  content: [
-    './src/**/*.{js,ts,jsx,tsx,mdx}',
-    '../../packages/rbee-ui/**/*.{js,ts,jsx,tsx}',
-  ],
-};
-
-export default config;
+// TEAM-288: Tailwind v4 doesn't use config files
+// Configuration is done via @import in globals.css
+export default {};

@@ -19,8 +19,14 @@ mod narration; // TEAM-188: Narration constants
                // TEAM-188: operations module doesn't exist yet
                // mod operations;
 
-use anyhow::Result;
-use axum::routing::{get, post};
+use axum::{
+    extract::State,
+    http::StatusCode,
+    response::Json,
+    routing::{get, post},
+};
+use tower_http::cors::{CorsLayer, Any}; // TEAM-288: CORS support for web UI
+use anyhow::Result; // TEAM-288: Import Result for main function
 use clap::Parser;
 use job_server::JobRegistry;
 use observability_narration_core::NarrationFactory;
@@ -136,10 +142,22 @@ fn create_router(
 
     // TEAM-284: Initialize both worker and hive registries
     let hive_registry = Arc::new(queen_rbee_hive_registry::HiveRegistry::new());
+    
+    // TEAM-288: Create broadcast channel for real-time heartbeat events
+    // Capacity of 100 events - if clients are slow, old events are dropped
+    let (event_tx, _) = tokio::sync::broadcast::channel(100);
+    
     let heartbeat_state = http::HeartbeatState {
         worker_registry: worker_registry.clone(),
         hive_registry,
+        event_tx, // TEAM-288: Broadcast channel for real-time events
     };
+
+    // TEAM-288: Add CORS layer to allow web UI access
+    let cors = CorsLayer::new()
+        .allow_origin(Any) // Allow any origin for development
+        .allow_methods(Any) // Allow any HTTP method
+        .allow_headers(Any); // Allow any headers
 
     axum::Router::new()
         // Health check (no /v1 prefix for compatibility)
@@ -154,15 +172,15 @@ fn create_router(
         .with_state(heartbeat_state)
         .route("/v1/jobs", post(http::handle_create_job))
         .with_state(job_state.clone())
-        .route("/v1/jobs/{job_id}/stream", get(http::handle_stream_job))
-        .with_state(job_state.clone()) // TEAM-186: Pass full state for payload retrieval
+        .route("/v1/jobs/{job_id}/stream", get(http::handle_stream_job)) // TEAM-288: Fixed path syntax for axum 0.8
+        .with_state(job_state)
+        .layer(cors) // TEAM-288: Apply CORS layer to all routes
 }
 
 /// POST /v1/shutdown - Graceful shutdown
 ///
 /// TEAM-153: Created by TEAM-153
 /// TEAM-164: Migrated from http.rs to main.rs
-use axum::http::StatusCode;
 async fn handle_shutdown() -> StatusCode {
     NARRATE.action("shutdown").human("Received shutdown request, exiting gracefully").emit();
     std::process::exit(0);
