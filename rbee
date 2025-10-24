@@ -2,15 +2,17 @@
 # Smart wrapper for rbee-keeper
 # Auto-builds if source is newer than binary, then forwards all commands
 # Created by: TEAM-162
+# Updated by: TEAM-290 (auto-build xtask if not found)
 
 set -e
 
 # Get workspace root
 WORKSPACE_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
-# Build xtask once if needed (quietly)
+# TEAM-290: Build xtask if it doesn't exist (not just quietly, show output)
 if [[ ! -f "$WORKSPACE_ROOT/target/debug/xtask" ]]; then
-    cargo build --bin xtask --quiet 2>/dev/null
+    echo "🔨 Building xtask (not found in target)..."
+    cargo build -p xtask
 fi
 
 # Call xtask binary directly to avoid recompiling it every time

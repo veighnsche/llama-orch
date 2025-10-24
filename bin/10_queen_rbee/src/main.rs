@@ -30,9 +30,8 @@ use anyhow::Result; // TEAM-288: Import Result for main function
 use clap::Parser;
 use job_server::JobRegistry;
 use observability_narration_core::NarrationFactory;
-use rbee_config::RbeeConfig;
+// TEAM-290: DELETED rbee_config import (file-based config deprecated)
 use std::net::SocketAddr;
-use std::path::PathBuf;
 use std::sync::Arc;
 
 // TEAM-192: Local narration factory for main.rs
@@ -48,14 +47,7 @@ struct Args {
     /// HTTP server port
     #[arg(short, long, default_value = "8500")]
     port: u16,
-
-    /// Configuration file path
-    #[arg(short, long)]
-    config: Option<String>,
-
-    /// Config directory path (defaults to ~/.config/rbee/)
-    #[arg(long)]
-    config_dir: Option<String>,
+    // TEAM-290: DELETED config and config_dir args (file-based config deprecated)
 }
 
 #[tokio::main]
@@ -68,24 +60,10 @@ async fn main() -> Result<()> {
     NARRATE
         .action("start")
         .context(args.port.to_string())
-        .human("Queen-rbee starting on port {}")
+        .human("Queen-rbee starting on port {} (localhost-only mode)")
         .emit();
 
-    // TEAM-194: Load file-based config from ~/.config/rbee/
-    let config = if let Some(dir) = args.config_dir {
-        RbeeConfig::load_from_dir(&PathBuf::from(dir))
-            .map_err(|e| anyhow::anyhow!("Failed to load config: {}", e))?
-    } else {
-        RbeeConfig::load().map_err(|e| anyhow::anyhow!("Failed to load config: {}", e))?
-    };
-
-    let config_dir = RbeeConfig::config_dir()?;
-
-    NARRATE
-        .action("start")
-        .context(config_dir.display().to_string())
-        .human("Loaded config from {}")
-        .emit();
+    // TEAM-290: No config loading (file-based config deprecated)
 
     // TEAM-155: Initialize job registry for dual-call pattern
     // Generic over String for now (will stream text tokens)
@@ -98,9 +76,9 @@ async fn main() -> Result<()> {
     // TODO: Initialize other registries when migrated
     // - beehive_registry (SQLite catalog + RAM registry)
     // - worker_registry (RAM)
-    // - Load config from args.config
+    // TEAM-290: No config loading (file-based config deprecated)
 
-    let app = create_router(job_server, Arc::new(config), worker_registry);
+    let app = create_router(job_server, worker_registry);
     let addr = SocketAddr::from(([127, 0, 0, 1], args.port));
 
     NARRATE.action("listen").context(addr.to_string()).human("Listening on http://{}").emit();
@@ -124,19 +102,18 @@ async fn main() -> Result<()> {
 /// TEAM-155: Added job endpoints for dual-call pattern
 /// TEAM-156: Added hive catalog to state
 /// TEAM-158: Added heartbeat endpoint for hive health monitoring
+/// TEAM-290: Removed config parameter (file-based config deprecated)
 /// Currently health, shutdown, job, and heartbeat endpoints are active.
 /// TODO: Uncomment http::routes::create_router() when registries are migrated
 fn create_router(
     job_server: Arc<JobRegistry<String>>,
-    config: Arc<RbeeConfig>,
     worker_registry: Arc<queen_rbee_worker_registry::WorkerRegistry>, // TEAM-262: Renamed
 ) -> axum::Router {
     // TEAM-164: Create states for HTTP endpoints
     // TEAM-190: Added hive_registry to job_state for Status operation
-    // TEAM-194: Replaced hive_catalog with config
+    // TEAM-290: Removed config from job_state (file-based config deprecated)
     let job_state = http::SchedulerState {
         registry: job_server,
-        config: config.clone(),
         hive_registry: worker_registry.clone(), // TEAM-262: Still named hive_registry in struct
     };
 
@@ -165,6 +142,7 @@ fn create_router(
         // TEAM-186: V1 API endpoints (matches API_REFERENCE.md)
         .route("/v1/shutdown", post(handle_shutdown))
         .route("/v1/build-info", get(http::handle_build_info)) // TEAM-262: Build information
+        .route("/v1/info", get(http::handle_info)) // TEAM-292: Queen info for service discovery
         // TEAM-275: Removed /v1/heartbeat endpoint (deprecated, use /v1/worker-heartbeat instead)
         .route("/v1/worker-heartbeat", post(http::handle_worker_heartbeat)) // TEAM-261: Workers send heartbeats directly to queen
         .route("/v1/hive-heartbeat", post(http::handle_hive_heartbeat)) // TEAM-284/285: Hives send heartbeats directly to queen

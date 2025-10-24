@@ -123,17 +123,68 @@ pub async fn install_daemon(config: InstallConfig) -> Result<InstallResult> {
                 found_in_target: true,
             })
         }
-        Err(e) => {
+        Err(_) => {
+            // TEAM-290: Binary not found, try to build it
             let mut narration = NARRATE
-                .action("daemon_not_found")
-                .context(&config.binary_name)
-                .human("❌ Binary '{}' not found in target directory")
-                .error_kind("binary_not_found");
+                .action("daemon_build")
+                .context(&config.binary_name);
             if let Some(ref job_id) = config.job_id {
                 narration = narration.job_id(job_id);
             }
-            narration.emit_error();
-            Err(e)
+            narration.human("🔨 Building '{}' (not found in target)").emit();
+
+            // Build the binary
+            let output = tokio::process::Command::new("cargo")
+                .arg("build")
+                .arg("-p")
+                .arg(&config.binary_name)
+                .output()
+                .await?;
+
+            if !output.status.success() {
+                let stderr = String::from_utf8_lossy(&output.stderr);
+                let mut narration = NARRATE
+                    .action("daemon_build_err")
+                    .context(&config.binary_name)
+                    .human("❌ Failed to build '{}'")
+                    .error_kind("build_failed");
+                if let Some(ref job_id) = config.job_id {
+                    narration = narration.job_id(job_id);
+                }
+                narration.emit_error();
+                anyhow::bail!("Failed to build '{}': {}", config.binary_name, stderr);
+            }
+
+            // Try to find again after build
+            match crate::manager::DaemonManager::find_in_target(&config.binary_name) {
+                Ok(binary_path) => {
+                    let mut narration = NARRATE
+                        .action("daemon_built")
+                        .context(&config.binary_name)
+                        .context(binary_path.display().to_string());
+                    if let Some(ref job_id) = config.job_id {
+                        narration = narration.job_id(job_id);
+                    }
+                    narration.human("✅ Built '{}' at: {}").emit();
+
+                    Ok(InstallResult {
+                        binary_path: binary_path.display().to_string(),
+                        found_in_target: true,
+                    })
+                }
+                Err(e) => {
+                    let mut narration = NARRATE
+                        .action("daemon_not_found")
+                        .context(&config.binary_name)
+                        .human("❌ Binary '{}' not found even after build")
+                        .error_kind("binary_not_found");
+                    if let Some(ref job_id) = config.job_id {
+                        narration = narration.job_id(job_id);
+                    }
+                    narration.emit_error();
+                    Err(e)
+                }
+            }
         }
     }
 }

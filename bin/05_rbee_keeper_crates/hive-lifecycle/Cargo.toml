@@ -1,0 +1,31 @@
+# TEAM-290: Hive lifecycle management for rbee-keeper
+# Purpose: Remote hive operations via SSH (install/uninstall/start/stop)
+
+[package]
+name = "hive-lifecycle"
+version = "0.1.0"
+edition = "2021"
+authors = ["TEAM-290"]
+description = "Hive lifecycle management for rbee-keeper (SSH + daemon-lifecycle)"
+license = "GPL-3.0-or-later"
+
+[dependencies]
+# SSH client (uses host SSH config)
+ssh2 = "0.9"
+
+# Async runtime
+tokio = { version = "1", features = ["process", "io-util", "rt"] }
+
+# HTTP client (for health checks)
+reqwest = "0.12"
+
+# Error handling
+anyhow = "1.0"
+thiserror = "1.0"
+
+# Shared crates
+daemon-lifecycle = { path = "../../99_shared_crates/daemon-lifecycle" }
+observability-narration-core = { path = "../../99_shared_crates/narration-core" }
+
+[lints]
+workspace = true

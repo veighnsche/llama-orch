@@ -17,16 +17,14 @@ members = [
     "bin/30_llm_worker_rbee/bdd", # BDD integration tests
 
     # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-    # BINARY-SPECIFIC CRATES (TEAM-135: New architecture)
+    # RBEE-KEEPER CRATES — CLI tool crates
     # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
     
-    # queen-rbee crates
     "bin/05_rbee_keeper_crates/queen-lifecycle",
+    "bin/05_rbee_keeper_crates/hive-lifecycle",  # TEAM-290: Hive lifecycle (SSH + daemon-lifecycle)
     "bin/15_queen_rbee_crates/worker-registry",  # TEAM-262: Renamed from hive-registry
     "bin/15_queen_rbee_crates/worker-registry/bdd",
     "bin/15_queen_rbee_crates/hive-registry",    # TEAM-284: New hive registry
-    "bin/15_queen_rbee_crates/hive-lifecycle",
-    "bin/15_queen_rbee_crates/hive-lifecycle/bdd",
     
     # rbee-hive crates (NO CLI!)
     "bin/25_rbee_hive_crates/artifact-catalog",  # TEAM-273: Shared catalog abstraction
@@ -67,7 +65,7 @@ members = [
     "bin/99_shared_crates/job-server",        # TEAM-154: Dual-call pattern job tracking (worker/queen/hive)
     "bin/99_shared_crates/timeout-enforcer",    # TEAM-163: Hard timeout enforcement with visual countdown
     "bin/99_shared_crates/auto-update",         # TEAM-193: Dependency-aware auto-update for binaries
-    "bin/99_shared_crates/rbee-config",         # TEAM-194: File-based config for queen
+    # TEAM-290: DELETED rbee-config (file-based config deprecated)
     # TEAM-284: DELETED daemon-sync and ssh-client (SSH/remote operations removed)
     "bin/99_shared_crates/job-client",          # Workspace automation (cargo xtask)
 

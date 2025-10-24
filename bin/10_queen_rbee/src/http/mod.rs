@@ -24,11 +24,13 @@ pub mod build_info;
 pub mod health;
 pub mod heartbeat;
 pub mod heartbeat_stream; // TEAM-285: Live heartbeat streaming
+pub mod info; // TEAM-292: Queen info endpoint for service discovery
 pub mod jobs; // TEAM-262
 
 // Re-export commonly used types
 pub use build_info::handle_build_info;
 pub use health::handle_health;
+pub use info::handle_info; // TEAM-292: Queen info handler
 pub use heartbeat::{
     handle_hive_heartbeat, // TEAM-284/285: Hive heartbeat handler
     handle_worker_heartbeat,

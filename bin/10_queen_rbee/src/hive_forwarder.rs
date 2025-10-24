@@ -81,10 +81,9 @@ use anyhow::Result;
 use job_client::JobClient;
 use observability_narration_core::NarrationFactory;
 // TEAM-285: DELETED execute_hive_start, HiveStartRequest (localhost-only, no lifecycle management)
-use rbee_config::RbeeConfig;
+// TEAM-290: DELETED rbee_config import (file-based config deprecated)
 use operations_contract::Operation; // TEAM-284: Renamed from rbee_operations
-use std::sync::Arc;
-use std::time::Duration;
+// TEAM-290: DELETED Duration import (not needed anymore)
 
 const NARRATE: NarrationFactory = NarrationFactory::new("qn-fwd");
 
@@ -124,13 +123,13 @@ const NARRATE: NarrationFactory = NarrationFactory::new("qn-fwd");
 /// # Errors
 ///
 /// - Operation doesn't have hive_id
-/// - Hive not found in configuration
+/// - Hive is not localhost
 /// - HTTP communication failure
-/// - Hive failed to start
+///
+/// TEAM-290: Localhost-only mode (rbee-config removed)
 pub async fn forward_to_hive(
     job_id: &str,
     operation: Operation,
-    config: Arc<RbeeConfig>,
 ) -> Result<()> {
     // Extract metadata before moving operation
     let operation_name = operation.name();
@@ -139,82 +138,33 @@ pub async fn forward_to_hive(
         .ok_or_else(|| anyhow::anyhow!("Operation does not target a hive"))?
         .to_string();
 
-    // TEAM-265: Detect communication mode
-    let is_localhost = hive_id == "localhost";
-    let has_integrated = cfg!(feature = "local-hive");
-
-    let mode = if is_localhost && has_integrated {
-        "integrated"
-    } else if is_localhost {
-        "localhost-http"
-    } else {
-        "remote-http"
-    };
+    // TEAM-290: Validate localhost only
+    if hive_id != "localhost" {
+        anyhow::bail!(
+            "Only localhost hive is supported. Remote hives are deprecated.\n\
+             Requested: '{}'\n\
+             Supported: 'localhost'",
+            hive_id
+        );
+    }
 
     NARRATE
         .action("forward_start")
         .job_id(job_id)
         .context(operation_name)
         .context(&hive_id)
-        .context(mode)
-        .human("Forwarding {} operation to hive '{}' (mode: {})")
+        .human("Forwarding {} operation to localhost hive")
         .emit();
 
-    // TEAM-265: TODO - Implement integrated mode
-    // TEAM-266: Investigation complete - See bin/.plan/TEAM_266_MODE_3_INVESTIGATION_FINDINGS.md
-    //
-    // CRITICAL: Mode 3 implementation is BLOCKED by missing rbee-hive crate implementations.
-    // All worker-lifecycle, model-catalog, and model-provisioner crates are empty stubs.
-    //
-    // Prerequisites before Mode 3 implementation:
-    // 1. Implement worker-lifecycle crate functions (spawn, list, get, delete)
-    // 2. Implement model-catalog crate functions (list, get, delete)
-    // 3. Implement model-provisioner crate functions (download)
-    // 4. Test HTTP mode (Mode 2) thoroughly
-    // 5. Document public APIs
-    //
-    // Expected effort: 180+ hours for prerequisites, 30-58 hours for Mode 3
-    // Expected speedup: 110x for list/get operations, minimal for spawn/download
-    //
-    // When local-hive feature is enabled and hive_id == "localhost",
-    // we should call rbee-hive crates directly instead of HTTP.
-    // This requires:
-    // 1. Add rbee-hive crates as optional dependencies
-    // 2. Implement execute_integrated() function with direct calls
-    // 3. Convert results to narration events (no HTTP/SSE needed)
-    //
-    // For now, we always use HTTP (modes 1 & 2).
-    // This is correct but not optimal for localhost with local-hive feature.
+    // TEAM-290: Hardcoded localhost URL (no config needed)
+    let hive_url = "http://localhost:9000";
 
-    if is_localhost && has_integrated {
-        NARRATE
-            .action("forward_mode")
-            .job_id(job_id)
-            .human("⚠️  Integrated mode detected but not yet implemented - falling back to HTTP")
-            .emit();
-    }
-
-    // Look up hive in config
-    let hive_config = config
-        .hives
-        .hives
-        .iter()
-        .find(|h| h.alias == hive_id)
-        .ok_or_else(|| anyhow::anyhow!("Hive '{}' not found in configuration", hive_id))?;
-
-    // Determine hive host and port
-    let hive_host = &hive_config.hostname;
-    let hive_port = hive_config.hive_port;
-
-    let hive_url = format!("http://{}:{}", hive_host, hive_port);
-
-    // TEAM-259: Ensure hive is running before forwarding (mirrors queen_lifecycle pattern)
-    ensure_hive_running(job_id, &hive_id, &hive_url, config.clone()).await?;
+    // TEAM-290: Skip ensure_hive_running (no lifecycle management in localhost-only mode)
 
     NARRATE
         .action("forward_connect")
         .job_id(job_id)
-        .context(&hive_url)
+        .context(hive_url)
         .human("Connecting to hive at {}")
         .emit();
 
@@ -249,60 +199,4 @@ async fn stream_from_hive(job_id: &str, hive_url: &str, operation: Operation) ->
     Ok(())
 }
 
-/// Ensure hive is running before forwarding operations
-///
-/// TEAM-259: Mirrors rbee-keeper's ensure_queen_running pattern
-/// TEAM-285: Updated to localhost-only (no auto-start)
-///
-/// 1. Check if hive is healthy
-/// 2. If not running, return error (user must start hive manually)
-async fn ensure_hive_running(
-    job_id: &str,
-    hive_id: &str,
-    hive_url: &str,
-    _config: Arc<RbeeConfig>,
-) -> Result<()> {
-    // Check if hive is already healthy
-    if is_hive_healthy(hive_url).await {
-        NARRATE
-            .action("hive_check")
-            .job_id(job_id)
-            .context(hive_id)
-            .human("Hive '{}' is already running")
-            .emit();
-        return Ok(());
-    }
-
-    // TEAM-285: Hive is not running - fail with helpful error message
-    NARRATE
-        .action("hive_check")
-        .job_id(job_id)
-        .context(hive_id)
-        .human("❌ Hive '{}' is not running")
-        .emit();
-
-    Err(anyhow::anyhow!(
-        "Hive '{}' is not running. Please start it manually:\n\
-         \n\
-         For localhost:\n\
-         $ cargo run --bin rbee-hive\n\
-         \n\
-         Or use systemd/docker to manage the hive daemon.",
-        hive_id
-    ))
-}
-
-/// Check if hive is healthy via HTTP health check
-///
-/// TEAM-259: Mirrors rbee-keeper's is_queen_healthy pattern
-async fn is_hive_healthy(hive_url: &str) -> bool {
-    let client = reqwest::Client::builder().timeout(Duration::from_secs(2)).build().ok();
-
-    if let Some(client) = client {
-        if let Ok(response) = client.get(format!("{}/health", hive_url)).send().await {
-            return response.status().is_success();
-        }
-    }
-
-    false
-}
+// TEAM-290: DELETED ensure_hive_running and is_hive_healthy (no lifecycle management in localhost-only mode)

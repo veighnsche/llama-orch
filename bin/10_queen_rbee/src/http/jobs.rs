@@ -15,7 +15,7 @@ use axum::{
 use futures::stream::{Stream, StreamExt};
 use job_server::JobRegistry;
 use observability_narration_core::sse_sink;
-use rbee_config::RbeeConfig;
+// TEAM-290: DELETED rbee_config import (file-based config deprecated)
 use std::{convert::Infallible, sync::Arc};
 
 // TEAM-205: Removed JobChannelGuard - it was dropping too early!
@@ -27,8 +27,7 @@ use std::{convert::Infallible, sync::Arc};
 pub struct SchedulerState {
     /// Registry for managing job lifecycle and payloads
     pub registry: Arc<JobRegistry<String>>,
-    /// TEAM-194: File-based config (replaces hive_catalog)
-    pub config: Arc<RbeeConfig>,
+    // TEAM-290: DELETED config field (file-based config deprecated)
     /// TEAM-190: Runtime registry for live hive/worker state
     /// TEAM-262: Renamed to WorkerRegistry (field name kept for compatibility)
     pub hive_registry: Arc<queen_rbee_worker_registry::WorkerRegistry>,
@@ -39,7 +38,7 @@ impl From<SchedulerState> for crate::job_router::JobState {
     fn from(state: SchedulerState) -> Self {
         Self {
             registry: state.registry,
-            config: state.config,               // TEAM-194
+            // TEAM-290: DELETED config field (file-based config deprecated)
             hive_registry: state.hive_registry, // TEAM-190
         }
     }

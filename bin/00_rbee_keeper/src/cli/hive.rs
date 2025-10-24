@@ -40,8 +40,46 @@ use clap::Subcommand;
 // - ./rbee hive start --host localhost (should work)
 // ============================================================
 pub enum HiveAction {
-    // TEAM-278: DELETED SshTest, Install, Uninstall
-    // TEAM-285: DELETED Start, Stop (localhost-only, no lifecycle management)
+    // TEAM-290: RESTORED Install, Uninstall, Start, Stop (now with SSH support via hive-lifecycle)
+    /// Install rbee-hive locally or remotely
+    Install {
+        /// Host to install on (default: localhost)
+        #[arg(short = 'a', long = "host", default_value = "localhost")]
+        host: String,
+        /// Path to rbee-hive binary (auto-detects if not specified)
+        #[arg(short = 'b', long = "binary")]
+        binary: Option<String>,
+        /// Installation directory (default: ~/.local/bin for localhost, /usr/local/bin for remote)
+        #[arg(short = 'd', long = "dir")]
+        install_dir: Option<String>,
+    },
+    /// Uninstall rbee-hive from local or remote host
+    Uninstall {
+        /// Host to uninstall from (default: localhost)
+        #[arg(short = 'a', long = "host", default_value = "localhost")]
+        host: String,
+        /// Installation directory
+        #[arg(short = 'd', long = "dir")]
+        install_dir: Option<String>,
+    },
+    /// Start rbee-hive on local or remote host
+    Start {
+        /// Host to start on (default: localhost)
+        #[arg(short = 'a', long = "host", default_value = "localhost")]
+        host: String,
+        /// Installation directory
+        #[arg(short = 'd', long = "dir")]
+        install_dir: Option<String>,
+        /// HTTP port (default: 9000)
+        #[arg(short = 'p', long = "port", default_value = "9000")]
+        port: u16,
+    },
+    /// Stop rbee-hive on local or remote host
+    Stop {
+        /// Host to stop on (default: localhost)
+        #[arg(short = 'a', long = "host", default_value = "localhost")]
+        host: String,
+    },
     /// List all hives
     List,
     /// Get hive details
@@ -59,8 +97,9 @@ pub enum HiveAction {
     },
     /// Refresh device capabilities for a hive
     /// TEAM-196: Fetch and cache device capabilities from a running hive
+    /// TEAM-290: Localhost-only (no config files)
     RefreshCapabilities {
-        /// Hive alias from ~/.config/rbee/hives.conf
+        /// Hive alias (only "localhost" supported)
         #[arg(short = 'a', long = "host")]
         alias: String,
     },

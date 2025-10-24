@@ -46,6 +46,14 @@ impl QueenHandle {
     pub fn base_url(&self) -> &str {
         &self.base_url
     }
+    
+    /// Update the handle with discovered queen URL
+    ///
+    /// TEAM-292: Service discovery - update URL after fetching from /v1/info
+    pub fn with_discovered_url(mut self, url: String) -> Self {
+        self.base_url = url;
+        self
+    }
 
     /// Keep the queen alive (no shutdown after task)
     ///

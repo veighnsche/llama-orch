@@ -8,7 +8,7 @@ use daemon_lifecycle::{
     ensure_daemon_with_handle, poll_until_healthy, DaemonManager, HealthPollConfig,
 };
 use observability_narration_core::NarrationFactory;
-use rbee_config::RbeeConfig;
+// TEAM-290: DELETED rbee_config import (file-based config deprecated)
 use std::time::Duration;
 use timeout_enforcer::TimeoutEnforcer;
 
@@ -52,7 +52,7 @@ async fn ensure_queen_running_inner(base_url: &str) -> Result<QueenHandle> {
     // TEAM-276: Use shared ensure pattern from daemon-lifecycle
     let health_url = format!("{}/health", base_url);
 
-    ensure_daemon_with_handle(
+    let handle = ensure_daemon_with_handle(
         "queen-rbee",
         &health_url,
         None,
@@ -63,66 +63,70 @@ async fn ensure_queen_running_inner(base_url: &str) -> Result<QueenHandle> {
         || QueenHandle::already_running(base_url.to_string()),
         || QueenHandle::started_by_us(base_url.to_string(), None),
     )
-    .await
+    .await?;
+    
+    // TEAM-292: Fetch queen's actual URL from /v1/info endpoint
+    // This allows queen to tell us its address (useful for future remote queens)
+    match fetch_queen_url(base_url).await {
+        Ok(queen_url) => {
+            NARRATE
+                .action("queen_url_discovered")
+                .context(&queen_url)
+                .human("✅ Queen URL discovered: {}")
+                .emit();
+            Ok(handle.with_discovered_url(queen_url))
+        }
+        Err(e) => {
+            // Fallback to base_url if discovery fails
+            NARRATE
+                .action("queen_url_fallback")
+                .context(e.to_string())
+                .human("⚠️  Failed to discover queen URL ({}), using default")
+                .emit();
+            Ok(handle)
+        }
+    }
+}
+
+/// Fetch queen's URL from /v1/info endpoint
+///
+/// TEAM-292: Service discovery - ask queen for its address
+async fn fetch_queen_url(base_url: &str) -> Result<String> {
+    let info_url = format!("{}/v1/info", base_url);
+    let client = reqwest::Client::new();
+    
+    let response = client
+        .get(&info_url)
+        .timeout(Duration::from_secs(5))
+        .send()
+        .await
+        .context("Failed to fetch queen info")?;
+    
+    if !response.status().is_success() {
+        anyhow::bail!("Queen info endpoint returned error: {}", response.status());
+    }
+    
+    let info: serde_json::Value = response.json().await
+        .context("Failed to parse queen info response")?;
+    
+    let queen_url = info["base_url"]
+        .as_str()
+        .ok_or_else(|| anyhow::anyhow!("Queen info missing base_url field"))?
+        .to_string();
+    
+    Ok(queen_url)
 }
 
 /// Spawn queen with preflight checks
 ///
 /// TEAM-276: Extracted spawn logic to use with ensure_daemon_with_handle
+/// TEAM-290: Removed config loading (file-based config deprecated)
 async fn spawn_queen_with_preflight(base_url: &str) -> Result<()> {
-    // Step 1: TEAM-195: Preflight validation before starting queen
-    NARRATE.action("queen_preflight").human("📋 Loading rbee configuration...").emit();
-
-    let config = RbeeConfig::load().context("Failed to load rbee config")?;
-
+    // TEAM-290: No preflight validation (no config files)
     NARRATE
         .action("queen_preflight")
-        .human(format!("✅ Config loaded from {}", RbeeConfig::config_dir()?.display()))
+        .human("✅ Localhost-only mode (no config needed)")
         .emit();
-
-    // Validate configuration
-    NARRATE.action("queen_preflight").human("🔍 Validating configuration...").emit();
-
-    let validation_result = config.validate().context("Configuration validation failed")?;
-
-    if !validation_result.is_valid() {
-        NARRATE
-            .action("queen_preflight")
-            .human(format!(
-                "❌ Configuration validation failed:\n\n{}\n\nPlease fix the errors in ~/.config/rbee/ and try again.",
-                validation_result.errors.join("\n")
-            ))
-            .error_kind("config_validation_failed")
-            .emit();
-        anyhow::bail!("Configuration validation failed: {}", validation_result.errors.join(", "));
-    }
-
-    // Report hive count
-    let hive_count = config.hives.len();
-    NARRATE.action("queen_preflight").human(format!("✅ {} hive(s) configured", hive_count)).emit();
-
-    // Report capabilities
-    let caps_count = config.capabilities.aliases().len();
-    if caps_count > 0 {
-        NARRATE
-            .action("queen_preflight")
-            .human(format!("📊 {} hive(s) have cached capabilities", caps_count))
-            .emit();
-    } else {
-        NARRATE
-            .action("queen_preflight")
-            .human("⚠️  No cached capabilities found (hives not yet started)")
-            .emit();
-    }
-
-    // Report warnings if any
-    if validation_result.has_warnings() {
-        for warning in &validation_result.warnings {
-            NARRATE.action("queen_preflight").human(format!("⚠️  {}", warning)).emit();
-        }
-    }
-
-    NARRATE.action("queen_preflight").human("✅ All preflight checks passed").emit();
 
     // Step 2: Find queen-rbee binary in target directory
     let queen_binary = DaemonManager::find_in_target("queen-rbee")

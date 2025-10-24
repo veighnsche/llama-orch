@@ -82,19 +82,19 @@ pub enum Operation {
     // TEAM-285: DELETED HiveStart, HiveStop (localhost-only, no lifecycle management)
     HiveList,
     HiveGet {
-        /// Alias from hives.conf (defaults to "localhost")
+        /// Hive alias (only "localhost" supported)
         #[serde(default = "default_hive_id")]
         alias: String,
     },
     /// TEAM-189: Check hive health endpoint status
     HiveStatus {
-        /// Alias from hives.conf (defaults to "localhost")
+        /// Hive alias (only "localhost" supported)
         #[serde(default = "default_hive_id")]
         alias: String,
     },
     /// TEAM-196: Refresh device capabilities for a running hive
     HiveRefreshCapabilities {
-        /// Alias from hives.conf
+        /// Hive alias (only "localhost" supported)
         alias: String,
     },
     // TEAM-278: DELETED HiveImportSsh - not needed in declarative arch

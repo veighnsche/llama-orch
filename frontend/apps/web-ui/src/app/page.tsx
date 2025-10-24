@@ -5,6 +5,7 @@
 import { useHeartbeat } from '@/src/hooks/useHeartbeat';
 import { Button } from '@rbee/ui/atoms';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@rbee/ui/atoms';
+import { ThemeToggle } from '@rbee/ui/molecules';
 
 export default function HomePage() {
   const { heartbeat, connected, loading, error } = useHeartbeat();
@@ -36,11 +37,14 @@ export default function HomePage() {
 
   return (
     <div className="min-h-screen bg-background p-8">
-      <header className="mb-8">
-        <h1 className="text-4xl font-bold mb-2">🐝 rbee Web UI</h1>
-        <p className="text-muted-foreground">
-          Dashboard for managing queen, hives, workers, and models
-        </p>
+      <header className="mb-8 flex items-start justify-between">
+        <div>
+          <h1 className="text-4xl font-bold mb-2">🐝 rbee Web UI</h1>
+          <p className="text-muted-foreground">
+            Dashboard for managing queen, hives, workers, and models
+          </p>
+        </div>
+        <ThemeToggle />
       </header>
 
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">

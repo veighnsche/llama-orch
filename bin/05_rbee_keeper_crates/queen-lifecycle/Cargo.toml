@@ -14,11 +14,12 @@ license = "GPL-3.0-or-later"
 anyhow = "1.0"
 tokio = { version = "1", features = ["time"] }
 reqwest = { version = "0.12", features = ["json"] }
+serde_json = "1.0" # TEAM-292: For parsing queen info response
 
 # Shared crates
 daemon-lifecycle = { path = "../../99_shared_crates/daemon-lifecycle" }
 observability-narration-core = { path = "../../99_shared_crates/narration-core" }
-rbee-config = { path = "../../99_shared_crates/rbee-config" }
+# TEAM-290: DELETED rbee-config dependency (file-based config deprecated)
 timeout-enforcer = { path = "../../99_shared_crates/timeout-enforcer" }
 
 [lints]

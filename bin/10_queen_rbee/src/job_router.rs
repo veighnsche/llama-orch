@@ -29,14 +29,10 @@ use job_server::JobRegistry;
 use observability_narration_core::NarrationFactory;
 // TEAM-278: DELETED execute_hive_install, execute_hive_uninstall, execute_ssh_test
 // TEAM-285: DELETED execute_hive_start, execute_hive_stop (localhost-only, no lifecycle management)
-use queen_rbee_hive_lifecycle::{
-    execute_hive_get, execute_hive_list, execute_hive_refresh_capabilities,
-    execute_hive_status, HiveGetRequest, HiveListRequest,
-    HiveRefreshCapabilitiesRequest, HiveStatusRequest,
-};
+// TEAM-290: DELETED hive_lifecycle imports (queen no longer manages hives, rbee-keeper does via SSH)
 // TEAM-275: Removed unused import (using state.hive_registry which is already Arc<WorkerRegistry>)
 // TEAM-284: DELETED HivesConfig import (no longer needed without daemon-sync)
-use rbee_config::RbeeConfig;
+// TEAM-290: DELETED rbee_config import (file-based config deprecated)
 use operations_contract::Operation; // TEAM-284: Renamed from rbee_operations
 use std::sync::Arc;
 
@@ -50,7 +46,7 @@ const NARRATE: NarrationFactory = NarrationFactory::new("qn-router");
 #[derive(Clone)]
 pub struct JobState {
     pub registry: Arc<JobRegistry<String>>,
-    pub config: Arc<RbeeConfig>, // TEAM-194: File-based config
+    // TEAM-290: DELETED config field (file-based config deprecated)
     pub hive_registry: Arc<queen_rbee_worker_registry::WorkerRegistry>, // TEAM-190/262/275: For Status and Infer operations
 }
 
@@ -93,11 +89,11 @@ pub async fn execute_job(
     state: JobState,
 ) -> impl futures::stream::Stream<Item = String> {
     let registry = state.registry.clone();
-    let config = state.config.clone(); // TEAM-194
+    // TEAM-290: DELETED config clone (file-based config deprecated)
     let hive_registry = state.hive_registry.clone(); // TEAM-190
 
     job_server::execute_and_stream(job_id, registry.clone(), move |job_id, payload| {
-        route_operation(job_id, payload, registry, config, hive_registry)
+        route_operation(job_id, payload, registry, hive_registry)
     })
     .await
 }
@@ -112,10 +108,10 @@ async fn route_operation(
     job_id: String,
     payload: serde_json::Value,
     registry: Arc<JobRegistry<String>>,
-    config: Arc<RbeeConfig>, // TEAM-194
+    // TEAM-290: DELETED config parameter (file-based config deprecated)
     hive_registry: Arc<queen_rbee_worker_registry::WorkerRegistry>, // TEAM-190/262/275: For Status and Infer operations
 ) -> Result<()> {
-    let state = JobState { registry, config, hive_registry };
+    let state = JobState { registry, hive_registry };
     // Parse payload into typed Operation enum
     let operation: Operation = serde_json::from_value(payload)
         .map_err(|e| anyhow::anyhow!("Failed to parse operation: {}", e))?;
@@ -209,27 +205,7 @@ async fn route_operation(
         // TEAM-278: DELETED Operation::HiveInstall - replaced by PackageSync/PackageInstall
         // TEAM-278: DELETED Operation::HiveUninstall - replaced by PackageUninstall
         // TEAM-285: DELETED Operation::HiveStart, Operation::HiveStop (localhost-only, no lifecycle management)
-        // Hive operations
-        Operation::HiveList => {
-            // TEAM-215: Delegate to hive-lifecycle crate
-            let request = HiveListRequest {};
-            execute_hive_list(request, state.config.clone(), &job_id).await?;
-        }
-        Operation::HiveGet { alias } => {
-            // TEAM-215: Delegate to hive-lifecycle crate
-            let request = HiveGetRequest { alias };
-            execute_hive_get(request, state.config.clone(), &job_id).await?;
-        }
-        Operation::HiveStatus { alias } => {
-            // TEAM-215: Delegate to hive-lifecycle crate
-            let request = HiveStatusRequest { alias, job_id: job_id.clone() };
-            execute_hive_status(request, state.config.clone(), &job_id).await?;
-        }
-        Operation::HiveRefreshCapabilities { alias } => {
-            // TEAM-215: Delegate to hive-lifecycle crate
-            let request = HiveRefreshCapabilitiesRequest { alias, job_id: job_id.clone() };
-            execute_hive_refresh_capabilities(request, state.config.clone()).await?;
-        }
+        // TEAM-290: DELETED HiveList, HiveGet, HiveStatus, HiveRefreshCapabilities (queen no longer manages hives, rbee-keeper does via SSH)
 
         // ========================================================================
         // INFERENCE ROUTING - CRITICAL ARCHITECTURE NOTE (TEAM-261)
@@ -375,8 +351,9 @@ async fn route_operation(
 
         // TEAM-258: All worker/model operations are forwarded to hive
         // This allows new operations to be added to rbee-hive without modifying queen-rbee
+        // TEAM-290: No config needed (localhost-only)
         op if op.should_forward_to_hive() => {
-            hive_forwarder::forward_to_hive(&job_id, op, state.config.clone()).await?
+            hive_forwarder::forward_to_hive(&job_id, op).await?
         }
 
         // Catch-all for any unhandled operations

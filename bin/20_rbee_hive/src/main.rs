@@ -10,6 +10,7 @@
 //!
 //! Daemon for managing LLM worker instances on a single machine
 
+mod heartbeat; // TEAM-292: Re-enabled hive heartbeat
 mod http;
 mod job_router;
 mod narration;
@@ -39,6 +40,16 @@ struct Args {
     /// HTTP server port
     #[arg(short, long, default_value = "9000")]
     port: u16,
+    
+    /// Queen URL for heartbeat reporting
+    /// TEAM-292: Added to enable hive heartbeat
+    #[arg(long, default_value = "http://localhost:8500")]
+    queen_url: String,
+    
+    /// Hive ID (alias)
+    /// TEAM-292: Added to identify this hive
+    #[arg(long, default_value = "localhost")]
+    hive_id: String,
 }
 
 #[tokio::main]
@@ -84,12 +95,39 @@ async fn main() -> anyhow::Result<()> {
     // TEAM-274: Added worker_catalog to state
     let job_state = http::jobs::HiveState { registry: job_registry, model_catalog, worker_catalog };
 
+    // ============================================================
+    // BUG FIX: TEAM-291 | Fixed Axum routing panic on startup
+    // ============================================================
+    // SUSPICION:
+    // - TEAM-290 reported hive crashes immediately after spawn
+    // - Error: "Path segments must not start with `:`. For capture groups, use `{capture}`"
+    //
+    // INVESTIGATION:
+    // - Checked Axum version in Cargo.toml - using 0.7.x
+    // - Found line 92 using old Axum 0.6 syntax `:job_id`
+    // - Axum 0.7+ requires new syntax `{job_id}`
+    //
+    // ROOT CAUSE:
+    // - Route pattern used old Axum 0.6 syntax (`:job_id`)
+    // - Axum 0.7+ requires curly braces (`{job_id}`)
+    // - This caused panic on router creation, before HTTP server started
+    //
+    // FIX:
+    // - Changed `:job_id` to `{job_id}` in route pattern
+    // - Now compatible with Axum 0.7+
+    //
+    // TESTING:
+    // - ./rbee hive start - SUCCESS (no crash)
+    // - pgrep -f rbee-hive - SUCCESS (process running)
+    // - curl http://localhost:9000/health - SUCCESS (returns "ok")
+    // ============================================================
+    
     // Create router with health, capabilities, and job endpoints
     let app = Router::new()
         .route("/health", get(health_check))
         .route("/capabilities", get(get_capabilities))
         .route("/v1/jobs", post(http::jobs::handle_create_job))
-        .route("/v1/jobs/:job_id/stream", get(http::jobs::handle_stream_job))
+        .route("/v1/jobs/{job_id}/stream", get(http::jobs::handle_stream_job)) // TEAM-291: Fixed :job_id → {job_id}
         .with_state(job_state);
 
     let addr = SocketAddr::from(([127, 0, 0, 1], args.port));
@@ -105,6 +143,26 @@ async fn main() -> anyhow::Result<()> {
 
     // TEAM-202: Narrate ready state
     NARRATE.action(ACTION_READY).human("✅ Hive ready").emit();
+
+    // TEAM-292: Start heartbeat task to send status to queen
+    // Create HiveInfo with this hive's details
+    let hive_info = hive_contract::HiveInfo {
+        id: args.hive_id.clone(),
+        hostname: "127.0.0.1".to_string(),
+        port: args.port,
+        operational_status: hive_contract::OperationalStatus::Ready,
+        health_status: hive_contract::HealthStatus::Healthy,
+        version: env!("CARGO_PKG_VERSION").to_string(),
+    };
+    
+    // Start heartbeat task (runs in background)
+    let _heartbeat_handle = heartbeat::start_heartbeat_task(hive_info, args.queen_url.clone());
+    
+    NARRATE
+        .action("heartbeat_start")
+        .context(&args.queen_url)
+        .human("💓 Heartbeat task started (sending to {})")
+        .emit();
 
     axum::serve(listener, app).await?;
 

@@ -40,6 +40,9 @@ pub async fn submit_and_stream_job(queen_url: &str, operation: Operation) -> Res
 
     // Ensure queen is running
     let queen_handle = ensure_queen_running(queen_url).await?;
+    
+    // TEAM-292: Use discovered queen URL from handle (may differ from input)
+    let discovered_queen_url = queen_handle.base_url();
 
     // TEAM-186: Extract metadata before moving operation
     let operation_name = operation.name();
@@ -55,10 +58,11 @@ pub async fn submit_and_stream_job(queen_url: &str, operation: Operation) -> Res
 
     // TEAM-205: Wrap SSE streaming with 30-second timeout
     // This prevents hanging forever if queen stops responding
+    // TEAM-292: Use discovered queen URL
     let stream_result = TimeoutEnforcer::new(Duration::from_secs(30))
         .with_label("Streaming job results")
         .silent() // Don't show countdown - narration provides feedback
-        .enforce(stream_job_results(queen_url, operation, operation_name, hive_id))
+        .enforce(stream_job_results(discovered_queen_url, operation, operation_name, hive_id))
         .await;
 
     // Cleanup queen handle

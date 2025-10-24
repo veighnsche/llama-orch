@@ -1,11 +1,11 @@
-import type { Meta, StoryObj } from '@storybook/react'
-import { TestimonialCard } from './TestimonialCard'
+import type { Meta, StoryObj } from "@storybook/react";
+import { TestimonialCard } from "./TestimonialCard";
 
 const meta: Meta<typeof TestimonialCard> = {
-  title: 'Molecules/TestimonialCard',
+  title: "Molecules/TestimonialCard",
   component: TestimonialCard,
   parameters: {
-    layout: 'padded',
+    layout: "padded",
     docs: {
       description: {
         component: `
@@ -41,91 +41,93 @@ Used in:
       },
     },
   },
-  tags: ['autodocs'],
+  tags: ["autodocs"],
   argTypes: {
     name: {
-      control: 'text',
+      control: "text",
       description: "Person's name",
       table: {
-        type: { summary: 'string' },
-        category: 'Content',
+        type: { summary: "string" },
+        category: "Content",
       },
     },
     role: {
-      control: 'text',
+      control: "text",
       description: "Person's role",
       table: {
-        type: { summary: 'string' },
-        category: 'Content',
+        type: { summary: "string" },
+        category: "Content",
       },
     },
     quote: {
-      control: 'text',
-      description: 'Testimonial quote',
+      control: "text",
+      description: "Testimonial quote",
       table: {
-        type: { summary: 'string' },
-        category: 'Content',
+        type: { summary: "string" },
+        category: "Content",
       },
     },
     verified: {
-      control: 'boolean',
-      description: 'Show verified badge',
+      control: "boolean",
+      description: "Show verified badge",
       table: {
-        type: { summary: 'boolean' },
-        category: 'Appearance',
+        type: { summary: "boolean" },
+        category: "Appearance",
       },
     },
     rating: {
-      control: { type: 'select', options: [1, 2, 3, 4, 5] },
-      description: 'Star rating (1-5)',
+      control: { type: "select", options: [1, 2, 3, 4, 5] },
+      description: "Star rating (1-5)",
       table: {
-        type: { summary: '1 | 2 | 3 | 4 | 5' },
-        category: 'Content',
+        type: { summary: "1 | 2 | 3 | 4 | 5" },
+        category: "Content",
       },
     },
   },
-}
+};
 
-export default meta
-type Story = StoryObj<typeof TestimonialCard>
+export default meta;
+type Story = StoryObj<typeof TestimonialCard>;
 
 export const Default: Story = {
   args: {
-    name: 'Dr. Sarah van den Berg',
-    role: 'Chief Data Officer',
+    name: "Dr. Sarah van den Berg",
+    role: "Chief Data Officer",
     quote:
-      'rbee allows us to process patient data with complete GDPR compliance. The Dutch data sovereignty gives us peace of mind that no patient information ever leaves the Netherlands.',
+      "rbee allows us to process patient data with complete GDPR compliance. The Dutch data sovereignty gives us peace of mind that no patient information ever leaves the Netherlands.",
     verified: true,
     rating: 5,
   },
-}
+};
 
 export const WithAvatar: Story = {
   args: {
-    name: 'Emma Jansen',
-    role: 'Legal Counsel',
+    name: "Emma Jansen",
+    role: "Legal Counsel",
     quote:
-      'The GDPR compliance documentation is thorough and well-maintained. We can confidently use rbee for processing sensitive legal documents.',
-    avatar: '👩‍⚖️',
-    company: { name: 'Jansen & Partners Advocaten' },
+      "The GDPR compliance documentation is thorough and well-maintained. We can confidently use rbee for processing sensitive legal documents.",
+    avatar: "👩‍⚖️",
+    company: { name: "Jansen & Partners Advocaten" },
     verified: true,
     rating: 5,
   },
-}
+};
 
 export const WithRating: Story = {
   render: () => (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl">
       <TestimonialCard
+        role="Software Engineer"
         name="Jan Bakker"
         quote="Outstanding service. The performance is incredible and the support team is very responsive."
-        company={{ name: 'FinTech Startup' }}
+        company={{ name: "FinTech Startup" }}
         rating={5}
       />
       <TestimonialCard
+        role="Software Engineer"
         name="Lisa Vermeer"
         quote="Great platform overall. Setup was straightforward and documentation is clear."
-        company={{ name: 'Tech Company' }}
+        company={{ name: "Tech Company" }}
         rating={4}
       />
     </div>
@@ -133,27 +135,31 @@ export const WithRating: Story = {
   parameters: {
     docs: {
       description: {
-        story: 'Testimonials with different star ratings.',
+        story: "Testimonials with different star ratings.",
       },
     },
   },
-}
+};
 
 export const InRailContext: Story = {
   render: () => (
     <div className="w-full">
       <div className="mb-6 text-center">
         <h2 className="text-3xl font-bold mb-2">What Our Customers Say</h2>
-        <p className="text-muted-foreground">Trusted by enterprises and developers across the Netherlands</p>
+        <p className="text-muted-foreground">
+          Trusted by enterprises and developers across the Netherlands
+        </p>
       </div>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <TestimonialCard
+          role="Data Scientist"
           name="Dr. Sarah van den Berg"
           quote="rbee allows us to process patient data with complete GDPR compliance. The Dutch data sovereignty gives us peace of mind that no patient information ever leaves the Netherlands."
           verified
           rating={5}
         />
         <TestimonialCard
+          role="Gamer"
           name="Mark de Vries"
           quote="I earn €150-200/month by sharing my gaming PC when I'm not using it. Setup took 10 minutes, and payments are automatic."
           highlight="€150-200/mo"
@@ -161,9 +167,10 @@ export const InRailContext: Story = {
           rating={5}
         />
         <TestimonialCard
+          role="Software Engineer"
           name="Peter Smit"
           quote="The API is well-designed and the SDK makes integration easy. Excellent developer experience."
-          company={{ name: 'Government Agency' }}
+          company={{ name: "Government Agency" }}
           rating={5}
         />
       </div>
@@ -172,8 +179,9 @@ export const InRailContext: Story = {
   parameters: {
     docs: {
       description: {
-        story: 'TestimonialCard as used in TestimonialsRail, showing multiple testimonials in a grid.',
+        story:
+          "TestimonialCard as used in TestimonialsRail, showing multiple testimonials in a grid.",
       },
     },
   },
-}
+};

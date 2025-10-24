@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 // TEAM-288: Import order matches commercial app - app CSS first, then UI CSS
 import './globals.css';
 import '@rbee/ui/styles.css';
+import { ThemeProvider } from 'next-themes';
 
 export const metadata: Metadata = {
   title: 'rbee Web UI',
@@ -15,7 +16,11 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body>{children}</body>
+      <body>
+        <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+          {children}
+        </ThemeProvider>
+      </body>
     </html>
   );
 }

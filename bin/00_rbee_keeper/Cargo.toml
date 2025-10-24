@@ -41,9 +41,10 @@ observability-narration-core = { path = "../99_shared_crates/narration-core" }
 daemon-lifecycle = { path = "../99_shared_crates/daemon-lifecycle" }
 timeout-enforcer = { path = "../99_shared_crates/timeout-enforcer" }
 operations-contract = { path = "../97_contracts/operations-contract" }  # TEAM-186/284: Operations contract
-rbee-config = { path = "../99_shared_crates/rbee-config" }  # TEAM-195: For preflight validation
+# TEAM-290: DELETED rbee-config dependency (file-based config deprecated)
 job-client = { path = "../99_shared_crates/job-client" }  # TEAM-259: Shared job submission client
 queen-lifecycle = { path = "../05_rbee_keeper_crates/queen-lifecycle" }  # TEAM-259: Queen lifecycle management
+hive-lifecycle = { path = "../05_rbee_keeper_crates/hive-lifecycle" }  # TEAM-290: Hive lifecycle management (SSH + local)
 
 [dev-dependencies]
 # Add dev dependencies as needed

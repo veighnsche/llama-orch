@@ -73,8 +73,24 @@ impl HeartbeatMonitor {
         open_closure.forget();
 
         // TEAM-288: Add error event listener
-        let error_closure = Closure::wrap(Box::new(move |event: web_sys::Event| {
-            web_sys::console::error_1(&JsValue::from_str(&format!("🐝 [SDK] SSE ERROR: {:?}", event)));
+        // TEAM-XXX: Improved error handling - Event object doesn't contain useful error details
+        // We need to check EventSource readyState and provide context
+        let es_for_error = event_source.clone();
+        let error_closure = Closure::wrap(Box::new(move |_event: web_sys::Event| {
+            let ready_state = es_for_error.ready_state();
+            let state_str = match ready_state {
+                0 => "CONNECTING",
+                1 => "OPEN",
+                2 => "CLOSED",
+                _ => "UNKNOWN",
+            };
+            
+            // SSE errors are typically connection failures
+            // The browser will automatically retry, so this is informational
+            web_sys::console::warn_1(&JsValue::from_str(&format!(
+                "🐝 [SDK] SSE connection error (state: {} [{}]). Browser will retry automatically.",
+                state_str, ready_state
+            )));
         }) as Box<dyn FnMut(web_sys::Event)>);
         event_source.add_event_listener_with_callback("error", error_closure.as_ref().unchecked_ref())?;
         error_closure.forget();
