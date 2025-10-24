@@ -85,10 +85,7 @@ impl Default for HealthPollConfig {
 impl HealthPollConfig {
     /// Create a new config with just the base URL
     pub fn new(base_url: impl Into<String>) -> Self {
-        Self {
-            base_url: base_url.into(),
-            ..Default::default()
-        }
+        Self { base_url: base_url.into(), ..Default::default() }
     }
 
     /// Set the health endpoint
@@ -191,7 +188,10 @@ pub async fn poll_until_healthy(config: HealthPollConfig) -> anyhow::Result<()> 
             NARRATE
                 .action("daemon_poll_retry")
                 .context(format!("{}/{}", attempt, config.max_attempts))
-                .human(format!("🔄 Attempt {}/{}, retrying in {}ms...", attempt, config.max_attempts, delay_ms))
+                .human(format!(
+                    "🔄 Attempt {}/{}, retrying in {}ms...",
+                    attempt, config.max_attempts, delay_ms
+                ))
                 .maybe_job_id(config.job_id.as_deref())
                 .emit();
 
@@ -204,7 +204,10 @@ pub async fn poll_until_healthy(config: HealthPollConfig) -> anyhow::Result<()> 
     NARRATE
         .action("daemon_not_healthy")
         .context(&config.base_url)
-        .human(format!("❌ {} failed to become healthy after {} attempts", daemon_name, config.max_attempts))
+        .human(format!(
+            "❌ {} failed to become healthy after {} attempts",
+            daemon_name, config.max_attempts
+        ))
         .error_kind("health_timeout")
         .maybe_job_id(config.job_id.as_deref())
         .emit_error();

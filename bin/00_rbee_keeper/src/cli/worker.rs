@@ -18,7 +18,6 @@ pub enum WorkerAction {
 
     // TEAM-278: DELETED WorkerBinaryAction subcommand
     // Worker binary management (download, build, list, get, delete) is now handled by PackageSync
-
     /// Worker process management (local ps on hive)
     #[command(subcommand)]
     Process(WorkerProcessAction),

@@ -136,8 +136,8 @@ pub async fn start_http_daemon(config: HttpDaemonConfig) -> Result<Child> {
     let child = manager.spawn().await?;
 
     // Step 2: Poll until healthy
-    let mut health_config = HealthPollConfig::new(&config.health_url)
-        .with_daemon_name(&config.daemon_name);
+    let mut health_config =
+        HealthPollConfig::new(&config.health_url).with_daemon_name(&config.daemon_name);
 
     if let Some(attempts) = config.max_health_attempts {
         health_config = health_config.with_max_attempts(attempts);
@@ -186,11 +186,8 @@ pub async fn start_http_daemon(config: HttpDaemonConfig) -> Result<Child> {
 /// # }
 /// ```
 pub async fn stop_http_daemon(config: HttpDaemonConfig) -> Result<()> {
-    let shutdown_config = ShutdownConfig::new(
-        config.daemon_name,
-        config.health_url,
-        config.shutdown_endpoint,
-    );
+    let shutdown_config =
+        ShutdownConfig::new(config.daemon_name, config.health_url, config.shutdown_endpoint);
 
     let shutdown_config = if let Some(job_id) = config.job_id {
         shutdown_config.with_job_id(job_id)

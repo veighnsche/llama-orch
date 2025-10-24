@@ -766,9 +766,11 @@ impl NarrationFactory {
     /// JOB.action("hive_check").human("Checking status").emit();
     /// ```
     pub fn with_job_id(&self, job_id: impl Into<String>) -> Narration {
-        let mut fields = NarrationFields::default();
-        fields.actor = self.actor;
-        fields.job_id = Some(job_id.into());
+        let fields = NarrationFields {
+            actor: self.actor,
+            job_id: Some(job_id.into()),
+            ..Default::default()
+        };
 
         Narration { fields, context_values: Vec::new() }
     }

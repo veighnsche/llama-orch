@@ -4,7 +4,9 @@
 //! TEAM-276: Refactored to use daemon-lifecycle::ensure_daemon_with_handle
 
 use anyhow::{Context, Result};
-use daemon_lifecycle::{ensure_daemon_with_handle, poll_until_healthy, DaemonManager, HealthPollConfig};
+use daemon_lifecycle::{
+    ensure_daemon_with_handle, poll_until_healthy, DaemonManager, HealthPollConfig,
+};
 use observability_narration_core::NarrationFactory;
 use rbee_config::RbeeConfig;
 use std::time::Duration;
@@ -49,7 +51,7 @@ pub async fn ensure_queen_running(base_url: &str) -> Result<QueenHandle> {
 async fn ensure_queen_running_inner(base_url: &str) -> Result<QueenHandle> {
     // TEAM-276: Use shared ensure pattern from daemon-lifecycle
     let health_url = format!("{}/health", base_url);
-    
+
     ensure_daemon_with_handle(
         "queen-rbee",
         &health_url,
@@ -138,16 +140,11 @@ async fn spawn_queen_with_preflight(base_url: &str) -> Result<()> {
 
     let child = manager.spawn().await.context("Failed to spawn queen-rbee process")?;
 
-    NARRATE
-        .action("queen_spawned")
-        .human("Queen-rbee process spawned, polling health...")
-        .emit();
+    NARRATE.action("queen_spawned").human("Queen-rbee process spawned, polling health...").emit();
 
     // Step 4: Poll health until ready
     poll_until_healthy(
-        HealthPollConfig::new(base_url)
-            .with_daemon_name("queen-rbee")
-            .with_max_attempts(30)
+        HealthPollConfig::new(base_url).with_daemon_name("queen-rbee").with_max_attempts(30),
     )
     .await
     .context("Queen failed to become healthy within timeout")?;

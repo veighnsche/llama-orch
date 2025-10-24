@@ -7,7 +7,11 @@
 .gitignore
 
 # Rust build outputs
-**/target/
+# TEMPORARILY COMMENTED FOR DOCKER TESTS - they need target/debug/ binaries
+# **/target/
+target/release/
+target/doc/
+target/tmp/
 
 # Node/Frontend artifacts
 **/node_modules/

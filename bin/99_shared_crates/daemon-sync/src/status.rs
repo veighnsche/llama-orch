@@ -75,14 +75,14 @@ pub async fn check_status(
     NARRATE
         .action("status_check")
         .job_id(job_id)
-        .context(&config.hives.len().to_string())
+        .context(config.hives.len().to_string())
         .human("🔍 Checking status for {} hives")
         .emit();
 
     // Query actual state
-    // TODO: Implement actual state query (for now, assume nothing installed)
-    let actual_hives: Vec<String> = Vec::new();
-    let actual_workers: Vec<(String, Vec<String>)> = Vec::new();
+    // TEAM-281: Implemented state query (was TODO)
+    let actual_hives = super::query::query_installed_hives(&config.hives, job_id).await?;
+    let actual_workers = super::query::query_installed_workers(&config.hives, job_id).await?;
 
     // Compute diff
     let diff = compute_diff(&config.hives, &actual_hives, &actual_workers, true);
@@ -115,7 +115,10 @@ pub async fn check_status(
                 drift.push(DriftItem {
                     hive: hive_alias.clone(),
                     issue: "missing_worker".to_string(),
-                    details: format!("Worker '{}' not installed on '{}'", worker.worker_type, hive_alias),
+                    details: format!(
+                        "Worker '{}' not installed on '{}'",
+                        worker.worker_type, hive_alias
+                    ),
                 });
             }
         }
@@ -132,11 +135,7 @@ pub async fn check_status(
         }
     }
 
-    let status = if diff.has_changes() {
-        "drift_detected".to_string()
-    } else {
-        "ok".to_string()
-    };
+    let status = if diff.has_changes() { "drift_detected".to_string() } else { "ok".to_string() };
 
     let report = StatusReport {
         status: status.clone(),
@@ -149,12 +148,7 @@ pub async fn check_status(
         drift,
     };
 
-    NARRATE
-        .action("status_result")
-        .job_id(job_id)
-        .context(&status)
-        .human("📊 Status: {}")
-        .emit();
+    NARRATE.action("status_result").job_id(job_id).context(&status).human("📊 Status: {}").emit();
 
     Ok(report)
 }

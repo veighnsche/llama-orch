@@ -68,7 +68,7 @@ async fn ensure_hive_running_inner(
     job_id: &str,
 ) -> Result<HiveHandle> {
     // TEAM-276: Use shared ensure pattern from daemon-lifecycle
-    
+
     // Step 1: Get hive configuration
     let all_hives = &config.hives.hives;
     let hive_config = all_hives
@@ -84,17 +84,14 @@ async fn ensure_hive_running_inner(
     let endpoint = hive_endpoint.clone();
     let cfg = config.clone();
     let jid = job_id.to_string();
-    
+
     ensure_daemon_with_handle(
         hive_alias,
         &health_url,
         Some(job_id),
         || async move {
             // Spawn logic: start hive via SSH or local
-            let start_request = HiveStartRequest {
-                alias: alias.clone(),
-                job_id: jid.clone(),
-            };
+            let start_request = HiveStartRequest { alias: alias.clone(), job_id: jid.clone() };
             execute_hive_start(start_request, cfg).await?;
             Ok(())
         },

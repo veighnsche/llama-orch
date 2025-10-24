@@ -69,10 +69,7 @@ pub async fn install_queen(binary: Option<String>) -> Result<()> {
         .context(install_path.display().to_string())
         .human("📍 Binary location: {}")
         .emit();
-    NARRATE
-        .action("queen_install")
-        .human("💡 Make sure ~/.local/bin is in your PATH")
-        .emit();
+    NARRATE.action("queen_install").human("💡 Make sure ~/.local/bin is in your PATH").emit();
 
     Ok(())
 }

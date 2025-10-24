@@ -180,9 +180,7 @@ mod tests {
 
     #[test]
     fn test_validate_valid_hive() {
-        let hives = HivesConfig {
-            hives: vec![create_test_hive("test")],
-        };
+        let hives = HivesConfig { hives: vec![create_test_hive("test")] };
 
         let result = validate_hives_config(&hives);
         assert!(result.is_valid());
@@ -194,9 +192,7 @@ mod tests {
         let mut invalid_hive = create_test_hive("invalid");
         invalid_hive.hostname = "".to_string();
         invalid_hive.ssh_port = 0;
-        let hives = HivesConfig {
-            hives: vec![invalid_hive],
-        };
+        let hives = HivesConfig { hives: vec![invalid_hive] };
 
         let result = validate_hives_config(&hives);
         assert!(!result.is_valid());
@@ -208,9 +204,7 @@ mod tests {
         let mut hive = create_test_hive("test");
         hive.ssh_port = 8081;
         hive.hive_port = 8081;
-        let hives = HivesConfig {
-            hives: vec![hive],
-        };
+        let hives = HivesConfig { hives: vec![hive] };
 
         let result = validate_hives_config(&hives);
         assert!(result.is_valid()); // Valid but has warning
@@ -219,12 +213,8 @@ mod tests {
 
     #[test]
     fn test_validate_capabilities_sync() {
-        let hives = HivesConfig {
-            hives: vec![
-                create_test_hive("hive1"),
-                create_test_hive("hive2"),
-            ],
-        };
+        let hives =
+            HivesConfig { hives: vec![create_test_hive("hive1"), create_test_hive("hive2")] };
 
         let mut cap_map = HashMap::new();
         cap_map.insert(
@@ -248,9 +238,7 @@ mod tests {
 
     #[test]
     fn test_preflight_validation() {
-        let hives = HivesConfig {
-            hives: vec![create_test_hive("test")],
-        };
+        let hives = HivesConfig { hives: vec![create_test_hive("test")] };
 
         let capabilities = CapabilitiesCache::from_map(
             std::path::PathBuf::new(),
@@ -268,9 +256,7 @@ mod tests {
     fn test_validate_zero_ssh_port() {
         let mut hive = create_test_hive("test");
         hive.ssh_port = 0; // Invalid port
-        let hives = HivesConfig {
-            hives: vec![hive],
-        };
+        let hives = HivesConfig { hives: vec![hive] };
 
         let result = validate_hives_config(&hives);
         assert!(!result.is_valid());
@@ -281,9 +267,7 @@ mod tests {
     fn test_validate_zero_hive_port() {
         let mut hive = create_test_hive("test");
         hive.hive_port = 0; // Invalid port
-        let hives = HivesConfig {
-            hives: vec![hive],
-        };
+        let hives = HivesConfig { hives: vec![hive] };
 
         let result = validate_hives_config(&hives);
         assert!(!result.is_valid());

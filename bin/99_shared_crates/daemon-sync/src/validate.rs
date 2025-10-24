@@ -63,7 +63,7 @@ pub async fn validate_config(config: HivesConfig, job_id: &str) -> Result<Valida
     NARRATE
         .action("validate_start")
         .job_id(job_id)
-        .context(&config.hives.len().to_string())
+        .context(config.hives.len().to_string())
         .human("🔍 Validating config with {} hives")
         .emit();
 
@@ -185,16 +185,12 @@ pub async fn validate_config(config: HivesConfig, job_id: &str) -> Result<Valida
         .action("validate_result")
         .job_id(job_id)
         .context(status)
-        .context(&errors.len().to_string())
-        .context(&warnings.len().to_string())
+        .context(errors.len().to_string())
+        .context(warnings.len().to_string())
         .human("📊 Validation {}: {} errors, {} warnings")
         .emit();
 
-    Ok(ValidationReport {
-        status: status.to_string(),
-        warnings,
-        errors,
-    })
+    Ok(ValidationReport { status: status.to_string(), warnings, errors })
 }
 
 /// Check SSH connectivity to a hive
@@ -294,7 +290,7 @@ async fn check_worker_binary_exists(
         .map_err(|e| anyhow::anyhow!("SSH connection failed: {}", e))?;
 
     let binary_name = format!("rbee-worker-{}", worker_type);
-    
+
     // Check multiple possible locations
     let check_cmd = format!(
         "test -f ~/.local/share/rbee/workers/{} || test -f /usr/local/bin/{} || which {}",

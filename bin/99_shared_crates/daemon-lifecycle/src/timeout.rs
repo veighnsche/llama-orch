@@ -23,11 +23,7 @@ pub struct TimeoutConfig {
 impl TimeoutConfig {
     /// Create a new timeout config
     pub fn new(operation_name: impl Into<String>, timeout: Duration) -> Self {
-        Self {
-            operation_name: operation_name.into(),
-            timeout,
-            job_id: None,
-        }
+        Self { operation_name: operation_name.into(), timeout, job_id: None }
     }
 
     /// Set the job_id for narration routing
@@ -75,8 +71,7 @@ pub async fn with_timeout<F, T>(config: TimeoutConfig, operation: F) -> Result<T
 where
     F: std::future::Future<Output = Result<T>>,
 {
-    let mut enforcer = TimeoutEnforcer::new(config.timeout)
-        .with_label(&config.operation_name);
+    let mut enforcer = TimeoutEnforcer::new(config.timeout).with_label(&config.operation_name);
 
     if let Some(ref job_id) = config.job_id {
         enforcer = enforcer.with_job_id(job_id);
@@ -104,9 +99,5 @@ pub async fn timeout_after<F, T>(timeout: Duration, operation: F) -> Result<T>
 where
     F: std::future::Future<Output = Result<T>>,
 {
-    with_timeout(
-        TimeoutConfig::new("operation", timeout),
-        operation,
-    )
-    .await
+    with_timeout(TimeoutConfig::new("operation", timeout), operation).await
 }

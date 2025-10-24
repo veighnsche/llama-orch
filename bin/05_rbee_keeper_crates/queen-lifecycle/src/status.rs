@@ -19,9 +19,7 @@ const NARRATE: NarrationFactory = NarrationFactory::new("queen-life");
 /// * `Err` - Error during status check
 pub async fn check_queen_status(queen_url: &str) -> Result<()> {
     // TEAM-186: Check queen-rbee health endpoint
-    let client = reqwest::Client::builder()
-        .timeout(tokio::time::Duration::from_secs(5))
-        .build()?;
+    let client = reqwest::Client::builder().timeout(tokio::time::Duration::from_secs(5)).build()?;
 
     match client.get(format!("{}/health", queen_url)).send().await {
         Ok(response) if response.status().is_success() => {

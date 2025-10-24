@@ -59,7 +59,7 @@ pub async fn uninstall_worker(job_id: &str, worker_type: &str) -> Result<()> {
 
     // NOTE: Worker binaries are managed by worker-catalog
     // This is a stub that would remove the binary from the catalog
-    
+
     NARRATE
         .action("worker_uninstall_stub")
         .job_id(job_id)

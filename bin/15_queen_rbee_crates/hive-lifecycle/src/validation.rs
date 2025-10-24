@@ -23,6 +23,7 @@ pub fn validate_hive_exists<'a>(config: &'a RbeeConfig, alias: &str) -> Result<&
             ssh_user: "user".to_string(),
             hive_port: 9000,
             binary_path: Some("target/debug/rbee-hive".to_string()),
+            install_method: Default::default(), // Use default git installation
             workers: Vec::new(), // TEAM-280: No workers for localhost default
             auto_start: false,   // TEAM-280: Don't auto-start localhost
         });

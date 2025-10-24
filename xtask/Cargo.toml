@@ -42,3 +42,5 @@ auto-update = { path = "../bin/99_shared_crates/auto-update" }
 # TEAM-252: Integration testing dependencies
 tempfile = "3.8"
 futures = "0.3"
+# TEAM-281: Real SSH testing for Docker tests
+queen-rbee-ssh-client = { path = "../bin/15_queen_rbee_crates/ssh-client" }

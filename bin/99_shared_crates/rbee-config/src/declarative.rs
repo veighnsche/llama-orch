@@ -177,15 +177,15 @@ pub struct WorkerConfig {
 }
 
 // Default value functions for serde
-fn default_ssh_port() -> u16 {
+const fn default_ssh_port() -> u16 {
     22
 }
 
-fn default_hive_port() -> u16 {
+const fn default_hive_port() -> u16 {
     8600
 }
 
-fn default_true() -> bool {
+const fn default_true() -> bool {
     true
 }
 
@@ -220,9 +220,8 @@ impl HivesConfig {
         let content = std::fs::read_to_string(path)
             .map_err(|e| ConfigError::ReadError { path: path.to_path_buf(), source: e })?;
 
-        let config: Self = toml::from_str(&content).map_err(|e| ConfigError::InvalidConfig(
-            format!("Failed to parse TOML: {}", e),
-        ))?;
+        let config: Self = toml::from_str(&content)
+            .map_err(|e| ConfigError::InvalidConfig(format!("Failed to parse TOML: {}", e)))?;
 
         Ok(config)
     }
@@ -249,9 +248,8 @@ impl HivesConfig {
     /// - File cannot be written
     /// - TOML serialization fails
     pub fn save_to(&self, path: &Path) -> Result<()> {
-        let content = toml::to_string_pretty(self).map_err(|e| {
-            ConfigError::InvalidConfig(format!("Failed to serialize TOML: {}", e))
-        })?;
+        let content = toml::to_string_pretty(self)
+            .map_err(|e| ConfigError::InvalidConfig(format!("Failed to serialize TOML: {}", e)))?;
 
         std::fs::write(path, content)
             .map_err(|e| ConfigError::ReadError { path: path.to_path_buf(), source: e })?;
@@ -313,12 +311,12 @@ impl HivesConfig {
     }
 
     /// Check if empty
-    pub fn is_empty(&self) -> bool {
+    pub const fn is_empty(&self) -> bool {
         self.hives.is_empty()
     }
 
     /// Number of hives
-    pub fn len(&self) -> usize {
+    pub const fn len(&self) -> usize {
         self.hives.len()
     }
 
@@ -357,29 +355,33 @@ impl HiveConfig {
 
         // Check hostname
         if self.hostname.is_empty() {
-            return Err(ConfigError::InvalidConfig(
-                format!("Hive '{}': hostname cannot be empty", self.alias),
-            ));
+            return Err(ConfigError::InvalidConfig(format!(
+                "Hive '{}': hostname cannot be empty",
+                self.alias
+            )));
         }
 
         // Check SSH user
         if self.ssh_user.is_empty() {
-            return Err(ConfigError::InvalidConfig(
-                format!("Hive '{}': ssh_user cannot be empty", self.alias),
-            ));
+            return Err(ConfigError::InvalidConfig(format!(
+                "Hive '{}': ssh_user cannot be empty",
+                self.alias
+            )));
         }
 
         // Check ports
         if self.ssh_port == 0 {
-            return Err(ConfigError::InvalidConfig(
-                format!("Hive '{}': ssh_port cannot be 0", self.alias),
-            ));
+            return Err(ConfigError::InvalidConfig(format!(
+                "Hive '{}': ssh_port cannot be 0",
+                self.alias
+            )));
         }
 
         if self.hive_port == 0 {
-            return Err(ConfigError::InvalidConfig(
-                format!("Hive '{}': hive_port cannot be 0", self.alias),
-            ));
+            return Err(ConfigError::InvalidConfig(format!(
+                "Hive '{}': hive_port cannot be 0",
+                self.alias
+            )));
         }
 
         // Validate workers
@@ -406,15 +408,17 @@ impl WorkerConfig {
     /// - Version is empty
     pub fn validate(&self, hive_alias: &str) -> Result<()> {
         if self.worker_type.is_empty() {
-            return Err(ConfigError::InvalidConfig(
-                format!("Hive '{}': worker type cannot be empty", hive_alias),
-            ));
+            return Err(ConfigError::InvalidConfig(format!(
+                "Hive '{}': worker type cannot be empty",
+                hive_alias
+            )));
         }
 
         if self.version.is_empty() {
-            return Err(ConfigError::InvalidConfig(
-                format!("Hive '{}': worker version cannot be empty", hive_alias),
-            ));
+            return Err(ConfigError::InvalidConfig(format!(
+                "Hive '{}': worker version cannot be empty",
+                hive_alias
+            )));
         }
 
         Ok(())

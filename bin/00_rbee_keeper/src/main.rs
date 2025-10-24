@@ -110,12 +110,9 @@ async fn handle_command(cli: Cli) -> Result<()> {
         // ========================================================================
         // PACKAGE MANAGER COMMANDS (TEAM-282)
         // ========================================================================
-        Commands::Sync {
-            dry_run,
-            remove_extra,
-            force,
-            hive,
-        } => handle_sync(&queen_url, dry_run, remove_extra, force, hive).await,
+        Commands::Sync { dry_run, remove_extra, force, hive } => {
+            handle_sync(&queen_url, dry_run, remove_extra, force, hive).await
+        }
 
         Commands::PackageStatus { verbose } => handle_package_status(&queen_url, verbose).await,
 

@@ -42,7 +42,6 @@ use clap::Subcommand;
 pub enum HiveAction {
     // TEAM-278: DELETED SshTest, Install, Uninstall
     // These are replaced by package commands (sync, install, uninstall)
-    
     /// List all hives
     List,
     /// Start a hive

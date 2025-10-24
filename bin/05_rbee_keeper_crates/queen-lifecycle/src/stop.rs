@@ -32,9 +32,8 @@ pub async fn stop_queen(queen_url: &str) -> Result<()> {
     }
 
     // Queen is running, send shutdown request
-    let shutdown_client = reqwest::Client::builder()
-        .timeout(tokio::time::Duration::from_secs(30))
-        .build()?;
+    let shutdown_client =
+        reqwest::Client::builder().timeout(tokio::time::Duration::from_secs(30)).build()?;
 
     match shutdown_client.post(format!("{}/v1/shutdown", queen_url)).send().await {
         Ok(_) => {

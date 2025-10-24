@@ -1,0 +1,52 @@
+version: '3.8'
+
+services:
+  queen:
+    build:
+      context: ../..
+      dockerfile: tests/docker/Dockerfile.queen
+    container_name: rbee-queen-localhost
+    hostname: queen
+    ports:
+      - "8500:8500"
+    networks:
+      rbee-test:
+        ipv4_address: 172.20.0.10
+    environment:
+      - RBEE_CONFIG_DIR=/home/rbee/.config/rbee
+      - RBEE_DATA_DIR=/home/rbee/.local/share/rbee
+      - RUST_LOG=debug
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8500/health"]
+      interval: 5s
+      timeout: 3s
+      retries: 3
+
+  hive-localhost:
+    build:
+      context: ../..
+      dockerfile: tests/docker/Dockerfile.hive
+    container_name: rbee-hive-localhost
+    hostname: hive-localhost
+    ports:
+      - "9000:9000"
+      - "2222:22"
+    networks:
+      rbee-test:
+        ipv4_address: 172.20.0.20
+    environment:
+      - RBEE_CONFIG_DIR=/home/rbee/.config/rbee
+      - RBEE_DATA_DIR=/home/rbee/.local/share/rbee
+      - RUST_LOG=debug
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/health"]
+      interval: 5s
+      timeout: 3s
+      retries: 3
+
+networks:
+  rbee-test:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16

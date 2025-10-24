@@ -19,9 +19,7 @@ const NARRATE: NarrationFactory = NarrationFactory::new("queen-life");
 /// * `Ok(())` - Build info retrieved (prints to stdout)
 /// * `Err` - Error during query
 pub async fn get_queen_info(queen_url: &str) -> Result<()> {
-    let client = reqwest::Client::builder()
-        .timeout(tokio::time::Duration::from_secs(5))
-        .build()?;
+    let client = reqwest::Client::builder().timeout(tokio::time::Duration::from_secs(5)).build()?;
 
     match client.get(format!("{}/v1/build-info", queen_url)).send().await {
         Ok(response) if response.status().is_success() => {

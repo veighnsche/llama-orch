@@ -3,7 +3,8 @@
 // Architecture: Custom test harness + state machine + chaos testing
 
 pub mod assertions;
-pub mod harness;
+pub mod docker_harness;
+pub mod harness; // Docker-based network testing
 
 #[cfg(test)]
 pub mod commands;

@@ -92,10 +92,8 @@ pub fn compute_diff(
 
     // Convert actual state to sets for easier lookup
     let actual_hive_set: std::collections::HashSet<_> = actual_hives.iter().collect();
-    let actual_worker_map: std::collections::HashMap<_, _> = actual_workers
-        .iter()
-        .map(|(alias, workers)| (alias.as_str(), workers))
-        .collect();
+    let actual_worker_map: std::collections::HashMap<_, _> =
+        actual_workers.iter().map(|(alias, workers)| (alias.as_str(), workers)).collect();
 
     // Check each desired hive
     for hive in desired {
@@ -187,6 +185,7 @@ mod tests {
             ssh_port: 22,
             hive_port: 8600,
             binary_path: None,
+            install_method: Default::default(),
             workers: vec![],
             auto_start: true,
         }];
@@ -206,6 +205,7 @@ mod tests {
             ssh_port: 22,
             hive_port: 8600,
             binary_path: None,
+            install_method: Default::default(),
             workers: vec![],
             auto_start: true,
         }];

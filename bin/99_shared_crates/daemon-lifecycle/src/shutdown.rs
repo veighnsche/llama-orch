@@ -91,12 +91,9 @@ impl ShutdownConfig {
 /// ```
 pub async fn graceful_shutdown(config: ShutdownConfig) -> Result<()> {
     // Step 1: Check if daemon is running
-    let is_running = crate::health::is_daemon_healthy(
-        &config.health_url,
-        None,
-        Some(Duration::from_secs(2)),
-    )
-    .await;
+    let is_running =
+        crate::health::is_daemon_healthy(&config.health_url, None, Some(Duration::from_secs(2)))
+            .await;
 
     if !is_running {
         // TEAM-276: Using .maybe_job_id() to reduce boilerplate
@@ -118,9 +115,7 @@ pub async fn graceful_shutdown(config: ShutdownConfig) -> Result<()> {
         .maybe_job_id(config.job_id.as_deref())
         .emit();
 
-    let shutdown_client = reqwest::Client::builder()
-        .timeout(Duration::from_secs(30))
-        .build()?;
+    let shutdown_client = reqwest::Client::builder().timeout(Duration::from_secs(30)).build()?;
 
     match shutdown_client.post(&config.shutdown_endpoint).send().await {
         Ok(_) => {
@@ -217,7 +212,7 @@ pub async fn force_shutdown(
             NARRATE
                 .action("daemon_sigterm_failed")
                 .context(e.to_string())
-                .human(format!("⚠️  Failed to send SIGTERM: {{}}", ))
+                .human(format!("⚠️  Failed to send SIGTERM: {{}}",))
                 .error_kind("sigterm_failed")
                 .maybe_job_id(job_id)
                 .emit();
@@ -246,7 +241,10 @@ pub async fn force_shutdown(
                 NARRATE
                     .action("daemon_sigkill")
                     .context(pid.to_string())
-                    .human(format!("⚠️  {} did not stop gracefully, sending SIGKILL (PID: {})", daemon_name, pid))
+                    .human(format!(
+                        "⚠️  {} did not stop gracefully, sending SIGKILL (PID: {})",
+                        daemon_name, pid
+                    ))
                     .maybe_job_id(job_id)
                     .emit();
 

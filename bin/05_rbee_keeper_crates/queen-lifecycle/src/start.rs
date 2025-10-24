@@ -25,16 +25,16 @@ const NARRATE: NarrationFactory = NarrationFactory::new("queen-life");
 /// * Returns error if queen fails health check
 pub async fn start_queen(queen_url: &str) -> Result<()> {
     let queen_handle = ensure_queen_running(queen_url).await?;
-    
+
     NARRATE
         .action("queen_start")
         .context(queen_handle.base_url())
         .human("✅ Queen started on {}")
         .emit();
-    
+
     // Keep queen alive - detach the handle
     // The queen process will continue running independently
     drop(queen_handle);
-    
+
     Ok(())
 }

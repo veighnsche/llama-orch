@@ -245,9 +245,8 @@ pub async fn uninstall_daemon(config: UninstallConfig) -> Result<()> {
     }
     narration.human("✅ Daemon '{}' uninstalled successfully!").emit();
 
-    let mut narration = NARRATE
-        .action("daemon_removed")
-        .context(config.install_path.display().to_string());
+    let mut narration =
+        NARRATE.action("daemon_removed").context(config.install_path.display().to_string());
     if let Some(ref job_id) = config.job_id {
         narration = narration.job_id(job_id);
     }

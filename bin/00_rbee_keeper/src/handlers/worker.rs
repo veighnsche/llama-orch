@@ -24,12 +24,7 @@ pub async fn handle_worker(hive_id: String, action: WorkerAction, queen_url: &st
                 (device.clone(), 0)
             };
 
-            Operation::WorkerSpawn {
-                hive_id,
-                model: model.clone(),
-                worker,
-                device: device_id,
-            }
+            Operation::WorkerSpawn { hive_id, model: model.clone(), worker, device: device_id }
         }
         // TEAM-278: DELETED WorkerAction::Binary match arm
         // Worker binary management is now handled by PackageSync

@@ -79,10 +79,7 @@ pub async fn install_hive_binary(hive: &HiveConfig, job_id: &str) -> Result<()> 
     client.close().await?;
 
     if exit_code != 0 {
-        return Err(anyhow::anyhow!(
-            "Hive binary verification failed: {}",
-            stderr
-        ));
+        return Err(anyhow::anyhow!("Hive binary verification failed: {}", stderr));
     }
 
     NARRATE
@@ -184,10 +181,7 @@ pub async fn install_worker_binary(
     client.close().await?;
 
     if exit_code != 0 {
-        return Err(anyhow::anyhow!(
-            "Worker binary verification failed: {}",
-            stderr
-        ));
+        return Err(anyhow::anyhow!("Worker binary verification failed: {}", stderr));
     }
 
     NARRATE
@@ -235,7 +229,7 @@ pub async fn install_all(hive: Arc<HiveConfig>, job_id: String) -> Result<()> {
             .action("install_workers")
             .job_id(&job_id)
             .context(&hive.alias)
-            .context(&hive.workers.len().to_string())
+            .context(hive.workers.len().to_string())
             .human("📦 Installing {} workers for '{}'")
             .emit();
 
@@ -329,10 +323,7 @@ async fn install_hive_from_git(
         .emit();
 
     // Build rbee-hive binary
-    let build_cmd = format!(
-        "cd {} && cargo build --release --bin rbee-hive",
-        clone_dir
-    );
+    let build_cmd = format!("cd {} && cargo build --release --bin rbee-hive", clone_dir);
 
     let (_, stderr, exit_code) = client.exec(&build_cmd).await?;
     if exit_code != 0 {
@@ -408,7 +399,7 @@ async fn install_worker_from_git(
         .context(worker_type)
         .context(alias)
         .human("🔨 Building worker '{}' for '{}' with features: {:?}")
-        .context(&format!("{:?}", features))
+        .context(format!("{:?}", features))
         .emit();
 
     // Build worker binary with features
@@ -471,10 +462,7 @@ async fn install_hive_from_release(
         .human("⬇️  Downloading hive release for '{}': {} @ {}")
         .emit();
 
-    let download_url = format!(
-        "https://github.com/{}/releases/download/{}/rbee-hive",
-        repo, tag
-    );
+    let download_url = format!("https://github.com/{}/releases/download/{}/rbee-hive", repo, tag);
 
     let download_cmd = format!(
         "curl -L {} -o ~/.local/bin/rbee-hive && chmod +x ~/.local/bin/rbee-hive",
@@ -511,23 +499,16 @@ async fn install_worker_from_release(
         .emit();
 
     let binary_name = format!("rbee-worker-{}", worker_type);
-    let download_url = format!(
-        "https://github.com/{}/releases/download/{}/{}",
-        repo, tag, binary_name
-    );
+    let download_url =
+        format!("https://github.com/{}/releases/download/{}/{}", repo, tag, binary_name);
 
     let target_path = format!("~/.local/share/rbee/workers/{}", binary_name);
-    let download_cmd = format!(
-        "curl -L {} -o {} && chmod +x {}",
-        download_url, target_path, target_path
-    );
+    let download_cmd =
+        format!("curl -L {} -o {} && chmod +x {}", download_url, target_path, target_path);
 
     let (_, stderr, exit_code) = client.exec(&download_cmd).await?;
     if exit_code != 0 {
-        return Err(anyhow::anyhow!(
-            "Failed to download worker release: {}",
-            stderr
-        ));
+        return Err(anyhow::anyhow!("Failed to download worker release: {}", stderr));
     }
 
     Ok(target_path)

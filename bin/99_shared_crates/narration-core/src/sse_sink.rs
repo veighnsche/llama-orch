@@ -46,7 +46,7 @@ use tokio::sync::mpsc;
 // TEAM-276: Extract magic numbers for maintainability
 
 /// Default channel capacity for job-scoped SSE streams
-/// 
+///
 /// TEAM-276: Currently unused but defined for future API improvements
 /// (e.g., create_job_channel_with_default_capacity). Kept for documentation.
 #[allow(dead_code)]

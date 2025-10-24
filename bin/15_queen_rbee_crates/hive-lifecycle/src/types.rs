@@ -178,20 +178,12 @@ pub struct HiveHandle {
 impl HiveHandle {
     /// Create handle for hive that was already running
     pub const fn already_running(alias: String, endpoint: String) -> Self {
-        Self {
-            started_by_us: false,
-            alias,
-            endpoint,
-        }
+        Self { started_by_us: false, alias, endpoint }
     }
 
     /// Create handle for hive that we just started
     pub const fn started_by_us(alias: String, endpoint: String) -> Self {
-        Self {
-            started_by_us: true,
-            alias,
-            endpoint,
-        }
+        Self { started_by_us: true, alias, endpoint }
     }
 
     /// Check if we started the hive (and should clean it up)

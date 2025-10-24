@@ -7,7 +7,7 @@
 
 use anyhow::Result;
 use observability_narration_core::NarrationFactory;
-use rbee_config::declarative::{HiveConfig, HivesConfig, WorkerConfig};
+use rbee_config::declarative::HivesConfig;
 use std::path::Path;
 
 const NARRATE: NarrationFactory = NarrationFactory::new("pkg-migr");
@@ -85,6 +85,7 @@ pub async fn migrate_to_config(output_path: &Path, job_id: &str) -> Result<()> {
 /// TEAM-280: Helper for migration
 ///
 /// TODO: Implement actual query logic
+#[allow(dead_code)]
 async fn _query_all_hives() -> Result<Vec<HiveInfo>> {
     // Placeholder
     Ok(Vec::new())
@@ -95,12 +96,14 @@ async fn _query_all_hives() -> Result<Vec<HiveInfo>> {
 /// TEAM-280: Helper for migration
 ///
 /// TODO: Implement actual query logic
+#[allow(dead_code)]
 async fn _query_hive_workers(_hive_alias: &str) -> Result<Vec<WorkerInfo>> {
     // Placeholder
     Ok(Vec::new())
 }
 
 /// Hive information from actual state
+#[allow(dead_code)]
 #[derive(Debug, Clone)]
 struct HiveInfo {
     alias: String,
@@ -111,6 +114,7 @@ struct HiveInfo {
 }
 
 /// Worker information from actual state
+#[allow(dead_code)]
 #[derive(Debug, Clone)]
 struct WorkerInfo {
     worker_type: String,

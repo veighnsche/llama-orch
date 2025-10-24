@@ -81,7 +81,7 @@ pub use declarative::{HiveConfig, HivesConfig, WorkerConfig};
 use std::path::{Path, PathBuf};
 
 /// Main configuration structure
-/// 
+///
 /// TEAM-278: BREAKING CHANGE - hives field now uses declarative::HivesConfig (Vec-based)
 /// instead of old SSH-style HivesConfig (HashMap-based)
 #[derive(Debug, Clone)]

@@ -178,7 +178,9 @@ pub mod timeout;
 pub use ensure::{ensure_daemon_running, ensure_daemon_with_handle};
 pub use get::{get_daemon, GettableConfig};
 pub use health::{is_daemon_healthy, poll_until_healthy, HealthPollConfig};
-pub use install::{install_daemon, uninstall_daemon, InstallConfig, InstallResult, UninstallConfig};
+pub use install::{
+    install_daemon, uninstall_daemon, InstallConfig, InstallResult, UninstallConfig,
+};
 pub use lifecycle::{start_http_daemon, stop_http_daemon, HttpDaemonConfig};
 pub use list::{list_daemons, ListableConfig};
 pub use manager::{spawn_daemon, DaemonManager};

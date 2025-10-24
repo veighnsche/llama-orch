@@ -30,14 +30,13 @@ use observability_narration_core::NarrationFactory;
 // TEAM-278: DELETED execute_hive_install, execute_hive_uninstall, execute_ssh_test
 // TEAM-278: DELETED HiveInstallRequest, HiveUninstallRequest, SshTestRequest
 use queen_rbee_hive_lifecycle::{
-    execute_hive_get, execute_hive_list, execute_hive_refresh_capabilities,
-    execute_hive_start, execute_hive_status, execute_hive_stop,
-    HiveGetRequest, HiveListRequest,
+    execute_hive_get, execute_hive_list, execute_hive_refresh_capabilities, execute_hive_start,
+    execute_hive_status, execute_hive_stop, HiveGetRequest, HiveListRequest,
     HiveRefreshCapabilitiesRequest, HiveStartRequest, HiveStatusRequest, HiveStopRequest,
 };
 // TEAM-275: Removed unused import (using state.hive_registry which is already Arc<WorkerRegistry>)
-use rbee_config::RbeeConfig;
 use rbee_config::declarative::HivesConfig; // TEAM-280: Declarative config
+use rbee_config::RbeeConfig;
 use rbee_operations::Operation;
 use std::sync::Arc;
 
@@ -219,11 +218,7 @@ async fn route_operation(
                 HivesConfig::load()?
             };
 
-            let opts = daemon_sync::sync::SyncOptions {
-                dry_run,
-                remove_extra,
-                force,
-            };
+            let opts = daemon_sync::sync::SyncOptions { dry_run, remove_extra, force };
 
             let report = daemon_sync::sync_all_hives(config, opts, &job_id).await?;
 
@@ -263,11 +258,8 @@ async fn route_operation(
                 HivesConfig::load()?
             };
 
-            let opts = daemon_sync::sync::SyncOptions {
-                dry_run: false,
-                remove_extra: false,
-                force,
-            };
+            let opts =
+                daemon_sync::sync::SyncOptions { dry_run: false, remove_extra: false, force };
 
             let report = daemon_sync::sync_all_hives(config, opts, &job_id).await?;
 

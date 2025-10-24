@@ -178,42 +178,30 @@ where
 {
     // Check if daemon is already healthy
     if is_daemon_healthy(health_url, None, Some(Duration::from_secs(2))).await {
-        let mut narration = NARRATE
-            .action("daemon_already_running")
-            .context(daemon_name);
+        let mut narration = NARRATE.action("daemon_already_running").context(daemon_name);
         if let Some(jid) = job_id {
             narration = narration.job_id(jid);
         }
-        narration
-            .human(format!("✅ {} is already running and healthy", daemon_name))
-            .emit();
+        narration.human(format!("✅ {} is already running and healthy", daemon_name)).emit();
         return Ok(handle_already_running());
     }
 
     // Daemon is not running, start it
-    let mut narration = NARRATE
-        .action("daemon_not_running")
-        .context(daemon_name);
+    let mut narration = NARRATE.action("daemon_not_running").context(daemon_name);
     if let Some(jid) = job_id {
         narration = narration.job_id(jid);
     }
-    narration
-        .human(format!("⚠️  {} is not running, starting...", daemon_name))
-        .emit();
+    narration.human(format!("⚠️  {} is not running, starting...", daemon_name)).emit();
 
     // Spawn daemon
     spawn_fn().await?;
 
     // Daemon started successfully
-    let mut narration = NARRATE
-        .action("daemon_started")
-        .context(daemon_name);
+    let mut narration = NARRATE.action("daemon_started").context(daemon_name);
     if let Some(jid) = job_id {
         narration = narration.job_id(jid);
     }
-    narration
-        .human(format!("✅ {} started and healthy", daemon_name))
-        .emit();
+    narration.human(format!("✅ {} started and healthy", daemon_name)).emit();
 
     Ok(handle_started_by_us())
 }

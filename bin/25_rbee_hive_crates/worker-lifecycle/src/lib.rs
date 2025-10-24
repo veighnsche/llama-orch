@@ -53,20 +53,20 @@
 
 // TEAM-271: Module declarations
 // TEAM-276: Renamed modules for consistency across lifecycle crates
-/// Worker start operations (renamed from spawn)
-pub mod start;
-/// Worker stop operations (renamed from delete)
-pub mod stop;
-/// List worker processes (renamed from process_list)
-pub mod list;
 /// Get worker process details (renamed from process_get)
 pub mod get;
 /// Install worker binary (stub for consistency)
 pub mod install;
-/// Uninstall worker binary (stub for consistency)
-pub mod uninstall;
+/// List worker processes (renamed from process_list)
+pub mod list;
+/// Worker start operations (renamed from spawn)
+pub mod start;
+/// Worker stop operations (renamed from delete)
+pub mod stop;
 /// Request/Response types
 pub mod types;
+/// Uninstall worker binary (stub for consistency)
+pub mod uninstall;
 
 // NOTE: WorkerList and WorkerGet are NOT implemented in hive
 // According to corrected architecture (CORRECTION_269_TO_272_ARCHITECTURE_FIX.md):
@@ -82,10 +82,10 @@ pub mod types;
 
 // TEAM-271: Re-export main types and functions
 // TEAM-276: Updated exports for renamed modules and added install/uninstall stubs
-pub use start::start_worker;
-pub use stop::stop_worker;
-pub use list::list_workers;
 pub use get::get_worker;
 pub use install::install_worker;
+pub use list::list_workers;
+pub use start::start_worker;
+pub use stop::stop_worker;
+pub use types::{StartResult, WorkerInfo, WorkerStartConfig};
 pub use uninstall::uninstall_worker;
-pub use types::{StartResult, WorkerStartConfig, WorkerInfo};

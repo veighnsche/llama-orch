@@ -59,7 +59,7 @@ pub async fn install_worker(job_id: &str, worker_type: &str) -> Result<()> {
 
     // NOTE: Worker binaries are managed by worker-catalog
     // This is a stub that verifies the binary exists in the catalog
-    
+
     NARRATE
         .action("worker_install_stub")
         .job_id(job_id)

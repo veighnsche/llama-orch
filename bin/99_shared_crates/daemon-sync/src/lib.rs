@@ -35,12 +35,14 @@
 pub mod diff;
 pub mod install;
 pub mod migrate;
+pub mod query; // TEAM-281: State query implementation
 pub mod status;
 pub mod sync;
 pub mod validate;
 
 // Re-export main functions
 pub use install::{install_all, install_hive_binary, install_worker_binary};
+pub use query::{query_installed_hives, query_installed_workers}; // TEAM-281
 pub use status::check_status;
 pub use sync::{sync_all_hives, sync_single_hive};
 pub use validate::validate_config;

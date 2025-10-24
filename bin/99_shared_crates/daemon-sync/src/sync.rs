@@ -10,7 +10,7 @@
 
 use super::diff::{compute_diff, StateDiff};
 use super::install::install_all;
-use anyhow::{Context, Result};
+use anyhow::Result;
 use observability_narration_core::NarrationFactory;
 use rbee_config::declarative::{HiveConfig, HivesConfig};
 use serde::{Deserialize, Serialize};
@@ -111,14 +111,14 @@ pub async fn sync_all_hives(
     NARRATE
         .action("sync_start")
         .job_id(job_id)
-        .context(&config.hives.len().to_string())
-        .human("🔄 Starting sync for {} hives")
+        .context(config.hives.len().to_string())
+        .human("🔄 Syncing {} hives")
         .emit();
 
     // Step 1: Query actual state
-    // TODO: Implement actual state query (for now, assume nothing installed)
-    let actual_hives: Vec<String> = Vec::new();
-    let actual_workers: Vec<(String, Vec<String>)> = Vec::new();
+    // TEAM-281: Implemented state query (was TODO)
+    let actual_hives = super::query::query_installed_hives(&config.hives, job_id).await?;
+    let actual_workers = super::query::query_installed_workers(&config.hives, job_id).await?;
 
     // Step 2: Compute diff
     let diff = compute_diff(&config.hives, &actual_hives, &actual_workers, opts.remove_extra);
@@ -126,8 +126,8 @@ pub async fn sync_all_hives(
     NARRATE
         .action("sync_diff")
         .job_id(job_id)
-        .context(&diff.change_count().to_string())
-        .human("📊 Diff computed: {} changes needed")
+        .context(diff.change_count().to_string())
+        .human("📊 Found {} changes")
         .emit();
 
     // Step 3: If dry run, return early
@@ -148,8 +148,8 @@ pub async fn sync_all_hives(
         NARRATE
             .action("sync_install")
             .job_id(job_id)
-            .context(&diff.hives_to_install.len().to_string())
-            .human("🚀 Installing {} hives concurrently")
+            .context(diff.hives_to_install.len().to_string())
+            .human("📦 Installing {} binaries")
             .emit();
 
         // Spawn concurrent installation tasks
@@ -210,18 +210,14 @@ pub async fn sync_all_hives(
     NARRATE
         .action("sync_complete")
         .job_id(job_id)
-        .context(&format!("{:.2}", duration))
-        .human("✅ Sync complete in {:.2}s")
+        .context(format!("{:.2}", duration))
+        .human("✅ Sync completed in {}s")
         .emit();
 
     Ok(SyncReport {
         hives_installed: diff.hives_to_install.len(),
         hives_already_installed: diff.hives_already_installed.len(),
-        workers_installed: diff
-            .workers_to_install
-            .iter()
-            .map(|(_, w)| w.len())
-            .sum(),
+        workers_installed: diff.workers_to_install.iter().map(|(_, w)| w.len()).sum(),
         workers_already_installed: diff
             .workers_already_installed
             .iter()
