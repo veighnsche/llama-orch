@@ -1,25 +1,23 @@
 // TEAM-288: React hook for heartbeat monitoring
+// TEAM-291: Updated to use zustand store and @rbee/react package
 
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
-import { useRbeeSDK } from './useRbeeSDK';
-
-interface HeartbeatSnapshot {
-  timestamp: string;
-  workers_online: number;
-  workers_available: number;
-  hives_online: number;
-  hives_available: number;
-  worker_ids: string[];
-  hive_ids: string[];
-}
+import { useEffect, useRef } from 'react';
+import { useRbeeSDK } from '@rbee/react';
+import { useRbeeStore, type HeartbeatSnapshot } from '@/src/stores/rbeeStore';
 
 export function useHeartbeat(baseUrl: string = 'http://localhost:8500') {
-  const { sdk, loading: sdkLoading } = useRbeeSDK();
-  const [heartbeat, setHeartbeat] = useState<HeartbeatSnapshot | null>(null);
-  const [connected, setConnected] = useState(false);
-  const [error, setError] = useState<Error | null>(null);
+  const { sdk, loading: sdkLoading, error: sdkError } = useRbeeSDK();
+  
+  // TEAM-291: Get store actions and state
+  const { 
+    updateFromHeartbeat, 
+    setQueenConnected, 
+    setQueenError,
+    queen,
+  } = useRbeeStore();
+  
   // TEAM-288: Using any for WASM HeartbeatMonitor instance (no TypeScript types available)
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const monitorRef = useRef<any>(null);
@@ -45,9 +43,8 @@ export function useHeartbeat(baseUrl: string = 'http://localhost:8500') {
       console.log('🐝 [useHeartbeat] Starting monitor...');
       monitor.start((snapshot: HeartbeatSnapshot) => {
         console.log('🐝 [useHeartbeat] CALLBACK FIRED! Received snapshot:', snapshot);
-        setHeartbeat(snapshot);
-        setConnected(true);
-        setError(null);
+        // TEAM-291: Update zustand store instead of local state
+        updateFromHeartbeat(snapshot);
       });
 
       console.log('🐝 [useHeartbeat] Monitor.start() called');
@@ -57,13 +54,14 @@ export function useHeartbeat(baseUrl: string = 'http://localhost:8500') {
         const isConn = monitor.isConnected();
         console.log('🐝 [useHeartbeat] Connection check after 1s, isConnected:', isConn);
         if (isConn) {
-          setConnected(true);
+          // TEAM-291: Update store
+          setQueenConnected(true);
         }
       }, 1000);
     } catch (err) {
       console.error('🐝 [useHeartbeat] ERROR starting monitor:', err);
-      setError(err as Error);
-      setConnected(false);
+      // TEAM-291: Update store with error
+      setQueenError((err as Error).message);
     }
 
     // Cleanup
@@ -73,12 +71,12 @@ export function useHeartbeat(baseUrl: string = 'http://localhost:8500') {
         monitorRef.current.stop();
       }
     };
-  }, [sdk, baseUrl]);
+  }, [sdk, baseUrl, updateFromHeartbeat, setQueenConnected, setQueenError]);
 
+  // TEAM-291: Return store state instead of local state
   return {
-    heartbeat,
-    connected,
+    connected: queen.connected,
     loading: sdkLoading,
-    error,
+    error: sdkError || (queen.error ? new Error(queen.error) : null),
   };
 }

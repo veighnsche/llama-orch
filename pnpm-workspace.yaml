@@ -4,6 +4,7 @@ packages:
   - frontend/apps/web-ui
   - frontend/packages/rbee-ui
   - frontend/packages/rbee-sdk
+  - frontend/packages/rbee-react
   - frontend/packages/tailwind-config
   - frontend/reference/v0
 

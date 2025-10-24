@@ -1,14 +1,28 @@
 // TEAM-288: Live heartbeat monitoring dashboard
+// TEAM-291: Updated to use zustand store
 
 'use client';
 
 import { useHeartbeat } from '@/src/hooks/useHeartbeat';
+import { useRbeeStore } from '@/src/stores/rbeeStore';
 import { Button } from '@rbee/ui/atoms';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@rbee/ui/atoms';
 import { ThemeToggle } from '@rbee/ui/molecules';
 
 export default function HomePage() {
-  const { heartbeat, connected, loading, error } = useHeartbeat();
+  const { connected, loading, error } = useHeartbeat();
+  
+  // TEAM-291: Get state from zustand store
+  const { 
+    queen, 
+    hives, 
+    hivesOnline, 
+    hivesAvailable,
+    workersOnline,
+    workersAvailable,
+    workerIds,
+    lastHeartbeat,
+  } = useRbeeStore();
 
   // Loading state
   if (loading) {
@@ -70,9 +84,9 @@ export default function HomePage() {
                 {connected ? 'Connected' : 'Disconnected'}
               </span>
             </div>
-            {heartbeat && (
+            {queen.lastUpdate && (
               <p className="text-xs text-muted-foreground mt-2">
-                Last update: {new Date(heartbeat.timestamp).toLocaleTimeString()}
+                Last update: {new Date(queen.lastUpdate).toLocaleTimeString()}
               </p>
             )}
           </CardContent>
@@ -86,16 +100,16 @@ export default function HomePage() {
           </CardHeader>
           <CardContent>
             <p className="text-2xl font-bold">
-              {heartbeat?.hives_online ?? 0}
+              {hivesOnline}
             </p>
             <p className="text-sm text-muted-foreground">
-              {heartbeat?.hives_available ?? 0} available
+              {hivesAvailable} available
             </p>
-            {heartbeat?.hive_ids && heartbeat.hive_ids.length > 0 && (
+            {hives.length > 0 && (
               <ul className="mt-2 space-y-1">
-                {heartbeat.hive_ids.map((id) => (
-                  <li key={id} className="text-xs text-muted-foreground">
-                    {id}
+                {hives.map((hive) => (
+                  <li key={hive.id} className="text-xs text-muted-foreground">
+                    {hive.id}
                   </li>
                 ))}
               </ul>
@@ -114,21 +128,21 @@ export default function HomePage() {
           </CardHeader>
           <CardContent>
             <p className="text-2xl font-bold">
-              {heartbeat?.workers_online ?? 0}
+              {workersOnline}
             </p>
             <p className="text-sm text-muted-foreground">
-              {heartbeat?.workers_available ?? 0} available
+              {workersAvailable} available
             </p>
-            {heartbeat?.worker_ids && heartbeat.worker_ids.length > 0 && (
+            {workerIds.length > 0 && (
               <ul className="mt-2 space-y-1">
-                {heartbeat.worker_ids.slice(0, 5).map((id) => (
+                {workerIds.slice(0, 5).map((id) => (
                   <li key={id} className="text-xs text-muted-foreground">
                     {id}
                   </li>
                 ))}
-                {heartbeat.worker_ids.length > 5 && (
+                {workerIds.length > 5 && (
                   <li className="text-xs text-muted-foreground">
-                    +{heartbeat.worker_ids.length - 5} more
+                    +{workerIds.length - 5} more
                   </li>
                 )}
               </ul>
@@ -174,10 +188,10 @@ export default function HomePage() {
       </div>
 
       <footer className="mt-8 text-center text-sm text-muted-foreground">
-        <p>rbee Web UI v0.1.0 - TEAM-288</p>
+        <p>rbee Web UI v0.1.0 - TEAM-288, TEAM-291</p>
         <p className="mt-1">
           Status: Live heartbeat monitoring active
-          {heartbeat && ` • Updates every 5 seconds`}
+          {lastHeartbeat && ` • Updates every 5 seconds`}
         </p>
       </footer>
     </div>

@@ -1,4 +1,7 @@
 // TEAM-288: React hook for rbee-sdk WASM initialization
+// TEAM-291: ⚠️ DEPRECATED - This file has been moved to @rbee/react package
+// TODO: DELETE THIS FILE after verifying web-ui works with @rbee/react import
+// New location: frontend/packages/rbee-react/src/useRbeeSDK.ts
 
 'use client';
 
