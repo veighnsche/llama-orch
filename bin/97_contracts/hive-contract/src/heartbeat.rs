@@ -82,6 +82,27 @@ impl HeartbeatPayload for HiveHeartbeat {
     }
 }
 
+// TEAM-285: Implement HeartbeatItem for generic registry
+impl heartbeat_registry::HeartbeatItem for HiveHeartbeat {
+    type Info = HiveInfo;
+
+    fn id(&self) -> &str {
+        &self.hive.id
+    }
+
+    fn info(&self) -> Self::Info {
+        self.hive.clone()
+    }
+
+    fn is_recent(&self) -> bool {
+        self.timestamp.is_recent(HEARTBEAT_TIMEOUT_SECS)
+    }
+
+    fn is_available(&self) -> bool {
+        self.hive.is_available()
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

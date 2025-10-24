@@ -1,10 +1,10 @@
 //! Hive registry implementation
 //!
 //! TEAM-284: Thread-safe registry for tracking hive state
+//! TEAM-285: Migrated to use generic HeartbeatRegistry
 
+use heartbeat_registry::HeartbeatRegistry;
 use hive_contract::{HiveHeartbeat, HiveInfo};
-use std::collections::HashMap;
-use std::sync::RwLock;
 
 /// Hive registry
 ///
@@ -36,14 +36,14 @@ use std::sync::RwLock;
 /// let available = registry.list_available_hives();
 /// ```
 pub struct HiveRegistry {
-    hives: RwLock<HashMap<String, HiveHeartbeat>>,
+    inner: HeartbeatRegistry<HiveHeartbeat>,
 }
 
 impl HiveRegistry {
     /// Create a new empty registry
     pub fn new() -> Self {
         Self {
-            hives: RwLock::new(HashMap::new()),
+            inner: HeartbeatRegistry::new(),
         }
     }
 
@@ -51,40 +51,31 @@ impl HiveRegistry {
     ///
     /// Upserts hive info - creates if new, updates if exists.
     pub fn update_hive(&self, heartbeat: HiveHeartbeat) {
-        let mut hives = self.hives.write().unwrap();
-        hives.insert(heartbeat.hive.id.clone(), heartbeat);
+        self.inner.update(heartbeat);
     }
 
     /// Get hive by ID
     pub fn get_hive(&self, hive_id: &str) -> Option<HiveInfo> {
-        let hives = self.hives.read().unwrap();
-        hives.get(hive_id).map(|hb| hb.hive.clone())
+        self.inner.get(hive_id)
     }
 
     /// Remove hive from registry
     ///
     /// Returns true if hive was removed, false if not found.
     pub fn remove_hive(&self, hive_id: &str) -> bool {
-        let mut hives = self.hives.write().unwrap();
-        hives.remove(hive_id).is_some()
+        self.inner.remove(hive_id)
     }
 
     /// List all hives (including stale ones)
     pub fn list_all_hives(&self) -> Vec<HiveInfo> {
-        let hives = self.hives.read().unwrap();
-        hives.values().map(|hb| hb.hive.clone()).collect()
+        self.inner.list_all()
     }
 
     /// List hives with recent heartbeats
     ///
     /// Only returns hives that sent heartbeat within timeout window.
     pub fn list_online_hives(&self) -> Vec<HiveInfo> {
-        let hives = self.hives.read().unwrap();
-        hives
-            .values()
-            .filter(|hb| hb.is_recent())
-            .map(|hb| hb.hive.clone())
-            .collect()
+        self.inner.list_online()
     }
 
     /// List available hives (online + ready status)
@@ -93,27 +84,17 @@ impl HiveRegistry {
     /// 1. Online (recent heartbeat)
     /// 2. Ready status (not busy/starting/stopped)
     pub fn list_available_hives(&self) -> Vec<HiveInfo> {
-        let hives = self.hives.read().unwrap();
-        hives
-            .values()
-            .filter(|hb| hb.is_recent() && hb.hive.is_available())
-            .map(|hb| hb.hive.clone())
-            .collect()
+        self.inner.list_available()
     }
 
     /// Get count of online hives
     pub fn count_online(&self) -> usize {
-        let hives = self.hives.read().unwrap();
-        hives.values().filter(|hb| hb.is_recent()).count()
+        self.inner.count_online()
     }
 
     /// Get count of available hives
     pub fn count_available(&self) -> usize {
-        let hives = self.hives.read().unwrap();
-        hives
-            .values()
-            .filter(|hb| hb.is_recent() && hb.hive.is_available())
-            .count()
+        self.inner.count_available()
     }
 
     /// Cleanup stale hives
@@ -121,10 +102,7 @@ impl HiveRegistry {
     /// Removes hives that haven't sent heartbeat within timeout window.
     /// Returns number of hives removed.
     pub fn cleanup_stale(&self) -> usize {
-        let mut hives = self.hives.write().unwrap();
-        let before_count = hives.len();
-        hives.retain(|_, hb| hb.is_recent());
-        before_count - hives.len()
+        self.inner.cleanup_stale()
     }
 }
 

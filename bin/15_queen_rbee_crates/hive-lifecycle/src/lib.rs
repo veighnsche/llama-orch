@@ -30,22 +30,17 @@
 
 // TEAM-210: Module declarations
 // TEAM-276: Added ensure module
+// TEAM-285: DELETED start, stop, ensure modules (localhost-only, no lifecycle management)
 /// Hive capabilities refresh operations
 pub mod capabilities;
-/// Ensure hive is running (auto-start if needed)
-pub mod ensure;
 /// Get hive details operations
 pub mod get;
 /// List all hives operations
 pub mod list;
 // TEAM-278: DELETED pub mod ssh_test, install, uninstall
 // TEAM-284: DELETED pub mod ssh_helper (SSH/remote operations removed)
-/// Hive startup operations
-pub mod start;
 /// Hive status check operations
 pub mod status;
-/// Hive shutdown operations
-pub mod stop;
 /// Request/Response types for all operations
 pub mod types;
 /// Validation helpers
@@ -68,8 +63,7 @@ pub use list::execute_hive_list;
 pub use status::execute_hive_status;
 
 // TEAM-212: Export lifecycle operations
-pub use start::execute_hive_start;
-pub use stop::execute_hive_stop;
+// TEAM-285: DELETED execute_hive_start, execute_hive_stop (localhost-only, no lifecycle management)
 
 // TEAM-278: DELETED install/uninstall exports
 
@@ -77,4 +71,4 @@ pub use stop::execute_hive_stop;
 pub use capabilities::execute_hive_refresh_capabilities;
 
 // TEAM-276: Export ensure operation and HiveHandle
-pub use ensure::ensure_hive_running;
+// TEAM-285: DELETED ensure_hive_running (localhost-only, no lifecycle management)

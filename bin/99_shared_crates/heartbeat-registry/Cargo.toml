@@ -1,0 +1,16 @@
+[package]
+name = "heartbeat-registry"
+version = "0.1.0"
+edition = "2021"
+license = "GPL-3.0-or-later"
+authors = ["TEAM-285"]
+description = "Generic heartbeat registry for tracking component state"
+
+[dependencies]
+# No external dependencies - pure Rust
+
+[dev-dependencies]
+chrono = { version = "0.4", features = ["serde"] }
+
+[lints]
+workspace = true

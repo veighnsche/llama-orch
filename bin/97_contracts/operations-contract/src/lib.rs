@@ -79,16 +79,7 @@ pub enum Operation {
     // Hive operations
     // TEAM-278: DELETED HiveInstall, HiveUninstall, SshTest
     // TEAM-284: DELETED PackageSync, PackageStatus, PackageInstall, PackageUninstall, PackageValidate, PackageMigrate (SSH/remote operations removed)
-    HiveStart {
-        /// Alias from hives.conf (defaults to "localhost")
-        #[serde(default = "default_hive_id")]
-        alias: String,
-    },
-    HiveStop {
-        /// Alias from hives.conf (defaults to "localhost")
-        #[serde(default = "default_hive_id")]
-        alias: String,
-    },
+    // TEAM-285: DELETED HiveStart, HiveStop (localhost-only, no lifecycle management)
     HiveList,
     HiveGet {
         /// Alias from hives.conf (defaults to "localhost")
@@ -162,8 +153,7 @@ impl Operation {
             Operation::Status => "status", // TEAM-190
             // TEAM-278: DELETED ssh_test, hive_install, hive_uninstall
             // TEAM-284: DELETED package_sync, package_status, package_install, package_uninstall, package_validate, package_migrate
-            Operation::HiveStart { .. } => "hive_start",
-            Operation::HiveStop { .. } => "hive_stop",
+            // TEAM-285: DELETED hive_start, hive_stop (localhost-only, no lifecycle management)
             Operation::HiveList => "hive_list",
             Operation::HiveGet { .. } => "hive_get",
             Operation::HiveStatus { .. } => "hive_status",
@@ -191,8 +181,7 @@ impl Operation {
     pub fn hive_id(&self) -> Option<&str> {
         match self {
             // TEAM-278: DELETED HiveInstall, HiveUninstall
-            Operation::HiveStart { alias } => Some(alias),
-            Operation::HiveStop { alias } => Some(alias),
+            // TEAM-285: DELETED HiveStart, HiveStop (localhost-only, no lifecycle management)
             Operation::HiveGet { alias } => Some(alias),
             Operation::HiveStatus { alias } => Some(alias),
             Operation::HiveRefreshCapabilities { alias } => Some(alias), // TEAM-196
@@ -289,26 +278,7 @@ mod tests {
     }
 
     // TEAM-278: DELETED tests for HiveInstall, HiveUninstall
-
-    #[test]
-    fn test_serialize_hive_start() {
-        let op = Operation::HiveStart { alias: "localhost".to_string() };
-        let json = serde_json::to_string(&op).unwrap();
-        assert_eq!(json, r#"{"operation":"hive_start","alias":"localhost"}"#);
-    }
-
-    #[test]
-    fn test_hive_start_defaults_to_localhost() {
-        // TEAM-194: Test that alias defaults to "localhost"
-        let json = r#"{"operation":"hive_start"}"#;
-        let op: Operation = serde_json::from_str(json).unwrap();
-        match op {
-            Operation::HiveStart { alias } => {
-                assert_eq!(alias, "localhost");
-            }
-            _ => panic!("Wrong operation type"),
-        }
-    }
+    // TEAM-285: DELETED tests for HiveStart, HiveStop
 
     #[test]
     fn test_serialize_worker_spawn() {
@@ -379,13 +349,14 @@ mod tests {
     #[test]
     fn test_operation_name() {
         assert_eq!(Operation::HiveList.name(), "hive_list");
-        assert_eq!(Operation::HiveStart { alias: "test".to_string() }.name(), "hive_start");
         // TEAM-278: DELETED tests for deleted operations
+        // TEAM-285: DELETED test for HiveStart
     }
 
     #[test]
     fn test_operation_hive_id() {
-        let op = Operation::HiveStart { alias: "localhost".to_string() };
+        // TEAM-285: Updated to use HiveGet instead of HiveStart
+        let op = Operation::HiveGet { alias: "localhost".to_string() };
         assert_eq!(op.hive_id(), Some("localhost"));
 
         let op = Operation::HiveList;

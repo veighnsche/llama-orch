@@ -80,7 +80,7 @@
 use anyhow::Result;
 use job_client::JobClient;
 use observability_narration_core::NarrationFactory;
-use queen_rbee_hive_lifecycle::{execute_hive_start, HiveStartRequest};
+// TEAM-285: DELETED execute_hive_start, HiveStartRequest (localhost-only, no lifecycle management)
 use rbee_config::RbeeConfig;
 use operations_contract::Operation; // TEAM-284: Renamed from rbee_operations
 use std::sync::Arc;
@@ -252,15 +252,15 @@ async fn stream_from_hive(job_id: &str, hive_url: &str, operation: Operation) ->
 /// Ensure hive is running before forwarding operations
 ///
 /// TEAM-259: Mirrors rbee-keeper's ensure_queen_running pattern
+/// TEAM-285: Updated to localhost-only (no auto-start)
 ///
 /// 1. Check if hive is healthy
-/// 2. If not running, start hive daemon
-/// 3. Wait for health check to pass
+/// 2. If not running, return error (user must start hive manually)
 async fn ensure_hive_running(
     job_id: &str,
     hive_id: &str,
     hive_url: &str,
-    config: Arc<RbeeConfig>,
+    _config: Arc<RbeeConfig>,
 ) -> Result<()> {
     // Check if hive is already healthy
     if is_hive_healthy(hive_url).await {
@@ -273,42 +273,23 @@ async fn ensure_hive_running(
         return Ok(());
     }
 
-    // Hive is not running, start it
+    // TEAM-285: Hive is not running - fail with helpful error message
     NARRATE
-        .action("hive_start")
+        .action("hive_check")
         .job_id(job_id)
         .context(hive_id)
-        .human("⚠️  Hive '{}' is not running, starting...")
+        .human("❌ Hive '{}' is not running")
         .emit();
 
-    // Use hive-lifecycle to start the hive
-    let request = HiveStartRequest { alias: hive_id.to_string(), job_id: job_id.to_string() };
-    execute_hive_start(request, config).await?;
-
-    // Wait for hive to become healthy (with timeout)
-    let start_time = std::time::Instant::now();
-    let timeout = Duration::from_secs(30);
-
-    loop {
-        if is_hive_healthy(hive_url).await {
-            NARRATE
-                .action("hive_start")
-                .job_id(job_id)
-                .context(hive_id)
-                .human("✅ Hive '{}' is now running and healthy")
-                .emit();
-            return Ok(());
-        }
-
-        if start_time.elapsed() > timeout {
-            return Err(anyhow::anyhow!(
-                "Timeout waiting for hive '{}' to become healthy",
-                hive_id
-            ));
-        }
-
-        tokio::time::sleep(Duration::from_millis(500)).await;
-    }
+    Err(anyhow::anyhow!(
+        "Hive '{}' is not running. Please start it manually:\n\
+         \n\
+         For localhost:\n\
+         $ cargo run --bin rbee-hive\n\
+         \n\
+         Or use systemd/docker to manage the hive daemon.",
+        hive_id
+    ))
 }
 
 /// Check if hive is healthy via HTTP health check

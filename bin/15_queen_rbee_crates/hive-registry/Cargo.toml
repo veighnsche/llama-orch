@@ -18,6 +18,9 @@ path = "src/lib.rs"
 hive-contract = { path = "../../97_contracts/hive-contract" }
 shared-contract = { path = "../../97_contracts/shared-contract" }
 
+# TEAM-285: Generic heartbeat registry
+heartbeat-registry = { path = "../../99_shared_crates/heartbeat-registry" }
+
 # Time handling
 chrono = "0.4"
 

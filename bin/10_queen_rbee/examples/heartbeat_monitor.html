@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>rbee Heartbeat Monitor</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            padding: 40px;
+            max-width: 800px;
+            width: 100%;
+        }
+        
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 2em;
+        }
+        
+        .subtitle {
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 0.9em;
+        }
+        
+        .status {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 0.85em;
+            font-weight: 600;
+            margin-left: 10px;
+        }
+        
+        .status.connected {
+            background: #10b981;
+            color: white;
+        }
+        
+        .status.disconnected {
+            background: #ef4444;
+            color: white;
+        }
+        
+        .status.connecting {
+            background: #f59e0b;
+            color: white;
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .stat-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        
+        .stat-label {
+            font-size: 0.85em;
+            opacity: 0.9;
+            margin-bottom: 8px;
+        }
+        
+        .stat-value {
+            font-size: 2.5em;
+            font-weight: bold;
+        }
+        
+        .list-section {
+            margin-bottom: 20px;
+        }
+        
+        .list-title {
+            font-size: 1.2em;
+            color: #333;
+            margin-bottom: 10px;
+            font-weight: 600;
+        }
+        
+        .item-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+        
+        .item-badge {
+            background: #f3f4f6;
+            color: #374151;
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 0.9em;
+            font-family: 'Courier New', monospace;
+        }
+        
+        .empty-state {
+            color: #9ca3af;
+            font-style: italic;
+            padding: 10px;
+        }
+        
+        .timestamp {
+            text-align: center;
+            color: #9ca3af;
+            font-size: 0.85em;
+            margin-top: 20px;
+        }
+        
+        .pulse {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #10b981;
+            margin-right: 8px;
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.3; }
+        }
+        
+        .error-message {
+            background: #fee2e2;
+            color: #991b1b;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            display: none;
+        }
+        
+        .error-message.show {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>
+            🐝 rbee Heartbeat Monitor
+            <span class="status connecting" id="connectionStatus">Connecting...</span>
+        </h1>
+        <p class="subtitle">Real-time monitoring of hives and workers</p>
+        
+        <div class="error-message" id="errorMessage"></div>
+        
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-label">Workers Online</div>
+                <div class="stat-value" id="workersOnline">-</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Workers Available</div>
+                <div class="stat-value" id="workersAvailable">-</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Hives Online</div>
+                <div class="stat-value" id="hivesOnline">-</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Hives Available</div>
+                <div class="stat-value" id="hivesAvailable">-</div>
+            </div>
+        </div>
+        
+        <div class="list-section">
+            <div class="list-title">
+                <span class="pulse"></span>
+                Active Workers
+            </div>
+            <div class="item-list" id="workerList">
+                <div class="empty-state">No workers online</div>
+            </div>
+        </div>
+        
+        <div class="list-section">
+            <div class="list-title">
+                <span class="pulse"></span>
+                Active Hives
+            </div>
+            <div class="item-list" id="hiveList">
+                <div class="empty-state">No hives online</div>
+            </div>
+        </div>
+        
+        <div class="timestamp">
+            Last update: <span id="lastUpdate">Never</span>
+        </div>
+    </div>
+    
+    <script>
+        // Configuration
+        const QUEEN_URL = 'http://localhost:8500';
+        const SSE_ENDPOINT = `${QUEEN_URL}/v1/heartbeats/stream`;
+        
+        // DOM elements
+        const elements = {
+            status: document.getElementById('connectionStatus'),
+            error: document.getElementById('errorMessage'),
+            workersOnline: document.getElementById('workersOnline'),
+            workersAvailable: document.getElementById('workersAvailable'),
+            hivesOnline: document.getElementById('hivesOnline'),
+            hivesAvailable: document.getElementById('hivesAvailable'),
+            workerList: document.getElementById('workerList'),
+            hiveList: document.getElementById('hiveList'),
+            lastUpdate: document.getElementById('lastUpdate')
+        };
+        
+        // Update connection status
+        function setStatus(status, message) {
+            elements.status.className = `status ${status}`;
+            elements.status.textContent = message;
+        }
+        
+        // Show error message
+        function showError(message) {
+            elements.error.textContent = message;
+            elements.error.classList.add('show');
+        }
+        
+        // Hide error message
+        function hideError() {
+            elements.error.classList.remove('show');
+        }
+        
+        // Update dashboard with heartbeat data
+        function updateDashboard(data) {
+            // Update stats
+            elements.workersOnline.textContent = data.workers_online;
+            elements.workersAvailable.textContent = data.workers_available;
+            elements.hivesOnline.textContent = data.hives_online;
+            elements.hivesAvailable.textContent = data.hives_available;
+            
+            // Update worker list
+            if (data.worker_ids && data.worker_ids.length > 0) {
+                elements.workerList.innerHTML = data.worker_ids
+                    .map(id => `<div class="item-badge">${id}</div>`)
+                    .join('');
+            } else {
+                elements.workerList.innerHTML = '<div class="empty-state">No workers online</div>';
+            }
+            
+            // Update hive list
+            if (data.hive_ids && data.hive_ids.length > 0) {
+                elements.hiveList.innerHTML = data.hive_ids
+                    .map(id => `<div class="item-badge">${id}</div>`)
+                    .join('');
+            } else {
+                elements.hiveList.innerHTML = '<div class="empty-state">No hives online</div>';
+            }
+            
+            // Update timestamp
+            const now = new Date();
+            elements.lastUpdate.textContent = now.toLocaleTimeString();
+        }
+        
+        // Connect to SSE stream
+        function connect() {
+            console.log('Connecting to SSE stream:', SSE_ENDPOINT);
+            setStatus('connecting', 'Connecting...');
+            
+            const eventSource = new EventSource(SSE_ENDPOINT);
+            
+            eventSource.addEventListener('heartbeat', (event) => {
+                try {
+                    const data = JSON.parse(event.data);
+                    console.log('Heartbeat received:', data);
+                    
+                    setStatus('connected', 'Connected');
+                    hideError();
+                    updateDashboard(data);
+                } catch (error) {
+                    console.error('Failed to parse heartbeat data:', error);
+                    showError('Failed to parse heartbeat data: ' + error.message);
+                }
+            });
+            
+            eventSource.onopen = () => {
+                console.log('SSE connection opened');
+                setStatus('connected', 'Connected');
+                hideError();
+            };
+            
+            eventSource.onerror = (error) => {
+                console.error('SSE connection error:', error);
+                setStatus('disconnected', 'Disconnected');
+                showError('Connection lost. Reconnecting...');
+                
+                // EventSource will automatically reconnect
+                // But we can close and recreate if needed
+                if (eventSource.readyState === EventSource.CLOSED) {
+                    console.log('Connection closed, reconnecting in 5s...');
+                    setTimeout(connect, 5000);
+                }
+            };
+            
+            return eventSource;
+        }
+        
+        // Start connection when page loads
+        let eventSource = connect();
+        
+        // Cleanup on page unload
+        window.addEventListener('beforeunload', () => {
+            if (eventSource) {
+                eventSource.close();
+            }
+        });
+    </script>
+</body>
+</html>

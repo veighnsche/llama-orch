@@ -26,16 +26,23 @@ pub async fn send_heartbeat_to_queen(
 ) -> Result<()> {
     tracing::debug!("Sending hive heartbeat to queen at {}", queen_url);
 
-    // TEAM-285: Fixed unused variable warning
-    let _heartbeat = HiveHeartbeat::new(hive_info.clone());
+    // TEAM-285: Implemented HTTP POST to queen
+    let heartbeat = HiveHeartbeat::new(hive_info.clone());
 
-    // TODO: Implement HTTP POST to queen
-    // let client = reqwest::Client::new();
-    // client.post(format!("{}/v1/hive-heartbeat", queen_url))
-    //     .json(&_heartbeat)
-    //     .send()
-    //     .await?;
+    let client = reqwest::Client::new();
+    let response = client
+        .post(format!("{}/v1/hive-heartbeat", queen_url))
+        .json(&heartbeat)
+        .send()
+        .await?;
 
+    if !response.status().is_success() {
+        let status = response.status();
+        let body = response.text().await.unwrap_or_else(|_| "unknown error".to_string());
+        anyhow::bail!("Heartbeat failed with status {}: {}", status, body);
+    }
+
+    tracing::trace!("Hive heartbeat sent successfully");
     Ok(())
 }
 

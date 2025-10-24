@@ -224,10 +224,84 @@ After adding a new operation:
 
 ---
 
+## Special Endpoints (Non-Operation)
+
+Some endpoints don't follow the Operation pattern because they're not job-based operations.
+
+### Live Heartbeat Monitor (SSE Stream)
+
+**TEAM-285:** Real-time heartbeat monitoring for web UI
+
+**Endpoint:** `GET /v1/heartbeats/stream`
+
+**Purpose:** Stream live heartbeat updates to web UI without polling
+
+**Implementation:**
+- **File:** `bin/10_queen_rbee/src/http/heartbeat_stream.rs`
+- **Handler:** `handle_heartbeat_stream()`
+- **Registered in:** `bin/10_queen_rbee/src/main.rs`
+
+**Why not an Operation?**
+- SSE streams are long-lived connections (not job-based)
+- No job_id needed (not a discrete task)
+- Direct HTTP endpoint (not routed through job system)
+
+**SSE Format:**
+```text
+event: heartbeat
+data: {
+  "timestamp": "2025-10-24T19:00:00Z",
+  "workers_online": 3,
+  "workers_available": 2,
+  "hives_online": 1,
+  "hives_available": 1,
+  "worker_ids": ["worker-1", "worker-2", "worker-3"],
+  "hive_ids": ["localhost"]
+}
+```
+
+**Update Frequency:** Every 5 seconds
+
+**Client Example (JavaScript):**
+```javascript
+const eventSource = new EventSource('http://localhost:8500/v1/heartbeats/stream');
+
+eventSource.addEventListener('heartbeat', (event) => {
+    const data = JSON.parse(event.data);
+    console.log('Workers online:', data.workers_online);
+    console.log('Hives online:', data.hives_online);
+    
+    // Update UI
+    updateDashboard(data);
+});
+
+eventSource.onerror = (error) => {
+    console.error('SSE connection error:', error);
+    // Reconnect automatically handled by EventSource
+};
+```
+
+**Features:**
+- ✅ Multiple simultaneous connections supported
+- ✅ Automatic reconnection (browser handles it)
+- ✅ Keep-alive pings (prevents timeout)
+- ✅ JSON payload with all heartbeat data
+- ✅ No polling required (push-based)
+
+**Rust Implementation Notes:**
+- Uses Axum's SSE support
+- `stream::unfold` for infinite stream
+- Each connection runs independently
+- No shared state mutation (read-only registry access)
+- Efficient: Only sends snapshots every 5s
+
+---
+
 ## Need Help?
 
 See existing operations for examples:
 - Simple: `Operation::HiveList` (no parameters)
-- With parameters: `Operation::HiveStart` (alias)
+- With parameters: `Operation::HiveGet` (alias)
 - Complex: `Operation::Infer` (many parameters, streaming)
 - System-wide: `Operation::Status` (no hive, uses registry)
+- SSE Stream: `GET /v1/heartbeats/stream` (live monitoring)

@@ -28,11 +28,11 @@ use anyhow::Result;
 use job_server::JobRegistry;
 use observability_narration_core::NarrationFactory;
 // TEAM-278: DELETED execute_hive_install, execute_hive_uninstall, execute_ssh_test
-// TEAM-278: DELETED HiveInstallRequest, HiveUninstallRequest, SshTestRequest
+// TEAM-285: DELETED execute_hive_start, execute_hive_stop (localhost-only, no lifecycle management)
 use queen_rbee_hive_lifecycle::{
-    execute_hive_get, execute_hive_list, execute_hive_refresh_capabilities, execute_hive_start,
-    execute_hive_status, execute_hive_stop, HiveGetRequest, HiveListRequest,
-    HiveRefreshCapabilitiesRequest, HiveStartRequest, HiveStatusRequest, HiveStopRequest,
+    execute_hive_get, execute_hive_list, execute_hive_refresh_capabilities,
+    execute_hive_status, HiveGetRequest, HiveListRequest,
+    HiveRefreshCapabilitiesRequest, HiveStatusRequest,
 };
 // TEAM-275: Removed unused import (using state.hive_registry which is already Arc<WorkerRegistry>)
 // TEAM-284: DELETED HivesConfig import (no longer needed without daemon-sync)
@@ -206,19 +206,10 @@ async fn route_operation(
         // TEAM-284: DELETED all Package operations (PackageSync, PackageStatus, PackageInstall, PackageUninstall, PackageValidate, PackageMigrate)
         // SSH and remote installation functionality removed
         // TEAM-278: DELETED Operation::SshTest
-        // Hive operations
         // TEAM-278: DELETED Operation::HiveInstall - replaced by PackageSync/PackageInstall
         // TEAM-278: DELETED Operation::HiveUninstall - replaced by PackageUninstall
-        Operation::HiveStart { alias } => {
-            // TEAM-215: Delegate to hive-lifecycle crate
-            let request = HiveStartRequest { alias, job_id: job_id.clone() };
-            execute_hive_start(request, state.config.clone()).await?;
-        }
-        Operation::HiveStop { alias } => {
-            // TEAM-215: Delegate to hive-lifecycle crate
-            let request = HiveStopRequest { alias, job_id: job_id.clone() };
-            execute_hive_stop(request, state.config.clone()).await?;
-        }
+        // TEAM-285: DELETED Operation::HiveStart, Operation::HiveStop (localhost-only, no lifecycle management)
+        // Hive operations
         Operation::HiveList => {
             // TEAM-215: Delegate to hive-lifecycle crate
             let request = HiveListRequest {};

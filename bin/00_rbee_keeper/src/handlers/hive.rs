@@ -17,8 +17,7 @@ pub async fn handle_hive(action: HiveAction, queen_url: &str) -> Result<()> {
 
     let operation = match action {
         // TEAM-278: DELETED SshTest, Install, Uninstall, ImportSsh
-        HiveAction::Start { alias } => Operation::HiveStart { alias },
-        HiveAction::Stop { alias } => Operation::HiveStop { alias },
+        // TEAM-285: DELETED Start, Stop (localhost-only, no lifecycle management)
         HiveAction::List => Operation::HiveList,
         HiveAction::Get { alias } => Operation::HiveGet { alias },
         HiveAction::Status { alias } => Operation::HiveStatus { alias },

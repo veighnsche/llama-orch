@@ -63,6 +63,7 @@ members = [
     # TEAM-135: New shared crates for consolidation
     "bin/99_shared_crates/daemon-lifecycle",
     "bin/99_shared_crates/daemon-lifecycle/bdd",
+    "bin/99_shared_crates/heartbeat-registry",  # TEAM-285: Generic heartbeat registry
     "bin/99_shared_crates/job-server",        # TEAM-154: Dual-call pattern job tracking (worker/queen/hive)
     "bin/99_shared_crates/timeout-enforcer",    # TEAM-163: Hard timeout enforcement with visual countdown
     "bin/99_shared_crates/auto-update",         # TEAM-193: Dependency-aware auto-update for binaries

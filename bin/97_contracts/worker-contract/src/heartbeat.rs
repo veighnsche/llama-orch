@@ -101,6 +101,27 @@ impl shared_contract::HeartbeatPayload for WorkerHeartbeat {
     }
 }
 
+// TEAM-285: Implement HeartbeatItem for generic registry
+impl heartbeat_registry::HeartbeatItem for WorkerHeartbeat {
+    type Info = WorkerInfo;
+
+    fn id(&self) -> &str {
+        &self.worker.id
+    }
+
+    fn info(&self) -> Self::Info {
+        self.worker.clone()
+    }
+
+    fn is_recent(&self) -> bool {
+        self.timestamp.is_recent(HEARTBEAT_TIMEOUT_SECS)
+    }
+
+    fn is_available(&self) -> bool {
+        self.worker.is_available()
+    }
+}
+
 impl HeartbeatAck {
     /// Create a success acknowledgement
     pub fn success(message: impl Into<String>) -> Self {

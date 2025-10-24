@@ -1,7 +1,7 @@
 // TEAM-270: Worker registry (workers send heartbeats to queen)
+// TEAM-285: Migrated to use generic HeartbeatRegistry
 
-use std::collections::HashMap;
-use std::sync::RwLock;
+use heartbeat_registry::HeartbeatRegistry;
 use worker_contract::{WorkerHeartbeat, WorkerInfo};
 
 /// Worker registry
@@ -34,49 +34,44 @@ use worker_contract::{WorkerHeartbeat, WorkerInfo};
 /// let available = registry.list_available_workers();
 /// ```
 pub struct WorkerRegistry {
-    workers: RwLock<HashMap<String, WorkerHeartbeat>>,
+    inner: HeartbeatRegistry<WorkerHeartbeat>,
 }
 
 impl WorkerRegistry {
     /// Create a new empty registry
     pub fn new() -> Self {
-        Self { workers: RwLock::new(HashMap::new()) }
+        Self { inner: HeartbeatRegistry::new() }
     }
 
     /// Update worker from heartbeat
     ///
     /// Upserts worker info - creates if new, updates if exists.
     pub fn update_worker(&self, heartbeat: WorkerHeartbeat) {
-        let mut workers = self.workers.write().unwrap();
-        workers.insert(heartbeat.worker.id.clone(), heartbeat);
+        self.inner.update(heartbeat);
     }
 
     /// Get worker by ID
     pub fn get_worker(&self, worker_id: &str) -> Option<WorkerInfo> {
-        let workers = self.workers.read().unwrap();
-        workers.get(worker_id).map(|hb| hb.worker.clone())
+        self.inner.get(worker_id)
     }
 
     /// Remove worker from registry
     ///
     /// Returns true if worker was removed, false if not found.
     pub fn remove_worker(&self, worker_id: &str) -> bool {
-        let mut workers = self.workers.write().unwrap();
-        workers.remove(worker_id).is_some()
+        self.inner.remove(worker_id)
     }
 
     /// List all workers (including stale ones)
     pub fn list_all_workers(&self) -> Vec<WorkerInfo> {
-        let workers = self.workers.read().unwrap();
-        workers.values().map(|hb| hb.worker.clone()).collect()
+        self.inner.list_all()
     }
 
     /// List workers with recent heartbeats
     ///
     /// Only returns workers that sent heartbeat within timeout window.
     pub fn list_online_workers(&self) -> Vec<WorkerInfo> {
-        let workers = self.workers.read().unwrap();
-        workers.values().filter(|hb| hb.is_recent()).map(|hb| hb.worker.clone()).collect()
+        self.inner.list_online()
     }
 
     /// List available workers (online + ready status)
@@ -85,21 +80,16 @@ impl WorkerRegistry {
     /// 1. Online (recent heartbeat)
     /// 2. Ready status (not busy/starting/stopped)
     pub fn list_available_workers(&self) -> Vec<WorkerInfo> {
-        let workers = self.workers.read().unwrap();
-        workers
-            .values()
-            .filter(|hb| hb.is_recent() && hb.worker.is_available())
-            .map(|hb| hb.worker.clone())
-            .collect()
+        self.inner.list_available()
     }
 
     /// Find workers serving a specific model
     pub fn find_workers_by_model(&self, model_id: &str) -> Vec<WorkerInfo> {
-        let workers = self.workers.read().unwrap();
-        workers
-            .values()
+        self.inner
+            .get_all_heartbeats()
+            .into_iter()
             .filter(|hb| hb.is_recent() && hb.worker.serves_model(model_id))
-            .map(|hb| hb.worker.clone())
+            .map(|hb| hb.worker)
             .collect()
     }
 
@@ -111,46 +101,49 @@ impl WorkerRegistry {
     /// 3. Must serve the requested model
     /// 4. Prefers worker with lowest load (future: use metrics)
     pub fn find_best_worker_for_model(&self, model_id: &str) -> Option<WorkerInfo> {
-        let workers = self.workers.read().unwrap();
-        workers
-            .values()
+        self.inner
+            .get_all_heartbeats()
+            .into_iter()
             .filter(|hb| {
                 hb.is_recent() && hb.worker.is_available() && hb.worker.serves_model(model_id)
             })
-            .map(|hb| hb.worker.clone())
-            .next() // For now, just return first match
-                    // Future: Sort by load/metrics
+            .map(|hb| hb.worker)
+            .next()
     }
 
     /// Get total worker count (including stale)
     pub fn total_worker_count(&self) -> usize {
-        let workers = self.workers.read().unwrap();
-        workers.len()
+        self.inner.count_total()
     }
 
     /// Get online worker count
     pub fn online_worker_count(&self) -> usize {
-        let workers = self.workers.read().unwrap();
-        workers.values().filter(|hb| hb.is_recent()).count()
+        self.inner.count_online()
+    }
+
+    /// Get count of online workers (alias for online_worker_count)
+    /// TEAM-285: Added to match hive-registry API
+    pub fn count_online(&self) -> usize {
+        self.inner.count_online()
+    }
+
+    /// Get count of available workers
+    /// TEAM-285: Added to match hive-registry API
+    pub fn count_available(&self) -> usize {
+        self.inner.count_available()
     }
 
     /// Check if worker is online
     pub fn is_worker_online(&self, worker_id: &str) -> bool {
-        let workers = self.workers.read().unwrap();
-        workers.get(worker_id).map(|hb| hb.is_recent()).unwrap_or(false)
+        self.inner.is_online(worker_id)
     }
 
     /// Clean up stale workers
     ///
     /// Removes workers that haven't sent heartbeat in timeout window.
     /// Returns number of workers removed.
-    pub fn cleanup_stale_workers(&self) -> usize {
-        let mut workers = self.workers.write().unwrap();
-        let initial_count = workers.len();
-
-        workers.retain(|_, hb| hb.is_recent());
-
-        initial_count - workers.len()
+    pub fn cleanup_stale(&self) -> usize {
+        self.inner.cleanup_stale()
     }
 }
 

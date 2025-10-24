@@ -150,6 +150,7 @@ fn create_router(
         // TEAM-275: Removed /v1/heartbeat endpoint (deprecated, use /v1/worker-heartbeat instead)
         .route("/v1/worker-heartbeat", post(http::handle_worker_heartbeat)) // TEAM-261: Workers send heartbeats directly to queen
         .route("/v1/hive-heartbeat", post(http::handle_hive_heartbeat)) // TEAM-284/285: Hives send heartbeats directly to queen
+        .route("/v1/heartbeats/stream", get(http::handle_heartbeat_stream)) // TEAM-285: Live heartbeat streaming for web UI
         .with_state(heartbeat_state)
         .route("/v1/jobs", post(http::handle_create_job))
         .with_state(job_state.clone())

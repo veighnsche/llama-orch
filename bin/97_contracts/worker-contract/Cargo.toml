@@ -14,6 +14,9 @@ path = "src/lib.rs"
 # Shared contract types
 shared-contract = { path = "../shared-contract" }  # TEAM-284: Use shared types
 
+# TEAM-285: Generic heartbeat registry
+heartbeat-registry = { path = "../../99_shared_crates/heartbeat-registry" }
+
 # Serialization
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"

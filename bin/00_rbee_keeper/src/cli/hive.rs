@@ -41,21 +41,9 @@ use clap::Subcommand;
 // ============================================================
 pub enum HiveAction {
     // TEAM-278: DELETED SshTest, Install, Uninstall
-    // These are replaced by package commands (sync, install, uninstall)
+    // TEAM-285: DELETED Start, Stop (localhost-only, no lifecycle management)
     /// List all hives
     List,
-    /// Start a hive
-    Start {
-        /// Hive alias (defaults to localhost)
-        #[arg(short = 'a', long = "host", default_value = "localhost")]
-        alias: String,
-    },
-    /// Stop a hive
-    Stop {
-        /// Hive alias (defaults to localhost)
-        #[arg(short = 'a', long = "host", default_value = "localhost")]
-        alias: String,
-    },
     /// Get hive details
     Get {
         /// Hive alias (defaults to localhost)
@@ -76,5 +64,4 @@ pub enum HiveAction {
         #[arg(short = 'a', long = "host")]
         alias: String,
     },
-    // TEAM-278: DELETED ImportSsh - not needed in declarative arch
 }
