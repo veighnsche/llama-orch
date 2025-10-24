@@ -1,6 +1,8 @@
 // TEAM-291: Zustand store for Queen status and hives
+// Connected directly to rbee SDK
 
 import { create } from 'zustand';
+import type { HeartbeatMonitor } from '@rbee/react';
 
 // TEAM-291: Types from heartbeat snapshot
 export interface HeartbeatSnapshot {
@@ -43,10 +45,13 @@ interface RbeeState {
   // Raw heartbeat
   lastHeartbeat: HeartbeatSnapshot | null;
   
+  // SDK connection
+  monitor: HeartbeatMonitor | null;
+  
   // Actions
-  setQueenConnected: (connected: boolean) => void;
   setQueenError: (error: string | null) => void;
-  updateFromHeartbeat: (heartbeat: HeartbeatSnapshot) => void;
+  startMonitoring: (monitor: HeartbeatMonitor, baseUrl: string) => void;
+  stopMonitoring: () => void;
   resetState: () => void;
 }
 
@@ -64,21 +69,12 @@ const initialState = {
   workersAvailable: 0,
   workerIds: [],
   lastHeartbeat: null,
+  monitor: null,
 };
 
 // TEAM-291: Create zustand store
 export const useRbeeStore = create<RbeeState>((set) => ({
   ...initialState,
-
-  // TEAM-291: Set queen connection status
-  setQueenConnected: (connected: boolean) =>
-    set((state) => ({
-      queen: {
-        ...state.queen,
-        connected,
-        lastUpdate: connected ? new Date().toISOString() : state.queen.lastUpdate,
-      },
-    })),
 
   // TEAM-291: Set queen error
   setQueenError: (error: string | null) =>
@@ -90,32 +86,59 @@ export const useRbeeStore = create<RbeeState>((set) => ({
       },
     })),
 
-  // TEAM-291: Update from heartbeat snapshot
-  updateFromHeartbeat: (heartbeat: HeartbeatSnapshot) =>
-    set(() => {
-      // TEAM-291: Convert hive_ids to HiveInfo objects
-      const hives: HiveInfo[] = heartbeat.hive_ids.map((id) => ({
-        id,
-        status: 'online' as const,
-        lastSeen: heartbeat.timestamp,
-      }));
+  // TEAM-291: Start monitoring heartbeats
+  // This callback fires every ~5 seconds when queen sends heartbeat
+  startMonitoring: (monitorInstance: HeartbeatMonitor, baseUrl: string) =>
+    set((state) => {
+      // Stop existing monitor if any
+      if (state.monitor) {
+        state.monitor.stop();
+      }
 
-      return {
-        queen: {
-          connected: true,
-          lastUpdate: heartbeat.timestamp,
-          error: null,
-        },
-        hives,
-        hivesOnline: heartbeat.hives_online,
-        hivesAvailable: heartbeat.hives_available,
-        workersOnline: heartbeat.workers_online,
-        workersAvailable: heartbeat.workers_available,
-        workerIds: heartbeat.worker_ids,
-        lastHeartbeat: heartbeat,
-      };
+      // Start new monitor - callback fires on EVERY heartbeat from queen
+      monitorInstance.start((snapshot: HeartbeatSnapshot) => {
+        // REAL-TIME UPDATE: This runs every time queen sends a heartbeat
+        const hives: HiveInfo[] = snapshot.hive_ids.map((id) => ({
+          id,
+          status: 'online' as const,
+          lastSeen: snapshot.timestamp,
+        }));
+
+        // Update store immediately with latest data
+        set({
+          queen: {
+            connected: true,
+            lastUpdate: snapshot.timestamp,
+            error: null,
+          },
+          hives,
+          hivesOnline: snapshot.hives_online,
+          hivesAvailable: snapshot.hives_available,
+          workersOnline: snapshot.workers_online,
+          workersAvailable: snapshot.workers_available,
+          workerIds: snapshot.worker_ids,
+          lastHeartbeat: snapshot,
+        });
+      });
+
+      return { monitor: monitorInstance };
+    }),
+
+  // TEAM-291: Stop monitoring
+  stopMonitoring: () =>
+    set((state) => {
+      if (state.monitor) {
+        state.monitor.stop();
+      }
+      return { monitor: null };
     }),
 
   // TEAM-291: Reset to initial state
-  resetState: () => set(initialState),
+  resetState: () =>
+    set((state) => {
+      if (state.monitor) {
+        state.monitor.stop();
+      }
+      return initialState;
+    }),
 }));
