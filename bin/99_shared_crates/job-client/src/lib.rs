@@ -27,8 +27,14 @@
 //! ```
 
 use anyhow::Result;
-use futures::stream::StreamExt;
 use operations_contract::Operation;
+
+// TEAM-286: StreamExt needed for both native and WASM
+#[cfg(not(target_arch = "wasm32"))]
+use futures::stream::StreamExt;
+
+#[cfg(target_arch = "wasm32")]
+use futures_util::stream::StreamExt;
 
 /// HTTP client for job submission and SSE streaming
 ///
@@ -120,35 +126,62 @@ impl JobClient {
             return Err(anyhow::anyhow!("SSE stream returned error: {}", error));
         }
 
-        // 5. Stream bytes and process lines
+        // 5. Stream bytes and process lines incrementally
+        // TEAM-286: Use bytes_stream() for proper streaming (no buffering)
         let mut stream = response.bytes_stream();
+        let mut buffer = Vec::new();
 
         while let Some(chunk) = stream.next().await {
             let chunk = chunk.map_err(|e| anyhow::anyhow!("Stream error: {}", e))?;
-            let text = String::from_utf8(chunk.to_vec())
-                .map_err(|e| anyhow::anyhow!("Invalid UTF-8 in stream: {}", e))?;
+            
+            // Append to buffer
+            buffer.extend_from_slice(&chunk);
 
-            // Process each line
-            for line in text.lines() {
-                // Strip "data: " prefix if present (SSE format)
-                let data = line.strip_prefix("data: ").unwrap_or(line);
+            // Try to parse complete UTF-8 lines
+            loop {
+                // Find newline boundary
+                if let Some(newline_pos) = buffer.iter().position(|&b| b == b'\n') {
+                    // Extract line (including newline)
+                    let line_bytes = buffer.drain(..=newline_pos).collect::<Vec<_>>();
+                    
+                    // Convert to string (skip if invalid UTF-8)
+                    if let Ok(line) = std::str::from_utf8(&line_bytes) {
+                        let line = line.trim();
+                        
+                        // Strip "data: " prefix if present (SSE format)
+                        let data = line.strip_prefix("data: ").unwrap_or(line);
 
-                // Skip empty lines
-                if data.is_empty() {
-                    continue;
-                }
+                        // Skip empty lines
+                        if data.is_empty() {
+                            continue;
+                        }
 
-                // Call handler for each line
-                line_handler(data)?;
+                        // Call handler for each line
+                        line_handler(data)?;
 
-                // Check for [DONE] marker
-                if data.contains("[DONE]") {
-                    return Ok(job_id);
+                        // Check for [DONE] marker
+                        if data.contains("[DONE]") {
+                            return Ok(job_id);
+                        }
+                    }
+                } else {
+                    // No complete line yet, wait for more data
+                    break;
                 }
             }
         }
 
-        // Stream ended without [DONE] marker
+        // Process any remaining data in buffer
+        if !buffer.is_empty() {
+            if let Ok(line) = std::str::from_utf8(&buffer) {
+                let line = line.trim();
+                let data = line.strip_prefix("data: ").unwrap_or(line);
+                if !data.is_empty() {
+                    line_handler(data)?;
+                }
+            }
+        }
+
         Ok(job_id)
     }
 

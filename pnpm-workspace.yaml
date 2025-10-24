@@ -1,9 +1,10 @@
 packages:
   - consumers/rbee-utils
   - consumers/.examples/*
-  - consumers/rbee-sdk/ts
+  - consumers/rbee-sdk
   - frontend/apps/commercial
   - frontend/apps/user-docs
+  - frontend/apps/web-ui
   - frontend/packages/rbee-ui
   - frontend/packages/tailwind-config
   - frontend/reference/v0

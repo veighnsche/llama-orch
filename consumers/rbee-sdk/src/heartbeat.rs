@@ -81,10 +81,14 @@ impl HeartbeatMonitor {
             }
         }) as Box<dyn FnMut(MessageEvent)>);
 
-        event_source.add_event_listener_with_callback(
-            "heartbeat",
-            closure.as_ref().unchecked_ref()
-        )?;
+        // TEAM-286: SAFETY: unchecked_ref is safe here because we know the closure
+        // has the correct signature for MessageEvent callbacks
+        unsafe {
+            event_source.add_event_listener_with_callback(
+                "heartbeat",
+                closure.as_ref().unchecked_ref()
+            )?;
+        }
 
         // TEAM-286: Keep the closure alive
         closure.forget();

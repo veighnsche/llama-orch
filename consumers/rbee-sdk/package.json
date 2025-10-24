@@ -1,0 +1,30 @@
+{
+  "name": "@rbee/sdk",
+  "version": "0.1.0",
+  "description": "Rust SDK for rbee that compiles to WASM for browser/Node.js usage",
+  "main": "./pkg/bundler/rbee_sdk.js",
+  "types": "./pkg/bundler/rbee_sdk.d.ts",
+  "files": [
+    "pkg/bundler"
+  ],
+  "scripts": {
+    "build": "wasm-pack build --target bundler --out-dir pkg/bundler",
+    "build:web": "wasm-pack build --target web --out-dir pkg/web",
+    "build:all": "./build-wasm.sh"
+  },
+  "keywords": [
+    "rbee",
+    "llm",
+    "wasm",
+    "inference",
+    "ai",
+    "rust"
+  ],
+  "author": "rbee Team",
+  "license": "GPL-3.0-or-later",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/veighnsche/rbee.git",
+    "directory": "consumers/rbee-sdk"
+  }
+}

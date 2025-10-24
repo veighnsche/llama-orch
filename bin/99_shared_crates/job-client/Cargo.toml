@@ -6,13 +6,29 @@ license.workspace = true
 authors.workspace = true
 
 [dependencies]
+# TEAM-286: Core dependencies (all targets)
 anyhow = "1.0"
-reqwest = { version = "0.12", features = ["json", "stream"] }
+reqwest = { version = "0.12", default-features = false }
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
+operations-contract = { path = "../../97_contracts/operations-contract" }
+
+# TEAM-286: Native-only dependencies
+[target.'cfg(not(target_arch = "wasm32"))'.dependencies]
+reqwest = { version = "0.12", default-features = false, features = ["json", "stream", "rustls-tls"] }
 futures = "0.3"
-operations-contract = { path = "../../97_contracts/operations-contract" }  # TEAM-284/285: Moved to 97_contracts
-observability-narration-core = { path = "../narration-core" }
+tokio = { version = "1", features = ["rt-multi-thread", "macros", "time"] }
+
+# TEAM-286: WASM-only dependencies (fetch backend, no tokio)
+[target.'cfg(target_arch = "wasm32")'.dependencies]
+reqwest = { version = "0.12", default-features = false, features = ["json", "stream"] }
+futures-util = "0.3"
+wasm-bindgen = "0.2"
+wasm-bindgen-futures = "0.4"
+js-sys = "0.3"
+web-sys = { version = "0.3", features = ["ReadableStream", "Response", "Headers"] }
+wasm-streams = "0.4"
+serde-wasm-bindgen = "0.6"
 
 [lints]
 workspace = true
