@@ -69,7 +69,8 @@ members = [
     "bin/99_shared_crates/auto-update",         # TEAM-193: Dependency-aware auto-update for binaries
     "bin/99_shared_crates/rbee-config",         # TEAM-194: File-based config for queen
     # TEAM-284: DELETED daemon-sync and ssh-client (SSH/remote operations removed)
-    
+    "bin/99_shared_crates/job-client",          # Workspace automation (cargo xtask)
+
     # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
     # CONTRACT CRATES — Type-safe contracts (TEAM-285: Moved from 99 to 97)
     # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -92,8 +93,7 @@ members = [
     # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
     # Client libraries and utilities for external developers.
     
-    "consumers/rbee-sdk",    # Rust SDK for rbee
-    "consumers/rbee-utils",  # CLI utilities & helpers
+    "frontend/packages/rbee-sdk",    # Rust SDK for rbee
 
     # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
     # DEVELOPER TOOLS — Build & Maintenance
@@ -103,7 +103,7 @@ members = [
     "tools/openapi-client",  # OpenAPI client generator
     "tools/readme-index",    # README index generator
     "tools/spec-extract",    # Spec extraction & validation
-    "xtask", "bin/99_shared_crates/job-client",                 # Workspace automation (cargo xtask)
+    "xtask", 
     
 ]
 

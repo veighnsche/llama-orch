@@ -24,13 +24,16 @@ crate-type = ["cdylib", "rlib"]  # cdylib = WASM, rlib = for tests
 # ============================================================================
 
 # TEAM-286: Reuse job-client for all HTTP + SSE logic
-job-client = { path = "../../bin/99_shared_crates/job-client" }
+# TEAM-287: Updated path after moving to frontend/packages/
+job-client = { path = "../../../bin/99_shared_crates/job-client" }
 
 # TEAM-286: Reuse operations-contract for all operation types
-operations-contract = { path = "../../bin/97_contracts/operations-contract" }
+# TEAM-287: Updated path after moving to frontend/packages/
+operations-contract = { path = "../../../bin/97_contracts/operations-contract" }
 
 # TEAM-286: Reuse rbee-config for configuration
-rbee-config = { path = "../../bin/99_shared_crates/rbee-config" }
+# TEAM-287: Updated path after moving to frontend/packages/
+rbee-config = { path = "../../../bin/99_shared_crates/rbee-config" }
 
 # ============================================================================
 # WASM DEPENDENCIES

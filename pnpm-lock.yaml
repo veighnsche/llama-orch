@@ -323,8 +323,8 @@ importers:
         specifier: 1.2.8
         version: 1.2.8(@types/react-dom@19.2.2(@types/react@19.2.2))(@types/react@19.2.2)(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
       '@rbee/sdk':
-        specifier: ../../consumers/rbee-sdk
-        version: link:../../consumers/rbee-sdk
+        specifier: workspace:*
+        version: link:../../packages/rbee-sdk
       '@rbee/ui':
         specifier: workspace:*
         version: link:../../packages/rbee-ui
