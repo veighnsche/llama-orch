@@ -13,13 +13,41 @@ const meta: Meta<typeof BrandLogo> = {
       description: {
         component: `
 ## Overview
-The BrandLogo component combines the BrandMark (bee icon) with the "rbee" wordmark to create the complete brand identity. It's a clickable logo that typically links to the home page.
+The BrandLogo component combines the BrandMark (bee icon) with the "rbee" wordmark to create the complete brand identity. 
+
+**⚠️ Framework-Agnostic:** This component is now framework-agnostic and does NOT include navigation logic. Wrap it with your framework's Link component for navigation.
 
 ## Composition
 This molecule is composed of:
 - **BrandMark**: The bee icon SVG (atom)
 - **Wordmark**: The "rbee" text styled with brand typography
-- **Link Wrapper**: Optional Next.js Link component for navigation
+
+## Usage Examples
+
+### Next.js
+\`\`\`tsx
+import Link from 'next/link'
+import { BrandLogo } from '@rbee/ui/molecules'
+
+<Link href="/">
+  <BrandLogo size="md" />
+</Link>
+\`\`\`
+
+### React Router (Tauri, Vite)
+\`\`\`tsx
+import { Link } from 'react-router-dom'
+import { BrandLogo } from '@rbee/ui/molecules'
+
+<Link to="/">
+  <BrandLogo size="md" />
+</Link>
+\`\`\`
+
+### Static (No Link)
+\`\`\`tsx
+<BrandLogo size="md" />
+\`\`\`
 
 ## When to Use
 - In the Navigation component (top-left corner of all pages)
@@ -31,11 +59,11 @@ This molecule is composed of:
 - **Small (sm)**: Compact logo for mobile navigation or footer
 - **Medium (md)**: Default size for desktop navigation
 - **Large (lg)**: Prominent branding in hero sections or landing pages
-- **With/Without Link**: Can be rendered as a link or static element
 
-## Used In Commercial Site
-- **Navigation**: Top-left corner, links to home page, medium size on desktop, small on mobile
-- **Footer**: Brand identity section, medium size, links to home page
+## Used In
+- **Commercial Site (Next.js)**: Navigation and Footer
+- **Queen UI (Vite)**: AppSidebar
+- **Keeper UI (Tauri)**: KeeperSidebar
         `,
       },
     },
@@ -61,13 +89,14 @@ This molecule is composed of:
         category: 'Performance',
       },
     },
-    href: {
-      control: 'text',
-      description: 'URL to navigate to when clicked. If undefined, renders as non-clickable element.',
+    as: {
+      control: 'select',
+      options: ['div', 'span'],
+      description: 'Wrapper element type. Use "div" or "span" for static logo, or wrap with your own Link component.',
       table: {
-        type: { summary: 'string' },
-        defaultValue: { summary: 'undefined' },
-        category: 'Behavior',
+        type: { summary: "'div' | 'span'" },
+        defaultValue: { summary: 'div' },
+        category: 'Structure',
       },
     },
   },
@@ -79,28 +108,32 @@ type Story = StoryObj<typeof BrandLogo>
 export const Default: Story = {
   args: {
     size: 'md',
-    href: '/',
   },
 }
 
 export const Small: Story = {
   args: {
     size: 'sm',
-    href: '/',
   },
 }
 
 export const Large: Story = {
   args: {
     size: 'lg',
-    href: '/',
   },
 }
 
-export const WithoutLink: Story = {
+export const AsSpan: Story = {
   args: {
     size: 'md',
-    href: undefined,
+    as: 'span',
+  },
+  parameters: {
+    docs: {
+      description: {
+        story: 'Using span wrapper for inline display contexts.',
+      },
+    },
   },
 }
 
@@ -134,9 +167,13 @@ export const AllSizes: Story = {
 export const NavigationContext: Story = {
   render: () => (
     <div className="w-full">
-      <div className="mb-4 text-sm text-muted-foreground">Example: BrandLogo in Navigation component</div>
+      <div className="mb-4 text-sm text-muted-foreground">
+        Example: BrandLogo in Navigation component (wrap with Link in real usage)
+      </div>
       <div className="flex items-center justify-between rounded border bg-card p-4">
-        <BrandLogo size="md" href="/" />
+        <a href="/" className="inline-block">
+          <BrandLogo size="md" />
+        </a>
         <div className="flex gap-6">
           <a href="#" className="text-sm text-muted-foreground hover:text-foreground">
             Features
@@ -155,7 +192,7 @@ export const NavigationContext: Story = {
     docs: {
       description: {
         story:
-          'BrandLogo as it appears in the Navigation component. Positioned top-left, links to home page, medium size on desktop.',
+          'BrandLogo as it appears in the Navigation component. Wrapped in a link element, positioned top-left, medium size on desktop. In real usage, wrap with your framework\'s Link component.',
       },
     },
   },
@@ -164,10 +201,14 @@ export const NavigationContext: Story = {
 export const FooterContext: Story = {
   render: () => (
     <div className="w-full">
-      <div className="mb-4 text-sm text-muted-foreground">Example: BrandLogo in Footer component</div>
+      <div className="mb-4 text-sm text-muted-foreground">
+        Example: BrandLogo in Footer component (wrap with Link in real usage)
+      </div>
       <div className="rounded border bg-card p-8">
         <div className="flex flex-col gap-4">
-          <BrandLogo size="md" href="/" />
+          <a href="/" className="inline-block">
+            <BrandLogo size="md" />
+          </a>
           <p className="max-w-xs text-sm text-muted-foreground">
             Private LLM hosting in the Netherlands. GDPR-compliant, self-hosted AI infrastructure.
           </p>
@@ -178,7 +219,8 @@ export const FooterContext: Story = {
   parameters: {
     docs: {
       description: {
-        story: 'BrandLogo as it appears in the Footer component. Includes brand description below the logo.',
+        story:
+          'BrandLogo as it appears in the Footer component. Wrapped in a link element with brand description below. In real usage, wrap with your framework\'s Link component.',
       },
     },
   },

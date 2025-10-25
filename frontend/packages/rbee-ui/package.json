@@ -27,7 +27,9 @@
     "./assets": "./src/assets/index.ts",
     "./assets/*": "./src/assets/*",
     "./icons": "./src/icons/index.ts",
-    "./icons/*": "./src/icons/*"
+    "./icons/*": "./src/icons/*",
+    "./providers": "./src/providers/index.ts",
+    "./providers/*": "./src/providers/*/index.ts"
   },
   "files": ["src", "dist"],
   "scripts": {

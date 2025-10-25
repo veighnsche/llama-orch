@@ -1,9 +1,9 @@
-// TEAM-294: Main entry point
+// TEAM-295: Main entry point
 // Import order: globals.css (Tailwind + theme), then UI components, then App
 
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
-import { ThemeProvider } from "./components/ThemeProvider";
+import { ThemeProvider } from "@rbee/ui/providers";
 import "./globals.css";
 import "@rbee/ui/styles.css";
 import App from "./App.tsx";

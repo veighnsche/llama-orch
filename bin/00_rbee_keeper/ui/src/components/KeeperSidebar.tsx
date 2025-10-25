@@ -1,8 +1,8 @@
-// TEAM-292: Commands sidebar for Bee Keeper page
-// Ported from web-ui.old
-// TEAM-294: Added ThemeToggle at bottom and collapsible "See more" sections
+// TEAM-295: Navigation sidebar for Bee Keeper app
+// Based on AppSidebar from queen-rbee UI
 
-import { useState } from "react";
+import { HomeIcon, SettingsIcon, HelpCircleIcon } from "lucide-react";
+import { Link, useLocation } from "react-router-dom";
 import {
   Sidebar,
   SidebarContent,
@@ -15,126 +15,91 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@rbee/ui/atoms";
-import { ThemeToggle } from "./ThemeToggle";
-import { ChevronDown, ChevronRight } from "lucide-react";
+import { BrandLogo, ThemeToggle } from "@rbee/ui/molecules";
 
-interface CommandItemProps {
-  commandId: string;
-  label: string;
-}
+export function KeeperSidebar() {
+  const location = useLocation();
 
-interface CommandsSidebarProps {
-  onCommandClick: (command: string) => void;
-  activeCommand?: string;
-  disabled?: boolean;
-}
+  const mainNavigation = [
+    {
+      title: "Services",
+      href: "/",
+      icon: HomeIcon,
+      tooltip: "Manage services",
+    },
+  ];
 
-export function KeeperSidebar({
-  onCommandClick,
-  activeCommand,
-  disabled = false,
-}: CommandsSidebarProps) {
-  const [queenExpanded, setQueenExpanded] = useState(false);
-  const [hiveExpanded, setHiveExpanded] = useState(false);
-
-  function CommandItem({ commandId, label }: CommandItemProps) {
-    return (
-      <SidebarMenuItem>
-        <SidebarMenuButton
-          onClick={() => onCommandClick(commandId)}
-          isActive={activeCommand === commandId}
-          disabled={disabled}
-        >
-          {label}
-        </SidebarMenuButton>
-      </SidebarMenuItem>
-    );
-  }
-
-  function SeeMoreButton({
-    expanded,
-    onClick,
-  }: {
-    expanded: boolean;
-    onClick: () => void;
-  }) {
-    return (
-      <SidebarMenuItem>
-        <SidebarMenuButton
-          onClick={onClick}
-          className="text-xs text-muted-foreground hover:text-foreground"
-        >
-          {expanded ? (
-            <>
-              <ChevronDown className="h-3 w-3 mr-1" />
-              See less
-            </>
-          ) : (
-            <>
-              <ChevronRight className="h-3 w-3 mr-1" />
-              See more
-            </>
-          )}
-        </SidebarMenuButton>
-      </SidebarMenuItem>
-    );
-  }
+  const secondaryNavigation = [
+    {
+      title: "Settings",
+      href: "/settings",
+      icon: SettingsIcon,
+      tooltip: "Configuration",
+    },
+    {
+      title: "Help",
+      href: "/help",
+      icon: HelpCircleIcon,
+      tooltip: "Documentation",
+    },
+  ];
 
   return (
-    <Sidebar collapsible="none" className="border-r border-border">
+    <Sidebar collapsible="none" className="border-r border-border h-screen">
       <SidebarHeader className="p-4">
-        <div>
-          <h2 className="font-semibold">Commands</h2>
-          <p className="text-xs text-muted-foreground mt-1">CLI operations</p>
-        </div>
+        <Link to="/">
+          <BrandLogo size="md" />
+        </Link>
       </SidebarHeader>
       <SidebarContent>
-        {/* Queen Operations */}
         <SidebarGroup>
-          <SidebarGroupLabel>Queen</SidebarGroupLabel>
+          <SidebarGroupLabel>Main</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              <CommandItem commandId="queen-start" label="Start" />
-              <CommandItem commandId="queen-stop" label="Stop" />
-              <SeeMoreButton
-                expanded={queenExpanded}
-                onClick={() => setQueenExpanded(!queenExpanded)}
-              />
-              {queenExpanded && (
-                <>
-                  <CommandItem commandId="queen-status" label="Status" />
-                  <CommandItem commandId="queen-info" label="Info" />
-                  <CommandItem commandId="queen-rebuild" label="Rebuild" />
-                </>
-              )}
+              {mainNavigation.map((item) => (
+                <SidebarMenuItem key={item.href}>
+                  <SidebarMenuButton
+                    asChild
+                    isActive={location.pathname === item.href}
+                    tooltip={item.tooltip}
+                  >
+                    <Link to={item.href}>
+                      <item.icon />
+                      <span>{item.title}</span>
+                    </Link>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              ))}
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
-
-        {/* Hive Operations (localhost) */}
         <SidebarGroup>
-          <SidebarGroupLabel>Hive (localhost)</SidebarGroupLabel>
+          <SidebarGroupLabel>System</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              <CommandItem commandId="hive-start" label="Start" />
-              <CommandItem commandId="hive-stop" label="Stop" />
-              <SeeMoreButton
-                expanded={hiveExpanded}
-                onClick={() => setHiveExpanded(!hiveExpanded)}
-              />
-              {hiveExpanded && (
-                <>
-                  <CommandItem commandId="hive-status" label="Status" />
-                  <CommandItem commandId="hive-list" label="List Hives" />
-                </>
-              )}
+              {secondaryNavigation.map((item) => (
+                <SidebarMenuItem key={item.href}>
+                  <SidebarMenuButton
+                    asChild
+                    isActive={location.pathname === item.href}
+                    tooltip={item.tooltip}
+                  >
+                    <Link to={item.href}>
+                      <item.icon />
+                      <span>{item.title}</span>
+                    </Link>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              ))}
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
       </SidebarContent>
-      <SidebarFooter className="p-4 border-t border-border">
+      <SidebarFooter className="mt-auto p-4">
         <div className="flex items-center justify-between">
-          <span className="text-xs text-muted-foreground">Theme</span>
+          <span className="text-xs text-muted-foreground font-mono">
+            v0.1.0
+          </span>
           <ThemeToggle />
         </div>
       </SidebarFooter>

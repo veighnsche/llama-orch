@@ -42,14 +42,22 @@ pub async fn stop_queen(queen_url: &str) -> Result<()> {
         }
         Err(e) => {
             // Connection closed/reset is expected - queen shuts down before responding
-            if e.is_connect() || e.to_string().contains("connection closed") {
+            // TEAM-296: Fixed error detection to handle all connection closure scenarios
+            let error_str = e.to_string();
+            let is_expected_shutdown = e.is_connect()
+                || e.is_request()
+                || error_str.contains("connection closed")
+                || error_str.contains("connection reset")
+                || error_str.contains("broken pipe");
+
+            if is_expected_shutdown {
                 NARRATE.action("queen_stop").human("✅ Queen stopped").emit();
                 Ok(())
             } else {
                 // Unexpected error
                 NARRATE
                     .action("queen_stop")
-                    .context(e.to_string())
+                    .context(error_str)
                     .human("⚠️  Failed to stop queen: {}")
                     .error_kind("shutdown_failed")
                     .emit();

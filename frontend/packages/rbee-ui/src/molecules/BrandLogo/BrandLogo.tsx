@@ -1,13 +1,16 @@
 import { BrandMark } from '@rbee/ui/atoms/BrandMark'
 import { BrandWordmark } from '@rbee/ui/atoms/BrandWordmark'
 import { cn } from '@rbee/ui/utils'
-import Link from 'next/link'
 
 export interface BrandLogoProps {
+  /** Additional CSS classes */
   className?: string
-  href?: string
+  /** Next.js Image priority loading (passed to BrandMark) */
   priority?: boolean
+  /** Size variant */
   size?: 'sm' | 'md' | 'lg'
+  /** Wrapper element type - use 'div' for static logo, or wrap with your own Link component */
+  as?: 'div' | 'span'
 }
 
 const sizeClasses = {
@@ -16,21 +19,32 @@ const sizeClasses = {
   lg: 'gap-3',
 }
 
-export function BrandLogo({ className, href = '/', priority = false, size = 'md' }: BrandLogoProps) {
-  const content = (
-    <>
+/**
+ * BrandLogo - Framework-agnostic brand logo component
+ * 
+ * @example
+ * // Static logo
+ * <BrandLogo />
+ * 
+ * @example
+ * // With Next.js Link
+ * import Link from 'next/link'
+ * <Link href="/">
+ *   <BrandLogo />
+ * </Link>
+ * 
+ * @example
+ * // With React Router Link
+ * import { Link } from 'react-router-dom'
+ * <Link to="/">
+ *   <BrandLogo />
+ * </Link>
+ */
+export function BrandLogo({ className, priority = false, size = 'md', as: Component = 'div' }: BrandLogoProps) {
+  return (
+    <Component className={cn('flex items-center', sizeClasses[size], className)}>
       <BrandMark size={size} priority={priority} />
       <BrandWordmark size={size} />
-    </>
+    </Component>
   )
-
-  if (href) {
-    return (
-      <Link href={href} aria-label="rbee home" className={cn('flex items-center', sizeClasses[size], className)}>
-        {content}
-      </Link>
-    )
-  }
-
-  return <div className={cn('flex items-center', sizeClasses[size], className)}>{content}</div>
 }
