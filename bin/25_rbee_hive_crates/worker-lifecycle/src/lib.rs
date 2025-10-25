@@ -41,7 +41,7 @@
 //!     model_id: "meta-llama/Llama-3-8b".to_string(),
 //!     device: "cuda:0".to_string(),
 //!     port: 9001,
-//!     queen_url: "http://localhost:8500".to_string(),
+//!     queen_url: "http://localhost:7833".to_string(),
 //!     job_id: "job-456".to_string(),
 //! };
 //!

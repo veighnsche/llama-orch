@@ -100,7 +100,7 @@ OperationBuilder.infer({
 import init, { RbeeClient, OperationBuilder } from '@rbee/sdk';
 
 await init();
-const client = new RbeeClient('http://localhost:8500');
+const client = new RbeeClient('http://localhost:7833');
 
 // Status
 await client.submitAndStream(

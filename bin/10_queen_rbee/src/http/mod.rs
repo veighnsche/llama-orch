@@ -26,6 +26,7 @@ pub mod heartbeat;
 pub mod heartbeat_stream; // TEAM-285: Live heartbeat streaming
 pub mod info; // TEAM-292: Queen info endpoint for service discovery
 pub mod jobs; // TEAM-262
+pub mod static_files; // TEAM-293: Static file serving for web UI
 
 // Re-export commonly used types
 pub use build_info::handle_build_info;
@@ -39,3 +40,4 @@ pub use heartbeat::{
 };
 pub use heartbeat_stream::handle_heartbeat_stream; // TEAM-285: Live heartbeat streaming
 pub use jobs::{handle_create_job, handle_stream_job, SchedulerState}; // TEAM-262
+pub use static_files::create_static_router; // TEAM-293: Static file serving for web UI

@@ -34,8 +34,8 @@ pub async fn handle_info() -> Json<QueenInfo> {
     // TEAM-292: Hardcoded for localhost-only mode
     // In the future, this could be configurable
     Json(QueenInfo {
-        base_url: "http://localhost:8500".to_string(),
-        port: 8500,
+        base_url: "http://localhost:7833".to_string(),
+        port: 7833,
         version: env!("CARGO_PKG_VERSION").to_string(),
     })
 }
@@ -47,8 +47,8 @@ mod tests {
     #[tokio::test]
     async fn test_handle_info() {
         let response = handle_info().await;
-        assert_eq!(response.0.base_url, "http://localhost:8500");
-        assert_eq!(response.0.port, 8500);
+        assert_eq!(response.0.base_url, "http://localhost:7833");
+        assert_eq!(response.0.port, 7833);
         assert!(!response.0.version.is_empty());
     }
 }

@@ -16,7 +16,7 @@ pub struct Config {
 }
 
 fn default_queen_port() -> u16 {
-    8500
+    7833
 }
 
 impl Default for Config {

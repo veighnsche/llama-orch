@@ -143,7 +143,7 @@ async fn route_operation(
 
             // Queen URL for heartbeat (hardcoded for now)
             // TODO: Get from config
-            let queen_url = "http://localhost:8500".to_string();
+            let queen_url = "http://localhost:7833".to_string();
 
             let config = WorkerStartConfig {
                 worker_id: request.worker.clone(),

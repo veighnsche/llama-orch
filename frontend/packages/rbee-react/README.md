@@ -29,7 +29,7 @@ function MyComponent() {
   }
 
   // SDK is ready - use sdk.RbeeClient, sdk.HeartbeatMonitor, etc.
-  const client = new sdk.RbeeClient('http://localhost:8500');
+  const client = new sdk.RbeeClient('http://localhost:7833');
   
   return <div>SDK loaded!</div>;
 }

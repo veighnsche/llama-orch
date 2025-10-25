@@ -5,7 +5,7 @@ echo "KILL DEV SERVERS SCRIPT"
 echo "=========================================="
 echo ""
 
-PORTS=(7832 7833 7834 7835)
+PORTS=(6006 5173 7822 7811)
 KILLED_ANY=false
 
 echo "Step 1: Killing processes by name..."

@@ -4,10 +4,10 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "vite --port 7833",
+    "dev": "vite --port 5173",
     "build": "tsc -b && vite build",
     "lint": "eslint .",
-    "preview": "vite preview --port 7833"
+    "preview": "vite preview --port 5173"
   },
   "dependencies": {
     "@radix-ui/react-accordion": "1.2.12",

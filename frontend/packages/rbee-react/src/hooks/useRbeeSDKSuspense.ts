@@ -18,7 +18,7 @@ import { loadSDKOnce } from '../loader';
  * ```tsx
  * function MyComponent() {
  *   const sdk = useRbeeSDKSuspense();
- *   const client = new sdk.RbeeClient('http://localhost:8500');
+ *   const client = new sdk.RbeeClient('http://localhost:7833');
  *   return <div>Ready!</div>;
  * }
  * ```

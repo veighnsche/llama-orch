@@ -38,12 +38,12 @@ use std::sync::Arc;
 #[command(version)]
 struct Args {
     /// HTTP server port
-    #[arg(short, long, default_value = "9000")]
+    #[arg(short, long, default_value = "7844")]
     port: u16,
     
     /// Queen URL for heartbeat reporting
     /// TEAM-292: Added to enable hive heartbeat
-    #[arg(long, default_value = "http://localhost:8500")]
+    #[arg(long, default_value = "http://localhost:7833")]
     queen_url: String,
     
     /// Hive ID (alias)

@@ -17,7 +17,7 @@ import { loadSDKOnce } from '../loader';
  * const { sdk, loading, error } = useRbeeSDK({ onReady: (s) => console.log('Ready!') });
  * if (loading) return <div>Loading...</div>;
  * if (error) return <div>Error: {error.message}</div>;
- * const client = new sdk.RbeeClient('http://localhost:8500');
+ * const client = new sdk.RbeeClient('http://localhost:7833');
  * ```
  */
 export function useRbeeSDK(options?: LoadOptions) {

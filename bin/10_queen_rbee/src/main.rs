@@ -45,7 +45,7 @@ const NARRATE: NarrationFactory = NarrationFactory::new("queen");
 #[command(version)]
 struct Args {
     /// HTTP server port
-    #[arg(short, long, default_value = "8500")]
+    #[arg(short, long, default_value = "7833")]
     port: u16,
     // TEAM-290: DELETED config and config_dir args (file-based config deprecated)
 }
@@ -136,7 +136,8 @@ fn create_router(
         .allow_methods(Any) // Allow any HTTP method
         .allow_headers(Any); // Allow any headers
 
-    axum::Router::new()
+    // TEAM-293: Create API router first (takes priority over static files)
+    let api_router = axum::Router::new()
         // Health check (no /v1 prefix for compatibility)
         .route("/health", get(http::handle_health))
         // TEAM-186: V1 API endpoints (matches API_REFERENCE.md)
@@ -151,7 +152,12 @@ fn create_router(
         .route("/v1/jobs", post(http::handle_create_job))
         .with_state(job_state.clone())
         .route("/v1/jobs/{job_id}/stream", get(http::handle_stream_job)) // TEAM-288: Fixed path syntax for axum 0.8
-        .with_state(job_state)
+        .with_state(job_state);
+
+    // TEAM-293: Merge API routes with static file serving
+    // API routes take priority - static files are fallback
+    api_router
+        .merge(http::create_static_router())
         .layer(cors) // TEAM-288: Apply CORS layer to all routes
 }
 

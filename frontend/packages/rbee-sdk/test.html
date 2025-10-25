@@ -80,14 +80,14 @@
             log('');
             log('Click a button above to test operations.');
             log('');
-            log('Note: Make sure queen-rbee is running on http://localhost:8500');
+            log('Note: Make sure queen-rbee is running on http://localhost:7833');
         } catch (error) {
             clear();
             log('❌ Failed to load WASM: ' + error, 'error');
         }
         
         // Create client
-        const client = new RbeeClient('http://localhost:8500');
+        const client = new RbeeClient('http://localhost:7833');
         window.client = client;  // Make available globally
         
         // Test status operation
@@ -162,7 +162,7 @@
                 }
                 
                 // Create new monitor
-                heartbeatMonitor = new HeartbeatMonitor('http://localhost:8500');
+                heartbeatMonitor = new HeartbeatMonitor('http://localhost:7833');
                 
                 // Start monitoring
                 heartbeatMonitor.start((snapshot) => {

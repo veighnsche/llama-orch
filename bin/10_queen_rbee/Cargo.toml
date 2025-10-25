@@ -15,9 +15,11 @@ path = "src/main.rs"
 # HTTP framework
 axum = { workspace = true }
 tokio = { workspace = true, features = ["full"] }
-tower-http = { version = "0.6", features = ["cors"] } # TEAM-288: CORS support for web UI
+tower-http = { version = "0.6", features = ["cors", "fs"] } # TEAM-288: CORS support for web UI, TEAM-293: Static file serving
 reqwest = { version = "0.12", features = ["json"] }  # TEAM-158: For device detection HTTP calls
 async-trait = "0.1"  # TEAM-161: For DeviceDetector trait implementation
+rust-embed = "8.5" # TEAM-293: Embed static files in binary for distribution
+mime_guess = "2.0" # TEAM-293: MIME type detection for embedded assets
 
 # CLI
 clap = { version = "4", features = ["derive"] }
