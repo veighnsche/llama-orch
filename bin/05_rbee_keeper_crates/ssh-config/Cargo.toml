@@ -1,0 +1,19 @@
+# TEAM-294: SSH config parser for rbee-keeper
+# Parses ~/.ssh/config to discover available hives
+
+[package]
+name = "ssh-config"
+version = "0.1.0"
+edition = "2021"
+license = "GPL-3.0-or-later"
+
+[dependencies]
+anyhow = "1.0"
+serde = { version = "1.0", features = ["derive"] }
+thiserror = "1.0"
+
+[dev-dependencies]
+tempfile = "3.8"
+
+[lints]
+workspace = true

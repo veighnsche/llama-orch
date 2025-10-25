@@ -1,17 +1,17 @@
 // TEAM-294: Main entry point
-// Import order matches web-ui: app CSS first, then UI CSS
+// Import order: globals.css (Tailwind + theme), then UI components, then App
 
-import { StrictMode } from 'react'
-import { createRoot } from 'react-dom/client'
-import { ThemeProvider } from 'next-themes'
-import './globals.css'
-import '@rbee/ui/styles.css'
-import App from './App.tsx'
+import { StrictMode } from "react";
+import { createRoot } from "react-dom/client";
+import { ThemeProvider } from "./components/ThemeProvider";
+import "./globals.css";
+import "@rbee/ui/styles.css";
+import App from "./App.tsx";
 
-createRoot(document.getElementById('root')!).render(
+createRoot(document.getElementById("root")!).render(
   <StrictMode>
-    <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+    <ThemeProvider>
       <App />
     </ThemeProvider>
   </StrictMode>,
-)
+);

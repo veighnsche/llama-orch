@@ -1,7 +1,8 @@
 // TEAM-292: Commands sidebar for Bee Keeper page
 // Ported from web-ui.old
-// TEAM-294: Added ThemeToggle at bottom
+// TEAM-294: Added ThemeToggle at bottom and collapsible "See more" sections
 
+import { useState } from "react";
 import {
   Sidebar,
   SidebarContent,
@@ -14,7 +15,8 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@rbee/ui/atoms";
-import { ThemeToggle } from "@rbee/ui/molecules";
+import { ThemeToggle } from "./ThemeToggle";
+import { ChevronDown, ChevronRight } from "lucide-react";
 
 interface CommandItemProps {
   commandId: string;
@@ -32,6 +34,9 @@ export function CommandsSidebar({
   activeCommand,
   disabled = false,
 }: CommandsSidebarProps) {
+  const [queenExpanded, setQueenExpanded] = useState(false);
+  const [hiveExpanded, setHiveExpanded] = useState(false);
+
   function CommandItem({ commandId, label }: CommandItemProps) {
     return (
       <SidebarMenuItem>
@@ -41,6 +46,35 @@ export function CommandsSidebar({
           disabled={disabled}
         >
           {label}
+        </SidebarMenuButton>
+      </SidebarMenuItem>
+    );
+  }
+
+  function SeeMoreButton({
+    expanded,
+    onClick,
+  }: {
+    expanded: boolean;
+    onClick: () => void;
+  }) {
+    return (
+      <SidebarMenuItem>
+        <SidebarMenuButton
+          onClick={onClick}
+          className="text-xs text-muted-foreground hover:text-foreground"
+        >
+          {expanded ? (
+            <>
+              <ChevronDown className="h-3 w-3 mr-1" />
+              See less
+            </>
+          ) : (
+            <>
+              <ChevronRight className="h-3 w-3 mr-1" />
+              See more
+            </>
+          )}
         </SidebarMenuButton>
       </SidebarMenuItem>
     );
@@ -60,11 +94,19 @@ export function CommandsSidebar({
           <SidebarGroupLabel>Queen</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              <CommandItem commandId="queen-start" label="Start Queen" />
-              <CommandItem commandId="queen-stop" label="Stop Queen" />
-              <CommandItem commandId="queen-status" label="Status" />
-              <CommandItem commandId="queen-info" label="Info" />
-              <CommandItem commandId="queen-rebuild" label="Rebuild" />
+              <CommandItem commandId="queen-start" label="Start" />
+              <CommandItem commandId="queen-stop" label="Stop" />
+              <SeeMoreButton
+                expanded={queenExpanded}
+                onClick={() => setQueenExpanded(!queenExpanded)}
+              />
+              {queenExpanded && (
+                <>
+                  <CommandItem commandId="queen-status" label="Status" />
+                  <CommandItem commandId="queen-info" label="Info" />
+                  <CommandItem commandId="queen-rebuild" label="Rebuild" />
+                </>
+              )}
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
@@ -74,10 +116,18 @@ export function CommandsSidebar({
           <SidebarGroupLabel>Hive (localhost)</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              <CommandItem commandId="hive-start" label="Start Hive" />
-              <CommandItem commandId="hive-stop" label="Stop Hive" />
-              <CommandItem commandId="hive-status" label="Status" />
-              <CommandItem commandId="hive-list" label="List Hives" />
+              <CommandItem commandId="hive-start" label="Start" />
+              <CommandItem commandId="hive-stop" label="Stop" />
+              <SeeMoreButton
+                expanded={hiveExpanded}
+                onClick={() => setHiveExpanded(!hiveExpanded)}
+              />
+              {hiveExpanded && (
+                <>
+                  <CommandItem commandId="hive-status" label="Status" />
+                  <CommandItem commandId="hive-list" label="List Hives" />
+                </>
+              )}
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>

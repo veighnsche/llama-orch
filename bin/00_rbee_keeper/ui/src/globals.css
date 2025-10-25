@@ -4,3 +4,8 @@
  */
 
 @import "tailwindcss";
+@import "@repo/tailwind-config";
+@import "@rbee/ui/tokens/theme-tokens.css";
+
+/* Scan this app's source files for Tailwind classes */
+@source "../src/**/*.{ts,tsx}";

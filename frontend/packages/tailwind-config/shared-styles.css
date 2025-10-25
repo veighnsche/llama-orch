@@ -37,6 +37,15 @@
     --color-accent-foreground: var(--accent-foreground);
     --color-destructive: var(--destructive);
     --color-destructive-foreground: var(--destructive-foreground);
+    
+    /* Action colors - explicit mappings for Tailwind utilities */
+    --color-success: var(--success);
+    --color-success-foreground: var(--success-foreground);
+    --color-success-muted: var(--success-muted);
+    --color-danger: var(--danger);
+    --color-danger-foreground: var(--danger-foreground);
+    --color-danger-muted: var(--danger-muted);
+    
     --color-border: var(--border);
     --color-input: var(--input);
     --color-ring: var(--ring);

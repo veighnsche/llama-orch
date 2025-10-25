@@ -45,6 +45,15 @@
     --accent-foreground: #0f172a; /* text on pale ambers */
     --destructive: #dc2626;
     --destructive-foreground: #ffffff;
+    
+    /* Action colors */
+    --success: #10b981; /* emerald-500 */
+    --success-foreground: #ffffff;
+    --success-muted: #d1fae5; /* emerald-100 */
+    --danger: #dc2626; /* red-600 */
+    --danger-foreground: #ffffff;
+    --danger-muted: #fee2e2; /* red-100 */
+    
     --border: #cbd5e1; /* slate-300 for stronger definition */
     --input: #cbd5e1;
     --ring: #f59e0b; /* brand ring for focus-visible */
@@ -168,24 +177,32 @@
     --popover: #161f2e; /* tiny lift over card to separate overlays */
     --popover-foreground: #e5eaf1;
 
-    /* Brand system (dark): keep brand intact but slightly restrain chroma */
-    --primary: #b45309; /* amber-700 (current) – authority */
-    --primary-foreground: #ffffff;
-    --accent: #d97706; /* amber-600 for hover/highlights */
-    --accent-foreground: #101522; /* readable text on pale ambers if used */
+    /* Brand system (dark): more subdued orange to reduce brightness */
+    --primary: #92400e; /* amber-800 - much more subdued for dark mode */
+    --primary-foreground: #ffffff; /* white text for contrast on dark orange */
+    --accent: #b45309; /* amber-700 for hover/highlights */
+    --accent-foreground: #ffffff; /* white text for contrast */
 
     /* Structure & interaction */
     --secondary: #0f172a; /* keep */
     --secondary-foreground: #e5eaf1;
     --muted: #0e1726; /* slightly lighter than secondary for chips/rows */
     --muted-foreground: #a9b4c5; /* improve readability */
+    
+    /* Action colors - dark mode */
+    --success: #059669; /* emerald-600 - darker for dark mode */
+    --success-foreground: #ffffff;
+    --success-muted: #064e3b; /* emerald-900 */
+    --danger: #b91c1c; /* red-700 - darker for dark mode */
+    --danger-foreground: #ffffff;
+    --danger-muted: #7f1d1d; /* red-900 */
 
     --border: #263347; /* softer than #334155 to avoid heavy outlines */
     --input: #2a3a51; /* input shells slightly brighter than border */
     --ring: #b45309; /* keep brand ring in dark for strong focus */
 
     /* Chart colors - dark mode */
-    --chart-1: #b45309;
+    --chart-1: #92400e; /* match subdued primary */
     --chart-2: #3b82f6;
     --chart-3: #10b981;
     --chart-4: #8b5cf6;
@@ -193,7 +210,7 @@
 
     /* Terminal colors - dark mode */
     --terminal-red: #ef4444;
-    --terminal-amber: #b45309;
+    --terminal-amber: #92400e; /* match subdued primary */
     --terminal-green: #10b981;
 
     /* Code/Console backgrounds - dark mode */
@@ -214,12 +231,12 @@
     /* Sidebar colors - dark mode */
     --sidebar: #0b1220;
     --sidebar-foreground: #e5eaf1;
-    --sidebar-primary: #b45309;
-    --sidebar-primary-foreground: #ffffff;
-    --sidebar-accent: #d97706;
-    --sidebar-accent-foreground: #0b1220;
+    --sidebar-primary: #92400e; /* match primary - more subdued */
+    --sidebar-primary-foreground: #ffffff; /* white text for contrast */
+    --sidebar-accent: #b45309; /* amber-700 for hover */
+    --sidebar-accent-foreground: #ffffff; /* white text for contrast */
     --sidebar-border: #263347;
-    --sidebar-ring: #b45309;
+    --sidebar-ring: #92400e; /* match primary */
 
     /* Elevation (dark-friendly, ambient + subtle highlight) */
     --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.35), 0 0 0 1px rgba(255, 255, 255, 0.02) inset;

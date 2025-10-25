@@ -1,10 +1,15 @@
 // TEAM-292: Bee Keeper page - CLI operations interface
 // Ported from web-ui.old - Only operations that cannot be done through Queen HTTP API
 // TEAM-294: Connected to Tauri commands with Zustand state management
+// TEAM-294: Replaced TerminalWindow with SSH targets table
+// TEAM-294: Added PageContainer and dropdown menu for each row
+// TEAM-294: Load real SSH targets from ~/.ssh/config via Tauri
+// TEAM-294: Extracted SSH targets table into separate component
 
 import { invoke } from "@tauri-apps/api/core";
-import { TerminalWindow } from "@rbee/ui/molecules";
+import { PageContainer } from "@rbee/ui/molecules";
 import { CommandsSidebar } from "../components/CommandsSidebar";
+import { SshTargetsTable } from "../components/SshTargetsTable";
 import { useCommandStore } from "../store/commandStore";
 
 interface CommandResponse {
@@ -90,15 +95,43 @@ export default function KeeperPage() {
       appendOutput("");
       appendOutput(`[${timestamp}] ${statusIcon} ${response.message}`);
       
-      // If there's data, split it into lines and append each
+      // If there's data, format it appropriately
       if (response.data) {
         appendOutput("");
-        const dataLines = response.data.split("\n");
-        dataLines.forEach((line) => {
-          if (line.trim()) {
-            appendOutput(line);
+        
+        // Special handling for hive-list to display as table
+        if (command === "hive-list") {
+          try {
+            const targets = JSON.parse(response.data);
+            appendOutput("┌─────────────────────┬──────────────────────┬────────────┬─────────┐");
+            appendOutput("│ Host                │ Hostname:Port        │ User       │ Status  │");
+            appendOutput("├─────────────────────┼──────────────────────┼────────────┼─────────┤");
+            targets.forEach((target: any) => {
+              const host = target.host.padEnd(19);
+              const hostPort = `${target.hostname}:${target.port}`.padEnd(20);
+              const user = target.user.padEnd(10);
+              const status = target.status.padEnd(7);
+              appendOutput(`│ ${host} │ ${hostPort} │ ${user} │ ${status} │`);
+            });
+            appendOutput("└─────────────────────┴──────────────────────┴────────────┴─────────┘");
+          } catch (e) {
+            // Fallback to raw data if parsing fails
+            const dataLines = response.data.split("\n");
+            dataLines.forEach((line) => {
+              if (line.trim()) {
+                appendOutput(line);
+              }
+            });
           }
-        });
+        } else {
+          // Default: split by lines
+          const dataLines = response.data.split("\n");
+          dataLines.forEach((line) => {
+            if (line.trim()) {
+              appendOutput(line);
+            }
+          });
+        }
       }
     } catch (error) {
       const errorMessage =
@@ -110,8 +143,11 @@ export default function KeeperPage() {
     }
   };
 
-  // Join output lines for copy functionality
-  const outputText = outputLines.join("\n");
+  // Handle refresh from SSH targets table
+  const handleRefresh = async () => {
+    // Trigger the hive-list command to show narration output
+    await handleCommandClick("hive-list");
+  };
 
   return (
     <div className="flex h-full w-full">
@@ -121,29 +157,14 @@ export default function KeeperPage() {
         disabled={isExecuting}
       />
 
-      {/* Command Output Area */}
-      <div className="flex-1 p-4">
-        <TerminalWindow
-          title="rbee-keeper"
-          variant="output"
-          copyable
-          copyText={outputText}
-          className="h-full"
-        >
-          <div className="font-mono text-sm">
-            {outputLines.map((line, index) => (
-              <div
-                key={index}
-                className={
-                  activeCommand ? "text-foreground" : "text-muted-foreground"
-                }
-              >
-                {line || "\u00A0"} {/* Non-breaking space for empty lines */}
-              </div>
-            ))}
-          </div>
-        </TerminalWindow>
-      </div>
+      {/* SSH Targets Table */}
+      <PageContainer
+        title="SSH Targets"
+        description="Available hosts from ~/.ssh/config"
+        padding="lg"
+      >
+        <SshTargetsTable onRefresh={handleRefresh} />
+      </PageContainer>
     </div>
   );
 }

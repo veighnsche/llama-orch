@@ -8,6 +8,7 @@
     "./styles.css": "./dist/index.css",
     "./globals": "./src/tokens/globals.css",
     "./tokens": "./src/tokens/index.ts",
+    "./tokens/theme-tokens.css": "./src/tokens/theme-tokens.css",
     "./atoms": "./src/atoms/index.ts",
     "./atoms/*": "./src/atoms/*/index.ts",
     "./molecules": "./src/molecules/index.ts",

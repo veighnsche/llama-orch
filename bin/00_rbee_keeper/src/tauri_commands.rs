@@ -216,11 +216,24 @@ pub async fn hive_stop(host: String) -> Result<String, String> {
 
 #[tauri::command]
 pub async fn hive_list() -> Result<String, String> {
-    let config = Config::load().map_err(|e| e.to_string())?;
-    let queen_url = config.queen_url();
+    // TEAM-294: Return JSON for UI instead of using NARRATE
+    use ssh_config::parse_ssh_config;
     
-    let result = handlers::handle_hive(HiveAction::List, &queen_url).await;
-    to_response_unit(result)
+    let ssh_config_path = dirs::home_dir()
+        .ok_or("Failed to get home directory")?
+        .join(".ssh/config");
+
+    let targets = parse_ssh_config(&ssh_config_path)
+        .map_err(|e| e.to_string())?;
+
+    // Return JSON for UI
+    let response = CommandResponse {
+        success: true,
+        message: format!("Found {} SSH target(s)", targets.len()),
+        data: Some(serde_json::to_string(&targets).map_err(|e| e.to_string())?),
+    };
+
+    serde_json::to_string(&response).map_err(|e| e.to_string())
 }
 
 #[tauri::command]

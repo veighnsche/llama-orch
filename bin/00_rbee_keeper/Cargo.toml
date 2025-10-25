@@ -55,7 +55,8 @@ operations-contract = { path = "../97_contracts/operations-contract" }  # TEAM-1
 # TEAM-290: DELETED rbee-config dependency (file-based config deprecated)
 job-client = { path = "../99_shared_crates/job-client" }  # TEAM-259: Shared job submission client
 queen-lifecycle = { path = "../05_rbee_keeper_crates/queen-lifecycle" }  # TEAM-259: Queen lifecycle management
-hive-lifecycle = { path = "../05_rbee_keeper_crates/hive-lifecycle" }  # TEAM-290: Hive lifecycle management (SSH + local)
+hive-lifecycle = { path = "../05_rbee_keeper_crates/hive-lifecycle" }  # TEAM-290: Hive lifecycle management (SSH)
+ssh-config = { path = "../05_rbee_keeper_crates/ssh-config" }  # TEAM-294: SSH config parser + local
 
 # TEAM-293/294: Tauri v2 dependencies for GUI
 tauri = { version = "2", features = [] }
