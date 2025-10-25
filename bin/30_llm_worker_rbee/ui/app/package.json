@@ -1,5 +1,5 @@
 {
-  "name": "30_llm_worker_rbee",
+  "name": "@rbee/llm-worker-ui",
   "private": true,
   "version": "0.0.0",
   "type": "module",

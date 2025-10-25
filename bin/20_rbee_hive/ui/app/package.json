@@ -1,5 +1,5 @@
 {
-  "name": "20_rbee_hive",
+  "name": "@rbee/rbee-hive-ui",
   "private": true,
   "version": "0.0.0",
   "type": "module",
