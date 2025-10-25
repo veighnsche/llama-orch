@@ -8,12 +8,14 @@ echo ""
 
 echo "Step 1/10: Killing any running dev servers..."
 pkill -f "next dev" || true
+pkill -f "vite" || true
 echo "✓ Dev servers stopped"
 echo ""
 
-echo "Step 2/10: Removing .next build directories..."
+echo "Step 2/10: Removing .next and dist build directories..."
 find . -name ".next" -type d -exec rm -rf {} + 2>/dev/null || true
-echo "✓ .next directories removed"
+find . -name "dist" -type d -path "*/apps/*/dist" -exec rm -rf {} + 2>/dev/null || true
+echo "✓ Build directories removed"
 echo ""
 
 echo "Step 3/10: Removing .turbo cache directories..."
@@ -55,15 +57,23 @@ pnpm --filter @rbee/ui run build
 echo "✓ UI package built"
 echo ""
 
-echo "Step 10/10: Building commercial app..."
+echo "Step 10/11: Building commercial app..."
 pnpm --filter @rbee/commercial run build
 echo "✓ Commercial app built"
+echo ""
+
+echo "Step 11/11: Building web-ui app..."
+pnpm --filter web-ui run build
+echo "✓ Web UI app built"
 echo ""
 
 echo "=========================================="
 echo "CLEAN REINSTALL COMPLETE!"
 echo "=========================================="
 echo ""
-echo "You can now start the dev server with:"
-echo "  pnpm --filter @rbee/commercial run dev"
+echo "You can now start the dev servers with:"
+echo "  pnpm --filter @rbee/ui run storybook    (port 7832)"
+echo "  pnpm --filter web-ui run dev            (port 7833)"
+echo "  pnpm --filter @rbee/commercial run dev  (port 7834)"
+echo "  pnpm --filter @rbee/user-docs run dev   (port 7835)"
 echo ""

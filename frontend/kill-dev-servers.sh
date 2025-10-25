@@ -5,7 +5,7 @@ echo "KILL DEV SERVERS SCRIPT"
 echo "=========================================="
 echo ""
 
-PORTS=(3000 3100 6006)
+PORTS=(7832 7833 7834 7835)
 KILLED_ANY=false
 
 echo "Step 1: Killing processes by name..."
@@ -19,6 +19,16 @@ if pgrep -f "next dev" > /dev/null; then
     sleep 1
 else
     echo "  No Next.js dev servers found"
+fi
+
+# Kill Vite dev servers
+if pgrep -f "vite" > /dev/null; then
+    echo "  Found Vite dev server(s), killing..."
+    pkill -f "vite"
+    KILLED_ANY=true
+    sleep 1
+else
+    echo "  No Vite dev servers found"
 fi
 
 # Kill Storybook instances
