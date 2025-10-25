@@ -1,15 +1,18 @@
-# rbee-sdk
+# @rbee/queen-rbee-sdk
+
+**TEAM-294: Migrated from `frontend/packages/rbee-sdk`**
 
 **Rust SDK that compiles to WASM for browser/Node.js**
 
 > ✅ **Status:** Phase 2 in progress - `submit_and_stream()` implemented!  
-> **Version:** 0.1.0 (functional, under development)
+> **Version:** 0.1.0 (functional, under development)  
+> **Location:** `bin/10_queen_rbee/ui/packages/queen-rbee-sdk`
 
 ---
 
 ## Mission
 
-Provide a production-ready TypeScript/JavaScript SDK for building web UIs and Node.js applications that interact with rbee (queen-rbee).
+Provide a production-ready TypeScript/JavaScript SDK for building web UIs and Node.js applications that interact with queen-rbee.
 
 ---
 

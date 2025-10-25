@@ -1,9 +1,0 @@
-# TEAM-286: Ignore WASM build artifacts
-
-/target
-/pkg
-Cargo.lock
-*.wasm
-*.js
-*.d.ts
-node_modules/

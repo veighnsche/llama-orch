@@ -25,7 +25,7 @@ async function actuallyLoadSDK(opts: Required<LoadOptions>): Promise<{ sdk: Rbee
     try {
       // Import with timeout
       const mod = await withTimeout(
-        import('@rbee/sdk'),
+        import('@rbee/queen-rbee-sdk'),
         opts.timeoutMs,
         `SDK import (attempt ${attempt}/${opts.maxAttempts})`
       );

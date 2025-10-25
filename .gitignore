@@ -22,12 +22,19 @@ logs/
 Thumbs.db
 
 # Javascript
-/node_modules/
+node_modules/
+**/node_modules/
+dist/
+**/dist/
+*.tsbuildinfo
+**/*.tsbuildinfo
 
 *storybook.log
 storybook-static
 
 /.pnpm-store/
+.next/
+**/.next/
 
 # Environment files (global)
 # Ignore all .env files in any package, but keep example templates tracked

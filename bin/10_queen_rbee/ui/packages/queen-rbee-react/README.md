@@ -1,27 +1,31 @@
-# @rbee/react
+# @rbee/queen-rbee-react
 
-React hooks for the rbee WASM SDK.
+**TEAM-294: Migrated from `frontend/packages/rbee-react`**
+
+React hooks for the queen-rbee WASM SDK.
+
+**Location:** `bin/10_queen_rbee/ui/packages/queen-rbee-react`
 
 ## Installation
 
 ```bash
-pnpm add @rbee/react
+pnpm add @rbee/queen-rbee-react
 ```
 
 ## Usage
 
 ### useRbeeSDK
 
-Hook for loading and initializing the rbee WASM SDK.
+Hook for loading and initializing the queen-rbee WASM SDK.
 
 ```tsx
-import { useRbeeSDK } from '@rbee/react';
+import { useRbeeSDK } from '@rbee/queen-rbee-react';
 
 function MyComponent() {
   const { sdk, loading, error } = useRbeeSDK();
 
   if (loading) {
-    return <div>Loading rbee SDK...</div>;
+    return <div>Loading queen-rbee SDK...</div>;
   }
 
   if (error) {
