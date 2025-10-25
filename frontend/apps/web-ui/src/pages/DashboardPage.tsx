@@ -5,6 +5,7 @@ import { useHeartbeat } from '../hooks/useHeartbeat';
 import { useRbeeStore } from '../stores/rbeeStore';
 import { Button } from '@rbee/ui/atoms';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@rbee/ui/atoms';
+import { PageContainer } from '@rbee/ui/molecules';
 
 export default function DashboardPage() {
   const { connected, loading, error } = useHeartbeat();
@@ -45,14 +46,10 @@ export default function DashboardPage() {
   }
 
   return (
-    <div className="flex-1 space-y-4">
-      <div>
-        <h1 className="text-3xl font-bold">Dashboard</h1>
-        <p className="text-muted-foreground">
-          Monitor your queen, hives, workers, and models
-        </p>
-      </div>
-
+    <PageContainer
+      title="Dashboard"
+      description="Monitor your queen, hives, workers, and models"
+    >
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
         {/* Queen Status Card */}
         <Card>
@@ -178,6 +175,6 @@ export default function DashboardPage() {
           </CardContent>
         </Card>
       </div>
-    </div>
+    </PageContainer>
   );
 }

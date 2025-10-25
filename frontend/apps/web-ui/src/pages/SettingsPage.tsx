@@ -2,17 +2,14 @@
 // Ported from web-ui.old
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@rbee/ui/atoms';
+import { PageContainer } from '@rbee/ui/molecules';
 
 export default function SettingsPage() {
   return (
-    <div className="flex-1 space-y-4">
-      <div>
-        <h1 className="text-3xl font-bold">Settings</h1>
-        <p className="text-muted-foreground">
-          Configure your rbee installation
-        </p>
-      </div>
-
+    <PageContainer
+      title="Settings"
+      description="Configure your rbee installation"
+    >
       <div className="grid gap-6 md:grid-cols-2">
         <Card>
           <CardHeader>
@@ -62,6 +59,6 @@ export default function SettingsPage() {
           </CardContent>
         </Card>
       </div>
-    </div>
+    </PageContainer>
   );
 }

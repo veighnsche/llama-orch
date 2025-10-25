@@ -1,0 +1,79 @@
+import { cn } from '@rbee/ui/utils'
+import type { ReactNode } from 'react'
+
+export interface PageContainerProps {
+  /** Page title */
+  title: string
+  /** Optional page description */
+  description?: string
+  /** Optional actions (buttons, etc.) aligned to the right */
+  actions?: ReactNode
+  /** Page content */
+  children: ReactNode
+  /** Additional CSS classes */
+  className?: string
+  /** Content spacing variant */
+  spacing?: 'default' | 'compact' | 'relaxed'
+  /** Padding variant (default: 'default' = p-4) */
+  padding?: 'none' | 'sm' | 'default' | 'lg'
+}
+
+const spacingClasses = {
+  compact: 'space-y-3',
+  default: 'space-y-4',
+  relaxed: 'space-y-6',
+} as const
+
+const paddingClasses = {
+  none: '',
+  sm: 'p-2',
+  default: 'p-4',
+  lg: 'p-6',
+} as const
+
+/**
+ * PageContainer - Consistent page wrapper for web-ui app pages
+ * 
+ * Provides:
+ * - Consistent page structure (flex-1 container)
+ * - Title + description header
+ * - Optional action buttons
+ * - Proper spacing between sections
+ * 
+ * @example
+ * ```tsx
+ * <PageContainer
+ *   title="Dashboard"
+ *   description="Monitor your queen, hives, workers, and models"
+ * >
+ *   <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+ *     {/* Page content *\/}
+ *   </div>
+ * </PageContainer>
+ * ```
+ */
+export function PageContainer({
+  title,
+  description,
+  actions,
+  children,
+  className,
+  spacing = 'default',
+  padding = 'default',
+}: PageContainerProps) {
+  return (
+    <div className={cn('flex-1', paddingClasses[padding], spacingClasses[spacing], className)}>
+      {/* Header */}
+      <div className={cn('flex items-start justify-between gap-4', actions ? 'flex-wrap sm:flex-nowrap' : '')}>
+        <div className="min-w-0 flex-1">
+          <h1 className="text-3xl font-bold tracking-tight">{title}</h1>
+          {description && <p className="text-muted-foreground mt-1">{description}</p>}
+        </div>
+        {actions && <div className="flex items-center gap-2 shrink-0">{actions}</div>}
+      </div>
+
+      {/* Content */}
+      {children}
+    </div>
+  )
+}

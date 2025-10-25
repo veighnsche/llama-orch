@@ -3,18 +3,15 @@
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@rbee/ui/atoms';
 import { Button } from '@rbee/ui/atoms';
+import { PageContainer } from '@rbee/ui/molecules';
 import { ExternalLinkIcon } from 'lucide-react';
 
 export default function HelpPage() {
   return (
-    <div className="flex-1 space-y-4">
-      <div>
-        <h1 className="text-3xl font-bold">Help & Documentation</h1>
-        <p className="text-muted-foreground">
-          Get started with rbee
-        </p>
-      </div>
-
+    <PageContainer
+      title="Help & Documentation"
+      description="Get started with rbee"
+    >
       <div className="grid gap-6 md:grid-cols-2">
         <Card>
           <CardHeader>
@@ -80,6 +77,6 @@ export default function HelpPage() {
           </CardContent>
         </Card>
       </div>
-    </div>
+    </PageContainer>
   );
 }

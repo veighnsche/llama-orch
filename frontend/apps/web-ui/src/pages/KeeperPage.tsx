@@ -20,7 +20,7 @@ export default function KeeperPage() {
 
   return (
     <SidebarProvider>
-      <div className="flex h-[calc(100vh-2rem)] w-full">
+      <div className="flex h-full w-full">
         <CommandsSidebar 
           onCommandClick={handleCommandClick}
           activeCommand={activeCommand}
