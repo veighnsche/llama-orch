@@ -345,15 +345,19 @@ When you change a port in this document, update these files:
 ### Backend Services
 
 **queen-rbee (Port 7833):**
-- `bin/10_queen_rbee/src/main.rs` - Default port argument
-- `bin/10_queen_rbee/src/http/info.rs` - Hardcoded URLs
-- `bin/00_rbee_keeper/src/config.rs` - `default_queen_port()`
-- `bin/20_rbee_hive/src/main.rs` - Default queen URL
-- `bin/20_rbee_hive/src/job_router.rs` - Hardcoded URL
+- `bin/10_queen_rbee/src/main.rs` - Default port argument (line 48)
+- `bin/10_queen_rbee/src/http/info.rs` - Hardcoded URLs and port (lines 28, 37-38, 50-51)
+- `bin/10_queen_rbee/src/http/build_info.rs` - Documentation example (line 10)
+- `bin/10_queen_rbee/src/hive_forwarder.rs` - Documentation example (line 28)
+- `bin/00_rbee_keeper/src/config.rs` - `default_queen_port()` (line 19)
+- `bin/05_rbee_keeper_crates/queen-lifecycle/src/ensure.rs` - Extracted from base_url (line 142 comment)
+- `bin/20_rbee_hive/src/main.rs` - Default queen URL (line 46)
+- `bin/20_rbee_hive/src/job_router.rs` - Hardcoded URL (line 146)
+- `bin/25_rbee_hive_crates/worker-lifecycle/src/lib.rs` - Documentation example (line 44)
 
 **rbee-hive (Port 7835):**
-- `bin/20_rbee_hive/src/main.rs` - Default port argument
-- `bin/00_rbee_keeper/src/config.rs` - Default hive port
+- `bin/20_rbee_hive/src/main.rs` - Default port argument (line 41)
+- `bin/10_queen_rbee/src/hive_forwarder.rs` - Documentation example (line 28)
 
 **llm-worker (Port 8080):**
 - `bin/30_llm_worker_rbee/src/main.rs` - Default port argument
@@ -364,23 +368,29 @@ When you change a port in this document, update these files:
 **vllm-worker (Port 8000):**
 - `bin/30_vllm_worker_rbee/src/main.rs` - Default port argument
 
+### Documentation & Examples
+
+**Note:** The following files contain port references in documentation, examples, and tests.
+These should be updated when ports change to keep documentation accurate:
+
+- `bin/99_shared_crates/narration-core/src/builder.rs` - Example code (uses 8080 in examples)
+- `bin/98_security_crates/auth-min/src/policy.rs` - Example code and tests (uses 8080)
+- `bin/30_llm_worker_rbee/src/http/server.rs` - Example code and tests (uses 8080)
+
 ### Frontend Services (Development Ports)
 
 **rbee-keeper GUI (Port 5173):**
-- `frontend/apps/00_rbee_keeper/vite.config.ts` - Server port
+- `bin/00_rbee_keeper/ui/vite.config.ts` - Server port (line 10)
 - `bin/00_rbee_keeper/tauri.conf.json` - devPath URL
 
 **queen-rbee UI (Port 7834):**
-- `frontend/apps/10_queen_rbee/vite.config.ts` - Server port
-- `frontend/apps/10_queen_rbee/package.json` - Dev script
+- `bin/10_queen_rbee/ui/app/vite.config.ts` - Server port (line 9)
 
 **rbee-hive UI (Port 7836):**
-- `frontend/apps/20_rbee_hive/vite.config.ts` - Server port
-- `frontend/apps/20_rbee_hive/package.json` - Dev script
+- `bin/20_rbee_hive/ui/app/vite.config.ts` - Server port (line 7)
 
 **llm-worker UI (Port 7837):**
-- `frontend/apps/30_llm_worker_rbee/vite.config.ts` - Server port
-- `frontend/apps/30_llm_worker_rbee/package.json` - Dev script
+- `bin/30_llm_worker_rbee/ui/app/vite.config.ts` - Server port (line 7)
 
 **comfy-worker UI (Port 7838):**
 - `frontend/apps/30_comfy_worker_rbee/vite.config.ts` - Server port

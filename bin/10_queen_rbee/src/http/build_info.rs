@@ -7,7 +7,7 @@
 //! # Usage
 //!
 //! ```bash
-//! curl http://localhost:8500/v1/build-info
+//! curl http://localhost:7833/v1/build-info
 //! ```
 //!
 //! # Response

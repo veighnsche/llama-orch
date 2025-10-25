@@ -25,8 +25,8 @@ pub struct QueenInfo {
 /// # Example Response
 /// ```json
 /// {
-///   "base_url": "http://localhost:8500",
-///   "port": 8500,
+///   "base_url": "http://localhost:7833",
+///   "port": 7833,
 ///   "version": "0.1.0"
 /// }
 /// ```

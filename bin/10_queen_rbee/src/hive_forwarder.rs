@@ -25,7 +25,7 @@
 //! queen-rbee → HTTP → localhost-hive (same machine, different process)
 //! - Use case: Development, testing, or distributed queen build
 //! - Overhead: ~1-2ms per operation (loopback + serialization)
-//! - Example: queen on port 8500, hive on port 8600
+//! - Example: queen on port 7833, hive on port 7835
 //! ```
 //!
 //! ## 3. Integrated (local-hive feature - When hive_id="localhost")

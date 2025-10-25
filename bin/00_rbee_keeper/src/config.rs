@@ -13,6 +13,14 @@ use std::path::PathBuf;
 pub struct Config {
     #[serde(default = "default_queen_port")]
     pub queen_port: u16,
+    
+    // TEAM-294: Keep old fields for backward compatibility (ignored)
+    #[serde(skip_serializing, default)]
+    pool: Option<serde_json::Value>,
+    #[serde(skip_serializing, default)]
+    paths: Option<serde_json::Value>,
+    #[serde(skip_serializing, default)]
+    remote: Option<serde_json::Value>,
 }
 
 fn default_queen_port() -> u16 {
@@ -21,7 +29,12 @@ fn default_queen_port() -> u16 {
 
 impl Default for Config {
     fn default() -> Self {
-        Self { queen_port: default_queen_port() }
+        Self {
+            queen_port: default_queen_port(),
+            pool: None,
+            paths: None,
+            remote: None,
+        }
     }
 }
 

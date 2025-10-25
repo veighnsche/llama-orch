@@ -38,7 +38,7 @@ use std::sync::Arc;
 #[command(version)]
 struct Args {
     /// HTTP server port
-    #[arg(short, long, default_value = "7844")]
+    #[arg(short, long, default_value = "7835")]
     port: u16,
     
     /// Queen URL for heartbeat reporting

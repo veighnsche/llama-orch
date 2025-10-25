@@ -5,6 +5,10 @@ import tailwindcss from '@tailwindcss/vite'
 
 // https://vite.dev/config/
 export default defineConfig({
+  server: {
+    port: 7834,  // queen-rbee UI dev server
+    strictPort: true,
+  },
   plugins: [
     tailwindcss(),  // Official Tailwind v4 Vite plugin (must be first)
     wasm(),

@@ -138,8 +138,15 @@ async fn spawn_queen_with_preflight(base_url: &str) -> Result<()> {
         .human("Found queen-rbee binary at {}")
         .emit();
 
-    // Step 3: Spawn queen process
-    let args = vec!["--port".to_string(), "8500".to_string()];
+    // Step 3: Extract port from base_url and spawn queen process
+    // base_url format: "http://localhost:7833"
+    let port = base_url
+        .split(':')
+        .last()
+        .context("Failed to extract port from base_url")?
+        .to_string();
+    
+    let args = vec!["--port".to_string(), port];
     let manager = DaemonManager::new(queen_binary, args);
 
     let child = manager.spawn().await.context("Failed to spawn queen-rbee process")?;
