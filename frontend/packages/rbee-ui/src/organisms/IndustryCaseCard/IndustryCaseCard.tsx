@@ -39,20 +39,15 @@ export function IndustryCaseCard({
   solutions,
   badges,
   href,
-  className,
 }: IndustryCaseCardProps) {
-  const industryId = `industry-${industry.toLowerCase().replace(/\s+/g, '-')}`
-
   return (
     <Card className="p-8">
       <IconCardHeader
         icon={icon}
         title={industry}
         subtitle={segments}
-        titleId={industryId}
         iconSize="lg"
         iconTone="primary"
-        titleClassName="text-xl"
       />
 
       <CardContent className="space-y-4 p-0">

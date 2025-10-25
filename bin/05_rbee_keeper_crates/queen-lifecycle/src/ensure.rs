@@ -128,15 +128,32 @@ async fn spawn_queen_with_preflight(base_url: &str) -> Result<()> {
         .human("✅ Localhost-only mode (no config needed)")
         .emit();
 
-    // Step 2: Find queen-rbee binary in target directory
-    let queen_binary = DaemonManager::find_in_target("queen-rbee")
-        .context("Failed to find queen-rbee binary in target directory")?;
-
-    NARRATE
-        .action("queen_start")
-        .context(queen_binary.display().to_string())
-        .human("Found queen-rbee binary at {}")
-        .emit();
+    // Step 2: Find queen-rbee binary
+    // TEAM-296: ONLY use installed binary - no fallback to development binary
+    // This ensures install/uninstall actually control whether queen can run
+    let queen_binary = {
+        let home = std::env::var("HOME").context("Failed to get HOME directory")?;
+        let installed_path = std::path::PathBuf::from(format!("{}/.local/bin/queen-rbee", home));
+        
+        if installed_path.exists() {
+            NARRATE
+                .action("queen_start")
+                .context(installed_path.display().to_string())
+                .human("Using installed queen-rbee binary at {}")
+                .emit();
+            installed_path
+        } else {
+            NARRATE
+                .action("queen_start")
+                .human("❌ Queen not installed. Run 'rbee queen install' first.")
+                .error_kind("not_installed")
+                .emit();
+            anyhow::bail!(
+                "Queen not installed at {}. Run 'rbee queen install' to install from source.",
+                installed_path.display()
+            );
+        }
+    };
 
     // Step 3: Extract port from base_url and spawn queen process
     // base_url format: "http://localhost:7833"

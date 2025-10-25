@@ -10,7 +10,7 @@ export interface TabButtonProps {
   className?: string
 }
 
-export function TabButton({ id, label, icon: Icon, active, onClick, className }: TabButtonProps) {
+export function TabButton({ label, icon: Icon, active, onClick, className }: TabButtonProps) {
   return (
     <button
       onClick={onClick}

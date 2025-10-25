@@ -44,11 +44,8 @@ export function IconCardHeader({
   icon,
   title,
   subtitle,
-  titleId,
   iconSize = 'lg',
   iconTone = 'primary',
-  titleClassName = 'text-2xl',
-  subtitleClassName,
   className,
   align = 'start',
 }: IconCardHeaderProps) {

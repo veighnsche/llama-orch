@@ -134,16 +134,16 @@ export interface TemplateContainerProps {
   auditReadinessCTA?: AuditReadinessCTAProps
 }
 
-// Legacy bgVariant mapping to TemplateBackground variants
-const _legacyBgVariantMap = {
-  background: 'background',
-  secondary: 'secondary',
-  card: 'card',
-  default: 'background',
-  muted: 'muted',
-  subtle: 'subtle-border',
-  'destructive-gradient': 'gradient-destructive',
-} as const
+// Legacy bgVariant mapping to TemplateBackground variants (unused but kept for reference)
+// const _legacyBgVariantMap = {
+//   background: 'background',
+//   secondary: 'secondary',
+//   card: 'card',
+//   default: 'background',
+//   muted: 'muted',
+//   subtle: 'subtle-border',
+//   'destructive-gradient': 'gradient-destructive',
+// } as const
 
 const padY = {
   lg: 'py-16',

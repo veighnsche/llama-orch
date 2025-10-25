@@ -44,7 +44,7 @@ export interface CTARailProps {
  *   ]}
  * />
  */
-export function CTARail({ heading, description, buttons, links, footnote, className }: CTARailProps) {
+export function CTARail({ heading, description, buttons, links, footnote }: CTARailProps) {
   return (
     <Card className="border-primary/20 bg-primary/5">
       <CardContent className="p-6 text-center">

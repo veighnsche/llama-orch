@@ -34,7 +34,6 @@ export function TerminalWindow({
   ariaLabel,
   copyable = false,
   copyText,
-  variant = "terminal",
   className,
 }: TerminalWindowProps) {
   const [copied, setCopied] = useState(false);

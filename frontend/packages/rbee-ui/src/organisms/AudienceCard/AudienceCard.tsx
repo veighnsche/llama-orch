@@ -5,21 +5,22 @@ import { cn, parseInlineMarkdown } from '@rbee/ui/utils'
 import { cva } from 'class-variance-authority'
 import type { ReactNode } from 'react'
 
-const _audienceCardVariants = cva('', {
-  variants: {
-    color: {
-      primary: '',
-      'chart-1': '',
-      'chart-2': '',
-      'chart-3': '',
-      'chart-4': '',
-      'chart-5': '',
-    },
-  },
-  defaultVariants: {
-    color: 'primary',
-  },
-})
+// Unused variants (kept for reference)
+// const _audienceCardVariants = cva('', {
+//   variants: {
+//     color: {
+//       primary: '',
+//       'chart-1': '',
+//       'chart-2': '',
+//       'chart-3': '',
+//       'chart-4': '',
+//       'chart-5': '',
+//     },
+//   },
+//   defaultVariants: {
+//     color: 'primary',
+//   },
+// })
 
 export type AudienceCardColor = 'primary' | 'chart-1' | 'chart-2' | 'chart-3' | 'chart-4' | 'chart-5'
 

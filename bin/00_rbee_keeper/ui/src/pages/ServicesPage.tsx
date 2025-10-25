@@ -1,5 +1,13 @@
 // TEAM-294: Keeper page - Status cards and SSH targets table
 // TEAM-295: Added action buttons to Queen and Hive cards (icon-only with tooltips)
+// TEAM-296: Wired up queen lifecycle operations (install, update, uninstall)
+//
+// Queen Lifecycle Operations:
+// - start: Run the queen daemon
+// - stop: Stop the queen daemon
+// - install: Build from git repo (cargo build --release) and install to ~/.local/bin (errors if already installed)
+// - update: Rebuild from source (cargo build --release)
+// - uninstall: Remove binary from ~/.local/bin (errors if not installed)
 
 import { invoke } from "@tauri-apps/api/core";
 import { PageContainer } from "@rbee/ui/molecules";
@@ -24,16 +32,16 @@ export default function KeeperPage() {
           await invoke("queen_stop");
           break;
         case "queen-install":
-          // TODO: Implement queen install
-          console.log("Queen install not yet implemented");
+          // TEAM-296: Build from source and install to ~/.local/bin
+          await invoke("queen_install", { binary: null });
           break;
         case "queen-update":
-          // TODO: Implement queen update
-          console.log("Queen update not yet implemented");
+          // TEAM-296: Rebuild from source (same as rebuild)
+          await invoke("queen_rebuild", { withLocalHive: false });
           break;
         case "queen-uninstall":
-          // TODO: Implement queen uninstall
-          console.log("Queen uninstall not yet implemented");
+          // TEAM-296: Remove binary from ~/.local/bin
+          await invoke("queen_uninstall");
           break;
         case "hive-start":
           await invoke("hive_start", {
@@ -81,7 +89,8 @@ export default function KeeperPage() {
             <CardContent>
               <div className="space-y-4">
                 <p className="text-sm text-muted-foreground">
-                  Manage the Queen orchestrator service
+                  Job router that dispatches inference requests to workers in
+                  the correct hive
                 </p>
                 <ServiceActionButtons
                   servicePrefix="queen"
@@ -99,7 +108,8 @@ export default function KeeperPage() {
             <CardContent>
               <div className="space-y-4">
                 <p className="text-sm text-muted-foreground">
-                  Manage the local Hive service
+                  Manages workers and catalogs (models, worker binaries) on this
+                  machine
                 </p>
                 <ServiceActionButtons
                   servicePrefix="hive"
@@ -109,6 +119,24 @@ export default function KeeperPage() {
               </div>
             </CardContent>
           </Card>
+        </div>
+
+        {/* Helper Text */}
+        <div className="rounded-lg border border-border bg-muted/50 p-4">
+          <h3 className="text-sm font-medium mb-2">About Services</h3>
+          <div className="space-y-2 text-sm text-muted-foreground">
+            <p>
+              <strong className="text-foreground">Queen</strong> routes
+              inference jobs to the right worker in the right hive. Start Queen
+              first to enable job routing.
+            </p>
+            <p>
+              <strong className="text-foreground">Hive</strong> manages worker
+              lifecycle and catalogs (models from HuggingFace, worker binaries).
+              Start localhost hive to see local models and workers. Use SSH
+              targets below to start remote hives and access their catalogs.
+            </p>
+          </div>
         </div>
 
         {/* SSH Targets Table */}

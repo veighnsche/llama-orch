@@ -25,7 +25,7 @@ export interface StepCardProps {
  * StepCard molecule for deployment process steps
  * with numbered badge, icon, intro, and deliverables list
  */
-export function StepCard({ index, icon, title, intro, items, footnote, isLast, className }: StepCardProps) {
+export function StepCard({ index, icon, title, intro, items, isLast, className }: StepCardProps) {
   return (
     <li
       className={cn('relative flex gap-6', className)}

@@ -25,7 +25,6 @@ export function PricingTier({
   title,
   price,
   priceYearly,
-  currency = 'CUSTOM',
   period,
   features,
   ctaText,

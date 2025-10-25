@@ -9,7 +9,9 @@ use observability_narration_core::NarrationFactory;
 
 const NARRATE: NarrationFactory = NarrationFactory::new("queen-life");
 
-/// Rebuild queen-rbee with optional features
+/// Rebuild queen-rbee with optional features (update operation)
+///
+/// TEAM-296: This is the 'update' command - rebuilds from source
 ///
 /// Runs `cargo build --release --bin queen-rbee` with optional features.
 ///
@@ -20,7 +22,7 @@ const NARRATE: NarrationFactory = NarrationFactory::new("queen-life");
 /// * `Ok(())` - Build successful
 /// * `Err` - Build failed
 pub async fn rebuild_queen(with_local_hive: bool) -> Result<()> {
-    NARRATE.action("queen_rebuild").human("🔨 Rebuilding queen-rbee...").emit();
+    NARRATE.action("queen_rebuild").human("🔄 Updating queen-rbee (rebuilding from source)...").emit();
 
     // Determine build command
     let mut cmd = std::process::Command::new("cargo");
