@@ -45,8 +45,8 @@ const mockData = [
 
 export const NeutralHoverStates: Story = {
   render: () => (
-    <div className="bg-[#0b1220] p-8 rounded-lg">
-      <div className="bg-card border border-border rounded-xl p-6">
+    <div className="bg-[#0b1220] p-8 rounded">
+      <div className="bg-card border border-border rounded-md p-6">
         <h3 className="text-lg font-semibold mb-4">GPU Rental Pricing</h3>
         <Table>
           <TableHeader>
@@ -85,8 +85,8 @@ export const NeutralHoverStates: Story = {
 
 export const SelectedRowWithFocus: Story = {
   render: () => (
-    <div className="bg-[#0b1220] p-8 rounded-lg">
-      <div className="bg-card border border-border rounded-xl p-6">
+    <div className="bg-[#0b1220] p-8 rounded">
+      <div className="bg-card border border-border rounded-md p-6">
         <h3 className="text-lg font-semibold mb-4">Selected State</h3>
         <Table>
           <TableHeader>
@@ -137,8 +137,8 @@ export const SelectedRowWithFocus: Story = {
 
 export const HeaderAndFooter: Story = {
   render: () => (
-    <div className="bg-[#0b1220] p-8 rounded-lg">
-      <div className="bg-card border border-border rounded-xl p-6">
+    <div className="bg-[#0b1220] p-8 rounded">
+      <div className="bg-card border border-border rounded-md p-6">
         <h3 className="text-lg font-semibold mb-4">Full Table Structure</h3>
         <Table>
           <TableHeader>

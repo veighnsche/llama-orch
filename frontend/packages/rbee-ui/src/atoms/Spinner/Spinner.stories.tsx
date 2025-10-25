@@ -135,10 +135,10 @@ export const InButton: Story = {
       </div>
 
       <div className="flex gap-3">
-        <button className="inline-flex items-center justify-center size-9 rounded-lg border border-input hover:bg-muted/40 transition-colors">
+        <button className="inline-flex items-center justify-center size-9 rounded border border-input hover:bg-muted/40 transition-colors">
           <Spinner className="size-4" />
         </button>
-        <button className="inline-flex items-center justify-center size-10 rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition-colors">
+        <button className="inline-flex items-center justify-center size-10 rounded bg-primary text-primary-foreground hover:bg-primary/90 transition-colors">
           <Spinner className="size-5" />
         </button>
       </div>
@@ -149,7 +149,7 @@ export const InButton: Story = {
 export const LoadingStates: Story = {
   render: () => (
     <div className="flex flex-col gap-6 w-full max-w-md">
-      <div className="p-6 border rounded-lg">
+      <div className="p-6 border rounded">
         <div className="flex items-center gap-3 mb-4">
           <Spinner className="size-5" />
           <h3 className="text-sm font-semibold">Loading data...</h3>
@@ -157,7 +157,7 @@ export const LoadingStates: Story = {
         <p className="text-sm text-muted-foreground">Please wait while we fetch your information.</p>
       </div>
 
-      <div className="p-6 border rounded-lg">
+      <div className="p-6 border rounded">
         <div className="flex flex-col items-center gap-4 py-8">
           <Spinner className="size-8" />
           <div className="text-center">
@@ -167,7 +167,7 @@ export const LoadingStates: Story = {
         </div>
       </div>
 
-      <div className="p-4 border rounded-lg">
+      <div className="p-4 border rounded">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <Spinner className="size-4 text-primary" />
@@ -203,7 +203,7 @@ export const InlineLoading: Story = {
 
 export const FullPageLoader: Story = {
   render: () => (
-    <div className="w-full max-w-4xl h-[400px] border rounded-lg relative overflow-hidden">
+    <div className="w-full max-w-4xl h-[400px] border rounded relative overflow-hidden">
       <div className="absolute inset-0 flex items-center justify-center bg-background/80 backdrop-blur-sm">
         <div className="flex flex-col items-center gap-4">
           <Spinner className="size-12 text-primary" />
@@ -220,21 +220,21 @@ export const FullPageLoader: Story = {
 export const ListLoading: Story = {
   render: () => (
     <div className="w-full max-w-md space-y-3">
-      <div className="flex items-center gap-3 p-3 border rounded-lg">
+      <div className="flex items-center gap-3 p-3 border rounded">
         <Spinner className="size-4" />
         <div className="flex-1">
           <div className="h-4 bg-muted rounded w-3/4 mb-2" />
           <div className="h-3 bg-muted rounded w-1/2" />
         </div>
       </div>
-      <div className="flex items-center gap-3 p-3 border rounded-lg">
+      <div className="flex items-center gap-3 p-3 border rounded">
         <Spinner className="size-4" />
         <div className="flex-1">
           <div className="h-4 bg-muted rounded w-2/3 mb-2" />
           <div className="h-3 bg-muted rounded w-1/3" />
         </div>
       </div>
-      <div className="flex items-center gap-3 p-3 border rounded-lg">
+      <div className="flex items-center gap-3 p-3 border rounded">
         <Spinner className="size-4" />
         <div className="flex-1">
           <div className="h-4 bg-muted rounded w-4/5 mb-2" />

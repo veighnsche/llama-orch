@@ -19,7 +19,7 @@ export const Default: Story = {
         {Array.from({ length: 5 }).map((_, index) => (
           <CarouselItem key={index}>
             <div className="p-1">
-              <div className="flex aspect-square items-center justify-center p-6 border rounded-lg">
+              <div className="flex aspect-square items-center justify-center p-6 border rounded">
                 <span className="text-4xl font-semibold">{index + 1}</span>
               </div>
             </div>
@@ -39,7 +39,7 @@ export const WithThumbnails: Story = {
         <CarouselContent>
           {Array.from({ length: 5 }).map((_, index) => (
             <CarouselItem key={index}>
-              <div className="flex aspect-square items-center justify-center p-6 border rounded-lg bg-muted">
+              <div className="flex aspect-square items-center justify-center p-6 border rounded bg-muted">
                 <span className="text-2xl">Slide {index + 1}</span>
               </div>
             </CarouselItem>
@@ -58,7 +58,7 @@ export const Autoplay: Story = {
       <CarouselContent>
         {Array.from({ length: 5 }).map((_, index) => (
           <CarouselItem key={index}>
-            <div className="flex aspect-square items-center justify-center p-6 border rounded-lg">
+            <div className="flex aspect-square items-center justify-center p-6 border rounded">
               <span className="text-4xl font-semibold">{index + 1}</span>
             </div>
           </CarouselItem>
@@ -77,7 +77,7 @@ export const Vertical: Story = {
         {Array.from({ length: 5 }).map((_, index) => (
           <CarouselItem key={index}>
             <div className="p-1">
-              <div className="flex items-center justify-center p-6 border rounded-lg">
+              <div className="flex items-center justify-center p-6 border rounded">
                 <span className="text-3xl font-semibold">{index + 1}</span>
               </div>
             </div>

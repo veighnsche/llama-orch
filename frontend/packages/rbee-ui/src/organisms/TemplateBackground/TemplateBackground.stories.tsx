@@ -22,7 +22,7 @@ const SampleContent = () => (
       </p>
       <div className="grid grid-cols-3 gap-4 pt-8">
         {[1, 2, 3, 4, 5, 6].map((i) => (
-          <div key={i} className="h-32 bg-card rounded-lg border flex items-center justify-center">
+          <div key={i} className="h-32 bg-card rounded border flex items-center justify-center">
             <span className="text-muted-foreground">Card {i}</span>
           </div>
         ))}

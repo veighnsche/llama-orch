@@ -127,7 +127,7 @@ export function DevelopersHeroTemplate({
             alt={hardwareImage.alt}
             width={840}
             height={525}
-            className="rounded-xl object-cover w-full aspect-video"
+            className="rounded-md object-cover w-full aspect-video"
             priority={false}
             sizes="(min-width: 1024px) 420px, 100vw"
           />

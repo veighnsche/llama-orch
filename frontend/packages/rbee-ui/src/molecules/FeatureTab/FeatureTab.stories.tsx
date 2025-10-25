@@ -13,7 +13,7 @@ const meta: Meta<typeof FeatureTab> = {
   decorators: [
     (Story) => (
       <Tabs defaultValue="api" className="w-full max-w-2xl">
-        <TabsList className="grid w-full grid-cols-2 lg:grid-cols-4 h-auto rounded-xl border bg-card/60 p-1 gap-1">
+        <TabsList className="grid w-full grid-cols-2 lg:grid-cols-4 h-auto rounded-md border bg-card/60 p-1 gap-1">
           <Story />
         </TabsList>
       </Tabs>
@@ -77,7 +77,7 @@ export const AllTabs: Story = {
   decorators: [
     () => (
       <Tabs defaultValue="api" className="w-full max-w-4xl">
-        <TabsList className="grid w-full grid-cols-2 lg:grid-cols-4 h-auto rounded-xl border bg-card/60 p-1 gap-1">
+        <TabsList className="grid w-full grid-cols-2 lg:grid-cols-4 h-auto rounded-md border bg-card/60 p-1 gap-1">
           <FeatureTab value="api" icon={<Code className="size-6" />} label="OpenAI-Compatible" mobileLabel="OpenAI" />
           <FeatureTab value="gpu" icon={<Cpu className="size-6" />} label="Multi-GPU" mobileLabel="GPU" />
           <FeatureTab value="scheduler" icon={<Gauge className="size-6" />} label="Scheduler" mobileLabel="Rhai" />

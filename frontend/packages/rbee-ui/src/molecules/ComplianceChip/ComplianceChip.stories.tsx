@@ -148,9 +148,9 @@ export const InEnterpriseContext: Story = {
         <p className="text-muted-foreground">Certified and compliant with international standards</p>
       </div>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div className="p-6 bg-card rounded-lg border">
+        <div className="p-6 bg-card rounded border">
           <div className="flex items-center gap-3 mb-4">
-            <div className="h-12 w-12 rounded-lg bg-primary/10 flex items-center justify-center">
+            <div className="h-12 w-12 rounded bg-primary/10 flex items-center justify-center">
               <Shield className="w-6 h-6 text-primary" />
             </div>
             <h3 className="font-semibold text-lg">Data Protection</h3>
@@ -164,9 +164,9 @@ export const InEnterpriseContext: Story = {
             <ComplianceChip icon={<CheckCircle className="w-3 h-3" />}>NIS2</ComplianceChip>
           </div>
         </div>
-        <div className="p-6 bg-card rounded-lg border">
+        <div className="p-6 bg-card rounded border">
           <div className="flex items-center gap-3 mb-4">
-            <div className="h-12 w-12 rounded-lg bg-primary/10 flex items-center justify-center">
+            <div className="h-12 w-12 rounded bg-primary/10 flex items-center justify-center">
               <Lock className="w-6 h-6 text-primary" />
             </div>
             <h3 className="font-semibold text-lg">Security Standards</h3>

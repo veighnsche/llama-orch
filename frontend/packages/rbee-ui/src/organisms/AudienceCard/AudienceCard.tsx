@@ -62,7 +62,7 @@ const gradientVariants = cva(
 )
 
 const iconBgVariants = cva(
-  'flex h-14 w-14 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br shadow-lg',
+  'flex h-14 w-14 shrink-0 items-center justify-center rounded bg-gradient-to-br shadow-lg',
   {
     variants: {
       color: {
@@ -156,7 +156,7 @@ export function AudienceCard({
                 </div>
               </div>
               {imageSlot && (
-                <div className="h-14 w-14 shrink-0 overflow-hidden rounded-lg bg-card ring-1 ring-border">
+                <div className="h-14 w-14 shrink-0 overflow-hidden rounded bg-card ring-1 ring-border">
                   {imageSlot}
                 </div>
               )}

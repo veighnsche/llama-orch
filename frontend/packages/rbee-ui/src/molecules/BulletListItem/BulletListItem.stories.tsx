@@ -188,7 +188,7 @@ export const AllColors: Story = {
 
 export const WhiteCheckmarks: Story = {
   render: () => (
-    <div className="flex flex-col gap-4 p-8 max-w-2xl bg-chart-3 rounded-lg">
+    <div className="flex flex-col gap-4 p-8 max-w-2xl bg-chart-3 rounded">
       <h3 className="text-lg font-semibold text-white">White Checkmarks (for dark backgrounds)</h3>
       <ul className="space-y-3">
         <BulletListItem

@@ -72,19 +72,19 @@ export const AllPropsShowcase: Story = {
     children: (
       <div className="space-y-8">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div className="p-6 rounded-lg border bg-card">
+          <div className="p-6 rounded border bg-card">
             <h3 className="font-semibold mb-2">Feature One</h3>
             <p className="text-sm text-muted-foreground">
               Comprehensive layout options with flexible alignment and spacing controls.
             </p>
           </div>
-          <div className="p-6 rounded-lg border bg-card">
+          <div className="p-6 rounded border bg-card">
             <h3 className="font-semibold mb-2">Feature Two</h3>
             <p className="text-sm text-muted-foreground">
               Multiple CTA patterns including banners, rails, and footer sections.
             </p>
           </div>
-          <div className="p-6 rounded-lg border bg-card">
+          <div className="p-6 rounded border bg-card">
             <h3 className="font-semibold mb-2">Feature Three</h3>
             <p className="text-sm text-muted-foreground">
               Built-in security guarantees and disclaimer components for trust signals.
@@ -244,7 +244,7 @@ export const SplitLayout: Story = {
       </div>
     ),
     children: (
-      <div className="p-8 border rounded-lg">
+      <div className="p-8 border rounded">
         <p className="text-muted-foreground">Main content area</p>
       </div>
     ),
@@ -264,7 +264,7 @@ export const DestructiveVariant: Story = {
       variant: 'gradient-destructive',
     },
     children: (
-      <div className="p-6 border border-destructive/30 rounded-lg bg-destructive/5">
+      <div className="p-6 border border-destructive/30 rounded bg-destructive/5">
         <p className="text-sm">This demonstrates the destructive gradient background and destructive kicker variant.</p>
       </div>
     ),
@@ -294,11 +294,11 @@ export const BleedLayout: Story = {
     bleed: true,
     children: (
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div className="p-6 rounded-lg border bg-card">
+        <div className="p-6 rounded border bg-card">
           <h3 className="font-semibold mb-2">Contained Content</h3>
           <p className="text-sm text-muted-foreground">Content respects max-width while background bleeds</p>
         </div>
-        <div className="p-6 rounded-lg border bg-card">
+        <div className="p-6 rounded border bg-card">
           <h3 className="font-semibold mb-2">Flexible Layout</h3>
           <p className="text-sm text-muted-foreground">Perfect for hero sections and full-width features</p>
         </div>

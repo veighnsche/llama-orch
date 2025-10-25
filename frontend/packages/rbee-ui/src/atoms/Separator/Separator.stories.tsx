@@ -93,7 +93,7 @@ export const WithText: Story = {
 
 export const InNavigation: Story = {
   render: () => (
-    <div className="w-[250px] rounded-lg border p-4">
+    <div className="w-[250px] rounded border p-4">
       <nav className="space-y-2">
         <div className="space-y-1">
           <a href="#" className="block text-sm font-medium hover:text-primary">

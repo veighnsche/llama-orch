@@ -98,7 +98,7 @@ export const InEarningsCalculator: Story = {
     const monthlyEarnings = dailyEarnings * 30
 
     return (
-      <div className="max-w-md p-6 border rounded-lg">
+      <div className="max-w-md p-6 border rounded">
         <h3 className="text-xl font-bold mb-6">Earnings Calculator</h3>
 
         <div className="space-y-6">

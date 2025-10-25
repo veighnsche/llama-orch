@@ -156,7 +156,7 @@ export function MultiBackendGpuTemplate({
           {featureCards.map((card, idx) => (
             <div
               key={idx}
-              className="bg-background rounded-xl border border-border p-4 flex items-start gap-3 hover:-translate-y-0.5 transition-transform"
+              className="bg-background rounded-md border border-border p-4 flex items-start gap-3 hover:-translate-y-0.5 transition-transform"
             >
               <div className="size-5 shrink-0 mt-0.5 text-chart-2" aria-hidden="true">
                 {card.icon}

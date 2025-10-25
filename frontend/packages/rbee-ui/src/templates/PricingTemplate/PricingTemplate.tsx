@@ -94,7 +94,7 @@ export function PricingTemplate({ kickerBadges, tiers, editorialImage, footer, c
 
       {/* Billing toggle */}
       <div className="flex justify-center mb-6">
-        <div className="inline-flex items-center gap-2 text-sm bg-muted p-1 rounded-lg">
+        <div className="inline-flex items-center gap-2 text-sm bg-muted p-1 rounded">
           <button
             onClick={() => setIsYearly(false)}
             className={cn(
@@ -151,7 +151,7 @@ export function PricingTemplate({ kickerBadges, tiers, editorialImage, footer, c
             src={editorialImage.src}
             width={editorialImage.width || 1100}
             height={editorialImage.height || 620}
-            className="rounded-2xl ring-1 ring-border/60 shadow-sm mx-auto"
+            className="rounded ring-1 ring-border/60 shadow-sm mx-auto"
             alt={editorialImage.alt}
             priority
           />

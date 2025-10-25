@@ -35,7 +35,7 @@ const featureInfoCardVariants = cva(
   },
 )
 
-const iconContainerVariants = cva('flex items-center justify-center rounded-xl', {
+const iconContainerVariants = cva('flex items-center justify-center rounded-md', {
   variants: {
     tone: {
       default: 'bg-primary/10',

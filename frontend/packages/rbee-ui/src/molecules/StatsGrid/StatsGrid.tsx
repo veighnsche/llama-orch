@@ -44,7 +44,7 @@ export function StatsGrid({ stats, variant = 'cards', columns = 3, className }: 
         {stats.map((stat, idx) => (
           <div
             key={idx}
-            className="group rounded-lg border/70 bg-background/60 p-4 backdrop-blur transition-all supports-[backdrop-filter]:bg-background/50 hover:border-primary/40 hover:bg-background/80"
+            className="group rounded border/70 bg-background/60 p-4 backdrop-blur transition-all supports-[backdrop-filter]:bg-background/50 hover:border-primary/40 hover:bg-background/80"
           >
             <div className="flex items-center gap-2.5">
               {stat.icon && (
@@ -80,7 +80,7 @@ export function StatsGrid({ stats, variant = 'cards', columns = 3, className }: 
         {stats.map((stat, idx) => (
           <div
             key={idx}
-            className="h-full rounded-xl border/70 bg-card/50 p-5 transition-all duration-200 hover:border-border hover:bg-card/70"
+            className="h-full rounded-md border/70 bg-card/50 p-5 transition-all duration-200 hover:border-border hover:bg-card/70"
             role="group"
             aria-label={`${stat.value} ${stat.label}`}
           >
@@ -105,7 +105,7 @@ export function StatsGrid({ stats, variant = 'cards', columns = 3, className }: 
     return (
       <div className={cn('grid gap-5 text-sm text-muted-foreground', gridClasses[columns], className)}>
         {stats.map((stat, idx) => (
-          <div key={idx} className="rounded-xl border/60 bg-card/40 p-4">
+          <div key={idx} className="rounded-md border/60 bg-card/40 p-4">
             {stat.icon && (
               <div className="mb-2 flex justify-center">
                 <IconPlate icon={stat.icon} size="sm" tone="primary" />

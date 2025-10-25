@@ -11,7 +11,7 @@ interface StatusKPIProps {
 
 export function StatusKPI({ icon, color, label, value }: StatusKPIProps) {
   return (
-    <div className="bg-card border border-border rounded-xl p-4 flex items-center gap-3">
+    <div className="bg-card border border-border rounded-md p-4 flex items-center gap-3">
       <IconPlate icon={icon} tone={color} size="sm" shape="rounded" />
       <div>
         <div className="text-xs text-muted-foreground">{label}</div>

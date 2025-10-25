@@ -21,7 +21,7 @@ export interface GlassCardProps extends HTMLAttributes<HTMLDivElement> {
 export function GlassCard({ children, className, ...props }: GlassCardProps) {
   return (
     <div
-      className={cn('rounded-2xl backdrop-blur-md bg-secondary/60 dark:bg-secondary/30 shadow-lg', className)}
+      className={cn('rounded backdrop-blur-md bg-secondary/60 dark:bg-secondary/30 shadow-lg', className)}
       {...props}
     >
       {children}

@@ -38,7 +38,7 @@ type Story = StoryObj<typeof Button>
 
 export const LinkStates: Story = {
   render: () => (
-    <div className="bg-[#0b1220] p-8 rounded-lg space-y-8 max-w-2xl">
+    <div className="bg-[#0b1220] p-8 rounded space-y-8 max-w-2xl">
       <div className="space-y-4">
         <h3 className="text-lg font-semibold">Link Variants</h3>
         <div className="space-y-3">
@@ -116,7 +116,7 @@ export const LinkStates: Story = {
 
 export const DisabledStates: Story = {
   render: () => (
-    <div className="bg-[#0b1220] p-8 rounded-lg space-y-6 max-w-md">
+    <div className="bg-[#0b1220] p-8 rounded space-y-6 max-w-md">
       <h3 className="text-lg font-semibold mb-4">Disabled Button States</h3>
 
       <div className="space-y-3">
@@ -158,7 +158,7 @@ export const DisabledStates: Story = {
 
 export const ButtonProgression: Story = {
   render: () => (
-    <div className="bg-[#0b1220] p-8 rounded-lg space-y-6 max-w-md">
+    <div className="bg-[#0b1220] p-8 rounded space-y-6 max-w-md">
       <h3 className="text-lg font-semibold mb-4">Brand Progression</h3>
 
       <div className="space-y-4">

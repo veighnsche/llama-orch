@@ -182,7 +182,7 @@ export const Sizes: Story = {
 
 export const InForm: Story = {
   render: () => (
-    <form className="w-full max-w-md space-y-6 p-6 border rounded-lg">
+    <form className="w-full max-w-md space-y-6 p-6 border rounded">
       <div>
         <h3 className="text-lg font-semibold mb-2">Deploy Model</h3>
         <p className="text-sm text-muted-foreground">Configure your model deployment</p>

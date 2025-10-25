@@ -82,8 +82,8 @@ export function UseCasesHeroTemplate({
 }: UseCasesHeroTemplateProps) {
   const asideContent = (
     <div className="relative max-lg:order-first animate-in fade-in-50 slide-in-from-right-4">
-      <div className="rounded-2xl border bg-card/50 p-4 backdrop-blur-sm">
-        <Image src={image} width={1080} height={760} priority className="rounded-xl" alt={imageAlt} />
+      <div className="rounded border bg-card/50 p-4 backdrop-blur-sm">
+        <Image src={image} width={1080} height={760} priority className="rounded-md" alt={imageAlt} />
       </div>
       <p className="mt-4 text-center text-sm text-muted-foreground">{imageCaption}</p>
     </div>

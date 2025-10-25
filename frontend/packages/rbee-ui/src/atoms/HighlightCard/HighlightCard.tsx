@@ -3,7 +3,7 @@ import { cn } from '@rbee/ui/utils'
 import { cva, type VariantProps } from 'class-variance-authority'
 import { Card, CardContent, CardHeader, CardTitle } from '../Card/Card'
 
-const highlightCardVariants = cva('rounded-lg border p-4', {
+const highlightCardVariants = cva('rounded border p-4', {
   variants: {
     color: {
       primary: 'border-primary/50 bg-primary/10',

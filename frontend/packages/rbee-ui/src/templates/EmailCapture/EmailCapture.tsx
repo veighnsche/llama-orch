@@ -158,7 +158,7 @@ export function EmailCapture({
               </div>
               <Button
                 type="submit"
-                className="h-12 px-7 bg-primary text-primary-foreground font-semibold rounded-xl shadow-sm hover:translate-y-[-1px] hover:shadow-md transition-transform"
+                className="h-12 px-7 bg-primary text-primary-foreground font-semibold rounded-md shadow-sm hover:translate-y-[-1px] hover:shadow-md transition-transform"
               >
                 {submitButton.label}
               </Button>
@@ -172,7 +172,7 @@ export function EmailCapture({
           </form>
         ) : (
           <div
-            className="inline-flex items-center gap-2 text-chart-3 text-base md:text-lg font-medium bg-card/60 border/60 rounded-xl px-4 py-3 shadow-xs"
+            className="inline-flex items-center gap-2 text-chart-3 text-base md:text-lg font-medium bg-card/60 border/60 rounded-md px-4 py-3 shadow-xs"
             role="status"
             aria-live="polite"
           >

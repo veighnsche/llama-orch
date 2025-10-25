@@ -40,7 +40,7 @@ export function EnterpriseCompliance({ pillars }: EnterpriseComplianceProps) {
       {pillars.map((pillar, idx) => (
         <Card
           key={idx}
-          className="h-full rounded-2xl border-border bg-card/60 transition-shadow hover:shadow-lg"
+          className="h-full rounded border-border bg-card/60 transition-shadow hover:shadow-lg"
           aria-labelledby={pillar.titleId}
         >
           <IconCardHeader icon={pillar.icon} title={pillar.title} subtitle={pillar.subtitle} titleId={pillar.titleId} />

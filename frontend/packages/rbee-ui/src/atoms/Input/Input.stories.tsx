@@ -153,7 +153,7 @@ export const AllStates: Story = {
 
 export const InEmailCapture: Story = {
   render: () => (
-    <div className="max-w-md mx-auto p-6 border rounded-lg">
+    <div className="max-w-md mx-auto p-6 border rounded">
       <div className="text-center mb-6">
         <h3 className="text-2xl font-bold mb-2">Stay Updated</h3>
         <p className="text-muted-foreground">Get the latest updates on new models and features</p>

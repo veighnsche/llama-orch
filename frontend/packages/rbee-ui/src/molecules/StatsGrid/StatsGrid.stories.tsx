@@ -142,7 +142,7 @@ export const WithTones: Story = {
 
 export const InHeroContext: Story = {
   render: () => (
-    <div className="w-full bg-muted p-8 rounded-lg">
+    <div className="w-full bg-muted p-8 rounded">
       <div className="mb-8 text-center">
         <h2 className="text-3xl font-bold mb-2">Private LLM Hosting</h2>
         <p className="text-muted-foreground">GDPR-compliant AI infrastructure in the Netherlands</p>

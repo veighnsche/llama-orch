@@ -34,7 +34,7 @@ export function MonthlyEarningsPanel({
   className,
 }: MonthlyEarningsPanelProps) {
   return (
-    <div className={`rounded-lg border border-primary/20 bg-primary/5 p-4 ${className || ''}`}>
+    <div className={`rounded border border-primary/20 bg-primary/5 p-4 ${className || ''}`}>
       <div className="mb-1 text-xs uppercase tracking-wide text-muted-foreground">{monthLabel}</div>
       <div className="mb-1 tabular-nums text-4xl font-extrabold text-foreground">{monthEarnings}</div>
       <div className="mb-3 text-sm font-medium text-emerald-400">{monthGrowth}</div>

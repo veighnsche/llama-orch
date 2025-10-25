@@ -93,7 +93,7 @@ export function TechnicalTemplate({
           {/* Architecture Diagram (Desktop Only) */}
           {DiagramComponent && (
             <DiagramComponent
-              className="hidden md:block rounded-2xl ring-1 ring-border/60 shadow-sm"
+              className="hidden md:block rounded ring-1 ring-border/60 shadow-sm"
               aria-label={architectureDiagram.ariaLabel}
             />
           )}

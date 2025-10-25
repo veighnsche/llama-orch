@@ -21,7 +21,7 @@ export function IndustryCard({ title, copy, icon, color, badge, anchor, classNam
       aria-labelledby={anchor ? `${anchor}-title` : undefined}
       tabIndex={-1}
       className={cn(
-        'bg-card border/80 rounded-xl p-6 md:p-7 shadow-sm hover:shadow-md transition-all scroll-mt-28',
+        'bg-card border/80 rounded-md p-6 md:p-7 shadow-sm hover:shadow-md transition-all scroll-mt-28',
         'hover:-translate-y-0.5',
         'focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary/40',
         'animate-in fade-in-50 slide-in-from-bottom-4',

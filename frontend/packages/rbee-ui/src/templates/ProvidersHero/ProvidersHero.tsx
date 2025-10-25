@@ -84,7 +84,7 @@ export function ProvidersHero({
     <div className="flex items-center justify-center animate-in fade-in slide-in-from-bottom-2 delay-200 duration-700">
       <div className="relative w-full max-w-md lg:max-w-lg">
         {/* Glow effect */}
-        <div className="absolute -inset-4 rounded-2xl bg-primary/20 blur-3xl" />
+        <div className="absolute -inset-4 rounded bg-primary/20 blur-3xl" />
 
         {/* Card shell */}
         <Card className="relative bg-card/70 shadow-[0_10px_40px_-12px_rgb(0_0_0_/_0.35)] backdrop-blur">

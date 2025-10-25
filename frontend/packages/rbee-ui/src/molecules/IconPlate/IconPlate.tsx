@@ -50,7 +50,7 @@ export function IconPlate({ icon, size = 'md', tone = 'primary', shape = 'square
 
   const shapeClasses = {
     square: 'rounded-none',
-    rounded: 'rounded-lg',
+    rounded: 'rounded',
     circle: 'rounded-full',
   }
 

@@ -46,7 +46,7 @@ export const Default: Story = {
           <OptionSelector options={earningsPresets} onSelect={setSelected} columns={3} />
         </div>
         {selected && (
-          <div className="rounded-lg border bg-muted p-4 text-sm">
+          <div className="rounded border bg-muted p-4 text-sm">
             <strong>Selected:</strong> {selected.hours}h/day at {selected.utilization}% utilization
           </div>
         )}

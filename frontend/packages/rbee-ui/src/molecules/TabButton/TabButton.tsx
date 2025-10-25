@@ -15,7 +15,7 @@ export function TabButton({ id, label, icon: Icon, active, onClick, className }:
     <button
       onClick={onClick}
       className={cn(
-        'flex items-center gap-2 rounded-lg border px-4 py-2 text-sm font-medium transition-all',
+        'flex items-center gap-2 rounded border px-4 py-2 text-sm font-medium transition-all',
         active
           ? 'border-primary bg-primary/10 text-primary'
           : 'border-border bg-card text-muted-foreground hover:border-border hover:text-foreground',

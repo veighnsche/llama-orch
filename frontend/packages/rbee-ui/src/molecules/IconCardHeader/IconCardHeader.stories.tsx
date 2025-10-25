@@ -150,7 +150,7 @@ export const CustomTitleSize: Story = {
 
 export const InCard: Story = {
   render: () => (
-    <Card className="w-96 rounded-2xl border-border bg-card/60 p-8">
+    <Card className="w-96 rounded border-border bg-card/60 p-8">
       <IconCardHeader
         icon={<Globe className="size-6" />}
         title="GDPR"
@@ -177,7 +177,7 @@ export const InCard: Story = {
 export const MultipleCards: Story = {
   render: () => (
     <div className="grid max-w-4xl gap-6 md:grid-cols-3">
-      <Card className="rounded-2xl border-border bg-card/60 p-6">
+      <Card className="rounded border-border bg-card/60 p-6">
         <IconCardHeader
           icon={<Globe className="size-6" />}
           title="GDPR"
@@ -189,14 +189,14 @@ export const MultipleCards: Story = {
         </CardContent>
       </Card>
 
-      <Card className="rounded-2xl border-border bg-card/60 p-6">
+      <Card className="rounded border-border bg-card/60 p-6">
         <IconCardHeader icon={<Shield className="size-6" />} title="SOC2" subtitle="US Standard" titleId="multi-soc2" />
         <CardContent className="p-0">
           <p className="text-sm text-muted-foreground">Security and availability controls</p>
         </CardContent>
       </Card>
 
-      <Card className="rounded-2xl border-border bg-card/60 p-6">
+      <Card className="rounded border-border bg-card/60 p-6">
         <IconCardHeader
           icon={<Lock className="size-6" />}
           title="ISO 27001"
@@ -226,7 +226,7 @@ export const RealWorldUsage: Story = {
       <div>
         <h3 className="mb-4 text-lg font-semibold">EnterpriseCompliance Pattern (with CardHeader)</h3>
         <div className="grid gap-6 lg:grid-cols-3">
-          <Card className="h-full rounded-2xl border-border bg-card/60 p-8">
+          <Card className="h-full rounded border-border bg-card/60 p-8">
             <IconCardHeader
               icon={<Globe className="size-6" />}
               title="GDPR"
@@ -242,7 +242,7 @@ export const RealWorldUsage: Story = {
             </CardContent>
           </Card>
 
-          <Card className="h-full rounded-2xl border-border bg-card/60 p-8">
+          <Card className="h-full rounded border-border bg-card/60 p-8">
             <IconCardHeader
               icon={<Shield className="size-6" />}
               title="SOC 2"
@@ -258,7 +258,7 @@ export const RealWorldUsage: Story = {
             </CardContent>
           </Card>
 
-          <Card className="h-full rounded-2xl border-border bg-card/60 p-8">
+          <Card className="h-full rounded border-border bg-card/60 p-8">
             <IconCardHeader
               icon={<Lock className="size-6" />}
               title="ISO 27001"
@@ -354,7 +354,7 @@ export const AllVariants: Story = {
   render: () => (
     <div className="grid max-w-6xl gap-6 md:grid-cols-2 lg:grid-cols-3">
       {/* Short title, short subtitle */}
-      <Card className="rounded-2xl border-border bg-card/60 p-6">
+      <Card className="rounded border-border bg-card/60 p-6">
         <IconCardHeader icon={<Globe className="size-6" />} title="GDPR" subtitle="EU Regulation" titleId="variant-1" />
         <CardContent className="p-0">
           <p className="text-sm text-muted-foreground">Short title and subtitle example</p>
@@ -362,7 +362,7 @@ export const AllVariants: Story = {
       </Card>
 
       {/* Long title, short subtitle */}
-      <Card className="rounded-2xl border-border bg-card/60 p-6">
+      <Card className="rounded border-border bg-card/60 p-6">
         <IconCardHeader
           icon={<Shield className="size-6" />}
           title="ISO 27001 Information Security Management"
@@ -375,7 +375,7 @@ export const AllVariants: Story = {
       </Card>
 
       {/* Short title, long subtitle */}
-      <Card className="rounded-2xl border-border bg-card/60 p-6">
+      <Card className="rounded border-border bg-card/60 p-6">
         <IconCardHeader
           icon={<Lock className="size-6" />}
           title="SOC 2"
@@ -388,7 +388,7 @@ export const AllVariants: Story = {
       </Card>
 
       {/* Long title, long subtitle */}
-      <Card className="rounded-2xl border-border bg-card/60 p-6">
+      <Card className="rounded border-border bg-card/60 p-6">
         <IconCardHeader
           icon={<Database className="size-6" />}
           title="Payment Card Industry Data Security Standard Compliance"
@@ -401,7 +401,7 @@ export const AllVariants: Story = {
       </Card>
 
       {/* No subtitle */}
-      <Card className="rounded-2xl border-border bg-card/60 p-6">
+      <Card className="rounded border-border bg-card/60 p-6">
         <IconCardHeader icon={<Zap className="size-6" />} title="Performance Monitoring" titleId="variant-5" />
         <CardContent className="p-0">
           <p className="text-sm text-muted-foreground">Title only, no subtitle</p>
@@ -409,7 +409,7 @@ export const AllVariants: Story = {
       </Card>
 
       {/* Small icon */}
-      <Card className="rounded-2xl border-border bg-card/60 p-6">
+      <Card className="rounded border-border bg-card/60 p-6">
         <IconCardHeader
           icon={<Shield className="size-6" />}
           title="Security Audit"
@@ -423,7 +423,7 @@ export const AllVariants: Story = {
       </Card>
 
       {/* Medium icon */}
-      <Card className="rounded-2xl border-border bg-card/60 p-6">
+      <Card className="rounded border-border bg-card/60 p-6">
         <IconCardHeader
           icon={<Database className="size-6" />}
           title="Data Storage"
@@ -437,7 +437,7 @@ export const AllVariants: Story = {
       </Card>
 
       {/* Muted tone */}
-      <Card className="rounded-2xl border-border bg-card/60 p-6">
+      <Card className="rounded border-border bg-card/60 p-6">
         <IconCardHeader
           icon={<Globe className="size-6" />}
           title="Regional Compliance"
@@ -451,7 +451,7 @@ export const AllVariants: Story = {
       </Card>
 
       {/* Custom title size */}
-      <Card className="rounded-2xl border-border bg-card/60 p-6">
+      <Card className="rounded border-border bg-card/60 p-6">
         <IconCardHeader
           icon={<Lock className="size-6" />}
           title="Encryption"

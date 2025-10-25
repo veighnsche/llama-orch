@@ -160,10 +160,10 @@ export const InHeroContext: Story = {
         GDPR-compliant, self-hosted AI infrastructure for enterprises and developers
       </p>
       <div className="flex justify-center gap-4">
-        <button className="px-6 py-3 bg-primary text-primary-foreground rounded-lg font-semibold hover:bg-primary/90 transition-colors">
+        <button className="px-6 py-3 bg-primary text-primary-foreground rounded font-semibold hover:bg-primary/90 transition-colors">
           Get Started
         </button>
-        <button className="px-6 py-3 bg-secondary text-secondary-foreground rounded-lg font-semibold hover:bg-secondary/80 transition-colors">
+        <button className="px-6 py-3 bg-secondary text-secondary-foreground rounded font-semibold hover:bg-secondary/80 transition-colors">
           Learn More
         </button>
       </div>

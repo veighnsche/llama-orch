@@ -28,7 +28,7 @@ export function GPUListItem({
   return (
     <div
       className={cn(
-        'flex items-center justify-between rounded-lg border border-border bg-background/50 p-3',
+        'flex items-center justify-between rounded border border-border bg-background/50 p-3',
         className,
       )}
     >

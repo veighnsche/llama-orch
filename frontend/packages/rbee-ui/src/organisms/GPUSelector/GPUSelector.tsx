@@ -64,7 +64,7 @@ export function GPUSelector({
               aria-checked={isSelected}
               onClick={() => onSelect(gpu)}
               className={cn(
-                'relative min-w-0 rounded-lg border p-3 text-left transition-transform hover:translate-y-0.5',
+                'relative min-w-0 rounded border p-3 text-left transition-transform hover:translate-y-0.5',
                 isSelected
                   ? 'animate-in zoom-in-95 border-primary bg-primary/10 motion-reduce:animate-none'
                   : 'border-border bg-background/50 hover:border-border/70',

@@ -186,7 +186,7 @@ export const InPricingContext: Story = {
 export const WithIconHeader: Story = {
   render: () => (
     <div className="grid max-w-4xl gap-6 md:grid-cols-2">
-      <Card className="rounded-2xl border-border bg-card/60 p-8">
+      <Card className="rounded border-border bg-card/60 p-8">
         <IconCardHeader icon={<Globe className="size-6" />} title="GDPR" subtitle="EU Regulation" titleId="card-gdpr" />
         <CardContent className="p-0">
           <p className="text-sm text-foreground/85">
@@ -196,7 +196,7 @@ export const WithIconHeader: Story = {
         </CardContent>
       </Card>
 
-      <Card className="rounded-2xl border-border bg-card/60 p-8">
+      <Card className="rounded border-border bg-card/60 p-8">
         <IconCardHeader icon={<Shield className="size-6" />} title="SOC2" subtitle="US Standard" titleId="card-soc2" />
         <CardContent className="p-0">
           <p className="text-sm text-foreground/85">

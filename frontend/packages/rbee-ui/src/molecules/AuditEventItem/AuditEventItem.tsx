@@ -19,7 +19,7 @@ export interface AuditEventItemProps {
 export function AuditEventItem({ event, user, time, displayTime, status, className }: AuditEventItemProps) {
   return (
     <li
-      className={cn('rounded-lg border border-border bg-background p-3', className)}
+      className={cn('rounded border border-border bg-background p-3', className)}
       aria-label={`${event} by ${user} at ${displayTime} – ${status}`}
     >
       <div className="mb-1 flex items-center justify-between">

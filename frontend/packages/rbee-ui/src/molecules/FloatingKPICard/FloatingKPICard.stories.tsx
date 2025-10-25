@@ -59,7 +59,7 @@ export const Default: Story = {
 
 export const WithTrend: Story = {
   render: () => (
-    <div className="relative w-96 h-64 bg-gradient-to-br from-primary/20 to-chart-2/20 rounded-lg flex items-center justify-center">
+    <div className="relative w-96 h-64 bg-gradient-to-br from-primary/20 to-chart-2/20 rounded flex items-center justify-center">
       <div className="text-center">
         <h3 className="text-2xl font-bold mb-2">Your Infrastructure</h3>
         <p className="text-muted-foreground">Real-time metrics</p>
@@ -81,7 +81,7 @@ export const AllVariants: Story = {
     <div className="space-y-8">
       <div>
         <h3 className="text-lg font-semibold mb-4">Light Background</h3>
-        <div className="relative w-full h-64 bg-muted rounded-lg flex items-center justify-center">
+        <div className="relative w-full h-64 bg-muted rounded flex items-center justify-center">
           <div className="text-center">
             <h3 className="text-2xl font-bold">GPU Pool</h3>
           </div>
@@ -90,7 +90,7 @@ export const AllVariants: Story = {
       </div>
       <div>
         <h3 className="text-lg font-semibold mb-4">Gradient Background</h3>
-        <div className="relative w-full h-64 bg-gradient-to-br from-chart-1/30 to-chart-3/30 rounded-lg flex items-center justify-center">
+        <div className="relative w-full h-64 bg-gradient-to-br from-chart-1/30 to-chart-3/30 rounded flex items-center justify-center">
           <div className="text-center">
             <h3 className="text-2xl font-bold">Performance</h3>
           </div>
@@ -111,21 +111,21 @@ export const AllVariants: Story = {
 export const InHeroContext: Story = {
   render: () => (
     <div className="w-full max-w-4xl">
-      <div className="relative bg-gradient-to-br from-primary/10 via-chart-2/10 to-chart-3/10 rounded-2xl p-12 overflow-hidden">
+      <div className="relative bg-gradient-to-br from-primary/10 via-chart-2/10 to-chart-3/10 rounded p-12 overflow-hidden">
         <div className="relative z-10 text-center mb-8">
           <h1 className="text-4xl md:text-5xl font-bold mb-4">Private LLM Hosting</h1>
           <p className="text-lg text-muted-foreground mb-6">GDPR-compliant AI infrastructure in the Netherlands</p>
           <div className="flex justify-center gap-4">
-            <button className="px-6 py-3 bg-primary text-primary-foreground rounded-lg font-semibold hover:bg-primary/90 transition-colors">
+            <button className="px-6 py-3 bg-primary text-primary-foreground rounded font-semibold hover:bg-primary/90 transition-colors">
               Get Started
             </button>
-            <button className="px-6 py-3 bg-secondary text-secondary-foreground rounded-lg font-semibold hover:bg-secondary/80 transition-colors">
+            <button className="px-6 py-3 bg-secondary text-secondary-foreground rounded font-semibold hover:bg-secondary/80 transition-colors">
               Learn More
             </button>
           </div>
         </div>
         <div className="relative h-48 flex items-center justify-center">
-          <div className="w-64 h-32 bg-card/40 rounded-lg border flex items-center justify-center">
+          <div className="w-64 h-32 bg-card/40 rounded border flex items-center justify-center">
             <span className="text-muted-foreground">Architecture Diagram</span>
           </div>
           <FloatingKPICard />

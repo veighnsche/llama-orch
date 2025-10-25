@@ -22,7 +22,7 @@ type Story = StoryObj<typeof ResizablePanelGroup>
 
 export const Default: Story = {
   render: () => (
-    <ResizablePanelGroup direction="horizontal" className="h-[400px] w-full rounded-lg border">
+    <ResizablePanelGroup direction="horizontal" className="h-[400px] w-full rounded border">
       <ResizablePanel defaultSize={50}>
         <div className="flex h-full items-center justify-center p-6">
           <span className="font-semibold">Panel One</span>
@@ -40,7 +40,7 @@ export const Default: Story = {
 
 export const Vertical: Story = {
   render: () => (
-    <ResizablePanelGroup direction="vertical" className="h-[400px] w-full rounded-lg border">
+    <ResizablePanelGroup direction="vertical" className="h-[400px] w-full rounded border">
       <ResizablePanel defaultSize={50}>
         <div className="flex h-full items-center justify-center p-6">
           <span className="font-semibold">Top Panel</span>
@@ -58,7 +58,7 @@ export const Vertical: Story = {
 
 export const Both: Story = {
   render: () => (
-    <ResizablePanelGroup direction="horizontal" className="h-[400px] w-full rounded-lg border">
+    <ResizablePanelGroup direction="horizontal" className="h-[400px] w-full rounded border">
       <ResizablePanel defaultSize={25}>
         <div className="flex h-full items-center justify-center p-6">
           <span className="font-semibold">Sidebar</span>
@@ -86,7 +86,7 @@ export const Both: Story = {
 
 export const WithPanels: Story = {
   render: () => (
-    <ResizablePanelGroup direction="horizontal" className="h-[400px] w-full rounded-lg border">
+    <ResizablePanelGroup direction="horizontal" className="h-[400px] w-full rounded border">
       <ResizablePanel defaultSize={20} minSize={15}>
         <div className="flex h-full items-center justify-center p-6">
           <span className="font-semibold">Left (min 15%)</span>

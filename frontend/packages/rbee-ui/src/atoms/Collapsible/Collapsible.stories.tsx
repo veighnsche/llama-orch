@@ -21,7 +21,7 @@ export const Default: Story = {
     const [isOpen, setIsOpen] = useState(false)
     return (
       <Collapsible open={isOpen} onOpenChange={setIsOpen} className="w-[350px]">
-        <div className="flex items-center justify-between border rounded-lg p-4">
+        <div className="flex items-center justify-between border rounded p-4">
           <h4 className="text-sm font-semibold">Collapsible Section</h4>
           <CollapsibleTrigger asChild>
             <Button variant="ghost" size="sm">
@@ -29,7 +29,7 @@ export const Default: Story = {
             </Button>
           </CollapsibleTrigger>
         </div>
-        <CollapsibleContent className="mt-2 border rounded-lg p-4">
+        <CollapsibleContent className="mt-2 border rounded p-4">
           <p className="text-sm text-muted-foreground">This is the collapsible content.</p>
         </CollapsibleContent>
       </Collapsible>
@@ -40,7 +40,7 @@ export const Default: Story = {
 export const Expanded: Story = {
   render: () => (
     <Collapsible defaultOpen className="w-[350px]">
-      <div className="flex items-center justify-between border rounded-lg p-4">
+      <div className="flex items-center justify-between border rounded p-4">
         <h4 className="text-sm font-semibold">Expanded by Default</h4>
         <CollapsibleTrigger asChild>
           <Button variant="ghost" size="sm">
@@ -48,7 +48,7 @@ export const Expanded: Story = {
           </Button>
         </CollapsibleTrigger>
       </div>
-      <CollapsibleContent className="mt-2 border rounded-lg p-4">
+      <CollapsibleContent className="mt-2 border rounded p-4">
         <p className="text-sm text-muted-foreground">This content is visible by default.</p>
       </CollapsibleContent>
     </Collapsible>
@@ -64,7 +64,7 @@ export const WithTrigger: Story = {
           <ChevronDown className="h-4 w-4" />
         </Button>
       </CollapsibleTrigger>
-      <CollapsibleContent className="mt-2 border rounded-lg p-4">
+      <CollapsibleContent className="mt-2 border rounded p-4">
         <p className="text-sm">Content revealed when triggered.</p>
       </CollapsibleContent>
     </Collapsible>
@@ -74,7 +74,7 @@ export const WithTrigger: Story = {
 export const Nested: Story = {
   render: () => (
     <Collapsible className="w-[350px]">
-      <div className="border rounded-lg p-4">
+      <div className="border rounded p-4">
         <CollapsibleTrigger asChild>
           <Button variant="ghost" className="w-full justify-between p-0">
             <span className="font-semibold">Parent Section</span>

@@ -46,19 +46,19 @@ export const Default: Story = {
         <TabsTrigger value="tab3">Notifications</TabsTrigger>
       </TabsList>
       <TabsContent value="tab1">
-        <div className="p-4 border rounded-lg">
+        <div className="p-4 border rounded">
           <h3 className="font-semibold mb-2">Account Settings</h3>
           <p className="text-sm text-muted-foreground">Manage your account preferences and profile information.</p>
         </div>
       </TabsContent>
       <TabsContent value="tab2">
-        <div className="p-4 border rounded-lg">
+        <div className="p-4 border rounded">
           <h3 className="font-semibold mb-2">Password Settings</h3>
           <p className="text-sm text-muted-foreground">Update your password and security settings.</p>
         </div>
       </TabsContent>
       <TabsContent value="tab3">
-        <div className="p-4 border rounded-lg">
+        <div className="p-4 border rounded">
           <h3 className="font-semibold mb-2">Notification Preferences</h3>
           <p className="text-sm text-muted-foreground">Choose how you want to be notified.</p>
         </div>
@@ -101,17 +101,17 @@ export const WithIcons: Story = {
         </TabsTrigger>
       </TabsList>
       <TabsContent value="models">
-        <div className="p-4 border rounded-lg">
+        <div className="p-4 border rounded">
           <p className="text-sm">Browse and deploy AI models</p>
         </div>
       </TabsContent>
       <TabsContent value="deployments">
-        <div className="p-4 border rounded-lg">
+        <div className="p-4 border rounded">
           <p className="text-sm">Manage your active deployments</p>
         </div>
       </TabsContent>
       <TabsContent value="analytics">
-        <div className="p-4 border rounded-lg">
+        <div className="p-4 border rounded">
           <p className="text-sm">View usage statistics and metrics</p>
         </div>
       </TabsContent>
@@ -131,25 +131,25 @@ export const Vertical: Story = {
         </TabsList>
         <div className="flex-1">
           <TabsContent value="overview">
-            <div className="p-4 border rounded-lg">
+            <div className="p-4 border rounded">
               <h3 className="font-semibold mb-2">Overview</h3>
               <p className="text-sm text-muted-foreground">Dashboard overview and key metrics</p>
             </div>
           </TabsContent>
           <TabsContent value="performance">
-            <div className="p-4 border rounded-lg">
+            <div className="p-4 border rounded">
               <h3 className="font-semibold mb-2">Performance</h3>
               <p className="text-sm text-muted-foreground">Monitor system performance and uptime</p>
             </div>
           </TabsContent>
           <TabsContent value="security">
-            <div className="p-4 border rounded-lg">
+            <div className="p-4 border rounded">
               <h3 className="font-semibold mb-2">Security</h3>
               <p className="text-sm text-muted-foreground">Security settings and access control</p>
             </div>
           </TabsContent>
           <TabsContent value="billing">
-            <div className="p-4 border rounded-lg">
+            <div className="p-4 border rounded">
               <h3 className="font-semibold mb-2">Billing</h3>
               <p className="text-sm text-muted-foreground">Invoices and payment methods</p>
             </div>
@@ -187,7 +187,7 @@ export const InFeaturesContext: Story = {
                 <li>✓ Automatic dependency management</li>
               </ul>
             </div>
-            <div className="bg-muted rounded-lg p-6 flex items-center justify-center">
+            <div className="bg-muted rounded p-6 flex items-center justify-center">
               <div className="text-center text-muted-foreground">Deployment Demo</div>
             </div>
           </div>
@@ -205,7 +205,7 @@ export const InFeaturesContext: Story = {
                 <li>✓ Zero-downtime updates</li>
               </ul>
             </div>
-            <div className="bg-muted rounded-lg p-6 flex items-center justify-center">
+            <div className="bg-muted rounded p-6 flex items-center justify-center">
               <div className="text-center text-muted-foreground">Scaling Demo</div>
             </div>
           </div>
@@ -223,7 +223,7 @@ export const InFeaturesContext: Story = {
                 <li>✓ Detailed logs</li>
               </ul>
             </div>
-            <div className="bg-muted rounded-lg p-6 flex items-center justify-center">
+            <div className="bg-muted rounded p-6 flex items-center justify-center">
               <div className="text-center text-muted-foreground">Monitoring Demo</div>
             </div>
           </div>
@@ -241,7 +241,7 @@ export const InFeaturesContext: Story = {
                 <li>✓ Role-based access control</li>
               </ul>
             </div>
-            <div className="bg-muted rounded-lg p-6 flex items-center justify-center">
+            <div className="bg-muted rounded p-6 flex items-center justify-center">
               <div className="text-center text-muted-foreground">Security Demo</div>
             </div>
           </div>

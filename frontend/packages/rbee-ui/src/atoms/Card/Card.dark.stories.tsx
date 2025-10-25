@@ -40,7 +40,7 @@ type Story = StoryObj<typeof Card>
 
 export const CardOnCanvas: Story = {
   render: () => (
-    <div className="bg-[#0b1220] p-8 rounded-lg">
+    <div className="bg-[#0b1220] p-8 rounded">
       <Card className="w-[350px]">
         <CardHeader>
           <CardTitle>Dark Mode Card</CardTitle>
@@ -72,7 +72,7 @@ export const CardOnCanvas: Story = {
 
 export const PopoverOnCard: Story = {
   render: () => (
-    <div className="bg-[#0b1220] p-8 rounded-lg">
+    <div className="bg-[#0b1220] p-8 rounded">
       <Card className="w-[400px]">
         <CardHeader>
           <CardTitle>Card Surface</CardTitle>
@@ -100,7 +100,7 @@ export const PopoverOnCard: Story = {
 
 export const FormOnCard: Story = {
   render: () => (
-    <div className="bg-[#0b1220] p-8 rounded-lg">
+    <div className="bg-[#0b1220] p-8 rounded">
       <Card className="w-[400px]">
         <CardHeader>
           <CardTitle>Sign In</CardTitle>
@@ -147,9 +147,9 @@ export const FormOnCard: Story = {
 
 export const IconHeaderCards: Story = {
   render: () => (
-    <div className="bg-[#0b1220] p-8 rounded-lg">
+    <div className="bg-[#0b1220] p-8 rounded">
       <div className="grid max-w-4xl gap-6 md:grid-cols-2">
-        <Card className="rounded-2xl border-border bg-card/60 p-8">
+        <Card className="rounded border-border bg-card/60 p-8">
           <IconCardHeader
             icon={<Globe className="size-6" />}
             title="GDPR"
@@ -164,7 +164,7 @@ export const IconHeaderCards: Story = {
           </CardContent>
         </Card>
 
-        <Card className="rounded-2xl border-border bg-card/60 p-8">
+        <Card className="rounded border-border bg-card/60 p-8">
           <IconCardHeader
             icon={<Shield className="size-6" />}
             title="SOC2"
@@ -179,7 +179,7 @@ export const IconHeaderCards: Story = {
           </CardContent>
         </Card>
 
-        <Card className="rounded-2xl border-border bg-card/60 p-8">
+        <Card className="rounded border-border bg-card/60 p-8">
           <IconCardHeader
             icon={<Server className="size-6" />}
             title="ISO 27001"
@@ -193,7 +193,7 @@ export const IconHeaderCards: Story = {
           </CardContent>
         </Card>
 
-        <Card className="rounded-2xl border-border bg-card/60 p-8">
+        <Card className="rounded border-border bg-card/60 p-8">
           <IconCardHeader
             icon={<Database className="size-6" />}
             title="HIPAA"
@@ -220,7 +220,7 @@ export const IconHeaderCards: Story = {
 
 export const BrandProgression: Story = {
   render: () => (
-    <div className="bg-[#0b1220] p-8 rounded-lg">
+    <div className="bg-[#0b1220] p-8 rounded">
       <Card className="w-[400px]">
         <CardHeader>
           <CardTitle>Brand Progression</CardTitle>

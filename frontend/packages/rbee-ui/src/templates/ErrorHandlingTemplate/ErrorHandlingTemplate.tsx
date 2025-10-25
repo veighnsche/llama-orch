@@ -75,7 +75,7 @@ export function ErrorHandlingTemplate({
           </TerminalWindow>
         </div>
 
-        <div id="playbook" className="rounded-2xl border border-border bg-card overflow-hidden">
+        <div id="playbook" className="rounded border border-border bg-card overflow-hidden">
           <PlaybookHeader
             title="Playbook"
             description="19+ scenarios · 4 categories"

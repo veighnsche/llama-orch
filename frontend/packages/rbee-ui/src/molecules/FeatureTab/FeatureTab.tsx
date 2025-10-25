@@ -16,7 +16,7 @@ export function FeatureTab({ value, icon, label, mobileLabel }: FeatureTabProps)
   return (
     <TabsTrigger
       value={value}
-      className="flex flex-col sm:flex-row items-center justify-center gap-2 py-3 data-[state=active]:bg-background data-[state=active]:shadow-sm data-[state=active]:text-foreground rounded-lg text-sm font-medium transition-colors"
+      className="flex flex-col sm:flex-row items-center justify-center gap-2 py-3 data-[state=active]:bg-background data-[state=active]:shadow-sm data-[state=active]:text-foreground rounded text-sm font-medium transition-colors"
     >
       {icon}
       <span className="hidden sm:inline">{label}</span>

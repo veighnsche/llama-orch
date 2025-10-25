@@ -6,7 +6,7 @@ function UseMobileDemo() {
   const isMobile = useIsMobile()
 
   return (
-    <div className="rounded-lg border p-6">
+    <div className="rounded border p-6">
       <h3 className="mb-4 text-lg font-semibold">useIsMobile Hook Demo</h3>
       <div className="space-y-2">
         <p className="text-sm">
@@ -38,7 +38,7 @@ function WithComponentDemo() {
   const isMobile = useIsMobile()
 
   return (
-    <div className="w-[400px] rounded-lg border p-6">
+    <div className="w-[400px] rounded border p-6">
       {isMobile ? (
         <div className="space-y-4">
           <h3 className="text-lg font-semibold">Mobile View</h3>
@@ -67,7 +67,7 @@ export const Responsive: Story = {
   render: () => {
     const isMobile = useIsMobile()
     return (
-      <div className="w-full max-w-2xl space-y-4 rounded-lg border p-6">
+      <div className="w-full max-w-2xl space-y-4 rounded border p-6">
         <div className="flex items-center justify-between">
           <h3 className="text-lg font-semibold">Responsive Layout</h3>
           <span className="rounded-md bg-muted px-2 py-1 text-xs">{isMobile ? 'Mobile' : 'Desktop'}</span>

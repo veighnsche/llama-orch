@@ -61,7 +61,7 @@ function OriginalAudienceCard({
     <div className="flex flex-col">
       <div
         className={cn(
-          'group relative flex flex-col overflow-hidden border-border bg-card backdrop-blur-sm transition-all duration-300 hover:scale-[1.02] rounded-lg border p-6',
+          'group relative flex flex-col overflow-hidden border-border bg-card backdrop-blur-sm transition-all duration-300 hover:scale-[1.02] rounded border p-6',
           colors.hoverBorder,
           className,
         )}
@@ -76,7 +76,7 @@ function OriginalAudienceCard({
         <div className="mb-6 flex items-center gap-3">
           <div
             className={cn(
-              'flex h-14 w-14 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br shadow-lg',
+              'flex h-14 w-14 shrink-0 items-center justify-center rounded bg-gradient-to-br shadow-lg',
               colors.iconBg,
             )}
           >

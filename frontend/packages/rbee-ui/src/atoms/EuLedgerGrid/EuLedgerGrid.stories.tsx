@@ -48,7 +48,7 @@ export const LightTheme: Story = {
     <div className="relative h-screen w-full bg-white">
       <EuLedgerGrid className="absolute inset-0 opacity-20" />
       <div className="relative z-10 flex h-full items-center justify-center">
-        <div className="max-w-2xl rounded-xl border bg-card p-8 text-center shadow-lg">
+        <div className="max-w-2xl rounded-md border bg-card p-8 text-center shadow-lg">
           <h2 className="mb-2 text-2xl font-bold text-foreground">Light Theme</h2>
           <p className="text-muted-foreground">Subtle blue grid with low opacity for light backgrounds</p>
         </div>
@@ -70,7 +70,7 @@ export const DarkTheme: Story = {
     <div className="dark relative h-screen w-full bg-slate-950">
       <EuLedgerGrid className="absolute inset-0 opacity-20" />
       <div className="relative z-10 flex h-full items-center justify-center">
-        <div className="max-w-2xl rounded-xl border border-slate-800 bg-slate-900 p-8 text-center shadow-lg">
+        <div className="max-w-2xl rounded-md border border-slate-800 bg-slate-900 p-8 text-center shadow-lg">
           <h2 className="mb-2 text-2xl font-bold text-white">Dark Theme</h2>
           <p className="text-slate-400">Brighter blue grid with glow effect for dark backgrounds</p>
         </div>
@@ -94,7 +94,7 @@ export const InEnterpriseSolution: Story = {
           <p className="mb-8 text-lg text-muted-foreground">GDPR-compliant by design. SOC2 ready. ISO 27001 aligned.</p>
           <div className="grid gap-6 md:grid-cols-3">
             {['Deploy On-Premises', 'Enable Audit Logging', 'Run Compliant AI'].map((title, i) => (
-              <div key={i} className="rounded-lg border bg-card p-6">
+              <div key={i} className="rounded border bg-card p-6">
                 <h3 className="mb-2 font-semibold text-foreground">{title}</h3>
                 <p className="text-sm text-muted-foreground">
                   Your models, your data, your infrastructure. Zero external dependencies.

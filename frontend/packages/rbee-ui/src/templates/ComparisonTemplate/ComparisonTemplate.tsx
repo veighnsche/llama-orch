@@ -68,7 +68,7 @@ export function ComparisonTemplate({
         {/* Desktop Table */}
         <div
           className={cn(
-            'rounded-xl ring-1 ring-border/60 bg-card overflow-hidden',
+            'rounded-md ring-1 ring-border/60 bg-card overflow-hidden',
             showMobileCards ? 'hidden md:block' : 'block',
           )}
         >

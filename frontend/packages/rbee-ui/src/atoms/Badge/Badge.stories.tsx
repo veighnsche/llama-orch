@@ -76,7 +76,7 @@ export const InOrganisms: Story = {
   render: () => (
     <div className="flex flex-col gap-6 max-w-md">
       {/* Pricing context */}
-      <div className="border rounded-lg p-4">
+      <div className="border rounded p-4">
         <div className="flex items-center justify-between mb-3">
           <h3 className="font-semibold">Professional Plan</h3>
           <Badge variant="accent">Popular</Badge>
@@ -85,7 +85,7 @@ export const InOrganisms: Story = {
       </div>
 
       {/* Feature list context */}
-      <div className="border rounded-lg p-4">
+      <div className="border rounded p-4">
         <h3 className="font-semibold mb-3">Features</h3>
         <div className="flex flex-col gap-2">
           <div className="flex items-center justify-between">
@@ -104,7 +104,7 @@ export const InOrganisms: Story = {
       </div>
 
       {/* Tag list context */}
-      <div className="border rounded-lg p-4">
+      <div className="border rounded p-4">
         <h3 className="font-semibold mb-3">Model Tags</h3>
         <div className="flex flex-wrap gap-2">
           <Badge variant="accent">Featured</Badge>

@@ -121,7 +121,7 @@ export function CrossNodeOrchestration({
             />
             <CardContent className="space-y-6">
               {/* Diagram */}
-              <div className="relative bg-background rounded-xl p-6 overflow-hidden">
+              <div className="relative bg-background rounded-md p-6 overflow-hidden">
                 <div className="space-y-4">
                   {/* Row 1: First node */}
                   <div className="flex items-center gap-3">
@@ -201,7 +201,7 @@ function DiagramNodeComponent({ name, label, tone }: DiagramNodeComponentProps) 
   }
 
   return (
-    <div className={cn('rounded-lg border-2 p-3 transition-all hover:scale-105', toneClasses[tone])}>
+    <div className={cn('rounded border-2 p-3 transition-all hover:scale-105', toneClasses[tone])}>
       <div className="font-mono text-sm font-semibold text-foreground">{name}</div>
       <div className="text-xs text-muted-foreground mt-1">{label}</div>
     </div>

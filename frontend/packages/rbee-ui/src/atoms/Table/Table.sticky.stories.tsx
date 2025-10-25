@@ -45,8 +45,8 @@ const mockData = Array.from({ length: 20 }, (_, i) => ({
 
 export const StickyHeader: Story = {
   render: () => (
-    <div className="bg-[#0b1220] p-8 rounded-lg">
-      <div className="bg-card border border-border rounded-xl p-6">
+    <div className="bg-[#0b1220] p-8 rounded">
+      <div className="bg-card border border-border rounded-md p-6">
         <h3 className="text-lg font-semibold mb-4">Sticky Table Header</h3>
         <p className="text-sm text-muted-foreground mb-4">
           Scroll down to see the sticky header remain visible with backdrop blur. The header uses backdrop-blur-[2px] +
@@ -107,8 +107,8 @@ export const StickyHeader: Story = {
 
 export const KeyboardFocus: Story = {
   render: () => (
-    <div className="bg-[#0b1220] p-8 rounded-lg">
-      <div className="bg-card border border-border rounded-xl p-6">
+    <div className="bg-[#0b1220] p-8 rounded">
+      <div className="bg-card border border-border rounded-md p-6">
         <h3 className="text-lg font-semibold mb-4">Keyboard Navigation</h3>
         <p className="text-sm text-muted-foreground mb-4">
           Tab through the rows to see the focus ring. Uses ring-[color:var(--ring)] with proper offset for clear
@@ -162,8 +162,8 @@ export const KeyboardFocus: Story = {
 
 export const SelectedAndFocused: Story = {
   render: () => (
-    <div className="bg-[#0b1220] p-8 rounded-lg">
-      <div className="bg-card border border-border rounded-xl p-6">
+    <div className="bg-[#0b1220] p-8 rounded">
+      <div className="bg-card border border-border rounded-md p-6">
         <h3 className="text-lg font-semibold mb-4">Selected + Focused States</h3>
         <p className="text-sm text-muted-foreground mb-4">
           Shows the difference between hover, selected, and focused states. All use neutral white overlays (not amber)

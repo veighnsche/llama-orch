@@ -24,14 +24,14 @@ export const AllShapes: Story = {
       <Skeleton className="h-4 w-[200px]" />
       <Skeleton className="h-4 w-[150px]" />
       <Skeleton className="size-12 rounded-full" />
-      <Skeleton className="h-32 w-[300px] rounded-lg" />
+      <Skeleton className="h-32 w-[300px] rounded" />
     </div>
   ),
 }
 
 export const Card: Story = {
   render: () => (
-    <div className="flex w-[350px] flex-col gap-3 rounded-lg border p-4">
+    <div className="flex w-[350px] flex-col gap-3 rounded border p-4">
       <div className="flex items-center gap-4">
         <Skeleton className="size-12 rounded-full" />
         <div className="flex-1 space-y-2">

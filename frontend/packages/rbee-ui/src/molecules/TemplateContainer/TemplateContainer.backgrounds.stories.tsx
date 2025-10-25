@@ -14,15 +14,15 @@ type Story = StoryObj<typeof meta>
 
 const SampleContent = () => (
   <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-    <div className="p-6 rounded-lg border bg-card">
+    <div className="p-6 rounded border bg-card">
       <h3 className="font-semibold mb-2">Feature One</h3>
       <p className="text-sm text-muted-foreground">Sample feature description</p>
     </div>
-    <div className="p-6 rounded-lg border bg-card">
+    <div className="p-6 rounded border bg-card">
       <h3 className="font-semibold mb-2">Feature Two</h3>
       <p className="text-sm text-muted-foreground">Sample feature description</p>
     </div>
-    <div className="p-6 rounded-lg border bg-card">
+    <div className="p-6 rounded border bg-card">
       <h3 className="font-semibold mb-2">Feature Three</h3>
       <p className="text-sm text-muted-foreground">Sample feature description</p>
     </div>

@@ -44,7 +44,7 @@ export const termsHeroProps: HeroTemplateProps = {
   },
   helperText: 'Please read these terms carefully before using rbee.',
   aside: (
-    <div className="flex items-center justify-center rounded-lg border border-border bg-card/60 backdrop-blur-sm p-8 shadow-sm">
+    <div className="flex items-center justify-center rounded border border-border bg-card/60 backdrop-blur-sm p-8 shadow-sm">
       <div className="text-center space-y-4">
         <FileText className="h-16 w-16 mx-auto text-muted-foreground" />
         <div className="space-y-2">

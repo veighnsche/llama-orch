@@ -41,7 +41,7 @@ export function CodeSnippet({ children, variant = 'inline', className }: CodeSni
   }
 
   return (
-    <div className={cn('overflow-x-auto rounded-lg border bg-muted p-3', className)}>
+    <div className={cn('overflow-x-auto rounded border bg-muted p-3', className)}>
       <code className="block text-sm text-foreground font-mono">{children}</code>
     </div>
   )

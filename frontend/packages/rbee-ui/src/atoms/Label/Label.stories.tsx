@@ -106,7 +106,7 @@ export const WithHelp: Story = {
 
 export const InForm: Story = {
   render: () => (
-    <form className="w-full max-w-md space-y-6 p-6 border rounded-lg">
+    <form className="w-full max-w-md space-y-6 p-6 border rounded">
       <div>
         <h3 className="text-lg font-semibold mb-4">Create Account</h3>
       </div>

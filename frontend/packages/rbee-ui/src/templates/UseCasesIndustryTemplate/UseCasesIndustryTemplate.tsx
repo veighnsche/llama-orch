@@ -79,7 +79,7 @@ export function UseCasesIndustryTemplate({
         <p className="text-center text-sm text-muted-foreground mb-6">{eyebrow}</p>
 
         {/* Hero banner */}
-        <div className="overflow-hidden rounded-lg border/60 mb-8">{heroImage}</div>
+        <div className="overflow-hidden rounded border/60 mb-8">{heroImage}</div>
 
         {/* Filter pills */}
         <nav

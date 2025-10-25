@@ -83,7 +83,7 @@ export function IntelligentModelManagement({
 
             {/* Terminal timeline */}
             <div
-              className="bg-background rounded-xl p-6 font-mono text-sm leading-relaxed shadow-sm"
+              className="bg-background rounded-md p-6 font-mono text-sm leading-relaxed shadow-sm"
               aria-label="Model download and validation log"
               aria-live="polite"
             >
@@ -95,7 +95,7 @@ export function IntelligentModelManagement({
               {modelSources.map((source, idx) => (
                 <div
                   key={idx}
-                  className="bg-secondary/60 border border-border rounded-lg p-4 hover:-translate-y-0.5 transition-transform"
+                  className="bg-secondary/60 border border-border rounded p-4 hover:-translate-y-0.5 transition-transform"
                 >
                   <div className="text-sm font-semibold mb-1 text-chart-3">{source.title}</div>
                   <div className="text-xs text-muted-foreground">{source.example}</div>
@@ -125,7 +125,7 @@ export function IntelligentModelManagement({
             {/* Checklist grid */}
             <div className="grid sm:grid-cols-2 gap-4">
               {resourceChecks.map((check, idx) => (
-                <div key={idx} className="bg-background rounded-lg p-4 flex items-start gap-3">
+                <div key={idx} className="bg-background rounded p-4 flex items-start gap-3">
                   <CheckCircle2 className="size-5 text-chart-3 mt-0.5 shrink-0" aria-hidden="true" />
                   <div>
                     <div className="font-semibold text-foreground">{check.title}</div>

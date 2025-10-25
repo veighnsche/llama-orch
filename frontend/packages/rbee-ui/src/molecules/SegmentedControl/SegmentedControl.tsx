@@ -36,7 +36,7 @@ export interface SegmentedControlProps {
 export function SegmentedControl({ options, value, onChange, className }: SegmentedControlProps) {
   return (
     <div
-      className={cn('flex items-center justify-center gap-2 rounded-lg border border-border bg-card/60 p-1', className)}
+      className={cn('flex items-center justify-center gap-2 rounded border border-border bg-card/60 p-1', className)}
       role="tablist"
     >
       {options.map((option) => (

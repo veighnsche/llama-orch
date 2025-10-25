@@ -93,7 +93,7 @@ export const startupsHeroProps: HeroTemplateProps = {
   },
   aside: (
     <div className="relative">
-      <div className="rounded-lg border border-border bg-card p-6 shadow-lg">
+      <div className="rounded border border-border bg-card p-6 shadow-lg">
         <div className="mb-4 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <BarChart3 className="h-5 w-5 text-primary" />

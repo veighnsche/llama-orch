@@ -133,14 +133,14 @@ export function PricingComparisonTemplate({
       </div>
 
       {/* Comparison Table */}
-      <Card className="rounded-xl border border-border bg-card shadow-sm overflow-hidden p-0">
+      <Card className="rounded-md border border-border bg-card shadow-sm overflow-hidden p-0">
         <div className="overflow-x-auto">
           <MatrixTable columns={columns} rows={rows} groups={groups} caption={tableCaption} />
         </div>
       </Card>
 
       {/* CTA Strip */}
-      <div className="mt-6 flex flex-wrap items-center gap-3 justify-between rounded-xl border border-border p-4 bg-secondary animate-in fade-in slide-in-from-bottom-2 duration-500">
+      <div className="mt-6 flex flex-wrap items-center gap-3 justify-between rounded-md border border-border p-4 bg-secondary animate-in fade-in slide-in-from-bottom-2 duration-500">
         <div className="text-sm font-medium">{cta.text}</div>
         <div className="flex gap-3">
           {cta.buttons.map((button, index) => (

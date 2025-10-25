@@ -33,7 +33,7 @@ export function HowItWorks({ steps, className }: HowItWorksProps) {
               style={{ animationDelay: `${index * 120}ms` }}
             >
               {/* Step badge */}
-              <StepNumber number={stepNumber} size="md" variant="primary" className="flex-shrink-0 rounded-lg" />
+              <StepNumber number={stepNumber} size="md" variant="primary" className="flex-shrink-0 rounded" />
 
               {/* Step content */}
               <div className="flex-1">
@@ -63,7 +63,7 @@ export function HowItWorks({ steps, className }: HowItWorksProps) {
                     )}
 
                     {step.block.kind === 'note' && (
-                      <div className="overflow-hidden rounded-lg border border-border bg-card">
+                      <div className="overflow-hidden rounded border border-border bg-card">
                         <div className="bg-muted/50 px-4 py-2">
                           <span className="font-mono text-xs text-muted-foreground">Note</span>
                         </div>

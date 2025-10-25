@@ -79,7 +79,7 @@ export function UseCaseCard({
             <div className="h-px bg-border/60" />
 
             {/* Outcome callout */}
-            <div className="rounded-lg border border-primary/30 bg-primary/10 p-3 min-h-28 items-center flex">
+            <div className="rounded border border-primary/30 bg-primary/10 p-3 min-h-28 items-center flex">
               <div>
                 <div className="text-xs font-semibold uppercase tracking-wide text-primary font-sans">Outcome</div>
                 <div className="mt-1 text-sm text-foreground">{outcome}</div>

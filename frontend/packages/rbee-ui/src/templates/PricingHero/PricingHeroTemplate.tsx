@@ -59,7 +59,7 @@ export interface PricingHeroTemplateProps {
  *     { text: 'Full orchestrator on every tier', icon: Sparkles },
  *     { text: 'No feature gates or limits', icon: Sparkles }
  *   ]}
- *   visual={<PricingScaleVisual size="100%" className="rounded-xl opacity-70" />}
+ *   visual={<PricingScaleVisual size="100%" className="rounded-md opacity-70" />}
  *   visualAriaLabel="Illustration showing rbee pricing scales"
  * />
  * ```

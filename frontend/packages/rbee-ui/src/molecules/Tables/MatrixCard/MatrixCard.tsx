@@ -45,7 +45,7 @@ export function MatrixCard({ provider, rows, className }: MatrixCardProps) {
   return (
     <div
       className={cn(
-        'mb-4 rounded-2xl border bg-card/60 p-5',
+        'mb-4 rounded border bg-card/60 p-5',
         provider.accent && 'border-primary/30 bg-primary/5',
         className,
       )}

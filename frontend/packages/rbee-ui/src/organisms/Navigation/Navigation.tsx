@@ -107,7 +107,7 @@ export function Navigation() {
                             </li>
                           </ul>
                           {/* Quick Start Rail */}
-                          <div className="mt-2 flex items-center justify-between rounded-lg bg-muted/30 p-2 ring-1 ring-border/50">
+                          <div className="mt-2 flex items-center justify-between rounded bg-muted/30 p-2 ring-1 ring-border/50">
                             <Link
                               href="https://github.com/veighnsche/llama-orch/tree/main/docs"
                               target="_blank"
@@ -186,7 +186,7 @@ export function Navigation() {
                             </li>
                           </ul>
                           {/* Quick Start Rail */}
-                          <div className="mt-2 flex items-center justify-between rounded-lg bg-muted/30 p-2 ring-1 ring-border/50">
+                          <div className="mt-2 flex items-center justify-between rounded bg-muted/30 p-2 ring-1 ring-border/50">
                             <Link
                               href="https://github.com/veighnsche/llama-orch/tree/main/docs"
                               target="_blank"
@@ -316,7 +316,7 @@ export function Navigation() {
                             </li>
                           </ul>
                           {/* Quick Start Rail */}
-                          <div className="mt-2 flex items-center justify-between rounded-lg bg-muted/30 p-2 ring-1 ring-border/50">
+                          <div className="mt-2 flex items-center justify-between rounded bg-muted/30 p-2 ring-1 ring-border/50">
                             <Link
                               href="https://github.com/veighnsche/llama-orch/tree/main/docs"
                               target="_blank"
@@ -380,7 +380,7 @@ export function Navigation() {
                             </li>
                           </ul>
                           {/* Quick Start Rail */}
-                          <div className="mt-2 flex items-center justify-between rounded-lg bg-muted/30 p-2 ring-1 ring-border/50">
+                          <div className="mt-2 flex items-center justify-between rounded bg-muted/30 p-2 ring-1 ring-border/50">
                             <Link
                               href="https://github.com/veighnsche/llama-orch/tree/main/docs"
                               target="_blank"
@@ -415,7 +415,7 @@ export function Navigation() {
                   </Link>
                 </Button>
 
-                <div className="flex items-center gap-1 rounded-xl p-0.5 bg-muted/40 ring-1 ring-border/60 shadow-[inset_0_0_0_1px_var(--border)]">
+                <div className="flex items-center gap-1 rounded-md p-0.5 bg-muted/40 ring-1 ring-border/60 shadow-[inset_0_0_0_1px_var(--border)]">
                   <IconButton asChild aria-label="Open rbee on GitHub" title="GitHub">
                     <a
                       href="https://github.com/veighnsche/llama-orch"
@@ -647,7 +647,7 @@ export function Navigation() {
                     <Separator className="my-4 opacity-60" />
 
                     {/* Utility Row */}
-                    <div className="flex items-center gap-3 py-2 px-3 rounded-xl ring-1 ring-border/60">
+                    <div className="flex items-center gap-3 py-2 px-3 rounded-md ring-1 ring-border/60">
                       <a
                         href="https://github.com/veighnsche/llama-orch"
                         target="_blank"

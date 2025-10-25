@@ -146,7 +146,7 @@ export function WhatIsRbee({
         </div>
 
         {/* Right column: Visual */}
-        <div className="relative rounded-xl overflow-hidden ring-1 ring-border bg-card">
+        <div className="relative rounded-md overflow-hidden ring-1 ring-border bg-card">
           {/* Network diagram image */}
           <div className="relative aspect-[16/9]">
             <div className="absolute top-4 left-4 z-10">

@@ -158,7 +158,7 @@ export function FAQTemplate({
             </div>
 
             {/* Toolbar */}
-            <div className="space-y-4 rounded-lg border border-border bg-card/60 backdrop-blur-sm p-4 shadow-sm animate-fade-in">
+            <div className="space-y-4 rounded border border-border bg-card/60 backdrop-blur-sm p-4 shadow-sm animate-fade-in">
               <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                 <div className="relative flex-1">
                   <SearchIcon className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground pointer-events-none" />
@@ -198,7 +198,7 @@ export function FAQTemplate({
 
             {/* FAQ List */}
             {filteredFAQs.length === 0 ? (
-              <div className="rounded-lg border border-border bg-card/60 backdrop-blur-sm p-8 text-center shadow-sm animate-fade-in">
+              <div className="rounded border border-border bg-card/60 backdrop-blur-sm p-8 text-center shadow-sm animate-fade-in">
                 <p className="text-muted-foreground">
                   No matches. Try keywords like{' '}
                   {emptySearchKeywords.map((keyword, idx) => (
@@ -228,7 +228,7 @@ export function FAQTemplate({
                         <AccordionItem
                           key={item.value}
                           value={item.value}
-                          className="rounded-lg border border-border bg-card/60 backdrop-blur-sm shadow-sm transition hover:shadow-md animate-fade-in px-6 !border-b"
+                          className="rounded border border-border bg-card/60 backdrop-blur-sm shadow-sm transition hover:shadow-md animate-fade-in px-6 !border-b"
                         >
                           <AccordionTrigger className="text-left text-base font-semibold text-card-foreground hover:no-underline focus-visible:ring-1 focus-visible:ring-ring/50">
                             {item.question}
@@ -248,14 +248,14 @@ export function FAQTemplate({
           {/* Right Column: Support Card */}
           {supportCard && (
             <aside className="hidden md:block md:col-span-1">
-              <div className="sticky top-24 rounded-xl border border-border bg-card p-5 shadow-sm animate-fade-in space-y-4">
+              <div className="sticky top-24 rounded-md border border-border bg-card p-5 shadow-sm animate-fade-in space-y-4">
                 {supportCard.image && (
                   <Image
                     src={supportCard.image}
                     width={320}
                     height={180}
                     priority
-                    className="rounded-lg shadow-sm ring-1 ring-border object-cover w-full"
+                    className="rounded shadow-sm ring-1 ring-border object-cover w-full"
                     alt={supportCard.imageAlt || ''}
                   />
                 )}

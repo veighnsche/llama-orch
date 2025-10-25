@@ -262,7 +262,7 @@ export const IconVariants: Story = {
 
 export const RealWorldExample: Story = {
   render: () => (
-    <div className="flex flex-col gap-6 p-8 max-w-2xl bg-secondary rounded-lg">
+    <div className="flex flex-col gap-6 p-8 max-w-2xl bg-secondary rounded">
       <h3 className="text-2xl font-semibold text-foreground">What is rbee?</h3>
       <p className="text-muted-foreground">
         rbee is an open-source AI orchestration platform that unifies every computer in your home or office into a

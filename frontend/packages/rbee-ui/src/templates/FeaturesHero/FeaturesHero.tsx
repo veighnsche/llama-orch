@@ -20,7 +20,7 @@ export function FeaturesHero() {
             src={featuresHeroImage}
             alt="Modern homelab server rack with glowing amber and blue LEDs, NVIDIA GPUs visible through tempered glass side panel, clean cable management, soft rim lighting from behind, shallow depth of field, cinematic composition, professional photography, dark background with subtle honeycomb pattern, conveying enterprise-grade hardware in a home environment"
             priority
-            className="w-full h-auto object-cover rounded-lg"
+            className="w-full h-auto object-cover rounded"
           />
 
           <FeatureInfoCard

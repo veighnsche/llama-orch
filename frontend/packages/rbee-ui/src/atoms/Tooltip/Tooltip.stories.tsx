@@ -158,7 +158,7 @@ export const WithIcon: Story = {
 
 export const InPricingTable: Story = {
   render: () => (
-    <div className="max-w-md p-6 border rounded-lg">
+    <div className="max-w-md p-6 border rounded">
       <h3 className="text-xl font-bold mb-4">Professional Plan</h3>
       <div className="space-y-3">
         <div className="flex items-center justify-between">

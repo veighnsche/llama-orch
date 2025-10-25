@@ -74,7 +74,7 @@ export function TechnologyStack({
             key={tech.name}
             role="group"
             aria-label={tech.ariaLabel}
-            className={`bg-muted/60 border border-border rounded-xl p-4 hover:border-primary/40 transition-colors motion-safe:animate-in motion-safe:slide-in-from-bottom-2 motion-safe:duration-400 ${
+            className={`bg-muted/60 border border-border rounded-md p-4 hover:border-primary/40 transition-colors motion-safe:animate-in motion-safe:slide-in-from-bottom-2 motion-safe:duration-400 ${
               delayClasses[index % delayClasses.length]
             }`}
           >
@@ -88,7 +88,7 @@ export function TechnologyStack({
           <article
             role="group"
             aria-label="Open Source Information"
-            className="bg-primary/10 border border-primary/30 rounded-xl p-5 flex items-center justify-between motion-safe:animate-in motion-safe:slide-in-from-bottom-2 motion-safe:duration-400 motion-safe:delay-500"
+            className="bg-primary/10 border border-primary/30 rounded-md p-5 flex items-center justify-between motion-safe:animate-in motion-safe:slide-in-from-bottom-2 motion-safe:duration-400 motion-safe:delay-500"
           >
             <div>
               <div className="font-bold text-foreground">100% Open Source</div>

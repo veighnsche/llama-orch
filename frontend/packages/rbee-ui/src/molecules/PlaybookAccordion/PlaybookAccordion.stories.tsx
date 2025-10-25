@@ -555,7 +555,7 @@ export const FullPlaybook: Story = {
 
     return (
       <div className="w-full max-w-5xl">
-        <div className="rounded-2xl border border-border bg-card overflow-hidden">
+        <div className="rounded border border-border bg-card overflow-hidden">
           <PlaybookHeader
             title="Playbook"
             description="19+ scenarios · 4 categories"

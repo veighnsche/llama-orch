@@ -44,7 +44,7 @@ export function TimelineStep({ timestamp, title, description, className, variant
   return (
     <div
       className={cn(
-        'bg-background border border-border rounded-xl p-4 hover:ring-1 hover:ring-border transition-all font-sans',
+        'bg-background border border-border rounded-md p-4 hover:ring-1 hover:ring-border transition-all font-sans',
         variantClasses[variant],
         className,
       )}

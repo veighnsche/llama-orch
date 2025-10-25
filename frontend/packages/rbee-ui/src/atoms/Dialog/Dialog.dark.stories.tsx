@@ -51,8 +51,8 @@ export const DialogWithScrim: Story = {
     const [open, setOpen] = useState(false)
 
     return (
-      <div className="bg-[#0b1220] p-8 rounded-lg min-h-[400px]">
-        <div className="bg-card border border-border rounded-xl p-6 max-w-2xl">
+      <div className="bg-[#0b1220] p-8 rounded min-h-[400px]">
+        <div className="bg-card border border-border rounded-md p-6 max-w-2xl">
           <h3 className="text-lg font-semibold mb-4">Dialog Overlay</h3>
           <p className="text-sm text-muted-foreground mb-4">
             Click the button to see the scrim + blur effect. The backdrop uses bg-black/60 backdrop-blur-[2px] to reduce
@@ -111,8 +111,8 @@ export const DialogWithScrim: Story = {
 
 export const PopoverWithShadow: Story = {
   render: () => (
-    <div className="bg-[#0b1220] p-8 rounded-lg min-h-[400px]">
-      <div className="bg-card border border-border rounded-xl p-6 max-w-2xl">
+    <div className="bg-[#0b1220] p-8 rounded min-h-[400px]">
+      <div className="bg-card border border-border rounded-md p-6 max-w-2xl">
         <h3 className="text-lg font-semibold mb-4">Popover Overlay</h3>
         <p className="text-sm text-muted-foreground mb-4">
           Popovers use var(--shadow-md) which includes ambient shadow + subtle highlight inset for depth on dark.
@@ -183,8 +183,8 @@ export const MotionComparison: Story = {
     const [dialogOpen, setDialogOpen] = useState(false)
 
     return (
-      <div className="bg-[#0b1220] p-8 rounded-lg min-h-[400px]">
-        <div className="bg-card border border-border rounded-xl p-6 max-w-2xl">
+      <div className="bg-[#0b1220] p-8 rounded min-h-[400px]">
+        <div className="bg-card border border-border rounded-md p-6 max-w-2xl">
           <h3 className="text-lg font-semibold mb-4">Motion Choreography</h3>
           <p className="text-sm text-muted-foreground mb-4">
             All overlays use consistent motion: fade-in-50/fade-out-50 + directional slide. This creates soft, symmetric

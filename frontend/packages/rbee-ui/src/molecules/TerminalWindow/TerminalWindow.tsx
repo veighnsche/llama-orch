@@ -1,29 +1,29 @@
-'use client'
+"use client";
 
-import { cn } from '@rbee/ui/utils'
-import { Check, Copy } from 'lucide-react'
-import type { ReactNode } from 'react'
-import { useState } from 'react'
+import { cn } from "@rbee/ui/utils";
+import { Check, Copy } from "lucide-react";
+import type { ReactNode } from "react";
+import { useState } from "react";
 
 export interface TerminalWindowProps {
   /** Terminal title */
-  title?: string
+  title?: string;
   /** Terminal content */
-  children: ReactNode
+  children: ReactNode;
   /** Show terminal window chrome (traffic lights, title bar) */
-  showChrome?: boolean
+  showChrome?: boolean;
   /** Optional footer content */
-  footer?: ReactNode
+  footer?: ReactNode;
   /** Accessible label for screen readers */
-  ariaLabel?: string
+  ariaLabel?: string;
   /** Show copy button */
-  copyable?: boolean
+  copyable?: boolean;
   /** Raw text to copy (if different from rendered children) */
-  copyText?: string
+  copyText?: string;
   /** Terminal variant */
-  variant?: 'terminal' | 'code' | 'output'
+  variant?: "terminal" | "code" | "output";
   /** Additional CSS classes */
-  className?: string
+  className?: string;
 }
 
 export function TerminalWindow({
@@ -34,23 +34,27 @@ export function TerminalWindow({
   ariaLabel,
   copyable = false,
   copyText,
-  variant = 'terminal',
+  variant = "terminal",
   className,
 }: TerminalWindowProps) {
-  const [copied, setCopied] = useState(false)
+  const [copied, setCopied] = useState(false);
 
   const handleCopy = async () => {
-    const textToCopy = copyText || (typeof children === 'string' ? children : '')
+    const textToCopy =
+      copyText || (typeof children === "string" ? children : "");
     if (textToCopy) {
-      await navigator.clipboard.writeText(textToCopy)
-      setCopied(true)
-      setTimeout(() => setCopied(false), 2000)
+      await navigator.clipboard.writeText(textToCopy);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
     }
-  }
+  };
 
   return (
     <div
-      className={cn('rounded-2xl border border-border bg-card overflow-hidden font-sans', className)}
+      className={cn(
+        "rounded border border-border bg-card overflow-hidden font-sans",
+        className,
+      )}
       role="region"
       aria-label={ariaLabel}
     >
@@ -58,10 +62,23 @@ export function TerminalWindow({
       {showChrome && (
         <div className="flex items-center justify-between gap-1 bg-muted/50 px-4 py-2">
           <div className="flex items-center gap-1">
-            <span className="size-2 rounded-full bg-red-500/70" aria-hidden="true" />
-            <span className="size-2 rounded-full bg-yellow-500/70" aria-hidden="true" />
-            <span className="size-2 rounded-full bg-green-500/70" aria-hidden="true" />
-            {title && <span className="ml-3 font-mono text-xs text-muted-foreground">{title}</span>}
+            <span
+              className="size-2 rounded-full bg-red-500/70"
+              aria-hidden="true"
+            />
+            <span
+              className="size-2 rounded-full bg-yellow-500/70"
+              aria-hidden="true"
+            />
+            <span
+              className="size-2 rounded-full bg-green-500/70"
+              aria-hidden="true"
+            />
+            {title && (
+              <span className="ml-3 font-mono text-xs text-muted-foreground">
+                {title}
+              </span>
+            )}
           </div>
           {copyable && (
             <button
@@ -86,10 +103,14 @@ export function TerminalWindow({
       )}
 
       {/* Console content */}
-      <div className="bg-background p-6 font-mono text-sm leading-relaxed">{children}</div>
+      <div className="bg-background p-6 font-mono text-sm leading-relaxed">
+        {children}
+      </div>
 
       {/* Optional footer */}
-      {footer && <div className="border-t border-border px-6 py-3">{footer}</div>}
+      {footer && (
+        <div className="border-t border-border px-6 py-3">{footer}</div>
+      )}
     </div>
-  )
+  );
 }

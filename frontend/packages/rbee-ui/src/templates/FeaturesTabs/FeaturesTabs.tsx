@@ -77,7 +77,7 @@ export function FeaturesTabs({ title, description, tabs, defaultTab }: FeaturesT
                 value={tab.value}
                 className="animate-in fade-in slide-in-from-right-4 duration-300 data-[state=inactive]:absolute data-[state=inactive]:invisible"
               >
-                <div className="bg-card border border-border rounded-2xl p-8 space-y-6">
+                <div className="bg-card border border-border rounded p-8 space-y-6">
                   <div>
                     <div className="flex items-center gap-2 mb-3">
                       <h3 className="text-2xl font-bold text-foreground">{tab.label}</h3>

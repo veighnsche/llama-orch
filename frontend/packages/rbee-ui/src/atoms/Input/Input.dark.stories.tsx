@@ -40,7 +40,7 @@ type Story = StoryObj<typeof Input>
 
 export const InputStates: Story = {
   render: () => (
-    <div className="bg-[#0b1220] p-8 rounded-lg space-y-6 max-w-md">
+    <div className="bg-[#0b1220] p-8 rounded space-y-6 max-w-md">
       <div className="space-y-2">
         <label className="text-sm font-medium">Default Input</label>
         <Input placeholder="Type to see accent caret..." />
@@ -70,7 +70,7 @@ export const InputStates: Story = {
 
 export const SelectStates: Story = {
   render: () => (
-    <div className="bg-[#0b1220] p-8 rounded-lg space-y-6 max-w-md">
+    <div className="bg-[#0b1220] p-8 rounded space-y-6 max-w-md">
       <div className="space-y-2">
         <label className="text-sm font-medium">Select Dropdown</label>
         <Select>
@@ -108,7 +108,7 @@ export const SelectStates: Story = {
 
 export const TextareaStates: Story = {
   render: () => (
-    <div className="bg-[#0b1220] p-8 rounded-lg space-y-6 max-w-md">
+    <div className="bg-[#0b1220] p-8 rounded space-y-6 max-w-md">
       <div className="space-y-2">
         <label className="text-sm font-medium">Textarea</label>
         <Textarea placeholder="Type multiple lines..." rows={4} />
@@ -132,8 +132,8 @@ export const TextareaStates: Story = {
 
 export const FormComplete: Story = {
   render: () => (
-    <div className="bg-[#0b1220] p-8 rounded-lg">
-      <div className="bg-card border border-border rounded-xl p-6 max-w-md">
+    <div className="bg-[#0b1220] p-8 rounded">
+      <div className="bg-card border border-border rounded-md p-6 max-w-md">
         <h3 className="text-lg font-semibold mb-4">Contact Form</h3>
         <div className="space-y-4">
           <div className="space-y-2">

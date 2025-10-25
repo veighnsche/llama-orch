@@ -34,7 +34,7 @@ export function AuditReadinessCTA({
   footnote,
 }: AuditReadinessCTAProps) {
   return (
-    <Card className="animate-in fade-in-50 rounded-2xl border-primary/20 bg-primary/5 [animation-delay:200ms]">
+    <Card className="animate-in fade-in-50 rounded border-primary/20 bg-primary/5 [animation-delay:200ms]">
       <CardContent className="p-8 text-center">
         <h3 className="mb-2 text-2xl font-semibold text-foreground">{heading}</h3>
         <p className="mb-2 text-foreground/85">{parseInlineMarkdown(description)}</p>

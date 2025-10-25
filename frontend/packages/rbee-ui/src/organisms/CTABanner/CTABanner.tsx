@@ -45,7 +45,7 @@ export function CTABanner({ copy, primary, secondary, className }: CTABannerProp
   return (
     <Card
       className={cn(
-        'rounded-2xl bg-card/60 p-6 text-center sm:p-8',
+        'rounded bg-card/60 p-6 text-center sm:p-8',
         'animate-in fade-in slide-in-from-bottom-2 motion-reduce:animate-none delay-300',
         className,
       )}

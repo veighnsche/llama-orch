@@ -97,7 +97,7 @@ export const InBrandLogo: Story = {
         <BrandWordmark size="2xl" />
       </div>
       <div className="flex items-center gap-3">
-        <div className="flex size-16 items-center justify-center rounded-lg bg-primary text-primary-foreground">
+        <div className="flex size-16 items-center justify-center rounded bg-primary text-primary-foreground">
           <span className="text-2xl font-bold">R</span>
         </div>
         <BrandWordmark size="3xl" />

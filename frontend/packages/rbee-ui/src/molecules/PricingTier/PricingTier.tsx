@@ -49,7 +49,7 @@ export function PricingTier({
       className={cn(
         'flex flex-col h-full',
         'bg-card/90 backdrop-blur supports-[backdrop-filter]:bg-card/75',
-        'rounded-2xl p-7 md:p-8 border-2',
+        'rounded p-7 md:p-8 border-2',
         'motion-safe:hover:translate-y-[-2px] motion-safe:hover:shadow-lg motion-safe:transition-all',
         highlighted
           ? 'border-primary shadow-[0_0_0_1px_var(--primary)] shadow-primary/20 hover:shadow-primary/30 ring-1 ring-primary/30'

@@ -35,7 +35,7 @@ function BeeNode({ emoji, label, sublabel, variant, size = 'default', className 
   return (
     <div
       className={cn(
-        'flex items-center gap-3 rounded-lg border',
+        'flex items-center gap-3 rounded border',
         isQueen ? 'border-primary/30 bg-primary/10 px-6 py-3' : 'border-border bg-muted px-6 py-3',
         isSmall && 'gap-2 px-4 py-2',
         className,
@@ -84,7 +84,7 @@ function WorkerChip({ worker, index }: WorkerChipProps) {
   return (
     <div
       className={cn(
-        'flex items-center gap-2 rounded-lg border border-border bg-muted px-3 py-2',
+        'flex items-center gap-2 rounded border border-border bg-muted px-3 py-2',
         'animate-in zoom-in-50 duration-400',
         getWorkerRing(worker.kind),
       )}
@@ -120,7 +120,7 @@ export function BeeArchitecture({ topology, className }: BeeArchitectureProps) {
         <div className="h-8 w-px bg-border" aria-hidden="true" />
 
         {/* Host chassis with embedded hive */}
-        <div className="w-full rounded-xl border border-border bg-card/50 p-6 animate-in fade-in slide-in-from-top-2 duration-400 delay-200">
+        <div className="w-full rounded-md border border-border bg-card/50 p-6 animate-in fade-in slide-in-from-top-2 duration-400 delay-200">
           <div className="mb-4 text-center text-sm font-medium text-muted-foreground font-sans">
             {topology.hostLabel}
           </div>
@@ -165,7 +165,7 @@ export function BeeArchitecture({ topology, className }: BeeArchitectureProps) {
         {/* Multiple hosts - each with its own hive */}
         <div className="grid w-full gap-6 sm:grid-cols-2 lg:grid-cols-3 animate-in fade-in slide-in-from-top-2 duration-400 delay-200">
           {topology.hosts.map((host, hostIndex) => (
-            <div key={hostIndex} className="rounded-xl border border-border bg-card/50 p-4">
+            <div key={hostIndex} className="rounded-md border border-border bg-card/50 p-4">
               <div className="mb-3 text-center text-sm font-medium text-muted-foreground font-sans">
                 {host.hostLabel}
               </div>
@@ -206,7 +206,7 @@ export function BeeArchitecture({ topology, className }: BeeArchitectureProps) {
   }
 
   return (
-    <figure className={cn('mx-auto mt-16 max-w-3xl rounded-xl border border-border bg-card p-8', className)}>
+    <figure className={cn('mx-auto mt-16 max-w-3xl rounded-md border border-border bg-card p-8', className)}>
       <figcaption className="sr-only">{getFigcaption()}</figcaption>
       <h3 className="mb-6 text-center text-xl font-semibold text-card-foreground">The Bee Architecture</h3>
       <div className="flex flex-col items-center gap-6">

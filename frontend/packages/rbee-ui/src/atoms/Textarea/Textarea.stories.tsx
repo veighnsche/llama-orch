@@ -122,7 +122,7 @@ export const DisabledState: Story = {
 
 export const InForm: Story = {
   render: () => (
-    <form className="w-full max-w-2xl space-y-6 p-6 border rounded-lg">
+    <form className="w-full max-w-2xl space-y-6 p-6 border rounded">
       <div>
         <h3 className="text-lg font-semibold mb-2">Submit Feedback</h3>
         <p className="text-sm text-muted-foreground">Help us improve by sharing your thoughts</p>
@@ -175,7 +175,7 @@ export const InForm: Story = {
 
 export const CodeEditor: Story = {
   render: () => (
-    <div className="w-full max-w-3xl space-y-4 p-6 border rounded-lg">
+    <div className="w-full max-w-3xl space-y-4 p-6 border rounded">
       <div className="flex items-center justify-between">
         <h3 className="text-sm font-semibold">System Prompt</h3>
         <div className="flex gap-2">
@@ -210,7 +210,7 @@ Always explain your reasoning and provide context for your suggestions.`}
 export const ChatInput: Story = {
   render: () => (
     <div className="w-full max-w-3xl">
-      <div className="border rounded-lg overflow-hidden">
+      <div className="border rounded overflow-hidden">
         <div className="p-4 border-b border-border bg-muted/20">
           <h3 className="text-sm font-semibold">Chat with Llama 3.1 8B</h3>
         </div>

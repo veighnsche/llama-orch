@@ -47,7 +47,7 @@ export const pricingHeroProps: PricingHeroTemplateProps = {
   visual: (
     <PricingScaleVisual
       size="100%"
-      className="rounded-xl opacity-70"
+      className="rounded-md opacity-70"
       aria-label="Illustration showing rbee pricing scales from single-GPU homelab to multi-node server setups with progressive cost tiers"
     />
   ),

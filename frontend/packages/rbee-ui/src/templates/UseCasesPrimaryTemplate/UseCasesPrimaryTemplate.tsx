@@ -92,7 +92,7 @@ export function UseCasesPrimaryTemplate({
         <p className="text-center text-sm text-muted-foreground mb-6">{eyebrow}</p>
 
         {/* Hero strip image */}
-        <div className="relative overflow-hidden rounded-lg border/60 mb-8">{heroImage}</div>
+        <div className="relative overflow-hidden rounded border/60 mb-8">{heroImage}</div>
 
         {/* Filter pills */}
         <nav
