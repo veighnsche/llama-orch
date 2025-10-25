@@ -11,12 +11,13 @@ use axum::{
 };
 use rust_embed::RustEmbed;
 
-/// Embedded static assets from web-ui production build
+/// Embedded static assets from queen-rbee UI production build
 ///
-/// Files are embedded at compile time from frontend/apps/web-ui/dist/
+/// TEAM-295: Files are embedded at compile time from ui/app/dist/
 /// This allows the binary to be distributed as a single executable
+/// The build.rs script ensures UI is built before Rust compilation
 #[derive(RustEmbed)]
-#[folder = "../../frontend/apps/web-ui/dist/"]
+#[folder = "ui/app/dist/"]
 struct Assets;
 
 /// Create static file serving router

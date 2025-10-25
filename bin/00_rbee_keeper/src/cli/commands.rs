@@ -10,9 +10,10 @@ use super::{HiveAction, ModelAction, QueenAction, WorkerAction};
 #[command(name = "rbee")]
 #[command(about = "rbee infrastructure management CLI", version)]
 #[command(long_about = "CLI tool for managing queen-rbee, hives, workers, and inference")]
+// TEAM-295: Made command optional - if no subcommand, launch Tauri GUI
 pub struct Cli {
     #[command(subcommand)]
-    pub command: Commands,
+    pub command: Option<Commands>,
 }
 
 #[derive(Subcommand)]

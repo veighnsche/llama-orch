@@ -91,7 +91,7 @@ members = [
     # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
     # Client libraries and utilities for external developers.
     
-    "frontend/packages/rbee-sdk",    # Rust SDK for rbee
+    # TEAM-295: rbee-sdk moved out of Cargo workspace (WASM-only package)
 
     # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
     # DEVELOPER TOOLS — Build & Maintenance

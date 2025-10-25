@@ -54,7 +54,56 @@ use handlers::{
 #[tokio::main]
 async fn main() -> Result<()> {
     let cli = Cli::parse();
+    
+    // TEAM-295: If no subcommand provided, launch Tauri GUI instead
+    if cli.command.is_none() {
+        launch_gui();
+        return Ok(());
+    }
+    
     handle_command(cli).await
+}
+
+// TEAM-295: Launch Tauri GUI (synchronous, blocks until window closes)
+fn launch_gui() {
+    use rbee_keeper::tauri_commands::*;
+    
+    tauri::Builder::default()
+        .invoke_handler(tauri::generate_handler![
+            // Status
+            get_status,
+            // Queen commands
+            queen_start,
+            queen_stop,
+            queen_status,
+            queen_rebuild,
+            queen_info,
+            queen_install,
+            queen_uninstall,
+            // Hive commands
+            hive_install,
+            hive_uninstall,
+            hive_start,
+            hive_stop,
+            hive_list,
+            hive_get,
+            hive_status,
+            hive_refresh_capabilities,
+            // Worker commands
+            worker_spawn,
+            worker_process_list,
+            worker_process_get,
+            worker_process_delete,
+            // Model commands
+            model_download,
+            model_list,
+            model_get,
+            model_delete,
+            // Inference
+            infer,
+        ])
+        .run(tauri::generate_context!())
+        .expect("error while running tauri application");
 }
 
 async fn handle_command(cli: Cli) -> Result<()> {
@@ -73,8 +122,11 @@ async fn handle_command(cli: Cli) -> Result<()> {
     //   2. Call handler::handle_xxx()
     //   3. Handler constructs Operation and submits to queen
     // ============================================================================
+    
+    // TEAM-295: Command is now Option, unwrap it here since we checked is_some earlier
+    let command = cli.command.expect("Command should be Some if we reach here");
 
-    match cli.command {
+    match command {
         Commands::Status => handle_status(&queen_url).await,
         Commands::Queen { action } => handle_queen(action, &queen_url).await,
         Commands::Hive { action } => handle_hive(action, &queen_url).await,

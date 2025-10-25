@@ -57,14 +57,14 @@ Returns an object with:
 All WASM types are re-exported for convenience:
 
 ```typescript
-import type { RbeeClient, HeartbeatMonitor, OperationBuilder } from '@rbee/react';
+import type { RbeeClient, HeartbeatMonitor, OperationBuilder } from '@rbee/queen-rbee-react';
 ```
 
 These are the actual class types from the WASM package, providing full TypeScript support.
 
 ## Architecture
 
-This package provides a thin React wrapper around `@rbee/sdk` (the WASM package). It handles:
+This package provides a thin React wrapper around `@rbee/queen-rbee-sdk` (the WASM package). It handles:
 
 1. Dynamic WASM module loading
 2. SDK initialization
