@@ -78,6 +78,18 @@ export default function KeeperPage() {
       title="Services"
       description="Manage Queen, Hive, and SSH connections"
       padding="lg"
+      helperText={[
+        {
+          title: "Queen",
+          description:
+            "routes inference jobs to the right worker in the right hive. Start Queen first to enable job routing.",
+        },
+        {
+          title: "Hive",
+          description:
+            "manages worker lifecycle and catalogs (models from HuggingFace, worker binaries). Start localhost hive to see local models and workers. Use SSH targets above to start remote hives and access their catalogs.",
+        },
+      ]}
     >
       <div className="space-y-6">
         {/* Status Cards */}
@@ -119,24 +131,6 @@ export default function KeeperPage() {
               </div>
             </CardContent>
           </Card>
-        </div>
-
-        {/* Helper Text */}
-        <div className="rounded-lg border border-border bg-muted/50 p-4">
-          <h3 className="text-sm font-medium mb-2">About Services</h3>
-          <div className="space-y-2 text-sm text-muted-foreground">
-            <p>
-              <strong className="text-foreground">Queen</strong> routes
-              inference jobs to the right worker in the right hive. Start Queen
-              first to enable job routing.
-            </p>
-            <p>
-              <strong className="text-foreground">Hive</strong> manages worker
-              lifecycle and catalogs (models from HuggingFace, worker binaries).
-              Start localhost hive to see local models and workers. Use SSH
-              targets below to start remote hives and access their catalogs.
-            </p>
-          </div>
         </div>
 
         {/* SSH Targets Table */}

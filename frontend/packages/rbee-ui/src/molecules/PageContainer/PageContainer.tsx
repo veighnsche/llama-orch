@@ -1,5 +1,6 @@
 import { cn } from '@rbee/ui/utils'
 import type { ReactNode } from 'react'
+import { HelperTextItem, type HelperTextItemProps } from '../HelperTextItem'
 
 export interface PageContainerProps {
   /** Page title */
@@ -16,6 +17,8 @@ export interface PageContainerProps {
   spacing?: 'default' | 'compact' | 'relaxed'
   /** Padding variant (default: 'default' = p-4) */
   padding?: 'none' | 'sm' | 'default' | 'lg'
+  /** Optional helper text items shown at the bottom of the page */
+  helperText?: HelperTextItemProps[]
 }
 
 const spacingClasses = {
@@ -60,6 +63,7 @@ export function PageContainer({
   className,
   spacing = 'default',
   padding = 'default',
+  helperText,
 }: PageContainerProps) {
   return (
     <div className={cn('flex-1', paddingClasses[padding], spacingClasses[spacing], className)}>
@@ -74,6 +78,15 @@ export function PageContainer({
 
       {/* Content */}
       {children}
+
+      {/* Helper Text */}
+      {helperText && helperText.length > 0 && (
+        <div className="mt-8 pt-6 border-t border-border/50 space-y-3">
+          {helperText.map((item, index) => (
+            <HelperTextItem key={index} title={item.title} description={item.description} />
+          ))}
+        </div>
+      )}
     </div>
   )
 }
