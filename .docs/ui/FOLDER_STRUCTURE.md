@@ -6,60 +6,76 @@
 
 **Parity:** Each binary in `bin/` has a corresponding UI in `frontend/apps/` with the same numbered prefix.
 
-## Structure
+## Complete Folder Structure
 
 ```
-/home/vince/Projects/llama-orch/
-
-├── bin/                                    # Rust binaries
-│   ├── 00_rbee_keeper/                     # Keeper binary (Tauri)
-│   │   ├── src/
-│   │   ├── Cargo.toml
-│   │   └── tauri.conf.json                 # Points to ../../../frontend/apps/00_rbee_keeper
-│   │
-│   ├── 10_queen_rbee/                      # Queen binary
-│   │   ├── src/
-│   │   └── Cargo.toml
-│   │
-│   ├── 20_rbee_hive/                       # Hive binary
-│   │   ├── src/
-│   │   └── Cargo.toml
-│   │
-│   └── 30_llm_worker_rbee/                 # Worker binary
+bin/
+├── 00_rbee_keeper/
+│   └── ui/                      # Desktop GUI (Tauri) - no app subfolder
 │       ├── src/
-│       └── Cargo.toml
+│       ├── src-tauri/
+│       ├── package.json
+│       └── vite.config.ts
 │
-└── frontend/apps/                          # React UIs
-    ├── 00_rbee_keeper/                     # Keeper UI (Tauri frontend)
-    │   ├── src/
-    │   ├── package.json
-    │   ├── vite.config.ts
-    │   └── index.html
-    │
-    ├── 10_queen_rbee/                      # Queen UI (static)
-    │   ├── src/
-    │   ├── package.json
-    │   └── vite.config.ts
-    │
-    ├── 20_rbee_hive/                       # Hive UI (static)
-    │   ├── src/
-    │   ├── package.json
-    │   └── vite.config.ts
-    │
-    ├── 30_llm_worker_rbee/                 # LLM Worker UI (static)
-    │   ├── src/
-    │   ├── package.json
-    │   └── vite.config.ts
-    │
-    ├── 30_comfy_worker_rbee/               # ComfyUI Worker UI (static)
-    │   └── ...
-    │
-    ├── 30_vllm_worker_rbee/                # vLLM Worker UI (static)
-    │   └── ...
-    │
-    ├── commercial/                         # Commercial website (unchanged)
-    └── user-docs/                          # User docs (unchanged)
-```
+├── 10_queen_rbee/
+│   └── ui/
+│       ├── app/                 # Queen web UI
+│       │   ├── src/
+│       │   ├── package.json
+│       │   └── vite.config.ts
+│       └── packages/
+│           ├── queen-rbee-sdk/  # HTTP client for queen
+│           │   ├── src/
+│           │   ├── package.json
+│           │   └── tsconfig.json
+│           └── queen-rbee-react/ # React hooks for queen
+│               ├── src/
+│               ├── package.json
+│               └── tsconfig.json
+│
+├── 20_rbee_hive/
+│   └── ui/
+│       ├── app/                 # Hive web UI
+│       │   ├── src/
+│       │   ├── package.json
+│       │   └── vite.config.ts
+│       └── packages/
+│           ├── rbee-hive-sdk/   # HTTP client for hive
+│           │   ├── src/
+│           │   ├── package.json
+│           │   └── tsconfig.json
+│           └── rbee-hive-react/  # React hooks for hive
+│               ├── src/
+│               ├── package.json
+│               └── tsconfig.json
+│
+└── 30_llm_worker_rbee/
+    └── ui/
+        ├── app/                 # Worker web UI
+        │   ├── src/
+        │   ├── package.json
+        │   └── vite.config.ts
+        └── packages/
+            ├── llm-worker-sdk/  # HTTP client for worker
+            │   ├── src/
+            │   ├── package.json
+            │   └── tsconfig.json
+            └── llm-worker-react/ # React hooks for worker
+                ├── src/
+                ├── package.json
+                └── tsconfig.json
+
+frontend/
+├── apps/
+│   ├── commercial/              # Marketing site
+│   ├── user-docs/               # Documentation site
+│   └── web-ui/                  # DEPRECATED
+│
+└── packages/
+    ├── rbee-ui/                 # Shared Storybook
+    ├── rbee-sdk/                # DEPRECATED
+    ├── rbee-react/              # DEPRECATED
+    └── tailwind-config/         # Shared Tailwind
 
 ## Numbering Convention
 
@@ -78,27 +94,27 @@
 
 | Binary | UI | Relationship |
 |--------|-----|-------------|
-| `bin/00_rbee_keeper/` | `frontend/apps/00_rbee_keeper/` | Tauri app (binary uses UI) |
-| `bin/10_queen_rbee/` | `frontend/apps/10_queen_rbee/` | Binary serves UI as static files |
-| `bin/20_rbee_hive/` | `frontend/apps/20_rbee_hive/` | Binary serves UI as static files |
-| `bin/30_llm_worker_rbee/` | `frontend/apps/30_llm_worker_rbee/` | Binary serves UI as static files |
+| `bin/00_rbee_keeper/` | `bin/00_rbee_keeper/ui/` | Tauri app (no app subfolder) |
+| `bin/10_queen_rbee/` | `bin/10_queen_rbee/ui/app/` | Binary serves UI as static files |
+| `bin/20_rbee_hive/` | `bin/20_rbee_hive/ui/app/` | Binary serves UI as static files |
+| `bin/30_llm_worker_rbee/` | `bin/30_llm_worker_rbee/ui/app/` | Binary serves UI as static files |
 
 ## Benefits
 
 ### 1. Clear Correspondence
 ```bash
 # Want to find the UI for a binary?
-ls bin/10_queen_rbee        # Binary
-ls frontend/apps/10_queen_rbee  # UI
+ls bin/10_queen_rbee/src     # Binary source
+ls bin/10_queen_rbee/ui      # UI source
 
-# Same number = related components
+# Everything for one component in one place
 ```
 
 ### 2. Easy Navigation
 ```bash
 # Jump between binary and UI
-cd bin/10_queen_rbee
-cd ../../../frontend/apps/10_queen_rbee
+cd bin/10_queen_rbee/src     # Binary
+cd ../ui/app                 # UI
 ```
 
 ### 3. Consistent Naming
@@ -110,11 +126,13 @@ cd ../../../frontend/apps/10_queen_rbee
 ```bash
 # Add new worker type?
 bin/30_whisper_worker_rbee/
-frontend/apps/30_whisper_worker_rbee/
+  ├── src/                # Binary
+  └── ui/app/             # UI
 
 # Add new component?
 bin/40_new_component/
-frontend/apps/40_new_component/
+  ├── src/                # Binary
+  └── ui/app/             # UI
 ```
 
 ## Migration from Old Structure
@@ -123,16 +141,16 @@ frontend/apps/40_new_component/
 ```
 bin/00_rbee_keeper/GUI/              # ❌ Nested in binary
 frontend/apps/web-ui/                # ❌ Generic name
-frontend/apps/ui-rbee-hive/          # ❌ Different naming
-frontend/apps/ui-llm-worker-rbee/    # ❌ Different naming
+frontend/apps/00_rbee_keeper/        # ❌ Separate from binary
+frontend/apps/10_queen_rbee/         # ❌ Separate from binary
 ```
 
 ### After (Consistent)
 ```
-frontend/apps/00_rbee_keeper/        # ✅ Top-level, numbered
-frontend/apps/10_queen_rbee/         # ✅ Numbered, clear
-frontend/apps/20_rbee_hive/          # ✅ Numbered, clear
-frontend/apps/30_llm_worker_rbee/    # ✅ Numbered, clear
+bin/00_rbee_keeper/ui/               # ✅ Co-located with binary
+bin/10_queen_rbee/ui/app/            # ✅ Co-located with binary
+bin/20_rbee_hive/ui/app/             # ✅ Co-located with binary
+bin/30_llm_worker_rbee/ui/app/       # ✅ Co-located with binary
 ```
 
 ## Tauri Configuration

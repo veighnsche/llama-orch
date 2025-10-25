@@ -1,48 +1,61 @@
-# Folder Parity: bin/ ↔ frontend/apps/
+# Folder Co-location: UIs in bin/
 
-**TEAM-293: Aligned folder structure for clarity**
+**TEAM-293: UIs co-located with their binaries**
 
 ## Quick Summary
 
-**Before:** UIs scattered, inconsistent naming  
-**After:** Clear 1:1 mapping between binaries and UIs
+**Before:** UIs in `frontend/apps/`, separate from binaries  
+**After:** UIs in `bin/*/ui/`, co-located with their binaries
 
 ## New Structure
 
 ```
-bin/                          frontend/apps/
-├── 00_rbee_keeper/     ↔    ├── 00_rbee_keeper/
-├── 10_queen_rbee/      ↔    ├── 10_queen_rbee/
-├── 20_rbee_hive/       ↔    ├── 20_rbee_hive/
-└── 30_llm_worker_rbee/ ↔    └── 30_llm_worker_rbee/
+bin/
+├── 00_rbee_keeper/
+│   ├── src/              # Binary source
+│   └── ui/               # Tauri GUI (no app subfolder)
+├── 10_queen_rbee/
+│   ├── src/              # Binary source
+│   └── ui/
+│       ├── app/          # Queen UI
+│       └── packages/     # Queen SDK packages
+├── 20_rbee_hive/
+│   ├── src/              # Binary source
+│   └── ui/
+│       ├── app/          # Hive UI
+│       └── packages/     # Hive SDK packages
+└── 30_llm_worker_rbee/
+    ├── src/              # Binary source
+    └── ui/
+        ├── app/          # Worker UI
+        └── packages/     # Worker SDK packages
 ```
 
 ## Key Changes
 
-### 1. Keeper GUI Moved
-**From:** `bin/00_rbee_keeper/GUI/`  
-**To:** `frontend/apps/00_rbee_keeper/`
+### 1. Keeper GUI Co-located
+**From:** `frontend/apps/00_rbee_keeper/`  
+**To:** `bin/00_rbee_keeper/ui/`
 
-**Why:** Keeps all UIs in one place, matches numbering
+**Why:** Co-locate UI with binary, no app subfolder (keeper doesn't need packages)
 
-### 2. Queen UI Renamed
-**From:** `frontend/apps/web-ui/`  
-**To:** `frontend/apps/10_queen_rbee/`
+### 2. Queen UI Co-located
+**From:** `frontend/apps/10_queen_rbee/`  
+**To:** `bin/10_queen_rbee/ui/app/`
 
-**Why:** Matches binary name and number
+**Why:** Co-locate UI with binary, packages in `ui/packages/`
 
-### 3. Hive UI Created
-**New:** `frontend/apps/20_rbee_hive/`
+### 3. Hive UI Co-located
+**From:** `frontend/apps/20_rbee_hive/`  
+**To:** `bin/20_rbee_hive/ui/app/`
 
-**Why:** Matches binary name and number
+**Why:** Co-locate UI with binary, packages in `ui/packages/`
 
-### 4. Worker UIs Created
-**New:** 
-- `frontend/apps/30_llm_worker_rbee/`
-- `frontend/apps/30_comfy_worker_rbee/`
-- `frontend/apps/30_vllm_worker_rbee/`
+### 4. Worker UIs Co-located
+**From:** `frontend/apps/30_llm_worker_rbee/`  
+**To:** `bin/30_llm_worker_rbee/ui/app/`
 
-**Why:** Matches binary prefix (all workers are 30_)
+**Why:** Co-locate UI with binary, packages in `ui/packages/`
 
 ## pnpm-workspace.yaml
 
@@ -51,15 +64,22 @@ packages:
   # Commercial & Docs
   - frontend/apps/commercial
   - frontend/apps/user-docs
+  - frontend/apps/web-ui  # DEPRECATED
   
-  # rbee UIs (numbered)
-  - frontend/apps/00_rbee_keeper
-  - frontend/apps/10_queen_rbee
-  - frontend/apps/20_rbee_hive
-  - frontend/apps/30_*_worker_rbee
+  # rbee UIs (co-located in bin/)
+  - bin/00_rbee_keeper/ui
+  - bin/10_queen_rbee/ui/app
+  - bin/10_queen_rbee/ui/packages/*
+  - bin/20_rbee_hive/ui/app
+  - bin/20_rbee_hive/ui/packages/*
+  - bin/30_llm_worker_rbee/ui/app
+  - bin/30_llm_worker_rbee/ui/packages/*
   
   # Shared packages
-  - frontend/packages/*
+  - frontend/packages/rbee-ui
+  - frontend/packages/rbee-sdk      # DEPRECATED
+  - frontend/packages/rbee-react    # DEPRECATED
+  - frontend/packages/tailwind-config
 ```
 
 ## Package Names
@@ -81,52 +101,71 @@ packages:
 {
   "build": {
     "devPath": "http://localhost:5173",
-    "distDir": "../../../frontend/apps/00_rbee_keeper/dist"
+    "distDir": "../ui/dist"
   }
 }
 ```
 
 **Path explanation:**
 - From: `bin/00_rbee_keeper/`
-- Go up 3 levels: `../../../`
-- Enter: `frontend/apps/00_rbee_keeper/dist`
+- Go up 1 level: `../`
+- Enter: `ui/dist`
 
 ## Migration Commands
 
 ```bash
-# 1. Move keeper GUI
-mkdir -p frontend/apps/00_rbee_keeper
-mv bin/00_rbee_keeper/GUI/* frontend/apps/00_rbee_keeper/
-rmdir bin/00_rbee_keeper/GUI
+# 1. Move keeper GUI to bin/
+mkdir -p bin/00_rbee_keeper/ui
+mv frontend/apps/00_rbee_keeper/* bin/00_rbee_keeper/ui/
+rmdir frontend/apps/00_rbee_keeper
 
-# 2. Rename queen UI
-mv frontend/apps/web-ui frontend/apps/10_queen_rbee
+# 2. Move queen UI to bin/
+mkdir -p bin/10_queen_rbee/ui/app
+mv frontend/apps/10_queen_rbee/* bin/10_queen_rbee/ui/app/
+rmdir frontend/apps/10_queen_rbee
 
-# 3. Create hive UI
-mkdir frontend/apps/20_rbee_hive
+# 3. Move queen packages to bin/
+mkdir -p bin/10_queen_rbee/ui/packages
+mv frontend/packages/10_queen_rbee/* bin/10_queen_rbee/ui/packages/
+rmdir frontend/packages/10_queen_rbee
 
-# 4. Create worker UIs
-mkdir frontend/apps/30_llm_worker_rbee
-mkdir frontend/apps/30_comfy_worker_rbee
-mkdir frontend/apps/30_vllm_worker_rbee
+# 4. Move hive UI to bin/
+mkdir -p bin/20_rbee_hive/ui/app
+mv frontend/apps/20_rbee_hive/* bin/20_rbee_hive/ui/app/
+rmdir frontend/apps/20_rbee_hive
 
-# 5. Update tauri.conf.json
-# Change distDir to: ../../../frontend/apps/00_rbee_keeper/dist
+# 5. Move hive packages to bin/
+mkdir -p bin/20_rbee_hive/ui/packages
+mv frontend/packages/20_rbee_hive/* bin/20_rbee_hive/ui/packages/
+rmdir frontend/packages/20_rbee_hive
 
-# 6. Update pnpm-workspace.yaml
-# Add numbered app entries
+# 6. Move worker UI to bin/
+mkdir -p bin/30_llm_worker_rbee/ui/app
+mv frontend/apps/30_llm_worker_rbee/* bin/30_llm_worker_rbee/ui/app/
+rmdir frontend/apps/30_llm_worker_rbee
 
-# 7. Reinstall
+# 7. Move worker packages to bin/
+mkdir -p bin/30_llm_worker_rbee/ui/packages
+mv frontend/packages/30_llm_worker_rbee/* bin/30_llm_worker_rbee/ui/packages/
+rmdir frontend/packages/30_llm_worker_rbee
+
+# 8. Update tauri.conf.json
+# Change distDir to: ../ui/dist
+
+# 9. Update pnpm-workspace.yaml
+# Update to use bin/* paths
+
+# 10. Reinstall
 pnpm install
 ```
 
 ## Benefits
 
-✅ **Clear correspondence:** Same number = related components  
-✅ **Easy navigation:** Jump between binary and UI  
-✅ **Consistent naming:** No more confusion  
-✅ **Scalable:** Easy to add new components  
-✅ **Professional:** Organized structure
+✅ **Co-location:** Binary and UI in same directory  
+✅ **Easy navigation:** `cd bin/10_queen_rbee/src` → `cd ../ui/app`  
+✅ **Clear ownership:** Each component owns its UI  
+✅ **Scalable:** Add new component = add one directory  
+✅ **Self-contained:** Everything for one component in one place
 
 ## Documentation Updated
 

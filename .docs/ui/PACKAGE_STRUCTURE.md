@@ -28,25 +28,22 @@
 ## New Structure
 
 ```
-frontend/packages/
-├── rbee-ui/                          # ✅ Shared UI components (unchanged)
-├── tailwind-config/                  # ✅ Shared Tailwind config (unchanged)
-│
-├── 10_queen_rbee/                    # Queen packages
+bin/
+├── 10_queen_rbee/ui/packages/        # Queen packages
 │   ├── queen-rbee-sdk/               # HTTP client for queen API
 │   └── queen-rbee-react/             # React hooks for queen SDK
 │
-├── 20_rbee_hive/                     # Hive packages
+├── 20_rbee_hive/ui/packages/         # Hive packages
 │   ├── rbee-hive-sdk/                # HTTP client for hive API
 │   └── rbee-hive-react/              # React hooks for hive SDK
 │
-└── 30_workers/                       # Worker packages
+└── 30_llm_worker_rbee/ui/packages/   # Worker packages
     ├── llm-worker-sdk/               # HTTP client for LLM worker API
-    ├── llm-worker-react/             # React hooks for LLM worker SDK
-    ├── comfy-worker-sdk/             # HTTP client for ComfyUI worker API
-    ├── comfy-worker-react/           # React hooks for ComfyUI worker SDK
-    ├── vllm-worker-sdk/              # HTTP client for vLLM worker API
-    └── vllm-worker-react/            # React hooks for vLLM worker SDK
+    └── llm-worker-react/             # React hooks for LLM worker SDK
+
+frontend/packages/
+├── rbee-ui/                          # ✅ Shared UI components (unchanged)
+└── tailwind-config/                  # ✅ Shared Tailwind config (unchanged)
 ```
 
 ## Keeper Exception

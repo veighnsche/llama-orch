@@ -30,57 +30,68 @@ bin/00_rbee_keeper/
 
 ```
 Architecture:
-┌─────────────────────────────────────────────────┐
-│ rbee-keeper (Tauri GUI)                         │
-│ ├── Sidebar Navigation                          │
-│ ├── PageContainer with iframes                  │
-│ └── Manages: start/stop/status/install/uninstall│
-│                                                 │
-│  ┌───────────────────────────────────────────┐  │
-│  │ iframe: queen-rbee UI (if alive)          │  │
-│  │ - Scheduling                              │  │
-│  │ - Job queue                               │  │
-│  │ - Inference routing                       │  │
-│  └───────────────────────────────────────────┘  │
-│                                                 │
-│  ┌───────────────────────────────────────────┐  │
-│  │ iframe: hive-001 UI                       │  │
-│  │ - Model management                        │  │
-│  │ - Worker spawning                         │  │
-│  │ - Resource monitoring                     │  │
-│  └───────────────────────────────────────────┘  │
-│                                                 │
-│  ┌───────────────────────────────────────────┐  │
-│  │ iframe: llm-worker-001 UI                 │  │
-│  │ - Inference parameters                    │  │
-│  │ - Performance metrics                     │  │
-│  │ - Live inference demo                     │  │
-│  └───────────────────────────────────────────┘  │
-└─────────────────────────────────────────────────┘
+┌───────────────────────────────────────────────## Folder Structure
+
+```
+bin/
+├── 00_rbee_keeper/
+│   └── ui/                    # Desktop GUI (Tauri) - no app subfolder
+├── 10_queen_rbee/
+│   └── ui/
+│       ├── app/               # Queen web UI
+│       └── packages/
+│           ├── queen-rbee-sdk/    # HTTP client for queen API
+│           └── queen-rbee-react/  # React hooks for queen
+├── 20_rbee_hive/
+│   └── ui/
+│       ├── app/               # Hive web UI
+│       └── packages/
+│           ├── rbee-hive-sdk/     # HTTP client for hive API
+│           └── rbee-hive-react/   # React hooks for hive
+└── 30_llm_worker_rbee/
+    └── ui/
+        ├── app/               # Worker web UI
+        └── packages/
+            ├── llm-worker-sdk/    # HTTP client for worker API
+            └── llm-worker-react/  # React hooks for worker
+
+frontend/
+├── apps/
+│   ├── commercial/          # Marketing site
+│   ├── user-docs/           # Documentation site
+│   └── web-ui/              # DEPRECATED (old monolithic UI)
+│
+└── packages/
+    ├── rbee-ui/               # Shared Storybook components
+    ├── rbee-sdk/              # DEPRECATED (generic SDK)
+    ├── rbee-react/            # DEPRECATED (generic hooks)
+    └── tailwind-config/       # Shared Tailwind config
 ```
 
 ## New UI Structure
 
-### 1. rbee-keeper (Tauri GUI)
-**Location:** `frontend/apps/00_rbee_keeper/`  
-**Type:** Tauri (Rust + React)  
-**Purpose:** Top-level orchestration UI
+### 1. Keeper GUI (`bin/00_rbee_keeper/ui/`)
+
+**Technology:** Tauri (Rust + React)
+**Purpose:** Desktop application for managing the entire rbee system
+**Port:** N/A (desktop app)
+**Location:** `bin/00_rbee_keeper/ui/` (no app subfolder - keeper doesn't need packages)
 
 **Features:**
-- Sidebar with hierarchical navigation
-- iframe host for child UIs
-- Lifecycle management (start/stop/install/uninstall)
-- Status monitoring via heartbeats
+- System overview dashboard
+- Queen management (start/stop/configure)
+- Hive registry and health monitoring
+- Worker pool visualization
+- System logs and diagnostics
+- Configuration management
 
-**Does NOT include:**
-- Scheduling (that's queen's job)
-- Model management (that's hive's job)
-- Worker-specific features (that's worker's job)
+### 2. Queen UI (`bin/10_queen_rbee/ui/app/`)
 
-### 2. queen-rbee UI
-**Location:** `frontend/apps/10_queen_rbee/`  
-**Type:** React (static build)  
-**Purpose:** Scheduling and job management
+**Technology:** Vite + React
+**Purpose:** Web interface for queen-rbee orchestrator
+**Port:** 5174
+**API:** `http://localhost:7833`
+**Packages:** `bin/10_queen_rbee/ui/packages/` (queen-rbee-sdk, queen-rbee-react)
 
 **Features:**
 - Job queue visualization
@@ -91,10 +102,13 @@ Architecture:
 **Hosted by:** queen-rbee binary (static files)  
 **Accessed via:** rbee-keeper iframe
 
-### 3. rbee-hive UI
-**Location:** `frontend/apps/20_rbee_hive/`  
-**Type:** React (static build)  
-**Purpose:** Model and worker management
+### 3. Hive UI (`bin/20_rbee_hive/ui/app/`)
+
+**Technology:** Vite + React
+**Purpose:** Web interface for rbee-hive manager
+**Port:** 5175
+**API:** `http://localhost:7835`
+**Packages:** `bin/20_rbee_hive/ui/packages/` (rbee-hive-sdk, rbee-hive-react)
 
 **Features:**
 - Model download/list/delete
@@ -105,15 +119,13 @@ Architecture:
 **Hosted by:** rbee-hive binary (static files)  
 **Accessed via:** rbee-keeper iframe
 
-### 4. Worker UIs (Per Type)
-**Locations:** 
-- `frontend/apps/30_llm_worker_rbee/`
-- `frontend/apps/30_comfy_worker_rbee/`
-- `frontend/apps/30_vllm_worker_rbee/`
-- etc.
+### 4. Worker UIs (`bin/30_llm_worker_rbee/ui/app/`)
 
-**Type:** React (static builds)  
-**Purpose:** Worker-specific interfaces
+**Technology:** Vite + React
+**Purpose:** Web interface for individual LLM workers
+**Port:** 5176 (base), 5177, 5178, etc.
+**API:** `http://localhost:8080` (base), 8081, 8082, etc.
+**Packages:** `bin/30_llm_worker_rbee/ui/packages/` (llm-worker-sdk, llm-worker-react)
 
 **Features (vary by type):**
 - Live inference demo

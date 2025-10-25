@@ -1,24 +1,16 @@
 {
-  "$schema": "https://schema.tauri.app/config/1",
+  "$schema": "https://schema.tauri.app/config/2",
+  "productName": "rbee-keeper",
+  "version": "0.1.0",
+  "identifier": "com.rbee.keeper",
   "build": {
-    "devPath": "http://localhost:5173",
-    "distDir": "../ui/dist"
+    "frontendDist": "../ui/dist",
+    "devUrl": "http://localhost:5173"
   },
-  "package": {
-    "productName": "rbee-keeper",
-    "version": "0.1.0"
+  "bundle": {
+    "active": false
   },
-  "tauri": {
-    "allowlist": {
-      "all": false
-    },
-    "bundle": {
-      "active": false,
-      "identifier": "com.rbee.keeper"
-    },
-    "security": {
-      "csp": null
-    },
+  "app": {
     "windows": [
       {
         "fullscreen": false,
@@ -29,6 +21,9 @@
         "minWidth": 800,
         "minHeight": 600
       }
-    ]
+    ],
+    "security": {
+      "csp": null
+    }
   }
 }
