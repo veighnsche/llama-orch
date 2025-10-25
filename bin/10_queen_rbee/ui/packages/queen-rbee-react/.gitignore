@@ -1,0 +1,16 @@
+# TEAM-294: Ignore build artifacts and dependencies
+
+# Dependencies
+node_modules/
+
+# Build outputs
+dist/
+*.tsbuildinfo
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
