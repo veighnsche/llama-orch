@@ -1,21 +1,21 @@
 packages:
   - frontend/apps/commercial
   - frontend/apps/user-docs
-  - frontend/apps/web-ui # DEPRECATED -> should be migrated to `frontend/apps/10_queen_rbee`
-  - frontend/apps/00_rbee_keeper
-  - frontend/apps/10_queen_rbee
-  - frontend/apps/20_rbee_hive
-  - frontend/apps/30_llm_worker_rbee
-  - frontend/packages/10_queen_rbee/queen-rbee-sdk
-  - frontend/packages/10_queen_rbee/queen-rbee-react
-  - frontend/packages/20_rbee_hive/rbee-hive-sdk
-  - frontend/packages/20_rbee_hive/rbee-hive-react
-  - frontend/packages/30_llm_worker_rbee/llm-worker-sdk
-  - frontend/packages/30_llm_worker_rbee/llm-worker-react
+  - frontend/apps/web-ui # DEPRECATED -> should be migrated to `bin/10_queen_rbee/ui/app`
   - frontend/packages/rbee-ui
-  - frontend/packages/rbee-sdk # DEPRECATED -> should be migrated to frontend/packages/10_queen_rbee/queen-rbee-sdk
-  - frontend/packages/rbee-react # DEPRECATED -> should be migrated to frontend/packages/10_queen_rbee/queen-rbee-react
+  - frontend/packages/rbee-sdk # DEPRECATED -> should be migrated to bin/10_queen_rbee/ui/packages/queen-rbee-sdk
+  - frontend/packages/rbee-react # DEPRECATED -> should be migrated to bin/10_queen_rbee/ui/packages/queen-rbee-react
   - frontend/packages/tailwind-config
+  - bin/00_rbee_keeper/ui
+  - bin/10_queen_rbee/ui/app
+  - bin/10_queen_rbee/ui/packages/queen-rbee-sdk
+  - bin/10_queen_rbee/ui/packages/queen-rbee-react
+  - bin/20_rbee_hive/ui/app
+  - bin/20_rbee_hive/ui/packages/rbee-hive-sdk
+  - bin/20_rbee_hive/ui/packages/rbee-hive-react
+  - bin/30_llm_worker_rbee/ui/app
+  - bin/30_llm_worker_rbee/ui/packages/llm-worker-sdk
+  - bin/30_llm_worker_rbee/ui/packages/llm-worker-react
 
 onlyBuiltDependencies:
   - esbuild
