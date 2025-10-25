@@ -3,19 +3,15 @@
 'use client';
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@rbee/ui/atoms';
-import { ThemeToggle } from '@rbee/ui/molecules';
 
 export default function SettingsPage() {
   return (
     <div className="flex-1 space-y-4">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold">Settings</h1>
-          <p className="text-muted-foreground">
-            Configure your rbee installation
-          </p>
-        </div>
-        <ThemeToggle />
+      <div>
+        <h1 className="text-3xl font-bold">Settings</h1>
+        <p className="text-muted-foreground">
+          Configure your rbee installation
+        </p>
       </div>
 
       <div className="grid gap-6 md:grid-cols-2">

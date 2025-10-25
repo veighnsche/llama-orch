@@ -4,20 +4,16 @@
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@rbee/ui/atoms';
 import { Button } from '@rbee/ui/atoms';
-import { ThemeToggle } from '@rbee/ui/molecules';
 import { BookOpenIcon, GithubIcon, MessageCircleIcon, FileTextIcon } from 'lucide-react';
 
 export default function HelpPage() {
   return (
     <div className="flex-1 space-y-4">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold">Help & Documentation</h1>
-          <p className="text-muted-foreground">
-            Resources to help you get started with rbee
-          </p>
-        </div>
-        <ThemeToggle />
+      <div>
+        <h1 className="text-3xl font-bold">Help & Documentation</h1>
+        <p className="text-muted-foreground">
+          Resources to help you get started with rbee
+        </p>
       </div>
 
       <div className="grid gap-6 md:grid-cols-2">

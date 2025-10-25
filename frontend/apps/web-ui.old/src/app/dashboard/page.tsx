@@ -7,7 +7,6 @@ import { useHeartbeat } from '@/src/hooks/useHeartbeat';
 import { useRbeeStore } from '@/src/stores/rbeeStore';
 import { Button } from '@rbee/ui/atoms';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@rbee/ui/atoms';
-import { ThemeToggle } from '@rbee/ui/molecules';
 
 export default function DashboardPage() {
   const { connected, loading, error } = useHeartbeat();
@@ -50,14 +49,11 @@ export default function DashboardPage() {
 
   return (
     <div className="flex-1 space-y-4">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold">Dashboard</h1>
-          <p className="text-muted-foreground">
-            Monitor your queen, hives, workers, and models
-          </p>
-        </div>
-        <ThemeToggle />
+      <div>
+        <h1 className="text-3xl font-bold">Dashboard</h1>
+        <p className="text-muted-foreground">
+          Monitor your queen, hives, workers, and models
+        </p>
       </div>
 
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">

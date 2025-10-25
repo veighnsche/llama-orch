@@ -1,6 +1,8 @@
-# TEAM-291: Generic AI Market Submodule Added
+# TEAM-291: Generic AI Market Submodule Added (REMOVED)
 
-**Status:** ✅ COMPLETE
+**Status:** ❌ REMOVED
+
+**Note:** This submodule was added temporarily to study the sidebar implementation, then removed after extracting the useful patterns.
 
 **Mission:** Add `generic_ai_market` repository as a git submodule in the frontend apps directory.
 

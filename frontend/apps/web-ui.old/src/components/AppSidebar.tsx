@@ -22,8 +22,8 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
-  SidebarSeparator,
 } from "@rbee/ui/atoms";
+import { ThemeToggle } from "@rbee/ui/molecules";
 
 export function AppSidebar() {
   const pathname = usePathname();
@@ -59,8 +59,8 @@ export function AppSidebar() {
   ];
 
   return (
-    <Sidebar collapsible="icon">
-      <SidebarHeader className="border-b border-sidebar-border p-4">
+    <Sidebar collapsible="none" className="border-r border-border h-screen">
+      <SidebarHeader className="p-4">
         <div className="flex items-center gap-2">
           <span className="text-2xl">🐝</span>
           <span className="font-semibold">rbee</span>
@@ -88,7 +88,6 @@ export function AppSidebar() {
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
-        <SidebarSeparator />
         <SidebarGroup>
           <SidebarGroupLabel>System</SidebarGroupLabel>
           <SidebarGroupContent>
@@ -111,9 +110,12 @@ export function AppSidebar() {
           </SidebarGroupContent>
         </SidebarGroup>
       </SidebarContent>
-      <SidebarFooter className="border-t border-sidebar-border p-2">
-        <div className="text-xs text-muted-foreground px-2 py-1">
-          <span className="font-mono">v0.1.0</span>
+      <SidebarFooter className="mt-auto p-4">
+        <div className="flex items-center justify-between">
+          <span className="text-xs text-muted-foreground font-mono">
+            v0.1.0
+          </span>
+          <ThemeToggle />
         </div>
       </SidebarFooter>
     </Sidebar>
