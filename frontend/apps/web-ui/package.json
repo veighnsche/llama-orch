@@ -59,10 +59,5 @@
     "typescript-eslint": "^8.45.0",
     "vite": "npm:rolldown-vite@7.1.14",
     "vite-plugin-wasm": "^3.3.0"
-  },
-  "pnpm": {
-    "overrides": {
-      "vite": "npm:rolldown-vite@7.1.14"
-    }
   }
 }

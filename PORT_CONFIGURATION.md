@@ -1,29 +1,61 @@
 # Port Configuration Reference
 
-**Version:** 1.0  
+**Version:** 2.0  
 **Last Updated:** 2025-10-25  
 **Purpose:** Central registry of all port numbers used in the rbee ecosystem
 
 ---
 
+## 📊 Port Map Visualization
+
+```
+Backend APIs:
+7833 ← queen-rbee (orchestrator)
+7835 ← rbee-hive (hive manager)
+8000 ← vllm-worker
+8080 ← llm-worker
+8188 ← comfy-worker
+
+Frontend (Development):
+5173 ← keeper GUI (Tauri)
+6006 ← Storybook
+7811 ← user-docs
+7822 ← commercial
+7834 ← queen UI (dev) → 7833/ui (prod)
+7836 ← hive UI (dev) → 7835/ui (prod)
+7837 ← llm-worker UI (dev) → 8080/ui (prod)
+7838 ← comfy-worker UI (dev) → 8188/ui (prod)
+7839 ← vllm-worker UI (dev) → 8000/ui (prod)
+```
+
+---
+
 ## 🎯 Quick Port Reference - EDIT THESE VALUES
 
-### Backend Services
+### Backend Services (HTTP APIs)
 
 | Service | Port | Description |
 |---------|------|-------------|
-| **queen-rbee** | `7833` | Orchestrator daemon |
-| **rbee-hive** | `7844` | Hive daemon |
-| **worker-pool** | `7855 - 7899` | LLM worker instances (dynamic) |
+| **queen-rbee** | `7833` | Orchestrator daemon (HTTP API) |
+| **rbee-hive** | `7835` | Hive daemon (HTTP API) |
+| **llm-worker** | `8080` | LLM worker (HTTP API) |
+| **comfy-worker** | `8188` | ComfyUI worker (HTTP API) |
+| **vllm-worker** | `8000` | vLLM worker (HTTP API) |
 
-### Frontend Services
+### Frontend Services (Development)
 
-| Service | Port | Description |
-|---------|------|-------------|
-| **rbee-ui Storybook** | `6006` | Component library |
-| **web-ui** | `5173` | Main web UI (React + Vite) |
-| **commercial** | `7822` | Marketing site (Next.js) |
-| **user-docs** | `7811` | Documentation (Next.js + Nextra) |
+| Service | Port | Description | Production |
+|---------|------|-------------|------------|
+| **rbee-keeper GUI** | `5173` | Keeper Tauri GUI (dev server) | Tauri app |
+| **queen-rbee UI** | `7834` | Queen UI (dev server) | Hosted at `7833/ui` |
+| **rbee-hive UI** | `7836` | Hive UI (dev server) | Hosted at `7835/ui` |
+| **llm-worker UI** | `7837` | LLM worker UI (dev server) | Hosted at `8080/ui` |
+| **comfy-worker UI** | `7838` | ComfyUI worker UI (dev server) | Hosted at `8188/ui` |
+| **vllm-worker UI** | `7839` | vLLM worker UI (dev server) | Hosted at `8000/ui` |
+| **rbee-ui Storybook** | `6006` | Component library | N/A |
+| **commercial** | `7822` | Marketing site (Next.js) | Deployed |
+| **user-docs** | `7811` | Documentation (Next.js + Nextra) | Deployed |
+| **web-ui** | `5179` | OLD UI (DEPRECATED) | N/A |
 
 ---
 
@@ -38,6 +70,98 @@
 This ensures consistency and prevents configuration drift.
 
 ---
+
+---
+
+## 🏗️ Hierarchical UI Architecture
+
+### Overview
+
+The rbee system uses a **hierarchical, distributed UI architecture**:
+
+```
+┌─────────────────────────────────────┐
+│ rbee-keeper (Tauri GUI)             │  Port 5173 (dev)
+│ ├─ Sidebar (dynamic)                │
+│ ├─ iframe: queen-rbee UI            │  → http://localhost:7833/ui (prod)
+│ ├─ iframe: hive UI (per hive)       │  → http://localhost:7835/ui (prod)
+│ └─ iframe: worker UI (per worker)   │  → http://localhost:8080/ui (prod)
+└─────────────────────────────────────┘
+```
+
+### Port Mapping: Development vs Production
+
+| Component | Vite Dev Port | Backend URL | Dev Behavior | Prod Behavior |
+|-----------|---------------|-------------|--------------|---------------|
+| **Keeper GUI** | 5173 | Tauri app | Vite dev server | Tauri bundle |
+| **Queen UI** | 7834 | `7833/ui` | Backend proxies to 7834 | Backend serves dist/ |
+| **Hive UI** | 7836 | `7835/ui` | Backend proxies to 7836 | Backend serves dist/ |
+| **LLM Worker UI** | 7837 | `8080/ui` | Backend proxies to 7837 | Backend serves dist/ |
+| **ComfyUI Worker UI** | 7838 | `8188/ui` | Backend proxies to 7838 | Backend serves dist/ |
+| **vLLM Worker UI** | 7839 | `8000/ui` | Backend proxies to 7839 | Backend serves dist/ |
+
+**Key Principles:**
+- **Development:** Backend proxies `/ui` to Vite dev server (hot-reload works)
+- **Production:** Backend serves static files from `dist/` (no Vite needed)
+- **Same URL:** `http://localhost:7833/ui` works in both modes
+
+### Development Workflow
+
+**Terminal 1: Keeper GUI**
+```bash
+cd frontend/apps/00_rbee_keeper
+pnpm dev  # Runs on port 5173
+```
+
+**Terminal 2: Queen UI**
+```bash
+cd frontend/apps/10_queen_rbee
+pnpm dev  # Runs on port 7834
+```
+
+**Terminal 3: Hive UI**
+```bash
+cd frontend/apps/20_rbee_hive
+pnpm dev  # Runs on port 7836
+```
+
+**Terminal 4: Worker UIs**
+```bash
+cd frontend/apps/30_llm_worker_rbee
+pnpm dev  # Runs on port 7837
+```
+
+### Development vs Production
+
+**Development Mode:**
+Backend proxies `/ui` requests to Vite dev servers (enables hot-reload):
+
+```rust
+// Example: queen-rbee proxies to Vite dev server
+if dev_mode {
+    // Proxy /ui to http://localhost:7834 (Vite dev server)
+    proxy_to_vite("http://localhost:7834")
+} else {
+    // Serve static files from dist/
+    ServeDir::new("../../../frontend/apps/10_queen_rbee/dist")
+}
+```
+
+**Production Mode:**
+Backend serves static files from `dist/`:
+
+```rust
+let app = Router::new()
+    .route("/api/*", /* API routes */)
+    .nest_service("/ui", ServeDir::new("../../../frontend/apps/10_queen_rbee/dist"));
+```
+
+**URLs (same in both modes):**
+- Queen: `http://localhost:7833/ui`
+- Hive: `http://localhost:7835/ui`
+- Worker: `http://localhost:8080/ui`
+
+**See:** `.docs/ui/DEVELOPMENT_PROXY_STRATEGY.md` for implementation details
 
 ---
 
@@ -192,16 +316,25 @@ Tests use **dynamic port allocation** to avoid conflicts.
 
 | Range | Purpose | Notes |
 |-------|---------|-------|
-| `7832-7835` | Frontend dev servers | Sequential, easy to remember |
-| `8500` | queen-rbee | Core orchestrator |
-| `9000` | rbee-hive | Hive daemon |
-| `9001-9999` | LLM workers | Dynamically assigned |
+| `5173` | Keeper GUI dev server | Tauri frontend (Vite default) |
+| `6006` | Storybook | Component library |
+| `7811` | user-docs | Next.js documentation |
+| `7822` | commercial | Next.js marketing site |
+| `7833` | queen-rbee API | Backend HTTP API |
+| `7834` | queen-rbee UI (dev) | Frontend dev server |
+| `7835` | rbee-hive API | Backend HTTP API |
+| `7836` | rbee-hive UI (dev) | Frontend dev server |
+| `7837-7839` | Worker UIs (dev) | LLM, ComfyUI, vLLM dev servers |
+| `8000` | vLLM worker API | Backend HTTP API |
+| `8080` | LLM worker API | Backend HTTP API |
+| `8188` | ComfyUI worker API | Backend HTTP API |
 
-**Why 7832-7835?**
-- Sequential and grouped together
-- Avoids common conflicts (3000, 5173, 6006, 8080)
-- Room for expansion (7836+)
-- Managed by `frontend/kill-dev-servers.sh`
+**Port Assignment Strategy:**
+- **5173:** Keeper GUI (Vite default for Tauri)
+- **6006:** Storybook (standard)
+- **7811, 7822:** Existing Next.js apps
+- **7833-7839:** rbee services (sequential, grouped)
+- **8000, 8080, 8188:** Worker APIs (standard ports for each type)
 
 ---
 
@@ -212,44 +345,73 @@ When you change a port in this document, update these files:
 ### Backend Services
 
 **queen-rbee (Port 7833):**
-- `bin/10_queen_rbee/src/main.rs` - Line 48: `default_value = "7833"`
-- `bin/10_queen_rbee/src/http/info.rs` - Lines 37-38: hardcoded URLs
-- `bin/00_rbee_keeper/src/config.rs` - Line 19: `default_queen_port()`
-- `bin/20_rbee_hive/src/main.rs` - Line 46: `default_value = "http://localhost:7833"`
-- `bin/20_rbee_hive/src/job_router.rs` - Line 146: hardcoded URL
-- `bin/25_rbee_hive_crates/worker-lifecycle/src/lib.rs` - Line 44: example URL
+- `bin/10_queen_rbee/src/main.rs` - Default port argument
+- `bin/10_queen_rbee/src/http/info.rs` - Hardcoded URLs
+- `bin/00_rbee_keeper/src/config.rs` - `default_queen_port()`
+- `bin/20_rbee_hive/src/main.rs` - Default queen URL
+- `bin/20_rbee_hive/src/job_router.rs` - Hardcoded URL
 
-**rbee-hive (Port 7844):**
-- `bin/20_rbee_hive/src/main.rs` - Line 41: `default_value = "7844"`
+**rbee-hive (Port 7835):**
+- `bin/20_rbee_hive/src/main.rs` - Default port argument
+- `bin/00_rbee_keeper/src/config.rs` - Default hive port
 
-### Frontend Services
+**llm-worker (Port 8080):**
+- `bin/30_llm_worker_rbee/src/main.rs` - Default port argument
+
+**comfy-worker (Port 8188):**
+- `bin/30_comfy_worker_rbee/src/main.rs` - Default port argument
+
+**vllm-worker (Port 8000):**
+- `bin/30_vllm_worker_rbee/src/main.rs` - Default port argument
+
+### Frontend Services (Development Ports)
+
+**rbee-keeper GUI (Port 5173):**
+- `frontend/apps/00_rbee_keeper/vite.config.ts` - Server port
+- `bin/00_rbee_keeper/tauri.conf.json` - devPath URL
+
+**queen-rbee UI (Port 7834):**
+- `frontend/apps/10_queen_rbee/vite.config.ts` - Server port
+- `frontend/apps/10_queen_rbee/package.json` - Dev script
+
+**rbee-hive UI (Port 7836):**
+- `frontend/apps/20_rbee_hive/vite.config.ts` - Server port
+- `frontend/apps/20_rbee_hive/package.json` - Dev script
+
+**llm-worker UI (Port 7837):**
+- `frontend/apps/30_llm_worker_rbee/vite.config.ts` - Server port
+- `frontend/apps/30_llm_worker_rbee/package.json` - Dev script
+
+**comfy-worker UI (Port 7838):**
+- `frontend/apps/30_comfy_worker_rbee/vite.config.ts` - Server port
+- `frontend/apps/30_comfy_worker_rbee/package.json` - Dev script
+
+**vllm-worker UI (Port 7839):**
+- `frontend/apps/30_vllm_worker_rbee/vite.config.ts` - Server port
+- `frontend/apps/30_vllm_worker_rbee/package.json` - Dev script
 
 **rbee-ui Storybook (Port 6006):**
-- `frontend/packages/rbee-ui/package.json` - Lines 36, 43: `storybook dev -p 6006`
-- `frontend/kill-dev-servers.sh` - Line 8: `PORTS=(6006 ...)`
-
-**web-ui (Port 5173):**
-- `frontend/apps/web-ui/package.json` - Lines 7, 10: `--port 5173`
-- `frontend/kill-dev-servers.sh` - Line 8: `PORTS=(... 5173 ...)`
+- `frontend/packages/rbee-ui/package.json` - Storybook dev script
 
 **commercial (Port 7822):**
-- `frontend/apps/commercial/package.json` - Line 6: `next dev -p 7822`
-- `frontend/kill-dev-servers.sh` - Line 8: `PORTS=(... 7822 ...)`
+- `frontend/apps/commercial/package.json` - Next.js dev script
 
 **user-docs (Port 7811):**
-- `frontend/apps/user-docs/package.json` - Line 6: `next dev -p 7811`
-- `frontend/kill-dev-servers.sh` - Line 8: `PORTS=(... 7811)`
+- `frontend/apps/user-docs/package.json` - Next.js dev script
 
-### Frontend Packages (SDK Examples)
+**web-ui (Port 5179 - DEPRECATED):**
+- `frontend/apps/web-ui/package.json` - Vite dev script
 
-**rbee-react package:**
-- `frontend/packages/rbee-react/README.md` - Line 32: Example RbeeClient URL
-- `frontend/packages/rbee-react/src/hooks/useRbeeSDK.ts` - Line 20: JSDoc example
-- `frontend/packages/rbee-react/src/hooks/useRbeeSDKSuspense.ts` - Line 21: JSDoc example
+### SDK Packages
 
-**rbee-sdk package:**
-- `frontend/packages/rbee-sdk/test.html` - Lines 83, 90, 165: Test page examples
-- `frontend/packages/rbee-sdk/TEAM_286_ALL_OPERATIONS_IMPLEMENTED.md` - Line 103: Documentation example
+**queen-rbee-sdk:**
+- `frontend/packages/10_queen_rbee/queen-rbee-sdk/src/index.ts` - API base URL
+
+**rbee-hive-sdk:**
+- `frontend/packages/20_rbee_hive/rbee-hive-sdk/src/index.ts` - API base URL
+
+**llm-worker-sdk:**
+- `frontend/packages/30_llm_worker_rbee/llm-worker-sdk/src/index.ts` - API base URL
 
 ---
 
@@ -432,40 +594,81 @@ kill $(lsof -t -i:8500)
 
 ### Start All Services
 
+**Backend:**
 ```bash
-# Backend
-queen-rbee -p 8500 &
-rbee-hive -p 9000 --queen-url http://localhost:8500 --hive-id localhost &
+# Core services
+queen-rbee -p 7833 &
+rbee-hive -p 7835 --queen-url http://localhost:7833 --hive-id localhost &
 
-# Frontend
-cd frontend/packages/rbee-ui && pnpm dev &     # Port 7832 (Storybook)
-cd frontend/apps/web-ui && pnpm dev &          # Port 7833
-cd frontend/apps/commercial && pnpm dev &      # Port 7834
-cd frontend/apps/user-docs && pnpm dev &       # Port 7835
+# Workers (spawned by hive)
+llm-worker --port 8080 &
+comfy-worker --port 8188 &
+vllm-worker --port 8000 &
+```
+
+**Frontend (Development):**
+```bash
+# Keeper GUI
+cd frontend/apps/00_rbee_keeper && pnpm dev &  # Port 5173
+
+# Component UIs
+cd frontend/apps/10_queen_rbee && pnpm dev &   # Port 7834
+cd frontend/apps/20_rbee_hive && pnpm dev &    # Port 7836
+cd frontend/apps/30_llm_worker_rbee && pnpm dev &  # Port 7837
+
+# Shared
+cd frontend/packages/rbee-ui && pnpm dev &     # Port 6006 (Storybook)
+
+# Existing apps
+cd frontend/apps/commercial && pnpm dev &      # Port 7822
+cd frontend/apps/user-docs && pnpm dev &       # Port 7811
+```
+
+**Or use turbo:**
+```bash
+cd frontend/apps
+turbo dev  # Starts all apps in parallel
 ```
 
 ### Health Checks
 
+**Backend APIs:**
 ```bash
-# Backend
-curl http://localhost:8500/health  # queen-rbee
-curl http://localhost:9000/health  # rbee-hive
+curl http://localhost:7833/health  # queen-rbee
+curl http://localhost:7835/health  # rbee-hive
+curl http://localhost:8080/health  # llm-worker
+curl http://localhost:8188/health  # comfy-worker
+curl http://localhost:8000/health  # vllm-worker
+```
 
-# Frontend
-curl http://localhost:7832         # rbee-ui Storybook
-curl http://localhost:7833         # web-ui
-curl http://localhost:7834         # commercial
-curl http://localhost:7835         # user-docs
+**Frontend (Development):**
+```bash
+curl http://localhost:5173         # keeper GUI
+curl http://localhost:7834         # queen-rbee UI
+curl http://localhost:7836         # rbee-hive UI
+curl http://localhost:7837         # llm-worker UI
+curl http://localhost:6006         # rbee-ui Storybook
+curl http://localhost:7822         # commercial
+curl http://localhost:7811         # user-docs
+```
+
+**Frontend (Production):**
+```bash
+curl http://localhost:7833/ui      # queen-rbee UI (served by binary)
+curl http://localhost:7835/ui      # rbee-hive UI (served by binary)
+curl http://localhost:8080/ui      # llm-worker UI (served by binary)
 ```
 
 ---
 
 ## Related Documentation
 
-- [Architecture Overview](.arch/00_OVERVIEW_PART_1.md)
-- [Configuration Guide](docs/CONFIGURATION.md)
-- [Security Policy](bin/98_security_crates/auth-min/src/policy.rs)
-- [Testing Guide](.docs/testing/)
+- [UI Architecture](.docs/ui/00_UI_ARCHITECTURE_OVERVIEW.md) - Hierarchical UI system
+- [Folder Structure](.docs/ui/FOLDER_STRUCTURE.md) - bin/ ↔ frontend/apps/ parity
+- [Package Structure](.docs/ui/PACKAGE_STRUCTURE.md) - Specialized SDK packages
+- [Architecture Overview](.arch/00_OVERVIEW_PART_1.md) - System architecture
+- [Configuration Guide](docs/CONFIGURATION.md) - Configuration reference
+- [Security Policy](bin/98_security_crates/auth-min/src/policy.rs) - Security rules
 
 ---
 
@@ -473,9 +676,20 @@ curl http://localhost:7835         # user-docs
 
 | Date | Version | Changes |
 |------|---------|---------|
+| 2025-10-25 | 2.0 | Updated for hierarchical UI architecture (keeper, queen, hive, workers) |
 | 2025-10-25 | 1.0 | Initial port configuration document created |
 
 ---
 
 **Maintained by:** rbee Core Team  
 **Last Review:** 2025-10-25
+
+## Summary
+
+**Total Ports Tracked:** 14
+
+**Backend APIs:** 5 (queen, hive, 3 worker types)  
+**Frontend Dev:** 9 (keeper, queen, hive, 3 workers, storybook, commercial, user-docs)  
+**Deprecated:** 1 (web-ui)
+
+**Key Principle:** Each binary hosts its own UI at `/ui` endpoint in production.
