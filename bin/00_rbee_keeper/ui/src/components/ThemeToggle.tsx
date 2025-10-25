@@ -23,8 +23,10 @@ export function ThemeToggle() {
     );
   }
 
-  const isDark = theme === "dark" || (theme === "system" && 
-    window.matchMedia("(prefers-color-scheme: dark)").matches);
+  const isDark =
+    theme === "dark" ||
+    (theme === "system" &&
+      window.matchMedia("(prefers-color-scheme: dark)").matches);
 
   return (
     <IconButton
@@ -35,7 +37,10 @@ export function ThemeToggle() {
       {isDark ? (
         <Sun className="size-5 transition-transform duration-300" aria-hidden />
       ) : (
-        <Moon className="size-5 transition-transform duration-300" aria-hidden />
+        <Moon
+          className="size-5 transition-transform duration-300"
+          aria-hidden
+        />
       )}
     </IconButton>
   );

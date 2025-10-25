@@ -29,7 +29,7 @@ interface CommandsSidebarProps {
   disabled?: boolean;
 }
 
-export function CommandsSidebar({
+export function KeeperSidebar({
   onCommandClick,
   activeCommand,
   disabled = false,

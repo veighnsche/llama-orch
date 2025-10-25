@@ -42,11 +42,7 @@ interface SSHTarget {
   status: "online" | "offline" | "unknown";
 }
 
-interface SshTargetsTableProps {
-  onRefresh?: () => Promise<void>;
-}
-
-export function SshTargetsTable({ onRefresh }: SshTargetsTableProps) {
+export function SshTargetsTable() {
   const [sshTargets, setSshTargets] = useState<SSHTarget[]>([]);
   const [isLoadingTargets, setIsLoadingTargets] = useState(true);
 
@@ -58,11 +54,6 @@ export function SshTargetsTable({ onRefresh }: SshTargetsTableProps) {
     setIsLoadingTargets(true);
 
     try {
-      // Call onRefresh callback to trigger CLI command execution
-      if (onRefresh) {
-        await onRefresh();
-      }
-
       const result = await invoke<string>("hive_list");
       const response: CommandResponse = JSON.parse(result);
 
@@ -72,7 +63,6 @@ export function SshTargetsTable({ onRefresh }: SshTargetsTableProps) {
       }
     } catch (error) {
       console.error("Failed to load SSH targets:", error);
-      // Keep empty array on error
     } finally {
       setIsLoadingTargets(false);
     }
