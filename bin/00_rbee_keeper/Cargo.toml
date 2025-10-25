@@ -7,9 +7,18 @@ version = "0.1.0"
 edition = "2021"
 license = "GPL-3.0-or-later"
 
+# TEAM-293: Support both CLI and GUI modes
+[lib]
+name = "rbee_keeper"
+path = "src/lib.rs"
+
 [[bin]]
 name = "rbee-keeper"
 path = "src/main.rs"
+
+[[bin]]
+name = "rbee-keeper-gui"
+path = "src/tauri_main.rs"
 
 [dependencies]
 # CLI parsing
@@ -45,6 +54,13 @@ operations-contract = { path = "../97_contracts/operations-contract" }  # TEAM-1
 job-client = { path = "../99_shared_crates/job-client" }  # TEAM-259: Shared job submission client
 queen-lifecycle = { path = "../05_rbee_keeper_crates/queen-lifecycle" }  # TEAM-259: Queen lifecycle management
 hive-lifecycle = { path = "../05_rbee_keeper_crates/hive-lifecycle" }  # TEAM-290: Hive lifecycle management (SSH + local)
+
+# TEAM-293: Tauri dependencies for GUI
+tauri = { version = "1.6", features = [] }
+
+[build-dependencies]
+# TEAM-293: Tauri build dependencies
+tauri-build = { version = "1.5", features = [] }
 
 [dev-dependencies]
 # Add dev dependencies as needed

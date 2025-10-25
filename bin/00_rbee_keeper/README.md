@@ -1,9 +1,53 @@
 # rbee-keeper
 
-**Status:** ✅ IMPLEMENTED (TEAM-158)  
+**Status:** ✅ IMPLEMENTED (TEAM-158, TEAM-293)  
 **Purpose:** Thin HTTP client for queen-rbee  
-**Binary Name:** `rbee-keeper`  
-**LOC:** ~450 lines (main.rs + health_check.rs)
+**Binary Names:** `rbee-keeper` (CLI), `rbee-keeper-gui` (GUI)  
+**LOC:** ~450 lines (CLI) + ~1,948 lines (GUI + docs)
+
+## 🎨 AVAILABLE INTERFACES
+
+rbee-keeper is available in **two interfaces** that share the same business logic:
+
+### CLI (Command Line Interface)
+```bash
+# Traditional command-line interface
+rbee-keeper infer --model llama-7b --prompt "Hello"
+rbee-keeper hive start --host localhost
+```
+
+**Use when:**
+- ✅ Scripting/automation
+- ✅ Remote SSH sessions
+- ✅ CI/CD pipelines
+- ✅ Server environments
+
+### GUI (Graphical User Interface)
+```bash
+# Desktop application (Tauri + React)
+rbee-keeper-gui
+```
+
+**Use when:**
+- ✅ Interactive exploration
+- ✅ Visual feedback needed
+- ✅ Desktop environment
+- ✅ New users learning the system
+
+**📖 See [README_GUI.md](./README_GUI.md) for GUI documentation**  
+**🚀 See [QUICKSTART_GUI.md](./QUICKSTART_GUI.md) for 5-minute quick start**
+
+## 🌍 Platform Support
+
+rbee-keeper is designed to work cross-platform:
+
+| Platform | Status | Notes |
+|----------|--------|-------|
+| **Linux** | ✅ Fully Supported | Primary development platform |
+| **macOS** | ⚠️ Ready (Untested) | Implementation complete, needs testing |
+| **Windows** | ⚠️ Ready (Untested) | Implementation complete, SSH may require setup |
+
+**See [CROSS_PLATFORM.md](./CROSS_PLATFORM.md) for platform-specific details**
 
 ---
 

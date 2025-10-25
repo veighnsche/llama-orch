@@ -1,0 +1,34 @@
+# TEAM-293: rbee-keeper GUI gitignore
+
+# Tauri build outputs
+target/
+WixTools/
+
+# Node modules
+ui/node_modules/
+ui/dist/
+
+# Tauri generated files
+ui/.vite/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Environment
+.env
+.env.local
+.env.*.local

@@ -7,7 +7,8 @@ packages:
   - frontend/packages/rbee-react
   - frontend/packages/tailwind-config
   - frontend/reference/v0
-
+  - bin/00_rbee_keeper/ui
+  
 onlyBuiltDependencies:
   - esbuild
   - workerd
