@@ -1,7 +1,7 @@
 // TEAM-294: rbee-keeper GUI - Main application component
 import { invoke } from "@tauri-apps/api/core";
 import KeeperPage from "./pages/KeeperPage";
-import { KeeperSidebar } from "./components/Sidebar";
+import { KeeperSidebar } from "./components/KeeperSidebar";
 import { SidebarProvider } from "@rbee/ui/atoms";
 import { useCommandStore } from "./store/commandStore";
 
