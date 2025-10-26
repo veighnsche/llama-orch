@@ -2,6 +2,7 @@
 //!
 //! Created by: TEAM-163
 //! Updated by: TEAM-197 (narration-core v0.5.0 migration)
+//! Updated by: TEAM-312 (narration-core v0.7.0 migration - n!() macro)
 //!
 //! # Purpose
 //! Prevents hanging operations by enforcing hard timeouts with visual feedback.
@@ -35,14 +36,13 @@
 
 use anyhow::Result;
 use indicatif::{ProgressBar, ProgressStyle};
-use observability_narration_core::NarrationFactory;
+use observability_narration_core::{n, with_narration_context, NarrationContext};
 use std::future::Future;
 use std::time::Duration;
 use tokio::time::{interval, timeout};
 
-// TEAM-197: Migrated to narration-core v0.5.0 pattern
-// Actor: "timeout" (7 chars, ≤10 limit)
-const NARRATE: NarrationFactory = NarrationFactory::new("timeout");
+// TEAM-312: Migrated to narration-core v0.7.0 n!() macro
+// Actor is auto-detected from crate name ("timeout-enforcer")
 
 /// Timeout enforcer with visual countdown feedback
 ///
@@ -211,35 +211,28 @@ impl TimeoutEnforcer {
         let label = self.label.clone().unwrap_or_else(|| "Operation".to_string());
         let total_secs = self.duration.as_secs();
 
-        // TEAM-207: Emit start narration (no progress bar, just notification)
-        let mut narration = NARRATE
-            .action("start")
-            .context(label.clone())
-            .context(total_secs.to_string())
-            .human("⏱️  {0} (timeout: {1}s)");
-
+        // TEAM-312: Emit start narration using n!() macro
         if let Some(ref job_id) = self.job_id {
-            narration = narration.job_id(job_id);
+            let ctx = NarrationContext::new().with_job_id(job_id);
+            with_narration_context(ctx, async {
+                n!("start", "⏱️  {} (timeout: {}s)", label, total_secs);
+            }).await;
+        } else {
+            n!("start", "⏱️  {} (timeout: {}s)", label, total_secs);
         }
-
-        narration.emit();
 
         match timeout(self.duration, future).await {
             Ok(result) => result,
             Err(_) => {
-                // TEAM-207: Emit timeout error narration
-                let mut narration = NARRATE
-                    .action("timeout")
-                    .context(label.clone())
-                    .context(total_secs.to_string())
-                    .human("❌ {0} TIMED OUT after {1}s")
-                    .error_kind("operation_timeout");
-
+                // TEAM-312: Emit timeout error narration using n!() macro
                 if let Some(ref job_id) = self.job_id {
-                    narration = narration.job_id(job_id);
+                    let ctx = NarrationContext::new().with_job_id(job_id);
+                    with_narration_context(ctx, async {
+                        n!("timeout", "❌ {} TIMED OUT after {}s", label, total_secs);
+                    }).await;
+                } else {
+                    n!("timeout", "❌ {} TIMED OUT after {}s", label, total_secs);
                 }
-
-                narration.emit_error();
 
                 anyhow::bail!("{} timed out after {} seconds", label, total_secs)
             }
@@ -254,19 +247,15 @@ impl TimeoutEnforcer {
         let label = self.label.clone().unwrap_or_else(|| "Operation".to_string());
         let total_secs = self.duration.as_secs();
 
-        // TEAM-197: Use narration for start message
-        // TEAM-207: Include job_id for SSE routing
-        let mut narration = NARRATE
-            .action("start")
-            .context(label.clone())
-            .context(total_secs.to_string())
-            .human("⏱️  {0} (timeout: {1}s)");
-
+        // TEAM-312: Use n!() macro for start message with job_id context
         if let Some(ref job_id) = self.job_id {
-            narration = narration.job_id(job_id);
+            let ctx = NarrationContext::new().with_job_id(job_id);
+            with_narration_context(ctx, async {
+                n!("start", "⏱️  {} (timeout: {}s)", label, total_secs);
+            }).await;
+        } else {
+            n!("start", "⏱️  {} (timeout: {}s)", label, total_secs);
         }
-
-        narration.emit();
 
         // TEAM-197: Create progress bar that fills up over time
         let pb = ProgressBar::new(total_secs);
@@ -308,20 +297,15 @@ impl TimeoutEnforcer {
                 progress_handle.abort();
                 pb.finish_and_clear();
 
-                // TEAM-197: Use narration for timeout error
-                // TEAM-207: Include job_id for SSE routing
-                let mut narration = NARRATE
-                    .action("timeout")
-                    .context(label.clone())
-                    .context(total_secs.to_string())
-                    .human("❌ {0} TIMED OUT after {1}s")
-                    .error_kind("operation_timeout");
-
+                // TEAM-312: Use n!() macro for timeout error with job_id context
                 if let Some(ref job_id) = self.job_id {
-                    narration = narration.job_id(job_id);
+                    let ctx = NarrationContext::new().with_job_id(job_id);
+                    with_narration_context(ctx, async {
+                        n!("timeout", "❌ {} TIMED OUT after {}s", label, total_secs);
+                    }).await;
+                } else {
+                    n!("timeout", "❌ {} TIMED OUT after {}s", label, total_secs);
                 }
-
-                narration.emit_error();
 
                 anyhow::bail!(
                     "{} timed out after {} seconds - operation was hanging",

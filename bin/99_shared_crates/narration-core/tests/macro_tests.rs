@@ -280,8 +280,8 @@ fn test_comparison_old_vs_new() {
     assert_eq!(captured[0].action, "test-action");
     assert_eq!(captured[0].human, "Old way message");
     
-    // New way
-    assert_eq!(captured[1].actor, "unknown"); // No context set
+    // New way - TEAM-312: Actor is now auto-detected from crate name
+    assert_eq!(captured[1].actor, "macro_tests"); // Auto-detected from test crate name
     assert_eq!(captured[1].action, "test-action");
     assert_eq!(captured[1].human, "New way message");
 }

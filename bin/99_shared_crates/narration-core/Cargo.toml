@@ -20,6 +20,7 @@ regex = { workspace = true }
 uuid = { workspace = true }
 tokio = { workspace = true, features = ["sync", "process", "io-util"] } # TEAM-300: Added process, io-util for ProcessNarrationCapture
 once_cell = "1.19"
+stdext = "0.3" # TEAM-312: For function_name!() macro
 opentelemetry = { version = "0.21", optional = true }
 axum = { workspace = true, optional = true }
 anyhow = { workspace = true } # TEAM-300: For process_capture Result types

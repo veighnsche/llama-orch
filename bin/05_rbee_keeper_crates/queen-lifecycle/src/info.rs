@@ -2,11 +2,10 @@
 //!
 //! TEAM-276: Extracted from rbee-keeper/src/handlers/queen.rs
 //! TEAM-262: Query queen's /v1/build-info endpoint
+//! TEAM-311: Migrated to n!() macro
 
 use anyhow::Result;
-use observability_narration_core::NarrationFactory;
-
-const NARRATE: NarrationFactory = NarrationFactory::new("queen-life");
+use observability_narration_core::n;
 
 /// Get queen-rbee build information
 ///
@@ -23,21 +22,18 @@ pub async fn get_queen_info(queen_url: &str) -> Result<()> {
 
     match client.get(format!("{}/v1/build-info", queen_url)).send().await {
         Ok(response) if response.status().is_success() => {
-            NARRATE.action("queen_info").human("📋 Queen build information:").emit();
+            n!("queen_info", "📋 Queen build information:");
             if let Ok(body) = response.text().await {
                 println!("{}", body);
             }
             Ok(())
         }
         Err(_) => {
-            NARRATE
-                .action("queen_info")
-                .human("❌ Queen is not running or /v1/build-info not available")
-                .emit();
+            n!("queen_info", "❌ Queen is not running or /v1/build-info not available");
             Ok(())
         }
         _ => {
-            NARRATE.action("queen_info").human("⚠️  Failed to get build info").emit();
+            n!("queen_info", "⚠️  Failed to get build info");
             Ok(())
         }
     }

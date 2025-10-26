@@ -28,42 +28,8 @@ pub const SHORT_JOB_ID_SUFFIX: usize = 6;
 // MESSAGE FORMATTING
 // ============================================================================
 
-/// Format a narration message in standard format.
-///
-/// ⚠️ DEPRECATED: Use `format_message_with_fn()` instead to support function names from #[narrate_fn]
-///
-/// Format: 
-/// ```text
-/// \x1b[1m[actor              ] action              \x1b[0m
-/// message
-/// (blank line)
-/// ```
-/// - Actor: ACTOR_WIDTH chars (left-aligned, padded)
-/// - Action: ACTION_WIDTH chars (left-aligned, padded)
-/// - Message: on new line, no formatting
-/// - Trailing newline: separates consecutive narrations
-/// - First line: bold ANSI escape codes
-///
-/// # Example
-/// ```
-/// use observability_narration_core::format::format_message;
-///
-/// let formatted = format_message("queen", "start", "Starting hive");
-/// // First line is bold: [queen              ] start              
-/// // Second line: Starting hive
-/// // Third line: blank (separates from next narration)
-/// ```
-#[deprecated(since = "0.6.0", note = "Use format_message_with_fn() to support function names from #[narrate_fn]")]
-pub fn format_message(actor: &str, action: &str, message: &str) -> String {
-    format!(
-        "\x1b[1m[{:<width_actor$}] {:<width_action$}\x1b[0m\n{}\n",
-        actor,
-        action,
-        message,
-        width_actor = ACTOR_WIDTH,
-        width_action = ACTION_WIDTH
-    )
-}
+// TEAM-312: ENTROPY REMOVED - Deleted deprecated format_message()
+// Use format_message_with_fn() instead (pass None for fn_name if not needed)
 
 /// Format a narration message with optional function name.
 ///
@@ -77,13 +43,13 @@ pub fn format_message(actor: &str, action: &str, message: &str) -> String {
 ///
 /// Format: 
 /// ```text
-/// \x1b[1m[actor              ] action              \x1b[0m \x1b[2mfn_name\x1b[0m
+/// \x1b[1m[actor              ] fn_name            \x1b[0m action              
 /// message
 /// (blank line)
 /// ```
-/// - Actor: ACTOR_WIDTH chars (left-aligned, padded)
-/// - Action: ACTION_WIDTH chars (left-aligned, padded)
-/// - Function name: dimmed (only if present)
+/// - Actor: ACTOR_WIDTH chars (left-aligned, padded) - **BOLD**
+/// - Function name: ACTION_WIDTH chars (left-aligned, padded) - **BOLD**
+/// - Action: light (not bold)
 /// - Message: on new line, no formatting
 /// - Trailing newline: separates consecutive narrations
 ///
@@ -105,56 +71,27 @@ pub fn format_message(actor: &str, action: &str, message: &str) -> String {
 /// ```
 pub fn format_message_with_fn(actor: &str, action: &str, message: &str, fn_name: Option<&str>) -> String {
     if let Some(fn_name) = fn_name {
+        // TEAM-311: Order is [actor] fn_name action (actor and fn_name are bold, action is light)
         format!(
             "\x1b[1m[{:<width_actor$}] {:<width_action$}\x1b[0m \x1b[2m{}\x1b[0m\n{}\n",
             actor,
-            action,
             fn_name,
+            action,
             message,
             width_actor = ACTOR_WIDTH,
             width_action = ACTION_WIDTH
         )
     } else {
-        format_message(actor, action, message)
+        // TEAM-312: Inline the old format_message() logic instead of calling deprecated function
+        format!(
+            "\x1b[1m[{:<width_actor$}] {:<width_action$}\x1b[0m\n{}\n",
+            actor,
+            action,
+            message,
+            width_actor = ACTOR_WIDTH,
+            width_action = ACTION_WIDTH
+        )
     }
-}
-
-// ============================================================================
-// LEGACY CONTEXT INTERPOLATION
-// ============================================================================
-
-/// Replace {N} placeholders with context values (legacy backward compatibility).
-///
-/// TEAM-191: This is the legacy .context() interpolation pattern.
-/// New code should use Rust's format!() macro instead.
-///
-/// # Example
-/// ```
-/// use observability_narration_core::format::interpolate_context;
-///
-/// let msg = "Found {0} hives on {1}";
-/// let context = vec!["2".to_string(), "localhost".to_string()];
-/// let result = interpolate_context(msg, &context);
-/// assert_eq!(result, "Found 2 hives on localhost");
-/// ```
-#[deprecated(
-    since = "0.5.0",
-    note = "Use Rust's format!() macro instead - this legacy {0}, {1} syntax is deprecated. Use n!() macro for narration."
-)]
-pub fn interpolate_context(msg: &str, context_values: &[String]) -> String {
-    let mut result = msg.to_string();
-    
-    // Replace {N} with context values
-    for (i, value) in context_values.iter().enumerate() {
-        result = result.replace(&format!("{{{}}}", i), value);
-    }
-    
-    // Replace {} with first context value (legacy)
-    if let Some(first) = context_values.first() {
-        result = result.replace("{}", first);
-    }
-    
-    result
 }
 
 // ============================================================================
@@ -315,7 +252,8 @@ mod tests {
 
     #[test]
     fn test_format_message() {
-        let formatted = format_message("queen", "start", "Starting hive");
+        // TEAM-312: Use format_message_with_fn() with None for fn_name
+        let formatted = format_message_with_fn("queen", "start", "Starting hive", None);
         // Format: Bold first line with actor/action, message on second line, blank line after
         // Actor: 20 chars, Action: 20 chars
         assert_eq!(formatted, "\x1b[1m[queen               ] start               \x1b[0m\nStarting hive\n");
@@ -323,8 +261,8 @@ mod tests {
 
     #[test]
     fn test_format_message_long_names() {
-        // Should not truncate - format! will extend if needed
-        let formatted = format_message("very-long-actor", "very-long-action", "Message");
+        // TEAM-312: Use format_message_with_fn() with None for fn_name
+        let formatted = format_message_with_fn("very-long-actor", "very-long-action", "Message", None);
         assert!(formatted.contains("very-long-actor"));
         assert!(formatted.contains("very-long-action"));
         assert!(formatted.contains("\nMessage\n")); // Message on new line with trailing newline
@@ -332,21 +270,8 @@ mod tests {
         assert!(formatted.contains("\x1b[0m")); // Contains reset
     }
 
-    #[test]
-    fn test_interpolate_context() {
-        let msg = "Found {0} hives on {1}";
-        let context = vec!["2".to_string(), "localhost".to_string()];
-        let result = interpolate_context(msg, &context);
-        assert_eq!(result, "Found 2 hives on localhost");
-    }
-
-    #[test]
-    fn test_interpolate_context_legacy_braces() {
-        let msg = "Found {} hives";
-        let context = vec!["2".to_string()];
-        let result = interpolate_context(msg, &context);
-        assert_eq!(result, "Found 2 hives");
-    }
+    // TEAM-312: DELETED test_interpolate_context tests
+    // Use Rust's format!() macro instead - no need to test legacy {0}, {1} syntax
 
     #[test]
     fn test_short_job_id() {

@@ -1,13 +1,12 @@
 //! Queen start operation
 //!
 //! TEAM-276: Extracted from rbee-keeper/src/handlers/queen.rs
+//! TEAM-311: Migrated to n!() macro
 
 use anyhow::Result;
-use observability_narration_core::NarrationFactory;
+use observability_narration_core::n;
 
 use crate::ensure::ensure_queen_running;
-
-const NARRATE: NarrationFactory = NarrationFactory::new("queen-life");
 
 /// Start queen-rbee daemon
 ///
@@ -26,11 +25,7 @@ const NARRATE: NarrationFactory = NarrationFactory::new("queen-life");
 pub async fn start_queen(queen_url: &str) -> Result<()> {
     let queen_handle = ensure_queen_running(queen_url).await?;
 
-    NARRATE
-        .action("queen_start")
-        .context(queen_handle.base_url())
-        .human("✅ Queen started on {}")
-        .emit();
+    n!("queen_start", "✅ Queen started on {}", queen_handle.base_url());
 
     // Keep queen alive - detach the handle
     // The queen process will continue running independently

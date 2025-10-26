@@ -50,6 +50,19 @@ pub fn macro_emit_auto_with_level(
     macro_emit_with_actor_and_level(action, human, cute, story, Some(crate_name), level)
 }
 
+/// TEAM-312: Emit narration with auto-detected crate name AND function name
+#[doc(hidden)]
+pub fn macro_emit_auto_with_fn(
+    action: &'static str,
+    human: &str,
+    cute: Option<&str>,
+    story: Option<&str>,
+    crate_name: &'static str,
+    fn_name: &'static str,
+) {
+    macro_emit_with_actor_fn_and_level(action, human, cute, story, Some(crate_name), Some(fn_name), NarrationLevel::Info)
+}
+
 /// TEAM-309: Emit narration with explicit actor (for sync code that can't use context)
 #[doc(hidden)]
 pub fn macro_emit_with_actor(
@@ -70,6 +83,20 @@ pub fn macro_emit_with_actor_and_level(
     cute: Option<&str>,
     story: Option<&str>,
     explicit_actor: Option<&'static str>,
+    level: NarrationLevel,
+) {
+    macro_emit_with_actor_fn_and_level(action, human, cute, story, explicit_actor, None, level)
+}
+
+/// TEAM-312: Emit narration with explicit actor, function name, and level
+#[doc(hidden)]
+pub fn macro_emit_with_actor_fn_and_level(
+    action: &'static str,
+    human: &str,
+    cute: Option<&str>,
+    story: Option<&str>,
+    explicit_actor: Option<&'static str>,
+    explicit_fn_name: Option<&'static str>,
     level: NarrationLevel,
 ) {
     // TEAM-297: Get narration mode from global config
@@ -93,8 +120,11 @@ pub fn macro_emit_with_actor_and_level(
         .or_else(|| ctx.as_ref().and_then(|c| c.actor))
         .unwrap_or("unknown");
     
-    // TEAM-311: Function name from thread-local (set by #[narrate_fn])
-    let fn_name = crate::thread_actor::get_target();
+    // TEAM-312: Function name priority: explicit_fn_name > thread-local > None
+    // Thread-local is set by #[narrate_fn], explicit_fn_name is from function_name!()
+    let fn_name = explicit_fn_name
+        .map(|s| s.to_string())
+        .or_else(|| crate::thread_actor::get_target());
     
     // TEAM-309: Target defaults to action
     let target = action.to_string();
@@ -107,7 +137,7 @@ pub fn macro_emit_with_actor_and_level(
         target,
         human: selected_message.to_string(),
         level, // TEAM-311: Include level
-        fn_name, // TEAM-311: Function name from #[narrate_fn]
+        fn_name, // TEAM-312: Function name from function_name!() or #[narrate_fn]
         cute: cute.map(|s| s.to_string()),
         story: story.map(|s| s.to_string()),
         job_id,

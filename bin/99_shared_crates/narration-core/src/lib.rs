@@ -125,6 +125,8 @@ pub use api::macro_emit_auto; // TEAM-309: Auto-detect crate name
 #[doc(hidden)]
 pub use api::macro_emit_auto_with_level; // TEAM-311: Auto-detect crate name with level
 #[doc(hidden)]
+pub use api::macro_emit_auto_with_fn; // TEAM-312: Auto-detect crate name AND function name
+#[doc(hidden)]
 #[deprecated(since = "0.5.0", note = "Use n!() macro instead - actor is now auto-detected from crate name")]
 pub use api::macro_emit_with_actor; // TEAM-309: For sync code that can't use context
 
@@ -150,9 +152,10 @@ pub use correlation::{
 pub use unicode::{sanitize_crlf, sanitize_for_json, validate_action, validate_actor};
 
 // TEAM-310: Formatting utilities
+// TEAM-312: Removed deprecated format_message and interpolate_context
 pub use format::{
-    format_array_table, format_message, format_object_table, format_value_compact,
-    interpolate_context, short_job_id, ACTOR_WIDTH, ACTION_WIDTH, SHORT_JOB_ID_SUFFIX,
+    format_array_table, format_message_with_fn, format_object_table, format_value_compact,
+    short_job_id, ACTOR_WIDTH, ACTION_WIDTH, SHORT_JOB_ID_SUFFIX,
 };
 
 // TEAM-300: Process capture (re-export for convenience! 🎀)
@@ -274,31 +277,31 @@ macro_rules! narration_macro {
 macro_rules! n {
     // Simple: n!("action", "message")
     ($action:expr, $msg:expr) => {{
-        $crate::macro_emit_auto($action, $msg, None, None, env!("CARGO_CRATE_NAME"));
+        $crate::macro_emit_auto_with_fn($action, $msg, None, None, env!("CARGO_CRATE_NAME"), stdext::function_name!());
     }};
     
     // With format: n!("action", "msg {}", arg)
     ($action:expr, $fmt:expr, $($arg:expr),+ $(,)?) => {{
-        $crate::macro_emit_auto($action, &format!($fmt, $($arg),+), None, None, env!("CARGO_CRATE_NAME"));
+        $crate::macro_emit_auto_with_fn($action, &format!($fmt, $($arg),+), None, None, env!("CARGO_CRATE_NAME"), stdext::function_name!());
     }};
     
     // Explicit human: n!(human: "action", "msg {}", arg)
     (human: $action:expr, $fmt:expr $(, $arg:expr)* $(,)?) => {{
-        $crate::macro_emit_auto($action, &format!($fmt $(, $arg)*), None, None, env!("CARGO_CRATE_NAME"));
+        $crate::macro_emit_auto_with_fn($action, &format!($fmt $(, $arg)*), None, None, env!("CARGO_CRATE_NAME"), stdext::function_name!());
     }};
     
     // Explicit cute: n!(cute: "action", "msg {}", arg)
     // TEAM-309: Use cute message as fallback for human (was empty string)
     (cute: $action:expr, $fmt:expr $(, $arg:expr)* $(,)?) => {{
         let msg = format!($fmt $(, $arg)*);
-        $crate::macro_emit_auto($action, &msg, Some(&msg), None, env!("CARGO_CRATE_NAME"));
+        $crate::macro_emit_auto_with_fn($action, &msg, Some(&msg), None, env!("CARGO_CRATE_NAME"), stdext::function_name!());
     }};
     
     // Explicit story: n!(story: "action", "msg {}", arg)
     // TEAM-309: Use story message as fallback for human (was empty string)
     (story: $action:expr, $fmt:expr $(, $arg:expr)* $(,)?) => {{
         let msg = format!($fmt $(, $arg)*);
-        $crate::macro_emit_auto($action, &msg, None, Some(&msg), env!("CARGO_CRATE_NAME"));
+        $crate::macro_emit_auto_with_fn($action, &msg, None, Some(&msg), env!("CARGO_CRATE_NAME"), stdext::function_name!());
     }};
     
     // Human + Cute: n!("action", human: "msg", cute: "msg", args...)
@@ -307,12 +310,13 @@ macro_rules! n {
      cute: $cute_fmt:expr
      $(, $arg:expr)* $(,)?
     ) => {{
-        $crate::macro_emit_auto(
+        $crate::macro_emit_auto_with_fn(
             $action,
             &format!($human_fmt $(, $arg)*),
             Some(&format!($cute_fmt $(, $arg)*)),
             None,
-            env!("CARGO_CRATE_NAME")
+            env!("CARGO_CRATE_NAME"),
+            stdext::function_name!()
         );
     }};
     
@@ -322,12 +326,13 @@ macro_rules! n {
      story: $story_fmt:expr
      $(, $arg:expr)* $(,)?
     ) => {{
-        $crate::macro_emit_auto(
+        $crate::macro_emit_auto_with_fn(
             $action,
             &format!($human_fmt $(, $arg)*),
             None,
             Some(&format!($story_fmt $(, $arg)*)),
-            env!("CARGO_CRATE_NAME")
+            env!("CARGO_CRATE_NAME"),
+            stdext::function_name!()
         );
     }};
     
@@ -338,41 +343,23 @@ macro_rules! n {
      story: $story_fmt:expr
      $(, $arg:expr)* $(,)?
     ) => {{
-        $crate::macro_emit_auto(
+        $crate::macro_emit_auto_with_fn(
             $action,
             &format!($human_fmt $(, $arg)*),
             Some(&format!($cute_fmt $(, $arg)*)),
             Some(&format!($story_fmt $(, $arg)*)),
-            env!("CARGO_CRATE_NAME")
+            env!("CARGO_CRATE_NAME"),
+            stdext::function_name!()
         );
     }};
 }
 
-/// Long-form alias for those who prefer clarity over brevity
-///
-/// TEAM-297: Same as n!() but more explicit
-#[macro_export]
-macro_rules! narrate_concise {
-    ($($tt:tt)*) => { $crate::n!($($tt)*) };
-}
-
-/// Debug-level narration macro
-///
-/// TEAM-311: Emits narration at Debug level (only visible when RBEE_LOG=debug or lower)
-///
-/// # Example
-/// ```rust,ignore
-/// nd!("parse_detail", "Parsing {} · local={} · transitive={}", path, local, trans);
-/// ```
-#[macro_export]
-macro_rules! nd {
-    // Simple: nd!("action", "message")
-    ($action:expr, $msg:expr) => {{
-        $crate::macro_emit_auto_with_level($action, $msg, None, None, env!("CARGO_CRATE_NAME"), $crate::NarrationLevel::Debug);
-    }};
-    
-    // With format: nd!("action", "msg {}", arg)
-    ($action:expr, $fmt:expr, $($arg:expr),+ $(,)?) => {{
-        $crate::macro_emit_auto_with_level($action, &format!($fmt, $($arg),+), None, None, env!("CARGO_CRATE_NAME"), $crate::NarrationLevel::Debug);
-    }};
-}
+// TEAM-312: ENTROPY REMOVED
+// - Deleted nd!() macro - use n!() with NarrationLevel::Debug instead
+// - Deleted narrate_concise!() alias - just use n!()
+//
+// If you need debug-level narration, use the builder API:
+//   NarrationFields { level: NarrationLevel::Debug, .. }.emit()
+//
+// The n!() macro is for Info level (99% of cases).
+// Debug narration should be rare and explicit.

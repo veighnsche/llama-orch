@@ -159,10 +159,12 @@ impl NarrationFields {
     ///
     /// Format:
     /// ```text
-    /// \x1b[1m[actor              ] action              \x1b[0m \x1b[2mfn_name\x1b[0m
+    /// \x1b[1m[actor              ] fn_name            \x1b[0m action              
     /// message
     /// (blank line)
     /// ```
+    /// - Actor and fn_name are **BOLD**
+    /// - Action is light (not bold)
     ///
     /// # Example
     /// ```
@@ -178,7 +180,7 @@ impl NarrationFields {
     /// };
     ///
     /// let formatted = fields.format();
-    /// // Output: [auto-update        ] phase_init           new
+    /// // Output: [auto-update        ] new                  phase_init
     /// //         Initializing
     /// ```
     pub fn format(&self) -> String {

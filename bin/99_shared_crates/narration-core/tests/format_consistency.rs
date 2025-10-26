@@ -30,12 +30,14 @@ async fn test_formatted_field_matches_stderr_format() {
     // TEAM-276: MPSC uses recv() not try_recv() for async
     let event = rx.recv().await.unwrap();
 
-    // Formatted field should match: "[actor     ] action         : message"
-    // Actor: 10 chars left-aligned
-    // Action: 15 chars left-aligned
-    assert!(event.formatted.starts_with("[test-actor]"));
-    assert!(event.formatted.contains("test-action    :"));
-    assert!(event.formatted.ends_with("Test message"));
+    // TEAM-311: New format: "\x1b[1m[actor] action\x1b[0m\nmessage\n"
+    // Format includes ANSI escape codes for bold
+    // Actor: 20 chars left-aligned, BOLD
+    // Action: 20 chars left-aligned, light (not bold)
+    // Message: on second line
+    assert!(event.formatted.contains("[test-actor"));
+    assert!(event.formatted.contains("test-action"));
+    assert!(event.formatted.contains("Test message"));
 
     sse_sink::remove_job_channel("format-test");
 }
@@ -63,8 +65,13 @@ async fn test_formatted_with_padding() {
     // TEAM-276: MPSC uses recv() not try_recv() for async
     let event = rx.recv().await.unwrap();
 
-    // Should pad to 10 chars for actor, 15 for action
-    assert_eq!(event.formatted, "[abc       ] xyz            : Short");
+    // TEAM-311: New format pads to 20 chars for both actor and action
+    // Format: [actor              ] action              \nmessage\n
+    // Without fn_name, no bold on fn_name (only actor is bold, action is light)
+    // With ANSI codes stripped conceptually: "[abc                ] xyz                 \nShort\n"
+    assert!(event.formatted.contains("[abc"));
+    assert!(event.formatted.contains("xyz"));
+    assert!(event.formatted.contains("Short"));
 
     sse_sink::remove_job_channel("format-test-2");
 }

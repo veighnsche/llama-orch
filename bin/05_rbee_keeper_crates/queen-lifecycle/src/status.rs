@@ -1,11 +1,10 @@
 //! Queen status operation
 //!
 //! TEAM-276: Extracted from rbee-keeper/src/handlers/queen.rs
+//! TEAM-311: Migrated to n!() macro
 
 use anyhow::Result;
-use observability_narration_core::NarrationFactory;
-
-const NARRATE: NarrationFactory = NarrationFactory::new("queen-life");
+use observability_narration_core::n;
 
 /// Check queen-rbee daemon status
 ///
@@ -23,11 +22,7 @@ pub async fn check_queen_status(queen_url: &str) -> Result<()> {
 
     match client.get(format!("{}/health", queen_url)).send().await {
         Ok(response) if response.status().is_success() => {
-            NARRATE
-                .action("queen_status")
-                .context(queen_url)
-                .human("✅ Queen is running on {}")
-                .emit();
+            n!("queen_status", "✅ Queen is running on {}", queen_url);
 
             // Try to get more details from the response
             if let Ok(body) = response.text().await {
@@ -36,19 +31,11 @@ pub async fn check_queen_status(queen_url: &str) -> Result<()> {
             Ok(())
         }
         Ok(response) => {
-            NARRATE
-                .action("queen_status")
-                .context(response.status().to_string())
-                .human("⚠️  Queen responded with status: {}")
-                .emit();
+            n!("queen_status", "⚠️  Queen responded with status: {}", response.status());
             Ok(())
         }
         Err(_) => {
-            NARRATE
-                .action("queen_status")
-                .context(queen_url)
-                .human("❌ Queen is not running on {}")
-                .emit();
+            n!("queen_status", "❌ Queen is not running on {}", queen_url);
             Ok(())
         }
     }
