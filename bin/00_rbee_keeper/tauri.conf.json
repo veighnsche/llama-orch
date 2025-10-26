@@ -5,7 +5,18 @@
   "identifier": "com.rbee.keeper",
   "build": {
     "frontendDist": "../ui/dist",
-    "devUrl": "http://localhost:5173"
+    "devUrl": "http://localhost:5173",
+    "beforeDevCommand": "cargo tauri-typegen generate && cd ../ui && npm run dev",
+    "beforeBuildCommand": "cargo tauri-typegen generate && cd ../ui && npm run build"
+  },
+  "plugins": {
+    "tauri-typegen": {
+      "project_path": ".",
+      "output_path": "./ui/src/generated",
+      "validation_library": "none",
+      "verbose": false,
+      "visualize_deps": false
+    }
   },
   "bundle": {
     "active": false

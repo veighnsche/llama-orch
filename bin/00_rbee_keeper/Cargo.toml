@@ -59,7 +59,11 @@ hive-lifecycle = { path = "../05_rbee_keeper_crates/hive-lifecycle" }  # TEAM-29
 ssh-config = { path = "../05_rbee_keeper_crates/ssh-config" }  # TEAM-294: SSH config parser + local
 
 # TEAM-293/294: Tauri v2 dependencies for GUI
+# TEAM-297: Using tauri-specta v2.0.0-rc.21 for Tauri v2 support
 tauri = { version = "2", features = [] }
+specta = { version = "=2.0.0-rc.22" }
+tauri-specta = { version = "=2.0.0-rc.21", features = ["derive", "typescript"] }
+specta-typescript = "=0.0.9"
 
 [build-dependencies]
 # TEAM-293/294: Tauri v2 build dependencies

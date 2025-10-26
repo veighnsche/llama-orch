@@ -1,8 +1,10 @@
 // TEAM-294: TypeScript API wrapper for Tauri commands
 // Provides type-safe wrappers around all Tauri commands defined in tauri_commands.rs
+// TEAM-296: Updated to use COMMANDS registry for type safety
 
 import { invoke } from '@tauri-apps/api/core';
 import type { CommandResponse } from './types';
+import { COMMANDS } from './commands.registry';
 
 // Helper to parse command responses
 async function invokeCommand(command: string, args?: Record<string, unknown>): Promise<CommandResponse> {
@@ -15,7 +17,7 @@ async function invokeCommand(command: string, args?: Record<string, unknown>): P
 // ============================================================================
 
 export async function getStatus(): Promise<CommandResponse> {
-  return invokeCommand('get_status');
+  return invokeCommand(COMMANDS.GET_STATUS);
 }
 
 // ============================================================================
@@ -23,23 +25,23 @@ export async function getStatus(): Promise<CommandResponse> {
 // ============================================================================
 
 export async function queenStart(): Promise<CommandResponse> {
-  return invokeCommand('queen_start');
+  return invokeCommand(COMMANDS.QUEEN_START);
 }
 
 export async function queenStop(): Promise<CommandResponse> {
-  return invokeCommand('queen_stop');
+  return invokeCommand(COMMANDS.QUEEN_STOP);
 }
 
 export async function queenStatus(): Promise<CommandResponse> {
-  return invokeCommand('queen_status');
+  return invokeCommand(COMMANDS.QUEEN_STATUS);
 }
 
 export async function queenRebuild(withLocalHive: boolean): Promise<CommandResponse> {
-  return invokeCommand('queen_rebuild', { with_local_hive: withLocalHive });
+  return invokeCommand(COMMANDS.QUEEN_REBUILD, { with_local_hive: withLocalHive });
 }
 
 export async function queenInfo(): Promise<CommandResponse> {
-  return invokeCommand('queen_info');
+  return invokeCommand(COMMANDS.QUEEN_INFO);
 }
 
 export async function queenInstall(binary?: string): Promise<CommandResponse> {

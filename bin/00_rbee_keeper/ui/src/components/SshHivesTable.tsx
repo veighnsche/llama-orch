@@ -1,8 +1,6 @@
-// TEAM-294: SSH Targets table component
-// Displays SSH hosts from ~/.ssh/config with actions dropdown
+// TEAM-296: SSH Hives table presentation component
+// Pure presentation component that renders the hives table
 
-import { invoke } from "@tauri-apps/api/core";
-import { useEffect, useState } from "react";
 import {
   Table,
   TableBody,
@@ -27,13 +25,37 @@ import {
 } from "lucide-react";
 import { StatusBadge } from "./StatusBadge";
 
-interface CommandResponse {
-  success: boolean;
-  message: string;
-  data?: string;
+// TEAM-296: Loading fallback component
+export function LoadingHives() {
+  return (
+    <div className="rounded-lg border border-border bg-card">
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead>Host</TableHead>
+            <TableHead>Connection</TableHead>
+            <TableHead>Status</TableHead>
+            <TableHead className="text-right">
+              <Button variant="ghost" size="icon-sm" disabled>
+                <RefreshCw className="animate-spin" />
+              </Button>
+            </TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          <TableRow>
+            <TableCell colSpan={4} className="text-center text-muted-foreground">
+              Loading SSH hives...
+            </TableCell>
+          </TableRow>
+        </TableBody>
+      </Table>
+    </div>
+  );
 }
 
-interface SSHTarget {
+// TEAM-296: Hive data type
+export interface SshHive {
   host: string;
   host_subtitle?: string;
   hostname: string;
@@ -42,32 +64,13 @@ interface SSHTarget {
   status: "online" | "offline" | "unknown";
 }
 
-export function SshTargetsTable() {
-  const [sshTargets, setSshTargets] = useState<SSHTarget[]>([]);
-  const [isLoadingTargets, setIsLoadingTargets] = useState(true);
+export interface SshHivesTableProps {
+  hives: SshHive[];
+  onRefresh: () => void;
+}
 
-  useEffect(() => {
-    loadTargets();
-  }, []);
-
-  async function loadTargets() {
-    setIsLoadingTargets(true);
-
-    try {
-      const result = await invoke<string>("hive_list");
-      const response: CommandResponse = JSON.parse(result);
-
-      if (response.success && response.data) {
-        const targets: SSHTarget[] = JSON.parse(response.data);
-        setSshTargets(targets);
-      }
-    } catch (error) {
-      console.error("Failed to load SSH targets:", error);
-    } finally {
-      setIsLoadingTargets(false);
-    }
-  }
-
+// TEAM-296: Presentation component - renders the hives table
+export function SshHivesTable({ hives, onRefresh }: SshHivesTableProps) {
   return (
     <div className="rounded-lg border border-border bg-card">
       <Table>
@@ -78,60 +81,50 @@ export function SshTargetsTable() {
             <TableHead>Status</TableHead>
             <TableHead className="text-right">
               <Button
-                onClick={loadTargets}
-                disabled={isLoadingTargets}
+                onClick={onRefresh}
                 variant="ghost"
                 size="icon-sm"
                 aria-label="Refresh"
-                title="Refresh SSH targets"
+                title="Refresh SSH hives"
               >
-                <RefreshCw className={isLoadingTargets ? "animate-spin" : ""} />
+                <RefreshCw />
               </Button>
             </TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
-          {isLoadingTargets ? (
+          {hives.length === 0 ? (
             <TableRow>
               <TableCell
                 colSpan={4}
                 className="text-center text-muted-foreground"
               >
-                Loading SSH targets...
-              </TableCell>
-            </TableRow>
-          ) : sshTargets.length === 0 ? (
-            <TableRow>
-              <TableCell
-                colSpan={4}
-                className="text-center text-muted-foreground"
-              >
-                No SSH hosts found in ~/.ssh/config
+                No SSH hives found in ~/.ssh/config
               </TableCell>
             </TableRow>
           ) : (
-            sshTargets.map((target) => (
-              <TableRow key={target.host}>
+            hives.map((hive) => (
+              <TableRow key={hive.host}>
                 <TableCell className="font-medium">
                   <div className="flex flex-col">
-                    <span>{target.host}</span>
-                    {target.host_subtitle && (
+                    <span>{hive.host}</span>
+                    {hive.host_subtitle && (
                       <span className="text-xs text-muted-foreground font-normal">
-                        {target.host_subtitle}
+                        {hive.host_subtitle}
                       </span>
                     )}
                   </div>
                 </TableCell>
                 <TableCell className="font-mono text-xs">
                   <div className="flex flex-col">
-                    <span className="font-medium">{target.user}@</span>
+                    <span className="font-medium">{hive.user}@</span>
                     <span className="text-muted-foreground font-normal">
-                      {target.hostname}:{target.port}
+                      {hive.hostname}:{hive.port}
                     </span>
                   </div>
                 </TableCell>
                 <TableCell>
-                  <StatusBadge status={target.status} />
+                  <StatusBadge status={hive.status} />
                 </TableCell>
                 <TableCell>
                   <div className="flex items-center gap-1 justify-end">

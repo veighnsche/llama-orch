@@ -1,0 +1,224 @@
+# TEAM-297: SshHivesContainer Updated with Full Type Safety
+
+**Component:** `ui/src/components/SshHivesContainer.tsx`  
+**Date:** October 26, 2025
+
+## Changes Made
+
+Updated `SshHivesContainer` to use the new **tauri-specta v2.0.0-rc.21** generated bindings instead of the old `tauri-plugin-typegen` approach.
+
+## Before (TEAM-296 - Broken)
+
+```typescript
+// ❌ Old approach: JSON parsing required, no type safety
+import { hive_list } from "@/generated/commands";
+import type { CommandResponse } from "../api/types";
+
+async function fetchSshHives(): Promise<SshHive[]> {
+  const result = await hive_list();  // Returns: string
+  const response: CommandResponse = JSON.parse(result);  // Manual parsing
+
+  if (response.success && response.data) {
+    return JSON.parse(response.data) as SshHive[];  // Double parsing! 😱
+  }
+
+  throw new Error(response.message || "Failed to load SSH hives");
+}
+```
+
+**Problems:**
+- ❌ Returns untyped `string`
+- ❌ Manual JSON parsing required (twice!)
+- ❌ Type casting with `as` (unsafe)
+- ❌ No IntelliSense for return type
+- ❌ Runtime errors if structure changes
+
+## After (TEAM-297 - Full Type Safety! ✅)
+
+```typescript
+// ✅ New approach: Full type safety with tauri-specta
+import { commands } from "@/generated/bindings";
+import type { SshTarget } from "@/generated/bindings";
+
+function convertToSshHive(target: SshTarget): SshHive {
+  return {
+    host: target.host,
+    host_subtitle: target.host_subtitle ?? undefined,
+    hostname: target.hostname,
+    user: target.user,
+    port: target.port,
+    status: target.status,  // TypeScript knows: "online" | "offline" | "unknown"
+  };
+}
+
+async function fetchSshHives(): Promise<SshHive[]> {
+  const result = await commands.hiveList();  // Returns: Result<SshTarget[], string>
+
+  if (result.status === "ok") {
+    return result.data.map(convertToSshHive);  // Full IntelliSense! 🎉
+  }
+
+  throw new Error(result.error || "Failed to load SSH hives");
+}
+```
+
+**Benefits:**
+- ✅ Typed return: `Result<SshTarget[], string>`
+- ✅ No JSON parsing needed
+- ✅ Full IntelliSense on `result.data`
+- ✅ Compiler catches type errors
+- ✅ `result.status` discriminated union
+- ✅ Auto-completion for all fields
+
+## Type Safety Improvements
+
+### 1. IntelliSense on Result
+
+```typescript
+const result = await commands.hiveList();
+
+// TypeScript knows result is:
+type Result<T, E> = 
+  | { status: "ok"; data: T }
+  | { status: "error"; error: E };
+
+// So you get auto-completion:
+if (result.status === "ok") {
+  result.data  // ← TypeScript knows this is SshTarget[]
+  result.data[0].host  // ← Full IntelliSense!
+  result.data[0].status  // ← "online" | "offline" | "unknown"
+}
+```
+
+### 2. Type-Safe Conversion
+
+```typescript
+function convertToSshHive(target: SshTarget): SshHive {
+  return {
+    host: target.host,  // ✅ TypeScript verifies field exists
+    hostname: target.hostname,  // ✅ Checks type is string
+    status: target.status,  // ✅ Verifies union type matches
+  };
+}
+```
+
+### 3. No Runtime Type Mismatches
+
+**Old way:** If Rust changes `SshTarget.port` from `u16` to `String`:
+- ❌ JSON parsing still works
+- ❌ No compile error
+- ❌ Runtime error in component: `"8500".toFixed()` 💥
+
+**New way:** If Rust changes `SshTarget.port` from `u16` to `String`:
+- ✅ TypeScript bindings regenerated
+- ✅ **Compile error immediately**
+- ✅ Fix before runtime: change `port: number` → `port: string`
+
+## Visual Comparison
+
+### Type Safety Check
+
+```typescript
+// ❌ OLD: No type checking on fields
+const hives = JSON.parse(response.data) as SshHive[];
+hives[0].hoost;  // Typo! No error, returns undefined at runtime 😱
+
+// ✅ NEW: Full type checking
+const result = await commands.hiveList();
+if (result.status === "ok") {
+  result.data[0].hoost;  // TS Error: Property 'hoost' does not exist
+  result.data[0].host;   // ✅ Works, auto-completion shows this exists
+}
+```
+
+### Error Handling
+
+```typescript
+// ❌ OLD: String error message
+throw new Error(response.message || "Failed");
+
+// ✅ NEW: Typed error from Result
+if (result.status === "error") {
+  throw new Error(result.error);  // result.error is string (from Rust)
+}
+```
+
+## Component Structure
+
+The component uses **React 19 `use()` hook with Suspense** (unchanged):
+
+```typescript
+export function SshHivesContainer() {
+  const [hivesPromise, setHivesPromise] = useState(() => fetchSshHives());
+
+  const handleRefresh = () => {
+    setHivesPromise(fetchSshHives());
+  };
+
+  return (
+    <Suspense fallback={<LoadingHives />}>
+      <SshHivesTable hives={use(hivesPromise)} onRefresh={handleRefresh} />
+    </Suspense>
+  );
+}
+```
+
+**Unchanged:** Container pattern, Suspense boundary, refresh logic  
+**Changed:** `fetchSshHives()` implementation now uses typed bindings
+
+## Files Updated
+
+- ✅ `ui/src/components/SshHivesContainer.tsx` - Updated to use tauri-specta bindings
+
+## Related Types
+
+### Generated by tauri-specta (bindings.ts)
+
+```typescript
+export type SshTarget = { 
+  host: string; 
+  host_subtitle: string | null; 
+  hostname: string; 
+  user: string; 
+  port: number; 
+  status: SshTargetStatus 
+}
+
+export type SshTargetStatus = "online" | "offline" | "unknown"
+```
+
+### Component Type (SshHivesTable.tsx)
+
+```typescript
+export interface SshHive {
+  host: string;
+  host_subtitle?: string;  // Note: undefined instead of null
+  hostname: string;
+  user: string;
+  port: number;
+  status: "online" | "offline" | "unknown";
+}
+```
+
+**Why conversion needed?** `SshTarget.host_subtitle` is `string | null` (Rust `Option<String>`), but React prefers `string | undefined`.
+
+## Testing
+
+```bash
+# TypeScript compilation check
+cd ui && pnpm exec tsc --noEmit
+
+# Build check
+cd ui && pnpm run build
+```
+
+✅ **No TypeScript errors**  
+✅ **Full IntelliSense working**  
+✅ **Type safety verified**
+
+## Summary
+
+**Old (TEAM-296):** Manual JSON parsing, no type safety, runtime errors possible  
+**New (TEAM-297):** Auto-generated types, full IntelliSense, compile-time safety
+
+The component is now using the **proper tauri-specta v2 API** with full type safety from Rust to TypeScript! 🎉

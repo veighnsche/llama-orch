@@ -1,6 +1,7 @@
 //! Tauri commands for the rbee-keeper GUI
 //!
 //! TEAM-293: Created Tauri command wrappers for all CLI operations
+//! TEAM-297: Updated to use specta v2 for proper TypeScript type generation
 //!
 //! Each command in this module corresponds to a CLI command and delegates
 //! to the same handler functions used by the CLI.
@@ -10,13 +11,77 @@ use crate::config::Config;
 use crate::handlers;
 use anyhow::Result;
 use serde::{Deserialize, Serialize};
+use specta::Type;
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use specta_typescript::Typescript;
+    use tauri_specta::{collect_commands, Builder};
+
+    #[test]
+    fn export_typescript_bindings() {
+        // TEAM-297: Test that exports TypeScript bindings
+        let builder = Builder::<tauri::Wry>::new()
+            .commands(collect_commands![hive_list]);
+        
+        builder
+            .export(
+                Typescript::default(),
+                "ui/src/generated/bindings.ts",
+            )
+            .expect("Failed to export typescript bindings");
+    }
+}
 
 // ============================================================================
 // RESPONSE TYPES
 // ============================================================================
-// All Tauri commands return a Result<String, String> where:
-// - Ok(String) = success message or JSON data
-// - Err(String) = error message for display in GUI
+// TEAM-296: Define types with Specta for proper TypeScript generation
+
+/// SSH target from ~/.ssh/config
+#[derive(Debug, Clone, Serialize, Deserialize, Type)]
+pub struct SshTarget {
+    /// Host alias from SSH config
+    pub host: String,
+    /// Host subtitle (optional)
+    pub host_subtitle: Option<String>,
+    /// Hostname (IP or domain)
+    pub hostname: String,
+    /// SSH username
+    pub user: String,
+    /// SSH port
+    pub port: u16,
+    /// Connection status
+    pub status: SshTargetStatus,
+}
+
+/// SSH target connection status
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Type)]
+#[serde(rename_all = "lowercase")]
+pub enum SshTargetStatus {
+    Online,
+    Offline,
+    Unknown,
+}
+
+// Convert from ssh_config types to our types
+impl From<ssh_config::SshTarget> for SshTarget {
+    fn from(target: ssh_config::SshTarget) -> Self {
+        Self {
+            host: target.host,
+            host_subtitle: target.host_subtitle,
+            hostname: target.hostname,
+            user: target.user,
+            port: target.port,
+            status: match target.status {
+                ssh_config::SshTargetStatus::Online => SshTargetStatus::Online,
+                ssh_config::SshTargetStatus::Offline => SshTargetStatus::Offline,
+                ssh_config::SshTargetStatus::Unknown => SshTargetStatus::Unknown,
+            },
+        }
+    }
+}
 
 #[derive(Serialize, Deserialize)]
 pub struct CommandResponse {
@@ -215,8 +280,9 @@ pub async fn hive_stop(host: String) -> Result<String, String> {
 }
 
 #[tauri::command]
-pub async fn hive_list() -> Result<String, String> {
-    // TEAM-294: Return JSON for UI instead of using NARRATE
+#[specta::specta]
+pub async fn hive_list() -> Result<Vec<SshTarget>, String> {
+    // TEAM-296: Return typed data with Specta for proper TypeScript generation
     use ssh_config::parse_ssh_config;
     
     let ssh_config_path = dirs::home_dir()
@@ -226,14 +292,13 @@ pub async fn hive_list() -> Result<String, String> {
     let targets = parse_ssh_config(&ssh_config_path)
         .map_err(|e| e.to_string())?;
 
-    // Return JSON for UI
-    let response = CommandResponse {
-        success: true,
-        message: format!("Found {} SSH target(s)", targets.len()),
-        data: Some(serde_json::to_string(&targets).map_err(|e| e.to_string())?),
-    };
+    // Convert from ssh_config::SshTarget to our SshTarget type
+    let converted_targets: Vec<SshTarget> = targets
+        .into_iter()
+        .map(|t| t.into())
+        .collect();
 
-    serde_json::to_string(&response).map_err(|e| e.to_string())
+    Ok(converted_targets)
 }
 
 #[tauri::command]

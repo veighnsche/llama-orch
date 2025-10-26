@@ -11,9 +11,8 @@
 
 import { invoke } from "@tauri-apps/api/core";
 import { PageContainer } from "@rbee/ui/molecules";
-import { Card, CardContent, CardHeader, CardTitle } from "@rbee/ui/atoms";
-import { SshTargetsTable } from "../components/SshTargetsTable";
-import { ServiceActionButtons } from "../components/ServiceActionButtons";
+import { SshHivesContainer } from "../components/SshHivesContainer";
+import { ServiceCard } from "../components/ServiceCard";
 import { useCommandStore } from "../store/commandStore";
 
 export default function KeeperPage() {
@@ -94,49 +93,31 @@ export default function KeeperPage() {
       <div className="space-y-6">
         {/* Status Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Queen</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                <p className="text-sm text-muted-foreground">
-                  Job router that dispatches inference requests to workers in
-                  the correct hive
-                </p>
-                <ServiceActionButtons
-                  servicePrefix="queen"
-                  onCommandClick={handleCommand}
-                  disabled={isExecuting}
-                />
-              </div>
-            </CardContent>
-          </Card>
+          <ServiceCard
+            title="Queen"
+            description="Smart API server"
+            details="Job router that dispatches inference requests to workers in the correct hive"
+            servicePrefix="queen"
+            status="unknown" // TODO: Implement state detection
+            onCommandClick={handleCommand}
+            disabled={isExecuting}
+          />
 
-          <Card>
-            <CardHeader>
-              <CardTitle>Hive (localhost)</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                <p className="text-sm text-muted-foreground">
-                  Manages workers and catalogs (models, worker binaries) on this
-                  machine
-                </p>
-                <ServiceActionButtons
-                  servicePrefix="hive"
-                  onCommandClick={handleCommand}
-                  disabled={isExecuting}
-                />
-              </div>
-            </CardContent>
-          </Card>
+          <ServiceCard
+            title="Hive"
+            description="Local Worker Manager"
+            details="Manages workers and catalogs (models, worker binaries) on this machine"
+            servicePrefix="hive"
+            status="unknown" // TODO: Implement state detection
+            onCommandClick={handleCommand}
+            disabled={isExecuting}
+          />
         </div>
 
-        {/* SSH Targets Table */}
+        {/* SSH Hives Table */}
         <div>
           <h3 className="text-lg font-semibold mb-4">SSH Hives</h3>
-          <SshTargetsTable />
+          <SshHivesContainer />
         </div>
       </div>
     </PageContainer>
