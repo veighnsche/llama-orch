@@ -62,17 +62,88 @@
 //!     ..Default::default()
 //! });
 //! ```
+//!
+//! # Modular Structure (TEAM-300)
+//!
+//! The crate is organized into logical modules:
+//!
+//! - **`core/`** - Fundamental types (NarrationFields, NarrationLevel)
+//! - **`api/`** - Public APIs (emit functions, builder, macros)
+//! - **`taxonomy/`** - Constants (actors, actions)
+//! - **`output/`** - Output mechanisms (SSE, capture adapter)
+//! - **`context`** - Thread-local context for auto-injection
+//! - **`mode`** - Narration mode selection (human/cute/story)
+//! - **`correlation`** - Correlation ID utilities
+//! - **`unicode`** - Unicode validation and sanitization
 
-mod builder;
-mod capture;
+// ============================================================================
+// TEAM-300: Modular organization
+// ============================================================================
+
+pub mod api;
+pub mod core;
+pub mod output;
+pub mod taxonomy;
+
+// Existing modules (kept in place)
 pub mod context;
 pub mod correlation;
-pub mod sse_sink;
+pub mod mode;
 pub mod unicode;
 
-pub use builder::{short_job_id, Narration, NarrationFactory};
-pub use capture::{CaptureAdapter, CapturedNarration};
+// ============================================================================
+// Re-exports for backward compatibility
+// ============================================================================
+
+// Core types
+pub use core::{NarrationFields, NarrationLevel};
+
+// API functions
+pub use api::{narrate, narrate_at_level, narrate_error, narrate_fatal, narrate_warn};
+
+// Feature-gated functions
+#[cfg(feature = "debug-enabled")]
+pub use api::narrate_debug;
+#[cfg(feature = "trace-enabled")]
+pub use api::narrate_trace;
+
+// Legacy function (deprecated)
+#[deprecated(since = "0.1.0", note = "Use narrate() with NarrationFields instead")]
+pub use api::emit::human;
+
+pub use api::{short_job_id, Narration, NarrationFactory};
+#[doc(hidden)]
+pub use api::macro_emit;
+
+// Context
 pub use context::{with_narration_context, NarrationContext};
+
+// Mode
+pub use mode::{get_narration_mode, set_narration_mode, NarrationMode};
+
+// Output
+pub use output::{CaptureAdapter, CapturedNarration, NarrationEvent};
+
+// Taxonomy
+pub use taxonomy::*;
+
+// Correlation utilities
+pub use correlation::{
+    from_header as correlation_from_header, generate_correlation_id,
+    propagate as correlation_propagate, validate_correlation_id,
+};
+
+// Unicode utilities
+pub use unicode::{sanitize_crlf, sanitize_for_json, validate_action, validate_actor};
+
+// SSE sink (for external use)
+pub mod sse_sink {
+    pub use crate::output::sse_sink::*;
+}
+
+// ============================================================================
+// TEAM-297: Phase 0 - Ultra-concise narration macro
+// ============================================================================
 
 /// Macro to emit narration with automatic caller crate provenance.
 ///
@@ -142,381 +213,84 @@ macro_rules! narration_macro {
         }
     };
 }
-pub use correlation::{
-    from_header as correlation_from_header, generate_correlation_id,
-    propagate as correlation_propagate, validate_correlation_id,
-};
-pub use unicode::{sanitize_crlf, sanitize_for_json, validate_action, validate_actor};
 
-// Trace macros are exported via #[macro_export] in trace.rs
-
-// ============================================================================
-// Taxonomy: Actors
-// ============================================================================
-
-/// Core orchestration service
-pub const ACTOR_ORCHESTRATORD: &str = "orchestratord";
-/// GPU pool manager service
-pub const ACTOR_POOL_MANAGERD: &str = "pool-managerd";
-/// Worker daemon (inference service)
-pub const ACTOR_WORKER_ORCD: &str = "worker-orcd";
-/// Inference engine (llama.cpp, vLLM, etc.)
-pub const ACTOR_INFERENCE_ENGINE: &str = "inference-engine";
-/// VRAM residency manager
-pub const ACTOR_VRAM_RESIDENCY: &str = "vram-residency";
-/// Queen-rbee main service (TEAM-191: Added for queen-rbee operations)
-pub const ACTOR_QUEEN_RBEE: &str = "👑 queen-rbee";
-/// Queen router (job routing and operation dispatch) (TEAM-191: Added for job routing)
-pub const ACTOR_QUEEN_ROUTER: &str = "👑 queen-router";
-
-/// Extract service name from a module path string.
+/// Ultra-concise narration macro using Rust's format!()
 ///
-/// Used by the `#[narrate(...)]` macro to infer actor from module path.
+/// TEAM-297: This is the NEW API that reduces narration from 5 lines to 1 line!
+/// Uses standard Rust format!() instead of custom {0}, {1} replacement.
 ///
-/// # Examples
+/// # Simple usage (1 line instead of 5):
+/// ```rust,ignore
+/// use observability_narration_core::n;
+///
+/// n!("action", "message");
+/// n!("action", "message {}", var);
+/// n!("action", "msg {} and {}", var1, var2);
 /// ```
-/// use observability_narration_core::extract_service_name;
 ///
-/// assert_eq!(extract_service_name("llama_orch::orchestratord::admission"), "orchestratord");
-/// assert_eq!(extract_service_name("llama_orch::pool_managerd::spawn"), "pool-managerd");
-/// assert_eq!(extract_service_name("llama_orch::worker_orcd::inference"), "worker-orcd");
-/// assert_eq!(extract_service_name("unknown::path"), "unknown");
+/// # With narration mode (explicit):
+/// ```rust,ignore
+/// n!(human: "action", "Technical message");
+/// n!(cute: "action", "🐝 Fun message");
+/// n!(story: "action", "'Hello,' said the system");
 /// ```
-pub fn extract_service_name(module_path: &str) -> &'static str {
-    let parts: Vec<&str> = module_path.split("::").collect();
-
-    // Look for known service names
-    for part in &parts {
-        match *part {
-            "orchestratord" => return ACTOR_ORCHESTRATORD,
-            "pool_managerd" => return ACTOR_POOL_MANAGERD,
-            "worker_orcd" => return ACTOR_WORKER_ORCD,
-            "vram_residency" => return ACTOR_VRAM_RESIDENCY,
-            "inference_engine" => return ACTOR_INFERENCE_ENGINE,
-            _ => continue,
-        }
-    }
-
-    // Fallback: return "unknown"
-    "unknown"
-}
-
-#[cfg(test)]
-mod extract_service_name_tests {
-    use super::*;
-
-    #[test]
-    fn test_extract_service_name() {
-        assert_eq!(
-            extract_service_name("llama_orch::orchestratord::admission"),
-            ACTOR_ORCHESTRATORD
+///
+/// # All three modes (runtime selectable):
+/// ```rust,ignore
+/// n!("action",
+///     human: "Technical message {}",
+///     cute: "🐝 Fun message {}",
+///     story: "'Message,' said {}",
+///     var
+/// );
+/// ```
+#[macro_export]
+macro_rules! n {
+    // Simple: n!("action", "message")
+    ($action:expr, $msg:expr) => {{
+        $crate::macro_emit($action, $msg, None, None);
+    }};
+    
+    // With format: n!("action", "msg {}", arg)
+    ($action:expr, $fmt:expr, $($arg:expr),+ $(,)?) => {{
+        $crate::macro_emit($action, &format!($fmt, $($arg),+), None, None);
+    }};
+    
+    // Explicit human: n!(human: "action", "msg {}", arg)
+    (human: $action:expr, $fmt:expr $(, $arg:expr)* $(,)?) => {{
+        $crate::macro_emit($action, &format!($fmt $(, $arg)*), None, None);
+    }};
+    
+    // Explicit cute: n!(cute: "action", "msg {}", arg)
+    (cute: $action:expr, $fmt:expr $(, $arg:expr)* $(,)?) => {{
+        $crate::macro_emit($action, "", Some(&format!($fmt $(, $arg)*)), None);
+    }};
+    
+    // Explicit story: n!(story: "action", "msg {}", arg)
+    (story: $action:expr, $fmt:expr $(, $arg:expr)* $(,)?) => {{
+        $crate::macro_emit($action, "", None, Some(&format!($fmt $(, $arg)*)));
+    }};
+    
+    // All three: n!("action", human: "msg", cute: "msg", story: "msg", args...)
+    ($action:expr,
+     human: $human_fmt:expr,
+     cute: $cute_fmt:expr,
+     story: $story_fmt:expr
+     $(, $arg:expr)* $(,)?
+    ) => {{
+        $crate::macro_emit(
+            $action,
+            &format!($human_fmt $(, $arg)*),
+            Some(&format!($cute_fmt $(, $arg)*)),
+            Some(&format!($story_fmt $(, $arg)*))
         );
-        assert_eq!(extract_service_name("llama_orch::pool_managerd::spawn"), ACTOR_POOL_MANAGERD);
-        assert_eq!(extract_service_name("llama_orch::worker_orcd::inference"), ACTOR_WORKER_ORCD);
-        assert_eq!(extract_service_name("llama_orch::vram_residency::seal"), ACTOR_VRAM_RESIDENCY);
-        assert_eq!(extract_service_name("unknown::path"), "unknown");
-    }
+    }};
 }
 
-// ============================================================================
-// Taxonomy: Actions
-// ============================================================================
-
-/// Admission queue operations
-pub const ACTION_ADMISSION: &str = "admission";
-pub const ACTION_ENQUEUE: &str = "enqueue";
-pub const ACTION_DISPATCH: &str = "dispatch";
-
-/// Worker lifecycle
-pub const ACTION_SPAWN: &str = "spawn";
-pub const ACTION_READY_CALLBACK: &str = "ready_callback";
-pub const ACTION_HEARTBEAT_SEND: &str = "heartbeat_send";
-pub const ACTION_HEARTBEAT_RECEIVE: &str = "heartbeat_receive";
-pub const ACTION_SHUTDOWN: &str = "shutdown";
-
-/// Inference operations
-pub const ACTION_INFERENCE_START: &str = "inference_start";
-pub const ACTION_INFERENCE_COMPLETE: &str = "inference_complete";
-pub const ACTION_INFERENCE_ERROR: &str = "inference_error";
-pub const ACTION_CANCEL: &str = "cancel";
-
-/// VRAM operations
-pub const ACTION_VRAM_ALLOCATE: &str = "vram_allocate";
-pub const ACTION_VRAM_DEALLOCATE: &str = "vram_deallocate";
-pub const ACTION_SEAL: &str = "seal";
-pub const ACTION_VERIFY: &str = "verify";
-
-/// Pool management
-pub const ACTION_REGISTER: &str = "register";
-pub const ACTION_DEREGISTER: &str = "deregister";
-pub const ACTION_PROVISION: &str = "provision";
-
-// TEAM-191: Job routing actions (used by queen-rbee)
-/// Route job to appropriate handler
-pub const ACTION_ROUTE_JOB: &str = "route_job";
-/// Parse operation payload
-pub const ACTION_PARSE_OPERATION: &str = "parse_operation";
-/// Create new job
-pub const ACTION_JOB_CREATE: &str = "job_create";
-
-// TEAM-191: Hive management actions (used by queen-rbee)
-/// Install hive
-pub const ACTION_HIVE_INSTALL: &str = "hive_install";
-/// Uninstall hive
-pub const ACTION_HIVE_UNINSTALL: &str = "hive_uninstall";
-/// Start hive daemon
-pub const ACTION_HIVE_START: &str = "hive_start";
-/// Stop hive daemon
-pub const ACTION_HIVE_STOP: &str = "hive_stop";
-/// Check hive status
-pub const ACTION_HIVE_STATUS: &str = "hive_status";
-/// List all hives
-pub const ACTION_HIVE_LIST: &str = "hive_list";
-
-// TEAM-191: System actions (used by queen-rbee)
-/// Get system status
-pub const ACTION_STATUS: &str = "status";
-/// Start service
-pub const ACTION_START: &str = "start";
-/// Listen for connections
-pub const ACTION_LISTEN: &str = "listen";
-/// Service ready
-pub const ACTION_READY: &str = "ready";
-/// Error occurred
-pub const ACTION_ERROR: &str = "error";
-
-use serde::{Deserialize, Serialize};
-use tracing::{event, Level};
-
-/// Narration logging level
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum NarrationLevel {
-    Mute,  // No output
-    Trace, // Ultra-fine detail
-    Debug, // Developer diagnostics
-    Info,  // Narration backbone (default)
-    Warn,  // Anomalies & degradations
-    Error, // Operational failures
-    Fatal, // Unrecoverable errors
-}
-
-impl NarrationLevel {
-    fn to_tracing_level(self) -> Option<Level> {
-        match self {
-            NarrationLevel::Mute => None,
-            NarrationLevel::Trace => Some(Level::TRACE),
-            NarrationLevel::Debug => Some(Level::DEBUG),
-            NarrationLevel::Info => Some(Level::INFO),
-            NarrationLevel::Warn => Some(Level::WARN),
-            NarrationLevel::Error => Some(Level::ERROR),
-            NarrationLevel::Fatal => Some(Level::ERROR), // tracing doesn't have FATAL
-        }
-    }
-}
-
-/// Structured fields for narration events.
-/// Implements ORCH-3304 field taxonomy.
-#[derive(Debug, Clone, Default, Serialize, Deserialize)]
-pub struct NarrationFields {
-    /// Who performed the action (e.g., "orchestratord", "pool-managerd")
-    pub actor: &'static str,
-
-    /// What action was performed (e.g., "admission", "spawn", "build")
-    pub action: &'static str,
-
-    /// What was acted upon (e.g., session_id, pool_id, replica_id)
-    pub target: String,
-
-    /// Human-readable description (ORCH-3305: ≤100 chars, present tense, SVO)
-    pub human: String,
-
-    /// Cute children's book narration (optional, whimsical storytelling)
-    /// Example: "Tucked the model safely into GPU0's cozy VRAM blanket! 🛏️✨"
-    pub cute: Option<String>,
-
-    /// Story-mode dialogue narration (optional, conversation-focused)
-    /// Only use when components are actually communicating!
-    /// Example: "'Do you have 2GB VRAM?' asked orchestratord. 'No,' replied pool-managerd-3, 'only 512MB free.'"
-    pub story: Option<String>,
-
-    // Correlation and identity fields
-    pub correlation_id: Option<String>,
-    pub session_id: Option<String>,
-    pub job_id: Option<String>,
-    pub task_id: Option<String>,
-    pub pool_id: Option<String>,
-    pub replica_id: Option<String>,
-    pub worker_id: Option<String>,
-    /// TEAM-185: Added hive_id for multi-hive rbee operations
-    pub hive_id: Option<String>,
-
-    // Operation context (for job-based systems)
-    /// The specific operation being performed (e.g., "worker_spawn", "infer", "model_download")
-    /// Unlike action (which is static), this can be dynamic and operation-specific
-    /// TEAM-185: Added operation field for job-based systems to track dynamic operation names
-    pub operation: Option<String>,
-
-    // Contextual fields (ORCH-3304)
-    pub error_kind: Option<String>,
-    pub retry_after_ms: Option<u64>,
-    pub backoff_ms: Option<u64>,
-    pub duration_ms: Option<u64>,
-    pub queue_position: Option<usize>,
-    pub predicted_start_ms: Option<u64>,
-
-    // Engine/model context
-    pub engine: Option<String>,
-    pub engine_version: Option<String>,
-    pub model_ref: Option<String>,
-    pub device: Option<String>,
-
-    // Performance metrics
-    pub tokens_in: Option<u64>,
-    pub tokens_out: Option<u64>,
-    pub decode_time_ms: Option<u64>,
-
-    // Provenance (audit trail and debugging)
-    /// Service name and version (e.g., "orchestratord@0.1.0")
-    pub emitted_by: Option<String>,
-    /// Unix timestamp in milliseconds
-    pub emitted_at_ms: Option<u64>,
-    /// Distributed trace ID (OpenTelemetry compatible)
-    pub trace_id: Option<String>,
-    /// Span ID within the trace
-    pub span_id: Option<String>,
-    /// Parent span ID (for span hierarchy)
-    pub parent_span_id: Option<String>,
-    /// Source location for dev builds (e.g., "data.rs:155")
-    pub source_location: Option<String>,
-}
-
-/// Internal macro to emit a narration event at a specific level.
-/// Reduces duplication across TRACE/DEBUG/INFO/WARN/ERROR levels.
-/// TEAM-204: No redaction - narration is for debugging, not compliance
-macro_rules! emit_event {
-    ($level:expr, $fields:expr) => {
-        event!(
-            $level,
-            actor = $fields.actor,
-            action = $fields.action,
-            target = %$fields.target,
-            human = %$fields.human,
-            cute = $fields.cute.as_deref(),
-            story = $fields.story.as_deref(),
-            correlation_id = $fields.correlation_id.as_deref(),
-            session_id = $fields.session_id.as_deref(),
-            job_id = $fields.job_id.as_deref(),
-            task_id = $fields.task_id.as_deref(),
-            pool_id = $fields.pool_id.as_deref(),
-            replica_id = $fields.replica_id.as_deref(),
-            worker_id = $fields.worker_id.as_deref(),
-            hive_id = $fields.hive_id.as_deref(),
-            device = $fields.device.as_deref(),
-            tokens_in = $fields.tokens_in,
-            tokens_out = $fields.tokens_out,
-            decode_time_ms = $fields.decode_time_ms,
-            emitted_by = $fields.emitted_by.as_deref(),
-            emitted_at_ms = $fields.emitted_at_ms,
-            trace_id = $fields.trace_id.as_deref(),
-            span_id = $fields.span_id.as_deref(),
-            parent_span_id = $fields.parent_span_id.as_deref(),
-            source_location = $fields.source_location.as_deref(),
-        )
-    };
-}
-
-/// Emit a narration event at a specific level.
-/// Implements ORCH-3300, ORCH-3301, ORCH-3303.
+/// Long-form alias for those who prefer clarity over brevity
 ///
-/// TEAM-153: Outputs to both tracing (if configured) AND stderr for guaranteed visibility
-///
-/// # ⚠️ NOT FOR COMPLIANCE
-///
-/// Narration is for USERS to see what's happening!
-/// - NO redaction (users need full context)
-/// - Visible in UI/CLI (not hidden)
-/// - NOT for legal/security audit trails
-///
-/// **For compliance/audit logging, see:** `bin/99_shared_crates/audit-logging/`
-pub fn narrate_at_level(fields: NarrationFields, level: NarrationLevel) {
-    let Some(tracing_level) = level.to_tracing_level() else {
-        return; // MUTE - no output
-    };
-
-    // TEAM-204: No redaction - users need to see what's happening
-    // For audit logging (hidden, redacted), see: bin/99_shared_crates/audit-logging/
-
-    // TEAM-153: Always output to stderr for guaranteed shell visibility
-    // This works whether or not tracing subscriber is initialized
-    // TEAM-192: Fixed-width format with 30-char prefix for consistent message column
-    // Format: "[actor     ] action         : message"
-    // - Actor: 10 chars (left-aligned, padded with spaces)
-    // - Action: 15 chars (left-aligned, padded with spaces)
-    // - Total prefix: 30 chars (including brackets, spaces, and colon)
-    eprintln!("[{:<10}] {:<15}: {}", fields.actor, fields.action, fields.human);
-
-    // TEAM-164: Send to SSE subscribers if enabled (for distributed narration)
-    if sse_sink::is_enabled() {
-        sse_sink::send(&fields);
-    }
-
-    // Emit structured event at appropriate level using macro (for tracing subscribers if configured)
-    match tracing_level {
-        Level::TRACE => emit_event!(Level::TRACE, fields),
-        Level::DEBUG => emit_event!(Level::DEBUG, fields),
-        Level::INFO => emit_event!(Level::INFO, fields),
-        Level::WARN => emit_event!(Level::WARN, fields),
-        Level::ERROR => emit_event!(Level::ERROR, fields),
-    }
-
-    // Notify capture adapter if active (ORCH-3306)
-    #[cfg(any(test, feature = "test-support"))]
-    {
-        capture::notify(fields);
-    }
-}
-
-/// Emit INFO-level narration (default)
-pub fn narrate(fields: NarrationFields) {
-    narrate_at_level(fields, NarrationLevel::Info)
-}
-
-/// Emit WARN-level narration
-pub fn narrate_warn(fields: NarrationFields) {
-    narrate_at_level(fields, NarrationLevel::Warn)
-}
-
-/// Emit ERROR-level narration
-pub fn narrate_error(fields: NarrationFields) {
-    narrate_at_level(fields, NarrationLevel::Error)
-}
-
-/// Emit FATAL-level narration
-pub fn narrate_fatal(fields: NarrationFields) {
-    narrate_at_level(fields, NarrationLevel::Fatal)
-}
-
-/// Emit DEBUG-level narration (requires `debug-enabled` feature)
-#[cfg(feature = "debug-enabled")]
-pub fn narrate_debug(fields: NarrationFields) {
-    narrate_at_level(fields, NarrationLevel::Debug)
-}
-
-/// Emit TRACE-level narration (requires `trace-enabled` feature)
-#[cfg(feature = "trace-enabled")]
-pub fn narrate_trace(fields: NarrationFields) {
-    narrate_at_level(fields, NarrationLevel::Trace)
-}
-
-/// Legacy compatibility function for existing callers.
-/// Prefer `narrate()` with full `NarrationFields` for new code.
-#[deprecated(since = "0.1.0", note = "Use narrate() with NarrationFields instead")]
-pub fn human<S: AsRef<str>>(actor: &'static str, action: &'static str, target: &str, msg: S) {
-    narrate(NarrationFields {
-        actor,
-        action,
-        target: target.to_string(),
-        human: msg.as_ref().to_string(),
-        ..Default::default()
-    });
+/// TEAM-297: Same as n!() but more explicit
+#[macro_export]
+macro_rules! narrate_concise {
+    ($($tt:tt)*) => { $crate::n!($($tt)*) };
 }

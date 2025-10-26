@@ -103,10 +103,19 @@ n!("deploy",
 - Remove `.context()` system
 - Runtime mode configuration
 
-### Phase 1: SSE Optional (TEAM-298)
-**Goal:** Make SSE delivery opportunistic  
+### Phase 1: SSE Optional + Privacy Fix (TEAM-298)
+**Goal:** Make SSE delivery opportunistic AND fix privacy violation  
 **Duration:** 1 week  
 **Depends:** Phase 0
+
+**⚠️ CRITICAL ISSUE DISCOVERED**
+
+**PRIVACY VIOLATION:** Current implementation emits ALL narration to global `stderr`, causing:
+- Multi-tenant data leaks (User A sees User B's narration)
+- Sensitive data exposure (job_id, inference data visible globally)
+- Security violation (no isolation between jobs)
+
+**MUST FIX IN PHASE 1:** Change stdout/stderr to be job-scoped only.
 
 **Before:**
 ```rust
@@ -120,11 +129,18 @@ NARRATE.action("start").job_id(&job_id).emit();
 n!("start", "Starting");  // → stdout always works, SSE if available
 ```
 
+**⚠️ CRITICAL PRIVACY FIX (TEAM-298):**
+1. **Remove global stderr** - Privacy violation!
+2. **Add keeper mode** - `RBEE_KEEPER_MODE` env var
+3. **SSE becomes primary** - Job-scoped, secure
+4. **Conditional stderr** - Only in keeper mode (single-user)
+
 **Deliverables:**
 - `try_send()` for SSE (failure OK)
-- Stdout as primary output
-- No mandatory channel creation
-- Mode detection enum
+- Remove global stderr output (security)
+- Add keeper mode flag
+- Multi-tenant isolation tests
+- SSE as primary output (not bonus)
 
 ### Phase 2: Thread-Local Context (TEAM-299)
 **Goal:** Auto-inject job_id everywhere  

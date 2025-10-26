@@ -217,6 +217,49 @@ impl SseChannelRegistry {
         // This is intentional - better to lose narration than leak sensitive data
     }
 
+    /// Try to send narration to a specific job's SSE stream (returns success/failure).
+    ///
+    /// TEAM-298: Phase 1 - Opportunistic SSE delivery
+    /// Returns true if sent successfully, false otherwise.
+    ///
+    /// # Behavior
+    ///
+    /// - Returns `true` if event was successfully sent to channel
+    /// - Returns `false` if:
+    ///   - Channel doesn't exist (not an error - stdout has the narration!)
+    ///   - Channel is full (backpressure)
+    ///   - Channel is closed (job completed)
+    ///
+    /// # Why This Matters
+    ///
+    /// Narration works in two modes:
+    /// 1. **Primary**: Always emitted to stderr (guaranteed visibility)
+    /// 2. **Bonus**: Sent to SSE if channel exists (remote observability)
+    ///
+    /// This function makes SSE truly optional - narration never fails.
+    ///
+    /// # Example
+    /// ```rust,ignore
+    /// // Narration before channel creation (works!)
+    /// n!("early", "This goes to stdout only");
+    ///
+    /// // Create channel
+    /// sse_sink::create_job_channel(job_id, 1000);
+    ///
+    /// // Narration after channel creation (goes to both!)
+    /// n!("later", "This goes to stdout AND SSE");
+    /// ```
+    pub fn try_send_to_job(&self, job_id: &str, event: NarrationEvent) -> bool {
+        let senders = self.senders.lock().unwrap();
+        if let Some(tx) = senders.get(job_id) {
+            // Try to send, return true only if successful
+            tx.try_send(event).is_ok()
+        } else {
+            // Channel doesn't exist - not an error, stdout has the narration
+            false
+        }
+    }
+
     /// Take the receiver for a specific job's SSE stream.
     ///
     /// TEAM-200: Keeper calls this with job_id to get isolated stream.
@@ -296,6 +339,57 @@ pub fn send(fields: &NarrationFields) {
 
     let event = NarrationEvent::from(fields.clone());
     SSE_CHANNEL_REGISTRY.send_to_job(job_id, event);
+}
+
+/// Try to send a narration event to job-specific channel (returns success/failure).
+///
+/// TEAM-298: Phase 1 - Opportunistic SSE delivery
+///
+/// Returns `true` if event was successfully sent to SSE channel, `false` otherwise.
+/// **Failure is not an error** - narration always goes to stdout regardless.
+///
+/// # Why Use This
+///
+/// This function makes the SSE delivery status visible to callers:
+/// - `true`: Event delivered to SSE stream (remote observability working)
+/// - `false`: Event not delivered to SSE (but stdout has it!)
+///
+/// # Behavior
+///
+/// Returns `false` if:
+/// - No `job_id` in fields (security: prevent leaks)
+/// - Channel doesn't exist (narration before channel creation - OK!)
+/// - Channel is full (backpressure)
+/// - Channel is closed (job already completed)
+///
+/// All `false` cases are valid - stdout always has the narration.
+///
+/// # Example
+/// ```rust,ignore
+/// use observability_narration_core::{n, sse_sink, NarrationContext, with_narration_context};
+///
+/// let job_id = "job-123";
+/// let ctx = NarrationContext::new().with_job_id(job_id);
+///
+/// with_narration_context(ctx, async {
+///     // Before channel creation (goes to stdout only)
+///     n!("early", "Early narration");  // → stdout ✅, SSE ❌
+///     
+///     // Create channel
+///     sse_sink::create_job_channel(job_id.to_string(), 1000);
+///     
+///     // After channel creation (goes to both!)
+///     n!("later", "Later narration");  // → stdout ✅, SSE ✅
+/// }).await;
+/// ```
+pub fn try_send(fields: &NarrationFields) -> bool {
+    // TEAM-298: Early return if no job_id (security: prevent leaks)
+    let Some(job_id) = &fields.job_id else {
+        return false;  // No job_id = can't route to SSE
+    };
+
+    let event = NarrationEvent::from(fields.clone());
+    SSE_CHANNEL_REGISTRY.try_send_to_job(job_id, event)
 }
 
 /// Take the receiver for a specific job's SSE stream.

@@ -13,6 +13,9 @@ tokio::task_local! {
 pub struct NarrationContext {
     pub job_id: Option<String>,
     pub correlation_id: Option<String>,
+    // TEAM-300: Phase 2 - Add actor support
+    // Actor identifies which component is narrating (e.g., "qn-router", "hive-mgr")
+    pub actor: Option<&'static str>,
 }
 
 impl NarrationContext {
@@ -27,6 +30,12 @@ impl NarrationContext {
 
     pub fn with_correlation_id(mut self, correlation_id: impl Into<String>) -> Self {
         self.correlation_id = Some(correlation_id.into());
+        self
+    }
+
+    // TEAM-300: Phase 2 - Add actor builder
+    pub fn with_actor(mut self, actor: &'static str) -> Self {
+        self.actor = Some(actor);
         self
     }
 }

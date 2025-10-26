@@ -9,7 +9,9 @@
 
 ## Mission
 
-Enable rbee-keeper to spawn queen/hive processes and display their stdout to the user in real-time. Completes the end-to-end narration flow.
+Enable rbee-keeper to spawn queen/hive processes and display their stdout to the user in real-time. Keeper subscribes to SSE stream and displays to terminal (single-user). Completes the end-to-end narration flow.
+
+**CRITICAL:** Keeper displays via SSE subscription, NOT via stderr (see PRIVACY_ATTACK_SURFACE_ANALYSIS.md)
 
 ---
 
@@ -64,12 +66,65 @@ tokio::spawn(async move {
 
 ## Implementation Tasks
 
-### Task 1: Update Keeper Queen Lifecycle
+### Task 1: Create Display Module
+
+**New File:** `bin/00_rbee_keeper/src/display.rs`
+
+```rust
+use observability_narration_core::sse_sink::NarrationEvent;
+use tokio::sync::mpsc;
+
+/// Display narration events to terminal
+///
+/// TEAM-301: Keeper subscribes to SSE and displays to terminal.
+/// This code ONLY exists in keeper (single-user CLI).
+/// Daemons do NOT have this code (secure by design).
+pub async fn display_narration_stream(mut rx: mpsc::Receiver<NarrationEvent>) {
+    while let Some(event) = rx.recv().await {
+        // Display to keeper's terminal (single-user, no privacy issue)
+        eprintln!("{}", event.formatted);
+    }
+}
+```
+
+### Task 2: Setup Keeper Display in Main
+
+**File:** `bin/00_rbee_keeper/src/main.rs`
+
+```rust
+use observability_narration_core::{sse_sink, NarrationContext, with_narration_context};
+use crate::display::display_narration_stream;
+
+#[tokio::main]
+async fn main() -> Result<()> {
+    // TEAM-301: Create keeper's display channel
+    let keeper_job_id = "keeper-display";
+    sse_sink::create_job_channel(keeper_job_id.to_string(), 1000);
+    let rx = sse_sink::take_job_receiver(keeper_job_id)
+        .expect("Failed to create keeper display channel");
+    
+    // TEAM-301: Spawn display task
+    tokio::spawn(async move {
+        display_narration_stream(rx).await;
+    });
+    
+    // TEAM-301: Set narration context for keeper
+    let ctx = NarrationContext::new().with_job_id(keeper_job_id);
+    
+    // TEAM-301: Run keeper with narration context
+    with_narration_context(ctx, async {
+        run_keeper().await
+    }).await
+}
+```
+
+### Task 3: Update Keeper Queen Lifecycle
 
 **File:** `bin/00_rbee_keeper/src/handlers/queen.rs` (or similar)
 
 ```rust
 pub async fn start_queen() -> Result<()> {
+    // TEAM-301: Narration goes to keeper's SSE channel, then displayed to terminal
     n!("queen_start", "Starting queen-rbee...");
     
     let mut command = Command::new("queen-rbee");

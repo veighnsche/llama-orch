@@ -9,8 +9,10 @@
 ## Quick Navigation
 
 - **[MASTERPLAN.md](./MASTERPLAN.md)** - Complete overview, vision, timeline
+- **🚨 [PRIVACY_FIX_FINAL_APPROACH.md](./PRIVACY_FIX_FINAL_APPROACH.md)** - **READ THIS FIRST!** Privacy fix decision
+- **[PRIVACY_ATTACK_SURFACE_ANALYSIS.md](./PRIVACY_ATTACK_SURFACE_ANALYSIS.md)** - Why complete removal is required
 - **[TEAM_297_PHASE_0_API_REDESIGN.md](./TEAM_297_PHASE_0_API_REDESIGN.md)** - Week 1: Macro API
-- **[TEAM_298_PHASE_1_SSE_OPTIONAL.md](./TEAM_298_PHASE_1_SSE_OPTIONAL.md)** - Week 2: SSE Optional
+- **[TEAM_298_PHASE_1_SSE_OPTIONAL.md](./TEAM_298_PHASE_1_SSE_OPTIONAL.md)** - Week 2: SSE Optional + Privacy Fix
 - **[TEAM_299_PHASE_2_THREAD_LOCAL_CONTEXT.md](./TEAM_299_PHASE_2_THREAD_LOCAL_CONTEXT.md)** - Week 3: Context
 - **[TEAM_300_PHASE_3_PROCESS_CAPTURE.md](./TEAM_300_PHASE_3_PROCESS_CAPTURE.md)** - Week 4: Process Capture
 - **[TEAM_301_PHASE_4_KEEPER_LIFECYCLE.md](./TEAM_301_PHASE_4_KEEPER_LIFECYCLE.md)** - Week 5: Keeper Lifecycle
@@ -55,11 +57,12 @@ n!("worker_spawn",
 
 // Benefits:
 // - Concise (1 line for 90% of cases)
-// - Resilient (SSE optional, stdout always works)
+// - Resilient (SSE optional)
 // - Automatic (job_id from context)
 // - Standard (uses Rust's format!())
 // - Flexible (3 modes, runtime configurable)
 // - Complete (process capture works)
+// - SECURE (job-scoped, no privacy leaks)
 ```
 
 ---
@@ -75,13 +78,15 @@ n!("worker_spawn",
 - Use Rust's `format!()` directly
 - **Result:** 80% less code for simple cases
 
-### Phase 1: SSE Optional (TEAM-298)
-**Make narration resilient**
+### Phase 1: SSE Optional + Privacy Fix (TEAM-298)
+**Make narration resilient AND secure**
 
-- SSE delivery is opportunistic
-- Stdout always works
-- No race conditions
-- **Result:** Narration never fails
+- ⚠️ **CRITICAL:** Remove stderr completely from narration-core
+- No exploitable code paths (security by design)
+- SSE is PRIMARY output (job-scoped, secure)
+- Keeper displays via separate SSE subscription
+- Multi-tenant isolation (job-scoped only)
+- **Result:** Narration never fails + zero attack surface
 
 ### Phase 2: Thread-Local Context (TEAM-299)
 **Eliminate manual job_id**

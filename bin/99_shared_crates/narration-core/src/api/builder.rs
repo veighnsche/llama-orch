@@ -122,31 +122,32 @@ impl Narration {
 
     /// Set the human-readable description.
     ///
-    /// Supports format string interpolation with `{}`, `{0}`, `{1}`, `{2}`, etc.
+    /// TEAM-297: SIMPLIFIED - No more {0}, {1} replacement!
+    /// Use Rust's format!() macro before calling this method, or use the n!() macro.
     ///
-    /// # TEAM-191: Format String Interpolation
-    /// Use `{N}` to reference context values by index!
-    /// - `{}` or `{0}` = first context (from `.context()`)
-    /// - `{1}` = second context
-    /// - `{2}` = third context, etc.
+    /// TEAM-191: Legacy .context() interpolation still supported for backward compatibility
     ///
-    /// # Example
+    /// # Example (New way with n! macro)
+    /// ```rust,ignore
+    /// use observability_narration_core::n;
+    /// n!("start", "✅ Queen started on {}, port {}", url, port);
+    /// ```
+    ///
+    /// # Example (Old way with builder - still works)
     /// ```rust,ignore
     /// Narration::new("queen-rbee", "start", "queen-rbee")
     ///     .context("http://localhost:8080")
     ///     .context("8080")
-    ///     .human("✅ Queen started on {}, port {1}")  // {} = {0}
+    ///     .human("✅ Queen started on {}, port {1}")  // Legacy {0}, {1} syntax
     ///     .emit();
     /// ```
-    ///
-    /// This field is automatically redacted for secrets.
     pub fn human(mut self, msg: impl Into<String>) -> Self {
         let mut msg = msg.into();
-        // TEAM-191: Replace {N} with context values
+        // TEAM-191: Replace {N} with context values (legacy backward compatibility)
         for (i, value) in self.context_values.iter().enumerate() {
             msg = msg.replace(&format!("{{{}}}", i), value);
         }
-        // TEAM-191: Replace {} with first context value (if exists)
+        // TEAM-191: Replace {} with first context value (legacy backward compatibility)
         if let Some(first) = self.context_values.first() {
             msg = msg.replace("{}", first);
         }
@@ -245,19 +246,29 @@ impl Narration {
 
     /// Set the cute narration message (requires `cute-mode` feature).
     ///
-    /// Supports format string interpolation with `{}`, `{0}`, `{1}`, `{2}`, etc.
+    /// TEAM-297: SIMPLIFIED - Use n!() macro for format strings!
     ///
-    /// # TEAM-191: Format String Interpolation
-    /// Use `{N}` to reference context values by index!
-    /// `{}` or `{0}` = first context
+    /// # Example (New way with n! macro)
+    /// ```rust,ignore
+    /// use observability_narration_core::n;
+    /// n!(cute: "start", "🐝 Cute message {}", var);
+    /// ```
+    ///
+    /// # Example (Old way - still works for backward compatibility)
+    /// ```rust,ignore
+    /// Narration::new("queen-rbee", "start", "queen-rbee")
+    ///     .context("value")
+    ///     .cute("🐝 Message {}")  // Legacy syntax
+    ///     .emit();
+    /// ```
     #[cfg(feature = "cute-mode")]
     pub fn cute(mut self, msg: impl Into<String>) -> Self {
         let mut msg = msg.into();
-        // TEAM-191: Replace {N} with context values
+        // TEAM-191: Replace {N} with context values (legacy backward compatibility)
         for (i, value) in self.context_values.iter().enumerate() {
             msg = msg.replace(&format!("{{{}}}", i), value);
         }
-        // TEAM-191: Replace {} with first context value (if exists)
+        // TEAM-191: Replace {} with first context value (legacy backward compatibility)
         if let Some(first) = self.context_values.first() {
             msg = msg.replace("{}", first);
         }
@@ -267,18 +278,28 @@ impl Narration {
 
     /// Set the story narration message.
     ///
-    /// Supports format string interpolation with `{}`, `{0}`, `{1}`, `{2}`, etc.
+    /// TEAM-297: SIMPLIFIED - Use n!() macro for format strings!
     ///
-    /// # TEAM-191: Format String Interpolation
-    /// Use `{N}` to reference context values by index!
-    /// `{}` or `{0}` = first context
+    /// # Example (New way with n! macro)
+    /// ```rust,ignore
+    /// use observability_narration_core::n;
+    /// n!(story: "start", "'Hello,' said {}", name);
+    /// ```
+    ///
+    /// # Example (Old way - still works for backward compatibility)
+    /// ```rust,ignore
+    /// Narration::new("queen-rbee", "start", "queen-rbee")
+    ///     .context("value")
+    ///     .story("'Hello,' said {}")  // Legacy syntax
+    ///     .emit();
+    /// ```
     pub fn story(mut self, msg: impl Into<String>) -> Self {
         let mut msg = msg.into();
-        // TEAM-191: Replace {N} with context values
+        // TEAM-191: Replace {N} with context values (legacy backward compatibility)
         for (i, value) in self.context_values.iter().enumerate() {
             msg = msg.replace(&format!("{{{}}}", i), value);
         }
-        // TEAM-191: Replace {} with first context value (if exists)
+        // TEAM-191: Replace {} with first context value (legacy backward compatibility)
         if let Some(first) = self.context_values.first() {
             msg = msg.replace("{}", first);
         }

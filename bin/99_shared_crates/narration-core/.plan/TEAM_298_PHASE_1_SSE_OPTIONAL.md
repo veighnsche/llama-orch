@@ -1,15 +1,30 @@
-# TEAM-298: Phase 1 - Make SSE Optional
+# TEAM-298: Phase 1 - SSE Optional + Privacy Fix
 
-**Status:** BLOCKED (Requires TEAM-297 completion)  
+**Status:** IN PROGRESS (TEAM-297 complete, privacy fix required)  
 **Estimated Duration:** 1 week  
 **Dependencies:** TEAM-297 (Phase 0 API Redesign)  
-**Risk Level:** Low (non-breaking changes)
+**Risk Level:** HIGH (privacy-critical, security fix)
+
+---
+
+## 🚨 CRITICAL: Privacy Violation Discovered
+
+**TEAM-297 implementation has CRITICAL privacy violation!**
+
+See: [PRIVACY_FIX_REQUIRED.md](./PRIVACY_FIX_REQUIRED.md)
+
+**Problem:** Global stderr output leaks narration between jobs (multi-tenant data leak)
+
+**MUST FIX IMMEDIATELY in Phase 1!**
 
 ---
 
 ## Mission
 
-Make SSE delivery optional for narration events. Narration works even if SSE channels don't exist, with stdout as primary output and SSE as opportunistic enhancement.
+1. **Fix privacy violation** - Remove global stderr output
+2. **Make SSE optional** - Narration works without channels
+3. **Add keeper mode** - Single-user CLI can print to terminal
+4. **Ensure isolation** - Job-scoped narration only
 
 ---
 
@@ -17,35 +32,50 @@ Make SSE delivery optional for narration events. Narration works even if SSE cha
 
 ### Required Research
 
-1. **Read TEAM-297 Handoff** - Understand new `n!()` macro and mode system
-2. **Read SSE Sink** - `src/sse_sink.rs` (understand current channel system)
-3. **Find All create_job_channel() Calls** - Grep and document all locations
-4. **Understand Failure Mode** - What happens when channel doesn't exist now
-5. **Create Research Summary** - `.plan/TEAM_298_RESEARCH_SUMMARY.md`
+1. **Read PRIVACY_FIX_REQUIRED.md** - Understand privacy violation
+2. **Read TEAM-297 Handoff** - Understand new `n!()` macro and mode system
+3. **Read SSE Sink** - `src/sse_sink.rs` (understand current channel system)
+4. **Analyze stderr usage** - Where does `eprintln!()` get called?
+5. **Plan keeper mode** - How to conditionally enable stderr
+6. **Create Research Summary** - `.plan/TEAM_298_RESEARCH_SUMMARY.md`
 
 **DO NOT CODE UNTIL RESEARCH IS COMPLETE!**
 
 ---
 
-## Problem: Fragile SSE Dependencies
+## Problem 1: Privacy Violation (CRITICAL!)
+
+```rust
+// TEAM-297 implementation:
+eprintln!("[{:<10}] {:<15}: {}", fields.actor, fields.action, message);
+// ↑ ALL narration goes to global stderr!
+
+// Multi-tenant scenario:
+// User A: rbee infer --prompt "secret data"
+// User B: rbee infer --prompt "other data"
+// → Both see each other's narration! PRIVACY LEAK!
+```
+
+## Problem 2: Fragile SSE Dependencies
 
 ```rust
 // Current: MUST create channel first
 create_job_channel(job_id.clone(), 1000);  // ← Forget this = broken!
 n!("start", "Starting");  // ← Works only if channel exists
-
-// If you reverse the order:
-n!("start", "Starting");  // ← DROPPED! (no channel yet)
-create_job_channel(job_id.clone(), 1000);  // ← Too late!
 ```
 
-## Solution: Opportunistic SSE
+## Solution: Privacy + Opportunistic SSE
 
 ```rust
-// After: Works regardless!
-n!("start", "Starting");  // → stdout always works
-create_job_channel(job_id.clone(), 1000);  // ← Optional, for SSE
-n!("progress", "Still working");  // → Now goes to SSE too!
+// After: Secure AND resilient!
+n!("start", "Starting");  
+// → SSE if job_id + channel exists (job-scoped, secure)
+// → stderr ONLY in keeper mode (single-user)
+// → No global leaks!
+
+// Keeper mode (single-user CLI):
+std::env::set_var("RBEE_KEEPER_MODE", "1");
+n!("start", "Starting");  // → Can print to terminal (user's own)
 ```
 
 ---
@@ -119,9 +149,15 @@ pub fn macro_emit(
 }
 ```
 
-### Task 3: Update `narrate()` Function
+### Task 3: Remove stderr Completely (PRIVACY FIX!)
 
 **File:** `bin/99_shared_crates/narration-core/src/lib.rs`
+
+**⚠️ CRITICAL: Complete removal, not conditional!**
+
+Environment variables are exploitable. The ONLY secure solution is complete removal.
+
+See: [PRIVACY_ATTACK_SURFACE_ANALYSIS.md](./PRIVACY_ATTACK_SURFACE_ANALYSIS.md)
 
 ```rust
 pub fn narrate_at_level(fields: NarrationFields, level: NarrationLevel) {
@@ -136,16 +172,21 @@ pub fn narrate_at_level(fields: NarrationFields, level: NarrationLevel) {
         NarrationMode::Story => fields.story.as_ref().unwrap_or(&fields.human),
     };
 
-    // TEAM-298: ALWAYS emit to stderr (primary output)
-    eprintln!("[{:<10}] {:<15}: {}", fields.actor, fields.action, message);
+    // TEAM-298: REMOVED - No stderr in narration-core!
+    // This eliminates the attack surface completely.
+    // Keeper displays via separate SSE subscription (see Task 4).
+    
+    // OLD (INSECURE):
+    // eprintln!("[{:<10}] {:<15}: {}", fields.actor, fields.action, message);
+    
+    // NEW (SECURE):
+    // No stderr code path exists in narration-core.
+    // Cannot be exploited if code doesn't exist.
 
-    // TEAM-298: Try SSE (opportunistic - failure OK!)
+    // TEAM-298: SSE is PRIMARY and ONLY output
+    // Job-scoped, secure, no privacy leaks.
     if sse_sink::is_enabled() {
-        if let Some(ref job_id) = fields.job_id {
-            let event = NarrationEvent::from(fields.clone());
-            let _sent = sse_sink::try_send(job_id, event);
-            // Don't care if it failed - stdout already has it!
-        }
+        let _sent = sse_sink::try_send(&fields);
     }
 
     // Emit structured event for tracing subscribers
@@ -164,7 +205,114 @@ pub fn narrate_at_level(fields: NarrationFields, level: NarrationLevel) {
 }
 ```
 
-### Task 4: Add Tests
+**Defense in depth:**
+1. Code doesn't exist → can't be exploited
+2. SSE is job-scoped → no cross-job leaks
+3. Keeper displays separately → clear separation
+4. Tests use capture → no stderr dependency
+
+### Task 4: Add Keeper Display (Separate from Core)
+
+**Note:** This is for TEAM-301, documented here for completeness.
+
+**New File:** `bin/00_rbee_keeper/src/display.rs`
+
+```rust
+use observability_narration_core::sse_sink::NarrationEvent;
+use tokio::sync::mpsc;
+
+/// Display narration events to terminal
+///
+/// TEAM-298: This is ONLY in keeper (single-user CLI).
+/// Keeper subscribes to SSE and displays to terminal.
+/// This code does NOT exist in daemons (secure by design).
+pub async fn display_narration_stream(mut rx: mpsc::Receiver<NarrationEvent>) {
+    while let Some(event) = rx.recv().await {
+        // Display to keeper's terminal (single-user, no privacy issue)
+        eprintln!("{}", event.formatted);
+    }
+}
+```
+
+### Task 5: Add Privacy Tests (CRITICAL!)
+
+**New File:** `bin/99_shared_crates/narration-core/tests/privacy_isolation_tests.rs`
+
+```rust
+use observability_narration_core::*;
+use serial_test::serial;
+
+#[tokio::test]
+#[serial(sse_sink)]
+async fn test_multi_tenant_isolation() {
+    // TEAM-298: CRITICAL - Verify no cross-job data leaks
+    
+    let job_a = "user-a-secret-job";
+    let job_b = "user-b-secret-job";
+    
+    // Create separate SSE channels
+    sse_sink::create_job_channel(job_a.to_string(), 100);
+    sse_sink::create_job_channel(job_b.to_string(), 100);
+    
+    let mut rx_a = sse_sink::take_job_receiver(job_a).unwrap();
+    let mut rx_b = sse_sink::take_job_receiver(job_b).unwrap();
+    
+    // User A narration
+    let ctx_a = NarrationContext::new().with_job_id(job_a);
+    with_narration_context(ctx_a, async {
+        n!("secret", "User A's secret API key: sk-abc123");
+    }).await;
+    
+    // User B narration
+    let ctx_b = NarrationContext::new().with_job_id(job_b);
+    with_narration_context(ctx_b, async {
+        n!("secret", "User B's secret API key: sk-xyz789");
+    }).await;
+    
+    // Verify isolation
+    let event_a = rx_a.recv().await.unwrap();
+    let event_b = rx_b.recv().await.unwrap();
+    
+    assert_eq!(event_a.human, "User A's secret API key: sk-abc123");
+    assert_eq!(event_b.human, "User B's secret API key: sk-xyz789");
+    
+    // CRITICAL: User A never sees User B's data!
+    // CRITICAL: User B never sees User A's data!
+}
+
+#[test]
+fn test_no_stderr_ever() {
+    // TEAM-298: CRITICAL - Verify narration-core NEVER prints to stderr
+    
+    let adapter = CaptureAdapter::install();
+    n!("test", "No stderr output");
+    
+    // Verify captured but NOT printed to stderr
+    let captured = adapter.captured();
+    assert_eq!(captured.len(), 1);
+    
+    // Visual verification: no stderr output (secure!)
+}
+
+#[test]
+fn test_all_tests_use_capture_adapter() {
+    // TEAM-298: All tests must use capture adapter
+    // No test should depend on stderr
+    
+    let adapter = CaptureAdapter::install();
+    
+    n!("test1", "Test 1");
+    n!("test2", "Test 2");
+    n!("test3", "Test 3");
+    
+    let captured = adapter.captured();
+    assert_eq!(captured.len(), 3);
+    
+    // All captured, none printed to stderr
+}
+```
+
+### Task 6: Add SSE Optional Tests
 
 **New File:** `bin/99_shared_crates/narration-core/tests/sse_optional_tests.rs`
 
@@ -235,22 +383,39 @@ async fn test_sse_still_works_when_available() {
 
 ## Verification Checklist
 
+### Privacy (CRITICAL!)
+- [ ] stderr completely removed from narration-core
+- [ ] No eprintln code path exists
+- [ ] Multi-tenant isolation test passes
+- [ ] No cross-job data leaks
+- [ ] All tests use capture adapter
+
+### SSE Optional
 - [ ] `try_send()` returns false when no channel
 - [ ] `try_send()` returns true when channel exists
 - [ ] Narration works without channel (no panic)
-- [ ] `narrate()` always emits to stderr
 - [ ] SSE still works when channel exists
+
+### General
 - [ ] No regressions in existing tests
-- [ ] New tests pass
+- [ ] New tests pass (privacy + SSE optional)
+- [ ] Keeper mode flag works correctly
 
 ---
 
 ## Success Criteria
 
+### Privacy (CRITICAL!)
+1. **No multi-tenant leaks** - Job narration isolated to SSE channels
+2. **No stderr in narration-core** - Code physically removed
+3. **Keeper displays separately** - Via SSE subscription
+4. **Security by design** - Attack surface eliminated
+
+### Resilience
 1. **Narration always works** - Even without SSE channels
-2. **Stdout is primary** - Always available
-3. **SSE is bonus** - If channel exists, great! If not, no problem
-4. **Backward compatible** - Existing code continues working
+2. **SSE is primary** - Job-scoped, secure output
+3. **Keeper mode is secondary** - For single-user CLI only
+4. **Backward compatible** - Existing code continues working (with privacy fix)
 
 ---
 
