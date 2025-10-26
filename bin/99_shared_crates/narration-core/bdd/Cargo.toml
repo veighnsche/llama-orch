@@ -14,6 +14,8 @@ path = "src/main.rs"
 observability-narration-core = { path = "..", features = ["test-support", "otel"] }
 cucumber = { version = "0.20", features = ["macros"] }
 tokio = { workspace = true }
+futures = { workspace = true }
+uuid = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }
 anyhow = { workspace = true }

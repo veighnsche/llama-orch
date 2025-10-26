@@ -1,3 +1,4 @@
+# TEAM-307: Updated for n!() macro (levels work with n!() macro)
 Feature: Narration Levels
   As a developer
   I want multiple logging levels

@@ -21,6 +21,9 @@ anyhow = "1.0"  # Error handling
 # TEAM-305: For job cancellation and timeout
 tokio-util = "0.7"  # CancellationToken (in default features)
 
+# TEAM-305: Interface trait to break circular dependency
+job-registry-interface = { path = "../job-registry-interface" }
+
 [dev-dependencies]
 tokio = { version = "1", features = ["rt", "macros"] }
 base64 = "0.21"

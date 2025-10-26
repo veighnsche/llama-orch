@@ -1,3 +1,4 @@
+# TEAM-307: Updated for n!() macro and context propagation
 Feature: Cute Mode Narration
   As a developer debugging distributed systems
   I want whimsical children's book narration
@@ -7,11 +8,16 @@ Feature: Cute Mode Narration
     Given the narration capture adapter is installed
     And the capture buffer is empty
 
-  Scenario: Basic cute narration
-    When I narrate with cute field "Tucked the model safely into GPU0's cozy VRAM blanket! 🛏️✨"
+  Scenario: Basic cute narration with n!() macro
+    When I emit narration with n!("deploy", cute: "Tucked the model safely into GPU0's cozy VRAM blanket! 🛏️✨")
     Then the captured narration should include cute field
     And the cute field should contain "cozy VRAM blanket"
     And the cute field should contain "🛏️"
+
+  Scenario: Cute narration with simple n!() macro
+    When I emit narration with n!("action", "Human message")
+    Then the captured narration should have 1 event
+    And the human field should contain "Human message"
 
   Scenario: Cute narration with emoji
     When I narrate with:
@@ -49,10 +55,18 @@ Feature: Cute Mode Narration
     Then the cute field should be present
     And the cute field length should be at most 150
 
-  Scenario: Cute mode with correlation ID
-    Given a correlation ID "req-cute-123"
-    When I narrate with cute field "Processing request cutely! 🎀" and correlation ID
-    Then the captured narration should include correlation ID "req-cute-123"
+  Scenario: Cute mode with context (job_id)
+    Given a narration context with job_id "job-cute-123"
+    When I emit narration with n!("process", cute: "Processing cutely! 🎀") in context
+    Then the captured narration should have 1 event
+    And event 1 should have job_id "job-cute-123"
+    And the cute field should contain "cutely"
+
+  Scenario: Cute mode with correlation ID in context
+    Given a narration context with correlation_id "req-cute-456"
+    When I emit narration with n!("process", cute: "Processing request cutely! 🎀") in context
+    Then the captured narration should have 1 event
+    And event 1 should have correlation_id "req-cute-456"
     And the cute field should contain "cutely"
 
   Scenario: Cute narration with WARN level

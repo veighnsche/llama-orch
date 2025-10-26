@@ -316,6 +316,76 @@ impl<T> Clone for JobRegistry<T> {
 }
 
 // ============================================================================
+// TEAM-305: Implement JobRegistryInterface Trait
+// ============================================================================
+
+impl<T> job_registry_interface::JobRegistryInterface<T> for JobRegistry<T>
+where
+    T: Send + 'static,
+{
+    fn create_job(&self) -> String {
+        self.create_job()
+    }
+    
+    fn set_payload(&self, job_id: &str, payload: serde_json::Value) {
+        self.set_payload(job_id, payload)
+    }
+    
+    fn take_payload(&self, job_id: &str) -> Option<serde_json::Value> {
+        self.take_payload(job_id)
+    }
+    
+    fn has_job(&self, job_id: &str) -> bool {
+        self.has_job(job_id)
+    }
+    
+    fn get_job_state(&self, job_id: &str) -> Option<job_registry_interface::JobState> {
+        self.get_job_state(job_id).map(|state| match state {
+            JobState::Queued => job_registry_interface::JobState::Queued,
+            JobState::Running => job_registry_interface::JobState::Running,
+            JobState::Completed => job_registry_interface::JobState::Completed,
+            JobState::Failed(msg) => job_registry_interface::JobState::Failed(msg),
+            JobState::Cancelled => job_registry_interface::JobState::Cancelled,
+        })
+    }
+    
+    fn update_state(&self, job_id: &str, state: job_registry_interface::JobState) {
+        let local_state = match state {
+            job_registry_interface::JobState::Queued => JobState::Queued,
+            job_registry_interface::JobState::Running => JobState::Running,
+            job_registry_interface::JobState::Completed => JobState::Completed,
+            job_registry_interface::JobState::Failed(msg) => JobState::Failed(msg),
+            job_registry_interface::JobState::Cancelled => JobState::Cancelled,
+        };
+        self.update_state(job_id, local_state)
+    }
+    
+    fn set_token_receiver(&self, job_id: &str, receiver: tokio::sync::mpsc::UnboundedReceiver<T>) {
+        self.set_token_receiver(job_id, receiver)
+    }
+    
+    fn take_token_receiver(&self, job_id: &str) -> Option<tokio::sync::mpsc::UnboundedReceiver<T>> {
+        self.take_token_receiver(job_id)
+    }
+    
+    fn remove_job(&self, job_id: &str) {
+        self.remove_job(job_id);
+    }
+    
+    fn job_count(&self) -> usize {
+        self.job_count()
+    }
+    
+    fn job_ids(&self) -> Vec<String> {
+        self.job_ids()
+    }
+    
+    fn cancel_job(&self, job_id: &str) -> bool {
+        self.cancel_job(job_id)
+    }
+}
+
+// ============================================================================
 // TEAM-186: Execute and Stream Helper
 // TEAM-305: Added timeout and cancellation support
 // ============================================================================

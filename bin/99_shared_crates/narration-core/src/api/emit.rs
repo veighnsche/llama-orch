@@ -5,11 +5,8 @@
 
 use crate::core::{NarrationFields, NarrationLevel};
 use crate::mode;
-use crate::output::sse_sink;
+use crate::output::{capture, sse_sink}; // TEAM-306: Added capture for notify
 use tracing::{event, Level};
-
-#[cfg(any(test, feature = "test-support"))]
-use crate::output::capture;
 
 /// Internal macro to emit a narration event at a specific level.
 /// Reduces duplication across TRACE/DEBUG/INFO/WARN/ERROR levels.
@@ -125,10 +122,8 @@ pub fn narrate_at_level(fields: NarrationFields, level: NarrationLevel) {
     }
 
     // Notify capture adapter if active (ORCH-3306)
-    #[cfg(any(test, feature = "test-support"))]
-    {
-        capture::notify(fields);
-    }
+    // TEAM-306: Always enabled - integration tests need this
+    capture::notify(fields);
 }
 
 /// Emit INFO-level narration (default)

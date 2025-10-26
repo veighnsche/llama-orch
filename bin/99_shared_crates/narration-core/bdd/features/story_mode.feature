@@ -1,3 +1,4 @@
+# TEAM-307: Updated for n!() macro and context propagation
 Feature: Story Mode Narration
   As a developer debugging distributed systems
   I want dialogue-based narration
@@ -7,11 +8,18 @@ Feature: Story Mode Narration
     Given the narration capture adapter is installed
     And the capture buffer is empty
 
-  Scenario: Basic story narration with dialogue
-    When I narrate with story field "\"Do you have 2GB VRAM?\" asked orchestratord. \"Yes!\" replied pool-managerd."
+  Scenario: Basic story narration with n!() macro
+    When I emit narration with n!("check", story: "\"Do you have 2GB VRAM?\" asked orchestratord. \"Yes!\" replied pool-managerd.")
     Then the captured narration should include story field
     And the story field should contain "asked orchestratord"
     And the story field should contain "replied pool-managerd"
+
+  Scenario: Story narration with context
+    Given a narration context with job_id "job-story-123"
+    When I emit narration with n!("dialogue", story: "\"Starting job!\" announced the system.") in context
+    Then the captured narration should have 1 event
+    And event 1 should have job_id "job-story-123"
+    And the story field should contain "announced the system"
 
   Scenario: Story mode is optional
     When I narrate without story field
