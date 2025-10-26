@@ -6,7 +6,7 @@
 //! - [CANCELLED] signal emission
 //! - State transitions to Cancelled
 
-use job_server::{JobRegistry, execute_and_stream_with_timeout, JobState};
+use job_server::{JobRegistry, execute_and_stream, JobState}; // TEAM-312: Renamed from execute_and_stream_with_timeout
 use std::sync::Arc;
 use std::time::Duration;
 use futures::StreamExt;
@@ -27,7 +27,7 @@ async fn test_job_timeout() {
     tx.send("token1".to_string()).unwrap();
     
     // Create stream with 100ms timeout
-    let stream = execute_and_stream_with_timeout(
+    let stream = execute_and_stream(
         job_id.clone(),
         registry.clone(),
         |_, _| async {
@@ -71,7 +71,7 @@ async fn test_job_completes_before_timeout() {
     tx.send("token1".to_string()).unwrap();
     
     // Create stream with 500ms timeout
-    let stream = execute_and_stream_with_timeout(
+    let stream = execute_and_stream(
         job_id.clone(),
         registry.clone(),
         |_, _| async {
@@ -114,7 +114,7 @@ async fn test_job_cancellation() {
     tx.send("token1".to_string()).unwrap();
     
     // Create stream (no timeout)
-    let stream = execute_and_stream_with_timeout(
+    let stream = execute_and_stream(
         job_id.clone(),
         registry.clone(),
         |_, _| async {
@@ -227,7 +227,7 @@ async fn test_timeout_with_no_receiver() {
     // Don't set receiver
     
     // Create stream with 100ms timeout
-    let stream = execute_and_stream_with_timeout(
+    let stream = execute_and_stream(
         job_id.clone(),
         registry.clone(),
         |_, _| async {
@@ -261,7 +261,7 @@ async fn test_cancellation_with_no_receiver() {
     // Don't set receiver
     
     // Create stream
-    let stream = execute_and_stream_with_timeout(
+    let stream = execute_and_stream(
         job_id.clone(),
         registry.clone(),
         |_, _| async {
@@ -304,7 +304,7 @@ async fn test_multiple_tokens_then_timeout() {
     }
     
     // Create stream with timeout
-    let stream = execute_and_stream_with_timeout(
+    let stream = execute_and_stream(
         job_id.clone(),
         registry.clone(),
         |_, _| async {

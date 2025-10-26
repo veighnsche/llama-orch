@@ -3,7 +3,7 @@
 
 use anyhow::{Context, Result};
 use cargo_toml::Manifest;
-use observability_narration_core::{n, nd};
+use observability_narration_core::n;
 use observability_narration_macros::narrate_fn;
 use std::collections::HashSet;
 use std::path::{Path, PathBuf};
@@ -45,12 +45,7 @@ impl DependencyParser {
         n!("parse_batch", "Parsed {} deps · {} local path · {} transitive", 
             toml_files.len(), local_deps, transitive_deps);
         
-        // TEAM-311: Debug-level detail (only visible with RBEE_LOG=debug)
-        for (path, local, trans) in &toml_files {
-            let rel_path = path.strip_prefix(workspace_root).unwrap_or(path);
-            nd!("parse_detail", "{} · local={} · transitive={}", 
-                rel_path.display(), local, trans);
-        }
+        // TEAM-312: Removed nd!() debug logging (entropy)
         
         let elapsed = start.elapsed().as_millis();
         n!("summary", "✅ Deps ok · {}ms", elapsed);

@@ -1,7 +1,8 @@
-//! Job Registry Interface
+//! Jobs Contract
 //!
 //! TEAM-305: Interface trait for breaking circular dependency between
 //! job-server and narration-core.
+//! TEAM-312: Renamed from job-registry-interface to jobs-contract and moved to contracts/
 //!
 //! ## Problem
 //! - job-server depends on narration-core (for narration events)
@@ -9,9 +10,9 @@
 //! - This creates a circular dependency
 //!
 //! ## Solution
-//! - Extract JobRegistry interface to this crate
+//! - Extract JobRegistry interface to this contract
 //! - job-server implements the trait
-//! - narration-core test binaries depend on interface (not job-server)
+//! - narration-core test binaries depend on contract (not job-server)
 //! - No circular dependency!
 
 use tokio::sync::mpsc::UnboundedReceiver;

@@ -1,9 +1,9 @@
 [package]
-name = "job-registry-interface"
+name = "jobs-contract"
 version = "0.1.0"
 edition = "2021"
-authors = ["TEAM-305"]
-description = "Interface trait for job registry to break circular dependency"
+authors = ["TEAM-305", "TEAM-312"]
+description = "Job registry contract for breaking circular dependency"
 license = "GPL-3.0-or-later"
 publish = false
 

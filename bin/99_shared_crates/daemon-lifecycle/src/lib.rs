@@ -168,6 +168,7 @@ pub mod manager;
 pub mod shutdown;
 pub mod status;
 pub mod timeout;
+pub mod uninstall;
 
 // TEAM-259: Re-export main types and functions
 // TEAM-276: Added UninstallConfig export
@@ -178,12 +179,11 @@ pub mod timeout;
 pub use ensure::{ensure_daemon_running, ensure_daemon_with_handle};
 pub use get::{get_daemon, GettableConfig};
 pub use health::{is_daemon_healthy, poll_until_healthy, HealthPollConfig};
-pub use install::{
-    install_daemon, uninstall_daemon, InstallConfig, InstallResult, UninstallConfig,
-};
+pub use install::{install_daemon, InstallConfig, InstallResult, UninstallConfig};
 pub use lifecycle::{start_http_daemon, stop_http_daemon, HttpDaemonConfig};
 pub use list::{list_daemons, ListableConfig};
 pub use manager::{spawn_daemon, DaemonManager};
 pub use shutdown::{force_shutdown, graceful_shutdown, ShutdownConfig};
 pub use status::{check_daemon_status, StatusRequest, StatusResponse};
 pub use timeout::{timeout_after, with_timeout, TimeoutConfig};
+pub use uninstall::uninstall_daemon;

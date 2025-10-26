@@ -4,12 +4,11 @@
 //! TEAM-262: Uninstall queen binary
 //! TEAM-263: Implemented uninstall logic
 //! TEAM-296: Enhanced to check if installed first (delegates to daemon-lifecycle)
+//! TEAM-312: Migrated to n!() macro
 
 use anyhow::Result;
 use daemon_lifecycle::{uninstall_daemon, UninstallConfig};
-use observability_narration_core::NarrationFactory;
-
-const NARRATE: NarrationFactory = NarrationFactory::new("queen-life");
+use observability_narration_core::n;
 
 /// Uninstall queen-rbee binary from ~/.local/bin
 ///
@@ -21,13 +20,16 @@ const NARRATE: NarrationFactory = NarrationFactory::new("queen-life");
 /// 3. Remove binary file (via daemon-lifecycle)
 ///
 /// # Arguments
-/// * `queen_url` - Base URL for queen (e.g., "http://localhost:8500") for health check
+/// * `queen_url` - Base URL for queen (e.g., "http://localhost:7833") for health check
 ///
-/// # Returns
-/// * `Ok(())` - Uninstallation successful
-/// * `Err` - Not installed, queen is running, or removal failed
+/// # Errors
+/// This function will return an error if:
+/// * HOME environment variable is not set
+/// * Queen is not installed at ~/.local/bin/queen-rbee
+/// * Queen is currently running (must be stopped first)
+/// * Failed to remove the binary file
 pub async fn uninstall_queen(queen_url: &str) -> Result<()> {
-    NARRATE.action("queen_uninstall").human("🗑️ Uninstalling queen-rbee...").emit();
+    n!("start", "🗑️ Uninstalling queen-rbee...");
 
     // Determine install location
     let home = std::env::var("HOME")?;
@@ -35,11 +37,7 @@ pub async fn uninstall_queen(queen_url: &str) -> Result<()> {
 
     // TEAM-296: Check if installed first
     if !install_path.exists() {
-        NARRATE
-            .action("queen_uninstall")
-            .human("❌ Queen not installed")
-            .error_kind("not_installed")
-            .emit();
+        n!("not_installed", "❌ Queen not installed");
         anyhow::bail!("Queen not installed. Nothing to uninstall.");
     }
 
@@ -54,6 +52,6 @@ pub async fn uninstall_queen(queen_url: &str) -> Result<()> {
 
     uninstall_daemon(config).await?;
 
-    NARRATE.action("queen_uninstall").human("✅ Queen uninstalled successfully!").emit();
+    n!("done", "✅ Queen uninstalled successfully!");
     Ok(())
 }

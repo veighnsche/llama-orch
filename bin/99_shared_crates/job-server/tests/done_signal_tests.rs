@@ -32,7 +32,8 @@ async fn test_execute_and_stream_sends_done_on_success() {
     let stream = execute_and_stream(
         job_id.clone(),
         registry.clone(),
-        |_, _| async { Ok(()) }  // Successful execution
+        |_, _| async { Ok(()) },  // Successful execution
+        None  // TEAM-312: No timeout
     ).await;
     
     let results: Vec<String> = stream.collect().await;
@@ -62,7 +63,8 @@ async fn test_execute_and_stream_sends_error_on_failure() {
         |_, _| async { 
             // Fail immediately
             Err(anyhow::anyhow!("Test error"))
-        }
+        },
+        None  // TEAM-312: No timeout
     ).await;
     
     tx.send("token1".to_string()).unwrap();
@@ -97,7 +99,8 @@ async fn test_done_sent_only_once() {
     let stream = execute_and_stream(
         job_id.clone(),
         registry.clone(),
-        |_, _| async { Ok(()) }
+        |_, _| async { Ok(()) },
+        None  // TEAM-312: No timeout
     ).await;
     
     let results: Vec<String> = stream.collect().await;
@@ -121,7 +124,8 @@ async fn test_no_receiver_sends_done_immediately() {
     let stream = execute_and_stream(
         job_id.clone(),
         registry.clone(),
-        |_, _| async { Ok(()) }
+        |_, _| async { Ok(()) },
+        None  // TEAM-312: No timeout
     ).await;
     
     let results: Vec<String> = stream.collect().await;
@@ -148,7 +152,8 @@ async fn test_job_state_updated_on_success() {
     let stream = execute_and_stream(
         job_id.clone(),
         registry.clone(),
-        |_, _| async { Ok(()) }
+        |_, _| async { Ok(()) },
+        None  // TEAM-312: No timeout
     ).await;
     
     // Consume stream
@@ -179,7 +184,8 @@ async fn test_job_state_updated_on_failure() {
     let stream = execute_and_stream(
         job_id.clone(),
         registry.clone(),
-        |_, _| async { Err(anyhow::anyhow!("Test failure")) }
+        |_, _| async { Err(anyhow::anyhow!("Test failure")) },
+        None  // TEAM-312: No timeout
     ).await;
     
     // Consume stream
@@ -219,7 +225,8 @@ async fn test_multiple_tokens_then_done() {
     let stream = execute_and_stream(
         job_id.clone(),
         registry.clone(),
-        |_, _| async { Ok(()) }
+        |_, _| async { Ok(()) },
+        None  // TEAM-312: No timeout
     ).await;
     
     let results: Vec<String> = stream.collect().await;

@@ -85,7 +85,6 @@ impl RebuildChecker {
             let (files, newer) = Self::scan_directory(dir, binary_time)?;
 
             let rel_dir = dir.strip_prefix(&updater.workspace_root).unwrap_or(dir);
-            n!("is_dir_newer", "{} · files={} · newer={}", rel_dir.display(), files, newer);
 
             total_files += files;
             total_newer += newer;

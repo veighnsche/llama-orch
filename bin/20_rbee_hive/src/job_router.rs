@@ -86,9 +86,10 @@ pub async fn execute_job(
     let registry = state.registry.clone();
     let state_clone = state.clone(); // TEAM-268: Clone full state for closure
 
+    // TEAM-312: Pass None for timeout (no timeout needed for hive operations)
     job_server::execute_and_stream(job_id, registry.clone(), move |job_id, payload| {
         route_operation(job_id, payload, state_clone.clone())
-    })
+    }, None)
     .await
 }
 

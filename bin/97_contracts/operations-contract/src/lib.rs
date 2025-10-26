@@ -75,6 +75,9 @@ pub enum Operation {
     // System-wide operations
     /// TEAM-190: Show live status of all hives and workers from registry
     Status,
+    
+    /// TEAM-312: Deep narration test through queen job server (like self-check but via SSE)
+    QueenCheck,
 
     // Hive operations
     // TEAM-278: DELETED HiveInstall, HiveUninstall, SshTest
@@ -151,6 +154,7 @@ impl Operation {
     pub fn name(&self) -> &'static str {
         match self {
             Operation::Status => "status", // TEAM-190
+            Operation::QueenCheck => "queen_check", // TEAM-312
             // TEAM-278: DELETED ssh_test, hive_install, hive_uninstall
             // TEAM-284: DELETED package_sync, package_status, package_install, package_uninstall, package_validate, package_migrate
             // TEAM-285: DELETED hive_start, hive_stop (localhost-only, no lifecycle management)

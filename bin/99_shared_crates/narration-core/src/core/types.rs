@@ -185,10 +185,9 @@ impl NarrationFields {
     /// ```
     pub fn format(&self) -> String {
         crate::format::format_message_with_fn(
-            self.actor,
             self.action,
             &self.human,
-            self.fn_name.as_deref()
+            self.fn_name.as_deref().unwrap_or("unknown")
         )
     }
 }

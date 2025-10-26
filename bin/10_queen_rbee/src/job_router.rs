@@ -26,7 +26,7 @@
 
 use anyhow::Result;
 use job_server::JobRegistry;
-use observability_narration_core::NarrationFactory;
+use observability_narration_core::{n, with_narration_context, NarrationContext};
 // TEAM-278: DELETED execute_hive_install, execute_hive_uninstall, execute_ssh_test
 // TEAM-285: DELETED execute_hive_start, execute_hive_stop (localhost-only, no lifecycle management)
 // TEAM-290: DELETED hive_lifecycle imports (queen no longer manages hives, rbee-keeper does via SSH)
@@ -39,8 +39,11 @@ use std::sync::Arc;
 use super::hive_forwarder; // TEAM-258: Generic forwarding for hive-managed operations
 // TEAM-284: DELETED daemon_sync import (SSH/remote operations removed)
 
-// TEAM-192: Narration factory for job router
-const NARRATE: NarrationFactory = NarrationFactory::new("qn-router");
+// TEAM-312: Migrated to n!() macro
+
+// TEAM-312: Queen-check handler module
+#[path = "handlers/queen_check.rs"]
+mod queen_check;
 
 /// State required for job routing and execution
 #[derive(Clone)]
@@ -70,12 +73,8 @@ pub async fn create_job(state: JobState, payload: serde_json::Value) -> Result<J
     // TEAM-200: Create job-specific SSE channel for isolation
     observability_narration_core::sse_sink::create_job_channel(job_id.clone(), 1000);
 
-    NARRATE
-        .action("job_create")
-        .context(&job_id)
-        .job_id(&job_id) // ← TEAM-200: Include job_id so narration routes correctly
-        .human("Job {} created, waiting for client connection")
-        .emit();
+    // TEAM-312: Use explicit actor since this is called before context is set
+    observability_narration_core::macro_emit_with_actor("job_create", &format!("Job {} created, waiting for client connection", job_id), None, None, Some("job-router"));
 
     Ok(JobResponse { job_id, sse_url })
 }
@@ -92,9 +91,10 @@ pub async fn execute_job(
     // TEAM-290: DELETED config clone (file-based config deprecated)
     let hive_registry = state.hive_registry.clone(); // TEAM-190
 
+    // TEAM-312: Pass None for timeout (no timeout needed for queen operations)
     job_server::execute_and_stream(job_id, registry.clone(), move |job_id, payload| {
         route_operation(job_id, payload, registry, hive_registry)
-    })
+    }, None)
     .await
 }
 
@@ -118,12 +118,7 @@ async fn route_operation(
 
     let operation_name = operation.name();
 
-    NARRATE
-        .action("route_job")
-        .context(operation_name)
-        .job_id(&job_id)
-        .human("Executing operation: {}")
-        .emit();
+    n!("route_job", "Executing operation: {}", operation_name);
 
     // ============================================================================
     // OPERATION ROUTING (Step 2 of 3-File Pattern)
@@ -151,29 +146,17 @@ async fn route_operation(
         Operation::Status => {
             // TEAM-190/275: Show live status of workers from registry
 
-            NARRATE
-                .action("status")
-                .job_id(&job_id)
-                .human("📊 Fetching live status from worker registry")
-                .emit();
+            n!("status", "📊 Fetching live status from worker registry");
 
             // Get all online workers (workers with recent heartbeats)
             let online_workers = state.hive_registry.list_online_workers();
 
             if online_workers.is_empty() {
-                NARRATE
-                    .action("status_empty")
-                    .job_id(&job_id)
-                    .human(
-                        "No online workers found.\n\
-                         \n\
-                         Workers must send heartbeats to appear here.\n\
-                         \n\
-                         To spawn a worker:\n\
-                         \n\
-                           ./rbee worker spawn --model <model> --device <device>",
-                    )
-                    .emit();
+                n!("status_empty", 
+                   "No online workers found.\n\n\
+                    Workers must send heartbeats to appear here.\n\n\
+                    To spawn a worker:\n\n  \
+                    ./rbee worker spawn --model <model> --device <device>");
                 return Ok(());
             }
 
@@ -190,13 +173,16 @@ async fn route_operation(
             }
 
             // Display as table
-            NARRATE
-                .action("status_result")
-                .job_id(&job_id)
-                .context(&online_workers.len().to_string())
-                .human("Live Status ({} worker(s)):")
-                .table(&serde_json::Value::Array(all_rows))
-                .emit();
+            n!("status_result", "Live Status ({} worker(s))", online_workers.len());
+            // TEAM-312: Table display via println for now
+            println!("{}", serde_json::to_string_pretty(&serde_json::Value::Array(all_rows)).unwrap());
+        }
+        
+        // TEAM-312: Queen-check operation for deep narration testing
+        Operation::QueenCheck => {
+            // TEAM-312: Set narration context so n!() calls route to SSE
+            let ctx = NarrationContext::new().with_job_id(&job_id);
+            with_narration_context(ctx, queen_check::handle_queen_check()).await?;
         }
 
         // TEAM-284: DELETED all Package operations (PackageSync, PackageStatus, PackageInstall, PackageUninstall, PackageValidate, PackageMigrate)
@@ -229,12 +215,7 @@ async fn route_operation(
             // TEAM-275: Use scheduler crate (pre-wired for M2 Rhai scheduler)
             use queen_rbee_scheduler::{JobRequest, JobScheduler, SimpleScheduler};
 
-            NARRATE
-                .action("infer_start")
-                .job_id(&job_id)
-                .context(&req.model)
-                .human("🤖 Starting inference for model '{}'")
-                .emit();
+            n!("infer_start", "🤖 Starting inference: model={}, prompt={}", req.model, req.prompt);
 
             let job_request = JobRequest {
                 job_id: job_id.clone(),
@@ -258,7 +239,7 @@ async fn route_operation(
 
             // Create line handler that emits to SSE
             let line_handler = |line: &str| -> Result<(), queen_rbee_scheduler::SchedulerError> {
-                NARRATE.action("infer_token").job_id(&job_id).human(line).emit();
+                println!("{}", line);  // TEAM-312: Direct output for streaming
                 Ok(())
             };
 
@@ -268,24 +249,16 @@ async fn route_operation(
                 .await
                 .map_err(|e| anyhow::anyhow!("Job execution failed: {}", e))?;
 
-            NARRATE.action("infer_success").job_id(&job_id).human("✅ Inference complete").emit();
+            n!("infer_success", "✅ Inference complete");
         }
 
         // TEAM-272: Active worker operations (query queen's registry)
         // These operations query the worker registry maintained by queen via heartbeats
         Operation::ActiveWorkerList => {
-            NARRATE
-                .action("active_worker_list_start")
-                .job_id(&job_id)
-                .human("📋 Listing active workers")
-                .emit();
+            n!("active_worker_list_start", "📋 Listing active workers");
 
             // TODO: Query worker registry
-            NARRATE
-                .action("active_worker_list_empty")
-                .job_id(&job_id)
-                .human("No active workers found (worker registry not yet implemented)")
-                .emit();
+            n!("active_worker_list_empty", "No active workers found (worker registry not yet implemented)");
 
             // Future implementation:
             // let workers = state.worker_registry.list_active();
@@ -302,12 +275,7 @@ async fn route_operation(
         }
 
         Operation::ActiveWorkerGet { worker_id } => {
-            NARRATE
-                .action("active_worker_get_start")
-                .job_id(&job_id)
-                .context(&worker_id)
-                .human("🔍 Getting active worker '{}'")
-                .emit();
+            n!("active_worker_get_start", "🔍 Getting active worker '{}'", worker_id);
 
             // TODO: Query worker registry
             return Err(anyhow::anyhow!(
@@ -326,12 +294,7 @@ async fn route_operation(
         }
 
         Operation::ActiveWorkerRetire { worker_id } => {
-            NARRATE
-                .action("active_worker_retire_start")
-                .job_id(&job_id)
-                .context(&worker_id)
-                .human("🛑 Retiring active worker '{}'")
-                .emit();
+            n!("active_worker_retire_start", "🛑 Retiring active worker '{}'", worker_id);
 
             // TODO: Mark worker as retired in registry
             return Err(anyhow::anyhow!(

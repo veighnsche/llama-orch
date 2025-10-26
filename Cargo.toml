@@ -62,7 +62,6 @@ members = [
     "bin/99_shared_crates/daemon-lifecycle",
     "bin/99_shared_crates/daemon-lifecycle/bdd",
     "bin/99_shared_crates/heartbeat-registry",  # TEAM-285: Generic heartbeat registry
-    "bin/99_shared_crates/job-registry-interface",  # TEAM-305: Interface trait to break circular dependency
     "bin/99_shared_crates/job-server",        # TEAM-154: Dual-call pattern job tracking (worker/queen/hive)
     "bin/99_shared_crates/timeout-enforcer",    # TEAM-163: Hard timeout enforcement with visual countdown
     "bin/99_shared_crates/auto-update",         # TEAM-193: Dependency-aware auto-update for binaries
@@ -78,6 +77,7 @@ members = [
     "bin/97_contracts/worker-contract",     # TEAM-270/284: Worker contract types and API spec
     "bin/97_contracts/hive-contract",       # TEAM-284: Hive contract types and API spec
     "bin/97_contracts/operations-contract", # TEAM-186/284: Operations contract (queen ↔ hive)
+    "bin/97_contracts/jobs-contract",  # TEAM-305/312: Job registry contract (moved from shared_crates)
 
     # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
     # CONTRACTS — API Specifications & Types

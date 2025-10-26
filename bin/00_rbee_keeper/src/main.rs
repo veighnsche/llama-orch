@@ -116,24 +116,14 @@ where
         
         // TEAM-310: Use centralized format_message from narration-core
         // TEAM-311: Now uses format_message_with_fn to show function names
-        // Format: Bold first line with actor/action, message on second line, optional fn_name (dimmed)
-        if let (Some(actor), Some(action), Some(human)) = (visitor.actor, visitor.action, visitor.human) {
-            let label = if let Some(target) = visitor.target {
-                if target != action {
-                    format!("{}/{}", actor, target)
-                } else {
-                    actor
-                }
-            } else {
-                actor
-            };
-            
-            // TEAM-311: Use format_message_with_fn to include optional function name
+        // TEAM-312: Removed actor from formatting - fn_name provides full trace
+        // Format: Bold fn_name (40 chars), dimmed action (20 chars), message on second line
+        if let (Some(action), Some(human)) = (visitor.action, visitor.human) {
+            // TEAM-311: Use format_message_with_fn to include function name
             let formatted = observability_narration_core::format::format_message_with_fn(
-                &label, 
                 &action, 
                 &human,
-                visitor.fn_name.as_deref()
+                visitor.fn_name.as_deref().unwrap_or("unknown")
             );
             write!(writer, "{}", formatted)
         } else {
@@ -288,6 +278,13 @@ async fn handle_command(cli: Cli) -> Result<()> {
     match command {
         Commands::Status => handle_status(&queen_url).await,
         Commands::SelfCheck => handle_self_check().await,
+        Commands::QueenCheck => {
+            // TEAM-312: Deep narration test through queen job server
+            use operations_contract::Operation;
+            use crate::job_client::submit_and_stream_job;
+            
+            submit_and_stream_job(&queen_url, Operation::QueenCheck).await
+        }
         Commands::Queen { action } => handle_queen(action, &queen_url).await,
         Commands::Hive { action } => handle_hive(action, &queen_url).await,
         Commands::Worker { hive_id, action } => handle_worker(hive_id, action, &queen_url).await,

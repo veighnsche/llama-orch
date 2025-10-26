@@ -26,6 +26,7 @@ thiserror = "1.0"
 # Shared crates
 daemon-lifecycle = { path = "../../99_shared_crates/daemon-lifecycle" }
 observability-narration-core = { path = "../../99_shared_crates/narration-core" }
+stdext = "0.3"  # TEAM-312: Required for n!() macro (function_name!())
 
 [lints]
 workspace = true

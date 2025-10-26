@@ -21,6 +21,9 @@ pub const ACTOR_WIDTH: usize = 20;
 /// Action field width in formatted output (characters)
 pub const ACTION_WIDTH: usize = 20;
 
+/// Function name field width in formatted output (characters)
+pub const FN_NAME_WIDTH: usize = 40;
+
 /// Job ID suffix length for short display (e.g., "...abc123")
 pub const SHORT_JOB_ID_SUFFIX: usize = 6;
 
@@ -41,7 +44,7 @@ pub const SHORT_JOB_ID_SUFFIX: usize = 6;
 /// External code should call `NarrationFields::format()` instead to ensure all formatting
 /// goes through the same code path.
 ///
-/// Format: 
+/// Format:
 /// ```text
 /// \x1b[1m[actor              ] fn_name            \x1b[0m action              
 /// message
@@ -56,7 +59,7 @@ pub const SHORT_JOB_ID_SUFFIX: usize = 6;
 /// # Public API
 /// ```
 /// use observability_narration_core::NarrationFields;
-/// 
+///
 /// let fields = NarrationFields {
 ///     actor: "auto-update",
 ///     action: "parse_deps",
@@ -65,33 +68,19 @@ pub const SHORT_JOB_ID_SUFFIX: usize = 6;
 ///     fn_name: Some("parse".to_string()),
 ///     ..Default::default()
 /// };
-/// 
+///
 /// // ⭐ Use this - central formatting method!
 /// let formatted = fields.format();
 /// ```
-pub fn format_message_with_fn(actor: &str, action: &str, message: &str, fn_name: Option<&str>) -> String {
-    if let Some(fn_name) = fn_name {
-        // TEAM-311: Order is [actor] fn_name action (actor and fn_name are bold, action is light)
-        format!(
-            "\x1b[1m[{:<width_actor$}] {:<width_action$}\x1b[0m \x1b[2m{}\x1b[0m\n{}\n",
-            actor,
-            fn_name,
-            action,
-            message,
-            width_actor = ACTOR_WIDTH,
-            width_action = ACTION_WIDTH
-        )
-    } else {
-        // TEAM-312: Inline the old format_message() logic instead of calling deprecated function
-        format!(
-            "\x1b[1m[{:<width_actor$}] {:<width_action$}\x1b[0m\n{}\n",
-            actor,
-            action,
-            message,
-            width_actor = ACTOR_WIDTH,
-            width_action = ACTION_WIDTH
-        )
-    }
+pub fn format_message_with_fn(action: &str, message: &str, fn_name: &str) -> String {
+    format!(
+        "\x1b[1m{:<width_fn$}\x1b[0m \x1b[2m{:<width_action$}\x1b[0m\n{}\n",
+        fn_name,
+        action,
+        message,
+        width_fn = FN_NAME_WIDTH,
+        width_action = ACTION_WIDTH
+    )
 }
 
 // ============================================================================
@@ -256,13 +245,17 @@ mod tests {
         let formatted = format_message_with_fn("queen", "start", "Starting hive", None);
         // Format: Bold first line with actor/action, message on second line, blank line after
         // Actor: 20 chars, Action: 20 chars
-        assert_eq!(formatted, "\x1b[1m[queen               ] start               \x1b[0m\nStarting hive\n");
+        assert_eq!(
+            formatted,
+            "\x1b[1m[queen               ] start               \x1b[0m\nStarting hive\n"
+        );
     }
 
     #[test]
     fn test_format_message_long_names() {
         // TEAM-312: Use format_message_with_fn() with None for fn_name
-        let formatted = format_message_with_fn("very-long-actor", "very-long-action", "Message", None);
+        let formatted =
+            format_message_with_fn("very-long-actor", "very-long-action", "Message", None);
         assert!(formatted.contains("very-long-actor"));
         assert!(formatted.contains("very-long-action"));
         assert!(formatted.contains("\nMessage\n")); // Message on new line with trailing newline

@@ -20,6 +20,7 @@ observability-narration-core = { path = "../narration-core" }
 auto-update = { path = "../auto-update" }  # TEAM-259: For auto-updating daemons
 timeout-enforcer = { path = "../timeout-enforcer" }  # TEAM-276: For timeout wrapper
 nix = { version = "0.29", features = ["signal"] }  # TEAM-276: For SIGTERM/SIGKILL
+stdext = "0.3"  # TEAM-312: Required for n!() macro (function_name!())
 
 [dev-dependencies]
 tokio = { version = "1", features = ["full"] }

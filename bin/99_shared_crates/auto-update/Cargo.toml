@@ -20,6 +20,7 @@ anyhow = "1.0"
 # Observability
 observability-narration-core = { path = "../narration-core" }
 observability-narration-macros = { path = "../narration-macros" } # TEAM-309: Actor injection
+stdext = "0.3" # TEAM-312: Required for n!() macro (function_name!())
 
 [dev-dependencies]
 tempfile = "3.8"

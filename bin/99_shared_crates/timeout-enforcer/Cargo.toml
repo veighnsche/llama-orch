@@ -13,6 +13,7 @@ anyhow = "1.0"
 atty = "0.2" # TEAM-164: TTY detection to auto-disable countdown when stderr is captured
 observability-narration-core = { path = "../narration-core" } # TEAM-197: Narration v0.5.0
 indicatif = "0.17" # TEAM-197: Progress bar for timeout visualization
+stdext = "0.3" # TEAM-312: Required for n!() macro (function_name!())
 
 [dev-dependencies]
 tokio = { version = "1.41", features = ["full"] }

@@ -15,14 +15,11 @@
 
 use anyhow::Result;
 use job_client::JobClient;
-use observability_narration_core::NarrationFactory;
+use observability_narration_core::n;
 use queen_lifecycle::ensure_queen_running;
 use operations_contract::Operation; // TEAM-284: Renamed from rbee_operations
 use std::time::Duration;
 use timeout_enforcer::TimeoutEnforcer;
-
-// TEAM-192: Local narration factory for job_client.rs
-const NARRATE: NarrationFactory = NarrationFactory::new("keeper");
 
 /// Submit a job to queen-rbee and stream its narration output.
 ///
@@ -48,13 +45,7 @@ pub async fn submit_and_stream_job(queen_url: &str, operation: Operation) -> Res
     let operation_name = operation.name();
     let hive_id = operation.hive_id().map(|s| s.to_string());
 
-    let mut narration =
-        NARRATE.action("job_submit").operation(operation_name).human("📋 Job submitted");
-
-    if let Some(ref hid) = hive_id {
-        narration = narration.hive_id(hid);
-    }
-    narration.emit();
+    n!("job_submit", "📋 Job submitted: {}", operation_name);
 
     // TEAM-205: Wrap SSE streaming with 30-second timeout
     // This prevents hanging forever if queen stops responding
@@ -81,13 +72,7 @@ async fn stream_job_results(
     operation_name: &'static str,
     hive_id: Option<String>,
 ) -> Result<()> {
-    let mut narration =
-        NARRATE.action("job_stream").operation(operation_name).human("📡 Streaming results...");
-
-    if let Some(ref hid) = hive_id {
-        narration = narration.hive_id(hid);
-    }
-    narration.emit();
+    n!("job_stream", "📡 Streaming results for {}", operation_name);
 
     let mut job_failed = false; // TEAM-189: Track job failures to show proper final status
 
@@ -108,16 +93,11 @@ async fn stream_job_results(
             // Check for [DONE] marker
             if line.contains("[DONE]") {
                 // TEAM-189: Show ❌ Failed for failures, ✅ Complete for successes
-                let mut narration = if job_failed {
-                    NARRATE.action("job_complete").operation(operation_name).human("❌ Failed")
+                if job_failed {
+                    n!("job_complete", "❌ Failed: {}", operation_name);
                 } else {
-                    NARRATE.action("job_complete").operation(operation_name).human("✅ Complete")
-                };
-
-                if let Some(ref hid) = hive_id {
-                    narration = narration.hive_id(hid);
+                    n!("job_complete", "✅ Complete: {}", operation_name);
                 }
-                narration.emit();
             }
 
             Ok(())

@@ -21,6 +21,7 @@ daemon-lifecycle = { path = "../../99_shared_crates/daemon-lifecycle" }
 observability-narration-core = { path = "../../99_shared_crates/narration-core" }
 # TEAM-290: DELETED rbee-config dependency (file-based config deprecated)
 timeout-enforcer = { path = "../../99_shared_crates/timeout-enforcer" }
+stdext = "0.3"  # TEAM-312: Required for n!() macro (function_name!())
 
 [lints]
 workspace = true

@@ -7,15 +7,12 @@ use anyhow::{Context, Result};
 use daemon_lifecycle::{
     ensure_daemon_with_handle, poll_until_healthy, DaemonManager, HealthPollConfig,
 };
-use observability_narration_core::NarrationFactory;
+use observability_narration_core::n;
 // TEAM-290: DELETED rbee_config import (file-based config deprecated)
 use std::time::Duration;
 use timeout_enforcer::TimeoutEnforcer;
 
 use crate::types::QueenHandle;
-
-// TEAM-192: Local narration factory for queen lifecycle
-const NARRATE: NarrationFactory = NarrationFactory::new("kpr-life");
 
 /// Ensure queen-rbee is running, auto-start if needed
 ///
@@ -69,20 +66,12 @@ async fn ensure_queen_running_inner(base_url: &str) -> Result<QueenHandle> {
     // This allows queen to tell us its address (useful for future remote queens)
     match fetch_queen_url(base_url).await {
         Ok(queen_url) => {
-            NARRATE
-                .action("queen_url_discovered")
-                .context(&queen_url)
-                .human("✅ Queen URL discovered: {}")
-                .emit();
+            n!("queen_url_discovered", "✅ Queen URL discovered: {}", queen_url);
             Ok(handle.with_discovered_url(queen_url))
         }
         Err(e) => {
             // Fallback to base_url if discovery fails
-            NARRATE
-                .action("queen_url_fallback")
-                .context(e.to_string())
-                .human("⚠️  Failed to discover queen URL ({}), using default")
-                .emit();
+            n!("queen_url_fallback", "⚠️  Failed to discover queen URL ({}), using default", e);
             Ok(handle)
         }
     }
@@ -123,10 +112,7 @@ async fn fetch_queen_url(base_url: &str) -> Result<String> {
 /// TEAM-290: Removed config loading (file-based config deprecated)
 async fn spawn_queen_with_preflight(base_url: &str) -> Result<()> {
     // TEAM-290: No preflight validation (no config files)
-    NARRATE
-        .action("queen_preflight")
-        .human("✅ Localhost-only mode (no config needed)")
-        .emit();
+    n!("queen_preflight", "✅ Localhost-only mode (no config needed)");
 
     // Step 2: Find queen-rbee binary
     // TEAM-296: ONLY use installed binary - no fallback to development binary
@@ -136,18 +122,10 @@ async fn spawn_queen_with_preflight(base_url: &str) -> Result<()> {
         let installed_path = std::path::PathBuf::from(format!("{}/.local/bin/queen-rbee", home));
         
         if installed_path.exists() {
-            NARRATE
-                .action("queen_start")
-                .context(installed_path.display().to_string())
-                .human("Using installed queen-rbee binary at {}")
-                .emit();
+            n!("queen_start", "Using installed queen-rbee binary at {}", installed_path.display());
             installed_path
         } else {
-            NARRATE
-                .action("queen_start")
-                .human("❌ Queen not installed. Run 'rbee queen install' first.")
-                .error_kind("not_installed")
-                .emit();
+            n!("queen_start", "❌ Queen not installed. Run 'rbee queen install' first.");
             anyhow::bail!(
                 "Queen not installed at {}. Run 'rbee queen install' to install from source.",
                 installed_path.display()
@@ -168,7 +146,7 @@ async fn spawn_queen_with_preflight(base_url: &str) -> Result<()> {
 
     let child = manager.spawn().await.context("Failed to spawn queen-rbee process")?;
 
-    NARRATE.action("queen_spawned").human("Queen-rbee process spawned, polling health...").emit();
+    n!("queen_spawned", "Queen-rbee process spawned, polling health...");
 
     // Step 4: Poll health until ready
     poll_until_healthy(

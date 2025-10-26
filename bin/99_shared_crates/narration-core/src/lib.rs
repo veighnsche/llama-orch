@@ -155,7 +155,7 @@ pub use unicode::{sanitize_crlf, sanitize_for_json, validate_action, validate_ac
 // TEAM-312: Removed deprecated format_message and interpolate_context
 pub use format::{
     format_array_table, format_message_with_fn, format_object_table, format_value_compact,
-    short_job_id, ACTOR_WIDTH, ACTION_WIDTH, SHORT_JOB_ID_SUFFIX,
+    short_job_id, ACTOR_WIDTH, ACTION_WIDTH, FN_NAME_WIDTH, SHORT_JOB_ID_SUFFIX,
 };
 
 // TEAM-300: Process capture (re-export for convenience! 🎀)

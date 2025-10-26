@@ -21,19 +21,27 @@ use observability_narration_core::n;
 /// # Arguments
 /// * `binary` - Optional custom binary path (if None, builds from source)
 ///
-/// # Returns
-/// * `Ok(())` - Installation successful
-/// * `Err` - Already installed, build failed, or installation failed
+/// # Errors
+/// This function will return an error if:
+/// * HOME environment variable is not set
+/// * Queen is already installed at ~/.local/bin/queen-rbee
+/// * Provided binary path does not exist
+/// * Cargo build fails (when building from source)
+/// * Failed to create installation directory
+/// * Failed to copy binary to installation path
+/// * Failed to set executable permissions (Unix only)
 pub async fn install_queen(binary: Option<String>) -> Result<()> {
-    n!("queen_install", "📦 Installing queen-rbee...");
+    n!("start", "📦 Installing queen-rbee...");
 
     // TEAM-296: Check if already installed
     let home = std::env::var("HOME")?;
     let install_path = std::path::PathBuf::from(format!("{}/.local/bin/queen-rbee", home));
-    
+
     if install_path.exists() {
-        n!("queen_install", "❌ Queen already installed at: {}", install_path.display());
-        anyhow::bail!("Queen already installed. Use 'queen update' to rebuild or 'queen uninstall' first.");
+        n!("exists", "❌ Queen already installed at: {}", install_path.display());
+        anyhow::bail!(
+            "Queen already installed. Use 'queen update' to rebuild or 'queen uninstall' first."
+        );
     }
 
     // TEAM-296: Build from source if no binary path provided
@@ -46,19 +54,19 @@ pub async fn install_queen(binary: Option<String>) -> Result<()> {
         path
     } else {
         // Build from source
-        n!("queen_install", "🔨 Building queen-rbee from source (cargo build --release)...");
-        
-        let output = std::process::Command::new("cargo")
+        n!("building", "🔨 Building queen-rbee from source (cargo build --release)...");
+
+        // TEAM-312: Use .status() instead of .output() to stream cargo output to terminal
+        let status = std::process::Command::new("cargo")
             .args(["build", "--release", "--bin", "queen-rbee"])
-            .output()?;
-        
-        if !output.status.success() {
-            let stderr = String::from_utf8_lossy(&output.stderr);
-            n!("queen_install", "❌ Build failed: {}", stderr);
+            .status()?;
+
+        if !status.success() {
+            n!("failed", "❌ Build failed");
             anyhow::bail!("Build failed");
         }
-        
-        n!("queen_install", "✅ Build successful!");
+
+        n!("success", "✅ Build successful!");
         std::path::PathBuf::from("target/release/queen-rbee")
     };
 
@@ -69,7 +77,7 @@ pub async fn install_queen(binary: Option<String>) -> Result<()> {
     std::fs::create_dir_all(&install_dir)?;
 
     // Copy binary
-    n!("queen_install", "📋 Installing to: {}", install_path.display());
+    n!("move", "📋 Installing to: {}", install_path.display());
 
     std::fs::copy(&source_path, &install_path)?;
 
@@ -82,9 +90,9 @@ pub async fn install_queen(binary: Option<String>) -> Result<()> {
         std::fs::set_permissions(&install_path, perms)?;
     }
 
-    n!("queen_install", "✅ Queen installed successfully!");
-    n!("queen_install", "📍 Binary location: {}", install_path.display());
-    n!("queen_install", "💡 Make sure ~/.local/bin is in your PATH");
+    n!("done", "✅ Queen installed successfully!");
+    n!("info", "📍 Binary location: {}", install_path.display());
+    n!("info", "💡 Make sure ~/.local/bin is in your PATH");
 
     Ok(())
 }
