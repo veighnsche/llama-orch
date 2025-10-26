@@ -5,6 +5,7 @@ pub mod builder;
 pub mod emit;
 pub mod macro_impl;
 
-pub use builder::{short_job_id, Narration, NarrationFactory};
+// TEAM-310: short_job_id moved to format.rs module
+pub use builder::{Narration, NarrationFactory};
 pub use emit::*;
-pub use macro_impl::{macro_emit, macro_emit_with_actor}; // TEAM-309: Export both variants
+pub use macro_impl::{macro_emit, macro_emit_auto, macro_emit_with_actor}; // TEAM-309: Export all variants

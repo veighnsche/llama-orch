@@ -34,6 +34,10 @@ impl NarrationContext {
     }
 
     // TEAM-300: Phase 2 - Add actor builder
+    /// ⚠️ **DEPRECATED** - Actor is now auto-detected from crate name via env!("CARGO_CRATE_NAME").
+    /// 
+    /// Use `n!()` macro directly - it will automatically use the crate name as actor.
+    #[deprecated(since = "0.5.0", note = "Actor is now auto-detected from crate name. Just use n!() macro directly.")]
     pub fn with_actor(mut self, actor: &'static str) -> Self {
         self.actor = Some(actor);
         self
@@ -42,25 +46,36 @@ impl NarrationContext {
 
 /// Run a task with narration context
 ///
-/// Sets job_id and correlation_id once, then all narrations inside
-/// automatically include them.
+/// ⚠️ **DEPRECATED for actor setting** - Actor is now auto-detected from crate name.
+/// Still useful for job_id and correlation_id.
 ///
-/// # Example
+/// # Example (NEW - actor auto-detected)
+///
 /// ```rust,ignore
-/// use observability_narration_core::{with_narration_context, NarrationContext, NarrationFactory};
+/// use observability_narration_core::n;
 ///
-/// const NARRATE: NarrationFactory = NarrationFactory::new("qn-router");
+/// async fn my_handler() -> Result<()> {
+///     n!("start", "Starting job");  // actor = crate name (auto)
+///     // ... do work ...
+///     n!("complete", "Job complete");
+///     Ok(())
+/// }
+/// ```
 ///
-/// let ctx = NarrationContext::new()
-///     .with_job_id("job-abc123")
-///     .with_correlation_id("corr-xyz789");
+/// # Example (OLD - still works for job_id/correlation_id)
 ///
-/// with_narration_context(ctx, async move {
-///     // No need to add job_id or correlation_id!
-///     NARRATE.action("hive_start").human("Starting hive").emit();
-///     NARRATE.action("hive_check").human("Checking status").emit();
-///     // Both automatically include job_id and correlation_id
-/// }).await;
+/// ```rust,ignore
+/// use observability_narration_core::{n, NarrationContext, with_narration_context};
+///
+/// async fn my_handler(job_id: String) -> Result<()> {
+///     let ctx = NarrationContext::new()
+///         .with_job_id(&job_id);  // ← Still useful for job_id
+///     
+///     with_narration_context(ctx, async {
+///         n!("start", "Starting job");  // actor auto-detected, job_id from context
+///         n!("complete", "Job complete");
+///     }).await
+/// }
 /// ```
 pub async fn with_narration_context<F>(ctx: NarrationContext, f: F) -> F::Output
 where

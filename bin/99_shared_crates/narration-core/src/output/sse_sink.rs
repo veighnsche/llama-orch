@@ -36,6 +36,7 @@
 //! could leak to subscribers of Job B. This module enforces job isolation.
 
 use crate::NarrationFields;
+use crate::format::format_message; // TEAM-310: Use centralized formatting
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
 use tokio::sync::mpsc;
@@ -52,11 +53,24 @@ use tokio::sync::mpsc;
 #[allow(dead_code)]
 const DEFAULT_CHANNEL_CAPACITY: usize = 1000;
 
-/// Actor field width in formatted output (characters)
-const ACTOR_WIDTH: usize = 10;
-
-/// Action field width in formatted output (characters)
-const ACTION_WIDTH: usize = 15;
+// ============================================================================
+// DEPRECATED CONSTANTS (TEAM-310)
+// ============================================================================
+// 
+// ⚠️ DEPRECATED: ACTOR_WIDTH and ACTION_WIDTH moved to format.rs module
+// 
+// Old location (pre-TEAM-310):
+//   const ACTOR_WIDTH: usize = 10;
+//   const ACTION_WIDTH: usize = 15;
+// 
+// New location (TEAM-310):
+//   observability_narration_core::format::ACTOR_WIDTH (now 20)
+//   observability_narration_core::format::ACTION_WIDTH (now 20)
+// 
+// Migration: Import from format module instead:
+//   use observability_narration_core::format::{ACTOR_WIDTH, ACTION_WIDTH};
+// 
+// See: TEAM_310_FORMAT_MODULE.md for full migration guide
 
 // ============================================================================
 // GLOBAL REGISTRY
@@ -129,19 +143,17 @@ impl From<NarrationFields> for NarrationEvent {
         // TEAM-204: No redaction needed - job isolation provides security
         // Developers need full context for debugging
 
-        // TEAM-201: Pre-format text (same format as stderr output)
-        // Format: "[actor     ] action         : message"
-        // - Actor: ACTOR_WIDTH chars (left-aligned, padded)
-        // - Action: ACTION_WIDTH chars (left-aligned, padded)
-        // TEAM-276: Use constants for field widths
-        let formatted = format!(
-            "[{:<width_actor$}] {:<width_action$}: {}",
-            fields.actor,
-            fields.action,
-            fields.human,
-            width_actor = ACTOR_WIDTH,
-            width_action = ACTION_WIDTH
-        );
+        // TEAM-310: Use centralized formatting from format.rs module
+        // 
+        // ⚠️ DEPRECATED: Inline formatting removed (pre-TEAM-310)
+        // Old code (REMOVED):
+        //   let formatted = format!(
+        //       "[{:<10}] {:<15}: {}",
+        //       fields.actor, fields.action, fields.human
+        //   );
+        // 
+        // New code (TEAM-310): Use centralized format_message()
+        let formatted = format_message(fields.actor, fields.action, &fields.human);
 
         Self {
             formatted,
@@ -472,12 +484,15 @@ mod team_201_formatting_tests {
 
         let event = NarrationEvent::from(fields);
 
-        // Formatted field should match: "[actor     ] action         : message"
-        assert_eq!(event.formatted, "[test-actor] test-action    : Test message");
+        // Formatted field should match new format: bold first line, message on second line
+        // Format: \x1b[1m[actor              ] action              \x1b[0m\nmessage
+        // test-actor (10 chars) + 10 spaces = 20, test-action (11 chars) + 9 spaces = 20
+        assert_eq!(event.formatted, "\x1b[1m[test-actor          ] test-action         \x1b[0m\nTest message");
 
-        // Verify padding
-        assert!(event.formatted.starts_with("[test-actor]"));
-        assert!(event.formatted.contains("test-action    :"));
+        // Verify components
+        assert!(event.formatted.contains("[test-actor"));
+        assert!(event.formatted.contains("test-action"));
+        assert!(event.formatted.contains("\nTest message"));
     }
 
     #[test]
@@ -486,8 +501,9 @@ mod team_201_formatting_tests {
         let fields = minimal_fields("abc", "xyz", "Short");
         let event = NarrationEvent::from(fields);
 
-        // Should pad to ACTOR_WIDTH (10) chars for actor, ACTION_WIDTH (15) for action
-        assert_eq!(event.formatted, "[abc       ] xyz            : Short");
+        // Should pad to ACTOR_WIDTH (20) chars for actor, ACTION_WIDTH (20) for action
+        // TEAM-310: New format with bold and newline
+        assert_eq!(event.formatted, "\x1b[1m[abc                 ] xyz                 \x1b[0m\nShort");
     }
 
     #[test]
@@ -496,10 +512,13 @@ mod team_201_formatting_tests {
         let fields = minimal_fields("very-long-actor-name", "very-long-action-name", "Long");
         let event = NarrationEvent::from(fields);
 
-        // Should truncate/handle long names (Rust format! will extend if needed)
+        // Should not truncate - format! will extend if needed
+        // TEAM-310: Verify bold codes and newline
         assert!(event.formatted.contains("very-long-actor-name"));
         assert!(event.formatted.contains("very-long-action-name"));
-        assert!(event.formatted.contains("Long"));
+        assert!(event.formatted.contains("\nLong")); // Message on new line
+        assert!(event.formatted.contains("\x1b[1m")); // Bold
+        assert!(event.formatted.contains("\x1b[0m")); // Reset
     }
 
     #[test]

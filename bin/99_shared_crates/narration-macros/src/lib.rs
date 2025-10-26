@@ -1,68 +1,41 @@
-extern crate proc_macro;
-
-mod actor_inference;
-mod narrate;
-mod template;
-mod trace_fn;
-mod with_actor; // TEAM-309: Actor injection macro
+// TEAM-309: Proc macros for narration system
+//! Procedural macros for the narration system
+//!
+//! **Current:** Only `#[narrate_fn]` is supported - adds function name as narration target.
+//! **Removed:** `#[narrate]` and `#[trace_fn]` - use `n!()` macro instead.
 
 use proc_macro::TokenStream;
 
-/// Attribute macro for automatic function tracing with entry/exit narration.
-///
-/// Automatically generates narration events at function entry and exit, with timing.
-/// Actor is auto-inferred from module path.
-///
-/// # Example
-/// ```ignore
-/// #[trace_fn]
-/// async fn dispatch_job(job_id: &str) -> Result<WorkerId> {
-///     // Function body
-/// }
-/// ```
-///
-/// Generates:
-/// - Entry trace with function name and arguments
-/// - Exit trace with result and elapsed time
-/// - Automatic error handling for Result types
-#[proc_macro_attribute]
-pub fn trace_fn(attr: TokenStream, item: TokenStream) -> TokenStream {
-    trace_fn::trace_fn_impl(attr, item)
-}
+mod with_actor;
 
-/// Attribute macro for narration with template interpolation.
+/// Attribute macro to set function name as narration target (TEAM-309).
 ///
-/// Supports compile-time template expansion with automatic actor inference.
+/// **OPTIONAL** - Only use this if you want function-scoped narration.
+/// Most functions don't need this - just use `n!()` directly.
 ///
-/// # Example
-/// ```ignore
-/// #[narrate(
-///     action: "dispatch",
-///     human: "Dispatched job {job_id} to worker {worker_id}",
-///     cute: "Sent job {job_id} off to its new friend {worker_id}! 🎫"
-/// )]
-/// fn dispatch_job(job_id: &str, worker_id: &str) -> Result<()> {
-///     // Function body
-/// }
-/// ```
-#[proc_macro_attribute]
-pub fn narrate(attr: TokenStream, item: TokenStream) -> TokenStream {
-    narrate::narrate_impl(attr, item)
-}
-
-/// Attribute macro to set narration actor for entire function (TEAM-309).
+/// All n!() calls inside automatically use function name as target.
+/// Actor is auto-detected from crate name.
 ///
-/// All n!() calls inside automatically use this actor.
+/// # When to use
+/// - Use `#[narrate_fn]` for important functions where you want to see the function name in logs
+/// - Skip it for simple helper functions - just use `n!()` directly
 ///
 /// # Example
 /// ```ignore
-/// #[with_actor("auto-update")]
-/// fn needs_rebuild() -> Result<bool> {
-///     n!("check", "Checking..."); // Uses actor="auto-update"
-///     Ok(true)
+/// #[narrate_fn]  // ← OPTIONAL - only if you want [crate/function] format
+/// fn rebuild() -> Result<()> {
+///     n!("start", "Starting...");   // Output: [auto-update/rebuild] start : Starting...
+///     n!("success", "Done!");        // Output: [auto-update/rebuild] success : Done!
+///     Ok(())
+/// }
+///
+/// // Without #[narrate_fn]:
+/// fn simple_helper() -> Result<()> {
+///     n!("action", "Doing thing");  // Output: [auto-update] action : Doing thing
+///     Ok(())
 /// }
 /// ```
 #[proc_macro_attribute]
-pub fn with_actor(attr: TokenStream, item: TokenStream) -> TokenStream {
-    with_actor::with_actor_impl(attr, item)
+pub fn narrate_fn(attr: TokenStream, item: TokenStream) -> TokenStream {
+    with_actor::narrate_fn_impl(attr, item)
 }

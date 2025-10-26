@@ -1,32 +1,32 @@
-// TEAM-309: Thread-local actor storage
-//! Thread-local actor for proc macro injection
+// TEAM-309: Thread-local target storage
+//! Thread-local target (function name) for proc macro injection
 //!
-//! This allows #[with_actor("name")] to set an actor that all n!() calls
+//! This allows #[narrate_fn] to set a target (function name) that all n!() calls
 //! inside the function will automatically use.
 
 use std::cell::RefCell;
 
 thread_local! {
-    static THREAD_ACTOR: RefCell<Option<&'static str>> = RefCell::new(None);
+    static THREAD_TARGET: RefCell<Option<String>> = RefCell::new(None);
 }
 
-/// Set thread-local actor (called by with_actor macro)
+/// Set thread-local target (called by narrate_fn macro)
 #[doc(hidden)]
-pub fn set_actor(actor: &'static str) {
-    THREAD_ACTOR.with(|a| {
-        *a.borrow_mut() = Some(actor);
+pub fn set_target(target: &str) {
+    THREAD_TARGET.with(|t| {
+        *t.borrow_mut() = Some(target.to_string());
     });
 }
 
-/// Clear thread-local actor (called by with_actor macro on exit)
+/// Clear thread-local target (called by narrate_fn macro on exit)
 #[doc(hidden)]
-pub fn clear_actor() {
-    THREAD_ACTOR.with(|a| {
-        *a.borrow_mut() = None;
+pub fn clear_target() {
+    THREAD_TARGET.with(|t| {
+        *t.borrow_mut() = None;
     });
 }
 
-/// Get thread-local actor if set
-pub(crate) fn get_actor() -> Option<&'static str> {
-    THREAD_ACTOR.with(|a| *a.borrow())
+/// Get thread-local target if set
+pub(crate) fn get_target() -> Option<String> {
+    THREAD_TARGET.with(|t| t.borrow().clone())
 }

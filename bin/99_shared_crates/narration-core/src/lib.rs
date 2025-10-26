@@ -73,13 +73,11 @@
 //! - **`output/`** - Output mechanisms (SSE, capture adapter)
 //! - **`context`** - Thread-local context for auto-injection
 //! - **`mode`** - Narration mode selection (human/cute/story)
+//! - **`format`** - Formatting utilities (messages, tables, job IDs) - TEAM-310
 //! - **`correlation`** - Correlation ID utilities
 //! - **`unicode`** - Unicode validation and sanitization
-
-// ============================================================================
-// TEAM-300: Modular organization
-// ============================================================================
-
+//!
+//! # Existing modules (kept in place)
 pub mod api;
 pub mod core;
 pub mod output;
@@ -88,6 +86,7 @@ pub mod taxonomy;
 // Existing modules (kept in place)
 pub mod context;
 pub mod correlation;
+pub mod format; // TEAM-310: Centralized formatting logic
 pub mod mode;
 pub mod unicode;
 
@@ -117,10 +116,14 @@ pub use api::narrate_trace;
 #[deprecated(since = "0.1.0", note = "Use narrate() with NarrationFields instead")]
 pub use api::emit::human;
 
-pub use api::{short_job_id, Narration, NarrationFactory};
+pub use api::{Narration, NarrationFactory};
 #[doc(hidden)]
+#[deprecated(since = "0.5.0", note = "Use n!() macro instead - actor is now auto-detected from crate name")]
 pub use api::macro_emit;
 #[doc(hidden)]
+pub use api::macro_emit_auto; // TEAM-309: Auto-detect crate name
+#[doc(hidden)]
+#[deprecated(since = "0.5.0", note = "Use n!() macro instead - actor is now auto-detected from crate name")]
 pub use api::macro_emit_with_actor; // TEAM-309: For sync code that can't use context
 
 // Context
@@ -144,12 +147,18 @@ pub use correlation::{
 // Unicode utilities
 pub use unicode::{sanitize_crlf, sanitize_for_json, validate_action, validate_actor};
 
+// TEAM-310: Formatting utilities
+pub use format::{
+    format_array_table, format_message, format_object_table, format_value_compact,
+    interpolate_context, short_job_id, ACTOR_WIDTH, ACTION_WIDTH, SHORT_JOB_ID_SUFFIX,
+};
+
 // TEAM-300: Process capture (re-export for convenience! 🎀)
 pub use process_capture::ProcessNarrationCapture;
 
-// TEAM-309: Thread-local actor (for proc macros)
+// TEAM-309: Thread-local target (for proc macros)
 #[doc(hidden)]
-pub use thread_actor::{set_actor as __internal_set_actor, clear_actor as __internal_clear_actor};
+pub use thread_actor::{set_target as __internal_set_target, clear_target as __internal_clear_target};
 
 // SSE sink (for external use)
 pub mod sse_sink {
@@ -263,31 +272,31 @@ macro_rules! narration_macro {
 macro_rules! n {
     // Simple: n!("action", "message")
     ($action:expr, $msg:expr) => {{
-        $crate::macro_emit($action, $msg, None, None);
+        $crate::macro_emit_auto($action, $msg, None, None, env!("CARGO_CRATE_NAME"));
     }};
     
     // With format: n!("action", "msg {}", arg)
     ($action:expr, $fmt:expr, $($arg:expr),+ $(,)?) => {{
-        $crate::macro_emit($action, &format!($fmt, $($arg),+), None, None);
+        $crate::macro_emit_auto($action, &format!($fmt, $($arg),+), None, None, env!("CARGO_CRATE_NAME"));
     }};
     
     // Explicit human: n!(human: "action", "msg {}", arg)
     (human: $action:expr, $fmt:expr $(, $arg:expr)* $(,)?) => {{
-        $crate::macro_emit($action, &format!($fmt $(, $arg)*), None, None);
+        $crate::macro_emit_auto($action, &format!($fmt $(, $arg)*), None, None, env!("CARGO_CRATE_NAME"));
     }};
     
     // Explicit cute: n!(cute: "action", "msg {}", arg)
     // TEAM-309: Use cute message as fallback for human (was empty string)
     (cute: $action:expr, $fmt:expr $(, $arg:expr)* $(,)?) => {{
         let msg = format!($fmt $(, $arg)*);
-        $crate::macro_emit($action, &msg, Some(&msg), None);
+        $crate::macro_emit_auto($action, &msg, Some(&msg), None, env!("CARGO_CRATE_NAME"));
     }};
     
     // Explicit story: n!(story: "action", "msg {}", arg)
     // TEAM-309: Use story message as fallback for human (was empty string)
     (story: $action:expr, $fmt:expr $(, $arg:expr)* $(,)?) => {{
         let msg = format!($fmt $(, $arg)*);
-        $crate::macro_emit($action, &msg, None, Some(&msg));
+        $crate::macro_emit_auto($action, &msg, None, Some(&msg), env!("CARGO_CRATE_NAME"));
     }};
     
     // Human + Cute: n!("action", human: "msg", cute: "msg", args...)
@@ -296,11 +305,12 @@ macro_rules! n {
      cute: $cute_fmt:expr
      $(, $arg:expr)* $(,)?
     ) => {{
-        $crate::macro_emit(
+        $crate::macro_emit_auto(
             $action,
             &format!($human_fmt $(, $arg)*),
             Some(&format!($cute_fmt $(, $arg)*)),
-            None
+            None,
+            env!("CARGO_CRATE_NAME")
         );
     }};
     
@@ -310,11 +320,12 @@ macro_rules! n {
      story: $story_fmt:expr
      $(, $arg:expr)* $(,)?
     ) => {{
-        $crate::macro_emit(
+        $crate::macro_emit_auto(
             $action,
             &format!($human_fmt $(, $arg)*),
             None,
-            Some(&format!($story_fmt $(, $arg)*))
+            Some(&format!($story_fmt $(, $arg)*)),
+            env!("CARGO_CRATE_NAME")
         );
     }};
     
@@ -325,11 +336,12 @@ macro_rules! n {
      story: $story_fmt:expr
      $(, $arg:expr)* $(,)?
     ) => {{
-        $crate::macro_emit(
+        $crate::macro_emit_auto(
             $action,
             &format!($human_fmt $(, $arg)*),
             Some(&format!($cute_fmt $(, $arg)*)),
-            Some(&format!($story_fmt $(, $arg)*))
+            Some(&format!($story_fmt $(, $arg)*)),
+            env!("CARGO_CRATE_NAME")
         );
     }};
 }

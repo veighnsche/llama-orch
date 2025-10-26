@@ -3,12 +3,10 @@
 
 use anyhow::Result;
 use observability_narration_core::{n, set_narration_mode, NarrationMode};
-use observability_narration_macros::with_actor;
 use std::time::Duration;
 
 /// Run self-check with comprehensive narration testing
-/// TEAM-309: Uses #[with_actor] proc macro - all n!() calls use actor="rbee-keeper"
-#[with_actor("rbee-keeper")]
+/// TEAM-309: Actor auto-detected from crate name (rbee-keeper)
 pub async fn handle_self_check() -> Result<()> {
     println!("\n🔍 rbee-keeper Self-Check");
     println!("{}", "=".repeat(50));

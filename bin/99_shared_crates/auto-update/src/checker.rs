@@ -3,7 +3,8 @@
 
 use anyhow::{Context, Result};
 use observability_narration_core::n;
-use observability_narration_macros::with_actor;
+use observability_narration_macros::narrate_fn;
+
 use std::path::Path;
 use std::time::SystemTime;
 use walkdir::WalkDir;
@@ -20,7 +21,7 @@ impl RebuildChecker {
     /// * `Ok(true)` - Rebuild needed
     /// * `Ok(false)` - Binary is up-to-date
     /// * `Err` - Failed to check
-    #[with_actor("auto-update")]
+    #[narrate_fn]
     pub fn check(updater: &AutoUpdater) -> Result<bool> {
         // TEAM-309: Added narration
         n!("check_rebuild", "🔍 Checking if {} needs rebuild", updater.binary_name);
@@ -38,16 +39,16 @@ impl RebuildChecker {
             std::fs::metadata(&binary_path)?.modified().context("Failed to get binary mtime")?;
 
         // TEAM-309: Added narration for binary timestamp
-        n!("check_rebuild", 
-            "📅 Binary {} last modified: {:?}",
-            updater.binary_name,
-            binary_time
-        );
+        n!("check_rebuild", "📅 Binary {} last modified: {:?}", updater.binary_name, binary_time);
 
         // Check binary's own source directory
         let source_path = updater.workspace_root.join(&updater.source_dir);
         if Self::is_dir_newer(&source_path, binary_time)? {
-            n!("check_rebuild", "🔨 Source directory {} changed, rebuild needed", updater.source_dir.display());
+            n!(
+                "check_rebuild",
+                "🔨 Source directory {} changed, rebuild needed",
+                updater.source_dir.display()
+            );
             return Ok(true);
         }
 
@@ -75,8 +76,8 @@ impl RebuildChecker {
     /// * `Ok(true)` - Directory has newer files
     /// * `Ok(false)` - No newer files found
     /// * `Err` - Failed to scan directory
-    #[with_actor("auto-update")]
-    pub fn is_dir_newer(dir: &Path, reference_time: SystemTime) -> Result<bool> {
+    #[narrate_fn]
+    fn is_dir_newer(dir: &Path, reference_time: SystemTime) -> Result<bool> {
         if !dir.exists() {
             return Ok(false);
         }
@@ -101,10 +102,7 @@ impl RebuildChecker {
                     if let Ok(modified) = meta.modified() {
                         if modified > reference_time {
                             // TEAM-309: Added narration for first newer file found
-                            n!("file_changed", 
-                                "📝 File {} is newer than binary",
-                                path.display()
-                            );
+                            n!("file_changed", "📝 File {} is newer than binary", path.display());
                             newer_found = true;
                             break;
                         }
@@ -115,7 +113,8 @@ impl RebuildChecker {
 
         // TEAM-309: Added narration for scan results
         if !newer_found && files_checked > 0 {
-            n!("scan_complete", 
+            n!(
+                "scan_complete",
                 "✅ Scanned {} files in {}, none newer",
                 files_checked,
                 dir.display()

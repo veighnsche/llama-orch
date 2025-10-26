@@ -3,7 +3,7 @@
 
 use anyhow::Result;
 use observability_narration_core::n;
-use observability_narration_macros::with_actor;
+use observability_narration_macros::narrate_fn;
 use std::path::PathBuf;
 
 use crate::updater::AutoUpdater;
@@ -26,7 +26,7 @@ impl BinaryFinder {
     }
 
     /// Internal method to find binary path
-    #[with_actor("auto-update")]
+    #[narrate_fn]
     pub(crate) fn find_path(updater: &AutoUpdater) -> Result<PathBuf> {
         // TEAM-309: Added narration
         n!("find_binary", "🔍 Searching for binary {}", updater.binary_name);
@@ -34,7 +34,8 @@ impl BinaryFinder {
         // Try debug first (development mode)
         let debug_path = updater.workspace_root.join("target/debug").join(&updater.binary_name);
         if debug_path.exists() {
-            n!("find_binary", 
+            n!(
+                "find_binary",
                 "✅ Found {} in debug mode at {}",
                 updater.binary_name,
                 debug_path.display()
@@ -45,7 +46,8 @@ impl BinaryFinder {
         // Try release
         let release_path = updater.workspace_root.join("target/release").join(&updater.binary_name);
         if release_path.exists() {
-            n!("find_binary", 
+            n!(
+                "find_binary",
                 "✅ Found {} in release mode at {}",
                 updater.binary_name,
                 release_path.display()
@@ -53,12 +55,16 @@ impl BinaryFinder {
             return Ok(release_path);
         }
 
-        n!("find_binary", 
+        n!(
+            "find_binary",
             "❌ Binary {} not found in target/debug or target/release",
             updater.binary_name
         );
 
-        anyhow::bail!("Binary '{}' not found in target/debug or target/release", updater.binary_name)
+        anyhow::bail!(
+            "Binary '{}' not found in target/debug or target/release",
+            updater.binary_name
+        )
     }
 }
 

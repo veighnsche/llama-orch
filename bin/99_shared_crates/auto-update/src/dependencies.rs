@@ -4,7 +4,7 @@
 use anyhow::{Context, Result};
 use cargo_toml::Manifest;
 use observability_narration_core::n;
-use observability_narration_macros::with_actor;
+use observability_narration_macros::narrate_fn;
 use std::collections::HashSet;
 use std::path::{Path, PathBuf};
 
@@ -21,20 +21,17 @@ impl DependencyParser {
     /// # Returns
     /// * `Ok(Vec<PathBuf>)` - List of dependency paths relative to workspace root
     /// * `Err` - Failed to parse dependencies
-    #[with_actor("auto-update")]
+    #[narrate_fn]
     pub fn parse(workspace_root: &Path, source_dir: &Path) -> Result<Vec<PathBuf>> {
         // TEAM-309: Added narration
         n!("parse_deps", "📦 Parsing dependencies for {}", source_dir.display());
-        
+
         let mut all_deps = Vec::new();
         let mut visited = HashSet::new();
 
         Self::collect_recursive(workspace_root, source_dir, &mut all_deps, &mut visited)?;
 
-        n!("parse_deps", 
-            "✅ Parsed {} total dependencies (including transitive)",
-            all_deps.len()
-        );
+        n!("parse_deps", "✅ Parsed {} total dependencies (including transitive)", all_deps.len());
 
         Ok(all_deps)
     }
@@ -78,6 +75,7 @@ impl DependencyParser {
     // ============================================================
 
     /// Recursively collect dependencies from Cargo.toml
+    #[narrate_fn]
     fn collect_recursive(
         workspace_root: &Path,
         source_dir: &Path,
@@ -140,7 +138,8 @@ impl DependencyParser {
         }
 
         if dep_count > 0 {
-            n!("parse_cargo_toml", 
+            n!(
+                "parse_cargo_toml",
                 "✅ Found {} local path dependencies in {}",
                 dep_count,
                 source_dir.display()

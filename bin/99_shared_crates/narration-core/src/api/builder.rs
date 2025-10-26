@@ -156,18 +156,21 @@ impl Narration {
     }
 
     /// Set the correlation ID for request tracking.
+    #[deprecated(since = "0.5.0", note = "Use n!() macro instead")]
     pub fn correlation_id(mut self, id: impl Into<String>) -> Self {
         self.fields.correlation_id = Some(id.into());
         self
     }
 
     /// Set the session ID.
+    #[deprecated(since = "0.5.0", note = "Use n!() macro instead")]
     pub fn session_id(mut self, id: impl Into<String>) -> Self {
         self.fields.session_id = Some(id.into());
         self
     }
 
     /// Set the job ID.
+    #[deprecated(since = "0.5.0", note = "Use n!() macro instead")]
     pub fn job_id(mut self, id: impl Into<String>) -> Self {
         self.fields.job_id = Some(id.into());
         self
@@ -239,6 +242,7 @@ impl Narration {
     /// Set the operation name (e.g., "worker_spawn", "infer", "model_download").
     /// This is for dynamic operation names in job-based systems.
     /// TEAM-185: Added for job-based systems to track dynamic operation names
+    #[deprecated(since = "0.5.0", note = "Use n!() macro instead")]
     pub fn operation(mut self, op: impl Into<String>) -> Self {
         self.fields.operation = Some(op.into());
         self
@@ -308,12 +312,14 @@ impl Narration {
     }
 
     /// Set the operation duration in milliseconds.
+    #[deprecated(since = "0.5.0", note = "Use n!() macro instead")]
     pub fn duration_ms(mut self, ms: u64) -> Self {
         self.fields.duration_ms = Some(ms);
         self
     }
 
     /// Set the error kind/category.
+    #[deprecated(since = "0.5.0", note = "Use n!() macro instead")]
     pub fn error_kind(mut self, kind: impl Into<String>) -> Self {
         self.fields.error_kind = Some(kind.into());
         self
@@ -437,6 +443,7 @@ impl Narration {
     /// Also automatically includes task-local context (job_id, correlation_id) if set.
     ///
     /// Note: Use the `narrate!` macro instead to capture caller's crate name.
+    #[deprecated(since = "0.5.0", note = "Use n!() macro instead")]
     pub fn emit(mut self) {
         // Automatically include task-local context if available
         if let Some(ctx) = crate::context::get_context() {
@@ -452,11 +459,13 @@ impl Narration {
     }
 
     /// Emit the narration at WARN level with auto-injection.
+    #[deprecated(since = "0.5.0", note = "Use n!() macro instead")]
     pub fn emit_warn(self) {
         crate::narrate_warn(self.fields)
     }
 
     /// Emit the narration at ERROR level with auto-injection.
+    #[deprecated(since = "0.5.0", note = "Use n!() macro instead")]
     pub fn emit_error(self) {
         crate::narrate_error(self.fields)
     }

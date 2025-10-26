@@ -46,10 +46,15 @@ use clap::Parser;
 use config::Config;
 
 // TEAM-309: Custom narration formatter for clean output
+// TEAM-310: Now uses centralized format_message from narration-core
 use tracing_subscriber::fmt::format::{self, FormatEvent, FormatFields};
 use tracing_subscriber::fmt::FmtContext;
 use tracing_subscriber::registry::LookupSpan;
 
+/// Custom formatter for narration events in CLI mode.
+/// 
+/// TEAM-310: This formatter now delegates to `observability_narration_core::format::format_message()`
+/// for consistent formatting across all narration outputs (SSE, CLI, logs).
 struct NarrationFormatter;
 
 impl<S, N> FormatEvent<S, N> for NarrationFormatter
@@ -69,6 +74,7 @@ where
         struct FieldVisitor {
             actor: Option<String>,
             action: Option<String>,
+            target: Option<String>,
             human: Option<String>,
         }
         
@@ -77,6 +83,7 @@ where
                 match field.name() {
                     "actor" => self.actor = Some(value.to_string()),
                     "action" => self.action = Some(value.to_string()),
+                    "target" => self.target = Some(value.to_string()),
                     "human" => self.human = Some(value.to_string()),
                     _ => {}
                 }
@@ -86,6 +93,7 @@ where
                 match field.name() {
                     "actor" => self.actor = Some(format!("{:?}", value).trim_matches('"').to_string()),
                     "action" => self.action = Some(format!("{:?}", value).trim_matches('"').to_string()),
+                    "target" => self.target = Some(format!("{:?}", value).trim_matches('"').to_string()),
                     "human" => self.human = Some(format!("{:?}", value).trim_matches('"').to_string()),
                     _ => {}
                 }
@@ -95,14 +103,28 @@ where
         let mut visitor = FieldVisitor {
             actor: None,
             action: None,
+            target: None,
             human: None,
         };
         
         event.record(&mut visitor);
         
-        // Format: [actor     ] action         : message
+        // TEAM-310: Use centralized format_message from narration-core
+        // Format: Bold first line with actor/action, message on second line
         if let (Some(actor), Some(action), Some(human)) = (visitor.actor, visitor.action, visitor.human) {
-            writeln!(writer, "[{:<12}] {:<15}: {}", actor, action, human)
+            let label = if let Some(target) = visitor.target {
+                if target != action {
+                    format!("{}/{}", actor, target)
+                } else {
+                    actor
+                }
+            } else {
+                actor
+            };
+            
+            // Use the centralized format_message function
+            let formatted = observability_narration_core::format::format_message(&label, &action, &human);
+            write!(writer, "{}", formatted)
         } else {
             // Fallback for non-narration events
             writeln!(writer, "{:?}", event)

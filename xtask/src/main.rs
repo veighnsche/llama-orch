@@ -34,6 +34,7 @@ where
         struct FieldVisitor {
             actor: Option<String>,
             action: Option<String>,
+            target: Option<String>,
             human: Option<String>,
         }
         
@@ -42,6 +43,7 @@ where
                 match field.name() {
                     "actor" => self.actor = Some(value.to_string()),
                     "action" => self.action = Some(value.to_string()),
+                    "target" => self.target = Some(value.to_string()),
                     "human" => self.human = Some(value.to_string()),
                     _ => {}
                 }
@@ -51,6 +53,7 @@ where
                 match field.name() {
                     "actor" => self.actor = Some(format!("{:?}", value).trim_matches('"').to_string()),
                     "action" => self.action = Some(format!("{:?}", value).trim_matches('"').to_string()),
+                    "target" => self.target = Some(format!("{:?}", value).trim_matches('"').to_string()),
                     "human" => self.human = Some(format!("{:?}", value).trim_matches('"').to_string()),
                     _ => {}
                 }
@@ -60,14 +63,25 @@ where
         let mut visitor = FieldVisitor {
             actor: None,
             action: None,
+            target: None,
             human: None,
         };
         
         event.record(&mut visitor);
         
-        // Format: [actor     ] action         : message
+        // TEAM-309: Format with optional target (function name)
+        // [actor/target] action : message  OR  [actor] action : message
         if let (Some(actor), Some(action), Some(human)) = (visitor.actor, visitor.action, visitor.human) {
-            writeln!(writer, "[{:<12}] {:<15}: {}", actor, action, human)
+            let label = if let Some(target) = visitor.target {
+                if target != action {
+                    format!("{}/{}", actor, target)
+                } else {
+                    actor
+                }
+            } else {
+                actor
+            };
+            writeln!(writer, "[{:<12}] {:<15}: {}", label, action, human)
         } else {
             // Fallback for non-narration events
             writeln!(writer, "{:?}", event)

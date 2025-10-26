@@ -3,7 +3,6 @@
 
 use anyhow::{anyhow, Context, Result};
 use observability_narration_core::n;
-use observability_narration_macros::with_actor;
 use std::path::PathBuf;
 
 /// Workspace root finder
@@ -15,7 +14,6 @@ impl WorkspaceFinder {
     /// # Returns
     /// * `Ok(PathBuf)` - Workspace root directory
     /// * `Err` - Workspace root not found
-    #[with_actor("auto-update")]
     pub fn find() -> Result<PathBuf> {
         // TEAM-309: Added narration
         n!("find_workspace", "🔍 Searching for workspace root");

@@ -25,6 +25,18 @@ pub fn macro_emit(
     macro_emit_with_actor(action, human, cute, story, None)
 }
 
+/// TEAM-309: Emit narration with auto-detected crate name as actor
+#[doc(hidden)]
+pub fn macro_emit_auto(
+    action: &'static str,
+    human: &str,
+    cute: Option<&str>,
+    story: Option<&str>,
+    crate_name: &'static str,
+) {
+    macro_emit_with_actor(action, human, cute, story, Some(crate_name))
+}
+
 /// TEAM-309: Emit narration with explicit actor (for sync code that can't use context)
 #[doc(hidden)]
 pub fn macro_emit_with_actor(
@@ -50,17 +62,19 @@ pub fn macro_emit_with_actor(
     let job_id = ctx.as_ref().and_then(|c| c.job_id.clone());
     let correlation_id = ctx.as_ref().and_then(|c| c.correlation_id.clone());
     
-    // TEAM-309: Actor priority: explicit_actor > thread_local > context > "unknown"
+    // TEAM-309: Actor priority: explicit_actor > context > "unknown"
     let actor = explicit_actor
-        .or_else(|| crate::thread_actor::get_actor())
         .or_else(|| ctx.as_ref().and_then(|c| c.actor))
         .unwrap_or("unknown");
+    
+    // TEAM-309: Target from thread-local (function name from #[narrate_fn])
+    let target = crate::thread_actor::get_target().unwrap_or_else(|| action.to_string());
     
     // TEAM-297: Build fields with selected message
     let fields = NarrationFields {
         actor,
         action,
-        target: action.to_string(), // Use action as default target
+        target, // TEAM-309: From thread-local or action
         human: selected_message.to_string(),
         cute: cute.map(|s| s.to_string()),
         story: story.map(|s| s.to_string()),

@@ -3,7 +3,7 @@
 
 use anyhow::{Context, Result};
 use observability_narration_core::n;
-use observability_narration_macros::with_actor;
+use observability_narration_macros::narrate_fn;
 use std::path::PathBuf;
 
 use crate::binary::BinaryFinder;
@@ -61,7 +61,6 @@ impl AutoUpdater {
     /// ```rust,ignore
     /// let updater = AutoUpdater::new("queen-rbee", "bin/10_queen_rbee")?;
     /// ```
-    #[with_actor("auto-update")]
     pub fn new(binary_name: impl Into<String>, source_dir: impl Into<PathBuf>) -> Result<Self> {
         let binary_name = binary_name.into();
         let source_dir = source_dir.into();
@@ -91,7 +90,6 @@ impl AutoUpdater {
     /// * `Ok(true)` - Rebuild needed
     /// * `Ok(false)` - Binary is up-to-date
     /// * `Err` - Failed to check
-    #[with_actor("auto-update")]
     pub fn needs_rebuild(&self) -> Result<bool> {
         use crate::checker::RebuildChecker;
         
@@ -105,7 +103,6 @@ impl AutoUpdater {
     /// # Returns
     /// * `Ok(())` - Build succeeded
     /// * `Err` - Build failed
-    #[with_actor("auto-update")]
     pub fn rebuild(&self) -> Result<()> {
         use crate::rebuild::Rebuilder;
         Rebuilder::rebuild(self)
@@ -120,7 +117,6 @@ impl AutoUpdater {
     /// # Returns
     /// * `Ok(PathBuf)` - Path to binary
     /// * `Err` - Binary not found
-    #[with_actor("auto-update")]
     pub fn find_binary(&self) -> Result<PathBuf> {
         use crate::binary::BinaryFinder;
         
@@ -145,7 +141,7 @@ impl AutoUpdater {
     /// // Spawn daemon with up-to-date binary
     /// Command::new(&binary_path).spawn()?;
     /// ```
-    #[with_actor("auto-update")]
+    #[narrate_fn]
     pub async fn ensure_built(self) -> Result<PathBuf> {
         // TEAM-309: Added narration for ensure_built flow
         n!("ensure_built", "🔍 Ensuring {} is built", self.binary_name);
