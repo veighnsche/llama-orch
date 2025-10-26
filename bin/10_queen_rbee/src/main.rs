@@ -23,7 +23,7 @@ use axum::{
     extract::State,
     http::StatusCode,
     response::Json,
-    routing::{get, post},
+    routing::{delete, get, post}, // TEAM-305-FIX: Added delete for cancel endpoint
 };
 use tower_http::cors::{CorsLayer, Any}; // TEAM-288: CORS support for web UI
 use anyhow::Result; // TEAM-288: Import Result for main function
@@ -152,6 +152,8 @@ fn create_router(
         .route("/v1/jobs", post(http::handle_create_job))
         .with_state(job_state.clone())
         .route("/v1/jobs/{job_id}/stream", get(http::handle_stream_job)) // TEAM-288: Fixed path syntax for axum 0.8
+        .with_state(job_state.clone())
+        .route("/v1/jobs/{job_id}", delete(http::handle_cancel_job)) // TEAM-305-FIX: Cancel job endpoint
         .with_state(job_state);
 
     // TEAM-293: Merge API routes with static file serving

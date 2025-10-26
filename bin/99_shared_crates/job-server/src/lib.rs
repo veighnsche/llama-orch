@@ -64,15 +64,54 @@
 
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
+use std::time::Duration;  // TEAM-305: For timeout
 use tokio::sync::mpsc::UnboundedSender;
 
 // TEAM-186: For execute_and_stream helper
 use futures::stream::{self, Stream};
 use observability_narration_core::NarrationFactory;
 
+// TEAM-305: For job cancellation
+use tokio_util::sync::CancellationToken;
+
 // TEAM-197: Migrated to narration-core v0.5.0 pattern
 // Actor: "job-exec" (8 chars, ≤10 limit)
 const NARRATE: NarrationFactory = NarrationFactory::new("job-exec");
+
+// ============================================================================
+// TEAM-305-FIX: Job Error Types
+// ============================================================================
+
+/// Job execution error types
+///
+/// TEAM-305-FIX: Type-safe error handling instead of string matching
+#[derive(Debug, Clone)]
+pub enum JobError {
+    /// Job was cancelled by user
+    Cancelled,
+    /// Job timed out after specified duration
+    Timeout(Duration),
+    /// Job execution failed with error message
+    ExecutionFailed(String),
+}
+
+impl std::fmt::Display for JobError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            JobError::Cancelled => write!(f, "Job cancelled by user"),
+            JobError::Timeout(d) => write!(f, "Job timed out after {:?}", d),
+            JobError::ExecutionFailed(msg) => write!(f, "{}", msg),
+        }
+    }
+}
+
+impl std::error::Error for JobError {}
+
+impl From<anyhow::Error> for JobError {
+    fn from(err: anyhow::Error) -> Self {
+        JobError::ExecutionFailed(err.to_string())
+    }
+}
 
 /// Job state in the registry
 #[derive(Debug, Clone)]
@@ -85,6 +124,8 @@ pub enum JobState {
     Completed,
     /// Job failed with error message
     Failed(String),
+    /// Job was cancelled by user
+    Cancelled,  // TEAM-305: New state for cancelled jobs
 }
 
 /// Generic token response type
@@ -106,6 +147,8 @@ pub type TokenReceiver<T> = tokio::sync::mpsc::UnboundedReceiver<T>;
 ///
 /// TEAM-186: Added payload field for deferred execution
 /// - POST stores payload, GET retrieves and executes
+///
+/// TEAM-305: Added cancellation_token for job cancellation
 pub struct Job<T> {
     pub job_id: String,
     pub state: JobState,
@@ -113,6 +156,8 @@ pub struct Job<T> {
     pub token_receiver: Option<TokenReceiver<T>>,
     /// TEAM-186: Store operation payload for deferred execution
     pub payload: Option<serde_json::Value>,
+    /// TEAM-305: Cancellation token for graceful job cancellation
+    pub cancellation_token: CancellationToken,
 }
 
 // TEAM-154: Job cannot be cloned because UnboundedReceiver is not Clone
@@ -140,6 +185,7 @@ where
     /// Create a new job and return job_id
     ///
     /// TEAM-154: Server generates job_id (client doesn't provide it)
+    /// TEAM-305: Initialize with cancellation token
     pub fn create_job(&self) -> String {
         let job_id = format!("job-{}", uuid::Uuid::new_v4());
 
@@ -149,6 +195,7 @@ where
             created_at: chrono::Utc::now(),
             token_receiver: None,
             payload: None, // TEAM-186: Initialize as None
+            cancellation_token: CancellationToken::new(),  // TEAM-305: Initialize cancellation token
         };
 
         self.jobs.lock().unwrap().insert(job_id.clone(), job);
@@ -223,6 +270,34 @@ where
     pub fn job_ids(&self) -> Vec<String> {
         self.jobs.lock().unwrap().keys().cloned().collect()
     }
+
+    /// Cancel a job
+    ///
+    /// TEAM-305: Gracefully cancel a running job
+    /// This signals the executor to stop processing and updates the job state
+    pub fn cancel_job(&self, job_id: &str) -> bool {
+        let mut jobs = self.jobs.lock().unwrap();
+        if let Some(job) = jobs.get_mut(job_id) {
+            // Only cancel if job is Queued or Running
+            match job.state {
+                JobState::Queued | JobState::Running => {
+                    job.cancellation_token.cancel();
+                    job.state = JobState::Cancelled;
+                    true
+                }
+                _ => false,  // Already completed, failed, or cancelled
+            }
+        } else {
+            false  // Job not found
+        }
+    }
+
+    /// Get cancellation token for a job
+    ///
+    /// TEAM-305: Retrieve cancellation token for executor
+    pub fn get_cancellation_token(&self, job_id: &str) -> Option<CancellationToken> {
+        self.jobs.lock().unwrap().get(job_id).map(|j| j.cancellation_token.clone())
+    }
 }
 
 impl<T> Default for JobRegistry<T>
@@ -242,11 +317,13 @@ impl<T> Clone for JobRegistry<T> {
 
 // ============================================================================
 // TEAM-186: Execute and Stream Helper
+// TEAM-305: Added timeout and cancellation support
 // ============================================================================
 
-/// Execute a job and stream its results
+/// Execute a job and stream its results (without timeout)
 ///
 /// TEAM-186: Reusable helper for deferred execution pattern
+/// TEAM-305: For backward compatibility, use execute_and_stream_with_timeout for new code
 ///
 /// This function:
 /// 1. Retrieves the job payload from the registry
@@ -295,6 +372,8 @@ where
     if let Some(payload) = payload {
         let job_id_clone = job_id.clone();
 
+        let registry_clone = registry.clone();
+        
         tokio::spawn(async move {
             // TEAM-197: Use narration v0.5.0 pattern
             NARRATE
@@ -304,16 +383,24 @@ where
                 .human("Executing job {}")
                 .emit();
 
-            // Execute the job
-            if let Err(e) = executor(job_id_clone.clone(), payload).await {
-                NARRATE
-                    .action("failed")
-                    .job_id(&job_id_clone)
-                    .context(job_id_clone.clone())
-                    .context(e.to_string())
-                    .human("Job {} failed: {}")
-                    .error_kind("job_execution_failed")
-                    .emit_error();
+            // TEAM-304: Execute the job and update state based on result
+            let result = executor(job_id_clone.clone(), payload).await;
+            
+            match result {
+                Ok(_) => {
+                    registry_clone.update_state(&job_id_clone, JobState::Completed);
+                }
+                Err(e) => {
+                    registry_clone.update_state(&job_id_clone, JobState::Failed(e.to_string()));
+                    NARRATE
+                        .action("failed")
+                        .job_id(&job_id_clone)
+                        .context(job_id_clone.clone())
+                        .context(e.to_string())
+                        .human("Job {} failed: {}")
+                        .error_kind("job_execution_failed")
+                        .emit_error();
+                }
             }
         });
     } else {
@@ -325,21 +412,232 @@ where
             .emit();
     }
 
-    // TEAM-186: Stream results
+    // TEAM-304: Stream results and send [DONE] or [ERROR]
     let receiver = registry.take_token_receiver(&job_id);
+    let registry_clone = registry.clone();
+    let job_id_clone = job_id.clone();
 
-    stream::unfold(receiver, |rx_opt| async move {
-        match rx_opt {
-            Some(mut rx) => match rx.recv().await {
-                Some(token) => {
-                    let data = token.to_string();
-                    Some((data, Some(rx)))
+    stream::unfold((receiver, false, job_id_clone, registry_clone), 
+        |(rx_opt, done_sent, job_id, registry)| async move {
+            if done_sent {
+                return None;
+            }
+
+            match rx_opt {
+                Some(mut rx) => match rx.recv().await {
+                    Some(token) => {
+                        let data = token.to_string();
+                        Some((data, (Some(rx), false, job_id, registry)))
+                    }
+                    None => {
+                        // TEAM-304: Channel closed - check job state and send appropriate signal
+                        let state = registry.get_job_state(&job_id);
+                        let signal = match state {
+                            Some(JobState::Failed(err)) => format!("[ERROR] {}", err),
+                            _ => "[DONE]".to_string(),
+                        };
+                        Some((signal, (None, true, job_id, registry)))
+                    }
+                },
+                None => {
+                    // TEAM-304: No receiver - send [DONE] immediately
+                    Some(("[DONE]".to_string(), (None, true, job_id, registry)))
                 }
-                None => None,
-            },
-            None => None,
+            }
         }
-    })
+    )
+}
+
+/// Execute a job and stream its results with timeout and cancellation support
+///
+/// TEAM-305: Enhanced version with timeout and cancellation
+///
+/// This function:
+/// 1. Retrieves the job payload from the registry
+/// 2. Spawns async execution in background with timeout and cancellation support
+/// 3. Returns a stream of results for SSE
+///
+/// # Type Parameters
+/// - `T`: Token type for streaming (must implement ToString)
+/// - `F`: Future that executes the job
+/// - `Exec`: Function that creates the execution future
+///
+/// # Arguments
+/// - `job_id`: The job ID to execute
+/// - `registry`: Job registry containing the job
+/// - `executor`: Function that takes (job_id, payload) and returns a Future
+/// - `timeout`: Maximum duration for job execution (None for no timeout)
+///
+/// # Returns
+/// A stream of string tokens suitable for SSE streaming
+///
+/// # Example
+/// ```rust,ignore
+/// use job_server::execute_and_stream_with_timeout;
+/// use std::time::Duration;
+///
+/// let stream = execute_and_stream_with_timeout(
+///     job_id,
+///     registry,
+///     |job_id, payload| async move {
+///         // Execute job logic here
+///         route_job(state, payload).await
+///     },
+///     Some(Duration::from_secs(300))  // 5 minute timeout
+/// ).await;
+/// ```
+pub async fn execute_and_stream_with_timeout<T, F, Exec>(
+    job_id: String,
+    registry: Arc<JobRegistry<T>>,
+    executor: Exec,
+    timeout: Option<Duration>,
+) -> impl Stream<Item = String>
+where
+    T: ToString + Send + 'static,
+    F: std::future::Future<Output = Result<(), anyhow::Error>> + Send + 'static,
+    Exec: FnOnce(String, serde_json::Value) -> F + Send + 'static,
+{
+    // TEAM-305: Retrieve payload and cancellation token
+    let payload = registry.take_payload(&job_id);
+    let cancellation_token = registry.get_cancellation_token(&job_id);
+
+    if let Some(payload) = payload {
+        let job_id_clone = job_id.clone();
+        let registry_clone = registry.clone();
+        
+        tokio::spawn(async move {
+            // TEAM-305: Use narration v0.5.0 pattern
+            NARRATE
+                .action("execute")
+                .job_id(&job_id_clone)
+                .context(job_id_clone.clone())
+                .human("Executing job {}")
+                .emit();
+
+            // TEAM-305-FIX: Execute with timeout and cancellation support using JobError
+            let execution_future = executor(job_id_clone.clone(), payload);
+            
+            let result: Result<(), JobError> = if let Some(cancellation_token) = cancellation_token {
+                // With cancellation support
+                if let Some(timeout_duration) = timeout {
+                    // With both timeout and cancellation
+                    tokio::select! {
+                        result = execution_future => result.map_err(JobError::from),
+                        _ = cancellation_token.cancelled() => {
+                            Err(JobError::Cancelled)
+                        }
+                        _ = tokio::time::sleep(timeout_duration) => {
+                            Err(JobError::Timeout(timeout_duration))
+                        }
+                    }
+                } else {
+                    // With cancellation only
+                    tokio::select! {
+                        result = execution_future => result.map_err(JobError::from),
+                        _ = cancellation_token.cancelled() => {
+                            Err(JobError::Cancelled)
+                        }
+                    }
+                }
+            } else if let Some(timeout_duration) = timeout {
+                // With timeout only
+                match tokio::time::timeout(timeout_duration, execution_future).await {
+                    Ok(result) => result.map_err(JobError::from),
+                    Err(_) => Err(JobError::Timeout(timeout_duration)),
+                }
+            } else {
+                // No timeout or cancellation
+                execution_future.await.map_err(JobError::from)
+            };
+            
+            // TEAM-305-FIX: Update state based on JobError type
+            match result {
+                Ok(_) => {
+                    registry_clone.update_state(&job_id_clone, JobState::Completed);
+                }
+                Err(JobError::Cancelled) => {
+                    registry_clone.update_state(&job_id_clone, JobState::Cancelled);
+                    NARRATE
+                        .action("cancelled")
+                        .job_id(&job_id_clone)
+                        .context(job_id_clone.clone())
+                        .human("Job {} cancelled")
+                        .emit();
+                }
+                Err(JobError::Timeout(duration)) => {
+                    let error_msg = format!("Timeout after {:?}", duration);
+                    registry_clone.update_state(&job_id_clone, JobState::Failed(error_msg.clone()));
+                    NARRATE
+                        .action("timeout")
+                        .job_id(&job_id_clone)
+                        .context(job_id_clone.clone())
+                        .context(error_msg.clone())
+                        .human("Job {} timed out: {}")
+                        .error_kind("job_timeout")
+                        .emit_error();
+                }
+                Err(JobError::ExecutionFailed(error_msg)) => {
+                    registry_clone.update_state(&job_id_clone, JobState::Failed(error_msg.clone()));
+                    NARRATE
+                        .action("failed")
+                        .job_id(&job_id_clone)
+                        .context(job_id_clone.clone())
+                        .context(error_msg.clone())
+                        .human("Job {} failed: {}")
+                        .error_kind("job_execution_failed")
+                        .emit_error();
+                }
+            }
+        });
+    } else {
+        NARRATE
+            .action("no_payload")
+            .job_id(&job_id)
+            .context(job_id.clone())
+            .human("Warning: No payload found for job {}")
+            .emit();
+    }
+
+    // TEAM-305: Stream results and send [DONE], [ERROR], or [CANCELLED]
+    let receiver = registry.take_token_receiver(&job_id);
+    let registry_clone = registry.clone();
+    let job_id_clone = job_id.clone();
+
+    stream::unfold((receiver, false, job_id_clone, registry_clone), 
+        |(rx_opt, done_sent, job_id, registry)| async move {
+            if done_sent {
+                return None;
+            }
+
+            match rx_opt {
+                Some(mut rx) => match rx.recv().await {
+                    Some(token) => {
+                        let data = token.to_string();
+                        Some((data, (Some(rx), false, job_id, registry)))
+                    }
+                    None => {
+                        // TEAM-305: Channel closed - check job state and send appropriate signal
+                        let state = registry.get_job_state(&job_id);
+                        let signal = match state {
+                            Some(JobState::Failed(err)) => format!("[ERROR] {}", err),
+                            Some(JobState::Cancelled) => "[CANCELLED]".to_string(),
+                            _ => "[DONE]".to_string(),
+                        };
+                        Some((signal, (None, true, job_id, registry)))
+                    }
+                },
+                None => {
+                    // TEAM-305: No receiver - check state and send appropriate signal
+                    let state = registry.get_job_state(&job_id);
+                    let signal = match state {
+                        Some(JobState::Cancelled) => "[CANCELLED]".to_string(),
+                        _ => "[DONE]".to_string(),
+                    };
+                    Some((signal, (None, true, job_id, registry)))
+                }
+            }
+        }
+    )
 }
 
 #[cfg(test)]

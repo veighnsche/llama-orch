@@ -159,9 +159,20 @@ impl JobClient {
                         // Call handler for each line
                         line_handler(data)?;
 
-                        // Check for [DONE] marker
+                        // TEAM-304: Check for [DONE] marker
                         if data.contains("[DONE]") {
                             return Ok(job_id);
+                        }
+                        
+                        // TEAM-305-FIX: Check for [CANCELLED] marker
+                        if data.contains("[CANCELLED]") {
+                            return Err(anyhow::anyhow!("Job was cancelled"));
+                        }
+                        
+                        // TEAM-304: Check for [ERROR] marker
+                        if data.contains("[ERROR]") {
+                            let error_msg = data.strip_prefix("[ERROR]").unwrap_or(data).trim();
+                            return Err(anyhow::anyhow!("Job failed: {}", error_msg));
                         }
                     }
                 } else {

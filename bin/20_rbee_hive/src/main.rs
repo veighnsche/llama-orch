@@ -20,7 +20,7 @@ use narration::{
 };
 
 use axum::{
-    routing::{get, post},
+    routing::{delete, get, post}, // TEAM-305-FIX: Added delete for cancel endpoint
     Json, Router,
 };
 use clap::Parser;
@@ -128,6 +128,7 @@ async fn main() -> anyhow::Result<()> {
         .route("/capabilities", get(get_capabilities))
         .route("/v1/jobs", post(http::jobs::handle_create_job))
         .route("/v1/jobs/{job_id}/stream", get(http::jobs::handle_stream_job)) // TEAM-291: Fixed :job_id → {job_id}
+        .route("/v1/jobs/{job_id}", delete(http::jobs::handle_cancel_job)) // TEAM-305-FIX: Cancel job endpoint
         .with_state(job_state);
 
     let addr = SocketAddr::from(([127, 0, 0, 1], args.port));

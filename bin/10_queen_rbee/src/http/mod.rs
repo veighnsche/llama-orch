@@ -39,5 +39,5 @@ pub use heartbeat::{
     HttpHeartbeatAcknowledgement, // TEAM-275: Removed handle_heartbeat (deprecated)
 };
 pub use heartbeat_stream::handle_heartbeat_stream; // TEAM-285: Live heartbeat streaming
-pub use jobs::{handle_create_job, handle_stream_job, SchedulerState}; // TEAM-262
+pub use jobs::{handle_cancel_job, handle_create_job, handle_stream_job, SchedulerState}; // TEAM-262, TEAM-305-FIX: Added handle_cancel_job
 pub use static_files::create_static_router; // TEAM-293: Static file serving for web UI

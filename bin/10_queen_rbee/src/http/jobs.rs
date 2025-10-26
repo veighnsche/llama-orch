@@ -63,6 +63,32 @@ pub async fn handle_create_job(
         .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))
 }
 
+/// DELETE /v1/jobs/{job_id} - Cancel a job
+///
+/// TEAM-305-FIX: Allow users to cancel running or queued jobs
+///
+/// Returns:
+/// - 200 OK with job_id if cancelled successfully
+/// - 404 NOT FOUND if job doesn't exist or cannot be cancelled
+pub async fn handle_cancel_job(
+    Path(job_id): Path<String>,
+    State(state): State<SchedulerState>,
+) -> Result<Json<serde_json::Value>, (StatusCode, String)> {
+    let cancelled = state.registry.cancel_job(&job_id);
+    
+    if cancelled {
+        Ok(Json(serde_json::json!({
+            "job_id": job_id,
+            "status": "cancelled"
+        })))
+    } else {
+        Err((
+            StatusCode::NOT_FOUND,
+            format!("Job {} not found or cannot be cancelled (already completed/failed)", job_id)
+        ))
+    }
+}
+
 /// GET /v1/jobs/{job_id}/stream - Stream job results via SSE
 ///
 /// TEAM-189: Fixed to subscribe to SSE narration broadcaster

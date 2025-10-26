@@ -78,27 +78,25 @@ async fn stream_job_handler(
                 n!("stream_processing", "Processing request");
                 tokio::time::sleep(tokio::time::Duration::from_millis(50)).await;
                 n!("stream_complete", "Request complete");
-                tokio::time::sleep(tokio::time::Duration::from_millis(50)).await;
-                // TEAM-303: Send [DONE] marker to close stream
-                n!("done", "[DONE]");
+                // TEAM-304: Removed [DONE] emission - job-server sends it when channel closes
             }).await;
         });
         
-        // Stream events
-        let event_stream = stream::unfold(rx, |mut rx| async move {
+        // TEAM-304: Stream events and send [DONE] when channel closes
+        let event_stream = stream::unfold((rx, false), |(mut rx, done_sent)| async move {
+            if done_sent {
+                return None;
+            }
+            
             match rx.recv().await {
                 Some(event) => {
                     let data = event.formatted.clone();
-                    let is_done = event.human.contains("[DONE]");
-                    let result = Some((Ok::<_, std::io::Error>(Event::default().data(data)), rx));
-                    // Stop streaming after [DONE]
-                    if is_done {
-                        None
-                    } else {
-                        result
-                    }
+                    Some((Ok::<_, std::io::Error>(Event::default().data(data)), (rx, false)))
                 }
-                None => None,
+                None => {
+                    // TEAM-304: Channel closed - send [DONE] signal
+                    Some((Ok::<_, std::io::Error>(Event::default().data("[DONE]")), (rx, true)))
+                }
             }
         });
         

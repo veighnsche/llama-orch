@@ -95,7 +95,7 @@ async fn create_job_handler(
         }
         
         n!("queen_complete", "Queen job processing complete");
-        n!("done", "[DONE]");
+        // TEAM-304: Removed [DONE] emission - job-server sends it when channel closes
     }).await;
     
     Json(serde_json::json!({
@@ -118,20 +118,21 @@ async fn stream_job_handler(
     let receiver = observability_narration_core::output::sse_sink::take_job_receiver(&job_id);
     
     if let Some(rx) = receiver {
-        // Stream events
-        let event_stream = stream::unfold(rx, |mut rx| async move {
+        // TEAM-304: Stream events and send [DONE] when channel closes
+        let event_stream = stream::unfold((rx, false), |(mut rx, done_sent)| async move {
+            if done_sent {
+                return None;
+            }
+            
             match rx.recv().await {
                 Some(event) => {
                     let data = event.formatted.clone();
-                    let is_done = event.human.contains("[DONE]");
-                    if is_done {
-                        // Send final event and close
-                        Some((Ok::<_, std::io::Error>(Event::default().data(data)), rx))
-                    } else {
-                        Some((Ok::<_, std::io::Error>(Event::default().data(data)), rx))
-                    }
+                    Some((Ok::<_, std::io::Error>(Event::default().data(data)), (rx, false)))
                 }
-                None => None,
+                None => {
+                    // TEAM-304: Channel closed - send [DONE] signal
+                    Some((Ok::<_, std::io::Error>(Event::default().data("[DONE]")), (rx, true)))
+                }
             }
         });
         

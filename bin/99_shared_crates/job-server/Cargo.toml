@@ -8,7 +8,7 @@ license = "GPL-3.0-or-later"
 
 [dependencies]
 # Core dependencies
-tokio = { version = "1", features = ["sync", "rt"] }
+tokio = { version = "1", features = ["sync", "rt", "time"] }  # TEAM-305: Added "time" for timeout
 uuid = { version = "1.0", features = ["v4"] }
 chrono = { version = "0.4", features = ["serde"] }
 serde_json = "1.0"  # TEAM-186: For payload storage
@@ -17,6 +17,9 @@ serde_json = "1.0"  # TEAM-186: For payload storage
 futures = "0.3"  # Stream utilities
 observability-narration-core = { path = "../narration-core" }  # Narration events
 anyhow = "1.0"  # Error handling
+
+# TEAM-305: For job cancellation and timeout
+tokio-util = "0.7"  # CancellationToken (in default features)
 
 [dev-dependencies]
 tokio = { version = "1", features = ["rt", "macros"] }
