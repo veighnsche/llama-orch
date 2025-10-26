@@ -1,8 +1,9 @@
-# TEAM-305: Phase 4 - Failure Scenarios & BDD Updates
+# TEAM-307: Failure Scenarios & BDD Updates
 
-**Status:** BLOCKED (Requires TEAM-304 completion)  
+**Status:** READY (After TEAM-306)  
+**Priority:** P2 (Medium)  
+**Dependencies:** TEAM-306 (context propagation tests)  
 **Estimated Duration:** 1 week (5 days)  
-**Dependencies:** TEAM-302, TEAM-303, TEAM-304  
 **Risk Level:** Medium
 
 ---

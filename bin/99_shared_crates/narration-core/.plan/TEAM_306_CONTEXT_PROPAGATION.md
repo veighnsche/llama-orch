@@ -1,6 +1,8 @@
-# TEAM-304: Phase 3 - Context Propagation & Performance Tests
+# TEAM-306: Context Propagation & Performance Tests
 
-**Status:** BLOCKED (Requires TEAM-303 completion)  
+**Status:** READY (After TEAM-304, TEAM-305, TEAM-308)  
+**Priority:** P2 (Medium)  
+**Dependencies:** TEAM-304 (DONE signal), TEAM-305 (circular dependency), TEAM-308 (test fixes)  
 **Estimated Duration:** 1 week (5 days)  
 **Dependencies:** TEAM-302, TEAM-303  
 **Risk Level:** Medium

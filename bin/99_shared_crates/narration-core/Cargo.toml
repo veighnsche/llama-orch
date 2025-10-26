@@ -23,17 +23,38 @@ once_cell = "1.19"
 opentelemetry = { version = "0.21", optional = true }
 axum = { workspace = true, optional = true }
 anyhow = { workspace = true } # TEAM-300: For process_capture Result types
+reqwest = { workspace = true, optional = true } # TEAM-303: For fake binaries HTTP forwarding
+futures = { version = "0.3", optional = true } # TEAM-303: For fake binaries SSE streaming
 
 [dev-dependencies]
 tracing-subscriber = { workspace = true }
 criterion = "0.5"
 serial_test = "3.0"
-tokio = { version = "1", features = ["macros", "rt"] }
+tokio = { version = "1", features = ["macros", "rt", "net"] } # TEAM-303: Added net for TcpListener
 tower = { version = "0.5", features = ["util"] }
+job-server = { path = "../job-server" } # TEAM-302: For test harness
+job-client = { path = "../job-client" } # TEAM-303: For E2E tests
+operations-contract = { path = "../../97_contracts/operations-contract" } # TEAM-303: For E2E tests
+futures = "0.3" # TEAM-303: For SSE streaming
 
 [[bench]]
 name = "narration_benchmarks"
 harness = false
+
+# TEAM-303: Test binaries for E2E integration tests
+[[bin]]
+name = "fake-queen-rbee"
+path = "tests/bin/fake_queen.rs"
+required-features = ["axum"]
+
+[[bin]]
+name = "fake-rbee-hive"
+path = "tests/bin/fake_hive.rs"
+required-features = ["axum"]
+
+[[bin]]
+name = "fake-worker"
+path = "tests/bin/fake_worker.rs"
 
 [features]
 default = []
@@ -41,6 +62,6 @@ trace-enabled = []  # Enable trace macros (dev/debug builds only)
 debug-enabled = []  # Enable debug-level narration
 cute-mode = []      # Enable cute narration fields
 otel = ["opentelemetry"]
-axum = ["dep:axum"]
+axum = ["dep:axum", "dep:reqwest", "dep:futures"]  # TEAM-303: Include deps for test binaries
 test-support = []  # Enables test capture adapter in non-test builds
 production = []     # Production profile (all tracing disabled)
