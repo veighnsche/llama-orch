@@ -8,7 +8,7 @@
 use std::sync::Arc;
 use std::time::Duration;
 use futures::stream::{self, Stream};
-use observability_narration_core::macro_emit_with_actor;
+use observability_narration_core::n;
 
 use crate::{JobError, JobRegistry, JobState};
 
@@ -79,7 +79,7 @@ where
         let registry_clone = registry.clone();
         
         tokio::spawn(async move {
-            macro_emit_with_actor("execute", &format!("Executing job {}", job_id_clone), None, None, Some("job-exec"));
+            n!("execute", "Executing job {}", job_id_clone);
 
             // Execute with timeout and cancellation support using JobError
             let execution_future = executor(job_id_clone.clone(), payload);
@@ -124,21 +124,21 @@ where
                 }
                 Err(JobError::Cancelled) => {
                     registry_clone.update_state(&job_id_clone, JobState::Cancelled);
-                    macro_emit_with_actor("cancelled", &format!("Job {} cancelled", job_id_clone), None, None, Some("job-exec"));
+                    n!("cancelled", "Job {} cancelled", job_id_clone);
                 }
                 Err(JobError::Timeout(duration)) => {
                     let error_msg = format!("Timeout after {:?}", duration);
                     registry_clone.update_state(&job_id_clone, JobState::Failed(error_msg.clone()));
-                    macro_emit_with_actor("timeout", &format!("Job {} timed out: {}", job_id_clone, error_msg), None, None, Some("job-exec"));
+                    n!("timeout", "Job {} timed out: {}", job_id_clone, error_msg);
                 }
                 Err(JobError::ExecutionFailed(error_msg)) => {
                     registry_clone.update_state(&job_id_clone, JobState::Failed(error_msg.clone()));
-                    macro_emit_with_actor("failed", &format!("Job {} failed: {}", job_id_clone, error_msg), None, None, Some("job-exec"));
+                    n!("failed", "Job {} failed: {}", job_id_clone, error_msg);
                 }
             }
         });
     } else {
-        macro_emit_with_actor("no_payload", &format!("Warning: No payload found for job {}", job_id), None, None, Some("job-exec"));
+        n!("no_payload", "Warning: No payload found for job {}", job_id);
     }
 
     // Stream results and send [DONE], [ERROR], or [CANCELLED]

@@ -73,8 +73,8 @@ pub async fn create_job(state: JobState, payload: serde_json::Value) -> Result<J
     // TEAM-200: Create job-specific SSE channel for isolation
     observability_narration_core::sse_sink::create_job_channel(job_id.clone(), 1000);
 
-    // TEAM-312: Use explicit actor since this is called before context is set
-    observability_narration_core::macro_emit_with_actor("job_create", &format!("Job {} created, waiting for client connection", job_id), None, None, Some("job-router"));
+    // TEAM-312: Use n!() macro - actor auto-detected from crate name
+    n!("job_create", "Job {} created, waiting for client connection", job_id);
 
     Ok(JobResponse { job_id, sse_url })
 }

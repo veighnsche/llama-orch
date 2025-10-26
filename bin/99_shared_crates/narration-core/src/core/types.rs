@@ -184,10 +184,13 @@ impl NarrationFields {
     /// //         Initializing
     /// ```
     pub fn format(&self) -> String {
+        // TEAM-312: If fn_name is unknown, use actor (crate name) instead
+        let display_name = self.fn_name.as_deref().unwrap_or(self.actor);
+        
         crate::format::format_message_with_fn(
             self.action,
             &self.human,
-            self.fn_name.as_deref().unwrap_or("unknown")
+            display_name
         )
     }
 }

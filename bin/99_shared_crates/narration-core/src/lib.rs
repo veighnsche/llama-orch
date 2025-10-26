@@ -118,17 +118,7 @@ pub use api::emit::human;
 
 pub use api::{Narration, NarrationFactory};
 #[doc(hidden)]
-#[deprecated(since = "0.5.0", note = "Use n!() macro instead - actor is now auto-detected from crate name")]
-pub use api::macro_emit;
-#[doc(hidden)]
-pub use api::macro_emit_auto; // TEAM-309: Auto-detect crate name
-#[doc(hidden)]
-pub use api::macro_emit_auto_with_level; // TEAM-311: Auto-detect crate name with level
-#[doc(hidden)]
-pub use api::macro_emit_auto_with_fn; // TEAM-312: Auto-detect crate name AND function name
-#[doc(hidden)]
-#[deprecated(since = "0.5.0", note = "Use n!() macro instead - actor is now auto-detected from crate name")]
-pub use api::macro_emit_with_actor; // TEAM-309: For sync code that can't use context
+pub use api::macro_emit_auto_with_fn; // TEAM-312: Only function needed by n!() macro (deleted 5 wrappers)
 
 // Context
 pub use context::{with_narration_context, NarrationContext};

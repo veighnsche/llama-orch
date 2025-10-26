@@ -242,33 +242,21 @@ impl Operation {
 }
 
 // ============================================================================
-// OPERATION CONSTANTS (for backward compatibility)
+// TEAM-312: DELETED OPERATION CONSTANTS MODULE (backwards compat trap)
 // ============================================================================
-
-/// Operation name constants
-///
-/// TEAM-186: Kept for backward compatibility with string-based code
-/// TEAM-194: Removed OP_HIVE_UPDATE (operation removed)
-pub mod constants {
-    // TEAM-278: DELETED OP_HIVE_INSTALL, OP_HIVE_UNINSTALL
-    pub const OP_HIVE_START: &str = "hive_start";
-    pub const OP_HIVE_STOP: &str = "hive_stop";
-    pub const OP_HIVE_LIST: &str = "hive_list";
-    pub const OP_HIVE_GET: &str = "hive_get";
-    pub const OP_HIVE_STATUS: &str = "hive_status"; // TEAM-189
-
-    pub const OP_WORKER_SPAWN: &str = "worker_spawn";
-    pub const OP_WORKER_LIST: &str = "worker_list";
-    pub const OP_WORKER_GET: &str = "worker_get";
-    pub const OP_WORKER_DELETE: &str = "worker_delete";
-
-    pub const OP_MODEL_DOWNLOAD: &str = "model_download";
-    pub const OP_MODEL_LIST: &str = "model_list";
-    pub const OP_MODEL_GET: &str = "model_get";
-    pub const OP_MODEL_DELETE: &str = "model_delete";
-
-    pub const OP_INFER: &str = "infer";
-}
+//
+// This module contained string constants like OP_HIVE_START, OP_WORKER_SPAWN, etc.
+// marked "for backward compatibility with string-based code".
+//
+// ❌ PROBLEM: These constants were NEVER used anywhere in the codebase.
+//    They created 28 lines of permanent technical debt that would need
+//    to be maintained forever "just in case".
+//
+// ✅ SOLUTION: DELETED. The Operation enum's .name() method provides
+//    the canonical string representation. No duplication needed.
+//
+// Pre-1.0 software is ALLOWED to break. See: RULE ZERO
+// ============================================================================
 
 #[cfg(test)]
 mod tests {

@@ -138,46 +138,45 @@ impl JobClient {
             buffer.extend_from_slice(&chunk);
 
             // Try to parse complete UTF-8 lines
-            loop {
-                // Find newline boundary
-                if let Some(newline_pos) = buffer.iter().position(|&b| b == b'\n') {
-                    // Extract line (including newline)
-                    let line_bytes = buffer.drain(..=newline_pos).collect::<Vec<_>>();
+            // TEAM-312: Use while let instead of loop + if let (clippy::while_let_loop)
+            while let Some(newline_pos) = buffer.iter().position(|&b| b == b'\n') {
+                // Extract line (including newline)
+                let line_bytes = buffer.drain(..=newline_pos).collect::<Vec<_>>();
+                
+                // Convert to string (skip if invalid UTF-8)
+                if let Ok(line) = std::str::from_utf8(&line_bytes) {
+                    let line = line.trim();
                     
-                    // Convert to string (skip if invalid UTF-8)
-                    if let Ok(line) = std::str::from_utf8(&line_bytes) {
-                        let line = line.trim();
-                        
-                        // Strip "data: " prefix if present (SSE format)
-                        let data = line.strip_prefix("data: ").unwrap_or(line);
+                    // Strip "data:" or "data: " prefix if present (SSE format)
+                    // TEAM-312: Handle both "data:" (empty event) and "data: content"
+                    let data = line
+                        .strip_prefix("data: ")
+                        .or_else(|| line.strip_prefix("data:"))
+                        .unwrap_or(line);
 
-                        // Skip empty lines
-                        if data.is_empty() {
-                            continue;
-                        }
-
-                        // Call handler for each line
-                        line_handler(data)?;
-
-                        // TEAM-304: Check for [DONE] marker
-                        if data.contains("[DONE]") {
-                            return Ok(job_id);
-                        }
-                        
-                        // TEAM-305-FIX: Check for [CANCELLED] marker
-                        if data.contains("[CANCELLED]") {
-                            return Err(anyhow::anyhow!("Job was cancelled"));
-                        }
-                        
-                        // TEAM-304: Check for [ERROR] marker
-                        if data.contains("[ERROR]") {
-                            let error_msg = data.strip_prefix("[ERROR]").unwrap_or(data).trim();
-                            return Err(anyhow::anyhow!("Job failed: {}", error_msg));
-                        }
+                    // Skip empty lines (including bare "data:" events)
+                    if data.is_empty() {
+                        continue;
                     }
-                } else {
-                    // No complete line yet, wait for more data
-                    break;
+
+                    // Call handler for each line
+                    line_handler(data)?;
+
+                    // TEAM-304: Check for [DONE] marker
+                    if data.contains("[DONE]") {
+                        return Ok(job_id);
+                    }
+                    
+                    // TEAM-305-FIX: Check for [CANCELLED] marker
+                    if data.contains("[CANCELLED]") {
+                        return Err(anyhow::anyhow!("Job was cancelled"));
+                    }
+                    
+                    // TEAM-304: Check for [ERROR] marker
+                    if data.contains("[ERROR]") {
+                        let error_msg = data.strip_prefix("[ERROR]").unwrap_or(data).trim();
+                        return Err(anyhow::anyhow!("Job failed: {}", error_msg));
+                    }
                 }
             }
         }
