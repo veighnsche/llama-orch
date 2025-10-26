@@ -3,11 +3,9 @@
 //! TEAM-276: Extracted pattern from queen-lifecycle and hive-lifecycle
 
 use anyhow::Result;
-use observability_narration_core::NarrationFactory;
+use observability_narration_core::{n, with_narration_context, NarrationContext};
 use std::time::Duration;
 use tokio::time::sleep;
-
-const NARRATE: NarrationFactory = NarrationFactory::new("dmn-life");
 
 /// Configuration for graceful shutdown
 ///
@@ -90,69 +88,49 @@ impl ShutdownConfig {
 /// # }
 /// ```
 pub async fn graceful_shutdown(config: ShutdownConfig) -> Result<()> {
-    // Step 1: Check if daemon is running
-    let is_running =
-        crate::health::is_daemon_healthy(&config.health_url, None, Some(Duration::from_secs(2)))
-            .await;
+    // TEAM-311: Migrated to n!() macro
+    let ctx = config.job_id.as_ref().map(|jid| NarrationContext::new().with_job_id(jid));
+    
+    let shutdown_impl = async {
+        // Step 1: Check if daemon is running
+        let is_running =
+            crate::health::is_daemon_healthy(&config.health_url, None, Some(Duration::from_secs(2)))
+                .await;
 
-    if !is_running {
-        // TEAM-276: Using .maybe_job_id() to reduce boilerplate
-        NARRATE
-            .action("daemon_not_running")
-            .context(&config.daemon_name)
-            .human(format!("⚠️  {} not running", config.daemon_name))
-            .maybe_job_id(config.job_id.as_deref())
-            .emit();
-        return Ok(());
-    }
-
-    // Step 2: Send shutdown request
-    // TEAM-276: Using .maybe_job_id() to reduce boilerplate
-    NARRATE
-        .action("daemon_shutdown")
-        .context(&config.daemon_name)
-        .human(format!("🛑 Shutting down {}...", config.daemon_name))
-        .maybe_job_id(config.job_id.as_deref())
-        .emit();
-
-    let shutdown_client = reqwest::Client::builder().timeout(Duration::from_secs(30)).build()?;
-
-    match shutdown_client.post(&config.shutdown_endpoint).send().await {
-        Ok(_) => {
-            // TEAM-276: Using .maybe_job_id() to reduce boilerplate
-            NARRATE
-                .action("daemon_stopped")
-                .context(&config.daemon_name)
-                .human(format!("✅ {} stopped", config.daemon_name))
-                .maybe_job_id(config.job_id.as_deref())
-                .emit();
-            Ok(())
+        if !is_running {
+            n!("daemon_not_running", "⚠️  {} not running", config.daemon_name);
+            return Ok(());
         }
-        Err(e) => {
-            // Connection closed/reset is expected - daemon shuts down before responding
-            if e.is_connect() || e.to_string().contains("connection closed") {
-                // TEAM-276: Using .maybe_job_id() to reduce boilerplate
-                NARRATE
-                    .action("daemon_stopped")
-                    .context(&config.daemon_name)
-                    .human(format!("✅ {} stopped", config.daemon_name))
-                    .maybe_job_id(config.job_id.as_deref())
-                    .emit();
+
+        // Step 2: Send shutdown request
+        n!("daemon_shutdown", "🛑 Shutting down {}...", config.daemon_name);
+
+        let shutdown_client = reqwest::Client::builder().timeout(Duration::from_secs(30)).build()?;
+
+        match shutdown_client.post(&config.shutdown_endpoint).send().await {
+            Ok(_) => {
+                n!("daemon_stopped", "✅ {} stopped", config.daemon_name);
                 Ok(())
-            } else {
-                // Unexpected error
-                // TEAM-276: Using .maybe_job_id() to reduce boilerplate
-                NARRATE
-                    .action("daemon_shutdown_failed")
-                    .context(&config.daemon_name)
-                    .context(e.to_string())
-                    .human(format!("⚠️  Failed to stop {}: {{}}", config.daemon_name))
-                    .error_kind("shutdown_failed")
-                    .maybe_job_id(config.job_id.as_deref())
-                    .emit();
-                Err(e.into())
+            }
+            Err(e) => {
+                // Connection closed/reset is expected - daemon shuts down before responding
+                if e.is_connect() || e.to_string().contains("connection closed") {
+                    n!("daemon_stopped", "✅ {} stopped", config.daemon_name);
+                    Ok(())
+                } else {
+                    // Unexpected error
+                    n!("daemon_shutdown_failed", "⚠️  Failed to stop {}: {}", config.daemon_name, e);
+                    Err(e.into())
+                }
             }
         }
+    };
+    
+    // Execute with context if job_id provided
+    if let Some(ctx) = ctx {
+        with_narration_context(ctx, shutdown_impl).await
+    } else {
+        shutdown_impl.await
     }
 }
 
@@ -190,14 +168,12 @@ pub async fn force_shutdown(
     timeout_secs: u64,
     job_id: Option<&str>,
 ) -> Result<()> {
-    // Step 1: Send SIGTERM
-    // TEAM-276: Using .maybe_job_id() to reduce boilerplate
-    NARRATE
-        .action("daemon_sigterm")
-        .context(pid.to_string())
-        .human(format!("🛑 Sending SIGTERM to {} (PID: {})", daemon_name, pid))
-        .maybe_job_id(job_id)
-        .emit();
+    // TEAM-311: Migrated to n!() macro
+    let ctx = job_id.map(|jid| NarrationContext::new().with_job_id(jid));
+    
+    let force_impl = async {
+        // Step 1: Send SIGTERM
+        n!("daemon_sigterm", "🛑 Sending SIGTERM to {} (PID: {})", daemon_name, pid);
 
     #[cfg(unix)]
     {
@@ -206,64 +182,44 @@ pub async fn force_shutdown(
 
         let pid_nix = Pid::from_raw(pid as i32);
 
-        // Send SIGTERM
-        if let Err(e) = kill(pid_nix, Signal::SIGTERM) {
-            // TEAM-276: Using .maybe_job_id() to reduce boilerplate
-            NARRATE
-                .action("daemon_sigterm_failed")
-                .context(e.to_string())
-                .human(format!("⚠️  Failed to send SIGTERM: {{}}",))
-                .error_kind("sigterm_failed")
-                .maybe_job_id(job_id)
-                .emit();
-            anyhow::bail!("Failed to send SIGTERM: {}", e);
-        }
-
-        // Step 2: Wait for graceful shutdown
-        sleep(Duration::from_secs(timeout_secs)).await;
-
-        // Step 3: Check if still running, send SIGKILL if needed
-        match kill(pid_nix, Signal::SIGTERM) {
-            Err(nix::errno::Errno::ESRCH) => {
-                // Process not found = already terminated
-                // TEAM-276: Using .maybe_job_id() to reduce boilerplate
-                NARRATE
-                    .action("daemon_terminated")
-                    .context(pid.to_string())
-                    .human(format!("✅ {} terminated gracefully (PID: {})", daemon_name, pid))
-                    .maybe_job_id(job_id)
-                    .emit();
-                Ok(())
+            // Send SIGTERM
+            if let Err(e) = kill(pid_nix, Signal::SIGTERM) {
+                n!("daemon_sigterm_failed", "⚠️  Failed to send SIGTERM: {}", e);
+                anyhow::bail!("Failed to send SIGTERM: {}", e);
             }
-            _ => {
-                // Still running, send SIGKILL
-                // TEAM-276: Using .maybe_job_id() to reduce boilerplate
-                NARRATE
-                    .action("daemon_sigkill")
-                    .context(pid.to_string())
-                    .human(format!(
-                        "⚠️  {} did not stop gracefully, sending SIGKILL (PID: {})",
-                        daemon_name, pid
-                    ))
-                    .maybe_job_id(job_id)
-                    .emit();
 
-                kill(pid_nix, Signal::SIGKILL)?;
+            // Step 2: Wait for graceful shutdown
+            sleep(Duration::from_secs(timeout_secs)).await;
 
-                // TEAM-276: Using .maybe_job_id() to reduce boilerplate
-                NARRATE
-                    .action("daemon_killed")
-                    .context(pid.to_string())
-                    .human(format!("✅ {} killed (PID: {})", daemon_name, pid))
-                    .maybe_job_id(job_id)
-                    .emit();
-                Ok(())
+            // Step 3: Check if still running, send SIGKILL if needed
+            match kill(pid_nix, Signal::SIGTERM) {
+                Err(nix::errno::Errno::ESRCH) => {
+                    // Process not found = already terminated
+                    n!("daemon_terminated", "✅ {} terminated gracefully (PID: {})", daemon_name, pid);
+                    Ok(())
+                }
+                _ => {
+                    // Still running, send SIGKILL
+                    n!("daemon_sigkill", "⚠️  {} did not stop gracefully, sending SIGKILL (PID: {})", daemon_name, pid);
+
+                    kill(pid_nix, Signal::SIGKILL)?;
+
+                    n!("daemon_killed", "✅ {} killed (PID: {})", daemon_name, pid);
+                    Ok(())
+                }
             }
         }
-    }
 
-    #[cfg(not(unix))]
-    {
-        anyhow::bail!("force_shutdown only supported on Unix systems")
+        #[cfg(not(unix))]
+        {
+            anyhow::bail!("force_shutdown only supported on Unix systems")
+        }
+    };
+    
+    // Execute with context if job_id provided
+    if let Some(ctx) = ctx {
+        with_narration_context(ctx, force_impl).await
+    } else {
+        force_impl.await
     }
 }

@@ -9,13 +9,10 @@
 //! - (future) rbee-hive → llm-worker
 
 use anyhow::Result;
-use observability_narration_core::NarrationFactory;
+use observability_narration_core::{n, with_narration_context, NarrationContext};
 use std::time::Duration;
 
 use crate::health::is_daemon_healthy;
-
-// TEAM-197: Migrated to narration-core v0.5.0 pattern
-const NARRATE: NarrationFactory = NarrationFactory::new("dmn-life");
 
 /// Ensure daemon is running, auto-start if needed
 ///
@@ -74,48 +71,48 @@ where
     let timeout = timeout.unwrap_or(Duration::from_secs(30));
     let poll_interval = poll_interval.unwrap_or(Duration::from_millis(500));
 
-    // Check if daemon is already healthy
-    if is_daemon_healthy(base_url, None, None).await {
-        let mut narration = NARRATE.action("daemon_check").context(daemon_name);
-        if let Some(jid) = job_id {
-            narration = narration.job_id(jid);
-        }
-        narration.human(&format!("{} is already running", daemon_name)).emit();
-        return Ok(true); // Already running
-    }
-
-    // Daemon is not running, start it
-    let mut narration = NARRATE.action("daemon_start").context(daemon_name);
-    if let Some(jid) = job_id {
-        narration = narration.job_id(jid);
-    }
-    narration.human(&format!("⚠️  {} is not running, starting...", daemon_name)).emit();
-
-    // Spawn daemon
-    spawn_fn().await?;
-
-    // Wait for daemon to become healthy (with timeout)
-    let start_time = std::time::Instant::now();
-
-    loop {
+    // TEAM-311: Migrated to n!() macro
+    let ctx = job_id.map(|jid| NarrationContext::new().with_job_id(jid));
+    
+    let ensure_impl = async {
+        // Check if daemon is already healthy
         if is_daemon_healthy(base_url, None, None).await {
-            let mut narration = NARRATE.action("daemon_start").context(daemon_name);
-            if let Some(jid) = job_id {
-                narration = narration.job_id(jid);
+            n!("daemon_check", "{} is already running", daemon_name);
+            return Ok(true); // Already running
+        }
+
+        // Daemon is not running, start it
+        n!("daemon_start", "⚠️  {} is not running, starting...", daemon_name);
+
+        // Spawn daemon
+        spawn_fn().await?;
+
+        // Wait for daemon to become healthy (with timeout)
+        let start_time = std::time::Instant::now();
+
+        loop {
+            if is_daemon_healthy(base_url, None, None).await {
+                n!("daemon_start", "✅ {} is now running and healthy", daemon_name);
+                return Ok(false); // Started by us
             }
-            narration.human(&format!("✅ {} is now running and healthy", daemon_name)).emit();
-            return Ok(false); // Started by us
-        }
 
-        if start_time.elapsed() > timeout {
-            return Err(anyhow::anyhow!(
-                "Timeout waiting for {} to become healthy (waited {:?})",
-                daemon_name,
-                timeout
-            ));
-        }
+            if start_time.elapsed() > timeout {
+                return Err(anyhow::anyhow!(
+                    "Timeout waiting for {} to become healthy (waited {:?})",
+                    daemon_name,
+                    timeout
+                ));
+            }
 
-        tokio::time::sleep(poll_interval).await;
+            tokio::time::sleep(poll_interval).await;
+        }
+    };
+    
+    // Execute with context if job_id provided
+    if let Some(ctx) = ctx {
+        with_narration_context(ctx, ensure_impl).await
+    } else {
+        ensure_impl.await
     }
 }
 
@@ -176,32 +173,32 @@ where
     AR: FnOnce() -> H,
     SU: FnOnce() -> H,
 {
-    // Check if daemon is already healthy
-    if is_daemon_healthy(health_url, None, Some(Duration::from_secs(2))).await {
-        let mut narration = NARRATE.action("daemon_already_running").context(daemon_name);
-        if let Some(jid) = job_id {
-            narration = narration.job_id(jid);
+    // TEAM-311: Migrated to n!() macro
+    let ctx = job_id.map(|jid| NarrationContext::new().with_job_id(jid));
+    
+    let ensure_impl = async {
+        // Check if daemon is already healthy
+        if is_daemon_healthy(health_url, None, Some(Duration::from_secs(2))).await {
+            n!("daemon_already_running", "✅ {} is already running and healthy", daemon_name);
+            return Ok(handle_already_running());
         }
-        narration.human(format!("✅ {} is already running and healthy", daemon_name)).emit();
-        return Ok(handle_already_running());
+
+        // Daemon is not running, start it
+        n!("daemon_not_running", "⚠️  {} is not running, starting...", daemon_name);
+
+        // Spawn daemon
+        spawn_fn().await?;
+
+        // Daemon started successfully
+        n!("daemon_started", "✅ {} started and healthy", daemon_name);
+
+        Ok(handle_started_by_us())
+    };
+    
+    // Execute with context if job_id provided
+    if let Some(ctx) = ctx {
+        with_narration_context(ctx, ensure_impl).await
+    } else {
+        ensure_impl.await
     }
-
-    // Daemon is not running, start it
-    let mut narration = NARRATE.action("daemon_not_running").context(daemon_name);
-    if let Some(jid) = job_id {
-        narration = narration.job_id(jid);
-    }
-    narration.human(format!("⚠️  {} is not running, starting...", daemon_name)).emit();
-
-    // Spawn daemon
-    spawn_fn().await?;
-
-    // Daemon started successfully
-    let mut narration = NARRATE.action("daemon_started").context(daemon_name);
-    if let Some(jid) = job_id {
-        narration = narration.job_id(jid);
-    }
-    narration.human(format!("✅ {} started and healthy", daemon_name)).emit();
-
-    Ok(handle_started_by_us())
 }

@@ -179,6 +179,7 @@ impl Narration {
     ///     .human("✅ Queen started on {}, port {1}")  // Legacy {0}, {1} syntax
     ///     .emit();
     /// ```
+    #[deprecated(since = "0.5.0", note = "Use n!() macro instead")]
     pub fn human(mut self, msg: impl Into<String>) -> Self {
         let mut msg = msg.into();
         // TEAM-191: Replace {N} with context values (legacy backward compatibility)

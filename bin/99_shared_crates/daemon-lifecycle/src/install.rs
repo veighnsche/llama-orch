@@ -7,10 +7,8 @@
 //! - worker-lifecycle (install/uninstall workers: vLLM, llama.cpp, SD, Whisper)
 
 use anyhow::Result;
-use observability_narration_core::NarrationFactory;
+use observability_narration_core::{n, with_narration_context, NarrationContext};
 use std::path::{Path, PathBuf};
-
-const NARRATE: NarrationFactory = NarrationFactory::new("dmn-life");
 
 /// Configuration for daemon installation
 pub struct InstallConfig {
@@ -69,69 +67,40 @@ pub struct InstallResult {
 /// # }
 /// ```
 pub async fn install_daemon(config: InstallConfig) -> Result<InstallResult> {
-    let mut narration = NARRATE.action("daemon_install").context(&config.binary_name);
-    if let Some(ref job_id) = config.job_id {
-        narration = narration.job_id(job_id);
-    }
-    narration.human("🔧 Installing daemon '{}'").emit();
+    // TEAM-311: Migrated to n!() macro
+    let ctx = config.job_id.as_ref().map(|jid| NarrationContext::new().with_job_id(jid));
+    
+    let install_impl = async {
+        n!("daemon_install", "🔧 Installing daemon '{}'", config.binary_name);
 
-    // Step 1: Check if binary path was provided
-    if let Some(provided_path) = config.binary_path {
-        let mut narration = NARRATE.action("daemon_binary").context(&provided_path);
-        if let Some(ref job_id) = config.job_id {
-            narration = narration.job_id(job_id);
-        }
-        narration.human("📁 Using provided binary path: {}").emit();
+        // Step 1: Check if binary path was provided
+        if let Some(provided_path) = config.binary_path {
+            n!("daemon_binary", "📁 Using provided binary path: {}", provided_path);
 
-        let path = Path::new(&provided_path);
-        if !path.exists() {
-            let mut narration = NARRATE
-                .action("daemon_bin_err")
-                .context(&provided_path)
-                .human("❌ Binary not found at: {}")
-                .error_kind("binary_not_found");
-            if let Some(ref job_id) = config.job_id {
-                narration = narration.job_id(job_id);
+            let path = Path::new(&provided_path);
+            if !path.exists() {
+                n!("daemon_bin_err", "❌ Binary not found at: {}", provided_path);
+                anyhow::bail!("Binary not found at: {}", provided_path);
             }
-            narration.emit_error();
-            anyhow::bail!("Binary not found at: {}", provided_path);
+
+            return Ok(InstallResult { binary_path: provided_path, found_in_target: false });
         }
 
-        return Ok(InstallResult { binary_path: provided_path, found_in_target: false });
-    }
+        // Step 2: Try to find in target directory
+        n!("daemon_search", "🔍 Searching for '{}' in target directory", config.binary_name);
 
-    // Step 2: Try to find in target directory
-    let mut narration = NARRATE.action("daemon_search").context(&config.binary_name);
-    if let Some(ref job_id) = config.job_id {
-        narration = narration.job_id(job_id);
-    }
-    narration.human("🔍 Searching for '{}' in target directory").emit();
+        match crate::manager::DaemonManager::find_in_target(&config.binary_name) {
+            Ok(binary_path) => {
+                n!("daemon_found", "✅ Found '{}' at: {}", config.binary_name, binary_path.display());
 
-    match crate::manager::DaemonManager::find_in_target(&config.binary_name) {
-        Ok(binary_path) => {
-            let mut narration = NARRATE
-                .action("daemon_found")
-                .context(&config.binary_name)
-                .context(binary_path.display().to_string());
-            if let Some(ref job_id) = config.job_id {
-                narration = narration.job_id(job_id);
+                Ok(InstallResult {
+                    binary_path: binary_path.display().to_string(),
+                    found_in_target: true,
+                })
             }
-            narration.human("✅ Found '{}' at: {}").emit();
-
-            Ok(InstallResult {
-                binary_path: binary_path.display().to_string(),
-                found_in_target: true,
-            })
-        }
-        Err(_) => {
-            // TEAM-290: Binary not found, try to build it
-            let mut narration = NARRATE
-                .action("daemon_build")
-                .context(&config.binary_name);
-            if let Some(ref job_id) = config.job_id {
-                narration = narration.job_id(job_id);
-            }
-            narration.human("🔨 Building '{}' (not found in target)").emit();
+            Err(_) => {
+                // TEAM-290: Binary not found, try to build it
+                n!("daemon_build", "🔨 Building '{}' (not found in target)", config.binary_name);
 
             // Build the binary
             let output = tokio::process::Command::new("cargo")
@@ -141,51 +110,36 @@ pub async fn install_daemon(config: InstallConfig) -> Result<InstallResult> {
                 .output()
                 .await?;
 
-            if !output.status.success() {
-                let stderr = String::from_utf8_lossy(&output.stderr);
-                let mut narration = NARRATE
-                    .action("daemon_build_err")
-                    .context(&config.binary_name)
-                    .human("❌ Failed to build '{}'")
-                    .error_kind("build_failed");
-                if let Some(ref job_id) = config.job_id {
-                    narration = narration.job_id(job_id);
+                if !output.status.success() {
+                    let stderr = String::from_utf8_lossy(&output.stderr);
+                    n!("daemon_build_err", "❌ Failed to build '{}'", config.binary_name);
+                    anyhow::bail!("Failed to build '{}': {}", config.binary_name, stderr);
                 }
-                narration.emit_error();
-                anyhow::bail!("Failed to build '{}': {}", config.binary_name, stderr);
-            }
 
-            // Try to find again after build
-            match crate::manager::DaemonManager::find_in_target(&config.binary_name) {
-                Ok(binary_path) => {
-                    let mut narration = NARRATE
-                        .action("daemon_built")
-                        .context(&config.binary_name)
-                        .context(binary_path.display().to_string());
-                    if let Some(ref job_id) = config.job_id {
-                        narration = narration.job_id(job_id);
-                    }
-                    narration.human("✅ Built '{}' at: {}").emit();
+                // Try to find again after build
+                match crate::manager::DaemonManager::find_in_target(&config.binary_name) {
+                    Ok(binary_path) => {
+                        n!("daemon_built", "✅ Built '{}' at: {}", config.binary_name, binary_path.display());
 
-                    Ok(InstallResult {
-                        binary_path: binary_path.display().to_string(),
-                        found_in_target: true,
-                    })
-                }
-                Err(e) => {
-                    let mut narration = NARRATE
-                        .action("daemon_not_found")
-                        .context(&config.binary_name)
-                        .human("❌ Binary '{}' not found even after build")
-                        .error_kind("binary_not_found");
-                    if let Some(ref job_id) = config.job_id {
-                        narration = narration.job_id(job_id);
+                        Ok(InstallResult {
+                            binary_path: binary_path.display().to_string(),
+                            found_in_target: true,
+                        })
                     }
-                    narration.emit_error();
-                    Err(e)
+                    Err(e) => {
+                        n!("daemon_not_found", "❌ Binary '{}' not found even after build", config.binary_name);
+                        Err(e)
+                    }
                 }
             }
         }
+    };
+    
+    // Execute with context if job_id provided
+    if let Some(ctx) = ctx {
+        with_narration_context(ctx, install_impl).await
+    } else {
+        install_impl.await
     }
 }
 
@@ -241,67 +195,47 @@ pub struct UninstallConfig {
 /// # }
 /// ```
 pub async fn uninstall_daemon(config: UninstallConfig) -> Result<()> {
-    let mut narration = NARRATE.action("daemon_uninstall").context(&config.daemon_name);
-    if let Some(ref job_id) = config.job_id {
-        narration = narration.job_id(job_id);
-    }
-    narration.human("🗑️  Uninstalling daemon '{}'").emit();
+    // TEAM-311: Migrated to n!() macro
+    let ctx = config.job_id.as_ref().map(|jid| NarrationContext::new().with_job_id(jid));
+    
+    let uninstall_impl = async {
+        n!("daemon_uninstall", "🗑️  Uninstalling daemon '{}'", config.daemon_name);
 
-    // Step 1: Check if binary exists
-    if !config.install_path.exists() {
-        let mut narration = NARRATE
-            .action("daemon_not_installed")
-            .context(&config.daemon_name)
-            .context(config.install_path.display().to_string());
-        if let Some(ref job_id) = config.job_id {
-            narration = narration.job_id(job_id);
+        // Step 1: Check if binary exists
+        if !config.install_path.exists() {
+            n!("daemon_not_installed", "⚠️  Daemon '{}' not installed at: {}", config.daemon_name, config.install_path.display());
+            return Ok(());
         }
-        narration.human("⚠️  Daemon '{}' not installed at: {}").emit();
-        return Ok(());
-    }
 
-    // Step 2: Check if daemon is running (if health_url provided)
-    if let Some(health_url) = config.health_url {
-        let timeout_secs = config.health_timeout_secs.unwrap_or(2);
-        let is_running = crate::health::is_daemon_healthy(
-            &health_url,
-            None, // Use default /health endpoint
-            Some(std::time::Duration::from_secs(timeout_secs)),
-        )
-        .await;
+        // Step 2: Check if daemon is running (if health_url provided)
+        if let Some(health_url) = config.health_url {
+            let timeout_secs = config.health_timeout_secs.unwrap_or(2);
+            let is_running = crate::health::is_daemon_healthy(
+                &health_url,
+                None, // Use default /health endpoint
+                Some(std::time::Duration::from_secs(timeout_secs)),
+            )
+            .await;
 
-        if is_running {
-            let mut narration = NARRATE
-                .action("daemon_still_running")
-                .context(&config.daemon_name)
-                .human("⚠️  Daemon '{}' is currently running. Stop it first.")
-                .error_kind("daemon_running");
-            if let Some(ref job_id) = config.job_id {
-                narration = narration.job_id(job_id);
+            if is_running {
+                n!("daemon_still_running", "⚠️  Daemon '{}' is currently running. Stop it first.", config.daemon_name);
+                anyhow::bail!("Daemon {} is still running", config.daemon_name);
             }
-            narration.emit_error();
-            anyhow::bail!("Daemon {} is still running", config.daemon_name);
         }
+
+        // Step 3: Remove binary file
+        std::fs::remove_file(&config.install_path)?;
+
+        n!("daemon_uninstalled", "✅ Daemon '{}' uninstalled successfully!", config.daemon_name);
+        n!("daemon_removed", "🗑️  Removed: {}", config.install_path.display());
+
+        Ok(())
+    };
+    
+    // Execute with context if job_id provided
+    if let Some(ctx) = ctx {
+        with_narration_context(ctx, uninstall_impl).await
+    } else {
+        uninstall_impl.await
     }
-
-    // Step 3: Remove binary file
-    std::fs::remove_file(&config.install_path)?;
-
-    let mut narration = NARRATE
-        .action("daemon_uninstalled")
-        .context(&config.daemon_name)
-        .context(config.install_path.display().to_string());
-    if let Some(ref job_id) = config.job_id {
-        narration = narration.job_id(job_id);
-    }
-    narration.human("✅ Daemon '{}' uninstalled successfully!").emit();
-
-    let mut narration =
-        NARRATE.action("daemon_removed").context(config.install_path.display().to_string());
-    if let Some(ref job_id) = config.job_id {
-        narration = narration.job_id(job_id);
-    }
-    narration.human("🗑️  Removed: {}").emit();
-
-    Ok(())
 }

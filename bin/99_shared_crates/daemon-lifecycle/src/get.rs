@@ -7,10 +7,8 @@
 //! - worker-lifecycle (get worker by ID)
 
 use anyhow::Result;
-use observability_narration_core::NarrationFactory;
+use observability_narration_core::{n, with_narration_context, NarrationContext};
 use serde::Serialize;
-
-const NARRATE: NarrationFactory = NarrationFactory::new("dmn-life");
 
 /// Trait for configurations that can get daemon instances by ID
 ///
@@ -84,40 +82,34 @@ pub async fn get_daemon<T: GettableConfig>(
     id: &str,
     job_id: Option<&str>,
 ) -> Result<T::Info> {
+    // TEAM-311: Migrated to n!() macro
+    let ctx = job_id.map(|jid| NarrationContext::new().with_job_id(jid));
     let daemon_type = config.daemon_type_name();
 
-    let mut narration = NARRATE.action("daemon_get").context(daemon_type).context(id);
-    if let Some(jid) = job_id {
-        narration = narration.job_id(jid);
-    }
-    narration.human(&format!("🔍 Getting {} '{{}}'", daemon_type)).emit();
+    let get_impl = async {
+        n!("daemon_get", "🔍 Getting {} '{}'", daemon_type, id);
 
-    match config.get_by_id(id) {
-        Some(info) => {
-            // Convert to JSON for display
-            let info_json = serde_json::to_value(&info).unwrap_or(serde_json::Value::Null);
+        match config.get_by_id(id) {
+            Some(info) => {
+                // Convert to JSON for display
+                let info_json = serde_json::to_value(&info).unwrap_or(serde_json::Value::Null);
+                let info_str = serde_json::to_string_pretty(&info_json).unwrap_or_default();
 
-            let mut narration = NARRATE.action("daemon_found").context(daemon_type).context(id);
-            if let Some(jid) = job_id {
-                narration = narration.job_id(jid);
+                n!("daemon_found", "✅ Found {} '{}':\n{}", daemon_type, id, info_str);
+
+                Ok(info)
             }
-            narration.human(&format!("✅ Found {} '{{}}':", daemon_type)).table(&info_json).emit();
-
-            Ok(info)
-        }
-        None => {
-            let mut narration = NARRATE
-                .action("daemon_not_found")
-                .context(daemon_type)
-                .context(id)
-                .human(&format!("❌ {} '{{}}' not found", daemon_type))
-                .error_kind("not_found");
-            if let Some(jid) = job_id {
-                narration = narration.job_id(jid);
+            None => {
+                n!("daemon_not_found", "❌ {} '{}' not found", daemon_type, id);
+                anyhow::bail!("{} '{}' not found", daemon_type, id)
             }
-            narration.emit_error();
-
-            anyhow::bail!("{} '{}' not found", daemon_type, id)
         }
+    };
+    
+    // Execute with context if job_id provided
+    if let Some(ctx) = ctx {
+        with_narration_context(ctx, get_impl).await
+    } else {
+        get_impl.await
     }
 }

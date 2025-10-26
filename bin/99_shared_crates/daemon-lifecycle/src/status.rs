@@ -7,11 +7,9 @@
 //! - worker-lifecycle (check worker status)
 
 use anyhow::Result;
-use observability_narration_core::NarrationFactory;
+use observability_narration_core::{n, with_narration_context, NarrationContext};
 use serde::Serialize;
 use std::time::Duration;
-
-const NARRATE: NarrationFactory = NarrationFactory::new("dmn-life");
 
 /// Request to check daemon status
 #[derive(Debug, Clone)]
@@ -72,57 +70,37 @@ pub async fn check_daemon_status(
     request: StatusRequest,
     job_id: Option<&str>,
 ) -> Result<StatusResponse> {
+    // TEAM-311: Migrated to n!() macro
+    let ctx = job_id.map(|jid| NarrationContext::new().with_job_id(jid));
     let daemon_type = request.daemon_type.as_deref().unwrap_or("daemon");
 
-    let mut narration =
-        NARRATE.action("daemon_check").context(daemon_type).context(&request.health_url);
-    if let Some(jid) = job_id {
-        narration = narration.job_id(jid);
-    }
-    narration.human(&format!("Checking {} status at {{}}", daemon_type)).emit();
+    let check_impl = async {
+        n!("daemon_check", "Checking {} status at {}", daemon_type, request.health_url);
 
-    let client = reqwest::Client::builder().timeout(Duration::from_secs(5)).build()?;
+        let client = reqwest::Client::builder().timeout(Duration::from_secs(5)).build()?;
 
-    let running = match client.get(&request.health_url).send().await {
-        Ok(response) if response.status().is_success() => {
-            let mut narration = NARRATE
-                .action("daemon_check")
-                .context(daemon_type)
-                .context(&request.id)
-                .context(&request.health_url);
-            if let Some(jid) = job_id {
-                narration = narration.job_id(jid);
+        let running = match client.get(&request.health_url).send().await {
+            Ok(response) if response.status().is_success() => {
+                n!("daemon_check", "✅ {} '{}' is running on {}", daemon_type, request.id, request.health_url);
+                true
             }
-            narration.human(&format!("✅ {} '{{0}}' is running on {{1}}", daemon_type)).emit();
-            true
-        }
-        Ok(response) => {
-            let mut narration = NARRATE
-                .action("daemon_check")
-                .context(daemon_type)
-                .context(&request.id)
-                .context(response.status().to_string());
-            if let Some(jid) = job_id {
-                narration = narration.job_id(jid);
+            Ok(response) => {
+                n!("daemon_check", "⚠️  {} '{}' responded with status: {}", daemon_type, request.id, response.status());
+                false
             }
-            narration
-                .human(&format!("⚠️  {} '{{0}}' responded with status: {{1}}", daemon_type))
-                .emit();
-            false
-        }
-        Err(_) => {
-            let mut narration = NARRATE
-                .action("daemon_check")
-                .context(daemon_type)
-                .context(&request.id)
-                .context(&request.health_url);
-            if let Some(jid) = job_id {
-                narration = narration.job_id(jid);
+            Err(_) => {
+                n!("daemon_check", "❌ {} '{}' is not running on {}", daemon_type, request.id, request.health_url);
+                false
             }
-            narration.human(&format!("❌ {} '{{0}}' is not running on {{1}}", daemon_type)).emit();
-            false
-        }
+        };
+
+        Ok(StatusResponse { id: request.id, running, health_url: request.health_url })
     };
-
-    Ok(StatusResponse { id: request.id, running, health_url: request.health_url })
+    
+    // Execute with context if job_id provided
+    if let Some(ctx) = ctx {
+        with_narration_context(ctx, check_impl).await
+    } else {
+        check_impl.await
+    }
 }

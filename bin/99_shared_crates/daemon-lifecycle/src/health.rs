@@ -4,12 +4,10 @@
 //!
 //! Provides HTTP-based health checking for daemons.
 
-use observability_narration_core::NarrationFactory;
+use observability_narration_core::{n, with_narration_context, NarrationContext};
 use reqwest::Client;
 use std::time::Duration;
 use tokio::time::sleep;
-
-const NARRATE: NarrationFactory = NarrationFactory::new("dmn-life");
 
 /// Check if daemon is healthy by querying its health endpoint
 ///
@@ -145,77 +143,57 @@ impl HealthPollConfig {
 /// # }
 /// ```
 pub async fn poll_until_healthy(config: HealthPollConfig) -> anyhow::Result<()> {
+    // TEAM-311: Migrated to n!() macro
+    let ctx = config.job_id.as_ref().map(|jid| NarrationContext::new().with_job_id(jid));
     let daemon_name = config.daemon_name.as_deref().unwrap_or("daemon");
 
-    // Emit start narration
-    // TEAM-276: Using .maybe_job_id() to reduce boilerplate
-    NARRATE
-        .action("daemon_health_poll")
-        .context(&config.base_url)
-        .human(format!("⏳ Waiting for {} to become healthy at {}", daemon_name, config.base_url))
-        .maybe_job_id(config.job_id.as_deref())
-        .emit();
+    let poll_impl = async {
+        // Emit start narration
+        n!("daemon_health_poll", "⏳ Waiting for {} to become healthy at {}", daemon_name, config.base_url);
 
-    for attempt in 1..=config.max_attempts {
-        // Check health
-        if is_daemon_healthy(
-            &config.base_url,
-            config.health_endpoint.as_deref(),
-            Some(Duration::from_secs(2)),
+        for attempt in 1..=config.max_attempts {
+            // Check health
+            if is_daemon_healthy(
+                &config.base_url,
+                config.health_endpoint.as_deref(),
+                Some(Duration::from_secs(2)),
+            )
+            .await
+            {
+                // Success!
+                n!("daemon_healthy", "✅ {} is healthy (attempt {})", daemon_name, attempt);
+                return Ok(());
+            }
+
+            // Not healthy yet, calculate delay with exponential backoff
+            if attempt < config.max_attempts {
+                let delay_ms = (config.initial_delay_ms as f64
+                    * config.backoff_multiplier.powi((attempt - 1) as i32))
+                    as u64;
+                let delay = Duration::from_millis(delay_ms);
+
+                // Emit progress narration
+                n!("daemon_poll_retry", "🔄 Attempt {}/{}, retrying in {}ms...", attempt, config.max_attempts, delay_ms);
+
+                sleep(delay).await;
+            }
+        }
+
+        // Failed after max attempts
+        n!("daemon_not_healthy", "❌ {} failed to become healthy after {} attempts", daemon_name, config.max_attempts);
+
+        anyhow::bail!(
+            "{} at {} failed to become healthy after {} attempts",
+            daemon_name,
+            config.base_url,
+            config.max_attempts
         )
-        .await
-        {
-            // Success!
-            // TEAM-276: Using .maybe_job_id() to reduce boilerplate
-            NARRATE
-                .action("daemon_healthy")
-                .context(attempt.to_string())
-                .human(format!("✅ {} is healthy (attempt {})", daemon_name, attempt))
-                .maybe_job_id(config.job_id.as_deref())
-                .emit();
-            return Ok(());
-        }
-
-        // Not healthy yet, calculate delay with exponential backoff
-        if attempt < config.max_attempts {
-            let delay_ms = (config.initial_delay_ms as f64
-                * config.backoff_multiplier.powi((attempt - 1) as i32))
-                as u64;
-            let delay = Duration::from_millis(delay_ms);
-
-            // Emit progress narration
-            // TEAM-276: Using .maybe_job_id() to reduce boilerplate
-            NARRATE
-                .action("daemon_poll_retry")
-                .context(format!("{}/{}", attempt, config.max_attempts))
-                .human(format!(
-                    "🔄 Attempt {}/{}, retrying in {}ms...",
-                    attempt, config.max_attempts, delay_ms
-                ))
-                .maybe_job_id(config.job_id.as_deref())
-                .emit();
-
-            sleep(delay).await;
-        }
+    };
+    
+    // Execute with context if job_id provided
+    if let Some(ctx) = ctx {
+        with_narration_context(ctx, poll_impl).await
+    } else {
+        poll_impl.await
     }
-
-    // Failed after max attempts
-    // TEAM-276: Using .maybe_job_id() to reduce boilerplate
-    NARRATE
-        .action("daemon_not_healthy")
-        .context(&config.base_url)
-        .human(format!(
-            "❌ {} failed to become healthy after {} attempts",
-            daemon_name, config.max_attempts
-        ))
-        .error_kind("health_timeout")
-        .maybe_job_id(config.job_id.as_deref())
-        .emit_error();
-
-    anyhow::bail!(
-        "{} at {} failed to become healthy after {} attempts",
-        daemon_name,
-        config.base_url,
-        config.max_attempts
-    )
 }

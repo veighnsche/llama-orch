@@ -7,10 +7,8 @@
 //! - worker-lifecycle (list all workers)
 
 use anyhow::Result;
-use observability_narration_core::NarrationFactory;
+use observability_narration_core::{n, with_narration_context, NarrationContext};
 use serde::Serialize;
-
-const NARRATE: NarrationFactory = NarrationFactory::new("dmn-life");
 
 /// Trait for configurations that can list daemon instances
 ///
@@ -81,41 +79,35 @@ pub async fn list_daemons<T: ListableConfig>(
     config: &T,
     job_id: Option<&str>,
 ) -> Result<Vec<T::Info>> {
+    // TEAM-311: Migrated to n!() macro
+    let ctx = job_id.map(|jid| NarrationContext::new().with_job_id(jid));
     let daemon_type = config.daemon_type_name();
 
-    let mut narration = NARRATE.action("daemon_list").context(daemon_type);
-    if let Some(jid) = job_id {
-        narration = narration.job_id(jid);
-    }
-    narration.human(&format!("📊 Listing all {}s", daemon_type)).emit();
+    let list_impl = async {
+        n!("daemon_list", "📊 Listing all {}s", daemon_type);
 
-    let instances = config.list_all();
+        let instances = config.list_all();
 
-    if instances.is_empty() {
-        let mut narration = NARRATE.action("daemon_empty").context(daemon_type);
-        if let Some(jid) = job_id {
-            narration = narration.job_id(jid);
+        if instances.is_empty() {
+            n!("daemon_empty", "No {}s registered", daemon_type);
+        } else {
+            // Convert to JSON for table display
+            let instances_json: Vec<serde_json::Value> = instances
+                .iter()
+                .map(|i| serde_json::to_value(i).unwrap_or(serde_json::Value::Null))
+                .collect();
+            let table_str = serde_json::to_string_pretty(&serde_json::Value::Array(instances_json)).unwrap_or_default();
+
+            n!("daemon_result", "Found {} {}(s):\n{}", instances.len(), daemon_type, table_str);
         }
-        narration.human(&format!("No {}s registered", daemon_type)).emit();
+
+        Ok(instances)
+    };
+    
+    // Execute with context if job_id provided
+    if let Some(ctx) = ctx {
+        with_narration_context(ctx, list_impl).await
     } else {
-        // Convert to JSON for table display
-        let instances_json: Vec<serde_json::Value> = instances
-            .iter()
-            .map(|i| serde_json::to_value(i).unwrap_or(serde_json::Value::Null))
-            .collect();
-
-        let mut narration = NARRATE
-            .action("daemon_result")
-            .context(instances.len().to_string())
-            .context(daemon_type);
-        if let Some(jid) = job_id {
-            narration = narration.job_id(jid);
-        }
-        narration
-            .human(&format!("Found {{}} {}(s):", daemon_type))
-            .table(&serde_json::Value::Array(instances_json))
-            .emit();
+        list_impl.await
     }
-
-    Ok(instances)
 }

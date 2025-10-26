@@ -6,13 +6,10 @@
 
 use anyhow::{Context, Result};
 use auto_update::AutoUpdater;
-use observability_narration_core::NarrationFactory;
+use observability_narration_core::n;
 use std::path::{Path, PathBuf};
 use std::process::Stdio;
 use tokio::process::{Child, Command};
-
-// TEAM-197: Migrated to narration-core v0.5.0 pattern
-const NARRATE: NarrationFactory = NarrationFactory::new("dmn-life");
 
 /// Daemon manager for spawning and managing daemon processes
 pub struct DaemonManager {
@@ -79,45 +76,25 @@ impl DaemonManager {
     /// - Auto-update rebuild failed
     pub async fn spawn(&self) -> Result<Child> {
         // TEAM-259: Auto-update if enabled
+        // TEAM-311: Migrated to n!() macro
         if let Some((binary_name, source_dir)) = &self.auto_update {
-            NARRATE
-                .action("auto_update")
-                .context(binary_name)
-                .human("Checking if '{}' needs rebuild...")
-                .emit();
+            n!("auto_update", "Checking if '{}' needs rebuild...", binary_name);
 
             let updater = AutoUpdater::new(binary_name, source_dir)?;
 
             if updater.needs_rebuild()? {
-                NARRATE
-                    .action("auto_rebuild")
-                    .context(binary_name)
-                    .human("🔨 Rebuilding '{}'...")
-                    .emit();
+                n!("auto_rebuild", "🔨 Rebuilding '{}'...", binary_name);
 
                 updater.rebuild()?;
 
-                NARRATE
-                    .action("auto_rebuild")
-                    .context(binary_name)
-                    .human("✅ Rebuild complete")
-                    .emit();
+                n!("auto_rebuild", "✅ Rebuild complete");
             } else {
-                NARRATE
-                    .action("auto_update")
-                    .context(binary_name)
-                    .human("✅ '{}' is up to date")
-                    .emit();
+                n!("auto_update", "✅ '{}' is up to date", binary_name);
             }
         }
 
-        // TEAM-197: Updated to narration-core v0.5.0 pattern
-        NARRATE
-            .action("spawn")
-            .context(self.binary_path.display().to_string())
-            .context(format!("{:?}", self.args))
-            .human("Spawning daemon: {0} with args: {1}")
-            .emit();
+        // TEAM-311: Migrated to n!() macro
+        n!("spawn", "Spawning daemon: {} with args: {:?}", self.binary_path.display(), self.args);
 
         // ============================================================
         // BUG FIX: TEAM-164 | Daemon holds parent's pipes open
@@ -169,12 +146,8 @@ impl DaemonManager {
             .context(format!("Failed to spawn daemon: {}", self.binary_path.display()))?;
 
         let pid_str = child.id().map(|p| p.to_string()).unwrap_or_else(|| "unknown".to_string());
-        // TEAM-197: Updated to narration-core v0.5.0 pattern
-        NARRATE
-            .action("spawned")
-            .context(pid_str.clone())
-            .human("Daemon spawned with PID: {}")
-            .emit();
+        // TEAM-311: Migrated to n!() macro
+        n!("spawned", "Daemon spawned with PID: {}", pid_str);
         Ok(child)
     }
 
@@ -208,36 +181,21 @@ impl DaemonManager {
         // Try debug first (development mode)
         let debug_path = workspace_root.join("target/debug").join(name);
         if debug_path.exists() {
-            // TEAM-197: Updated to narration-core v0.5.0 pattern
-            NARRATE
-                .action("find_binary")
-                .context(name.to_string())
-                .context(debug_path.display().to_string())
-                .human("Found binary '{0}' at: {1}")
-                .emit();
+            // TEAM-311: Migrated to n!() macro
+            n!("find_binary", "Found binary '{}' at: {}", name, debug_path.display());
             return Ok(debug_path);
         }
 
         // Try release
         let release_path = workspace_root.join("target/release").join(name);
         if release_path.exists() {
-            // TEAM-197: Updated to narration-core v0.5.0 pattern
-            NARRATE
-                .action("find_binary")
-                .context(name.to_string())
-                .context(release_path.display().to_string())
-                .human("Found binary '{0}' at: {1}")
-                .emit();
+            // TEAM-311: Migrated to n!() macro
+            n!("find_binary", "Found binary '{}' at: {}", name, release_path.display());
             return Ok(release_path);
         }
 
-        // TEAM-197: Updated to narration-core v0.5.0 pattern
-        NARRATE
-            .action("find_binary")
-            .context(name.to_string())
-            .human("Binary '{}' not found in target/debug or target/release")
-            .error_kind("binary_not_found")
-            .emit_error();
+        // TEAM-311: Migrated to n!() macro
+        n!("find_binary", "Binary '{}' not found in target/debug or target/release", name);
         anyhow::bail!("Binary '{}' not found in target/debug or target/release", name)
     }
 }
