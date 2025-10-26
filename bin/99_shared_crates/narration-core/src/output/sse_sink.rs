@@ -484,10 +484,10 @@ mod team_201_formatting_tests {
 
         let event = NarrationEvent::from(fields);
 
-        // Formatted field should match new format: bold first line, message on second line
-        // Format: \x1b[1m[actor              ] action              \x1b[0m\nmessage
+        // Formatted field should match new format: bold first line, message on second line, trailing newline
+        // Format: \x1b[1m[actor              ] action              \x1b[0m\nmessage\n
         // test-actor (10 chars) + 10 spaces = 20, test-action (11 chars) + 9 spaces = 20
-        assert_eq!(event.formatted, "\x1b[1m[test-actor          ] test-action         \x1b[0m\nTest message");
+        assert_eq!(event.formatted, "\x1b[1m[test-actor          ] test-action         \x1b[0m\nTest message\n");
 
         // Verify components
         assert!(event.formatted.contains("[test-actor"));
@@ -502,8 +502,8 @@ mod team_201_formatting_tests {
         let event = NarrationEvent::from(fields);
 
         // Should pad to ACTOR_WIDTH (20) chars for actor, ACTION_WIDTH (20) for action
-        // TEAM-310: New format with bold and newline
-        assert_eq!(event.formatted, "\x1b[1m[abc                 ] xyz                 \x1b[0m\nShort");
+        // TEAM-310: New format with bold, newline, and trailing newline
+        assert_eq!(event.formatted, "\x1b[1m[abc                 ] xyz                 \x1b[0m\nShort\n");
     }
 
     #[test]

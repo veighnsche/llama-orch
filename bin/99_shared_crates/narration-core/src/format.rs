@@ -34,10 +34,12 @@ pub const SHORT_JOB_ID_SUFFIX: usize = 6;
 /// ```text
 /// \x1b[1m[actor              ] action              \x1b[0m
 /// message
+/// (blank line)
 /// ```
 /// - Actor: ACTOR_WIDTH chars (left-aligned, padded)
 /// - Action: ACTION_WIDTH chars (left-aligned, padded)
 /// - Message: on new line, no formatting
+/// - Trailing newline: separates consecutive narrations
 /// - First line: bold ANSI escape codes
 ///
 /// # Example
@@ -47,10 +49,11 @@ pub const SHORT_JOB_ID_SUFFIX: usize = 6;
 /// let formatted = format_message("queen", "start", "Starting hive");
 /// // First line is bold: [queen              ] start              
 /// // Second line: Starting hive
+/// // Third line: blank (separates from next narration)
 /// ```
 pub fn format_message(actor: &str, action: &str, message: &str) -> String {
     format!(
-        "\x1b[1m[{:<width_actor$}] {:<width_action$}\x1b[0m\n{}",
+        "\x1b[1m[{:<width_actor$}] {:<width_action$}\x1b[0m\n{}\n",
         actor,
         action,
         message,
@@ -256,9 +259,9 @@ mod tests {
     #[test]
     fn test_format_message() {
         let formatted = format_message("queen", "start", "Starting hive");
-        // Format: Bold first line with actor/action, message on second line
+        // Format: Bold first line with actor/action, message on second line, blank line after
         // Actor: 20 chars, Action: 20 chars
-        assert_eq!(formatted, "\x1b[1m[queen               ] start               \x1b[0m\nStarting hive");
+        assert_eq!(formatted, "\x1b[1m[queen               ] start               \x1b[0m\nStarting hive\n");
     }
 
     #[test]
@@ -267,7 +270,7 @@ mod tests {
         let formatted = format_message("very-long-actor", "very-long-action", "Message");
         assert!(formatted.contains("very-long-actor"));
         assert!(formatted.contains("very-long-action"));
-        assert!(formatted.contains("\nMessage")); // Message on new line
+        assert!(formatted.contains("\nMessage\n")); // Message on new line with trailing newline
         assert!(formatted.contains("\x1b[1m")); // Contains bold
         assert!(formatted.contains("\x1b[0m")); // Contains reset
     }

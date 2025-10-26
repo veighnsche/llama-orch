@@ -69,8 +69,8 @@ where
         
         event.record(&mut visitor);
         
-        // TEAM-309: Format with optional target (function name)
-        // [actor/target] action : message  OR  [actor] action : message
+        // TEAM-310: Use centralized format_message from narration-core
+        // Format: Bold first line with actor/action, message on second line
         if let (Some(actor), Some(action), Some(human)) = (visitor.actor, visitor.action, visitor.human) {
             let label = if let Some(target) = visitor.target {
                 if target != action {
@@ -81,7 +81,10 @@ where
             } else {
                 actor
             };
-            writeln!(writer, "[{:<12}] {:<15}: {}", label, action, human)
+            
+            // Use the centralized format_message function
+            let formatted = observability_narration_core::format::format_message(&label, &action, &human);
+            write!(writer, "{}", formatted)
         } else {
             // Fallback for non-narration events
             writeln!(writer, "{:?}", event)

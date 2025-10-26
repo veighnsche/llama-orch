@@ -17,6 +17,29 @@ use serde_json::Value;
 
 /// Builder for constructing narration events with a fluent API.
 ///
+/// # ⚠️ DEPRECATED PIPELINE
+///
+/// This builder pattern is DEPRECATED. Use the `n!()` macro instead:
+///
+/// ```rust,ignore
+/// // OLD (deprecated):
+/// Narration::new("worker-orcd", "execute", "job-123")
+///     .human("Executing inference request")
+///     .correlation_id("req-abc")
+///     .duration_ms(150)
+///     .emit();
+///
+/// // NEW (recommended):
+/// use observability_narration_core::n;
+/// n!("execute", "Executing inference request");
+/// ```
+///
+/// The `n!()` macro:
+/// - Auto-detects actor from crate name
+/// - Uses standard Rust `format!()` syntax
+/// - Much more concise (1 line vs 5+ lines)
+/// - Automatic context propagation (job_id, correlation_id)
+///
 /// # Example
 /// ```rust
 /// use observability_narration_core::Narration;
@@ -41,6 +64,10 @@ use serde_json::Value;
 ///     .human("✅ Queen started on {0}, port {1}")  // {0} or {} = first context, {1} = second
 ///     .emit();
 /// ```
+#[deprecated(
+    since = "0.5.0",
+    note = "Use n!() macro instead - simpler API with auto-detected actor and standard Rust format!() syntax"
+)]
 #[derive(Clone)]
 pub struct Narration {
     fields: NarrationFields,
@@ -51,6 +78,8 @@ pub struct Narration {
 
 impl Narration {
     /// Create a new narration builder with required fields.
+    ///
+    /// # ⚠️ DEPRECATED - Use `n!()` macro instead
     ///
     /// # Arguments
     /// - `actor`: Service name (use constants like `ACTOR_ORCHESTRATORD`)
@@ -63,6 +92,7 @@ impl Narration {
     ///
     /// let narration = Narration::new(ACTOR_ORCHESTRATORD, "enqueue", "job-123");
     /// ```
+    #[deprecated(since = "0.5.0", note = "Use n!() macro instead")]
     pub fn new(actor: &'static str, action: &'static str, target: impl Into<String>) -> Self {
         let target_value = target.into();
         Self {
@@ -87,6 +117,10 @@ impl Narration {
     /// let JOB = NARRATE.with_job_id("job-123");
     /// JOB.action("hive_start").human("Starting hive").emit();
     /// ```
+    #[deprecated(
+        since = "0.5.0",
+        note = "Use n!() macro instead - actor is auto-detected from crate name"
+    )]
     pub fn action(mut self, action: &'static str) -> Self {
         // TEAM-257: Removed panic on long action names - just use as-is
         // The 15-char limit was for formatting aesthetics, not a hard requirement
@@ -115,6 +149,10 @@ impl Narration {
     ///     .human("✅ Queen started on {0}, port {1}")
     ///     .emit();
     /// ```
+    #[deprecated(
+        since = "0.5.0",
+        note = "Use n!() macro instead - actor is auto-detected from crate name"
+    )]
     pub fn context(mut self, value: impl Into<String>) -> Self {
         self.context_values.push(value.into());
         self
@@ -665,6 +703,21 @@ mod tests {
 
 /// Factory for creating narrations with a default actor.
 ///
+/// # ⚠️ DEPRECATED PIPELINE
+///
+/// This factory pattern is DEPRECATED. Use the `n!()` macro instead,
+/// which auto-detects the actor from the crate name.
+///
+/// ```rust,ignore
+/// // OLD (deprecated):
+/// const NARRATE: NarrationFactory = NarrationFactory::new(ACTOR_QUEEN_ROUTER);
+/// NARRATE.action("status").human("Found 2 hives").emit();
+///
+/// // NEW (recommended):
+/// use observability_narration_core::n;
+/// n!("status", "Found 2 hives");
+/// ```
+///
 /// This allows crates to define a default actor once and reuse it,
 /// reducing boilerplate and ensuring consistency.
 ///
@@ -680,6 +733,10 @@ mod tests {
 ///     .human("Found 2 hives")
 ///     .emit();
 /// ```
+#[deprecated(
+    since = "0.5.0",
+    note = "Use n!() macro instead - actor is auto-detected from crate name"
+)]
 pub struct NarrationFactory {
     actor: &'static str,
 }
@@ -701,6 +758,10 @@ impl NarrationFactory {
     ///
     /// # Panics
     /// Panics at compile time if actor string is longer than 20 characters.
+    #[deprecated(
+        since = "0.5.0",
+        note = "Use n!() macro instead - actor is auto-detected from crate name"
+    )]
     pub const fn new(actor: &'static str) -> Self {
         // TEAM-192: Compile-time check for actor length
         // Actor must be ≤ 10 characters for fixed-width output format
@@ -765,6 +826,10 @@ impl NarrationFactory {
     ///
     /// Note: Action names longer than 15 characters may affect formatting aesthetics
     /// but will not cause errors.
+    #[deprecated(
+        since = "0.5.0",
+        note = "Use n!() macro instead - actor is auto-detected from crate name"
+    )]
     pub fn action(&self, action: &'static str) -> Narration {
         // TEAM-257: Removed panic on long action names - just use as-is
         // The 15-char limit was for formatting aesthetics, not a hard requirement
@@ -795,6 +860,10 @@ impl NarrationFactory {
     /// JOB.action("hive_start").human("Starting hive").emit();
     /// JOB.action("hive_check").human("Checking status").emit();
     /// ```
+    #[deprecated(
+        since = "0.5.0",
+        note = "Use n!() macro instead - actor is auto-detected from crate name"
+    )]
     pub fn with_job_id(&self, job_id: impl Into<String>) -> Narration {
         let fields = NarrationFields {
             actor: self.actor,
