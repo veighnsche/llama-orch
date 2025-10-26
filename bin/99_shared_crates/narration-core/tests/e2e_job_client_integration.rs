@@ -68,7 +68,7 @@ async fn stream_job_handler(
     let receiver = observability_narration_core::output::sse_sink::take_job_receiver(&job_id);
     
     if let Some(rx) = receiver {
-        // Emit some test narration in background
+        // TEAM-308: Emit narration and close channel when done
         let job_id_clone = job_id.clone();
         tokio::spawn(async move {
             let ctx = NarrationContext::new().with_job_id(&job_id_clone);
@@ -78,8 +78,11 @@ async fn stream_job_handler(
                 n!("stream_processing", "Processing request");
                 tokio::time::sleep(tokio::time::Duration::from_millis(50)).await;
                 n!("stream_complete", "Request complete");
-                // TEAM-304: Removed [DONE] emission - job-server sends it when channel closes
+                // TEAM-308: Close the channel so stream knows to send [DONE]
             }).await;
+            
+            // TEAM-308: Remove the SSE channel after narration completes (closes sender)
+            observability_narration_core::output::sse_sink::remove_job_channel(&job_id_clone);
         });
         
         // TEAM-304: Stream events and send [DONE] when channel closes
