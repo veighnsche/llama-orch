@@ -46,13 +46,21 @@ pub fn narrate_fn_impl(_attr: TokenStream, item: TokenStream) -> TokenStream {
             }
         }
     } else {
+        // TEAM-311: CRITICAL FIX - Don't use closure for non-async functions
+        // Closures break `?` operator! Use a guard struct instead.
         quote! {
             #(#fn_attrs)*
             #fn_vis #fn_sig {
+                struct __Guard;
+                impl Drop for __Guard {
+                    fn drop(&mut self) {
+                        observability_narration_core::__internal_clear_target();
+                    }
+                }
+                
                 observability_narration_core::__internal_set_target(#fn_name_str);
-                let __result = (|| #fn_block)();
-                observability_narration_core::__internal_clear_target();
-                __result
+                let _guard = __Guard;
+                #fn_block
             }
         }
     };

@@ -36,7 +36,7 @@
 //! could leak to subscribers of Job B. This module enforces job isolation.
 
 use crate::NarrationFields;
-use crate::format::format_message; // TEAM-310: Use centralized formatting
+// TEAM-311: No longer import format functions - use fields.format() instead
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
 use tokio::sync::mpsc;
@@ -143,7 +143,10 @@ impl From<NarrationFields> for NarrationEvent {
         // TEAM-204: No redaction needed - job isolation provides security
         // Developers need full context for debugging
 
-        // TEAM-310: Use centralized formatting from format.rs module
+        // TEAM-311: ⭐ Use central formatting method!
+        //
+        // All formatting goes through NarrationFields::format() to ensure consistency
+        // across all code paths (SSE, CLI, tests).
         // 
         // ⚠️ DEPRECATED: Inline formatting removed (pre-TEAM-310)
         // Old code (REMOVED):
@@ -152,8 +155,9 @@ impl From<NarrationFields> for NarrationEvent {
         //       fields.actor, fields.action, fields.human
         //   );
         // 
-        // New code (TEAM-310): Use centralized format_message()
-        let formatted = format_message(fields.actor, fields.action, &fields.human);
+        // ⚠️ OLD: Direct format_message_with_fn() call (TEAM-310/311)
+        // Now replaced with fields.format() for central formatting
+        let formatted = fields.format();
 
         Self {
             formatted,

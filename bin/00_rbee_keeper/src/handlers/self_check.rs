@@ -1,19 +1,23 @@
 // TEAM-309: Self-check handler with narration testing
-//! Self-check command to test narration system
+// TEAM-311: Added #[narrate_fn] to test function name tracking
+//! Narration test command to test narration system
 
 use anyhow::Result;
 use observability_narration_core::{n, set_narration_mode, NarrationMode};
+use observability_narration_macros::narrate_fn;
 use std::time::Duration;
 
-/// Run self-check with comprehensive narration testing
+/// Run narration test with comprehensive narration testing
 /// TEAM-309: Actor auto-detected from crate name (rbee-keeper)
+/// TEAM-311: Function name tracked via #[narrate_fn]
+#[narrate_fn]
 pub async fn handle_self_check() -> Result<()> {
-    println!("\n🔍 rbee-keeper Self-Check");
+    println!("\n🔍 rbee-keeper Narration Test");
     println!("{}", "=".repeat(50));
     
     // Test 1: Simple narration
     println!("\n📝 Test 1: Simple Narration");
-    n!("self_check_start", "Starting rbee-keeper self-check");
+    n!("narrate_test_start", "Starting rbee-keeper narration test");
     tokio::time::sleep(Duration::from_millis(100)).await;
     
     // Test 2: Narration with variables

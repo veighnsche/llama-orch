@@ -123,6 +123,8 @@ pub use api::macro_emit;
 #[doc(hidden)]
 pub use api::macro_emit_auto; // TEAM-309: Auto-detect crate name
 #[doc(hidden)]
+pub use api::macro_emit_auto_with_level; // TEAM-311: Auto-detect crate name with level
+#[doc(hidden)]
 #[deprecated(since = "0.5.0", note = "Use n!() macro instead - actor is now auto-detected from crate name")]
 pub use api::macro_emit_with_actor; // TEAM-309: For sync code that can't use context
 
@@ -352,4 +354,25 @@ macro_rules! n {
 #[macro_export]
 macro_rules! narrate_concise {
     ($($tt:tt)*) => { $crate::n!($($tt)*) };
+}
+
+/// Debug-level narration macro
+///
+/// TEAM-311: Emits narration at Debug level (only visible when RBEE_LOG=debug or lower)
+///
+/// # Example
+/// ```rust,ignore
+/// nd!("parse_detail", "Parsing {} · local={} · transitive={}", path, local, trans);
+/// ```
+#[macro_export]
+macro_rules! nd {
+    // Simple: nd!("action", "message")
+    ($action:expr, $msg:expr) => {{
+        $crate::macro_emit_auto_with_level($action, $msg, None, None, env!("CARGO_CRATE_NAME"), $crate::NarrationLevel::Debug);
+    }};
+    
+    // With format: nd!("action", "msg {}", arg)
+    ($action:expr, $fmt:expr, $($arg:expr),+ $(,)?) => {{
+        $crate::macro_emit_auto_with_level($action, &format!($fmt, $($arg),+), None, None, env!("CARGO_CRATE_NAME"), $crate::NarrationLevel::Debug);
+    }};
 }

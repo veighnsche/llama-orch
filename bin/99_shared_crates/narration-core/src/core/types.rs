@@ -9,6 +9,8 @@ use serde::{Deserialize, Serialize};
 use tracing::Level;
 
 /// Narration logging level
+///
+/// TEAM-311: Controls which narrations are emitted
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum NarrationLevel {
     Mute,  // No output
@@ -18,6 +20,12 @@ pub enum NarrationLevel {
     Warn,  // Anomalies & degradations
     Error, // Operational failures
     Fatal, // Unrecoverable errors
+}
+
+impl Default for NarrationLevel {
+    fn default() -> Self {
+        NarrationLevel::Info
+    }
 }
 
 impl NarrationLevel {
@@ -31,6 +39,30 @@ impl NarrationLevel {
             NarrationLevel::Error => Some(Level::ERROR),
             NarrationLevel::Fatal => Some(Level::ERROR), // tracing doesn't have FATAL
         }
+    }
+    
+    /// TEAM-311: Check if this level should be emitted given the current filter level
+    pub fn should_emit(self, filter: NarrationLevel) -> bool {
+        use NarrationLevel::*;
+        let self_priority = match self {
+            Mute => 0,
+            Trace => 1,
+            Debug => 2,
+            Info => 3,
+            Warn => 4,
+            Error => 5,
+            Fatal => 6,
+        };
+        let filter_priority = match filter {
+            Mute => 0,
+            Trace => 1,
+            Debug => 2,
+            Info => 3,
+            Warn => 4,
+            Error => 5,
+            Fatal => 6,
+        };
+        self_priority >= filter_priority
     }
 }
 
@@ -49,6 +81,13 @@ pub struct NarrationFields {
 
     /// Human-readable description (ORCH-3305: ≤100 chars, present tense, SVO)
     pub human: String,
+    
+    /// TEAM-311: Narration level (default: Info)
+    #[serde(skip)]
+    pub level: NarrationLevel,
+    
+    /// TEAM-311: Function name (from #[narrate_fn] macro)
+    pub fn_name: Option<String>,
 
     /// Cute children's book narration (optional, whimsical storytelling)
     /// Example: "Tucked the model safely into GPU0's cozy VRAM blanket! 🛏️✨"
@@ -108,4 +147,46 @@ pub struct NarrationFields {
     pub parent_span_id: Option<String>,
     /// Source location for dev builds (e.g., "data.rs:155")
     pub source_location: Option<String>,
+}
+
+impl NarrationFields {
+    /// Format this narration for display
+    ///
+    /// TEAM-311: ⭐ CENTRAL FORMATTING METHOD - All formatting should go through here!
+    ///
+    /// This is the ONLY public API for formatting narration. All other code paths
+    /// (SSE, CLI, tests) should call this method instead of directly calling format functions.
+    ///
+    /// Format:
+    /// ```text
+    /// \x1b[1m[actor              ] action              \x1b[0m \x1b[2mfn_name\x1b[0m
+    /// message
+    /// (blank line)
+    /// ```
+    ///
+    /// # Example
+    /// ```
+    /// use observability_narration_core::NarrationFields;
+    ///
+    /// let fields = NarrationFields {
+    ///     actor: "auto-update",
+    ///     action: "phase_init",
+    ///     target: "phase_init".to_string(),
+    ///     human: "Initializing".to_string(),
+    ///     fn_name: Some("new".to_string()),
+    ///     ..Default::default()
+    /// };
+    ///
+    /// let formatted = fields.format();
+    /// // Output: [auto-update        ] phase_init           new
+    /// //         Initializing
+    /// ```
+    pub fn format(&self) -> String {
+        crate::format::format_message_with_fn(
+            self.actor,
+            self.action,
+            &self.human,
+            self.fn_name.as_deref()
+        )
+    }
 }

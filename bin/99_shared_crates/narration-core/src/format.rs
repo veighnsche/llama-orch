@@ -30,6 +30,8 @@ pub const SHORT_JOB_ID_SUFFIX: usize = 6;
 
 /// Format a narration message in standard format.
 ///
+/// ⚠️ DEPRECATED: Use `format_message_with_fn()` instead to support function names from #[narrate_fn]
+///
 /// Format: 
 /// ```text
 /// \x1b[1m[actor              ] action              \x1b[0m
@@ -51,6 +53,7 @@ pub const SHORT_JOB_ID_SUFFIX: usize = 6;
 /// // Second line: Starting hive
 /// // Third line: blank (separates from next narration)
 /// ```
+#[deprecated(since = "0.6.0", note = "Use format_message_with_fn() to support function names from #[narrate_fn]")]
 pub fn format_message(actor: &str, action: &str, message: &str) -> String {
     format!(
         "\x1b[1m[{:<width_actor$}] {:<width_action$}\x1b[0m\n{}\n",
@@ -60,6 +63,60 @@ pub fn format_message(actor: &str, action: &str, message: &str) -> String {
         width_actor = ACTOR_WIDTH,
         width_action = ACTION_WIDTH
     )
+}
+
+/// Format a narration message with optional function name.
+///
+/// TEAM-311: Internal formatting function - use `NarrationFields::format()` for public API!
+///
+/// ⭐ **PREFER:** `NarrationFields::format()` for consistent formatting
+///
+/// This function contains the actual formatting logic but is exposed for internal use.
+/// External code should call `NarrationFields::format()` instead to ensure all formatting
+/// goes through the same code path.
+///
+/// Format: 
+/// ```text
+/// \x1b[1m[actor              ] action              \x1b[0m \x1b[2mfn_name\x1b[0m
+/// message
+/// (blank line)
+/// ```
+/// - Actor: ACTOR_WIDTH chars (left-aligned, padded)
+/// - Action: ACTION_WIDTH chars (left-aligned, padded)
+/// - Function name: dimmed (only if present)
+/// - Message: on new line, no formatting
+/// - Trailing newline: separates consecutive narrations
+///
+/// # Public API
+/// ```
+/// use observability_narration_core::NarrationFields;
+/// 
+/// let fields = NarrationFields {
+///     actor: "auto-update",
+///     action: "parse_deps",
+///     target: "parse_deps".to_string(),
+///     human: "Scanning crate".to_string(),
+///     fn_name: Some("parse".to_string()),
+///     ..Default::default()
+/// };
+/// 
+/// // ⭐ Use this - central formatting method!
+/// let formatted = fields.format();
+/// ```
+pub fn format_message_with_fn(actor: &str, action: &str, message: &str, fn_name: Option<&str>) -> String {
+    if let Some(fn_name) = fn_name {
+        format!(
+            "\x1b[1m[{:<width_actor$}] {:<width_action$}\x1b[0m \x1b[2m{}\x1b[0m\n{}\n",
+            actor,
+            action,
+            fn_name,
+            message,
+            width_actor = ACTOR_WIDTH,
+            width_action = ACTION_WIDTH
+        )
+    } else {
+        format_message(actor, action, message)
+    }
 }
 
 // ============================================================================

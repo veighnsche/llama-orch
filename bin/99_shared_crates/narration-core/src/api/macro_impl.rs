@@ -1,7 +1,7 @@
 // TEAM-297: Phase 0 - Macro implementation
 //! Internal implementation for the n!() macro
 
-use crate::{mode::get_narration_mode, NarrationFields, NarrationMode};
+use crate::{mode::get_narration_mode, NarrationFields, NarrationMode, NarrationLevel};
 
 /// Emit narration from macro (internal use)
 ///
@@ -34,7 +34,20 @@ pub fn macro_emit_auto(
     story: Option<&str>,
     crate_name: &'static str,
 ) {
-    macro_emit_with_actor(action, human, cute, story, Some(crate_name))
+    macro_emit_with_actor_and_level(action, human, cute, story, Some(crate_name), NarrationLevel::Info)
+}
+
+/// TEAM-311: Emit narration with auto-detected crate name and explicit level
+#[doc(hidden)]
+pub fn macro_emit_auto_with_level(
+    action: &'static str,
+    human: &str,
+    cute: Option<&str>,
+    story: Option<&str>,
+    crate_name: &'static str,
+    level: NarrationLevel,
+) {
+    macro_emit_with_actor_and_level(action, human, cute, story, Some(crate_name), level)
 }
 
 /// TEAM-309: Emit narration with explicit actor (for sync code that can't use context)
@@ -45,6 +58,19 @@ pub fn macro_emit_with_actor(
     cute: Option<&str>,
     story: Option<&str>,
     explicit_actor: Option<&'static str>,
+) {
+    macro_emit_with_actor_and_level(action, human, cute, story, explicit_actor, NarrationLevel::Info)
+}
+
+/// TEAM-311: Emit narration with explicit actor and level
+#[doc(hidden)]
+pub fn macro_emit_with_actor_and_level(
+    action: &'static str,
+    human: &str,
+    cute: Option<&str>,
+    story: Option<&str>,
+    explicit_actor: Option<&'static str>,
+    level: NarrationLevel,
 ) {
     // TEAM-297: Get narration mode from global config
     let mode = get_narration_mode();
@@ -67,15 +93,21 @@ pub fn macro_emit_with_actor(
         .or_else(|| ctx.as_ref().and_then(|c| c.actor))
         .unwrap_or("unknown");
     
-    // TEAM-309: Target from thread-local (function name from #[narrate_fn])
-    let target = crate::thread_actor::get_target().unwrap_or_else(|| action.to_string());
+    // TEAM-311: Function name from thread-local (set by #[narrate_fn])
+    let fn_name = crate::thread_actor::get_target();
+    
+    // TEAM-309: Target defaults to action
+    let target = action.to_string();
     
     // TEAM-297: Build fields with selected message
+    // TEAM-311: Include level and fn_name
     let fields = NarrationFields {
         actor,
         action,
-        target, // TEAM-309: From thread-local or action
+        target,
         human: selected_message.to_string(),
+        level, // TEAM-311: Include level
+        fn_name, // TEAM-311: Function name from #[narrate_fn]
         cute: cute.map(|s| s.to_string()),
         story: story.map(|s| s.to_string()),
         job_id,
@@ -83,6 +115,7 @@ pub fn macro_emit_with_actor(
         ..Default::default()
     };
     
-    // TEAM-297: Emit using existing narrate() function
-    crate::narrate(fields);
+    // TEAM-311: CRITICAL FIX - Use narrate_at_level() not narrate()
+    // narrate() always uses Info level, ignoring fields.level!
+    crate::narrate_at_level(fields, level);
 }

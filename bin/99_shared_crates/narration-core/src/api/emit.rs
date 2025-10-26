@@ -19,6 +19,7 @@ macro_rules! emit_event {
             action = $fields.action,
             target = %$fields.target,
             human = %$fields.human,
+            fn_name = $fields.fn_name.as_deref(), // TEAM-311: Function name from #[narrate_fn]
             cute = $fields.cute.as_deref(),
             story = $fields.story.as_deref(),
             correlation_id = $fields.correlation_id.as_deref(),

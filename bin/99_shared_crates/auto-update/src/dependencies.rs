@@ -3,16 +3,19 @@
 
 use anyhow::{Context, Result};
 use cargo_toml::Manifest;
-use observability_narration_core::n;
+use observability_narration_core::{n, nd};
 use observability_narration_macros::narrate_fn;
 use std::collections::HashSet;
 use std::path::{Path, PathBuf};
+use std::time::Instant;
 
 /// Dependency parser
 pub struct DependencyParser;
 
 impl DependencyParser {
     /// Parse all local path dependencies from Cargo.toml (recursive)
+    ///
+    /// TEAM-311: Phase 3 - Dependencies with batching
     ///
     /// # Arguments
     /// * `workspace_root` - Workspace root directory
@@ -23,15 +26,34 @@ impl DependencyParser {
     /// * `Err` - Failed to parse dependencies
     #[narrate_fn]
     pub fn parse(workspace_root: &Path, source_dir: &Path) -> Result<Vec<PathBuf>> {
-        // TEAM-309: Added narration
-        n!("parse_deps", "📦 Parsing dependencies for {}", source_dir.display());
+        // TEAM-311: Phase 3 - Dependencies
+        let start = Instant::now();
+        n!("phase_deps", "📦 Dependency discovery");
+        n!("parse_deps", "Scanning root crate: {}", source_dir.display());
 
         let mut all_deps = Vec::new();
         let mut visited = HashSet::new();
+        let mut toml_files = Vec::new();
 
-        Self::collect_recursive(workspace_root, source_dir, &mut all_deps, &mut visited)?;
+        Self::collect_recursive(workspace_root, source_dir, &mut all_deps, &mut visited, &mut toml_files)?;
 
-        n!("parse_deps", "✅ Parsed {} total dependencies (including transitive)", all_deps.len());
+        // TEAM-311: Batch summary
+        n!("collect_tomls", "Queued Cargo.toml files: {}", toml_files.len());
+        
+        let local_deps = all_deps.len();
+        let transitive_deps = toml_files.len().saturating_sub(1); // Root crate doesn't count as transitive
+        n!("parse_batch", "Parsed {} deps · {} local path · {} transitive", 
+            toml_files.len(), local_deps, transitive_deps);
+        
+        // TEAM-311: Debug-level detail (only visible with RBEE_LOG=debug)
+        for (path, local, trans) in &toml_files {
+            let rel_path = path.strip_prefix(workspace_root).unwrap_or(path);
+            nd!("parse_detail", "{} · local={} · transitive={}", 
+                rel_path.display(), local, trans);
+        }
+        
+        let elapsed = start.elapsed().as_millis();
+        n!("summary", "✅ Deps ok · {}ms", elapsed);
 
         Ok(all_deps)
     }
@@ -75,12 +97,14 @@ impl DependencyParser {
     // ============================================================
 
     /// Recursively collect dependencies from Cargo.toml
-    #[narrate_fn]
+    ///
+    /// TEAM-311: Modified to track toml files for batching
     fn collect_recursive(
         workspace_root: &Path,
         source_dir: &Path,
         all_deps: &mut Vec<PathBuf>,
         visited: &mut HashSet<PathBuf>,
+        toml_files: &mut Vec<(PathBuf, usize, usize)>, // (path, local_count, transitive_count)
     ) -> Result<()> {
         let normalized = source_dir.to_path_buf();
         if visited.contains(&normalized) {
@@ -93,13 +117,11 @@ impl DependencyParser {
             return Ok(());
         }
 
-        // TEAM-309: Added narration for each Cargo.toml parsed
-        n!("parse_cargo_toml", "📄 Parsing {}", cargo_toml.display());
-
         let manifest = Manifest::from_path(&cargo_toml)
             .with_context(|| format!("Failed to parse {}", cargo_toml.display()))?;
 
-        let mut dep_count = 0;
+        let mut local_count = 0;
+        let mut transitive_count = 0;
 
         // Parse [dependencies]
         for (_name, dep) in manifest.dependencies {
@@ -129,22 +151,18 @@ impl DependencyParser {
                         .to_path_buf();
 
                     all_deps.push(dep_relative.clone());
-                    dep_count += 1;
+                    local_count += 1;
 
                     // Recursively check this dependency's dependencies
-                    Self::collect_recursive(workspace_root, &dep_relative, all_deps, visited)?;
+                    let before_len = all_deps.len();
+                    Self::collect_recursive(workspace_root, &dep_relative, all_deps, visited, toml_files)?;
+                    transitive_count += all_deps.len() - before_len;
                 }
             }
         }
 
-        if dep_count > 0 {
-            n!(
-                "parse_cargo_toml",
-                "✅ Found {} local path dependencies in {}",
-                dep_count,
-                source_dir.display()
-            );
-        }
+        // TEAM-311: Track this toml file for debug output
+        toml_files.push((cargo_toml, local_count, transitive_count));
 
         Ok(())
     }

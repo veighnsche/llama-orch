@@ -71,11 +71,13 @@ where
         use tracing::field::{Field, Visit};
         
         // Extract fields from the event
+        // TEAM-311: Added fn_name field
         struct FieldVisitor {
             actor: Option<String>,
             action: Option<String>,
             target: Option<String>,
             human: Option<String>,
+            fn_name: Option<String>,
         }
         
         impl Visit for FieldVisitor {
@@ -85,6 +87,7 @@ where
                     "action" => self.action = Some(value.to_string()),
                     "target" => self.target = Some(value.to_string()),
                     "human" => self.human = Some(value.to_string()),
+                    "fn_name" => self.fn_name = Some(value.to_string()),
                     _ => {}
                 }
             }
@@ -95,6 +98,7 @@ where
                     "action" => self.action = Some(format!("{:?}", value).trim_matches('"').to_string()),
                     "target" => self.target = Some(format!("{:?}", value).trim_matches('"').to_string()),
                     "human" => self.human = Some(format!("{:?}", value).trim_matches('"').to_string()),
+                    "fn_name" => self.fn_name = Some(format!("{:?}", value).trim_matches('"').to_string()),
                     _ => {}
                 }
             }
@@ -105,12 +109,14 @@ where
             action: None,
             target: None,
             human: None,
+            fn_name: None,
         };
         
         event.record(&mut visitor);
         
         // TEAM-310: Use centralized format_message from narration-core
-        // Format: Bold first line with actor/action, message on second line
+        // TEAM-311: Now uses format_message_with_fn to show function names
+        // Format: Bold first line with actor/action, message on second line, optional fn_name (dimmed)
         if let (Some(actor), Some(action), Some(human)) = (visitor.actor, visitor.action, visitor.human) {
             let label = if let Some(target) = visitor.target {
                 if target != action {
@@ -122,8 +128,13 @@ where
                 actor
             };
             
-            // Use the centralized format_message function
-            let formatted = observability_narration_core::format::format_message(&label, &action, &human);
+            // TEAM-311: Use format_message_with_fn to include optional function name
+            let formatted = observability_narration_core::format::format_message_with_fn(
+                &label, 
+                &action, 
+                &human,
+                visitor.fn_name.as_deref()
+            );
             write!(writer, "{}", formatted)
         } else {
             // Fallback for non-narration events
