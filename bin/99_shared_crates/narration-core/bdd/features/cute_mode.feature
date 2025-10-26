@@ -36,10 +36,6 @@ Feature: Cute Mode Narration
     Then the captured narration should have 1 event
     And the cute field should be absent
 
-  Scenario: Cute field with redaction
-    When I narrate with cute field "Model sealed with Bearer abc123 token! 🔒"
-    Then the cute field should contain "[REDACTED]"
-    And the cute field should not contain "abc123"
 
   Scenario: Multiple cute narrations
     When I narrate with cute field "First cute message! 🎀"

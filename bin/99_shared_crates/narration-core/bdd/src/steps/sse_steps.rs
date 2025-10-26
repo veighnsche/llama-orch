@@ -7,10 +7,7 @@ use crate::steps::world::World;
 // Given Steps - SSE Setup
 // ============================================================================
 
-#[given(regex = r#"^a job with ID "([^"]+)"$"#)]
-async fn job_with_id(world: &mut World, job_id: String) {
-    world.job_id = Some(job_id);
-}
+// TEAM-309: Removed duplicate step - now in job_lifecycle.rs
 
 #[given(regex = r#"^two jobs with IDs "([^"]+)" and "([^"]+)"$"#)]
 async fn two_jobs(world: &mut World, job_id1: String, job_id2: String) {

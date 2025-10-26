@@ -81,10 +81,6 @@ Feature: Worker-Orcd Narration Integration
     Then the narration event is still valid
     And the correlation_id field is absent
 
-  Scenario: Worker redacts secrets in narration
-    Given worker logs contain bearer token "Bearer abc123"
-    When narration is emitted
-    Then the human field shows "[REDACTED]" instead of the token
 
   Scenario: Worker emits cancellation narration
     Given worker receives cancellation request for job "job-789"

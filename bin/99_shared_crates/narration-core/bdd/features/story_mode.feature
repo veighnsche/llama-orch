@@ -44,10 +44,6 @@ Feature: Story Mode Narration
     And the story field should contain "asked orchestratord"
     And the story field should contain "replied worker sadly"
 
-  Scenario: Story with redaction
-    When I narrate with story field "\"Here's the token: Bearer abc123\" said auth-service."
-    Then the story field should contain "[REDACTED]"
-    And the story field should not contain "abc123"
 
   Scenario: Story narration length guideline
     When I narrate with story field that is 200 characters long

@@ -20,3 +20,9 @@ pub mod story_mode_extended;
 
 // TEAM-308: Failure scenario step implementations
 pub mod failure_scenarios;
+
+// TEAM-309: Additional step implementations
+pub mod levels;
+pub mod job_lifecycle;
+pub mod sse_extended;
+pub mod worker_integration;

@@ -165,7 +165,7 @@ pub async fn then_captured_has_n_events(world: &mut World, count: usize) {
     }
 }
 
-#[then(regex = r#"^the captured narration should include (.+)$"#)]
+#[then(regex = r#"^the captured narration should include (correlation ID .+|.+ ID .+)$"#)]
 pub async fn then_captured_includes(world: &mut World, field: String) {
     if let Some(adapter) = &world.adapter {
         let captured = adapter.captured();

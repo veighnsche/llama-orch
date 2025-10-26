@@ -28,11 +28,7 @@ async fn given_slow_server(_world: &mut World) {
     // For now, just a marker that the scenario expects slow behavior
 }
 
-#[given(regex = r#"^a job with ID "([^"]+)"$"#)]
-async fn given_job_with_id(world: &mut World, job_id: String) {
-    // TEAM-308: Store job_id in world
-    world.job_id = Some(job_id);
-}
+// TEAM-309: Removed duplicate "a job with ID" step - now in job_lifecycle.rs
 
 #[given("an SSE stream is active")]
 async fn given_sse_stream_active(world: &mut World) {
