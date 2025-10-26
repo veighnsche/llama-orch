@@ -4,8 +4,7 @@
 pub mod builder;
 pub mod emit;
 pub mod macro_impl;
-pub mod macros;
 
 pub use builder::{short_job_id, Narration, NarrationFactory};
 pub use emit::*;
-pub use macro_impl::macro_emit;
+pub use macro_impl::{macro_emit, macro_emit_with_actor}; // TEAM-309: Export both variants

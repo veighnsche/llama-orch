@@ -171,8 +171,8 @@ fn test_explicit_cute_mode() {
     
     let captured = adapter.captured();
     assert_eq!(captured.len(), 1);
-    // When only cute is provided, human is empty
-    assert_eq!(captured[0].human, "");
+    // TEAM-309: When only cute is provided, it's used as fallback for human
+    assert_eq!(captured[0].human, "🐝 Cute message");
     assert_eq!(captured[0].cute, Some("🐝 Cute message".to_string()));
     assert_eq!(captured[0].story, None);
 }
@@ -186,8 +186,8 @@ fn test_explicit_story_mode() {
     
     let captured = adapter.captured();
     assert_eq!(captured.len(), 1);
-    // When only story is provided, human is empty
-    assert_eq!(captured[0].human, "");
+    // TEAM-309: When only story is provided, it's used as fallback for human
+    assert_eq!(captured[0].human, "'Hello', said the system");
     assert_eq!(captured[0].cute, None);
     assert_eq!(captured[0].story, Some("'Hello', said the system".to_string()));
 }
@@ -301,6 +301,63 @@ fn test_backward_compatibility_builder_still_works() {
     let captured = adapter.captured();
     assert_eq!(captured.len(), 1);
     assert_eq!(captured[0].human, "Message value1 and value2");
+}
+
+/// TEAM-309: Test partial combination - human + cute only
+#[test]
+#[serial(capture_adapter)]
+fn test_partial_human_cute() {
+    let adapter = CaptureAdapter::install();
+    
+    n!("test",
+        human: "Technical message {}",
+        cute: "🐝 Fun message {}",
+        "arg1"
+    );
+    
+    let captured = adapter.captured();
+    assert_eq!(captured.len(), 1);
+    assert_eq!(captured[0].human, "Technical message arg1");
+    assert_eq!(captured[0].cute, Some("🐝 Fun message arg1".to_string()));
+    assert_eq!(captured[0].story, None);
+}
+
+/// TEAM-309: Test partial combination - human + story only
+#[test]
+#[serial(capture_adapter)]
+fn test_partial_human_story() {
+    let adapter = CaptureAdapter::install();
+    
+    n!("test",
+        human: "Technical message {}",
+        story: "'Message {}', said the system",
+        "arg1"
+    );
+    
+    let captured = adapter.captured();
+    assert_eq!(captured.len(), 1);
+    assert_eq!(captured[0].human, "Technical message arg1");
+    assert_eq!(captured[0].cute, None);
+    assert_eq!(captured[0].story, Some("'Message arg1', said the system".to_string()));
+}
+
+/// TEAM-309: Test fallback behavior when mode doesn't match
+#[test]
+#[serial(capture_adapter)]
+fn test_fallback_cute_to_human_mode() {
+    set_narration_mode(NarrationMode::Human);
+    let adapter = CaptureAdapter::install();
+    
+    // Use cute: syntax, but mode is Human
+    n!(cute: "test", "🐝 Cute message");
+    
+    let captured = adapter.captured();
+    assert_eq!(captured.len(), 1);
+    // Should show the cute message (which is also stored in human field)
+    assert_eq!(captured[0].human, "🐝 Cute message");
+    
+    // Reset mode
+    set_narration_mode(NarrationMode::Human);
 }
 
 #[test]

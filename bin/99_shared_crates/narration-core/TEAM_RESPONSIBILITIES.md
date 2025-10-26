@@ -686,6 +686,113 @@ let child = capture.spawn(command).await?;
 **Handoff:** See `.plan/TEAM_300_HANDOFF.md` for full details!
 
 ---
+
+## 🏗️ TEAM-304: [DONE] Signal Architecture Fix! 🏗️
+
+**Mission:** Fix critical architectural violation where [DONE] signal was being emitted by narration-core instead of job-server.
+
+**Problem:** Mixing observability with lifecycle! 😱
+- narration-core was emitting `n!("done", "[DONE]")` ❌
+- job-server couldn't track job completion ❌
+- Violated separation of concerns ❌
+
+**Solution:** Restored proper separation of concerns!
+- **job-server**: Manages lifecycle, emits [DONE]/[ERROR] signals ✅
+- **narration-core**: Handles observability events only ✅
+
+**Deliverables:**
+- ✅ Modified job-server to emit [DONE] when channel closes (50 LOC)
+- ✅ Added [ERROR] signal for job failures (10 LOC)
+- ✅ Removed [DONE] from narration-core (3 files)
+- ✅ Created done_signal_tests.rs (7 tests, 231 LOC)
+- ✅ All tests passing!
+
+**Impact:** Production code now has proper lifecycle management! 🎀
+
+**Handoff:** See `.plan/TEAM_304_HANDOFF.md` for full details!
+
+---
+
+## 🔗 TEAM-305: Circular Dependency Fixed! 🔗
+
+**Mission:** Break the circular dependency between job-server and narration-core.
+
+**Problem:** Circular dependency prevented test binaries from using real JobRegistry! 😱
+- job-server → narration-core (for narration events) ❌
+- narration-core test binaries → job-server (for JobRegistry) ❌
+- Result: CIRCULAR DEPENDENCY! ❌
+
+**Solution:** Created job-registry-interface crate!
+- ✅ Extracted JobRegistryInterface trait
+- ✅ job-server implements the trait
+- ✅ narration-core depends on interface (not job-server)
+- ✅ Clean dependency graph!
+
+**Deliverables:**
+- ✅ Created job-registry-interface crate (85 LOC)
+- ✅ job-server implements trait (73 LOC)
+- ✅ Added to workspace
+- ✅ Compilation: SUCCESS!
+
+**Impact:** Test binaries can now use real JobRegistry! Architecture is clean and future-proof! 🎀
+
+**Handoff:** See `.plan/TEAM_305_CIRCULAR_DEPENDENCY_FIXED.md` for full details!
+
+---
+
+## 🧪 TEAM-306: Context Propagation Verified! 🧪
+
+**Mission:** Verify context propagation across service boundaries.
+
+**Discovery:** Work already done! 17 comprehensive tests exist! 🎉
+
+**What We Found:**
+- ✅ 17 tests in thread_local_context_tests.rs (545 LOC)
+- ✅ Context propagates through nested tasks
+- ✅ Context survives await points
+- ✅ Job isolation verified
+- ✅ Correlation IDs flow end-to-end
+- ✅ Deep nesting works (5+ levels)
+- ✅ Concurrent contexts don't interfere
+
+**Deliverables:**
+- ✅ Verified all 17 existing tests pass
+- ✅ Documented test coverage
+- ✅ Confirmed architecture is sound
+
+**Impact:** Context propagation is rock solid! 🎀
+
+**Handoff:** See `.plan/TEAM_306_HANDOFF.md` for full details!
+
+---
+
+## ✅ TEAM-308: 100% Test Pass Rate! ✅
+
+**Mission:** Fix all broken tests after TEAM-304/305 architectural changes.
+
+**Problem:** Tests were broken after architecture changes! 😱
+- e2e_job_client_integration tests hanging indefinitely ❌
+- test_payload_serialization_errors failing ❌
+- Deprecated integration.rs still present ❌
+
+**Solution:** Fixed everything!
+- ✅ Added explicit SSE channel cleanup (fixed hanging tests)
+- ✅ Fixed incorrect serialization test expectations
+- ✅ Deleted deprecated integration.rs (373 lines removed)
+
+**Deliverables:**
+- ✅ Fixed e2e_job_client_integration.rs (+3 lines)
+- ✅ Fixed job_registry_edge_cases_tests.rs (~12 lines)
+- ✅ Deleted integration.rs (-373 lines)
+- ✅ 100% test pass rate: 180/180 tests passing!
+  - narration-core: 106/106 ✅
+  - job-server: 74/74 ✅
+
+**Impact:** All tests passing! Production ready! 🎀
+
+**Handoff:** See `.plan/TEAM_308_HANDOFF.md` for full details!
+
+---
 <!-- 
 🎊 TEAM-100 SIGN-OFF 🎊
 This document was created by TEAM-100 — the CENTENNIAL TEAM!

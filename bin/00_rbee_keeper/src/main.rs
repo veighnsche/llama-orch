@@ -45,10 +45,75 @@ use anyhow::Result;
 use clap::Parser;
 use config::Config;
 
+// TEAM-309: Custom narration formatter for clean output
+use tracing_subscriber::fmt::format::{self, FormatEvent, FormatFields};
+use tracing_subscriber::fmt::FmtContext;
+use tracing_subscriber::registry::LookupSpan;
+
+struct NarrationFormatter;
+
+impl<S, N> FormatEvent<S, N> for NarrationFormatter
+where
+    S: tracing::Subscriber + for<'a> LookupSpan<'a>,
+    N: for<'a> FormatFields<'a> + 'static,
+{
+    fn format_event(
+        &self,
+        _ctx: &FmtContext<'_, S, N>,
+        mut writer: format::Writer<'_>,
+        event: &tracing::Event<'_>,
+    ) -> std::fmt::Result {
+        use tracing::field::{Field, Visit};
+        
+        // Extract fields from the event
+        struct FieldVisitor {
+            actor: Option<String>,
+            action: Option<String>,
+            human: Option<String>,
+        }
+        
+        impl Visit for FieldVisitor {
+            fn record_str(&mut self, field: &Field, value: &str) {
+                match field.name() {
+                    "actor" => self.actor = Some(value.to_string()),
+                    "action" => self.action = Some(value.to_string()),
+                    "human" => self.human = Some(value.to_string()),
+                    _ => {}
+                }
+            }
+            
+            fn record_debug(&mut self, field: &Field, value: &dyn std::fmt::Debug) {
+                match field.name() {
+                    "actor" => self.actor = Some(format!("{:?}", value).trim_matches('"').to_string()),
+                    "action" => self.action = Some(format!("{:?}", value).trim_matches('"').to_string()),
+                    "human" => self.human = Some(format!("{:?}", value).trim_matches('"').to_string()),
+                    _ => {}
+                }
+            }
+        }
+        
+        let mut visitor = FieldVisitor {
+            actor: None,
+            action: None,
+            human: None,
+        };
+        
+        event.record(&mut visitor);
+        
+        // Format: [actor     ] action         : message
+        if let (Some(actor), Some(action), Some(human)) = (visitor.actor, visitor.action, visitor.human) {
+            writeln!(writer, "[{:<12}] {:<15}: {}", actor, action, human)
+        } else {
+            // Fallback for non-narration events
+            writeln!(writer, "{:?}", event)
+        }
+    }
+}
+
 use cli::{Cli, Commands};
 use handlers::{
     handle_hive, handle_infer, handle_model, handle_queen,
-    handle_status, handle_worker,
+    handle_self_check, handle_status, handle_worker,
 };
 // TEAM-284: DELETED handle_migrate, handle_package_status, handle_sync, handle_validate
 
@@ -108,6 +173,66 @@ fn launch_gui() {
 }
 
 async fn handle_command(cli: Cli) -> Result<()> {
+    // ============================================================
+    // BUG FIX: TEAM-309 | Narration not visible in CLI mode
+    // ============================================================
+    // SUSPICION:
+    // - Initially thought narration macros were broken
+    // - Suspected n!() macro wasn't calling the right functions
+    //
+    // INVESTIGATION:
+    // - Read debugging-rules.md (mandatory before fixing bugs)
+    // - Ran self-check and saw NO narration output
+    // - Traced code path: n!() → macro_emit() → narrate() → narrate_at_level()
+    // - Found TEAM-299 removed stderr output for multi-tenant privacy (emit.rs:77-103)
+    // - Checked privacy_isolation_tests.rs - confirms NO stderr by design
+    // - Discovered narration only goes to: SSE sink, Tracing, Capture adapter
+    // - self-check has NO SSE channel, NO job_id, NO tracing subscriber
+    //
+    // ROOT CAUSE:
+    // - TEAM-299 removed stderr for security (correct for queen-rbee server)
+    // - rbee-keeper CLI has NO tracing subscriber configured
+    // - Narration is emitted but goes nowhere visible
+    // - Not a bug in narration-core, missing integration in rbee-keeper
+    //
+    // FIX:
+    // - Initialize tracing-subscriber for CLI mode (stdout output)
+    // - Use FmtSubscriber with human-readable format
+    // - Only for CLI mode (GUI uses different logging)
+    // - This is safe: rbee-keeper is single-user, isolated process
+    // - No privacy violation (not multi-tenant like queen-rbee)
+    //
+    // TESTING:
+    // - Run: cargo build --bin rbee-keeper && ./target/debug/rbee-keeper self-check
+    // - Expect: All narration tests show visible output
+    // - Verify: 10 test narrations appear in terminal
+    // - Check: Different modes (human/cute/story) display correctly
+    // ============================================================
+    
+    // TEAM-309: Set up tracing subscriber for CLI narration visibility
+    // This makes narration-core's tracing events visible to users.
+    // Safe for CLI: single-user, isolated process (not multi-tenant server).
+    //
+    // DESIRED FORMAT (from narration-core/src/api/emit.rs:83):
+    //   [actor     ] action         : message
+    //
+    // Example:
+    //   [rbee-keeper] self_check_start: Starting rbee-keeper self-check
+    use tracing_subscriber::{fmt, EnvFilter, Layer};
+    use tracing_subscriber::layer::SubscriberExt;
+    use tracing_subscriber::util::SubscriberInitExt;
+    
+    // Custom formatter for narration events
+    let narration_layer = fmt::layer()
+        .with_writer(std::io::stderr)
+        .event_format(NarrationFormatter)
+        .with_filter(EnvFilter::try_from_default_env()
+            .unwrap_or_else(|_| EnvFilter::new("info")));
+    
+    tracing_subscriber::registry()
+        .with(narration_layer)
+        .init();
+    
     let config = Config::load()?;
     let queen_url = config.queen_url();
 
@@ -129,6 +254,7 @@ async fn handle_command(cli: Cli) -> Result<()> {
 
     match command {
         Commands::Status => handle_status(&queen_url).await,
+        Commands::SelfCheck => handle_self_check().await,
         Commands::Queen { action } => handle_queen(action, &queen_url).await,
         Commands::Hive { action } => handle_hive(action, &queen_url).await,
         Commands::Worker { hive_id, action } => handle_worker(hive_id, action, &queen_url).await,

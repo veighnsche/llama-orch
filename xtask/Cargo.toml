@@ -43,3 +43,8 @@ auto-update = { path = "../bin/99_shared_crates/auto-update" }
 tempfile = "3.8"
 futures = "0.3"
 # TEAM-281: Real SSH testing for Docker tests (REMOVED - not actually used)
+
+# TEAM-309: Tracing subscriber for narration visibility
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter", "fmt"] }
+observability-narration-core = { path = "../bin/99_shared_crates/narration-core" }

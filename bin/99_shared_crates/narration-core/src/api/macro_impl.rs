@@ -13,12 +13,26 @@ use crate::{mode::get_narration_mode, NarrationFields, NarrationMode};
 /// - `human`: Human-readable message (always required)
 /// - `cute`: Optional cute message (if None, falls back to human)
 /// - `story`: Optional story message (if None, falls back to human)
+///
+/// TEAM-309: Added optional actor parameter for crates that can't use async context
 #[doc(hidden)]
 pub fn macro_emit(
     action: &'static str,
     human: &str,
     cute: Option<&str>,
     story: Option<&str>,
+) {
+    macro_emit_with_actor(action, human, cute, story, None)
+}
+
+/// TEAM-309: Emit narration with explicit actor (for sync code that can't use context)
+#[doc(hidden)]
+pub fn macro_emit_with_actor(
+    action: &'static str,
+    human: &str,
+    cute: Option<&str>,
+    story: Option<&str>,
+    explicit_actor: Option<&'static str>,
 ) {
     // TEAM-297: Get narration mode from global config
     let mode = get_narration_mode();
@@ -36,8 +50,11 @@ pub fn macro_emit(
     let job_id = ctx.as_ref().and_then(|c| c.job_id.clone());
     let correlation_id = ctx.as_ref().and_then(|c| c.correlation_id.clone());
     
-    // TEAM-300: Phase 2 - Actor from context, defaults to "unknown"
-    let actor = ctx.as_ref().and_then(|c| c.actor).unwrap_or("unknown");
+    // TEAM-309: Actor priority: explicit_actor > thread_local > context > "unknown"
+    let actor = explicit_actor
+        .or_else(|| crate::thread_actor::get_actor())
+        .or_else(|| ctx.as_ref().and_then(|c| c.actor))
+        .unwrap_or("unknown");
     
     // TEAM-297: Build fields with selected message
     let fields = NarrationFields {

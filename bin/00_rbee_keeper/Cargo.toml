@@ -46,6 +46,11 @@ anyhow = "1.0"
 
 # TEAM-155: Narration for observability
 observability-narration-core = { path = "../99_shared_crates/narration-core" }
+observability-narration-macros = { path = "../99_shared_crates/narration-macros" } # TEAM-309: Proc macros
+
+# TEAM-309: Tracing subscriber for CLI narration visibility
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter", "fmt"] }
 
 # TEAM-152: Queen lifecycle management (consolidated)
 # TEAM-185: Consolidated queen-lifecycle crate dependencies directly into rbee-keeper

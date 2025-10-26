@@ -94,6 +94,9 @@ pub mod unicode;
 // TEAM-300: Process stdout capture for workers! 🎉💯✨
 pub mod process_capture;
 
+// TEAM-309: Thread-local actor storage for proc macros
+mod thread_actor;
+
 // ============================================================================
 // Re-exports for backward compatibility
 // ============================================================================
@@ -117,6 +120,8 @@ pub use api::emit::human;
 pub use api::{short_job_id, Narration, NarrationFactory};
 #[doc(hidden)]
 pub use api::macro_emit;
+#[doc(hidden)]
+pub use api::macro_emit_with_actor; // TEAM-309: For sync code that can't use context
 
 // Context
 pub use context::{with_narration_context, NarrationContext};
@@ -141,6 +146,10 @@ pub use unicode::{sanitize_crlf, sanitize_for_json, validate_action, validate_ac
 
 // TEAM-300: Process capture (re-export for convenience! 🎀)
 pub use process_capture::ProcessNarrationCapture;
+
+// TEAM-309: Thread-local actor (for proc macros)
+#[doc(hidden)]
+pub use thread_actor::{set_actor as __internal_set_actor, clear_actor as __internal_clear_actor};
 
 // SSE sink (for external use)
 pub mod sse_sink {
@@ -268,13 +277,45 @@ macro_rules! n {
     }};
     
     // Explicit cute: n!(cute: "action", "msg {}", arg)
+    // TEAM-309: Use cute message as fallback for human (was empty string)
     (cute: $action:expr, $fmt:expr $(, $arg:expr)* $(,)?) => {{
-        $crate::macro_emit($action, "", Some(&format!($fmt $(, $arg)*)), None);
+        let msg = format!($fmt $(, $arg)*);
+        $crate::macro_emit($action, &msg, Some(&msg), None);
     }};
     
     // Explicit story: n!(story: "action", "msg {}", arg)
+    // TEAM-309: Use story message as fallback for human (was empty string)
     (story: $action:expr, $fmt:expr $(, $arg:expr)* $(,)?) => {{
-        $crate::macro_emit($action, "", None, Some(&format!($fmt $(, $arg)*)));
+        let msg = format!($fmt $(, $arg)*);
+        $crate::macro_emit($action, &msg, None, Some(&msg));
+    }};
+    
+    // Human + Cute: n!("action", human: "msg", cute: "msg", args...)
+    ($action:expr,
+     human: $human_fmt:expr,
+     cute: $cute_fmt:expr
+     $(, $arg:expr)* $(,)?
+    ) => {{
+        $crate::macro_emit(
+            $action,
+            &format!($human_fmt $(, $arg)*),
+            Some(&format!($cute_fmt $(, $arg)*)),
+            None
+        );
+    }};
+    
+    // Human + Story: n!("action", human: "msg", story: "msg", args...)
+    ($action:expr,
+     human: $human_fmt:expr,
+     story: $story_fmt:expr
+     $(, $arg:expr)* $(,)?
+    ) => {{
+        $crate::macro_emit(
+            $action,
+            &format!($human_fmt $(, $arg)*),
+            None,
+            Some(&format!($story_fmt $(, $arg)*))
+        );
     }};
     
     // All three: n!("action", human: "msg", cute: "msg", story: "msg", args...)

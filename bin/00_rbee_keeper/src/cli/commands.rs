@@ -26,6 +26,10 @@ pub enum Commands {
     /// TEAM-190: Queries hive-registry for runtime state (not catalog)
     Status,
 
+    /// Run self-check with narration test
+    /// TEAM-309: Tests narration system with all 3 modes
+    SelfCheck,
+
     /// Manage queen-rbee daemon
     Queen {
         #[command(subcommand)]

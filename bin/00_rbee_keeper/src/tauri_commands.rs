@@ -283,20 +283,38 @@ pub async fn hive_stop(host: String) -> Result<String, String> {
 #[specta::specta]
 pub async fn hive_list() -> Result<Vec<SshTarget>, String> {
     // TEAM-296: Return typed data with Specta for proper TypeScript generation
+    // TEAM-309: Added narration for testing
+    use observability_narration_core::n;
     use ssh_config::parse_ssh_config;
+    
+    n!("hive_list_start", "Reading SSH config for hive list");
     
     let ssh_config_path = dirs::home_dir()
         .ok_or("Failed to get home directory")?
         .join(".ssh/config");
 
+    n!("ssh_config_path", "SSH config path: {}", ssh_config_path.display());
+
     let targets = parse_ssh_config(&ssh_config_path)
-        .map_err(|e| e.to_string())?;
+        .map_err(|e| {
+            n!("ssh_config_error", "Failed to parse SSH config: {}", e);
+            e.to_string()
+        })?;
+
+    n!("hive_list_parsed", "Found {} SSH targets", targets.len());
 
     // Convert from ssh_config::SshTarget to our SshTarget type
     let converted_targets: Vec<SshTarget> = targets
         .into_iter()
         .map(|t| t.into())
         .collect();
+
+    n!("hive_list_complete", 
+        human: "Hive list complete: {} targets",
+        cute: "🐝 Found {} hives ready to work!",
+        story: "The keeper discovered {} hives in the network",
+        converted_targets.len()
+    );
 
     Ok(converted_targets)
 }

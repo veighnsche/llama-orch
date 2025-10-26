@@ -1,9 +1,11 @@
 // Created by: TEAM-162
 // Smart wrapper for rbee-keeper: checks if build is stale, rebuilds if needed, then forwards command
 // TEAM-193: Updated to use auto-update crate for dependency-aware rebuilds
+// TEAM-309: Added narration context for auto-update visibility
 
 use anyhow::{Context, Result};
 use auto_update::AutoUpdater;
+use observability_narration_core::{NarrationContext, with_narration_context};
 use std::path::PathBuf;
 use std::process::Command;
 
