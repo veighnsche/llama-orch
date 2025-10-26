@@ -20,3 +20,4 @@ pub use handlers::{
 
 // TEAM-293: Tauri-specific module (always available for GUI binary)
 pub mod tauri_commands;
+pub mod process_utils; // TEAM-301: Process output streaming utilities

@@ -39,6 +39,7 @@ mod cli;
 mod config;
 mod handlers;
 mod job_client;
+mod process_utils; // TEAM-301: Process output streaming
 
 use anyhow::Result;
 use clap::Parser;

@@ -91,6 +91,9 @@ pub mod correlation;
 pub mod mode;
 pub mod unicode;
 
+// TEAM-300: Process stdout capture for workers! 🎉💯✨
+pub mod process_capture;
+
 // ============================================================================
 // Re-exports for backward compatibility
 // ============================================================================
@@ -135,6 +138,9 @@ pub use correlation::{
 
 // Unicode utilities
 pub use unicode::{sanitize_crlf, sanitize_for_json, validate_action, validate_actor};
+
+// TEAM-300: Process capture (re-export for convenience! 🎀)
+pub use process_capture::ProcessNarrationCapture;
 
 // SSE sink (for external use)
 pub mod sse_sink {

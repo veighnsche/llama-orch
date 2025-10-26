@@ -18,10 +18,11 @@ serde = { workspace = true, features = ["derive"] }
 serde_json = { workspace = true }
 regex = { workspace = true }
 uuid = { workspace = true }
-tokio = { workspace = true, features = ["sync"] }
+tokio = { workspace = true, features = ["sync", "process", "io-util"] } # TEAM-300: Added process, io-util for ProcessNarrationCapture
 once_cell = "1.19"
 opentelemetry = { version = "0.21", optional = true }
 axum = { workspace = true, optional = true }
+anyhow = { workspace = true } # TEAM-300: For process_capture Result types
 
 [dev-dependencies]
 tracing-subscriber = { workspace = true }
