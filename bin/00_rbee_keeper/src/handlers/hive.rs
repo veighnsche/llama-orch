@@ -6,7 +6,7 @@
 use anyhow::Result;
 use clap::Subcommand;
 use daemon_lifecycle::{
-    check_daemon_status, rebuild::build_daemon_local, rebuild::RebuildConfig, stop_http_daemon,
+    check_daemon_status, rebuild::rebuild_with_hot_reload, rebuild::RebuildConfig, stop_http_daemon,
     HttpDaemonConfig,
 };
 use operations_contract::Operation;
@@ -143,9 +143,12 @@ pub async fn handle_hive(action: HiveAction, queen_url: &str) -> Result<()> {
             daemon_lifecycle::uninstall_daemon(config).await
         }
         HiveAction::Rebuild { alias: _ } => {
-            // TEAM-323: Use daemon-lifecycle directly (same pattern as queen)
-            let config = RebuildConfig::new("rbee-hive");
-            build_daemon_local(config).await?;
+            // TEAM-328: Use rebuild_with_hot_reload for automatic state management
+            let rebuild_config = RebuildConfig::new("rbee-hive");
+            let daemon_config = HttpDaemonConfig::new("rbee-hive", "http://localhost:7835".to_string())
+                .with_args(vec!["--port".to_string(), "7835".to_string()]);
+            
+            rebuild_with_hot_reload(rebuild_config, daemon_config).await?;
             Ok(())
         }
     }

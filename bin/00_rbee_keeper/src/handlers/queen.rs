@@ -11,7 +11,7 @@
 use anyhow::Result;
 use clap::Subcommand;
 use daemon_lifecycle::{
-    HttpDaemonConfig, stop_http_daemon, rebuild::build_daemon_local, rebuild::RebuildConfig,
+    HttpDaemonConfig, stop_http_daemon, rebuild::rebuild_with_hot_reload, rebuild::RebuildConfig,
     check_daemon_status,
 };
 use std::path::PathBuf;
@@ -72,10 +72,13 @@ pub async fn handle_queen(action: QueenAction, queen_url: &str) -> Result<()> {
             check_daemon_status("localhost", &format!("{}/health", queen_url), Some("queen"), None).await?;
             Ok(())
         }
-        // TEAM-322: Use daemon-lifecycle directly (removed local-hive feature complexity)
+        // TEAM-328: Use rebuild_with_hot_reload for automatic state management
         QueenAction::Rebuild => {
-            let config = RebuildConfig::new("queen-rbee");
-            build_daemon_local(config).await?;
+            let rebuild_config = RebuildConfig::new("queen-rbee");
+            let daemon_config = HttpDaemonConfig::new("queen-rbee", queen_url.to_string())
+                .with_args(vec!["--port".to_string(), port.to_string()]);
+            
+            rebuild_with_hot_reload(rebuild_config, daemon_config).await?;
             Ok(())
         }
         QueenAction::Install { binary } => {

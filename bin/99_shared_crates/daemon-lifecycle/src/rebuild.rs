@@ -1,13 +1,16 @@
 //! Daemon rebuild utilities
 //!
 //! TEAM-316: Extracted common rebuild patterns from queen-lifecycle and hive-lifecycle
+//! TEAM-328: Added conditional hot reload behavior
 //!
 //! Provides reusable functions for rebuilding daemons from source:
-//! - Health check before rebuild (prevent rebuilding while running)
+//! - Conditional hot reload (running → stop → rebuild → start → running)
+//! - Cold rebuild (stopped → rebuild → stopped)
 //! - Local cargo build execution
 //! - Build output handling
 
 use anyhow::Result;
+use daemon_contract::HttpDaemonConfig;
 use observability_narration_core::{n, with_narration_context, NarrationContext};
 use std::process::Command;
 
@@ -44,70 +47,6 @@ impl RebuildConfig {
     pub fn with_job_id(mut self, job_id: impl Into<String>) -> Self {
         self.job_id = Some(job_id.into());
         self
-    }
-}
-
-/// Check if daemon is running before rebuild
-///
-/// TEAM-316: Extracted from queen-lifecycle and hive-lifecycle
-///
-/// Prevents rebuilding while daemon is running to avoid file conflicts.
-///
-/// # Arguments
-/// * `daemon_name` - Name of the daemon for error messages
-/// * `health_url` - Health check URL (e.g., "http://localhost:7833")
-/// * `job_id` - Optional job ID for narration routing
-///
-/// # Returns
-/// * `Ok(())` - Daemon is not running, safe to rebuild
-/// * `Err` - Daemon is running, must stop first
-///
-/// # Example
-/// ```rust,no_run
-/// use daemon_lifecycle::rebuild::check_not_running_before_rebuild;
-///
-/// # async fn example() -> anyhow::Result<()> {
-/// check_not_running_before_rebuild(
-///     "queen-rbee",
-///     "http://localhost:7833",
-///     None,
-/// ).await?;
-/// # Ok(())
-/// # }
-/// ```
-pub async fn check_not_running_before_rebuild(
-    daemon_name: &str,
-    health_url: &str,
-    job_id: Option<&str>,
-) -> Result<()> {
-    // TEAM-316: Migrated to n!() macro
-    let ctx = job_id.map(|jid| NarrationContext::new().with_job_id(jid));
-
-    let check_impl = async {
-        let is_running = crate::health::is_daemon_healthy(
-            health_url,
-            None, // Use default /health endpoint
-            Some(std::time::Duration::from_secs(2)),
-        )
-        .await;
-
-        if is_running {
-            n!(
-                "daemon_still_running",
-                "⚠️  {} is currently running. Stop it first.",
-                daemon_name
-            );
-            anyhow::bail!("{} is still running. Stop it first.", daemon_name);
-        }
-
-        Ok(())
-    };
-
-    // Execute with context if job_id provided
-    if let Some(ctx) = ctx {
-        with_narration_context(ctx, check_impl).await
-    } else {
-        check_impl.await
     }
 }
 
@@ -192,6 +131,121 @@ pub async fn build_daemon_local(config: RebuildConfig) -> Result<String> {
         with_narration_context(ctx, build_impl).await
     } else {
         build_impl.await
+    }
+}
+
+/// Rebuild daemon with conditional hot reload
+///
+/// TEAM-328: Implements conditional hot reload behavior:
+/// - running → stop → rebuild → start → running (hot reload)
+/// - stopped → rebuild → stopped (cold rebuild)
+///
+/// # Arguments
+/// * `rebuild_config` - Rebuild configuration (binary name, features, job_id)
+/// * `daemon_config` - HTTP daemon configuration (for start/stop operations)
+///
+/// # Returns
+/// * `Ok(bool)` - true if daemon was restarted (hot reload), false if left stopped
+/// * `Err` - Build or lifecycle operation failed
+///
+/// # Example
+/// ```rust,no_run
+/// use daemon_lifecycle::rebuild::{RebuildConfig, rebuild_with_hot_reload};
+/// use daemon_contract::HttpDaemonConfig;
+///
+/// # async fn example() -> anyhow::Result<()> {
+/// let rebuild_config = RebuildConfig::new("queen-rbee")
+///     .with_features(vec!["local-hive".to_string()])
+///     .with_job_id("job-123");
+///
+/// let daemon_config = HttpDaemonConfig {
+///     daemon_name: "queen-rbee".to_string(),
+///     binary_path: None, // Auto-resolve
+///     health_url: "http://localhost:7833".to_string(),
+///     args: vec![],
+///     env: vec![],
+///     job_id: Some("job-123".to_string()),
+/// };
+///
+/// let was_restarted = rebuild_with_hot_reload(rebuild_config, daemon_config).await?;
+/// if was_restarted {
+///     println!("Hot reload complete - daemon restarted");
+/// } else {
+///     println!("Cold rebuild complete - daemon left stopped");
+/// }
+/// # Ok(())
+/// # }
+/// ```
+pub async fn rebuild_with_hot_reload(
+    rebuild_config: RebuildConfig,
+    daemon_config: HttpDaemonConfig,
+) -> Result<bool> {
+    // TEAM-328: Migrated to n!() macro
+    let ctx = rebuild_config
+        .job_id
+        .as_ref()
+        .map(|jid| NarrationContext::new().with_job_id(jid));
+
+    let rebuild_impl = async {
+        // Step 1: Check if daemon is currently running
+        let was_running = crate::health::is_daemon_healthy(
+            &daemon_config.health_url,
+            None, // Use default /health endpoint
+            Some(std::time::Duration::from_secs(2)),
+        ).await;
+
+        if was_running {
+            n!(
+                "hot_reload_start",
+                "🔄 Hot reload detected - {} is running, will restart after rebuild",
+                rebuild_config.binary_name
+            );
+
+            // Step 2: Stop the running daemon
+            n!("hot_reload_stop", "⏸️  Stopping {}...", rebuild_config.binary_name);
+            crate::stop::stop_http_daemon(daemon_config.clone()).await?;
+            n!("hot_reload_stopped", "✅ {} stopped", rebuild_config.binary_name);
+        } else {
+            n!(
+                "cold_rebuild_start",
+                "🔨 Cold rebuild - {} is not running, will rebuild only",
+                rebuild_config.binary_name
+            );
+        }
+
+        // Step 3: Build the daemon
+        let binary_path = build_daemon_local(rebuild_config.clone()).await?;
+
+        // Step 4: If it was running, start it again (hot reload)
+        if was_running {
+            n!("hot_reload_restart", "▶️  Restarting {}...", rebuild_config.binary_name);
+            
+            // Update daemon config with built binary path
+            let mut start_config = daemon_config;
+            start_config.binary_path = Some(binary_path.into());
+            
+            crate::start::start_http_daemon(start_config).await?;
+            n!(
+                "hot_reload_complete",
+                "✅ Hot reload complete - {} is running with new binary",
+                rebuild_config.binary_name
+            );
+            Ok(true)
+        } else {
+            n!(
+                "cold_rebuild_complete",
+                "✅ Cold rebuild complete - {} binary updated, daemon left stopped",
+                rebuild_config.binary_name
+            );
+            Ok(false)
+        }
+    };
+
+    // Execute with context if job_id provided
+    if let Some(ctx) = ctx {
+        with_narration_context(ctx, rebuild_impl).await
+    } else {
+        rebuild_impl.await
     }
 }
 
