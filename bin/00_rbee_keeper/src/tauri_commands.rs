@@ -226,15 +226,6 @@ pub async fn hive_list() -> Result<Vec<String>, String> {
 }
 
 #[tauri::command]
-pub async fn hive_get(alias: String) -> Result<String, String> {
-    let config = Config::load().map_err(|e| e.to_string())?;
-    let queen_url = config.queen_url();
-    
-    let result = handlers::handle_hive(HiveAction::Get { alias }, &queen_url).await;
-    to_response_unit(result)
-}
-
-#[tauri::command]
 pub async fn hive_status(alias: String) -> Result<String, String> {
     let config = Config::load().map_err(|e| e.to_string())?;
     let queen_url = config.queen_url();

@@ -11,11 +11,9 @@
 use anyhow::Result;
 use clap::Subcommand;
 use daemon_lifecycle::{
-    HttpDaemonConfig, stop_http_daemon, rebuild::rebuild_with_hot_reload, rebuild::RebuildConfig,
-    is_daemon_healthy,
+    check_daemon_health, rebuild_daemon, stop_daemon, HttpDaemonConfig, RebuildConfig,
 };
 use observability_narration_core::n;
-use std::path::PathBuf;
 
 #[derive(Subcommand)]
 pub enum QueenAction {
@@ -58,50 +56,51 @@ pub async fn handle_queen(action: QueenAction, queen_url: &str) -> Result<()> {
             // TEAM-327: Binary path auto-resolved from daemon_name inside start_http_daemon
             let config = daemon_lifecycle::HttpDaemonConfig::new("queen-rbee", &base_url)
                 .with_args(args);
-            // TEAM-327: start_http_daemon now returns PID (discard it - we use health checks for status)
-            let _pid = daemon_lifecycle::start_http_daemon(config).await?;
+            // TEAM-329: start_daemon now returns PID (discard it - we use health checks for status)
+            let _pid = daemon_lifecycle::start_daemon(config).await?;
             Ok(())
         }
-        // TEAM-322: Use daemon-lifecycle directly
+        // TEAM-329: Use daemon-lifecycle directly
         QueenAction::Stop => {
-            // TEAM-327: Binary path auto-resolved from daemon_name
+            // TEAM-329: Binary path auto-resolved from daemon_name
             let config = HttpDaemonConfig::new("queen-rbee", queen_url.to_string());
-            stop_http_daemon(config).await
+            stop_daemon(config).await
         }
-        // TEAM-328: Use is_daemon_healthy() directly
+        // TEAM-329: Use check_daemon_health() directly
         QueenAction::Status => {
-            let health_url = format!("{}/health", queen_url);
-            let is_running = is_daemon_healthy(&health_url, None, None).await;
+            let is_running = check_daemon_health(queen_url, None, None).await;
             
             if is_running {
-                n!("queen_status", "✅ queen 'localhost' is running on {}", health_url);
+                n!("queen_status", "✅ queen 'localhost' is running on {}", queen_url);
             } else {
-                n!("queen_status", "❌ queen 'localhost' is not running on {}", health_url);
+                n!("queen_status", "❌ queen 'localhost' is not running on {}", queen_url);
             }
             Ok(())
         }
-        // TEAM-328: Use rebuild_with_hot_reload for automatic state management
+        // TEAM-329: Use rebuild_daemon (renamed from rebuild_with_hot_reload)
         QueenAction::Rebuild => {
             let rebuild_config = RebuildConfig::new("queen-rbee");
             let daemon_config = HttpDaemonConfig::new("queen-rbee", queen_url.to_string())
                 .with_args(vec!["--port".to_string(), port.to_string()]);
             
-            rebuild_with_hot_reload(rebuild_config, daemon_config).await?;
+            rebuild_daemon(rebuild_config, daemon_config).await?;
             Ok(())
         }
         QueenAction::Install { binary } => {
-            daemon_lifecycle::install_to_local_bin("queen-rbee", binary, None).await?;
+            // TEAM-329: Use install_daemon (renamed from install_to_local_bin)
+            daemon_lifecycle::install_daemon("queen-rbee", binary, None).await?;
             Ok(())
         }
         QueenAction::Uninstall => {
+            // TEAM-329: Use UninstallConfig builder pattern
             let home = std::env::var("HOME")?;
-            let config = daemon_lifecycle::UninstallConfig {
-                daemon_name: "queen-rbee".to_string(),
-                install_path: format!("{}/.local/bin/queen-rbee", home),
-                health_url: Some(queen_url.to_string()),
-                health_timeout_secs: Some(2),
-                job_id: None,
-            };
+            let config = daemon_lifecycle::UninstallConfig::new(
+                "queen-rbee",
+                format!("{}/.local/bin/queen-rbee", home),
+            )
+            .with_health_url(queen_url)
+            .with_health_timeout_secs(2);
+            
             daemon_lifecycle::uninstall_daemon(config).await
         }
     }
