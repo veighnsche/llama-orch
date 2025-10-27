@@ -131,7 +131,9 @@ async fn main() -> anyhow::Result<()> {
         .route("/v1/jobs/{job_id}", delete(http::jobs::handle_cancel_job)) // TEAM-305-FIX: Cancel job endpoint
         .with_state(job_state);
 
-    let addr = SocketAddr::from(([127, 0, 0, 1], args.port));
+    // TEAM-335: Bind to 0.0.0.0 to allow remote access (needed for remote hives)
+    // Localhost-only binding (127.0.0.1) would prevent health checks from remote machines
+    let addr = SocketAddr::from(([0, 0, 0, 0], args.port));
 
     // TEAM-202: Narrate listen address
     NARRATE

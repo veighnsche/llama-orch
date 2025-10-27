@@ -27,7 +27,7 @@ members = [
     
     # rbee-hive crates (NO CLI!)
     "bin/25_rbee_hive_crates/artifact-catalog",  # TEAM-273: Shared catalog abstraction
-    "bin/25_rbee_hive_crates/worker-lifecycle",
+    # TEAM-334: worker-lifecycle removed - use daemon-lifecycle directly
     "bin/25_rbee_hive_crates/model-catalog",     # TEAM-267: Uses artifact-catalog
     "bin/25_rbee_hive_crates/monitor",
     "bin/25_rbee_hive_crates/download-tracker",

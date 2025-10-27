@@ -128,11 +128,25 @@ async fn route_operation(
             n!("hive_check_complete", "✅ Hive narration check complete");
         }
 
-        // Worker operations
-        // TEAM-284: Updated to use typed requests
+        // ========================================================================
+        // WORKER OPERATIONS
+        // ========================================================================
+        //
+        // TEAM-334: Worker lifecycle uses daemon-lifecycle directly
+        //
+        // IMPORTANT: Worker binary installation/uninstallation is NOT handled here!
+        // - Worker binaries are managed by worker-catalog
+        // - Hive only spawns/stops worker PROCESSES
+        // - There are unlimited types of workers (cpu, cuda, metal, vulkan, etc.)
+        // - Each worker type is a separate binary in the catalog
+        //
+        // Worker operations:
+        // - WorkerSpawn: Start a worker process (assumes binary exists in catalog)
+        // - WorkerProcessList/Get/Delete: Manage running processes (ps/kill)
+        //
         Operation::WorkerSpawn(request) => {
-            // TEAM-272: Implemented worker spawning using worker-lifecycle
-            use rbee_hive_worker_lifecycle::{start_worker, WorkerStartConfig};
+            use daemon_lifecycle::{start_daemon, StartConfig, HttpDaemonConfig, SshConfig};
+            use rbee_hive_worker_catalog::{WorkerType, Platform};
 
             n!(
                 "worker_spawn_start",
@@ -142,54 +156,112 @@ async fn route_operation(
                 request.device
             );
 
-            // Allocate port (simple sequential allocation for now)
-            // TODO: Implement proper port allocation
-            let port = 9000 + (rand::random::<u16>() % 1000);
-
-            // Queen URL for heartbeat (hardcoded for now)
-            // TODO: Get from config
-            let queen_url = "http://localhost:7833".to_string();
-
-            let config = WorkerStartConfig {
-                worker_id: request.worker.clone(),
-                model_id: request.model.clone(),
-                device: request.device.to_string(),
-                port,
-                queen_url,
-                job_id: job_id.clone(),
+            // Determine worker type from worker string (e.g., "cpu", "cuda")
+            // NOTE: This assumes the worker binary is already in the catalog!
+            // Worker installation is handled by worker-catalog, not hive.
+            let worker_type = match request.worker.as_str() {
+                "cuda" => WorkerType::CudaLlm,
+                "cpu" => WorkerType::CpuLlm,
+                "metal" => WorkerType::MetalLlm,
+                _ => return Err(anyhow::anyhow!("Unsupported worker type: {}", request.worker)),
             };
 
-            let result = start_worker(config).await?;
+            // Find worker binary in catalog
+            // NOTE: If binary not found, it means worker-catalog needs to install it first!
+            // Hive does NOT install worker binaries - that's worker-catalog's job.
+            let worker_binary = state.worker_catalog.find_by_type_and_platform(worker_type, Platform::current())
+                .ok_or_else(|| anyhow::anyhow!(
+                    "Worker binary not found for {:?}. \
+                     Worker binaries must be installed via worker-catalog first!",
+                    worker_type
+                ))?;
+
+            // Allocate port
+            let port = 9000 + (rand::random::<u16>() % 1000);
+            let queen_url = "http://localhost:7833".to_string();
+            let worker_id = format!("worker-{}-{}", request.worker, port);
+
+            // Build worker arguments
+            let args = vec![
+                "--worker-id".to_string(), worker_id.clone(),
+                "--model".to_string(), request.model.clone(),
+                "--device".to_string(), request.device.to_string(),
+                "--port".to_string(), port.to_string(),
+                "--queen-url".to_string(), queen_url.clone(),
+            ];
+
+            // Start worker using daemon-lifecycle
+            let base_url = format!("http://localhost:{}", port);
+            let daemon_config = HttpDaemonConfig::new(&worker_id, &base_url).with_args(args);
+            let config = StartConfig {
+                ssh_config: SshConfig::localhost(),
+                daemon_config,
+                job_id: Some(job_id.clone()),
+            };
+
+            let pid = start_daemon(config).await?;
 
             n!(
                 "worker_spawn_complete",
                 "✅ Worker '{}' spawned (PID: {}, port: {})",
-                result.worker_id,
-                result.pid,
-                result.port
+                worker_id,
+                pid,
+                port
             );
         }
 
+        // ========================================================================
+        // WORKER BINARY MANAGEMENT - NOT IMPLEMENTED HERE
+        // ========================================================================
+        //
+        // Worker binary installation/uninstallation is the responsibility of:
+        // - worker-catalog (manages the catalog of available worker binaries)
+        // - queen-rbee's PackageSync (distributes binaries to hives)
+        //
+        // Hive ONLY manages worker PROCESSES, not binaries!
+        //
+        // There are unlimited types of workers:
+        // - cpu-llm-worker-rbee
+        // - cuda-llm-worker-rbee
+        // - metal-llm-worker-rbee
+        // - vulkan-llm-worker-rbee (future)
+        // - rocm-llm-worker-rbee (future)
+        // - etc.
+        //
+        // Each worker type is a separate binary that must be:
+        // 1. Built (cargo build)
+        // 2. Added to worker-catalog
+        // 3. Distributed to hives (via PackageSync)
+        //
         // TEAM-278: DELETED WorkerBinaryList, WorkerBinaryGet, WorkerBinaryDelete (~110 LOC)
-        // Worker binary management is now handled by PackageSync in queen-rbee
+        //
+        // ========================================================================
 
-        // TEAM-274: Worker process operations (local ps-based)
+        // TEAM-334: Worker process operations using ps command
         Operation::WorkerProcessList(request) => {
             let hive_id = request.hive_id.clone();
-            use rbee_hive_worker_lifecycle::list_workers;
 
             n!("worker_proc_list_start", "📋 Listing worker processes on hive '{}'", hive_id);
 
-            let processes = list_workers(&job_id).await?;
+            // Use ps to list worker processes
+            let output = tokio::process::Command::new("ps")
+                .args(&["aux"])
+                .output()
+                .await
+                .map_err(|e| anyhow::anyhow!("Failed to run ps: {}", e))?;
 
-            n!("worker_proc_list_result", "Found {} worker process(es)", processes.len());
+            let stdout = String::from_utf8_lossy(&output.stdout);
+            let worker_lines: Vec<_> = stdout.lines()
+                .filter(|line| line.contains("llm-worker") || line.contains("worker-rbee"))
+                .collect();
 
-            if processes.is_empty() {
+            n!("worker_proc_list_result", "Found {} worker process(es)", worker_lines.len());
+
+            if worker_lines.is_empty() {
                 n!("worker_proc_list_empty", "No worker processes found");
             } else {
-                for proc in &processes {
-                    // TEAM-278: WorkerInfo only has pid, command, args
-                    n!("worker_proc_list_entry", "  PID {} | {}", proc.pid, proc.command);
+                for line in worker_lines {
+                    n!("worker_proc_list_entry", "  {}", line);
                 }
             }
         }
@@ -197,7 +269,6 @@ async fn route_operation(
         Operation::WorkerProcessGet(request) => {
             let hive_id = request.hive_id.clone();
             let pid = request.pid;
-            use rbee_hive_worker_lifecycle::get_worker;
 
             n!(
                 "worker_proc_get_start",
@@ -206,22 +277,24 @@ async fn route_operation(
                 hive_id
             );
 
-            let proc_info = get_worker(&job_id, pid).await?;
+            // Use ps to get specific process
+            let output = tokio::process::Command::new("ps")
+                .args(&["-p", &pid.to_string(), "-o", "pid,command"])
+                .output()
+                .await
+                .map_err(|e| anyhow::anyhow!("Failed to run ps: {}", e))?;
 
-            // TEAM-278: WorkerInfo only has pid, command, args
-            n!("worker_proc_get_found", "✅ PID {}: {}", proc_info.pid, proc_info.command);
+            if !output.status.success() {
+                return Err(anyhow::anyhow!("Process {} not found", pid));
+            }
 
-            // Emit process details as JSON
-            let json = serde_json::to_string_pretty(&proc_info)
-                .unwrap_or_else(|_| "Failed to serialize".to_string());
-
-            n!("worker_proc_get_details", "{}", json);
+            let stdout = String::from_utf8_lossy(&output.stdout);
+            n!("worker_proc_get_found", "✅ PID {}: {}", pid, stdout.trim());
         }
 
         Operation::WorkerProcessDelete(request) => {
             let hive_id = request.hive_id.clone();
             let pid = request.pid;
-            use rbee_hive_worker_lifecycle::stop_worker;
 
             n!(
                 "worker_proc_del_start",
@@ -230,9 +303,31 @@ async fn route_operation(
                 hive_id
             );
 
-            // Worker ID is not known (hive is stateless), so use generic ID
-            let worker_id = format!("pid-{}", pid);
-            stop_worker(&job_id, &worker_id, pid).await?;
+            // Kill process using SIGTERM
+            #[cfg(unix)]
+            {
+                use nix::sys::signal::{kill, Signal};
+                use nix::unistd::Pid;
+
+                let pid_nix = Pid::from_raw(pid as i32);
+                match kill(pid_nix, Signal::SIGTERM) {
+                    Ok(_) => {
+                        n!("worker_proc_del_sigterm", "Sent SIGTERM to PID {}", pid);
+                        // Wait briefly for graceful shutdown
+                        tokio::time::sleep(tokio::time::Duration::from_secs(2)).await;
+                        // Try SIGKILL if still alive
+                        let _ = kill(pid_nix, Signal::SIGKILL);
+                    }
+                    Err(_) => {
+                        n!("worker_proc_del_already_dead", "Process {} may already be dead", pid);
+                    }
+                }
+            }
+
+            #[cfg(not(unix))]
+            {
+                return Err(anyhow::anyhow!("Process killing not supported on this platform"));
+            }
 
             n!("worker_proc_del_ok", "✅ Worker process PID {} deleted successfully", pid);
         }

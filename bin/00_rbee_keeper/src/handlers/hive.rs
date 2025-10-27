@@ -76,6 +76,7 @@ pub async fn handle_hive(action: HiveAction, queen_url: &str) -> Result<()> {
             let ssh = resolve_ssh_config(&alias)?;
             let port = port.unwrap_or(7835);
             let base_url = format!("http://{}:{}", ssh.hostname, port);
+            let health_url = format!("{}/health", base_url);
             let args = vec![
                 "--port".to_string(),
                 port.to_string(),
@@ -84,7 +85,7 @@ pub async fn handle_hive(action: HiveAction, queen_url: &str) -> Result<()> {
                 "--hive-id".to_string(),
                 alias.clone(),
             ];
-            let daemon_config = HttpDaemonConfig::new("rbee-hive", &base_url).with_args(args);
+            let daemon_config = HttpDaemonConfig::new("rbee-hive", &health_url).with_args(args);
             let config = StartConfig {
                 ssh_config: ssh,
                 daemon_config,

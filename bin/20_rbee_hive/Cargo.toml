@@ -48,8 +48,8 @@ async-stream = "0.3"
 # TEAM-268: Model catalog for model management
 rbee-hive-model-catalog = { path = "../25_rbee_hive_crates/model-catalog" }
 
-# TEAM-272: Worker lifecycle
-rbee-hive-worker-lifecycle = { path = "../25_rbee_hive_crates/worker-lifecycle" }
+# TEAM-334: Use daemon-lifecycle directly (worker-lifecycle removed)
+daemon-lifecycle = { path = "../99_shared_crates/daemon-lifecycle" }
 
 # TEAM-272: Random port allocation
 rand = "0.8"
@@ -59,6 +59,10 @@ rbee-hive-artifact-catalog = { path = "../25_rbee_hive_crates/artifact-catalog" 
 
 # TEAM-274: Worker catalog for binary management
 rbee-hive-worker-catalog = { path = "../25_rbee_hive_crates/worker-catalog" }
+
+# TEAM-334: For process management (Unix only)
+[target.'cfg(unix)'.dependencies]
+nix = { version = "0.27", features = ["signal"] }
 
 [dev-dependencies]
 # Add dev dependencies as needed

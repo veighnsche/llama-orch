@@ -123,13 +123,18 @@ fn parse_ssh_config(path: &PathBuf) -> Result<HashMap<String, SshConfig>> {
         
         match key.as_str() {
             "host" => {
-                // Save previous host entry
-                if let (Some(host), Some(hostname)) = (current_host.take(), current_hostname.take()) {
+                // Save previous host entry for ALL aliases
+                if let (Some(host_aliases), Some(hostname)) = (current_host.take(), current_hostname.take()) {
                     let user = current_user.take().unwrap_or_else(whoami::username);
-                    hosts.insert(host, SshConfig::new(hostname, user, current_port));
+                    let config = SshConfig::new(hostname, user, current_port);
+                    
+                    // Add entry for each alias (e.g., "workstation" and "workstation.home.arpa")
+                    for alias in host_aliases.split_whitespace() {
+                        hosts.insert(alias.to_string(), config.clone());
+                    }
                 }
                 
-                // Start new host entry
+                // Start new host entry (store all aliases as a single string)
                 current_host = Some(value);
                 current_hostname = None;
                 current_user = None;
@@ -148,10 +153,15 @@ fn parse_ssh_config(path: &PathBuf) -> Result<HashMap<String, SshConfig>> {
         }
     }
     
-    // Save last host entry
-    if let (Some(host), Some(hostname)) = (current_host, current_hostname) {
+    // Save last host entry for ALL aliases
+    if let (Some(host_aliases), Some(hostname)) = (current_host, current_hostname) {
         let user = current_user.unwrap_or_else(whoami::username);
-        hosts.insert(host, SshConfig::new(hostname, user, current_port));
+        let config = SshConfig::new(hostname, user, current_port);
+        
+        // Add entry for each alias
+        for alias in host_aliases.split_whitespace() {
+            hosts.insert(alias.to_string(), config.clone());
+        }
     }
     
     Ok(hosts)
