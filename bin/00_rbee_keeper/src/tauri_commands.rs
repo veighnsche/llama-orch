@@ -192,12 +192,13 @@ pub async fn hive_uninstall(alias: String) -> Result<String, String> {
 }
 
 #[tauri::command]
-pub async fn hive_start(port: Option<u16>) -> Result<String, String> {
+pub async fn hive_start(alias: Option<String>, port: Option<u16>) -> Result<String, String> {
     let config = Config::load().map_err(|e| e.to_string())?;
     let queen_url = config.queen_url();
+    let alias = alias.unwrap_or_else(|| "localhost".to_string());
     
     let result = handlers::handle_hive(
-        HiveAction::Start { port },
+        HiveAction::Start { alias, port },
         &queen_url,
     )
     .await;
@@ -205,11 +206,12 @@ pub async fn hive_start(port: Option<u16>) -> Result<String, String> {
 }
 
 #[tauri::command]
-pub async fn hive_stop(port: Option<u16>) -> Result<String, String> {
+pub async fn hive_stop(alias: Option<String>, port: Option<u16>) -> Result<String, String> {
     let config = Config::load().map_err(|e| e.to_string())?;
     let queen_url = config.queen_url();
+    let alias = alias.unwrap_or_else(|| "localhost".to_string());
     
-    let result = handlers::handle_hive(HiveAction::Stop { port }, &queen_url).await;
+    let result = handlers::handle_hive(HiveAction::Stop { alias, port }, &queen_url).await;
     to_response_unit(result)
 }
 

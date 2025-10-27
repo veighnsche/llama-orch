@@ -4,6 +4,7 @@
 //! TEAM-276: Refactored to delegate to queen-lifecycle crate
 //! TEAM-322: Consolidated status/info - both use check_queen_status with verbose flag
 //! TEAM-324: Moved QueenAction enum here to eliminate duplication
+//! TEAM-332: Use ssh_resolver middleware (queen is always localhost)
 //!
 //! This module is now a thin wrapper that delegates all queen lifecycle
 //! operations to the queen-lifecycle crate. All business logic lives there.
@@ -53,28 +54,27 @@ pub async fn handle_queen(action: QueenAction, queen_url: &str) -> Result<()> {
     
     match action {
         QueenAction::Start => {
-            let ssh = SshConfig::new("localhost".to_string(), whoami::username(), 22);
+            // TEAM-333: Queen is always localhost - use SshConfig::localhost() directly
             let base_url = format!("http://localhost:{}", port);
             let args = vec!["--port".to_string(), port.to_string()];
             let daemon_config = HttpDaemonConfig::new("queen-rbee", &base_url).with_args(args);
             let config = StartConfig {
-                ssh_config: ssh,
+                ssh_config: SshConfig::localhost(),
                 daemon_config,
                 job_id: None,
             };
             let _pid = start_daemon(config).await?;
             Ok(())
         }
-        // TEAM-330: Use SSH to localhost (consistent with remote operations)
         QueenAction::Stop => {
-            let ssh = SshConfig::new("localhost".to_string(), whoami::username(), 22);
+            // TEAM-333: Queen is always localhost - use SshConfig::localhost() directly
             let shutdown_url = format!("{}/v1/shutdown", queen_url);
             let health_url = format!("{}/health", queen_url);
             let config = StopConfig {
                 daemon_name: "queen-rbee".to_string(),
                 shutdown_url,
                 health_url,
-                ssh_config: ssh,
+                ssh_config: SshConfig::localhost(),
                 job_id: None,
             };
             stop_daemon(config).await
@@ -91,34 +91,33 @@ pub async fn handle_queen(action: QueenAction, queen_url: &str) -> Result<()> {
             }
             Ok(())
         }
-        // TEAM-330: Use SSH to localhost (consistent with remote operations)
         QueenAction::Rebuild => {
-            let ssh = SshConfig::new("localhost".to_string(), whoami::username(), 22);
+            // TEAM-333: Queen is always localhost - use SshConfig::localhost() directly
             let daemon_config = HttpDaemonConfig::new("queen-rbee", queen_url.to_string())
                 .with_args(vec!["--port".to_string(), port.to_string()]);
             let config = RebuildConfig {
                 daemon_name: "queen-rbee".to_string(),
-                ssh_config: ssh,
+                ssh_config: SshConfig::localhost(),
                 daemon_config,
                 job_id: None,
             };
             rebuild_daemon(config).await
         }
         QueenAction::Install { binary } => {
-            let ssh = SshConfig::new("localhost".to_string(), whoami::username(), 22);
+            // TEAM-333: Queen is always localhost - use SshConfig::localhost() directly
             let config = InstallConfig {
                 daemon_name: "queen-rbee".to_string(),
-                ssh_config: ssh,
+                ssh_config: SshConfig::localhost(),
                 local_binary_path: binary.map(std::path::PathBuf::from),
                 job_id: None,
             };
             install_daemon(config).await
         }
         QueenAction::Uninstall => {
-            let ssh = SshConfig::new("localhost".to_string(), whoami::username(), 22);
+            // TEAM-333: Queen is always localhost - use SshConfig::localhost() directly
             let config = UninstallConfig {
                 daemon_name: "queen-rbee".to_string(),
-                ssh_config: ssh,
+                ssh_config: SshConfig::localhost(),
                 health_url: Some(queen_url.to_string()),
                 health_timeout_secs: Some(2),
                 job_id: None,

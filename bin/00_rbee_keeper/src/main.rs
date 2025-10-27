@@ -35,15 +35,11 @@
 //! TEAM-185: Renamed actions module to operations_contract
 //! TEAM-185: Updated all operation strings to use constants
 
-mod cli;
-mod config;
-mod handlers;
-mod job_client;
-mod process_utils; // TEAM-301: Process output streaming
+// TEAM-332: Use library modules instead of redefining them
+use rbee_keeper::{cli, config, handlers, Config};
 
 use anyhow::Result;
 use clap::Parser;
-use config::Config;
 
 // TEAM-309: Custom narration formatter for clean output
 // TEAM-310: Now uses centralized format_message from narration-core
@@ -279,7 +275,7 @@ async fn handle_command(cli: Cli) -> Result<()> {
         Commands::QueenCheck => {
             // TEAM-312: Deep narration test through queen job server
             use operations_contract::Operation;
-            use crate::job_client::submit_and_stream_job;
+            use rbee_keeper::job_client::submit_and_stream_job;
             
             submit_and_stream_job(&queen_url, Operation::QueenCheck).await
         }

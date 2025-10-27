@@ -102,4 +102,22 @@ impl SshConfig {
     pub fn new(hostname: String, user: String, port: u16) -> Self {
         Self { hostname, user, port }
     }
+    
+    /// Create localhost SSH config (bypasses SSH when possible)
+    /// TEAM-331: Localhost mode - avoids SSH overhead for local operations
+    pub fn localhost() -> Self {
+        Self {
+            hostname: "localhost".to_string(),
+            user: whoami::username(),
+            port: 22,
+        }
+    }
+    
+    /// Check if this config points to localhost
+    /// TEAM-331: Used to bypass SSH for local operations
+    pub fn is_localhost(&self) -> bool {
+        self.hostname == "localhost" 
+            || self.hostname == "127.0.0.1"
+            || self.hostname == "::1"
+    }
 }

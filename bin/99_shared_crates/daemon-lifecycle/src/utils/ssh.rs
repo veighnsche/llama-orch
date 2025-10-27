@@ -26,10 +26,12 @@
 use anyhow::{Context, Result};
 use std::path::PathBuf;
 use crate::SshConfig;
+use super::local::{local_exec, local_copy}; // TEAM-331: Localhost bypass
 
 /// Execute SSH command on remote machine
 ///
 /// TEAM-330: Shared helper function for SSH operations
+/// TEAM-331: Bypasses SSH for localhost operations
 ///
 /// # Arguments
 /// * `ssh_config` - SSH connection configuration
@@ -45,6 +47,11 @@ use crate::SshConfig;
 /// println!("Remote user: {}", output.trim());
 /// ```
 pub async fn ssh_exec(ssh_config: &SshConfig, command: &str) -> Result<String> {
+    // TEAM-331: Bypass SSH for localhost
+    if ssh_config.is_localhost() {
+        return local_exec(command).await;
+    }
+    
     use tokio::process::Command;
     
     let output = Command::new("ssh")
@@ -66,6 +73,7 @@ pub async fn ssh_exec(ssh_config: &SshConfig, command: &str) -> Result<String> {
 /// Upload file to remote machine via SCP
 ///
 /// TEAM-330: Shared helper function for SCP operations
+/// TEAM-331: Bypasses SCP for localhost operations
 ///
 /// # Arguments
 /// * `ssh_config` - SSH connection configuration
@@ -82,6 +90,11 @@ pub async fn ssh_exec(ssh_config: &SshConfig, command: &str) -> Result<String> {
 /// scp_upload(&ssh_config, &local, "~/.local/bin/daemon").await?;
 /// ```
 pub async fn scp_upload(ssh_config: &SshConfig, local_path: &PathBuf, remote_path: &str) -> Result<()> {
+    // TEAM-331: Bypass SCP for localhost
+    if ssh_config.is_localhost() {
+        return local_copy(local_path, remote_path).await;
+    }
+    
     use tokio::process::Command;
     
     let remote_target = format!("{}@{}:{}", 

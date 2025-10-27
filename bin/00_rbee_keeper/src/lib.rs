@@ -10,6 +10,7 @@ pub mod config;
 pub mod handlers;
 pub mod job_client;
 pub mod platform; // TEAM-293: Cross-platform abstraction layer
+pub mod ssh_resolver; // TEAM-332: SSH config resolver middleware
 
 // Re-export commonly used types
 pub use config::Config;

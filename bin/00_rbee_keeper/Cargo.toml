@@ -78,4 +78,4 @@ specta-typescript = "=0.0.9"
 tauri-build = { version = "2", features = [] }
 
 [dev-dependencies]
-# Add dev dependencies as needed
+tempfile = "3.8" # TEAM-332: For SSH config parser tests
