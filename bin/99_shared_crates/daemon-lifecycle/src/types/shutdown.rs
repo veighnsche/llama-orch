@@ -27,6 +27,30 @@ fn default_graceful_timeout() -> u64 {
     5
 }
 
+impl ShutdownConfig {
+    /// Create a new shutdown config
+    pub fn new(daemon_name: impl Into<String>, pid: u32) -> Self {
+        Self {
+            daemon_name: daemon_name.into(),
+            pid,
+            graceful_timeout_secs: default_graceful_timeout(),
+            job_id: None,
+        }
+    }
+
+    /// Set graceful timeout in seconds
+    pub fn with_graceful_timeout_secs(mut self, secs: u64) -> Self {
+        self.graceful_timeout_secs = secs;
+        self
+    }
+
+    /// Set job_id for narration
+    pub fn with_job_id(mut self, job_id: impl Into<String>) -> Self {
+        self.job_id = Some(job_id.into());
+        self
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

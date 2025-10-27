@@ -4,9 +4,8 @@
 //! TEAM-327: Migrated to signal-based shutdown (no more HTTP /v1/shutdown endpoint)
 
 use anyhow::Result;
-use std::path::PathBuf;
 
-use crate::shutdown::shutdown_daemon_force;
+use crate::shutdown::shutdown_daemon;
 use crate::status::check_daemon_health; // TEAM-329: Renamed from health to status
 use crate::types::start::HttpDaemonConfig; // TEAM-329: types/start.rs (renamed from lifecycle.rs)
 use crate::utils::pid::{read_pid_file, remove_pid_file}; // TEAM-329: Centralized PID operations
@@ -70,7 +69,7 @@ pub async fn stop_daemon(config: HttpDaemonConfig) -> Result<()> {
     
     // Step 3: Use signal-based shutdown (SIGTERM → SIGKILL)
     let timeout_secs = config.graceful_timeout_secs.unwrap_or(5);
-    shutdown_daemon_force(pid, &config.daemon_name, timeout_secs, config.job_id.as_deref()).await?;
+    shutdown_daemon(pid, &config.daemon_name, timeout_secs, config.job_id.as_deref()).await?;
     
     // Step 4: Clean up PID file after successful shutdown
     remove_pid_file(&config.daemon_name)?;

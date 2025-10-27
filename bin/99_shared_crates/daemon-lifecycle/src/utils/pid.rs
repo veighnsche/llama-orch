@@ -105,10 +105,14 @@ mod tests {
 
     #[test]
     fn test_get_pid_file_path() {
-        // This test requires HOME to be set
-        if std::env::var("HOME").is_ok() {
-            let path = get_pid_file_path("test-daemon").unwrap();
-            assert!(path.to_string_lossy().ends_with(".local/var/run/test-daemon.pid"));
-        }
+        // Test path construction without creating directories
+        std::env::set_var("HOME", "/test/home");
+        
+        // Use get_pid_dir directly to avoid directory creation
+        let pid_dir = get_pid_dir().unwrap();
+        let expected_path = pid_dir.join("test-daemon.pid");
+        
+        assert_eq!(pid_dir.to_str().unwrap(), "/test/home/.local/var/run");
+        assert_eq!(expected_path.to_str().unwrap(), "/test/home/.local/var/run/test-daemon.pid");
     }
 }

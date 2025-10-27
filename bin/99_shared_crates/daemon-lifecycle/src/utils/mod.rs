@@ -7,6 +7,7 @@ pub mod find;
 pub mod paths; // TEAM-329: Moved from src/paths.rs
 pub mod pid; // TEAM-329: Centralized PID operations
 pub mod poll; // TEAM-329: Extracted from health.rs
+pub mod serde; // TEAM-329: Serde helpers (extracted from types/install.rs)
 pub mod timeout;
 
 // Re-export main functions

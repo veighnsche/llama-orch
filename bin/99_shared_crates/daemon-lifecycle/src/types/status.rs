@@ -18,6 +18,22 @@ pub struct StatusRequest {
     pub job_id: Option<String>,
 }
 
+impl StatusRequest {
+    /// Create a new status request
+    pub fn new(id: impl Into<String>) -> Self {
+        Self {
+            id: id.into(),
+            job_id: None,
+        }
+    }
+
+    /// Set job_id for narration
+    pub fn with_job_id(mut self, job_id: impl Into<String>) -> Self {
+        self.job_id = Some(job_id.into());
+        self
+    }
+}
+
 /// Response from daemon status check
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct StatusResponse {

@@ -12,11 +12,9 @@
 use anyhow::Result;
 use observability_narration_core::n;
 use observability_narration_macros::with_job_id;
-use std::process::Command;
 
 use crate::types::rebuild::RebuildConfig; // TEAM-329: Moved to types/rebuild.rs
 use crate::types::start::HttpDaemonConfig; // TEAM-329: types/start.rs (renamed from lifecycle.rs)
-
 
 /// Rebuild daemon with conditional hot reload
 ///
@@ -61,7 +59,7 @@ use crate::types::start::HttpDaemonConfig; // TEAM-329: types/start.rs (renamed 
 /// # }
 /// ```
 #[with_job_id(config_param = "rebuild_config")] // TEAM-328: Eliminates job_id context boilerplate
-pub async fn update_daemon(
+pub async fn rebuild_daemon(
     rebuild_config: RebuildConfig,
     daemon_config: HttpDaemonConfig,
 ) -> Result<bool> {
@@ -70,7 +68,8 @@ pub async fn update_daemon(
         &daemon_config.health_url,
         None, // Use default /health endpoint
         Some(std::time::Duration::from_secs(2)),
-    ).await;
+    )
+    .await;
 
     if was_running {
         n!(
@@ -97,16 +96,17 @@ pub async fn update_daemon(
         &rebuild_config.binary_name,
         None, // Will auto-build if not found
         None, // Install to ~/.local/bin
-    ).await?;
+    )
+    .await?;
 
     // Step 4: If it was running, start it again (hot reload)
     if was_running {
         n!("hot_reload_restart", "▶️  Restarting {}...", rebuild_config.binary_name);
-        
+
         // Update daemon config with built binary path
         let mut start_config = daemon_config;
         start_config.binary_path = Some(binary_path.into());
-        
+
         crate::start::start_daemon(start_config).await?;
         n!(
             "hot_reload_complete",
@@ -135,10 +135,7 @@ mod tests {
             .with_job_id("job-123");
 
         assert_eq!(config.binary_name, "test-daemon");
-        assert_eq!(
-            config.features,
-            Some(vec!["feature1".to_string(), "feature2".to_string()])
-        );
+        assert_eq!(config.features, Some(vec!["feature1".to_string(), "feature2".to_string()]));
         assert_eq!(config.job_id, Some("job-123".to_string()));
     }
 

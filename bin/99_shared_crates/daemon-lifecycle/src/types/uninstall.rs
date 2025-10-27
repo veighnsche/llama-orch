@@ -28,6 +28,37 @@ pub struct UninstallConfig {
     pub job_id: Option<String>,
 }
 
+impl UninstallConfig {
+    /// Create a new uninstall config
+    pub fn new(daemon_name: impl Into<String>, install_path: impl Into<String>) -> Self {
+        Self {
+            daemon_name: daemon_name.into(),
+            install_path: install_path.into(),
+            health_url: None,
+            health_timeout_secs: None,
+            job_id: None,
+        }
+    }
+
+    /// Set health check URL
+    pub fn with_health_url(mut self, url: impl Into<String>) -> Self {
+        self.health_url = Some(url.into());
+        self
+    }
+
+    /// Set health check timeout
+    pub fn with_health_timeout_secs(mut self, secs: u64) -> Self {
+        self.health_timeout_secs = Some(secs);
+        self
+    }
+
+    /// Set job_id for narration
+    pub fn with_job_id(mut self, job_id: impl Into<String>) -> Self {
+        self.job_id = Some(job_id.into());
+        self
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

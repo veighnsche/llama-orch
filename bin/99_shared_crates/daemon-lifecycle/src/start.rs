@@ -5,7 +5,6 @@
 
 use anyhow::{Context, Result};
 use observability_narration_core::n;
-use std::path::PathBuf;
 use std::process::Stdio;
 use tokio::process::Command;
 

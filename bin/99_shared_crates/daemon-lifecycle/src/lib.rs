@@ -169,11 +169,8 @@ pub mod utils; // TEAM-329: Utilities (find, paths, poll, timeout)
 // TEAM-329: All config types re-exported from types module
 pub use build::build_daemon; // TEAM-329: Extracted from install.rs to build.rs
 pub use install::install_daemon; // TEAM-328: Renamed from install_to_local_bin
-pub use rebuild::update_daemon; // TEAM-328: Renamed from rebuild_with_hot_reload (more accurate)
-pub use shutdown::{
-    shutdown_daemon_force,    // TEAM-328: Renamed from force_shutdown
-    shutdown_daemon_graceful, // TEAM-328: Renamed from graceful_shutdown
-};
+pub use rebuild::rebuild_daemon; // TEAM-329: Renamed from update_daemon (user request)
+pub use shutdown::shutdown_daemon; // TEAM-329: Simplified from shutdown_daemon_force
 pub use start::start_daemon; // TEAM-328: Renamed from start_http_daemon
 pub use status::check_daemon_health; // TEAM-329: Renamed from health.rs to status.rs
 pub use stop::stop_daemon; // TEAM-328: Renamed from stop_http_daemon
@@ -196,10 +193,10 @@ pub use utils::{
     find_binary,
     get_install_dir,
     get_install_path,
-    get_pid_file_path, // TEAM-329: Centralized in utils/pid.rs
+    get_pid_file_path,  // TEAM-329: Centralized in utils/pid.rs
     poll_daemon_health, // TEAM-329: Moved from health.rs to utils/poll.rs
-    read_pid_file, // TEAM-329: Centralized in utils/pid.rs
-    remove_pid_file, // TEAM-329: Centralized in utils/pid.rs
+    read_pid_file,      // TEAM-329: Centralized in utils/pid.rs
+    remove_pid_file,    // TEAM-329: Centralized in utils/pid.rs
     timeout_after,
     with_timeout,
     write_pid_file, // TEAM-329: Centralized in utils/pid.rs

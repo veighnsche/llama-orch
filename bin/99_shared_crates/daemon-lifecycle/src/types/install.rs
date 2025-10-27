@@ -25,6 +25,36 @@ pub struct InstallConfig {
     pub job_id: Option<String>,
 }
 
+impl InstallConfig {
+    /// Create a new install config
+    pub fn new(binary_name: impl Into<String>) -> Self {
+        Self {
+            binary_name: binary_name.into(),
+            binary_path: None,
+            target_path: None,
+            job_id: None,
+        }
+    }
+
+    /// Set explicit binary path
+    pub fn with_binary_path(mut self, path: impl Into<String>) -> Self {
+        self.binary_path = Some(path.into());
+        self
+    }
+
+    /// Set target installation path
+    pub fn with_target_path(mut self, path: impl Into<String>) -> Self {
+        self.target_path = Some(path.into());
+        self
+    }
+
+    /// Set job_id for narration
+    pub fn with_job_id(mut self, job_id: impl Into<String>) -> Self {
+        self.job_id = Some(job_id.into());
+        self
+    }
+}
+
 /// Result of daemon installation
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct InstallResult {
@@ -32,7 +62,10 @@ pub struct InstallResult {
     pub binary_path: String,
 
     /// Installation timestamp
-    #[serde(with = "systemtime_serde")]
+    #[serde(
+        serialize_with = "crate::utils::serde::serialize_systemtime",
+        deserialize_with = "crate::utils::serde::deserialize_systemtime"
+    )]
     pub install_time: SystemTime,
     
     /// Whether the binary was found in target directory (vs provided path)
@@ -41,28 +74,7 @@ pub struct InstallResult {
 }
 
 // TEAM-329: UninstallConfig moved to types/uninstall.rs (PARITY)
-
-// Helper module for SystemTime serialization
-mod systemtime_serde {
-    use serde::{Deserialize, Deserializer, Serialize, Serializer};
-    use std::time::{SystemTime, UNIX_EPOCH};
-
-    pub fn serialize<S>(time: &SystemTime, serializer: S) -> Result<S::Ok, S::Error>
-    where
-        S: Serializer,
-    {
-        let duration = time.duration_since(UNIX_EPOCH).unwrap();
-        duration.as_secs().serialize(serializer)
-    }
-
-    pub fn deserialize<'de, D>(deserializer: D) -> Result<SystemTime, D::Error>
-    where
-        D: Deserializer<'de>,
-    {
-        let secs = u64::deserialize(deserializer)?;
-        Ok(UNIX_EPOCH + std::time::Duration::from_secs(secs))
-    }
-}
+// TEAM-329: systemtime_serde moved to utils/serde.rs (serialization helpers are utilities)
 
 #[cfg(test)]
 mod tests {
