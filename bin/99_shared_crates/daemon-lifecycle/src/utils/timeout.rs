@@ -1,43 +1,13 @@
 //! Timeout enforcement for daemon operations
 //!
-//! TEAM-276: Added timeout wrapper using TimeoutEnforcer
+//! TEAM-276: Extracted timeout pattern from queen-lifecycle and hive-lifecycle
+//! TEAM-329: Moved TimeoutConfig to types/timeout.rs
 
 use anyhow::Result;
 use std::time::Duration;
 use timeout_enforcer::TimeoutEnforcer;
 
-/// Configuration for timeout enforcement
-///
-/// TEAM-276: Wrapper around TimeoutEnforcer for daemon operations
-pub struct TimeoutConfig {
-    /// Operation name for narration
-    pub operation_name: String,
-
-    /// Timeout duration
-    pub timeout: Duration,
-
-    /// Optional job_id for narration routing
-    pub job_id: Option<String>,
-}
-
-impl TimeoutConfig {
-    /// Create a new timeout config
-    pub fn new(operation_name: impl Into<String>, timeout: Duration) -> Self {
-        Self { operation_name: operation_name.into(), timeout, job_id: None }
-    }
-
-    /// Set the job_id for narration routing
-    pub fn with_job_id(mut self, job_id: impl Into<String>) -> Self {
-        self.job_id = Some(job_id.into());
-        self
-    }
-
-    /// Set timeout in seconds (convenience method)
-    pub fn with_timeout_secs(mut self, secs: u64) -> Self {
-        self.timeout = Duration::from_secs(secs);
-        self
-    }
-}
+use crate::types::timeout::TimeoutConfig; // TEAM-329: Moved to types/timeout.rs
 
 /// Wrap an async operation with timeout enforcement
 ///

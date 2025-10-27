@@ -10,46 +10,12 @@
 //! - Build output handling
 
 use anyhow::Result;
-use daemon_contract::HttpDaemonConfig;
 use observability_narration_core::n;
 use observability_narration_macros::with_job_id;
 use std::process::Command;
 
-/// Configuration for daemon rebuild
-#[derive(Debug, Clone)]
-pub struct RebuildConfig {
-    /// Name of the daemon binary (e.g., "queen-rbee", "rbee-hive")
-    pub binary_name: String,
-
-    /// Optional features to enable (e.g., "local-hive")
-    pub features: Option<Vec<String>>,
-
-    /// Optional job ID for narration routing
-    pub job_id: Option<String>,
-}
-
-impl RebuildConfig {
-    /// Create a new rebuild config
-    pub fn new(binary_name: impl Into<String>) -> Self {
-        Self {
-            binary_name: binary_name.into(),
-            features: None,
-            job_id: None,
-        }
-    }
-
-    /// Set features to enable
-    pub fn with_features(mut self, features: Vec<String>) -> Self {
-        self.features = Some(features);
-        self
-    }
-
-    /// Set job_id for narration
-    pub fn with_job_id(mut self, job_id: impl Into<String>) -> Self {
-        self.job_id = Some(job_id.into());
-        self
-    }
-}
+use crate::types::rebuild::RebuildConfig; // TEAM-329: Moved to types/rebuild.rs
+use crate::types::start::HttpDaemonConfig; // TEAM-329: types/start.rs (renamed from lifecycle.rs)
 
 
 /// Rebuild daemon with conditional hot reload
@@ -95,12 +61,12 @@ impl RebuildConfig {
 /// # }
 /// ```
 #[with_job_id(config_param = "rebuild_config")] // TEAM-328: Eliminates job_id context boilerplate
-pub async fn rebuild_with_hot_reload(
+pub async fn update_daemon(
     rebuild_config: RebuildConfig,
     daemon_config: HttpDaemonConfig,
 ) -> Result<bool> {
     // Step 1: Check if daemon is currently running
-    let was_running = crate::health::is_daemon_healthy(
+    let was_running = crate::status::check_daemon_health(
         &daemon_config.health_url,
         None, // Use default /health endpoint
         Some(std::time::Duration::from_secs(2)),
@@ -115,7 +81,7 @@ pub async fn rebuild_with_hot_reload(
 
         // Step 2: Stop the running daemon
         n!("hot_reload_stop", "⏸️  Stopping {}...", rebuild_config.binary_name);
-        crate::stop::stop_http_daemon(daemon_config.clone()).await?;
+        crate::stop::stop_daemon(daemon_config.clone()).await?;
         n!("hot_reload_stopped", "✅ {} stopped", rebuild_config.binary_name);
     } else {
         n!(
@@ -126,8 +92,8 @@ pub async fn rebuild_with_hot_reload(
     }
 
     // Step 3: Build and install the daemon
-    // TEAM-328: install_to_local_bin now builds if needed, no separate build function
-    let binary_path = crate::install::install_to_local_bin(
+    // TEAM-328: install_daemon now builds if needed, no separate build function
+    let binary_path = crate::install::install_daemon(
         &rebuild_config.binary_name,
         None, // Will auto-build if not found
         None, // Install to ~/.local/bin
@@ -141,7 +107,7 @@ pub async fn rebuild_with_hot_reload(
         let mut start_config = daemon_config;
         start_config.binary_path = Some(binary_path.into());
         
-        crate::start::start_http_daemon(start_config).await?;
+        crate::start::start_daemon(start_config).await?;
         n!(
             "hot_reload_complete",
             "✅ Hot reload complete - {} is running with new binary",
@@ -185,7 +151,3 @@ mod tests {
         assert_eq!(config.job_id, None);
     }
 }
-
-// TEAM-328: Renamed export for consistent naming
-/// Alias for rebuild_with_hot_reload with consistent naming
-pub use rebuild_with_hot_reload as rebuild_daemon;

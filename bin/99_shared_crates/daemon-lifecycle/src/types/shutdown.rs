@@ -1,6 +1,7 @@
 //! Daemon shutdown configuration types
 //!
 //! TEAM-315: Extracted from daemon-lifecycle
+//! TEAM-329: Moved from daemon-contract to daemon-lifecycle/types (inline)
 
 use serde::{Deserialize, Serialize};
 

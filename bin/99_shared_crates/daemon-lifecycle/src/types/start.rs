@@ -1,7 +1,9 @@
-//! Daemon lifecycle configuration types
+//! Start operation configuration types
 //!
 //! TEAM-315: Extracted from daemon-lifecycle
 //! TEAM-316: Added full HttpDaemonConfig with lifecycle fields (moved from daemon-lifecycle)
+//! TEAM-329: Moved from daemon-contract to daemon-lifecycle/types (inline)
+//! TEAM-329: Renamed lifecycle.rs → start.rs (matches src/start.rs)
 
 use serde::{Deserialize, Serialize};
 use std::path::PathBuf;
@@ -131,29 +133,15 @@ mod tests {
 
         assert_eq!(config.daemon_name, "test-daemon");
         assert_eq!(config.health_url, "http://localhost:8080");
-        assert_eq!(config.shutdown_endpoint, Some("http://localhost:8080/v1/shutdown".to_string()));
         assert_eq!(config.args.len(), 2);
         assert_eq!(config.job_id, Some("job-123".to_string()));
         assert_eq!(config.max_health_attempts, Some(5));
     }
 
     #[test]
-    fn test_http_daemon_config_custom_shutdown() {
-        let config = HttpDaemonConfig::new(
-            "test-daemon",
-            PathBuf::from("/usr/bin/test"),
-            "http://localhost:8080",
-        )
-        .with_shutdown_endpoint("http://localhost:8080/api/shutdown");
-
-        assert_eq!(config.shutdown_endpoint, Some("http://localhost:8080/api/shutdown".to_string()));
-    }
-
-    #[test]
     fn test_http_daemon_config_serialization() {
         let config = HttpDaemonConfig::new(
             "queen-rbee",
-            PathBuf::from("/usr/bin/queen-rbee"),
             "http://localhost:7833/health",
         )
         .with_job_id("job-123");
@@ -162,6 +150,5 @@ mod tests {
         let deserialized: HttpDaemonConfig = serde_json::from_str(&json).unwrap();
         assert_eq!(config.daemon_name, deserialized.daemon_name);
         assert_eq!(config.health_url, deserialized.health_url);
-        assert_eq!(config.shutdown_endpoint, deserialized.shutdown_endpoint);
     }
 }

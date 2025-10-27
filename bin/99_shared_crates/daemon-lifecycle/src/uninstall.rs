@@ -1,12 +1,14 @@
 //! Daemon uninstallation module
 //!
 //! TEAM-312: Extracted from install.rs to separate module
+//! TEAM-329: Import UninstallConfig from types/uninstall.rs (PARITY)
 
 use anyhow::Result;
 use observability_narration_core::n;
 use observability_narration_macros::with_job_id;
 
-use crate::install::UninstallConfig;
+// TEAM-329: UninstallConfig moved to types/uninstall.rs (PARITY)
+pub use crate::types::uninstall::UninstallConfig;
 
 /// Uninstall a daemon binary
 ///
@@ -56,7 +58,7 @@ pub async fn uninstall_daemon(config: UninstallConfig) -> Result<()> {
     // Step 2: Check if daemon is running (if health_url provided)
     if let Some(health_url) = config.health_url {
         let timeout_secs = config.health_timeout_secs.unwrap_or(2);
-        let is_running = crate::health::is_daemon_healthy(
+        let is_running = crate::status::check_daemon_health(
             &health_url,
             None, // Use default /health endpoint
             Some(std::time::Duration::from_secs(timeout_secs)),

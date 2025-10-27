@@ -141,17 +141,21 @@
 // TEAM-320: Removed ensure module (promotes explicit start/stop)
 // TEAM-328: Deleted get.rs and status.rs - consolidated into health.rs (RULE ZERO)
 // TEAM-328: Added paths module - centralized path constants to ensure install/uninstall consistency
-pub mod health;
+// TEAM-329: Renamed manager → find, extracted build from install (single responsibility)
+// TEAM-329: Inlined daemon-contract into types/ (RULE ZERO - 1 consumer = inline it)
+// TEAM-329: Moved find + timeout + paths + poll to utils/, extracted ALL config types to types/
+pub mod build; // TEAM-329: Extracted from install.rs
 pub mod install;
-pub mod list;
-pub mod manager;
-pub mod paths; // TEAM-328: Centralized path logic
 pub mod rebuild; // TEAM-316: Extracted from queen-lifecycle and hive-lifecycle
 pub mod shutdown;
 pub mod start; // TEAM-316: Extracted from lifecycle.rs
+pub mod status; // TEAM-329: Renamed from health.rs (checking status, not health)
 pub mod stop; // TEAM-316: Extracted from lifecycle.rs
-pub mod timeout;
+pub mod types; // TEAM-329: ALL config types, types/{op}.rs matches src/{op}.rs
 pub mod uninstall;
+pub mod utils; // TEAM-329: Utilities (find, paths, poll, timeout)
+
+// TEAM-329: DELETED list.rs - UNUSED (exported but never implemented, zero consumers)
 
 // TEAM-259: Re-export main types and functions
 // TEAM-276: Added UninstallConfig export
@@ -162,33 +166,41 @@ pub mod uninstall;
 // TEAM-328: Deleted check_daemon_status() - use check_daemon_health() directly
 // TEAM-328: Removed spawn_daemon export - RULE ZERO violation (unused wrapper)
 // TEAM-328: Aligned naming: verb_daemon() or verb_daemon_modifier() pattern
-pub use health::{
-    check_daemon_health, // TEAM-328: Renamed from is_daemon_healthy
-    poll_daemon_health,  // TEAM-328: Renamed from poll_until_healthy
-    HealthPollConfig,
-};
-pub use install::{
-    build_daemon,              // TEAM-328: Build binary from source (cargo build)
-    install_daemon,            // TEAM-328: Renamed from install_to_local_bin
-    InstallConfig,
-    InstallResult,
-    UninstallConfig,
-};
-pub use list::{list_daemons, ListableConfig};
-pub use manager::DaemonManager;
-pub use rebuild::{
-    rebuild_daemon, // TEAM-328: Renamed from rebuild_with_hot_reload
-    RebuildConfig,
-};
+// TEAM-329: All config types re-exported from types module
+pub use build::build_daemon; // TEAM-329: Extracted from install.rs to build.rs
+pub use install::install_daemon; // TEAM-328: Renamed from install_to_local_bin
+pub use rebuild::update_daemon; // TEAM-328: Renamed from rebuild_with_hot_reload (more accurate)
 pub use shutdown::{
     shutdown_daemon_force,    // TEAM-328: Renamed from force_shutdown
     shutdown_daemon_graceful, // TEAM-328: Renamed from graceful_shutdown
-    ShutdownConfig,
 };
 pub use start::start_daemon; // TEAM-328: Renamed from start_http_daemon
+pub use status::check_daemon_health; // TEAM-329: Renamed from health.rs to status.rs
 pub use stop::stop_daemon; // TEAM-328: Renamed from stop_http_daemon
-pub use timeout::{timeout_after, with_timeout, TimeoutConfig};
+pub use types::{
+    // TEAM-329: All config types from types/ module (PERFECT PARITY)
+    HealthPollConfig,
+    HttpDaemonConfig,
+    InstallConfig,
+    InstallResult,
+    RebuildConfig,
+    ShutdownConfig,
+    StatusRequest,
+    StatusResponse,
+    TimeoutConfig,
+    UninstallConfig,
+};
 pub use uninstall::uninstall_daemon;
-
-// TEAM-316: Re-export HttpDaemonConfig from contract (it's a contract, not implementation)
-pub use daemon_contract::HttpDaemonConfig;
+pub use utils::{
+    // TEAM-329: Utilities from utils/ module
+    find_binary,
+    get_install_dir,
+    get_install_path,
+    get_pid_file_path, // TEAM-329: Centralized in utils/pid.rs
+    poll_daemon_health, // TEAM-329: Moved from health.rs to utils/poll.rs
+    read_pid_file, // TEAM-329: Centralized in utils/pid.rs
+    remove_pid_file, // TEAM-329: Centralized in utils/pid.rs
+    timeout_after,
+    with_timeout,
+    write_pid_file, // TEAM-329: Centralized in utils/pid.rs
+};

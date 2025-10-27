@@ -4,47 +4,12 @@
 //! TEAM-327: Migrated to signal-based shutdown (no more HTTP /v1/shutdown endpoint)
 
 use anyhow::Result;
-use daemon_contract::HttpDaemonConfig;
 use std::path::PathBuf;
 
-use crate::health::is_daemon_healthy;
-use crate::shutdown::force_shutdown;
-
-/// Get PID file path for a daemon
-///
-/// TEAM-327: Standard Unix pattern - PID files in ~/.local/var/run/
-/// TEAM-328: Use centralized path function
-fn get_pid_file_path(daemon_name: &str) -> Result<PathBuf> {
-    crate::paths::get_pid_file_path(daemon_name)
-}
-
-/// Read PID from PID file
-///
-/// TEAM-327: Standard Unix pattern for stateless daemon management
-fn read_pid_file(daemon_name: &str) -> Result<u32> {
-    let pid_file = get_pid_file_path(daemon_name)?;
-    
-    if !pid_file.exists() {
-        anyhow::bail!("PID file not found: {}. Is {} running?", pid_file.display(), daemon_name);
-    }
-    
-    let pid_str = std::fs::read_to_string(&pid_file)?;
-    let pid = pid_str.trim().parse::<u32>()
-        .map_err(|e| anyhow::anyhow!("Invalid PID in {}: {}", pid_file.display(), e))?;
-    
-    Ok(pid)
-}
-
-/// Remove PID file after successful shutdown
-///
-/// TEAM-327: Cleanup PID file to avoid stale entries
-fn remove_pid_file(daemon_name: &str) -> Result<()> {
-    let pid_file = get_pid_file_path(daemon_name)?;
-    if pid_file.exists() {
-        std::fs::remove_file(&pid_file)?;
-    }
-    Ok(())
-}
+use crate::shutdown::shutdown_daemon_force;
+use crate::status::check_daemon_health; // TEAM-329: Renamed from health to status
+use crate::types::start::HttpDaemonConfig; // TEAM-329: types/start.rs (renamed from lifecycle.rs)
+use crate::utils::pid::{read_pid_file, remove_pid_file}; // TEAM-329: Centralized PID operations
 
 /// Stop an HTTP-based daemon gracefully using signals
 ///
@@ -84,9 +49,9 @@ fn remove_pid_file(daemon_name: &str) -> Result<()> {
 /// # Ok(())
 /// # }
 /// ```
-pub async fn stop_http_daemon(config: HttpDaemonConfig) -> Result<()> {
+pub async fn stop_daemon(config: HttpDaemonConfig) -> Result<()> {
     // Step 1: Check if daemon is running (via health check)
-    let is_running = is_daemon_healthy(&config.health_url, None, None).await;
+    let is_running = check_daemon_health(&config.health_url, None, None).await;
     
     if !is_running {
         use observability_narration_core::n;
@@ -105,7 +70,7 @@ pub async fn stop_http_daemon(config: HttpDaemonConfig) -> Result<()> {
     
     // Step 3: Use signal-based shutdown (SIGTERM → SIGKILL)
     let timeout_secs = config.graceful_timeout_secs.unwrap_or(5);
-    force_shutdown(pid, &config.daemon_name, timeout_secs, config.job_id.as_deref()).await?;
+    shutdown_daemon_force(pid, &config.daemon_name, timeout_secs, config.job_id.as_deref()).await?;
     
     // Step 4: Clean up PID file after successful shutdown
     remove_pid_file(&config.daemon_name)?;
@@ -113,6 +78,3 @@ pub async fn stop_http_daemon(config: HttpDaemonConfig) -> Result<()> {
     Ok(())
 }
 
-// TEAM-328: Renamed export for consistent naming
-/// Alias for stop_http_daemon with consistent naming
-pub use stop_http_daemon as stop_daemon;

@@ -8,8 +8,9 @@ use observability_narration_core::{n, with_narration_context, NarrationContext};
 use std::time::Duration;
 use tokio::time::sleep;
 
-// TEAM-316: Use ShutdownConfig from daemon-contract as base
-pub use daemon_contract::ShutdownConfig as ShutdownConfigBase;
+// TEAM-316: Use ShutdownConfig from types module as base
+// TEAM-329: types/shutdown.rs
+pub use crate::types::shutdown::ShutdownConfig as ShutdownConfigBase;
 
 /// Extended shutdown config with lifecycle-specific fields
 ///
@@ -99,7 +100,7 @@ impl ShutdownConfig {
     since = "0.1.0",
     note = "Use force_shutdown with signal-based shutdown instead. HTTP-based shutdown is being phased out."
 )]
-pub async fn graceful_shutdown(config: ShutdownConfig) -> Result<()> {
+pub async fn shutdown_daemon_graceful(config: ShutdownConfig) -> Result<()> {
     // TEAM-311: Migrated to n!() macro
     // TEAM-316: Updated to use config.base fields
     let ctx = config.base.job_id.as_ref().map(|jid| NarrationContext::new().with_job_id(jid));
@@ -107,7 +108,7 @@ pub async fn graceful_shutdown(config: ShutdownConfig) -> Result<()> {
     let shutdown_impl = async {
         // Step 1: Check if daemon is running
         let is_running =
-            crate::health::is_daemon_healthy(&config.health_url, None, Some(Duration::from_secs(2)))
+            crate::status::check_daemon_health(&config.health_url, None, Some(Duration::from_secs(2)))
                 .await;
 
         if !is_running {
@@ -175,7 +176,7 @@ pub async fn graceful_shutdown(config: ShutdownConfig) -> Result<()> {
 /// # Ok(())
 /// # }
 /// ```
-pub async fn force_shutdown(
+pub async fn shutdown_daemon_force(
     pid: u32,
     daemon_name: &str,
     timeout_secs: u64,
@@ -237,9 +238,3 @@ pub async fn force_shutdown(
     }
 }
 
-// TEAM-328: Renamed exports for consistent naming
-/// Alias for graceful_shutdown with consistent naming
-pub use graceful_shutdown as shutdown_daemon_graceful;
-
-/// Alias for force_shutdown with consistent naming
-pub use force_shutdown as shutdown_daemon_force;

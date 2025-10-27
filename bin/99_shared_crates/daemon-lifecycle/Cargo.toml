@@ -22,7 +22,7 @@ auto-update = { path = "../auto-update" }  # TEAM-259: For auto-updating daemons
 timeout-enforcer = { path = "../timeout-enforcer" }  # TEAM-276: For timeout wrapper
 nix = { version = "0.29", features = ["signal"] }  # TEAM-276: For SIGTERM/SIGKILL
 stdext = "0.3"  # TEAM-312: Required for n!() macro (function_name!())
-daemon-contract = { path = "../../97_contracts/daemon-contract" }  # TEAM-316: Generic daemon contracts
+# TEAM-329: Removed daemon-contract dependency - inlined into types/ module (RULE ZERO - 1 consumer)
 
 [dev-dependencies]
 tokio = { version = "1", features = ["full"] }

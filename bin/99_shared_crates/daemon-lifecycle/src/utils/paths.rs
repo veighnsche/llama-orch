@@ -65,27 +65,7 @@ pub fn get_pid_dir() -> Result<PathBuf> {
     Ok(PathBuf::from(format!("{}/.local/var/run", home)))
 }
 
-/// Get the full path to a daemon's PID file
-///
-/// # Arguments
-/// * `daemon_name` - Name of the daemon (e.g., "queen-rbee")
-///
-/// # Returns
-/// * `Ok(PathBuf)` - Full path to PID file
-///
-/// # Example
-/// ```rust,no_run
-/// use daemon_lifecycle::paths::get_pid_file_path;
-///
-/// # fn example() -> anyhow::Result<()> {
-/// let path = get_pid_file_path("queen-rbee")?;
-/// // Returns: /home/user/.local/var/run/queen-rbee.pid
-/// # Ok(())
-/// # }
-/// ```
-pub fn get_pid_file_path(daemon_name: &str) -> Result<PathBuf> {
-    Ok(get_pid_dir()?.join(format!("{}.pid", daemon_name)))
-}
+// TEAM-329: get_pid_file_path moved to utils/pid.rs (centralized PID operations)
 
 #[cfg(test)]
 mod tests {
@@ -104,9 +84,9 @@ mod tests {
         
         // Ensure full paths work
         let install_path = get_install_path("test-daemon").unwrap();
-        let pid_path = get_pid_file_path("test-daemon").unwrap();
         
         assert_eq!(install_path.to_str().unwrap(), "/test/home/.local/bin/test-daemon");
-        assert_eq!(pid_path.to_str().unwrap(), "/test/home/.local/var/run/test-daemon.pid");
+        
+        // TEAM-329: get_pid_file_path test moved to utils/pid.rs
     }
 }

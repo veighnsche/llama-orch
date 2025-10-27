@@ -1,32 +1,19 @@
 //! Start HTTP-based daemons
 //!
 //! TEAM-316: Extracted from lifecycle.rs (RULE ZERO - single responsibility)
+//! TEAM-329: Inlined spawn() logic to eliminate entropy (RULE ZERO)
 
-use anyhow::Result;
-use daemon_contract::HttpDaemonConfig;
+use anyhow::{Context, Result};
+use observability_narration_core::n;
 use std::path::PathBuf;
+use std::process::Stdio;
+use tokio::process::Command;
 
-use crate::health::{poll_until_healthy, HealthPollConfig};
-use crate::manager::DaemonManager;
-
-/// Get PID file path for a daemon
-///
-/// TEAM-327: Standard Unix pattern - PID files in ~/.local/var/run/
-/// 
-/// # Arguments
-/// * `daemon_name` - Name of the daemon (e.g., "queen-rbee", "rbee-hive")
-///
-/// # Returns
-/// Path to PID file (e.g., ~/.local/var/run/queen-rbee.pid)
-fn get_pid_file_path(daemon_name: &str) -> Result<PathBuf> {
-    // TEAM-328: Use centralized path function
-    let run_dir = crate::paths::get_pid_dir()?;
-    
-    // Create directory if it doesn't exist
-    std::fs::create_dir_all(&run_dir)?;
-    
-    Ok(run_dir.join(format!("{}.pid", daemon_name)))
-}
+use crate::types::start::HttpDaemonConfig; // TEAM-329: types/start.rs (PARITY)
+use crate::types::status::HealthPollConfig; // TEAM-329: types/status.rs (PARITY)
+use crate::utils::find::find_binary; // TEAM-329: utils/find.rs
+use crate::utils::pid::write_pid_file; // TEAM-329: utils/pid.rs (centralized PID operations)
+use crate::utils::poll::poll_daemon_health; // TEAM-329: utils/poll.rs
 
 /// Start an HTTP-based daemon (spawn + health polling)
 ///
@@ -70,23 +57,41 @@ fn get_pid_file_path(daemon_name: &str) -> Result<PathBuf> {
 /// # Ok(())
 /// # }
 /// ```
-pub async fn start_http_daemon(config: HttpDaemonConfig) -> Result<u32> {
+pub async fn start_daemon(config: HttpDaemonConfig) -> Result<u32> {
     // Step 1: Resolve binary path (auto-resolve from daemon_name if not provided)
     // TEAM-327: Binary resolution moved inside start_http_daemon
+    // TEAM-329: Use standalone find_binary function
     let binary_path = match config.binary_path {
         Some(path) => path,
-        None => DaemonManager::find_binary(&config.daemon_name)?,
+        None => find_binary(&config.daemon_name)?,
     };
     
-    // Step 2: Spawn the daemon
-    let manager = DaemonManager::new(binary_path, config.args.clone());
-    let child = manager.spawn().await?;
+    // Step 2: Spawn the daemon (inlined from manager.spawn())
+    // TEAM-329: Inlined spawn() to eliminate entropy (RULE ZERO)
+    n!("spawn", "Spawning daemon: {} with args: {:?}", binary_path.display(), config.args);
+    
+    // TEAM-164: Use Stdio::null() to prevent daemon from holding parent's pipes
+    let mut cmd = Command::new(&binary_path);
+    cmd.args(&config.args)
+        .stdout(Stdio::null())
+        .stderr(Stdio::null());
+    
+    // TEAM-189: Propagate SSH agent environment variables to daemon
+    if let Ok(ssh_auth_sock) = std::env::var("SSH_AUTH_SOCK") {
+        cmd.env("SSH_AUTH_SOCK", ssh_auth_sock);
+    }
+    
+    let child = cmd
+        .spawn()
+        .context(format!("Failed to spawn daemon: {}", binary_path.display()))?;
     
     // Step 3: Extract PID before detaching
     // TEAM-327: PID needed for signal-based shutdown
     let pid = child.id().ok_or_else(|| {
         anyhow::anyhow!("Failed to get PID from spawned daemon: {}", config.daemon_name)
     })?;
+    
+    n!("spawned", "Daemon spawned with PID: {}", pid);
 
     // Step 4: Poll until healthy
     let mut health_config =
@@ -100,12 +105,12 @@ pub async fn start_http_daemon(config: HttpDaemonConfig) -> Result<u32> {
         health_config = health_config.with_job_id(job_id);
     }
 
-    poll_until_healthy(health_config).await?;
+    poll_daemon_health(health_config).await?;
 
     // Step 5: Write PID file for stateless shutdown
     // TEAM-327: Standard Unix pattern - enables stateless stop command
-    let pid_file = get_pid_file_path(&config.daemon_name)?;
-    std::fs::write(&pid_file, pid.to_string())?;
+    // TEAM-329: Use centralized PID operations
+    write_pid_file(&config.daemon_name, pid)?;
 
     // Step 6: Detach the child process
     // The daemon will keep running independently
@@ -116,6 +121,3 @@ pub async fn start_http_daemon(config: HttpDaemonConfig) -> Result<u32> {
     Ok(pid)
 }
 
-// TEAM-328: Renamed export for consistent naming
-/// Alias for start_http_daemon with consistent naming
-pub use start_http_daemon as start_daemon;
