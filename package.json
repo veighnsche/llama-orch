@@ -1,30 +1,35 @@
 {
-  "name": "@rbee/monorepo",
-  "version": "0.1.0",
-  "private": true,
-  "scripts": {
-    "dev:commercial": "pnpm run build:ui && pnpm --filter @rbee/commercial run dev",
-    "dev:docs": "pnpm run build:ui && pnpm --filter @rbee/user-docs run dev",
-    "dev:frontend": "pnpm run build:ui && turbo dev --filter='@rbee/commercial' --filter='@rbee/user-docs'",
-    "build:ui": "pnpm --filter @rbee/ui run build",
-    "build:commercial": "pnpm run build:ui && pnpm --filter @rbee/commercial run build",
-    "build:docs": "pnpm run build:ui && pnpm --filter @rbee/user-docs run build",
-    "build:frontend": "pnpm run build:ui && pnpm --filter @rbee/commercial run build && pnpm --filter @rbee/user-docs run build",
-    "format-and-lint": "biome check .",
-    "format-and-lint:fix": "biome check . --write"
-  },
-  "devDependencies": {
-    "@biomejs/biome": "^2.2.6",
-    "concurrently": "^9.2.1",
-    "turbo": "^2.5.8"
-  },
-  "packageManager": "pnpm@9.15.0",
-  "engines": {
-    "node": ">=18"
-  },
-  "pnpm": {
-    "overrides": {
-      "vite": "npm:rolldown-vite@7.1.14"
+    "name": "@rbee/monorepo",
+    "version": "0.1.0",
+    "private": true,
+    "scripts": {
+        "dev:ui": "turbo dev --filter=@rbee/ui",
+        "dev:marketing": "turbo dev --filter=@repo/tailwind-config --filter=@rbee/ui --filter=@rbee/commercial --filter=@rbee/user-docs",
+        "dev:keeper": "turbo dev --filter=@repo/tailwind-config --filter=@rbee/ui --filter=@rbee/keeper-ui",
+        "dev:queen": "turbo dev --filter=@repo/tailwind-config --filter=@rbee/ui --filter=@rbee/queen-rbee-ui --filter=@rbee/queen-rbee-react --filter=@rbee/queen-rbee-sdk",
+        "dev:hive": "turbo dev --filter=@repo/tailwind-config --filter=@rbee/ui --filter=@rbee/rbee-hive-ui --filter=@rbee/rbee-hive-react --filter=@rbee/rbee-hive-sdk",
+        "dev:worker": "turbo dev --filter=@repo/tailwind-config --filter=@rbee/ui --filter=@rbee/llm-worker-ui --filter=@rbee/llm-worker-react --filter=@rbee/llm-worker-sdk",
+        "dev:product": "turbo dev --filter=@repo/tailwind-config --filter=@rbee/ui --filter=@rbee/keeper-ui --filter=@rbee/queen-rbee-ui --filter=@rbee/queen-rbee-react --filter=@rbee/queen-rbee-sdk --filter=@rbee/rbee-hive-ui --filter=@rbee/rbee-hive-react --filter=@rbee/rbee-hive-sdk --filter=@rbee/llm-worker-ui --filter=@rbee/llm-worker-react --filter=@rbee/llm-worker-sdk",
+        "dev:all": "turbo dev",
+        "build:ui": "pnpm --filter @rbee/ui run build",
+        "build:commercial": "pnpm run build:ui && pnpm --filter @rbee/commercial run build",
+        "build:docs": "pnpm run build:ui && pnpm --filter @rbee/user-docs run build",
+        "build:frontend": "pnpm run build:ui && pnpm --filter @rbee/commercial run build && pnpm --filter @rbee/user-docs run build",
+        "format-and-lint": "biome check .",
+        "format-and-lint:fix": "biome check . --write"
+    },
+    "devDependencies": {
+        "@biomejs/biome": "^2.2.6",
+        "concurrently": "^9.2.1",
+        "turbo": "^2.5.8"
+    },
+    "packageManager": "pnpm@9.15.0",
+    "engines": {
+        "node": ">=18"
+    },
+    "pnpm": {
+        "overrides": {
+            "vite": "npm:rolldown-vite@7.1.14"
+        }
     }
-  }
 }

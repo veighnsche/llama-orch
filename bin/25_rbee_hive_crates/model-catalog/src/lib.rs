@@ -89,7 +89,7 @@ impl Default for ModelCatalog {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use rbee_hive_artifact_catalog::ArtifactStatus;
+    use rbee_hive_artifact_catalog::Artifact;
     use tempfile::TempDir;
 
     #[test]
