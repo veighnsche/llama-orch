@@ -37,8 +37,8 @@ mod tests {
 // ============================================================================
 // RESPONSE TYPES
 // ============================================================================
-// TEAM-316: Use SSH types from ssh-contract (with Tauri support enabled)
-pub use ssh_contract::{SshTarget, SshTargetStatus};
+// TEAM-323: DELETED ssh_contract - SSH/remote operations removed
+// Tauri GUI commands are localhost-only now
 
 #[derive(Serialize, Deserialize)]
 pub struct CommandResponse {
@@ -129,26 +129,19 @@ pub async fn queen_status() -> Result<String, String> {
 }
 
 #[tauri::command]
-pub async fn queen_rebuild(with_local_hive: bool) -> Result<String, String> {
+pub async fn queen_rebuild() -> Result<String, String> {
     let config = Config::load().map_err(|e| e.to_string())?;
     let queen_url = config.queen_url();
     
     let result = handlers::handle_queen(
-        QueenAction::Rebuild { with_local_hive },
+        QueenAction::Rebuild,
         &queen_url,
     )
     .await;
     to_response_unit(result)
 }
 
-#[tauri::command]
-pub async fn queen_info() -> Result<String, String> {
-    let config = Config::load().map_err(|e| e.to_string())?;
-    let queen_url = config.queen_url();
-    
-    let result = handlers::handle_queen(QueenAction::Info, &queen_url).await;
-    to_response_unit(result)
-}
+// TEAM-323: DELETED queen_info - use curl http://localhost:7833/v1/build-info directly
 
 #[tauri::command]
 pub async fn queen_install(binary: Option<String>) -> Result<String, String> {
@@ -173,21 +166,12 @@ pub async fn queen_uninstall() -> Result<String, String> {
 // ============================================================================
 
 #[tauri::command]
-pub async fn hive_install(
-    host: String,
-    binary: Option<String>,
-    install_dir: Option<String>,
-) -> Result<String, String> {
+pub async fn hive_install(alias: String) -> Result<String, String> {
     let config = Config::load().map_err(|e| e.to_string())?;
     let queen_url = config.queen_url();
     
     let result = handlers::handle_hive(
-        HiveAction::Install {
-            host,
-            binary,
-            install_dir,
-            build_remote: false, // TEAM-314: Default to local build + upload
-        },
+        HiveAction::Install { alias },
         &queen_url,
     )
     .await;
@@ -195,12 +179,12 @@ pub async fn hive_install(
 }
 
 #[tauri::command]
-pub async fn hive_uninstall(host: String, install_dir: Option<String>) -> Result<String, String> {
+pub async fn hive_uninstall(alias: String) -> Result<String, String> {
     let config = Config::load().map_err(|e| e.to_string())?;
     let queen_url = config.queen_url();
     
     let result = handlers::handle_hive(
-        HiveAction::Uninstall { host, install_dir },
+        HiveAction::Uninstall { alias },
         &queen_url,
     )
     .await;
@@ -208,20 +192,12 @@ pub async fn hive_uninstall(host: String, install_dir: Option<String>) -> Result
 }
 
 #[tauri::command]
-pub async fn hive_start(
-    host: String,
-    install_dir: Option<String>,
-    port: u16,
-) -> Result<String, String> {
+pub async fn hive_start(port: Option<u16>) -> Result<String, String> {
     let config = Config::load().map_err(|e| e.to_string())?;
     let queen_url = config.queen_url();
     
     let result = handlers::handle_hive(
-        HiveAction::Start {
-            host,
-            install_dir,
-            port,
-        },
+        HiveAction::Start { port },
         &queen_url,
     )
     .await;
@@ -229,47 +205,24 @@ pub async fn hive_start(
 }
 
 #[tauri::command]
-pub async fn hive_stop(host: String) -> Result<String, String> {
+pub async fn hive_stop(port: Option<u16>) -> Result<String, String> {
     let config = Config::load().map_err(|e| e.to_string())?;
     let queen_url = config.queen_url();
     
-    let result = handlers::handle_hive(HiveAction::Stop { host }, &queen_url).await;
+    let result = handlers::handle_hive(HiveAction::Stop { port }, &queen_url).await;
     to_response_unit(result)
 }
 
 #[tauri::command]
 #[specta::specta]
-pub async fn hive_list() -> Result<Vec<SshTarget>, String> {
-    // TEAM-296: Return typed data with Specta for proper TypeScript generation
-    // TEAM-309: Added narration for testing
+pub async fn hive_list() -> Result<Vec<String>, String> {
+    // TEAM-323: DELETED SSH support - localhost only
+    // Returns just ["localhost"] for now
     use observability_narration_core::n;
-    use ssh_config::parse_ssh_config;
     
-    n!("hive_list_start", "Reading SSH config for hive list");
+    n!("hive_list", "Returning localhost hive");
     
-    let ssh_config_path = dirs::home_dir()
-        .ok_or("Failed to get home directory")?
-        .join(".ssh/config");
-
-    n!("ssh_config_path", "SSH config path: {}", ssh_config_path.display());
-
-    let targets = parse_ssh_config(&ssh_config_path)
-        .map_err(|e| {
-            n!("ssh_config_error", "Failed to parse SSH config: {}", e);
-            e.to_string()
-        })?;
-
-    n!("hive_list_parsed", "Found {} SSH targets", targets.len());
-
-    // TEAM-316: No conversion needed - ssh_config already uses ssh-contract types
-    n!("hive_list_complete", 
-        human: "Hive list complete: {} targets",
-        cute: "🐝 Found {} hives ready to work!",
-        story: "The keeper discovered {} hives in the network",
-        targets.len()
-    );
-
-    Ok(targets)
+    Ok(vec!["localhost".to_string()])
 }
 
 #[tauri::command]

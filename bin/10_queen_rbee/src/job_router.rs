@@ -188,8 +188,6 @@ async fn route_operation(
         // TEAM-284: DELETED all Package operations (PackageSync, PackageStatus, PackageInstall, PackageUninstall, PackageValidate, PackageMigrate)
         // SSH and remote installation functionality removed
         // TEAM-278: DELETED Operation::SshTest
-        // TEAM-278: DELETED Operation::HiveInstall - replaced by PackageSync/PackageInstall
-        // TEAM-278: DELETED Operation::HiveUninstall - replaced by PackageUninstall
         // TEAM-285: DELETED Operation::HiveStart, Operation::HiveStop (localhost-only, no lifecycle management)
         // TEAM-290: DELETED HiveList, HiveGet, HiveStatus, HiveRefreshCapabilities (queen no longer manages hives, rbee-keeper does via SSH)
 

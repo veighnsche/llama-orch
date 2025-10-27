@@ -166,7 +166,7 @@ fn launch_gui() {
             queen_stop,
             queen_status,
             queen_rebuild,
-            queen_info,
+            // TEAM-323: DELETED queen_info - use curl http://localhost:7833/v1/build-info
             queen_install,
             queen_uninstall,
             // Hive commands

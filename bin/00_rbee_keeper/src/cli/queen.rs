@@ -12,16 +12,8 @@ pub enum QueenAction {
     Stop,
     /// Check queen-rbee daemon status
     Status,
-    /// Rebuild queen with different configuration
-    /// TEAM-262: Added for local-hive optimization
-    Rebuild {
-        /// Include local hive for localhost operations (50-100x faster)
-        #[arg(long)]
-        with_local_hive: bool,
-    },
-    /// Show queen build configuration
-    /// TEAM-262: Query /v1/build-info endpoint
-    Info,
+    /// Rebuild queen from source
+    Rebuild,
     /// Install queen binary
     /// TEAM-262: Similar to hive install
     Install {

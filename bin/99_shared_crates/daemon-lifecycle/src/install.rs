@@ -1,130 +1,120 @@
-//! Daemon installation and uninstallation
+//! Daemon installation
 //!
-//! TEAM-259: Extracted common install/uninstall patterns
-//! TEAM-316: Use types from daemon-contract
+//! TEAM-323: DELETED install_daemon() - RULE ZERO violation (duplicate of install_to_local_bin)
 //!
-//! Provides generic daemon installation functionality for:
-//! - hive-lifecycle (install/uninstall hive)
-//! - worker-lifecycle (install/uninstall workers: vLLM, llama.cpp, SD, Whisper)
+//! Provides daemon installation functionality.
+//! Use `install_to_local_bin()` for all installations.
 
-use anyhow::Result;
-use observability_narration_core::{n, with_narration_context, NarrationContext};
+use anyhow::{Context, Result};
+use observability_narration_core::n;
 use std::path::Path;
 
 // TEAM-316: Use install types from daemon-contract
+// TEAM-323: InstallConfig/InstallResult only used by deleted install_daemon()
 pub use daemon_contract::{InstallConfig, InstallResult, UninstallConfig};
 
-/// Install a daemon binary
+/// Install a binary to a directory (default: ~/.local/bin)
+///
+/// TEAM-321: Common pattern extracted from queen-lifecycle and hive-lifecycle
 ///
 /// Steps:
-/// 1. Check if binary path was provided
-/// 2. If not, try to find in target directory (debug/release)
-/// 3. Verify binary exists and is executable
-/// 4. Return installation path
+/// 1. Find binary (using DaemonManager::find_binary)
+/// 2. Create install directory
+/// 3. Copy binary to install_dir/{binary_name}
+/// 4. Make executable (Unix)
+/// 5. Verify installation
 ///
 /// # Arguments
-/// * `config` - Installation configuration
+/// * `binary_name` - Name of the binary (e.g., "queen-rbee", "rbee-hive")
+/// * `source_path` - Optional source path (if None, uses DaemonManager::find_binary)
+/// * `install_dir` - Optional install directory (if None, uses ~/.local/bin)
 ///
 /// # Returns
-/// * `Ok(InstallResult)` - Installation successful with binary path
-/// * `Err` - Binary not found or not executable
+/// * `Ok(String)` - Installation path
 ///
 /// # Example
 /// ```rust,no_run
-/// use daemon_lifecycle::{InstallConfig, install_daemon};
+/// use daemon_lifecycle::install_to_local_bin;
 ///
 /// # async fn example() -> anyhow::Result<()> {
-/// let config = InstallConfig {
-///     binary_name: "rbee-hive".to_string(),
-///     binary_path: None,
-///     target_path: None,
-///     job_id: Some("job_123".to_string()),
-/// };
+/// // Install to default ~/.local/bin
+/// let path = install_to_local_bin("queen-rbee", None, None).await?;
 ///
-/// let result = install_daemon(config).await?;
-/// println!("Installed at: {}", result.binary_path);
+/// // Install to custom directory
+/// let path = install_to_local_bin("rbee-hive", None, Some("/opt/bin".to_string())).await?;
 /// # Ok(())
 /// # }
 /// ```
-pub async fn install_daemon(config: InstallConfig) -> Result<InstallResult> {
-    // TEAM-311: Migrated to n!() macro
-    let ctx = config.job_id.as_ref().map(|jid| NarrationContext::new().with_job_id(jid));
-    
-    let install_impl = async {
-        n!("daemon_install", "🔧 Installing daemon '{}'", config.binary_name);
+pub async fn install_to_local_bin(
+    binary_name: &str,
+    source_path: Option<String>,
+    install_dir: Option<String>,
+) -> Result<String> {
+    let dir_display = install_dir.as_deref().unwrap_or("~/.local/bin");
+    n!("install_to_local_bin", "📦 Installing {} to {}", binary_name, dir_display);
 
-        // Step 1: Check if binary path was provided
-        if let Some(provided_path) = config.binary_path {
-            n!("daemon_binary", "📁 Using provided binary path: {}", provided_path);
-
-            let path = Path::new(&provided_path);
-            if !path.exists() {
-                n!("daemon_bin_err", "❌ Binary not found at: {}", provided_path);
-                anyhow::bail!("Binary not found at: {}", provided_path);
-            }
-
-            return Ok(InstallResult {
-                binary_path: provided_path,
-                install_time: std::time::SystemTime::now(),
-                found_in_target: false,
-            });
+    // Find source binary
+    let source = if let Some(path) = source_path {
+        let p = Path::new(&path);
+        if !p.exists() {
+            anyhow::bail!("Binary not found at: {}", path);
         }
-
-        // Step 2: Try to find in target directory
-        n!("daemon_search", "🔍 Searching for '{}' in target directory", config.binary_name);
-
-        match crate::manager::DaemonManager::find_in_target(&config.binary_name) {
-            Ok(binary_path) => {
-                n!("daemon_found", "✅ Found '{}' at: {}", config.binary_name, binary_path.display());
-
-                Ok(InstallResult {
-                    binary_path: binary_path.display().to_string(),
-                    install_time: std::time::SystemTime::now(),
-                    found_in_target: true,
-                })
-            }
-            Err(_) => {
-                // TEAM-290: Binary not found, try to build it
-                n!("daemon_build", "🔨 Building '{}' (not found in target)", config.binary_name);
-
-            // Build the binary
-            let output = tokio::process::Command::new("cargo")
-                .arg("build")
-                .arg("-p")
-                .arg(&config.binary_name)
-                .output()
-                .await?;
-
-                if !output.status.success() {
-                    let stderr = String::from_utf8_lossy(&output.stderr);
-                    n!("daemon_build_err", "❌ Failed to build '{}'", config.binary_name);
-                    anyhow::bail!("Failed to build '{}': {}", config.binary_name, stderr);
-                }
-
-                // Try to find again after build
-                match crate::manager::DaemonManager::find_in_target(&config.binary_name) {
-                    Ok(binary_path) => {
-                        n!("daemon_built", "✅ Built '{}' at: {}", config.binary_name, binary_path.display());
-
-                        Ok(InstallResult {
-                            binary_path: binary_path.display().to_string(),
-                            install_time: std::time::SystemTime::now(),
-                            found_in_target: true,
-                        })
-                    }
-                    Err(e) => {
-                        n!("daemon_not_found", "❌ Binary '{}' not found even after build", config.binary_name);
-                        Err(e)
-                    }
-                }
-            }
-        }
-    };
-    
-    // Execute with context if job_id provided
-    if let Some(ctx) = ctx {
-        with_narration_context(ctx, install_impl).await
+        std::path::PathBuf::from(path)
     } else {
-        install_impl.await
+        crate::manager::DaemonManager::find_binary(binary_name)?
+    };
+
+    // Determine install location
+    let install_dir = if let Some(dir) = install_dir {
+        std::path::PathBuf::from(dir)
+    } else {
+        let home = std::env::var("HOME").context("HOME environment variable not set")?;
+        std::path::PathBuf::from(format!("{}/.local/bin", home))
+    };
+    let install_path = install_dir.join(binary_name);
+
+    // Check if already installed
+    if install_path.exists() {
+        anyhow::bail!(
+            "{} already installed at {}. Uninstall first or use rebuild.",
+            binary_name,
+            install_path.display()
+        );
     }
+
+    // Create install directory
+    std::fs::create_dir_all(&install_dir)
+        .context("Failed to create ~/.local/bin directory")?;
+
+    // Copy binary
+    n!("copy_binary", "📋 Copying to {}", install_path.display());
+    std::fs::copy(&source, &install_path)
+        .context(format!("Failed to copy {} to {}", binary_name, install_path.display()))?;
+
+    // Make executable (Unix only)
+    #[cfg(unix)]
+    {
+        use std::os::unix::fs::PermissionsExt;
+        let mut perms = std::fs::metadata(&install_path)?.permissions();
+        perms.set_mode(0o755);
+        std::fs::set_permissions(&install_path, perms)?;
+    }
+
+    // Verify installation
+    let output = std::process::Command::new(&install_path)
+        .arg("--version")
+        .output();
+
+    let version = if let Ok(out) = output {
+        String::from_utf8_lossy(&out.stdout).trim().to_string()
+    } else {
+        "unknown".to_string()
+    };
+
+    n!("install_complete", "✅ {} installed successfully!", binary_name);
+    n!("install_path", "📍 Binary location: {}", install_path.display());
+    n!("install_version", "📦 Version: {}", version);
+    n!("install_info", "💡 Make sure ~/.local/bin is in your PATH");
+
+    Ok(install_path.display().to_string())
 }

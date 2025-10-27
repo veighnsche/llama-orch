@@ -22,7 +22,6 @@
 //!
 //! - `manager` - DaemonManager for spawning daemon processes
 //! - `health` - HTTP health checking for daemons
-//! - `ensure` - "Ensure daemon running" pattern (TEAM-259)
 //! - `install` - Install/uninstall daemon binaries (TEAM-259)
 //! - `list` - List all daemon instances (TEAM-259)
 //! - `get` - Get daemon instance by ID (TEAM-259)
@@ -80,27 +79,6 @@
 //! # }
 //! ```
 //!
-//! ## Ensure Daemon Running
-//! ```rust,no_run
-//! use daemon_lifecycle::ensure_daemon_running;
-//! use anyhow::Result;
-//!
-//! # async fn example() -> Result<()> {
-//! let was_running = ensure_daemon_running(
-//!     "queen-rbee",
-//!     "http://localhost:8500",
-//!     None,  // No job_id
-//!     || async {
-//!         // Spawn daemon here
-//!         Ok(())
-//!     },
-//!     None,  // Default 30s timeout
-//!     None,  // Default 500ms poll interval
-//! ).await?;
-//! # Ok(())
-//! # }
-//! ```
-//!
 //! ## Timeout Enforcement (TEAM-276)
 //! ```rust,no_run
 //! use daemon_lifecycle::{with_timeout, TimeoutConfig};
@@ -136,7 +114,8 @@
 //!
 //! ## High-Level Lifecycle (TEAM-276)
 //! ```rust,no_run
-//! use daemon_lifecycle::{start_http_daemon, stop_http_daemon, HttpDaemonConfig};
+//! use daemon_lifecycle::{start_http_daemon, stop_http_daemon};
+//! use daemon_contract::HttpDaemonConfig;
 //! use std::path::PathBuf;
 //!
 //! # async fn example() -> anyhow::Result<()> {
@@ -157,35 +136,41 @@
 //! ```
 
 // TEAM-259: Module declarations
-// TEAM-276: Added timeout, shutdown, and lifecycle modules
-// TEAM-316: Added rebuild module
-pub mod ensure;
+// TEAM-276: Added high-level lifecycle operations
+// TEAM-316: Split lifecycle into start/stop modules (RULE ZERO - single responsibility)
+// TEAM-320: Removed ensure module (promotes explicit start/stop)
 pub mod get;
 pub mod health;
 pub mod install;
-pub mod lifecycle;
 pub mod list;
 pub mod manager;
 pub mod rebuild;  // TEAM-316: Extracted from queen-lifecycle and hive-lifecycle
 pub mod shutdown;
+pub mod start;    // TEAM-316: Extracted from lifecycle.rs
 pub mod status;
+pub mod stop;     // TEAM-316: Extracted from lifecycle.rs
 pub mod timeout;
 pub mod uninstall;
 
 // TEAM-259: Re-export main types and functions
 // TEAM-276: Added UninstallConfig export
 // TEAM-276: Added health polling with exponential backoff
-// TEAM-276: Added timeout enforcement and graceful shutdown
+// TEAM-259: Re-export main types and functions
 // TEAM-276: Added high-level lifecycle operations
-// TEAM-276: Added ensure pattern with handle support
-pub use ensure::{ensure_daemon_running, ensure_daemon_with_handle};
+// TEAM-316: HttpDaemonConfig moved to daemon-contract, lifecycle split into start/stop
+// TEAM-320: Removed ensure exports (promotes explicit start/stop)
 pub use get::{get_daemon, GettableConfig};
 pub use health::{is_daemon_healthy, poll_until_healthy, HealthPollConfig};
-pub use install::{install_daemon, InstallConfig, InstallResult, UninstallConfig};
-pub use lifecycle::{start_http_daemon, stop_http_daemon, HttpDaemonConfig};
+// TEAM-323: Deleted install_daemon() - RULE ZERO violation (use install_to_local_bin instead)
+pub use install::{install_to_local_bin, InstallConfig, InstallResult, UninstallConfig};
 pub use list::{list_daemons, ListableConfig};
 pub use manager::{spawn_daemon, DaemonManager};
 pub use shutdown::{force_shutdown, graceful_shutdown, ShutdownConfig};
+pub use start::start_http_daemon;
 pub use status::{check_daemon_status, StatusRequest, StatusResponse};
+pub use stop::stop_http_daemon;
 pub use timeout::{timeout_after, with_timeout, TimeoutConfig};
 pub use uninstall::uninstall_daemon;
+
+// TEAM-316: Re-export HttpDaemonConfig from contract (it's a contract, not implementation)
+pub use daemon_contract::HttpDaemonConfig;

@@ -107,6 +107,7 @@ pub enum Operation {
         /// Hive alias (only "localhost" supported)
         alias: String,
     },
+    // TEAM-323: DELETED HiveInstall, HiveUninstall, HiveRebuild - use daemon-lifecycle directly (same pattern as queen)
     // TEAM-278: DELETED HiveImportSsh - not needed in declarative arch
 
     // TEAM-278: DELETED all worker binary operations
@@ -170,6 +171,7 @@ impl Operation {
             Operation::HiveGet { .. } => "hive_get",
             Operation::HiveStatus { .. } => "hive_status",
             Operation::HiveRefreshCapabilities { .. } => "hive_refresh_capabilities", // TEAM-196
+            // TEAM-323: DELETED hive_install, hive_uninstall, hive_rebuild - use daemon-lifecycle directly
             // TEAM-278: DELETED hive_import_ssh, worker_download, worker_build, worker_binary_*
             // Worker process operations
             Operation::WorkerSpawn { .. } => "worker_spawn",
@@ -198,6 +200,7 @@ impl Operation {
             Operation::HiveGet { alias } => Some(alias),
             Operation::HiveStatus { alias } => Some(alias),
             Operation::HiveRefreshCapabilities { alias } => Some(alias), // TEAM-196
+            // TEAM-323: DELETED HiveInstall, HiveUninstall, HiveRebuild - use daemon-lifecycle directly
             // TEAM-278: DELETED worker binary operations
             // Worker process operations (TEAM-284: typed requests)
             Operation::WorkerSpawn(req) => Some(&req.hive_id),

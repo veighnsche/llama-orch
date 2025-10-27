@@ -151,6 +151,45 @@ impl DaemonManager {
         Ok(child)
     }
 
+    /// Find a binary (installed or development)
+    ///
+    /// TEAM-320: Checks installed location first, then falls back to development builds
+    ///
+    /// Search order:
+    /// 1. `~/.local/bin/{name}` (installed)
+    /// 2. `target/debug/{name}` (development)
+    /// 3. `target/release/{name}` (development)
+    ///
+    /// # Arguments
+    /// * `name` - Binary name (e.g., "queen-rbee")
+    ///
+    /// # Returns
+    /// Path to the binary if found
+    ///
+    /// # Example
+    /// ```rust,no_run
+    /// use daemon_lifecycle::DaemonManager;
+    ///
+    /// # fn example() -> anyhow::Result<()> {
+    /// let binary = DaemonManager::find_binary("queen-rbee")?;
+    /// println!("Found at: {}", binary.display());
+    /// # Ok(())
+    /// # }
+    /// ```
+    pub fn find_binary(name: &str) -> Result<PathBuf> {
+        // Try installed location first
+        if let Ok(home) = std::env::var("HOME") {
+            let installed_path = PathBuf::from(format!("{}/.local/bin/{}", home, name));
+            if installed_path.exists() {
+                n!("find_binary", "Found installed binary '{}' at: {}", name, installed_path.display());
+                return Ok(installed_path);
+            }
+        }
+        
+        // Fall back to development builds
+        Self::find_in_target(name)
+    }
+
     /// Find a binary in the target directory (for development)
     /// Tries to find a binary in the standard Cargo target directory:
     /// - `target/debug/{name}`
