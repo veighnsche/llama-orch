@@ -174,8 +174,6 @@ fn launch_gui() {
             hive_uninstall,
             hive_start,
             hive_stop,
-            hive_list,
-            hive_get,
             hive_status,
             hive_refresh_capabilities,
             // Worker commands

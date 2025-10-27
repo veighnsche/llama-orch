@@ -1,19 +1,22 @@
 [package]
 name = "timeout-enforcer"
-version = "0.1.0"
+version = "0.2.0"
 edition = "2021"
 
 # Created by: TEAM-163
+# Updated by: TEAM-330 (Universal context propagation)
 # Purpose: Hard timeout enforcement with visual countdown feedback
 # Prevents hanging operations across the entire codebase
+# Works everywhere: client, server, WASM
 
 [dependencies]
 tokio = { version = "1.41", features = ["time", "macros", "rt"] }
 anyhow = "1.0"
 atty = "0.2" # TEAM-164: TTY detection to auto-disable countdown when stderr is captured
 observability-narration-core = { path = "../narration-core" } # TEAM-197: Narration v0.5.0
-indicatif = "0.17" # TEAM-197: Progress bar for timeout visualization
+# TEAM-330: Removed indicatif - countdown now uses narration events via SSE instead of stderr
 stdext = "0.3" # TEAM-312: Required for n!() macro (function_name!())
+timeout-enforcer-macros = { path = "../timeout-enforcer-macros" } # TEAM-330: Ergonomic #[with_timeout] macro
 
 [dev-dependencies]
 tokio = { version = "1.41", features = ["full"] }

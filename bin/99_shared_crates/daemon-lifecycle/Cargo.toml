@@ -1,28 +1,21 @@
-# TEAM-135: Created by TEAM-135 (scaffolding)
-
 [package]
 name = "daemon-lifecycle"
 version = "0.1.0"
 edition = "2021"
-license = "GPL-3.0-or-later"
-
-[lib]
-name = "daemon_lifecycle"
-path = "src/lib.rs"
 
 [dependencies]
-tokio = { version = "1", features = ["process", "time", "fs"] }
 anyhow = "1.0"
-reqwest = { version = "0.12", features = ["json"] }  # TEAM-259: For health checks
-serde = { version = "1.0", features = ["derive"] }  # TEAM-259: For CRUD operations
-serde_json = "1.0"  # TEAM-259: For CRUD operations
+tokio = { version = "1.0", features = ["full"] }
 observability-narration-core = { path = "../narration-core" }
-observability-narration-macros = { path = "../narration-macros" }  # TEAM-328: For #[with_job_id] macro
-auto-update = { path = "../auto-update" }  # TEAM-259: For auto-updating daemons
-timeout-enforcer = { path = "../timeout-enforcer" }  # TEAM-276: For timeout wrapper
-nix = { version = "0.29", features = ["signal"] }  # TEAM-276: For SIGTERM/SIGKILL
-stdext = "0.3"  # TEAM-312: Required for n!() macro (function_name!())
-# TEAM-329: Removed daemon-contract dependency - inlined into types/ module (RULE ZERO - 1 consumer)
+observability-narration-macros = { path = "../narration-macros" } # TEAM-330: #[with_job_id] macro
+# TEAM-330: Removed daemon-lifecycle dependency - now self-contained
+timeout-enforcer = { path = "../timeout-enforcer" } # TEAM-330: Timeout enforcement
+reqwest = { version = "0.11", features = ["rustls-tls"], default-features = false } # TEAM-330: HTTP client
+stdext = "0.3" # TEAM-330: Required for n!() macro (function_name!())
+regex = "1" # TEAM-330: Required by ProcessNarrationCapture
+once_cell = "1" # TEAM-330: Required by ProcessNarrationCapture
+serde = { version = "1.0", features = ["derive"] } # TEAM-330: For types serialization
+serde_json = "1.0" # TEAM-330: For types metadata
 
 [dev-dependencies]
-tokio = { version = "1", features = ["full"] }
+tokio-test = "0.4"

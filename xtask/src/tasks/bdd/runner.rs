@@ -5,14 +5,13 @@ use super::{files, parser, reporter};
 use anyhow::{Context, Result};
 use chrono::Local;
 use colored::Colorize;
-use indicatif::{ProgressBar, ProgressStyle};
+// TEAM-330: Removed indicatif - using simple print statements instead
 use std::fs;
 use std::io::{BufRead, BufReader};
 use std::path::PathBuf;
 use std::process::{Command, Stdio};
 use std::sync::{Arc, Mutex};
 use std::thread;
-use std::time::Duration;
 
 /// Main entry point for BDD test execution
 pub fn run_bdd_tests(config: BddConfig) -> Result<()> {
@@ -242,19 +241,12 @@ fn execute_tests(
 }
 
 fn execute_tests_quiet(cmd: &mut Command, paths: &OutputPaths) -> Result<TestResults> {
-    let pb = ProgressBar::new_spinner();
-    pb.set_style(
-        ProgressStyle::default_spinner()
-            .template("{spinner:.cyan} {msg}")
-            .unwrap()
-            .tick_strings(&["-", "\\", "|", "/"]),
-    );
-    pb.set_message("Running tests...");
-    pb.enable_steady_tick(Duration::from_millis(100));
+    // TEAM-330: Simple print instead of spinner
+    println!("{}", "Running tests...".cyan());
 
     let output = cmd.output().context("Failed to execute test command")?;
 
-    pb.finish_with_message("Running tests... Done!");
+    println!("{}", "Running tests... Done!".green());
 
     // Combine stdout and stderr
     let mut combined_output = output.stdout.clone();

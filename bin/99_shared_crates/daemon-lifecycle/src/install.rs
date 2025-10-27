@@ -1,139 +1,194 @@
-//! Daemon installation
+//! Install daemon binary on remote machine via SCP
 //!
-//! TEAM-328: Provides install operations
-//! TEAM-329: Moved build_daemon() to build.rs module
+//! # Types/Utils Used (from daemon-lifecycle)
+//! - utils::ssh::ssh_exec() - Execute SSH commands
+//! - utils::ssh::scp_upload() - Upload files via SCP
+//! - build::build_daemon() - Build binary (reuses existing function)
 //!
-//! Core operations:
-//! - `install_daemon()` - Move binary to ~/.local/bin
+//! # Requirements
+//!
+//! ## Input
+//! - `daemon_name`: Name of daemon binary
+//! - `ssh_config`: SSH connection details
+//! - `local_binary_path`: Optional path to pre-built binary (if None, build it)
+//!
+//! ## Process
+//! 1. Build or locate binary locally
+//!    - If `local_binary_path` provided: use it
+//!    - Else: call `build_daemon(daemon_name)`
+//!
+//! 2. Copy binary to remote machine (ONE scp call)
+//!    - Use: `scp -P {port} {local_path} {user}@{hostname}:~/.local/bin/{daemon_name}`
+//!    - Create ~/.local/bin directory if needed (via SSH)
+//!
+//! 3. Make binary executable (ONE ssh call)
+//!    - Use: `chmod +x ~/.local/bin/{daemon_name}`
+//!
+//! ## SSH/SCP Calls
+//! - Total: 1 SCP call + 1 SSH call
+//!
+//! ## Error Handling
+//! - Local binary not found
+//! - SCP failed (connection, permissions, disk space)
+//! - chmod failed
+//!
+//! ## Example
+//! ```rust,no_run
+//! use remote_daemon_lifecycle::{install_daemon, SshConfig};
+//! use std::path::PathBuf;
+//!
+//! # async fn example() -> anyhow::Result<()> {
+//! let ssh = SshConfig::new("192.168.1.100".to_string(), "vince".to_string(), 22);
+//! 
+//! // Option 1: Build and install
+//! install_daemon("rbee-hive", ssh.clone(), None).await?;
+//!
+//! // Option 2: Install pre-built binary
+//! let binary = PathBuf::from("target/release/rbee-hive");
+//! install_daemon("rbee-hive", ssh, Some(binary)).await?;
+//! # Ok(())
+//! # }
+//! ```
 
 use anyhow::{Context, Result};
 use observability_narration_core::n;
-use std::path::Path;
+use observability_narration_macros::with_job_id;
+use std::path::PathBuf;
+use timeout_enforcer::with_timeout;
+use crate::SshConfig;
+use crate::utils::ssh::{ssh_exec, scp_upload};
+use crate::build::{build_daemon, BuildConfig};
 
-// TEAM-316: Use install types from types module
-// TEAM-329: types/install.rs (PARITY)
-pub use crate::types::install::{InstallConfig, InstallResult};
-
-// TEAM-329: Import build_daemon from build module
-use crate::build::build_daemon;
-
-/// Install a binary to a directory (default: ~/.local/bin)
+/// Configuration for remote daemon installation
 ///
-/// TEAM-321: Common pattern extracted from queen-lifecycle and hive-lifecycle
-/// TEAM-329: Updated to use find_binary() and build_daemon() from dedicated modules
-///
-/// Steps:
-/// 1. Find binary (using find_binary() or build if not found)
-/// 2. Create install directory
-/// 3. Copy binary to install_dir/{binary_name}
-/// 4. Make executable (Unix)
-/// 5. Verify installation
-///
-/// # Arguments
-/// * `binary_name` - Name of the binary (e.g., "queen-rbee", "rbee-hive")
-/// * `source_path` - Optional source path (if None, uses find_binary() or builds from source)
-/// * `install_dir` - Optional install directory (if None, uses ~/.local/bin)
-///
-/// # Returns
-/// * `Ok(String)` - Installation path
+/// TEAM-330: Includes optional job_id for SSE narration routing
 ///
 /// # Example
-/// ```rust,no_run
-/// use daemon_lifecycle::install_to_local_bin;
+/// ```rust,ignore
+/// use remote_daemon_lifecycle::{InstallConfig, SshConfig};
 ///
-/// # async fn example() -> anyhow::Result<()> {
-/// // Install to default ~/.local/bin
-/// let path = install_to_local_bin("queen-rbee", None, None).await?;
-///
-/// // Install to custom directory
-/// let path = install_to_local_bin("rbee-hive", None, Some("/opt/bin".to_string())).await?;
-/// # Ok(())
-/// # }
+/// let ssh = SshConfig::new("192.168.1.100".to_string(), "vince".to_string(), 22);
+/// let config = InstallConfig {
+///     daemon_name: "llm-worker-rbee".to_string(),
+///     ssh_config: ssh,
+///     local_binary_path: None,
+///     job_id: Some("job-123".to_string()),  // For SSE routing
+/// };
 /// ```
-pub async fn install_daemon(
-    binary_name: &str,
-    source_path: Option<String>,
-    install_dir: Option<String>,
-) -> Result<String> {
-    let dir_display = install_dir.as_deref().unwrap_or("~/.local/bin");
-    n!("install_to_local_bin", "📦 Installing {} to {}", binary_name, dir_display);
-
-    // Find source binary
-    let source = if let Some(path) = source_path {
-        let p = Path::new(&path);
-        if !p.exists() {
-            anyhow::bail!("Binary not found at: {}", path);
-        }
-        std::path::PathBuf::from(path)
-    } else {
-        // TEAM-328: Try to find existing binary, if not found call build_daemon()
-        // TEAM-329: Use standalone find_binary function from utils/find module
-        match crate::utils::find::find_binary(binary_name) {
-            Ok(path) => {
-                n!("found_existing", "📦 Found existing binary: {}", path.display());
-                path
-            }
-            Err(_) => {
-                n!("binary_not_found", "⚠️  Binary not found, building from source...");
-                
-                // TEAM-328: Use build_daemon() instead of duplicating build logic
-                let binary_path = build_daemon(binary_name).await?;
-                std::path::PathBuf::from(binary_path)
-            }
-        }
-    };
-
-    // Determine install location
-    // TEAM-328: Use centralized path function to ensure consistency with uninstall
-    let install_dir = if let Some(dir) = install_dir {
-        std::path::PathBuf::from(dir)
-    } else {
-        crate::utils::paths::get_install_dir()?
-    };
-    let install_path = install_dir.join(binary_name);
-
-    // Check if already installed
-    if install_path.exists() {
-        anyhow::bail!(
-            "{} already installed at {}. Uninstall first or use rebuild.",
-            binary_name,
-            install_path.display()
-        );
-    }
-
-    // Create install directory
-    std::fs::create_dir_all(&install_dir)
-        .context("Failed to create ~/.local/bin directory")?;
-
-    // Copy binary
-    n!("copy_binary", "📋 Copying to {}", install_path.display());
-    std::fs::copy(&source, &install_path)
-        .context(format!("Failed to copy {} to {}", binary_name, install_path.display()))?;
-
-    // Make executable (Unix only)
-    #[cfg(unix)]
-    {
-        use std::os::unix::fs::PermissionsExt;
-        let mut perms = std::fs::metadata(&install_path)?.permissions();
-        perms.set_mode(0o755);
-        std::fs::set_permissions(&install_path, perms)?;
-    }
-
-    // Verify installation
-    let output = std::process::Command::new(&install_path)
-        .arg("--version")
-        .output();
-
-    let version = if let Ok(out) = output {
-        String::from_utf8_lossy(&out.stdout).trim().to_string()
-    } else {
-        "unknown".to_string()
-    };
-
-    n!("install_complete", "✅ {} installed successfully!", binary_name);
-    n!("install_path", "📍 Binary location: {}", install_path.display());
-    n!("install_version", "📦 Version: {}", version);
-    n!("install_info", "💡 Make sure ~/.local/bin is in your PATH");
-
-    Ok(install_path.display().to_string())
+#[derive(Debug, Clone)]
+pub struct InstallConfig {
+    /// Name of the daemon binary
+    pub daemon_name: String,
+    
+    /// SSH connection configuration
+    pub ssh_config: SshConfig,
+    
+    /// Optional path to pre-built binary (if None, will build from source)
+    pub local_binary_path: Option<PathBuf>,
+    
+    /// Optional job ID for SSE narration routing
+    /// When set, all narration (including timeout countdown) goes through SSE
+    pub job_id: Option<String>,
 }
+
+/// Install daemon binary on remote machine
+///
+/// TEAM-330: Enforces 5-minute timeout for entire installation process
+///
+/// # Implementation
+/// 1. Build or locate binary locally (daemon-lifecycle)
+/// 2. Create remote directory via SSH
+/// 3. Copy binary via SCP
+/// 4. Make executable via SSH
+/// 5. Verify installation
+///
+/// # Timeout Strategy
+/// - Total timeout: 5 minutes (covers build + transfer + setup)
+/// - Build can take 2-3 minutes for large binaries
+/// - Transfer depends on binary size and network speed
+/// - SSH commands are fast (<1s each)
+///
+/// # Job ID Support (TEAM-330)
+/// When called from hive daemon managing worker lifecycle, set job_id in config:
+///
+/// ```rust,ignore
+/// let config = InstallConfig {
+///     daemon_name: "llm-worker-rbee".to_string(),
+///     ssh_config,
+///     local_binary_path: None,
+///     job_id: Some(job_id),  // ← Routes narration + countdown through SSE!
+/// };
+/// install_daemon(config).await?;
+/// ```
+///
+/// The #[with_job_id] macro automatically wraps the function in NarrationContext,
+/// routing ALL narration (including timeout countdown) through SSE!
+#[with_job_id(config_param = "install_config")]
+#[with_timeout(secs = 300, label = "Install daemon")]
+pub async fn install_daemon(install_config: InstallConfig) -> Result<()> {
+    let daemon_name = &install_config.daemon_name;
+    let ssh_config = &install_config.ssh_config;
+    
+    n!("install_start", "📦 Installing {} on {}@{}", 
+        daemon_name, ssh_config.user, ssh_config.hostname);
+
+    // Step 1: Build or locate binary locally
+    let binary_path = if let Some(path) = install_config.local_binary_path {
+        if !path.exists() {
+            anyhow::bail!("Binary not found at: {}", path.display());
+        }
+        n!("using_binary", "📦 Using pre-built binary: {}", path.display());
+        path
+    } else {
+        // Use build_daemon() instead of duplicating build code
+        let build_config = BuildConfig {
+            daemon_name: daemon_name.to_string(),
+            target: None,
+            job_id: install_config.job_id.clone(),
+        };
+        
+        build_daemon(build_config).await?
+    };
+
+    // Step 2: Create remote directory
+    n!("create_dir", "📁 Creating ~/.local/bin on remote");
+    let create_dir_cmd = format!("mkdir -p ~/.local/bin");
+    ssh_exec(&ssh_config, &create_dir_cmd)
+        .await
+        .context("Failed to create remote directory")?;
+
+    // Step 3: Copy binary via SCP
+    let remote_path = format!("~/.local/bin/{}", daemon_name);
+    n!("copying", "📤 Copying {} to {}@{}:{}", 
+        daemon_name, ssh_config.user, ssh_config.hostname, remote_path);
+    
+    scp_upload(&ssh_config, &binary_path, &remote_path)
+        .await
+        .context("Failed to copy binary to remote")?;
+
+    // Step 4: Make executable
+    n!("chmod", "🔐 Making binary executable");
+    let chmod_cmd = format!("chmod +x ~/.local/bin/{}", daemon_name);
+    ssh_exec(&ssh_config, &chmod_cmd)
+        .await
+        .context("Failed to make binary executable")?;
+
+    // Step 5: Verify installation
+    n!("verify", "✅ Verifying installation");
+    let verify_cmd = format!("test -x ~/.local/bin/{} && echo 'OK'", daemon_name);
+    let output = ssh_exec(&ssh_config, &verify_cmd)
+        .await
+        .context("Failed to verify installation")?;
+    
+    if !output.trim().contains("OK") {
+        anyhow::bail!("Installation verification failed");
+    }
+
+    n!("install_complete", "🎉 {} installed successfully on {}@{}", 
+        daemon_name, ssh_config.user, ssh_config.hostname);
+
+    Ok(())
+}
+
+// TEAM-330: ssh_exec() and scp_upload() are in utils/ssh.rs
+// See: src/utils/ssh.rs

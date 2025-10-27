@@ -30,7 +30,7 @@ auth-min = { path = "../bin/98_security_crates/auth-min" }  # TEAM-270: Moved to
 regex = "1.10"
 chrono = "0.4"
 colored = "2.1"
-indicatif = "0.17"
+# TEAM-330: Removed indicatif - no longer needed
 # Worker isolation testing
 uuid = { version = "1", features = ["v4"] }
 ureq = { version = "2.9", features = ["json"] }

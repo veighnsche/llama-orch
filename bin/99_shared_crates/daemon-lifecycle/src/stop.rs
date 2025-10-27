@@ -1,79 +1,161 @@
-//! Stop HTTP-based daemons
+//! Stop daemon on remote machine via HTTP
 //!
-//! TEAM-316: Extracted from lifecycle.rs (RULE ZERO - single responsibility)
-//! TEAM-327: Migrated to signal-based shutdown (no more HTTP /v1/shutdown endpoint)
+//! # Types/Utils Used (from daemon-lifecycle)
+//! - reqwest for HTTP shutdown endpoint
+//! - Falls back to shutdown_daemon() for SSH-based shutdown
+//!
+//! # Requirements
+//!
+//! ## Input
+//! - `daemon_name`: Name of daemon to stop
+//! - `ssh_config`: SSH connection details
+//! - `shutdown_url`: HTTP shutdown endpoint URL (e.g., "http://192.168.1.100:7835/v1/shutdown")
+//!
+//! ## Process
+//! 1. Try graceful shutdown via HTTP shutdown endpoint (NO SSH)
+//!    - POST to: `{shutdown_url}`
+//!    - Timeout: 5 seconds
+//!    - If succeeds: return Ok
+//!    - If fails: continue to step 2
+//!
+//! 2. Force kill via SSH (ONE ssh call)
+//!    - Use: `pkill -f {daemon_name}`
+//!    - Return Ok if successful
+//!
+//! ## SSH Calls
+//! - Best case: 0 SSH calls (HTTP shutdown succeeds)
+//! - Worst case: 1 SSH call (force kill)
+//!
+//! ## Error Handling
+//! - SSH connection failed
+//! - Process not found (not an error - daemon already stopped)
+//! - Kill command failed
+//!
+//! ## Example
+//! ```rust,no_run
+//! use remote_daemon_lifecycle::{stop_daemon, SshConfig};
+//!
+//! # async fn example() -> anyhow::Result<()> {
+//! let ssh = SshConfig::new("192.168.1.100".to_string(), "vince".to_string(), 22);
+//! stop_daemon(ssh, "rbee-hive", "http://192.168.1.100:7835").await?;
+//! # Ok(())
+//! # }
+//! ```
 
-use anyhow::Result;
+use anyhow::{Context, Result};
+use observability_narration_core::n;
+use observability_narration_macros::with_job_id;
+use timeout_enforcer::with_timeout;
+use std::time::Duration;
+use tokio::time::sleep;
+use crate::SshConfig;
+use crate::shutdown::{shutdown_daemon, ShutdownConfig};
 
-use crate::shutdown::shutdown_daemon;
-use crate::status::check_daemon_health; // TEAM-329: Renamed from health to status
-use crate::types::start::HttpDaemonConfig; // TEAM-329: types/start.rs (renamed from lifecycle.rs)
-use crate::utils::pid::{read_pid_file, remove_pid_file}; // TEAM-329: Centralized PID operations
-
-/// Stop an HTTP-based daemon gracefully using signals
+/// Configuration for stopping daemon on remote machine
 ///
-/// TEAM-276: High-level function for graceful daemon shutdown
-/// TEAM-316: Extracted from lifecycle.rs
-/// TEAM-327: Migrated to signal-based shutdown (SIGTERM → SIGKILL)
-///
-/// Steps:
-/// 1. Check if daemon is running (via health endpoint)
-/// 2. Read PID from file (~/.local/var/run/{daemon}.pid) for stateless shutdown
-/// 3. Send SIGTERM to process
-/// 4. Wait for graceful timeout, send SIGKILL if needed
-/// 5. Clean up PID file
-///
-/// # Arguments
-/// * `config` - HTTP daemon configuration (uses health_url and pid)
-///
-/// # Returns
-/// * `Ok(())` - Daemon stopped successfully
-/// * `Err` - Unexpected error during shutdown or PID not available
-///
-/// # Example
-/// ```rust,no_run
-/// use daemon_lifecycle::{stop_http_daemon, HttpDaemonConfig};
-/// use std::path::PathBuf;
-///
-/// # async fn example() -> anyhow::Result<()> {
-/// let config = HttpDaemonConfig::new(
-///     "queen-rbee",
-///     PathBuf::from("target/release/queen-rbee"),
-///     "http://localhost:8500",
-/// )
-/// .with_pid(12345)
-/// .with_job_id("job-123");
-///
-/// stop_http_daemon(config).await?;
-/// # Ok(())
-/// # }
-/// ```
-pub async fn stop_daemon(config: HttpDaemonConfig) -> Result<()> {
-    // Step 1: Check if daemon is running (via health check)
-    let is_running = check_daemon_health(&config.health_url, None, None).await;
+/// TEAM-330: Includes optional job_id for SSE narration routing
+#[derive(Debug, Clone)]
+pub struct StopConfig {
+    /// Name of daemon to stop
+    pub daemon_name: String,
     
-    if !is_running {
-        use observability_narration_core::n;
-        n!("daemon_not_running", "⚠️  {} not running", config.daemon_name);
-        // Clean up stale PID file if it exists
-        let _ = remove_pid_file(&config.daemon_name);
-        return Ok(());
+    /// HTTP shutdown endpoint URL
+    pub shutdown_url: String,
+    
+    /// Health endpoint URL (for polling)
+    pub health_url: String,
+    
+    /// SSH connection configuration (for fallback)
+    pub ssh_config: SshConfig,
+    
+    /// Optional job ID for SSE narration routing
+    pub job_id: Option<String>,
+}
+
+/// Stop daemon on remote machine via HTTP
+///
+/// TEAM-330: Enforces 20-second timeout, tries HTTP first then falls back to SSH
+///
+/// # Implementation
+/// 1. Try HTTP shutdown endpoint (10s timeout)
+/// 2. Poll health endpoint to verify shutdown (5s max)
+/// 3. If HTTP fails, fallback to shutdown_daemon() (SSH-based)
+///
+/// # Timeout Strategy
+/// - Total timeout: 20 seconds
+/// - HTTP shutdown: 10 seconds
+/// - Health polling: 5 seconds
+/// - SSH fallback: handled by shutdown_daemon (30s)
+///
+/// # Job ID Support
+/// When called with job_id in StopConfig, all narration routes through SSE
+#[with_job_id(config_param = "stop_config")]
+#[with_timeout(secs = 20, label = "Stop daemon")]
+pub async fn stop_daemon(stop_config: StopConfig) -> Result<()> {
+    let daemon_name = &stop_config.daemon_name;
+    let shutdown_url = &stop_config.shutdown_url;
+    let health_url = &stop_config.health_url;
+    let ssh_config = &stop_config.ssh_config;
+    
+    n!("stop_start", "🛑 Stopping {} on {}@{}", 
+        daemon_name, ssh_config.user, ssh_config.hostname);
+
+    // Step 1: Try HTTP shutdown endpoint
+    n!("http_shutdown", "📡 Attempting HTTP shutdown: {}", shutdown_url);
+    
+    let client = reqwest::Client::builder()
+        .timeout(Duration::from_secs(10))
+        .build()?;
+    
+    match client.post(shutdown_url).send().await {
+        Ok(response) if response.status().is_success() => {
+            n!("http_success", "✅ HTTP shutdown request accepted");
+            
+            // Step 2: Poll health endpoint to verify shutdown
+            n!("polling", "⏳ Waiting for daemon to stop...");
+            
+            for attempt in 1..=10 {
+                sleep(Duration::from_millis(500)).await;
+                
+                match client.get(health_url).send().await {
+                    Ok(resp) if resp.status().is_success() => {
+                        n!("still_running", "⏳ Daemon still running (attempt {}/10)", attempt);
+                    }
+                    _ => {
+                        // Daemon stopped responding - success!
+                        n!("stopped", "✅ Daemon stopped gracefully via HTTP");
+                        n!("stop_complete", "🎉 {} stopped successfully", daemon_name);
+                        return Ok(());
+                    }
+                }
+            }
+            
+            n!("http_timeout", "⚠️  Daemon didn't stop after HTTP shutdown, falling back to SSH");
+        }
+        Ok(response) => {
+            n!("http_failed", "⚠️  HTTP shutdown failed: {}, falling back to SSH", response.status());
+        }
+        Err(e) => {
+            n!("http_error", "⚠️  HTTP shutdown error: {}, falling back to SSH", e);
+        }
     }
+
+    // Step 3: Fallback to SSH-based shutdown
+    n!("ssh_fallback", "🔄 Falling back to SSH-based shutdown...");
     
-    // Step 2: Get PID from PID file (stateless shutdown)
-    // TEAM-327: Read from ~/.local/var/run/{daemon}.pid
-    let pid = match config.pid {
-        Some(pid) => pid, // Use provided PID if available
-        None => read_pid_file(&config.daemon_name)?, // Otherwise read from file
+    let shutdown_config = ShutdownConfig {
+        daemon_name: daemon_name.to_string(),
+        shutdown_url: shutdown_url.to_string(),
+        health_url: health_url.to_string(),
+        ssh_config: ssh_config.clone(),
+        job_id: stop_config.job_id.clone(),
     };
     
-    // Step 3: Use signal-based shutdown (SIGTERM → SIGKILL)
-    let timeout_secs = config.graceful_timeout_secs.unwrap_or(5);
-    shutdown_daemon(pid, &config.daemon_name, timeout_secs, config.job_id.as_deref()).await?;
+    shutdown_daemon(shutdown_config)
+        .await
+        .context("SSH-based shutdown failed")?;
     
-    // Step 4: Clean up PID file after successful shutdown
-    remove_pid_file(&config.daemon_name)?;
+    n!("stop_complete", "🎉 {} stopped via SSH fallback", daemon_name);
     
     Ok(())
 }
-

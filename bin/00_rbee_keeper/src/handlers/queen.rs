@@ -11,7 +11,9 @@
 use anyhow::Result;
 use clap::Subcommand;
 use daemon_lifecycle::{
-    check_daemon_health, rebuild_daemon, stop_daemon, HttpDaemonConfig, RebuildConfig,
+    check_daemon_health, install_daemon, rebuild_daemon, start_daemon, stop_daemon,
+    uninstall_daemon, HttpDaemonConfig, InstallConfig, RebuildConfig, SshConfig,
+    StartConfig, StopConfig, UninstallConfig,
 };
 use observability_narration_core::n;
 
@@ -51,24 +53,36 @@ pub async fn handle_queen(action: QueenAction, queen_url: &str) -> Result<()> {
     
     match action {
         QueenAction::Start => {
+            let ssh = SshConfig::new("localhost".to_string(), whoami::username(), 22);
             let base_url = format!("http://localhost:{}", port);
             let args = vec!["--port".to_string(), port.to_string()];
-            // TEAM-327: Binary path auto-resolved from daemon_name inside start_http_daemon
-            let config = daemon_lifecycle::HttpDaemonConfig::new("queen-rbee", &base_url)
-                .with_args(args);
-            // TEAM-329: start_daemon now returns PID (discard it - we use health checks for status)
-            let _pid = daemon_lifecycle::start_daemon(config).await?;
+            let daemon_config = HttpDaemonConfig::new("queen-rbee", &base_url).with_args(args);
+            let config = StartConfig {
+                ssh_config: ssh,
+                daemon_config,
+                job_id: None,
+            };
+            let _pid = start_daemon(config).await?;
             Ok(())
         }
-        // TEAM-329: Use daemon-lifecycle directly
+        // TEAM-330: Use SSH to localhost (consistent with remote operations)
         QueenAction::Stop => {
-            // TEAM-329: Binary path auto-resolved from daemon_name
-            let config = HttpDaemonConfig::new("queen-rbee", queen_url.to_string());
+            let ssh = SshConfig::new("localhost".to_string(), whoami::username(), 22);
+            let shutdown_url = format!("{}/v1/shutdown", queen_url);
+            let health_url = format!("{}/health", queen_url);
+            let config = StopConfig {
+                daemon_name: "queen-rbee".to_string(),
+                shutdown_url,
+                health_url,
+                ssh_config: ssh,
+                job_id: None,
+            };
             stop_daemon(config).await
         }
-        // TEAM-329: Use check_daemon_health() directly
+        // TEAM-330: Use check_daemon_health() directly (takes only URL)
         QueenAction::Status => {
-            let is_running = check_daemon_health(queen_url, None, None).await;
+            let health_url = format!("{}/health", queen_url);
+            let is_running = check_daemon_health(&health_url).await;
             
             if is_running {
                 n!("queen_status", "✅ queen 'localhost' is running on {}", queen_url);
@@ -77,31 +91,39 @@ pub async fn handle_queen(action: QueenAction, queen_url: &str) -> Result<()> {
             }
             Ok(())
         }
-        // TEAM-329: Use rebuild_daemon (renamed from rebuild_with_hot_reload)
+        // TEAM-330: Use SSH to localhost (consistent with remote operations)
         QueenAction::Rebuild => {
-            let rebuild_config = RebuildConfig::new("queen-rbee");
+            let ssh = SshConfig::new("localhost".to_string(), whoami::username(), 22);
             let daemon_config = HttpDaemonConfig::new("queen-rbee", queen_url.to_string())
                 .with_args(vec!["--port".to_string(), port.to_string()]);
-            
-            rebuild_daemon(rebuild_config, daemon_config).await?;
-            Ok(())
+            let config = RebuildConfig {
+                daemon_name: "queen-rbee".to_string(),
+                ssh_config: ssh,
+                daemon_config,
+                job_id: None,
+            };
+            rebuild_daemon(config).await
         }
         QueenAction::Install { binary } => {
-            // TEAM-329: Use install_daemon (renamed from install_to_local_bin)
-            daemon_lifecycle::install_daemon("queen-rbee", binary, None).await?;
-            Ok(())
+            let ssh = SshConfig::new("localhost".to_string(), whoami::username(), 22);
+            let config = InstallConfig {
+                daemon_name: "queen-rbee".to_string(),
+                ssh_config: ssh,
+                local_binary_path: binary.map(std::path::PathBuf::from),
+                job_id: None,
+            };
+            install_daemon(config).await
         }
         QueenAction::Uninstall => {
-            // TEAM-329: Use UninstallConfig builder pattern
-            let home = std::env::var("HOME")?;
-            let config = daemon_lifecycle::UninstallConfig::new(
-                "queen-rbee",
-                format!("{}/.local/bin/queen-rbee", home),
-            )
-            .with_health_url(queen_url)
-            .with_health_timeout_secs(2);
-            
-            daemon_lifecycle::uninstall_daemon(config).await
+            let ssh = SshConfig::new("localhost".to_string(), whoami::username(), 22);
+            let config = UninstallConfig {
+                daemon_name: "queen-rbee".to_string(),
+                ssh_config: ssh,
+                health_url: Some(queen_url.to_string()),
+                health_timeout_secs: Some(2),
+                job_id: None,
+            };
+            uninstall_daemon(config).await
         }
     }
 }

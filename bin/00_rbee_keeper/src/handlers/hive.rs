@@ -6,7 +6,9 @@
 use anyhow::Result;
 use clap::Subcommand;
 use daemon_lifecycle::{
-    check_daemon_health, rebuild_daemon, stop_daemon, HttpDaemonConfig, RebuildConfig,
+    check_daemon_health, install_daemon, rebuild_daemon, start_daemon, stop_daemon,
+    uninstall_daemon, HttpDaemonConfig, InstallConfig, RebuildConfig, SshConfig,
+    StartConfig, StopConfig, UninstallConfig,
 };
 use observability_narration_core::n;
 use operations_contract::Operation;
@@ -73,25 +75,36 @@ pub async fn handle_hive(action: HiveAction, queen_url: &str) -> Result<()> {
                 "--hive-id".to_string(),
                 "localhost".to_string(),
             ];
-            // TEAM-327: Binary path auto-resolved from daemon_name inside start_http_daemon
-            let config = daemon_lifecycle::HttpDaemonConfig::new("rbee-hive", &base_url)
-                .with_args(args);
-            // TEAM-329: start_daemon now returns PID (discard it - we use health checks for status)
-            let _pid = daemon_lifecycle::start_daemon(config).await?;
+            // TEAM-330: Use SSH to localhost (consistent with remote operations)
+            let ssh = SshConfig::new("localhost".to_string(), whoami::username(), 22);
+            let daemon_config = HttpDaemonConfig::new("rbee-hive", &base_url).with_args(args);
+            let config = StartConfig {
+                ssh_config: ssh,
+                daemon_config,
+                job_id: None,
+            };
+            let _pid = start_daemon(config).await?;
             Ok(())
         }
-        // TEAM-322: Use daemon-lifecycle directly
+        // TEAM-330: Use SSH to localhost (consistent with remote operations)
         HiveAction::Stop { port } => {
-            let base_url = format!("http://localhost:{}", port.unwrap_or(7835));
-            // TEAM-329: Binary path auto-resolved from daemon_name
-            let config = HttpDaemonConfig::new("rbee-hive", base_url);
+            let ssh = SshConfig::new("localhost".to_string(), whoami::username(), 22);
+            let shutdown_url = format!("http://localhost:{}/v1/shutdown", port.unwrap_or(7835));
+            let health_url = format!("http://localhost:{}/health", port.unwrap_or(7835));
+            let config = StopConfig {
+                daemon_name: "rbee-hive".to_string(),
+                shutdown_url,
+                health_url,
+                ssh_config: ssh,
+                job_id: None,
+            };
             stop_daemon(config).await
         }
 
-        // TEAM-329: Use check_daemon_health() directly
+        // TEAM-330: Use check_daemon_health() directly (takes only URL)
         HiveAction::Status { alias: _ } => {
-            let health_url = "http://localhost:7835";
-            let is_running = check_daemon_health(health_url, None, None).await;
+            let health_url = "http://localhost:7835/health";
+            let is_running = check_daemon_health(health_url).await;
             
             if is_running {
                 n!("hive_status", "✅ hive 'localhost' is running on {}", health_url);
@@ -107,32 +120,39 @@ pub async fn handle_hive(action: HiveAction, queen_url: &str) -> Result<()> {
             submit_and_stream_job(queen_url, operation).await
         }
 
-        // TEAM-323: Hive lifecycle operations (use daemon-lifecycle directly, same as queen)
+        // TEAM-330: Use SSH to localhost (consistent with remote operations)
         HiveAction::Install { alias: _ } => {
-            // TEAM-329: Use install_daemon (renamed from install_to_local_bin)
-            daemon_lifecycle::install_daemon("rbee-hive", None, None).await?;
-            Ok(())
+            let ssh = SshConfig::new("localhost".to_string(), whoami::username(), 22);
+            let config = InstallConfig {
+                daemon_name: "rbee-hive".to_string(),
+                ssh_config: ssh,
+                local_binary_path: None,
+                job_id: None,
+            };
+            install_daemon(config).await
         }
         HiveAction::Uninstall { alias: _ } => {
-            // TEAM-329: Use UninstallConfig builder pattern
-            let home = std::env::var("HOME")?;
-            let config = daemon_lifecycle::UninstallConfig::new(
-                "rbee-hive",
-                format!("{}/.local/bin/rbee-hive", home),
-            )
-            .with_health_url("http://localhost:7835")
-            .with_health_timeout_secs(2);
-            
-            daemon_lifecycle::uninstall_daemon(config).await
+            let ssh = SshConfig::new("localhost".to_string(), whoami::username(), 22);
+            let config = UninstallConfig {
+                daemon_name: "rbee-hive".to_string(),
+                ssh_config: ssh,
+                health_url: Some("http://localhost:7835".to_string()),
+                health_timeout_secs: Some(2),
+                job_id: None,
+            };
+            uninstall_daemon(config).await
         }
         HiveAction::Rebuild { alias: _ } => {
-            // TEAM-329: Use rebuild_daemon (renamed from rebuild_with_hot_reload)
-            let rebuild_config = RebuildConfig::new("rbee-hive");
+            let ssh = SshConfig::new("localhost".to_string(), whoami::username(), 22);
             let daemon_config = HttpDaemonConfig::new("rbee-hive", "http://localhost:7835")
                 .with_args(vec!["--port".to_string(), "7835".to_string()]);
-            
-            rebuild_daemon(rebuild_config, daemon_config).await?;
-            Ok(())
+            let config = RebuildConfig {
+                daemon_name: "rbee-hive".to_string(),
+                ssh_config: ssh,
+                daemon_config,
+                job_id: None,
+            };
+            rebuild_daemon(config).await
         }
     }
 }

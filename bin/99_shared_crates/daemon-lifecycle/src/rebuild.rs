@@ -1,150 +1,220 @@
-//! Daemon rebuild utilities
+//! Rebuild and hot-reload daemon on remote machine
 //!
-//! TEAM-316: Extracted common rebuild patterns from queen-lifecycle and hive-lifecycle
-//! TEAM-328: Added conditional hot reload behavior
+//! # Types/Utils Used (from daemon-lifecycle)
+//! - types::start::HttpDaemonConfig - Daemon configuration
+//! - Calls build_daemon(), stop_daemon(), install_daemon(), start_daemon()
 //!
-//! Provides reusable functions for rebuilding daemons from source:
-//! - Conditional hot reload (running → stop → rebuild → start → running)
-//! - Cold rebuild (stopped → rebuild → stopped)
-//! - Local cargo build execution
-//! - Build output handling
+//! # Requirements
+//!
+//! ## Input
+//! - `daemon_name`: Name of daemon to rebuild
+//! - `ssh_config`: SSH connection details
+//! - `daemon_config`: Daemon configuration (for restart)
+//!
+//! ## Process
+//! 1. Build binary locally
+//!    - Call: `build_daemon(daemon_name, None)`
+//!
+//! 2. Stop running daemon (if running)
+//!    - Call: `stop_daemon(ssh_config, daemon_name, health_url)`
+//!
+//! 3. Install new binary
+//!    - Call: `install_daemon(daemon_name, ssh_config, Some(binary_path))`
+//!
+//! 4. Start daemon with new binary
+//!    - Call: `start_daemon(ssh_config, daemon_config)`
+//!
+//! ## SSH/SCP Calls
+//! - Total: 3-4 calls (stop + install + start)
+//! - Build: local only (no SSH)
+//!
+//! ## Error Handling
+//! - Build failed
+//! - Stop failed (daemon stuck)
+//! - Install failed (SCP error)
+//! - Start failed (new binary broken)
+//!
+//! ## Example
+//! ```rust,no_run
+//! use remote_daemon_lifecycle::{RebuildConfig, SshConfig};
+//! use daemon_lifecycle::HttpDaemonConfig;
+//!
+//! # async fn example() -> anyhow::Result<()> {
+//! let ssh = SshConfig::new("192.168.1.100".to_string(), "vince".to_string(), 22);
+//! let daemon_config = HttpDaemonConfig::new("rbee-hive", "http://192.168.1.100:7835")
+//!     .with_args(vec!["--port".to_string(), "7835".to_string()]);
+//!
+//! let config = RebuildConfig {
+//!     daemon_name: "rbee-hive".to_string(),
+//!     ssh_config: ssh,
+//!     daemon_config,
+//!     job_id: None,
+//! };
+//!
+//! rebuild_daemon(config).await?;
+//! # Ok(())
+//! # }
+//! ```
 
-use anyhow::Result;
+use anyhow::{Context, Result};
 use observability_narration_core::n;
 use observability_narration_macros::with_job_id;
+use timeout_enforcer::with_timeout;
+use crate::SshConfig;
+use crate::start::HttpDaemonConfig; // TEAM-330: Moved from types/
+use crate::build::{build_daemon, BuildConfig};
+use crate::stop::{stop_daemon, StopConfig};
+use crate::install::{install_daemon, InstallConfig};
+use crate::start::{start_daemon, StartConfig};
 
-use crate::types::rebuild::RebuildConfig; // TEAM-329: Moved to types/rebuild.rs
-use crate::types::start::HttpDaemonConfig; // TEAM-329: types/start.rs (renamed from lifecycle.rs)
-
-/// Rebuild daemon with conditional hot reload
+/// Configuration for rebuilding daemon on remote machine
 ///
-/// TEAM-328: Implements conditional hot reload behavior:
-/// - running → stop → rebuild → start → running (hot reload)
-/// - stopped → rebuild → stopped (cold rebuild)
-///
-/// # Arguments
-/// * `rebuild_config` - Rebuild configuration (binary name, features, job_id)
-/// * `daemon_config` - HTTP daemon configuration (for start/stop operations)
-///
-/// # Returns
-/// * `Ok(bool)` - true if daemon was restarted (hot reload), false if left stopped
-/// * `Err` - Build or lifecycle operation failed
+/// TEAM-330: Includes optional job_id for SSE narration routing
 ///
 /// # Example
-/// ```rust,no_run
-/// use daemon_lifecycle::rebuild::{RebuildConfig, rebuild_with_hot_reload};
-/// use daemon_contract::HttpDaemonConfig;
+/// ```rust,ignore
+/// use remote_daemon_lifecycle::{RebuildConfig, SshConfig};
+/// use daemon_lifecycle::HttpDaemonConfig;
 ///
-/// # async fn example() -> anyhow::Result<()> {
-/// let rebuild_config = RebuildConfig::new("queen-rbee")
-///     .with_features(vec!["local-hive".to_string()])
-///     .with_job_id("job-123");
+/// let ssh = SshConfig::new("192.168.1.100".to_string(), "vince".to_string(), 22);
+/// let daemon_config = HttpDaemonConfig::new("llm-worker-rbee", "http://192.168.1.100:7836")
+///     .with_args(vec!["--port".to_string(), "7836".to_string()]);
 ///
-/// let daemon_config = HttpDaemonConfig {
-///     daemon_name: "queen-rbee".to_string(),
-///     binary_path: None, // Auto-resolve
-///     health_url: "http://localhost:7833".to_string(),
-///     args: vec![],
-///     env: vec![],
-///     job_id: Some("job-123".to_string()),
+/// let config = RebuildConfig {
+///     daemon_name: "llm-worker-rbee".to_string(),
+///     ssh_config: ssh,
+///     daemon_config,
+///     job_id: Some("job-123".to_string()),  // For SSE routing
 /// };
-///
-/// let was_restarted = rebuild_with_hot_reload(rebuild_config, daemon_config).await?;
-/// if was_restarted {
-///     println!("Hot reload complete - daemon restarted");
-/// } else {
-///     println!("Cold rebuild complete - daemon left stopped");
-/// }
-/// # Ok(())
-/// # }
 /// ```
-#[with_job_id(config_param = "rebuild_config")] // TEAM-328: Eliminates job_id context boilerplate
-pub async fn rebuild_daemon(
-    rebuild_config: RebuildConfig,
-    daemon_config: HttpDaemonConfig,
-) -> Result<bool> {
-    // Step 1: Check if daemon is currently running
-    let was_running = crate::status::check_daemon_health(
-        &daemon_config.health_url,
-        None, // Use default /health endpoint
-        Some(std::time::Duration::from_secs(2)),
-    )
-    .await;
-
-    if was_running {
-        n!(
-            "hot_reload_start",
-            "🔄 Hot reload detected - {} is running, will restart after rebuild",
-            rebuild_config.binary_name
-        );
-
-        // Step 2: Stop the running daemon
-        n!("hot_reload_stop", "⏸️  Stopping {}...", rebuild_config.binary_name);
-        crate::stop::stop_daemon(daemon_config.clone()).await?;
-        n!("hot_reload_stopped", "✅ {} stopped", rebuild_config.binary_name);
-    } else {
-        n!(
-            "cold_rebuild_start",
-            "🔨 Cold rebuild - {} is not running, will rebuild only",
-            rebuild_config.binary_name
-        );
-    }
-
-    // Step 3: Build and install the daemon
-    // TEAM-328: install_daemon now builds if needed, no separate build function
-    let binary_path = crate::install::install_daemon(
-        &rebuild_config.binary_name,
-        None, // Will auto-build if not found
-        None, // Install to ~/.local/bin
-    )
-    .await?;
-
-    // Step 4: If it was running, start it again (hot reload)
-    if was_running {
-        n!("hot_reload_restart", "▶️  Restarting {}...", rebuild_config.binary_name);
-
-        // Update daemon config with built binary path
-        let mut start_config = daemon_config;
-        start_config.binary_path = Some(binary_path.into());
-
-        crate::start::start_daemon(start_config).await?;
-        n!(
-            "hot_reload_complete",
-            "✅ Hot reload complete - {} is running with new binary",
-            rebuild_config.binary_name
-        );
-        Ok(true)
-    } else {
-        n!(
-            "cold_rebuild_complete",
-            "✅ Cold rebuild complete - {} binary updated, daemon left stopped",
-            rebuild_config.binary_name
-        );
-        Ok(false)
-    }
+#[derive(Debug, Clone)]
+pub struct RebuildConfig {
+    /// Name of the daemon binary
+    pub daemon_name: String,
+    
+    /// SSH connection configuration
+    pub ssh_config: SshConfig,
+    
+    /// Daemon configuration (for restart)
+    pub daemon_config: HttpDaemonConfig,
+    
+    /// Optional job ID for SSE narration routing
+    /// When set, all narration (including timeout countdown) goes through SSE
+    pub job_id: Option<String>,
 }
 
-#[cfg(test)]
-mod tests {
-    use super::*;
+/// Rebuild and hot-reload daemon on remote machine
+///
+/// TEAM-330: Enforces 10-minute timeout for entire rebuild process
+///
+/// # Implementation
+/// 1. Build binary locally (build_daemon)
+/// 2. Stop running daemon (stop_daemon)
+/// 3. Install new binary (install_daemon)
+/// 4. Start daemon with new binary (start_daemon)
+///
+/// # Timeout Strategy
+/// - Total timeout: 10 minutes (covers build + stop + install + start)
+/// - Build: up to 5 minutes (large binaries)
+/// - Stop: 20 seconds (handled by stop_daemon)
+/// - Install: up to 5 minutes (handled by install_daemon)
+/// - Start: 2 minutes (handled by start_daemon)
+///
+/// # Job ID Support (TEAM-330)
+/// When called with job_id in RebuildConfig, all narration routes through SSE:
+///
+/// ```rust,ignore
+/// let config = RebuildConfig {
+///     daemon_name: "llm-worker-rbee".to_string(),
+///     ssh_config,
+///     daemon_config,
+///     job_id: Some(job_id),  // ← Routes narration + countdown through SSE!
+/// };
+/// rebuild_daemon(config).await?;
+/// ```
+///
+/// The #[with_job_id] macro automatically wraps the function in NarrationContext,
+/// routing ALL narration (including timeout countdown) through SSE!
+#[with_job_id(config_param = "rebuild_config")]
+#[with_timeout(secs = 600, label = "Rebuild daemon")]
+pub async fn rebuild_daemon(rebuild_config: RebuildConfig) -> Result<()> {
+    let daemon_name = &rebuild_config.daemon_name;
+    let ssh_config = &rebuild_config.ssh_config;
+    let daemon_config = &rebuild_config.daemon_config;
+    
+    n!("rebuild_start", "🔄 Rebuilding {} on {}@{}", 
+        daemon_name, ssh_config.user, ssh_config.hostname);
 
-    #[test]
-    fn test_rebuild_config_builder() {
-        let config = RebuildConfig::new("test-daemon")
-            .with_features(vec!["feature1".to_string(), "feature2".to_string()])
-            .with_job_id("job-123");
+    // Step 1: Build binary locally
+    n!("rebuild_build", "🔨 Building {} locally", daemon_name);
+    let build_config = BuildConfig {
+        daemon_name: daemon_name.clone(),
+        target: None,
+        job_id: rebuild_config.job_id.clone(),
+    };
+    
+    let binary_path = build_daemon(build_config)
+        .await
+        .context("Failed to build daemon")?;
+    
+    n!("rebuild_built", "✅ Built: {}", binary_path.display());
 
-        assert_eq!(config.binary_name, "test-daemon");
-        assert_eq!(config.features, Some(vec!["feature1".to_string(), "feature2".to_string()]));
-        assert_eq!(config.job_id, Some("job-123".to_string()));
+    // Step 2: Stop running daemon (if running)
+    n!("rebuild_stop", "🛑 Stopping running daemon");
+    
+    // Extract base URL from daemon_config.health_url
+    let health_url = daemon_config.health_url.clone();
+    let shutdown_url = format!("{}/v1/shutdown", health_url.trim_end_matches("/health"));
+    
+    let stop_config = StopConfig {
+        daemon_name: daemon_name.clone(),
+        shutdown_url,
+        health_url: health_url.clone(),
+        ssh_config: ssh_config.clone(),
+        job_id: rebuild_config.job_id.clone(),
+    };
+    
+    // Ignore errors if daemon is not running
+    if let Err(e) = stop_daemon(stop_config).await {
+        n!("rebuild_stop_warning", "⚠️  Stop failed (daemon may not be running): {}", e);
+    } else {
+        n!("rebuild_stopped", "✅ Daemon stopped");
     }
 
-    #[test]
-    fn test_rebuild_config_no_features() {
-        let config = RebuildConfig::new("test-daemon");
+    // Step 3: Install new binary
+    n!("rebuild_install", "📦 Installing new binary");
+    let install_config = InstallConfig {
+        daemon_name: daemon_name.clone(),
+        ssh_config: ssh_config.clone(),
+        local_binary_path: Some(binary_path),
+        job_id: rebuild_config.job_id.clone(),
+    };
+    
+    install_daemon(install_config)
+        .await
+        .context("Failed to install new binary")?;
+    
+    n!("rebuild_installed", "✅ New binary installed");
 
-        assert_eq!(config.binary_name, "test-daemon");
-        assert_eq!(config.features, None);
-        assert_eq!(config.job_id, None);
-    }
+    // Step 4: Start daemon with new binary
+    n!("rebuild_start_daemon", "🚀 Starting daemon with new binary");
+    let start_config = StartConfig {
+        ssh_config: ssh_config.clone(),
+        daemon_config: daemon_config.clone(),
+        job_id: rebuild_config.job_id.clone(),
+    };
+    
+    let pid = start_daemon(start_config)
+        .await
+        .context("Failed to start daemon with new binary")?;
+    
+    n!("rebuild_started", "✅ Daemon started with PID: {}", pid);
+
+    n!("rebuild_complete", "🎉 {} rebuilt and restarted successfully on {}@{}", 
+        daemon_name, ssh_config.user, ssh_config.hostname);
+
+    Ok(())
 }
+
+// TEAM-330: Orchestrates build, stop, install, start operations
+// See: src/build.rs, src/stop.rs, src/install.rs, src/start.rs

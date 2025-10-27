@@ -58,9 +58,8 @@ members = [
     "bin/99_shared_crates/narration-core/bdd",
     "bin/99_shared_crates/narration-macros",
     # TEAM-135: New shared crates for consolidation
+    # TEAM-330: daemon-lifecycle now handles remote execution via SSH (RULE ZERO - one crate, not two)
     "bin/99_shared_crates/daemon-lifecycle",
-    "bin/99_shared_crates/daemon-lifecycle/bdd",
-    "bin/99_shared_crates/remote-daemon-lifecycle",  # TEAM-330: Remote execution via SSH
     "bin/99_shared_crates/heartbeat-registry",  # TEAM-285: Generic heartbeat registry
     "bin/99_shared_crates/job-server",        # TEAM-154: Dual-call pattern job tracking (worker/queen/hive)
     "bin/99_shared_crates/timeout-enforcer",    # TEAM-163: Hard timeout enforcement with visual countdown
@@ -147,7 +146,7 @@ once_cell = "1"
 chrono = { version = "0.4", features = ["serde"] }
 ssh2 = "0.9"
 daemonize = "0.5"
-indicatif = "0.17"
+# TEAM-330: Removed indicatif - countdown now uses narration events via SSE
 sysinfo = "0.30"
 
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━

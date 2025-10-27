@@ -8,7 +8,77 @@ use std::time::Duration;
 use tokio::time::sleep;
 
 use crate::status::check_daemon_health;
-use crate::types::status::HealthPollConfig; // TEAM-329: types/status.rs (PARITY)
+
+/// Configuration for health polling with exponential backoff
+///
+/// TEAM-330: Moved from types/status.rs (RULE ZERO - inline it)
+pub struct HealthPollConfig {
+    /// Base URL of daemon (e.g., "http://localhost:8500")
+    pub base_url: String,
+
+    /// Optional health endpoint path (default: "/health")
+    pub health_endpoint: Option<String>,
+
+    /// Maximum number of polling attempts (default: 10)
+    pub max_attempts: usize,
+
+    /// Initial delay in milliseconds (default: 200ms)
+    pub initial_delay_ms: u64,
+
+    /// Backoff multiplier for exponential backoff (default: 1.5)
+    pub backoff_multiplier: f64,
+
+    /// Optional job_id for narration routing
+    pub job_id: Option<String>,
+
+    /// Optional daemon name for narration (default: "daemon")
+    pub daemon_name: Option<String>,
+}
+
+impl Default for HealthPollConfig {
+    fn default() -> Self {
+        Self {
+            base_url: String::new(),
+            health_endpoint: None,
+            max_attempts: 10,
+            initial_delay_ms: 200,
+            backoff_multiplier: 1.5,
+            job_id: None,
+            daemon_name: None,
+        }
+    }
+}
+
+impl HealthPollConfig {
+    /// Create a new config with just the base URL
+    pub fn new(base_url: impl Into<String>) -> Self {
+        Self { base_url: base_url.into(), ..Default::default() }
+    }
+
+    /// Set the health endpoint
+    pub fn with_endpoint(mut self, endpoint: impl Into<String>) -> Self {
+        self.health_endpoint = Some(endpoint.into());
+        self
+    }
+
+    /// Set the maximum attempts
+    pub fn with_max_attempts(mut self, attempts: usize) -> Self {
+        self.max_attempts = attempts;
+        self
+    }
+
+    /// Set the job_id for narration
+    pub fn with_job_id(mut self, job_id: impl Into<String>) -> Self {
+        self.job_id = Some(job_id.into());
+        self
+    }
+
+    /// Set the daemon name for narration
+    pub fn with_daemon_name(mut self, name: impl Into<String>) -> Self {
+        self.daemon_name = Some(name.into());
+        self
+    }
+}
 
 /// Poll daemon health endpoint until healthy or max attempts reached
 ///
@@ -56,13 +126,8 @@ pub async fn poll_daemon_health(config: HealthPollConfig) -> anyhow::Result<()> 
 
     for attempt in 1..=config.max_attempts {
         // Check health
-        if check_daemon_health(
-            &config.base_url,
-            config.health_endpoint.as_deref(),
-            Some(Duration::from_secs(2)),
-        )
-        .await
-        {
+        // TEAM-330: RULE ZERO - Updated to new signature
+        if check_daemon_health(&config.base_url).await {
             // Success!
             n!("daemon_healthy", "✅ {} is healthy (attempt {})", daemon_name, attempt);
             return Ok(());

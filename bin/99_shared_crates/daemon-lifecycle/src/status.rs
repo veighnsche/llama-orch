@@ -1,47 +1,60 @@
-//! Daemon status checking
+//! Check daemon status on remote machine
 //!
-//! TEAM-276: Extracted from queen-lifecycle and hive-lifecycle
-//! TEAM-328: Consolidated status.rs and get.rs into health.rs (RULE ZERO)
-//! TEAM-329: Renamed health.rs → status.rs (checking status, not health)
-//! TEAM-329: Moved poll_daemon_health to utils/poll.rs (polling is a utility)
+//! # Types/Utils Used (from daemon-lifecycle)
+//! - None (uses reqwest directly for HTTP health checks)
+//! - Provides check_daemon_health() for utils::poll::poll_daemon_health()
 //!
-//! Provides simple HTTP status checking for daemons.
+//! # Requirements
+//!
+//! ## Input
+//! - `health_url`: Health endpoint URL (e.g., "http://192.168.1.100:7835/health")
+//!
+//! ## Process
+//! 1. HTTP GET to health endpoint (NO SSH)
+//!    - Use: `reqwest::get(health_url)`
+//!    - Timeout: 2 seconds
+//!    - Return: true if 200 OK, false otherwise
+//!
+//! ## SSH Calls
+//! - Total: 0 SSH calls (HTTP only)
+//!
+//! ## Error Handling
+//! - Connection timeout → return false (daemon not running)
+//! - Connection refused → return false (daemon not running)
+//! - HTTP error → return false (daemon unhealthy)
+//!
+//! ## Example
+//! ```rust,no_run
+//! use remote_daemon_lifecycle::check_daemon_status;
+//!
+//! # async fn example() -> anyhow::Result<()> {
+//! let is_running = check_daemon_status("http://192.168.1.100:7835/health").await?;
+//! if is_running {
+//!     println!("Daemon is running");
+//! } else {
+//!     println!("Daemon is not running");
+//! }
+//! # Ok(())
+//! # }
+//! ```
 
-use reqwest::Client;
 use std::time::Duration;
 
-// TEAM-329: Re-export status types from types module (PARITY)
-pub use crate::types::status::{StatusRequest, StatusResponse};
-
-/// Check if daemon is healthy by querying its health endpoint
+/// Check daemon health
 ///
-/// # Arguments
-/// * `base_url` - Base URL of daemon (e.g., "http://localhost:8500")
-/// * `health_endpoint` - Optional health endpoint path (default: "/health")
-/// * `timeout` - Optional timeout duration (default: 2 seconds)
-///
-/// # Returns
-/// * `true` if daemon responds with 2xx status
-/// * `false` if daemon is unreachable or returns error status
-pub async fn check_daemon_health(
-    base_url: &str,
-    health_endpoint: Option<&str>,
-    timeout: Option<Duration>,
-) -> bool {
-    let endpoint = health_endpoint.unwrap_or("/health");
-    let timeout = timeout.unwrap_or(Duration::from_secs(2));
-
-    let client = match Client::builder().timeout(timeout).build() {
+/// TEAM-330: RULE ZERO - One function, not two!
+/// Used by utils/poll.rs and everywhere else
+pub async fn check_daemon_health(health_url: &str) -> bool {
+    let client = match reqwest::Client::builder()
+        .timeout(Duration::from_secs(2))
+        .build()
+    {
         Ok(c) => c,
         Err(_) => return false,
     };
-
-    let url = format!("{}{}", base_url, endpoint);
-
-    match client.get(&url).send().await {
+    
+    match client.get(health_url).send().await {
         Ok(response) => response.status().is_success(),
         Err(_) => false,
     }
 }
-
-// TEAM-329: poll_daemon_health moved to utils/poll.rs (polling is a utility)
