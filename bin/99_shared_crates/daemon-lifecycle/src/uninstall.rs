@@ -49,8 +49,9 @@ pub async fn uninstall_daemon(config: UninstallConfig) -> Result<()> {
         n!("daemon_uninstall", "🗑️  Uninstalling daemon '{}'", config.daemon_name);
 
         // Step 1: Check if binary exists
-        if !config.install_path.exists() {
-            n!("daemon_not_installed", "⚠️  Daemon '{}' not installed at: {}", config.daemon_name, config.install_path.display());
+        let install_path = std::path::Path::new(&config.install_path);
+        if !install_path.exists() {
+            n!("daemon_not_installed", "⚠️  Daemon '{}' not installed at: {}", config.daemon_name, install_path.display());
             return Ok(());
         }
 
@@ -74,7 +75,7 @@ pub async fn uninstall_daemon(config: UninstallConfig) -> Result<()> {
         std::fs::remove_file(&config.install_path)?;
 
         n!("daemon_uninstalled", "✅ Daemon '{}' uninstalled successfully!", config.daemon_name);
-        n!("daemon_removed", "🗑️  Removed: {}", config.install_path.display());
+        n!("daemon_removed", "🗑️  Removed: {}", install_path.display());
 
         Ok(())
     };

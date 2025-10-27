@@ -22,6 +22,7 @@ thiserror = "1.0"
 
 # Shared crates
 daemon-lifecycle = { path = "../../99_shared_crates/daemon-lifecycle" }
+daemon-contract = { path = "../../97_contracts/daemon-contract" }  # TEAM-316: Generic daemon handle
 observability-narration-core = { path = "../../99_shared_crates/narration-core" }
 ssh-config = { path = "../ssh-config" }  # TEAM-314: Shared SSH client
 stdext = "0.3"  # TEAM-312: Required for n!() macro (function_name!())

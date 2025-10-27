@@ -33,6 +33,10 @@ pub struct InstallResult {
     /// Installation timestamp
     #[serde(with = "systemtime_serde")]
     pub install_time: SystemTime,
+    
+    /// Whether the binary was found in target directory (vs provided path)
+    /// TEAM-316: Added for daemon-lifecycle compatibility
+    pub found_in_target: bool,
 }
 
 /// Configuration for daemon uninstallation
@@ -43,6 +47,16 @@ pub struct UninstallConfig {
 
     /// Installation path
     pub install_path: String,
+
+    /// Optional health check URL to verify daemon is not running
+    /// TEAM-316: Added for daemon-lifecycle compatibility
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub health_url: Option<String>,
+
+    /// Optional timeout for health check (default: 2 seconds)
+    /// TEAM-316: Added for daemon-lifecycle compatibility
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub health_timeout_secs: Option<u64>,
 
     /// Optional job ID for narration routing
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -94,10 +108,12 @@ mod tests {
         let result = InstallResult {
             binary_path: "/usr/local/bin/rbee-hive".to_string(),
             install_time: SystemTime::now(),
+            found_in_target: true,
         };
         let json = serde_json::to_string(&result).unwrap();
         let deserialized: InstallResult = serde_json::from_str(&json).unwrap();
         assert_eq!(result.binary_path, deserialized.binary_path);
+        assert_eq!(result.found_in_target, deserialized.found_in_target);
     }
 
     #[test]
@@ -105,11 +121,15 @@ mod tests {
         let config = UninstallConfig {
             daemon_name: "rbee-hive".to_string(),
             install_path: "/usr/local/bin/rbee-hive".to_string(),
+            health_url: Some("http://localhost:7835/health".to_string()),
+            health_timeout_secs: Some(2),
             job_id: None,
         };
         let json = serde_json::to_string(&config).unwrap();
         let deserialized: UninstallConfig = serde_json::from_str(&json).unwrap();
         assert_eq!(config.daemon_name, deserialized.daemon_name);
         assert_eq!(config.install_path, deserialized.install_path);
+        assert_eq!(config.health_url, deserialized.health_url);
+        assert_eq!(config.health_timeout_secs, deserialized.health_timeout_secs);
     }
 }

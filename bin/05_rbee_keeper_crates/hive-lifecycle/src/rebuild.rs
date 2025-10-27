@@ -1,10 +1,12 @@
 //! Hive rebuild operation
 //!
 //! TEAM-314: Added for parity with queen-lifecycle rebuild
+//! TEAM-316: Refactored to use shared daemon-lifecycle rebuild functions
 
 use anyhow::Result;
 use observability_narration_core::n;
 use ssh_config::SshClient; // TEAM-314: Use shared SSH client
+use daemon_lifecycle::rebuild::{check_not_running_before_rebuild, build_daemon_local, RebuildConfig};
 
 use crate::{DEFAULT_INSTALL_DIR, DEFAULT_BUILD_DIR};
 
@@ -38,46 +40,19 @@ pub async fn rebuild_hive(host: &str, build_remote: bool) -> Result<()> {
 /// Rebuild rbee-hive locally (no SSH)
 ///
 /// TEAM-314: Mirrors queen rebuild for localhost
+/// TEAM-316: Refactored to use shared daemon-lifecycle rebuild functions
 async fn rebuild_hive_local() -> Result<()> {
-    // TEAM-314: Check if hive is running (same as queen)
+    // TEAM-316: Use shared health check function
     let hive_url = "http://localhost:7835";
-    let is_running = daemon_lifecycle::health::is_daemon_healthy(
-        hive_url,
-        None, // Use default /health endpoint
-        Some(std::time::Duration::from_secs(2)),
-    )
-    .await;
+    check_not_running_before_rebuild("rbee-hive", hive_url, None).await?;
+
+    // TEAM-316: Use shared build function
+    let config = RebuildConfig::new("rbee-hive");
+    let _binary_path = build_daemon_local(config).await?;
+
+    n!("restart_hint", "💡 Restart hive to use the new binary");
     
-    if is_running {
-        n!("daemon_still_running", "⚠️  Hive is currently running. Stop it first.");
-        anyhow::bail!("Hive is still running. Use 'rbee hive stop' first.");
-    }
-
-    // Execute build
-    n!("build_start", "⏳ Running cargo build (this may take a few minutes)...");
-
-    let mut cmd = std::process::Command::new("cargo");
-    cmd.arg("build")
-        .arg("--release")
-        .arg("--bin")
-        .arg("rbee-hive");
-
-    let output = cmd.output()?;
-
-    if output.status.success() {
-        n!("build_success", "✅ Build successful!");
-
-        // Show binary location
-        let binary_path = "target/release/rbee-hive";
-        n!("binary_location", "📦 Binary available at: {}", binary_path);
-        n!("restart_hint", "💡 Restart hive to use the new binary");
-        
-        Ok(())
-    } else {
-        let stderr = String::from_utf8_lossy(&output.stderr);
-        n!("build_failed", "❌ Build failed: {}", stderr);
-        anyhow::bail!("Build failed");
-    }
+    Ok(())
 }
 
 /// Rebuild rbee-hive remotely via SSH
@@ -108,32 +83,18 @@ async fn rebuild_hive_remote(host: &str, build_remote: bool) -> Result<()> {
     // TEAM-314: DEFAULT - Build locally, upload binary (same as install)
     n!("build_mode", "🏗️  Building locally on keeper, will upload to '{}'", host);
     
-    // Build locally
+    // TEAM-316: Use shared build function
     n!("cargo_build", "🔨 Building rbee-hive locally...");
-    let mut cmd = std::process::Command::new("cargo");
-    cmd.arg("build")
-        .arg("--release")
-        .arg("--bin")
-        .arg("rbee-hive");
-
-    let output = cmd.output()?;
-
-    if !output.status.success() {
-        let stderr = String::from_utf8_lossy(&output.stderr);
-        n!("build_failed", "❌ Build failed: {}", stderr);
-        anyhow::bail!("Build failed");
-    }
-    
-    n!("build_success", "✅ Build successful!");
+    let config = RebuildConfig::new("rbee-hive");
+    let local_binary = build_daemon_local(config).await?;
     
     // Upload binary
-    let local_binary = "target/release/rbee-hive";
     let install_dir = DEFAULT_INSTALL_DIR;
     let remote_path = format!("{}/rbee-hive", install_dir);
     
     n!("upload_binary", "📤 Uploading binary to '{}'...", host);
     client
-        .upload_file(local_binary, &remote_path)
+        .upload_file(&local_binary, &remote_path)
         .await?;
     
     // Make executable

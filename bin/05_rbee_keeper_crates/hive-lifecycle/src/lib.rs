@@ -45,6 +45,13 @@ pub const DEFAULT_INSTALL_DIR: &str = "$HOME/.local/bin";
 /// Default build directory for remote hive builds
 pub const DEFAULT_BUILD_DIR: &str = "/tmp/llama-orch-build";
 
+// TEAM-316: Generic daemon handle
+/// Type alias for hive daemon handle
+///
+/// This is a specialization of the generic DaemonHandle for hive operations.
+/// Use this to track hive lifecycle and determine whether cleanup is needed.
+pub type HiveHandle = daemon_contract::DaemonHandle;
+
 // TEAM-290: Individual files for each operation (matches lifecycle crate pattern)
 pub mod install;
 pub mod uninstall;

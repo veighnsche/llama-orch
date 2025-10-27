@@ -44,7 +44,7 @@ pub async fn uninstall_queen(queen_url: &str) -> Result<()> {
     // Use daemon-lifecycle to handle uninstallation (checks if running + removes binary)
     let config = UninstallConfig {
         daemon_name: "queen-rbee".to_string(),
-        install_path: install_path.clone(),
+        install_path: install_path.display().to_string(),
         health_url: Some(queen_url.to_string()),
         health_timeout_secs: Some(2),
         job_id: None,

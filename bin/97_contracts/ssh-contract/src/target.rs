@@ -1,10 +1,15 @@
 //! SSH target types
 //!
 //! TEAM-315: Extracted from ssh-config to eliminate duplication
+//! TEAM-316: Added optional Tauri/Specta support
 
 use serde::{Deserialize, Serialize};
 
 use crate::status::SshTargetStatus;
+
+// TEAM-316: Optional Tauri/Specta support for TypeScript generation
+#[cfg(feature = "tauri")]
+use specta::Type;
 
 /// SSH target from ~/.ssh/config
 ///
@@ -25,6 +30,7 @@ use crate::status::SshTargetStatus;
 /// };
 /// ```
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+#[cfg_attr(feature = "tauri", derive(Type))]
 pub struct SshTarget {
     /// Host alias from SSH config (first word)
     pub host: String,

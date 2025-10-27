@@ -158,6 +158,7 @@
 
 // TEAM-259: Module declarations
 // TEAM-276: Added timeout, shutdown, and lifecycle modules
+// TEAM-316: Added rebuild module
 pub mod ensure;
 pub mod get;
 pub mod health;
@@ -165,6 +166,7 @@ pub mod install;
 pub mod lifecycle;
 pub mod list;
 pub mod manager;
+pub mod rebuild;  // TEAM-316: Extracted from queen-lifecycle and hive-lifecycle
 pub mod shutdown;
 pub mod status;
 pub mod timeout;

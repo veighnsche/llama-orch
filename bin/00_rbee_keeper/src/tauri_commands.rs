@@ -37,51 +37,8 @@ mod tests {
 // ============================================================================
 // RESPONSE TYPES
 // ============================================================================
-// TEAM-296: Define types with Specta for proper TypeScript generation
-
-/// SSH target from ~/.ssh/config
-#[derive(Debug, Clone, Serialize, Deserialize, Type)]
-pub struct SshTarget {
-    /// Host alias from SSH config
-    pub host: String,
-    /// Host subtitle (optional)
-    pub host_subtitle: Option<String>,
-    /// Hostname (IP or domain)
-    pub hostname: String,
-    /// SSH username
-    pub user: String,
-    /// SSH port
-    pub port: u16,
-    /// Connection status
-    pub status: SshTargetStatus,
-}
-
-/// SSH target connection status
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Type)]
-#[serde(rename_all = "lowercase")]
-pub enum SshTargetStatus {
-    Online,
-    Offline,
-    Unknown,
-}
-
-// Convert from ssh_config types to our types
-impl From<ssh_config::SshTarget> for SshTarget {
-    fn from(target: ssh_config::SshTarget) -> Self {
-        Self {
-            host: target.host,
-            host_subtitle: target.host_subtitle,
-            hostname: target.hostname,
-            user: target.user,
-            port: target.port,
-            status: match target.status {
-                ssh_config::SshTargetStatus::Online => SshTargetStatus::Online,
-                ssh_config::SshTargetStatus::Offline => SshTargetStatus::Offline,
-                ssh_config::SshTargetStatus::Unknown => SshTargetStatus::Unknown,
-            },
-        }
-    }
-}
+// TEAM-316: Use SSH types from ssh-contract (with Tauri support enabled)
+pub use ssh_contract::{SshTarget, SshTargetStatus};
 
 #[derive(Serialize, Deserialize)]
 pub struct CommandResponse {
@@ -304,20 +261,15 @@ pub async fn hive_list() -> Result<Vec<SshTarget>, String> {
 
     n!("hive_list_parsed", "Found {} SSH targets", targets.len());
 
-    // Convert from ssh_config::SshTarget to our SshTarget type
-    let converted_targets: Vec<SshTarget> = targets
-        .into_iter()
-        .map(|t| t.into())
-        .collect();
-
+    // TEAM-316: No conversion needed - ssh_config already uses ssh-contract types
     n!("hive_list_complete", 
         human: "Hive list complete: {} targets",
         cute: "🐝 Found {} hives ready to work!",
         story: "The keeper discovered {} hives in the network",
-        converted_targets.len()
+        targets.len()
     );
 
-    Ok(converted_targets)
+    Ok(targets)
 }
 
 #[tauri::command]

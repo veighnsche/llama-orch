@@ -1,6 +1,7 @@
 //! Daemon installation and uninstallation
 //!
 //! TEAM-259: Extracted common install/uninstall patterns
+//! TEAM-316: Use types from daemon-contract
 //!
 //! Provides generic daemon installation functionality for:
 //! - hive-lifecycle (install/uninstall hive)
@@ -8,31 +9,10 @@
 
 use anyhow::Result;
 use observability_narration_core::{n, with_narration_context, NarrationContext};
-use std::path::{Path, PathBuf};
+use std::path::Path;
 
-/// Configuration for daemon installation
-pub struct InstallConfig {
-    /// Name of the daemon binary (e.g., "rbee-hive", "vllm-worker")
-    pub binary_name: String,
-
-    /// Optional: Provided binary path (if user specifies custom path)
-    pub binary_path: Option<String>,
-
-    /// Optional: Target installation path (if copying binary)
-    pub target_path: Option<String>,
-
-    /// Optional: Job ID for narration routing
-    pub job_id: Option<String>,
-}
-
-/// Result of daemon installation
-pub struct InstallResult {
-    /// Path to the installed binary
-    pub binary_path: String,
-
-    /// Whether the binary was found in target directory
-    pub found_in_target: bool,
-}
+// TEAM-316: Use install types from daemon-contract
+pub use daemon_contract::{InstallConfig, InstallResult, UninstallConfig};
 
 /// Install a daemon binary
 ///
@@ -83,7 +63,11 @@ pub async fn install_daemon(config: InstallConfig) -> Result<InstallResult> {
                 anyhow::bail!("Binary not found at: {}", provided_path);
             }
 
-            return Ok(InstallResult { binary_path: provided_path, found_in_target: false });
+            return Ok(InstallResult {
+                binary_path: provided_path,
+                install_time: std::time::SystemTime::now(),
+                found_in_target: false,
+            });
         }
 
         // Step 2: Try to find in target directory
@@ -95,6 +79,7 @@ pub async fn install_daemon(config: InstallConfig) -> Result<InstallResult> {
 
                 Ok(InstallResult {
                     binary_path: binary_path.display().to_string(),
+                    install_time: std::time::SystemTime::now(),
                     found_in_target: true,
                 })
             }
@@ -123,6 +108,7 @@ pub async fn install_daemon(config: InstallConfig) -> Result<InstallResult> {
 
                         Ok(InstallResult {
                             binary_path: binary_path.display().to_string(),
+                            install_time: std::time::SystemTime::now(),
                             found_in_target: true,
                         })
                     }
@@ -141,22 +127,4 @@ pub async fn install_daemon(config: InstallConfig) -> Result<InstallResult> {
     } else {
         install_impl.await
     }
-}
-
-/// Configuration for daemon uninstallation
-pub struct UninstallConfig {
-    /// Name of the daemon (e.g., "queen-rbee", "rbee-hive")
-    pub daemon_name: String,
-
-    /// Path to the installed binary
-    pub install_path: PathBuf,
-
-    /// Optional: Health check URL to verify daemon is not running
-    pub health_url: Option<String>,
-
-    /// Optional: Timeout for health check (default: 2 seconds)
-    pub health_timeout_secs: Option<u64>,
-
-    /// Optional: Job ID for narration routing
-    pub job_id: Option<String>,
 }

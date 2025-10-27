@@ -1,18 +1,23 @@
 //! Graceful daemon shutdown utilities
 //!
 //! TEAM-276: Extracted pattern from queen-lifecycle and hive-lifecycle
+//! TEAM-316: Extended ShutdownConfig with lifecycle-specific fields
 
 use anyhow::Result;
 use observability_narration_core::{n, with_narration_context, NarrationContext};
 use std::time::Duration;
 use tokio::time::sleep;
 
-/// Configuration for graceful shutdown
+// TEAM-316: Use ShutdownConfig from daemon-contract as base
+pub use daemon_contract::ShutdownConfig as ShutdownConfigBase;
+
+/// Extended shutdown config with lifecycle-specific fields
 ///
-/// TEAM-276: Pattern from queen-lifecycle/stop.rs and hive-lifecycle/stop.rs
+/// TEAM-316: Extends daemon-contract::ShutdownConfig with health check URL
+#[derive(Clone)]
 pub struct ShutdownConfig {
-    /// Daemon name for narration
-    pub daemon_name: String,
+    /// Base configuration from contract
+    pub base: ShutdownConfigBase,
 
     /// Health check URL to verify daemon is running
     pub health_url: String,
@@ -22,9 +27,6 @@ pub struct ShutdownConfig {
 
     /// Timeout for graceful shutdown (SIGTERM) before force kill
     pub sigterm_timeout_secs: u64,
-
-    /// Optional job_id for narration routing
-    pub job_id: Option<String>,
 }
 
 impl ShutdownConfig {
@@ -34,24 +36,31 @@ impl ShutdownConfig {
         health_url: impl Into<String>,
         shutdown_endpoint: impl Into<String>,
     ) -> Self {
-        Self {
+        let base = ShutdownConfigBase {
             daemon_name: daemon_name.into(),
+            pid: 0, // Will be set later if needed
+            graceful_timeout_secs: 5,
+            job_id: None,
+        };
+
+        Self {
+            base,
             health_url: health_url.into(),
             shutdown_endpoint: shutdown_endpoint.into(),
             sigterm_timeout_secs: 5,
-            job_id: None,
         }
     }
 
     /// Set the SIGTERM timeout
     pub fn with_sigterm_timeout(mut self, secs: u64) -> Self {
         self.sigterm_timeout_secs = secs;
+        self.base.graceful_timeout_secs = secs;
         self
     }
 
     /// Set the job_id for narration
     pub fn with_job_id(mut self, job_id: impl Into<String>) -> Self {
-        self.job_id = Some(job_id.into());
+        self.base.job_id = Some(job_id.into());
         self
     }
 }
@@ -89,7 +98,8 @@ impl ShutdownConfig {
 /// ```
 pub async fn graceful_shutdown(config: ShutdownConfig) -> Result<()> {
     // TEAM-311: Migrated to n!() macro
-    let ctx = config.job_id.as_ref().map(|jid| NarrationContext::new().with_job_id(jid));
+    // TEAM-316: Updated to use config.base fields
+    let ctx = config.base.job_id.as_ref().map(|jid| NarrationContext::new().with_job_id(jid));
     
     let shutdown_impl = async {
         // Step 1: Check if daemon is running
@@ -98,28 +108,28 @@ pub async fn graceful_shutdown(config: ShutdownConfig) -> Result<()> {
                 .await;
 
         if !is_running {
-            n!("daemon_not_running", "⚠️  {} not running", config.daemon_name);
+            n!("daemon_not_running", "⚠️  {} not running", config.base.daemon_name);
             return Ok(());
         }
 
         // Step 2: Send shutdown request
-        n!("daemon_shutdown", "🛑 Shutting down {}...", config.daemon_name);
+        n!("daemon_shutdown", "🛑 Shutting down {}...", config.base.daemon_name);
 
         let shutdown_client = reqwest::Client::builder().timeout(Duration::from_secs(30)).build()?;
 
         match shutdown_client.post(&config.shutdown_endpoint).send().await {
             Ok(_) => {
-                n!("daemon_stopped", "✅ {} stopped", config.daemon_name);
+                n!("daemon_stopped", "✅ {} stopped", config.base.daemon_name);
                 Ok(())
             }
             Err(e) => {
                 // Connection closed/reset is expected - daemon shuts down before responding
                 if e.is_connect() || e.to_string().contains("connection closed") {
-                    n!("daemon_stopped", "✅ {} stopped", config.daemon_name);
+                    n!("daemon_stopped", "✅ {} stopped", config.base.daemon_name);
                     Ok(())
                 } else {
                     // Unexpected error
-                    n!("daemon_shutdown_failed", "⚠️  Failed to stop {}: {}", config.daemon_name, e);
+                    n!("daemon_shutdown_failed", "⚠️  Failed to stop {}: {}", config.base.daemon_name, e);
                     Err(e.into())
                 }
             }

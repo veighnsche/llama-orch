@@ -1,6 +1,7 @@
 //! High-level daemon lifecycle operations
 //!
 //! TEAM-276: Combines spawn + health polling + shutdown for HTTP-based daemons
+//! TEAM-316: Extended HttpDaemonConfig with lifecycle-specific fields
 //!
 //! Provides complete start/stop patterns that combine lower-level utilities.
 
@@ -12,28 +13,23 @@ use crate::health::{poll_until_healthy, HealthPollConfig};
 use crate::manager::DaemonManager;
 use crate::shutdown::{graceful_shutdown, ShutdownConfig};
 
-/// Configuration for HTTP-based daemon lifecycle
+// TEAM-316: Use HttpDaemonConfig from daemon-contract as base
+// Note: daemon-lifecycle extends this with binary_path, args, and health polling config
+pub use daemon_contract::HttpDaemonConfig as HttpDaemonConfigBase;
+
+/// Extended HTTP daemon config with lifecycle-specific fields
 ///
-/// TEAM-276: Unified config for daemons with HTTP endpoints (queen, hive, etc.)
+/// TEAM-316: Extends daemon-contract::HttpDaemonConfig with lifecycle management fields
 #[derive(Clone)]
 pub struct HttpDaemonConfig {
-    /// Daemon name for narration (e.g., "queen-rbee", "rbee-hive")
-    pub daemon_name: String,
+    /// Base configuration from contract
+    pub base: HttpDaemonConfigBase,
 
     /// Path to daemon binary
     pub binary_path: PathBuf,
 
     /// Command-line arguments for daemon
     pub args: Vec<String>,
-
-    /// Base URL for health checks (e.g., "http://localhost:8500")
-    pub health_url: String,
-
-    /// Shutdown endpoint (e.g., "http://localhost:8500/v1/shutdown")
-    pub shutdown_endpoint: String,
-
-    /// Optional job_id for narration routing
-    pub job_id: Option<String>,
 
     /// Maximum health check attempts (default: 10)
     pub max_health_attempts: Option<usize>,
@@ -49,16 +45,20 @@ impl HttpDaemonConfig {
         binary_path: PathBuf,
         health_url: impl Into<String>,
     ) -> Self {
+        let daemon_name = daemon_name.into();
         let health_url_str = health_url.into();
-        let shutdown_endpoint = format!("{}/v1/shutdown", health_url_str);
+        
+        let base = HttpDaemonConfigBase {
+            daemon_name,
+            health_url: health_url_str.clone(),
+            shutdown_endpoint: Some(format!("{}/v1/shutdown", health_url_str)),
+            job_id: None,
+        };
 
         Self {
-            daemon_name: daemon_name.into(),
+            base,
             binary_path,
             args: Vec::new(),
-            health_url: health_url_str,
-            shutdown_endpoint,
-            job_id: None,
             max_health_attempts: None,
             health_initial_delay_ms: None,
         }
@@ -72,13 +72,13 @@ impl HttpDaemonConfig {
 
     /// Set job_id for narration
     pub fn with_job_id(mut self, job_id: impl Into<String>) -> Self {
-        self.job_id = Some(job_id.into());
+        self.base.job_id = Some(job_id.into());
         self
     }
 
     /// Set custom shutdown endpoint
     pub fn with_shutdown_endpoint(mut self, endpoint: impl Into<String>) -> Self {
-        self.shutdown_endpoint = endpoint.into();
+        self.base.shutdown_endpoint = Some(endpoint.into());
         self
     }
 
@@ -137,13 +137,13 @@ pub async fn start_http_daemon(config: HttpDaemonConfig) -> Result<Child> {
 
     // Step 2: Poll until healthy
     let mut health_config =
-        HealthPollConfig::new(&config.health_url).with_daemon_name(&config.daemon_name);
+        HealthPollConfig::new(&config.base.health_url).with_daemon_name(&config.base.daemon_name);
 
     if let Some(attempts) = config.max_health_attempts {
         health_config = health_config.with_max_attempts(attempts);
     }
 
-    if let Some(job_id) = config.job_id.as_deref() {
+    if let Some(job_id) = config.base.job_id.as_deref() {
         health_config = health_config.with_job_id(job_id);
     }
 
@@ -186,10 +186,13 @@ pub async fn start_http_daemon(config: HttpDaemonConfig) -> Result<Child> {
 /// # }
 /// ```
 pub async fn stop_http_daemon(config: HttpDaemonConfig) -> Result<()> {
+    let shutdown_endpoint = config.base.shutdown_endpoint
+        .unwrap_or_else(|| format!("{}/v1/shutdown", config.base.health_url));
+    
     let shutdown_config =
-        ShutdownConfig::new(config.daemon_name, config.health_url, config.shutdown_endpoint);
+        ShutdownConfig::new(config.base.daemon_name, config.base.health_url, shutdown_endpoint);
 
-    let shutdown_config = if let Some(job_id) = config.job_id {
+    let shutdown_config = if let Some(job_id) = config.base.job_id {
         shutdown_config.with_job_id(job_id)
     } else {
         shutdown_config
@@ -213,11 +216,11 @@ mod tests {
         .with_job_id("job-123")
         .with_max_health_attempts(5);
 
-        assert_eq!(config.daemon_name, "test-daemon");
-        assert_eq!(config.health_url, "http://localhost:8080");
-        assert_eq!(config.shutdown_endpoint, "http://localhost:8080/v1/shutdown");
+        assert_eq!(config.base.daemon_name, "test-daemon");
+        assert_eq!(config.base.health_url, "http://localhost:8080");
+        assert_eq!(config.base.shutdown_endpoint, Some("http://localhost:8080/v1/shutdown".to_string()));
         assert_eq!(config.args.len(), 2);
-        assert_eq!(config.job_id, Some("job-123".to_string()));
+        assert_eq!(config.base.job_id, Some("job-123".to_string()));
         assert_eq!(config.max_health_attempts, Some(5));
     }
 
@@ -230,6 +233,6 @@ mod tests {
         )
         .with_shutdown_endpoint("http://localhost:8080/api/shutdown");
 
-        assert_eq!(config.shutdown_endpoint, "http://localhost:8080/api/shutdown");
+        assert_eq!(config.base.shutdown_endpoint, Some("http://localhost:8080/api/shutdown".to_string()));
     }
 }

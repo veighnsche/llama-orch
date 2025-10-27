@@ -1,13 +1,19 @@
 //! SSH target connection status
 //!
 //! TEAM-315: Extracted from ssh-config
+//! TEAM-316: Added optional Tauri/Specta support
 
 use serde::{Deserialize, Serialize};
+
+// TEAM-316: Optional Tauri/Specta support for TypeScript generation
+#[cfg(feature = "tauri")]
+use specta::Type;
 
 /// SSH target connection status
 ///
 /// Indicates whether an SSH host is reachable.
 #[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
+#[cfg_attr(feature = "tauri", derive(Type))]
 #[serde(rename_all = "lowercase")]
 pub enum SshTargetStatus {
     /// Host is reachable and responding
