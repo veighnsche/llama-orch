@@ -1,0 +1,12 @@
+[package]
+name = "build-test-stub"
+version = "0.1.0"
+edition = "2021"
+publish = false
+
+# TEAM-330: Minimal stub binary for testing build.rs functionality
+# This compiles in <1 second, unlike real binaries like rbee-keeper
+
+[[bin]]
+name = "build-test-stub"
+path = "main.rs"
