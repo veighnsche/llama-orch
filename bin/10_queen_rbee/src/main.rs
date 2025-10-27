@@ -141,7 +141,7 @@ fn create_router(
         // Health check (no /v1 prefix for compatibility)
         .route("/health", get(http::handle_health))
         // TEAM-186: V1 API endpoints (matches API_REFERENCE.md)
-        .route("/v1/shutdown", post(handle_shutdown))
+        // TEAM-327: Removed /v1/shutdown (use signal-based shutdown: SIGTERM/SIGKILL)
         .route("/v1/build-info", get(http::handle_build_info)) // TEAM-262: Build information
         .route("/v1/info", get(http::handle_info)) // TEAM-292: Queen info for service discovery
         // TEAM-275: Removed /v1/heartbeat endpoint (deprecated, use /v1/worker-heartbeat instead)
@@ -163,11 +163,4 @@ fn create_router(
         .layer(cors) // TEAM-288: Apply CORS layer to all routes
 }
 
-/// POST /v1/shutdown - Graceful shutdown
-///
-/// TEAM-153: Created by TEAM-153
-/// TEAM-164: Migrated from http.rs to main.rs
-async fn handle_shutdown() -> StatusCode {
-    NARRATE.action("shutdown").human("Received shutdown request, exiting gracefully").emit();
-    std::process::exit(0);
-}
+// TEAM-327: Removed handle_shutdown() - use signal-based shutdown (SIGTERM/SIGKILL) instead

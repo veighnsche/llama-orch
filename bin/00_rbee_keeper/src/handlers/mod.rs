@@ -8,13 +8,17 @@
 //! Each handler module implements the business logic for a specific
 //! command category (queen, hive, worker, model, infer).
 
-mod hive;
+// TEAM-324: Made public so HiveAction can be re-exported from cli/mod.rs
+pub mod hive;
 mod infer;
-mod model;
-mod queen;
+// TEAM-324: Made public so ModelAction can be re-exported from cli/mod.rs
+pub mod model;
+// TEAM-324: Made public so QueenAction can be re-exported from cli/mod.rs
+pub mod queen;
 mod self_check;
 mod status;
-mod worker;
+// TEAM-324: Made public so WorkerAction can be re-exported from cli/mod.rs
+pub mod worker;
 // TEAM-284: DELETED migrate, package_status, sync, validate handlers
 
 pub use hive::handle_hive;

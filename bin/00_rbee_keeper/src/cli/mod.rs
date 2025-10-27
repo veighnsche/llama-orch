@@ -1,16 +1,13 @@
 //! CLI argument definitions for rbee-keeper
 //!
 //! TEAM-276: Extracted from main.rs for better organization
+//! TEAM-324: All action enums moved to handlers to eliminate duplication
 
 mod commands;
-mod hive;
-mod model;
-mod queen;
-mod worker;
 
 pub use commands::{Cli, Commands};
-pub use hive::HiveAction;
-pub use model::ModelAction;
-pub use queen::QueenAction;
-// TEAM-278: DELETED WorkerBinaryAction - no longer exists
-pub use worker::{WorkerAction, WorkerProcessAction};
+// TEAM-324: Re-export from handlers (single source of truth)
+pub use crate::handlers::hive::HiveAction;
+pub use crate::handlers::model::ModelAction;
+pub use crate::handlers::queen::QueenAction;
+pub use crate::handlers::worker::{WorkerAction, WorkerProcessAction};

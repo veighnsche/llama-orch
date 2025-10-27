@@ -9,6 +9,7 @@ use std::path::PathBuf;
 /// Configuration for HTTP-based daemons
 ///
 /// TEAM-316: Complete config with both contract fields and lifecycle management fields
+/// TEAM-327: Removed shutdown_endpoint (HTTP-based), added pid and graceful_timeout_secs (signal-based)
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct HttpDaemonConfig {
     /// Daemon name for narration (e.g., "queen-rbee", "rbee-hive")
@@ -17,17 +18,15 @@ pub struct HttpDaemonConfig {
     /// Health check URL (e.g., "http://localhost:7833/health")
     pub health_url: String,
 
-    /// Optional shutdown endpoint (e.g., "/v1/shutdown")
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub shutdown_endpoint: Option<String>,
-
     /// Optional job ID for narration routing
     #[serde(skip_serializing_if = "Option::is_none")]
     pub job_id: Option<String>,
 
     // TEAM-316: Lifecycle management fields (moved from daemon-lifecycle)
-    /// Path to daemon binary
-    pub binary_path: PathBuf,
+    /// Path to daemon binary (optional - auto-resolved from daemon_name if not provided)
+    /// TEAM-327: Made optional for auto-resolution
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub binary_path: Option<PathBuf>,
 
     /// Command-line arguments for daemon
     #[serde(default)]
@@ -40,28 +39,42 @@ pub struct HttpDaemonConfig {
     /// Initial health check delay in ms (default: 200)
     #[serde(skip_serializing_if = "Option::is_none")]
     pub health_initial_delay_ms: Option<u64>,
+
+    // TEAM-327: Signal-based shutdown fields
+    /// Process ID (required for signal-based shutdown)
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub pid: Option<u32>,
+
+    /// Graceful shutdown timeout in seconds (default: 5)
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub graceful_timeout_secs: Option<u64>,
 }
 
 impl HttpDaemonConfig {
     /// Create a new HTTP daemon config
+    ///
+    /// TEAM-327: binary_path is now optional - if not provided, will be auto-resolved from daemon_name
     pub fn new(
         daemon_name: impl Into<String>,
-        binary_path: PathBuf,
         health_url: impl Into<String>,
     ) -> Self {
-        let daemon_name = daemon_name.into();
-        let health_url_str = health_url.into();
-
         Self {
-            daemon_name,
-            health_url: health_url_str.clone(),
-            shutdown_endpoint: Some(format!("{}/v1/shutdown", health_url_str)),
+            daemon_name: daemon_name.into(),
+            health_url: health_url.into(),
             job_id: None,
-            binary_path,
+            binary_path: None,
             args: Vec::new(),
             max_health_attempts: None,
             health_initial_delay_ms: None,
+            pid: None,
+            graceful_timeout_secs: None,
         }
+    }
+
+    /// Set explicit binary path (optional - auto-resolved if not set)
+    pub fn with_binary_path(mut self, path: PathBuf) -> Self {
+        self.binary_path = Some(path);
+        self
     }
 
     /// Set command-line arguments
@@ -76,9 +89,15 @@ impl HttpDaemonConfig {
         self
     }
 
-    /// Set custom shutdown endpoint
-    pub fn with_shutdown_endpoint(mut self, endpoint: impl Into<String>) -> Self {
-        self.shutdown_endpoint = Some(endpoint.into());
+    /// Set process ID (required for signal-based shutdown)
+    pub fn with_pid(mut self, pid: u32) -> Self {
+        self.pid = Some(pid);
+        self
+    }
+
+    /// Set graceful shutdown timeout
+    pub fn with_graceful_timeout_secs(mut self, secs: u64) -> Self {
+        self.graceful_timeout_secs = Some(secs);
         self
     }
 
@@ -103,9 +122,9 @@ mod tests {
     fn test_http_daemon_config_builder() {
         let config = HttpDaemonConfig::new(
             "test-daemon",
-            PathBuf::from("/usr/bin/test"),
             "http://localhost:8080",
         )
+        .with_binary_path(PathBuf::from("/usr/bin/test"))
         .with_args(vec!["--config".to_string(), "test.toml".to_string()])
         .with_job_id("job-123")
         .with_max_health_attempts(5);

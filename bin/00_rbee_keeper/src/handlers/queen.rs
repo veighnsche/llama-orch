@@ -3,46 +3,68 @@
 //! TEAM-276: Extracted from main.rs
 //! TEAM-276: Refactored to delegate to queen-lifecycle crate
 //! TEAM-322: Consolidated status/info - both use check_queen_status with verbose flag
+//! TEAM-324: Moved QueenAction enum here to eliminate duplication
 //!
 //! This module is now a thin wrapper that delegates all queen lifecycle
 //! operations to the queen-lifecycle crate. All business logic lives there.
 
 use anyhow::Result;
+use clap::Subcommand;
 use daemon_lifecycle::{
     HttpDaemonConfig, stop_http_daemon, rebuild::build_daemon_local, rebuild::RebuildConfig,
-    check_daemon_status, install_to_local_bin,
+    check_daemon_status,
 };
 use std::path::PathBuf;
 
-use crate::cli::QueenAction;
+#[derive(Subcommand)]
+pub enum QueenAction {
+    /// Start queen-rbee daemon
+    Start,
+    /// Stop queen-rbee daemon
+    Stop,
+    /// Check queen-rbee daemon status
+    Status,
+    /// Rebuild queen from source
+    Rebuild,
+    /// Install queen binary
+    /// TEAM-262: Similar to hive install
+    Install {
+        /// Binary path (optional, auto-detect from target/)
+        #[arg(short, long)]
+        binary: Option<String>,
+    },
+    /// Uninstall queen binary
+    /// TEAM-262: Similar to hive uninstall
+    Uninstall,
+}
 
 /// Handle queen-rbee lifecycle commands
 ///
 /// Delegates to queen-lifecycle crate for all operations.
 pub async fn handle_queen(action: QueenAction, queen_url: &str) -> Result<()> {
     // TEAM-322: Extract port from queen_url (always localhost)
+    // TEAM-327: Use next_back() instead of last() for efficiency (clippy::double_ended_iterator_last)
     let port: u16 = queen_url
         .split(':')
-        .last()
+        .next_back()
         .and_then(|p| p.parse().ok())
         .unwrap_or(7833);
     
     match action {
         QueenAction::Start => {
-            let binary = daemon_lifecycle::DaemonManager::find_binary("queen-rbee")?;
             let base_url = format!("http://localhost:{}", port);
             let args = vec!["--port".to_string(), port.to_string()];
-            let config = daemon_lifecycle::HttpDaemonConfig::new("queen-rbee", binary, &base_url)
+            // TEAM-327: Binary path auto-resolved from daemon_name inside start_http_daemon
+            let config = daemon_lifecycle::HttpDaemonConfig::new("queen-rbee", &base_url)
                 .with_args(args);
-            daemon_lifecycle::start_http_daemon(config).await
+            // TEAM-327: start_http_daemon now returns PID (discard it - we use health checks for status)
+            let _pid = daemon_lifecycle::start_http_daemon(config).await?;
+            Ok(())
         }
         // TEAM-322: Use daemon-lifecycle directly
         QueenAction::Stop => {
-            let config = HttpDaemonConfig::new(
-                "queen-rbee",
-                PathBuf::from("~/.local/bin/queen-rbee"),
-                queen_url.to_string(),
-            );
+            // TEAM-327: Binary path auto-resolved from daemon_name
+            let config = HttpDaemonConfig::new("queen-rbee", queen_url.to_string());
             stop_http_daemon(config).await
         }
         // TEAM-323: Use daemon-lifecycle directly (same as hive)

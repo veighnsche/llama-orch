@@ -2,16 +2,48 @@
 //!
 //! TEAM-276: Extracted from main.rs
 //! TEAM-274: Updated worker actions for new architecture
+//! TEAM-324: Moved WorkerAction and WorkerProcessAction enums here to eliminate duplication
 
 use anyhow::Result;
+use clap::Subcommand;
 use operations_contract::{
     Operation, WorkerProcessDeleteRequest, WorkerProcessGetRequest, WorkerProcessListRequest,
     WorkerSpawnRequest,
 }; // TEAM-284: Renamed from rbee_operations
 
-// TEAM-278: DELETED WorkerBinaryAction import - no longer exists
-use crate::cli::{WorkerAction, WorkerProcessAction};
 use crate::job_client::submit_and_stream_job;
+
+#[derive(Subcommand)]
+pub enum WorkerAction {
+    /// Spawn a worker process on hive
+    Spawn {
+        /// Model identifier
+        #[arg(long)]
+        model: String,
+        /// Device specification: cpu, cuda:0, cuda:1, metal:0, etc.
+        #[arg(long)]
+        device: String,
+    },
+
+    // TEAM-278: DELETED WorkerBinaryAction subcommand
+    // Worker binary management (download, build, list, get, delete) is now handled by PackageSync
+    /// Worker process management (local ps on hive)
+    #[command(subcommand)]
+    Process(WorkerProcessAction),
+}
+
+// TEAM-278: DELETED WorkerBinaryAction enum entirely
+// Replaced by package commands (sync, install, uninstall)
+
+#[derive(Subcommand)]
+pub enum WorkerProcessAction {
+    /// List worker processes (local ps)
+    List,
+    /// Get worker process details by PID
+    Get { pid: u32 },
+    /// Delete (kill) worker process by PID
+    Delete { pid: u32 },
+}
 
 pub async fn handle_worker(hive_id: String, action: WorkerAction, queen_url: &str) -> Result<()> {
     let operation = match &action {

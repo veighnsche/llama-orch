@@ -3,14 +3,23 @@
 //! TEAM-276: Extracted from main.rs
 //! TEAM-186: Use typed Operation enum instead of JSON strings
 //! TEAM-187: Match on &action to avoid cloning hive_id multiple times
+//! TEAM-324: Moved ModelAction enum here to eliminate duplication
 
 use anyhow::Result;
+use clap::Subcommand;
 use operations_contract::{
     ModelDeleteRequest, ModelDownloadRequest, ModelGetRequest, ModelListRequest, Operation,
 }; // TEAM-284: Renamed from rbee_operations
 
-use crate::cli::ModelAction;
 use crate::job_client::submit_and_stream_job;
+
+#[derive(Subcommand)]
+pub enum ModelAction {
+    Download { model: String },
+    List,
+    Get { id: String },
+    Delete { id: String },
+}
 
 pub async fn handle_model(hive_id: String, action: ModelAction, queen_url: &str) -> Result<()> {
     // TEAM-284: Use typed requests

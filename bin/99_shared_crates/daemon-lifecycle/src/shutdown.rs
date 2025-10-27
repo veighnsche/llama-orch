@@ -68,6 +68,21 @@ impl ShutdownConfig {
 /// Gracefully shutdown a daemon via HTTP endpoint
 ///
 /// TEAM-276: Extracted from queen-lifecycle/stop.rs
+/// TEAM-327: DEPRECATED - Use `force_shutdown` with signal-based shutdown instead
+///
+/// # Deprecation Notice
+/// This function uses HTTP-based shutdown which requires daemons to implement `/v1/shutdown` endpoints.
+/// Modern daemons should use signal-based shutdown (SIGTERM → SIGKILL) via `force_shutdown` instead.
+///
+/// # Migration
+/// ```rust,no_run
+/// // Old (HTTP-based):
+/// // graceful_shutdown(config).await?;
+///
+/// // New (signal-based):
+/// use daemon_lifecycle::force_shutdown;
+/// force_shutdown(pid, "daemon-name", 5, Some("job-123")).await?;
+/// ```
 ///
 /// Steps:
 /// 1. Check if daemon is running (via health endpoint)
@@ -80,22 +95,10 @@ impl ShutdownConfig {
 /// # Returns
 /// * `Ok(())` - Daemon stopped successfully (or was not running)
 /// * `Err` - Unexpected error during shutdown
-///
-/// # Example
-/// ```rust,no_run
-/// use daemon_lifecycle::{graceful_shutdown, ShutdownConfig};
-///
-/// # async fn example() -> anyhow::Result<()> {
-/// let config = ShutdownConfig::new(
-///     "queen-rbee",
-///     "http://localhost:8500",
-///     "http://localhost:8500/v1/shutdown",
-/// ).with_job_id("job-123");
-///
-/// graceful_shutdown(config).await?;
-/// # Ok(())
-/// # }
-/// ```
+#[deprecated(
+    since = "0.1.0",
+    note = "Use force_shutdown with signal-based shutdown instead. HTTP-based shutdown is being phased out."
+)]
 pub async fn graceful_shutdown(config: ShutdownConfig) -> Result<()> {
     // TEAM-311: Migrated to n!() macro
     // TEAM-316: Updated to use config.base fields
