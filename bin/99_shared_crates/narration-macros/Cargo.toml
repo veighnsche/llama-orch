@@ -14,6 +14,4 @@ syn = { version = "2.0", features = ["full", "extra-traits"] }
 quote = "1.0"
 proc-macro2 = "1.0"
 
-[dev-dependencies]
-observability-narration-core = { path = "../narration-core" }
-tokio-test = "0.4"
+# TEAM-328: No dev-dependencies needed - macro is tested via integration in daemon-lifecycle

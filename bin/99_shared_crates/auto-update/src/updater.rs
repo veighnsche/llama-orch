@@ -3,7 +3,6 @@
 
 use anyhow::{Result};
 use observability_narration_core::{n, with_narration_context, NarrationContext};
-use observability_narration_macros::narrate_fn;
 use std::path::PathBuf;
 use std::time::Instant;
 
@@ -65,7 +64,6 @@ impl AutoUpdater {
     /// let updater = AutoUpdater::new("queen-rbee", "bin/10_queen_rbee")?;
     /// ```
     /// 
-    #[narrate_fn]
     pub fn new(binary_name: impl Into<String>, source_dir: impl Into<PathBuf>) -> Result<Self> {
         let binary_name = binary_name.into();
         let source_dir = source_dir.into();

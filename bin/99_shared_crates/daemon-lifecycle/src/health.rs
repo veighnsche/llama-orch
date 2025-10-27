@@ -1,13 +1,18 @@
 //! Daemon health checking
 //!
 //! TEAM-259: Extracted from lib.rs for better organization
+//! TEAM-328: Consolidated status.rs and get.rs into health.rs (RULE ZERO)
 //!
 //! Provides HTTP-based health checking for daemons.
 
-use observability_narration_core::{n, with_narration_context, NarrationContext};
+use observability_narration_core::n;
+use observability_narration_macros::with_job_id;
 use reqwest::Client;
 use std::time::Duration;
 use tokio::time::sleep;
+
+// TEAM-328: Re-export status types from daemon-contract
+pub use daemon_contract::{StatusRequest, StatusResponse};
 
 /// Check if daemon is healthy by querying its health endpoint
 ///
@@ -142,58 +147,71 @@ impl HealthPollConfig {
 /// # Ok(())
 /// # }
 /// ```
+#[with_job_id] // TEAM-328: Eliminates job_id context boilerplate
 pub async fn poll_until_healthy(config: HealthPollConfig) -> anyhow::Result<()> {
-    // TEAM-311: Migrated to n!() macro
-    let ctx = config.job_id.as_ref().map(|jid| NarrationContext::new().with_job_id(jid));
     let daemon_name = config.daemon_name.as_deref().unwrap_or("daemon");
 
-    let poll_impl = async {
-        // Emit start narration
-        n!("daemon_health_poll", "⏳ Waiting for {} to become healthy at {}", daemon_name, config.base_url);
+    // Emit start narration
+    n!(
+        "daemon_health_poll",
+        "⏳ Waiting for {} to become healthy at {}",
+        daemon_name,
+        config.base_url
+    );
 
-        for attempt in 1..=config.max_attempts {
-            // Check health
-            if is_daemon_healthy(
-                &config.base_url,
-                config.health_endpoint.as_deref(),
-                Some(Duration::from_secs(2)),
-            )
-            .await
-            {
-                // Success!
-                n!("daemon_healthy", "✅ {} is healthy (attempt {})", daemon_name, attempt);
-                return Ok(());
-            }
-
-            // Not healthy yet, calculate delay with exponential backoff
-            if attempt < config.max_attempts {
-                let delay_ms = (config.initial_delay_ms as f64
-                    * config.backoff_multiplier.powi((attempt - 1) as i32))
-                    as u64;
-                let delay = Duration::from_millis(delay_ms);
-
-                // Emit progress narration
-                n!("daemon_poll_retry", "🔄 Attempt {}/{}, retrying in {}ms...", attempt, config.max_attempts, delay_ms);
-
-                sleep(delay).await;
-            }
+    for attempt in 1..=config.max_attempts {
+        // Check health
+        if is_daemon_healthy(
+            &config.base_url,
+            config.health_endpoint.as_deref(),
+            Some(Duration::from_secs(2)),
+        )
+        .await
+        {
+            // Success!
+            n!("daemon_healthy", "✅ {} is healthy (attempt {})", daemon_name, attempt);
+            return Ok(());
         }
 
-        // Failed after max attempts
-        n!("daemon_not_healthy", "❌ {} failed to become healthy after {} attempts", daemon_name, config.max_attempts);
+        // Not healthy yet, calculate delay with exponential backoff
+        if attempt < config.max_attempts {
+            let delay_ms = (config.initial_delay_ms as f64
+                * config.backoff_multiplier.powi((attempt - 1) as i32))
+                as u64;
+            let delay = Duration::from_millis(delay_ms);
 
-        anyhow::bail!(
-            "{} at {} failed to become healthy after {} attempts",
-            daemon_name,
-            config.base_url,
-            config.max_attempts
-        )
-    };
-    
-    // Execute with context if job_id provided
-    if let Some(ctx) = ctx {
-        with_narration_context(ctx, poll_impl).await
-    } else {
-        poll_impl.await
+            // Emit progress narration
+            n!(
+                "daemon_poll_retry",
+                "🔄 Attempt {}/{}, retrying in {}ms...",
+                attempt,
+                config.max_attempts,
+                delay_ms
+            );
+
+            sleep(delay).await;
+        }
     }
+
+    // Failed after max attempts
+    n!(
+        "daemon_not_healthy",
+        "❌ {} failed to be come healthy after {} attempts",
+        daemon_name,
+        config.max_attempts
+    );
+
+    anyhow::bail!(
+        "{} at {} failed to become healthy after {} attempts",
+        daemon_name,
+        config.base_url,
+        config.max_attempts
+    )
 }
+
+// TEAM-328: Renamed exports for consistent naming
+/// Alias for is_daemon_healthy with consistent naming
+pub use is_daemon_healthy as check_daemon_health;
+
+/// Alias for poll_until_healthy with consistent naming  
+pub use poll_until_healthy as poll_daemon_health;

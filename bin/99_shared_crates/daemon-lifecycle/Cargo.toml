@@ -17,6 +17,7 @@ reqwest = { version = "0.12", features = ["json"] }  # TEAM-259: For health chec
 serde = { version = "1.0", features = ["derive"] }  # TEAM-259: For CRUD operations
 serde_json = "1.0"  # TEAM-259: For CRUD operations
 observability-narration-core = { path = "../narration-core" }
+observability-narration-macros = { path = "../narration-macros" }  # TEAM-328: For #[with_job_id] macro
 auto-update = { path = "../auto-update" }  # TEAM-259: For auto-updating daemons
 timeout-enforcer = { path = "../timeout-enforcer" }  # TEAM-276: For timeout wrapper
 nix = { version = "0.29", features = ["signal"] }  # TEAM-276: For SIGTERM/SIGKILL

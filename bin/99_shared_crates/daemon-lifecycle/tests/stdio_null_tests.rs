@@ -144,26 +144,27 @@ async fn test_daemon_spawn_returns_valid_pid() {
     println!("✓ Daemon spawned with valid PID: {:?}", pid);
 }
 
-/// Test find_in_target finds debug binary
+/// Test find_binary for debug binary
+/// TEAM-328: Updated to use find_binary() instead of deleted find_in_target()
 #[tokio::test]
-async fn test_find_in_target_debug_binary() {
+async fn test_find_binary_debug_binary() {
     // This test will pass if queen-rbee debug binary exists
-    match DaemonManager::find_in_target("queen-rbee") {
+    match DaemonManager::find_binary("queen-rbee") {
         Ok(path) => {
             assert!(path.exists(), "Found path should exist");
-            assert!(path.to_string_lossy().contains("target/debug"), "Should find debug binary");
-            println!("✓ Found debug binary at: {}", path.display());
+            println!("✓ Found binary at: {}", path.display());
         }
         Err(_) => {
-            println!("⊘ queen-rbee debug binary not found (expected in CI)");
+            println!("⚠ queen-rbee binary not found (build it first)");
         }
     }
 }
 
-/// Test find_in_target error handling for missing binary
+/// Test find_binary error handling for missing binary
+/// TEAM-328: Updated to use find_binary() instead of deleted find_in_target()
 #[tokio::test]
-async fn test_find_in_target_missing_binary_error() {
-    let result = DaemonManager::find_in_target("nonexistent-binary-xyz");
+async fn test_find_binary_missing_binary_error() {
+    let result = DaemonManager::find_binary("nonexistent-binary-xyz");
     assert!(result.is_err(), "Should return error for missing binary");
     println!("✓ Missing binary error handled correctly");
 }

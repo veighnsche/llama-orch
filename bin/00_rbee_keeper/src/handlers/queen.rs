@@ -12,8 +12,9 @@ use anyhow::Result;
 use clap::Subcommand;
 use daemon_lifecycle::{
     HttpDaemonConfig, stop_http_daemon, rebuild::rebuild_with_hot_reload, rebuild::RebuildConfig,
-    check_daemon_status,
+    is_daemon_healthy,
 };
+use observability_narration_core::n;
 use std::path::PathBuf;
 
 #[derive(Subcommand)]
@@ -67,9 +68,16 @@ pub async fn handle_queen(action: QueenAction, queen_url: &str) -> Result<()> {
             let config = HttpDaemonConfig::new("queen-rbee", queen_url.to_string());
             stop_http_daemon(config).await
         }
-        // TEAM-323: Use daemon-lifecycle directly (same as hive)
+        // TEAM-328: Use is_daemon_healthy() directly
         QueenAction::Status => {
-            check_daemon_status("localhost", &format!("{}/health", queen_url), Some("queen"), None).await?;
+            let health_url = format!("{}/health", queen_url);
+            let is_running = is_daemon_healthy(&health_url, None, None).await;
+            
+            if is_running {
+                n!("queen_status", "✅ queen 'localhost' is running on {}", health_url);
+            } else {
+                n!("queen_status", "❌ queen 'localhost' is not running on {}", health_url);
+            }
             Ok(())
         }
         // TEAM-328: Use rebuild_with_hot_reload for automatic state management

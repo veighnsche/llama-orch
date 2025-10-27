@@ -13,9 +13,9 @@ use crate::shutdown::force_shutdown;
 /// Get PID file path for a daemon
 ///
 /// TEAM-327: Standard Unix pattern - PID files in ~/.local/var/run/
+/// TEAM-328: Use centralized path function
 fn get_pid_file_path(daemon_name: &str) -> Result<PathBuf> {
-    let home = std::env::var("HOME")?;
-    Ok(PathBuf::from(format!("{}/.local/var/run/{}.pid", home, daemon_name)))
+    crate::paths::get_pid_file_path(daemon_name)
 }
 
 /// Read PID from PID file
@@ -112,3 +112,7 @@ pub async fn stop_http_daemon(config: HttpDaemonConfig) -> Result<()> {
     
     Ok(())
 }
+
+// TEAM-328: Renamed export for consistent naming
+/// Alias for stop_http_daemon with consistent naming
+pub use stop_http_daemon as stop_daemon;

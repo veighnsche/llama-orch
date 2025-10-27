@@ -6,9 +6,10 @@
 use anyhow::Result;
 use clap::Subcommand;
 use daemon_lifecycle::{
-    check_daemon_status, rebuild::rebuild_with_hot_reload, rebuild::RebuildConfig, stop_http_daemon,
+    is_daemon_healthy, rebuild::rebuild_with_hot_reload, rebuild::RebuildConfig, stop_http_daemon,
     HttpDaemonConfig,
 };
+use observability_narration_core::n;
 use operations_contract::Operation;
 use std::path::PathBuf;
 
@@ -101,11 +102,16 @@ pub async fn handle_hive(action: HiveAction, queen_url: &str) -> Result<()> {
             stop_http_daemon(config).await
         }
 
-        // TEAM-323: Status uses daemon-lifecycle directly (same as queen)
+        // TEAM-328: Use is_daemon_healthy() directly
         HiveAction::Status { alias: _ } => {
-            let hive_url = "http://localhost:7835";
-            check_daemon_status("localhost", &format!("{}/health", hive_url), Some("hive"), None)
-                .await?;
+            let health_url = "http://localhost:7835/health";
+            let is_running = is_daemon_healthy(health_url, None, None).await;
+            
+            if is_running {
+                n!("hive_status", "✅ hive 'localhost' is running on {}", health_url);
+            } else {
+                n!("hive_status", "❌ hive 'localhost' is not running on {}", health_url);
+            }
             Ok(())
         }
 

@@ -1,17 +1,65 @@
-//! Daemon installation
+//! Daemon installation and building
 //!
-//! TEAM-323: DELETED install_daemon() - RULE ZERO violation (duplicate of install_to_local_bin)
+//! TEAM-328: Provides build and install operations
 //!
-//! Provides daemon installation functionality.
-//! Use `install_to_local_bin()` for all installations.
+//! Core operations:
+//! - `build_daemon()` - Build binary from source (cargo build)
+//! - `install_daemon()` - Move binary to ~/.local/bin
 
 use anyhow::{Context, Result};
 use observability_narration_core::n;
 use std::path::Path;
 
 // TEAM-316: Use install types from daemon-contract
-// TEAM-323: InstallConfig/InstallResult only used by deleted install_daemon()
 pub use daemon_contract::{InstallConfig, InstallResult, UninstallConfig};
+
+/// Build a daemon binary from source
+///
+/// TEAM-328: Extracted from install_to_local_bin for clarity
+///
+/// Runs `cargo build --release --bin <binary_name>`
+///
+/// # Arguments
+/// * `binary_name` - Name of the binary to build (e.g., "queen-rbee")
+///
+/// # Returns
+/// * `Ok(String)` - Path to built binary (e.g., "target/release/queen-rbee")
+/// * `Err` - Build failed
+///
+/// # Example
+/// ```rust,no_run
+/// use daemon_lifecycle::build_daemon;
+///
+/// # async fn example() -> anyhow::Result<()> {
+/// let binary_path = build_daemon("queen-rbee").await?;
+/// println!("Built at: {}", binary_path);
+/// # Ok(())
+/// # }
+/// ```
+pub async fn build_daemon(binary_name: &str) -> Result<String> {
+    n!("build_start", "🔨 Building {} from source...", binary_name);
+    
+    // Build command
+    let mut cmd = std::process::Command::new("cargo");
+    cmd.arg("build")
+        .arg("--release")
+        .arg("--bin")
+        .arg(binary_name);
+    
+    n!("build_exec", "⏳ Running cargo build --release --bin {}...", binary_name);
+    let output = cmd.output()?;
+    
+    if !output.status.success() {
+        let stderr = String::from_utf8_lossy(&output.stderr);
+        n!("build_failed", "❌ Build failed: {}", stderr);
+        anyhow::bail!("Build failed: {}", stderr);
+    }
+    
+    let binary_path = format!("target/release/{}", binary_name);
+    n!("build_success", "✅ Build successful: {}", binary_path);
+    
+    Ok(binary_path)
+}
 
 /// Install a binary to a directory (default: ~/.local/bin)
 ///
@@ -61,15 +109,28 @@ pub async fn install_to_local_bin(
         }
         std::path::PathBuf::from(path)
     } else {
-        crate::manager::DaemonManager::find_binary(binary_name)?
+        // TEAM-328: Try to find existing binary, if not found call build_daemon()
+        match crate::manager::DaemonManager::find_binary(binary_name) {
+            Ok(path) => {
+                n!("found_existing", "📦 Found existing binary: {}", path.display());
+                path
+            }
+            Err(_) => {
+                n!("binary_not_found", "⚠️  Binary not found, building from source...");
+                
+                // TEAM-328: Use build_daemon() instead of duplicating build logic
+                let binary_path = build_daemon(binary_name).await?;
+                std::path::PathBuf::from(binary_path)
+            }
+        }
     };
 
     // Determine install location
+    // TEAM-328: Use centralized path function to ensure consistency with uninstall
     let install_dir = if let Some(dir) = install_dir {
         std::path::PathBuf::from(dir)
     } else {
-        let home = std::env::var("HOME").context("HOME environment variable not set")?;
-        std::path::PathBuf::from(format!("{}/.local/bin", home))
+        crate::paths::get_install_dir()?
     };
     let install_path = install_dir.join(binary_name);
 
@@ -118,3 +179,7 @@ pub async fn install_to_local_bin(
 
     Ok(install_path.display().to_string())
 }
+
+// TEAM-328: Renamed export for consistent naming
+/// Alias for install_to_local_bin with consistent naming
+pub use install_to_local_bin as install_daemon;

@@ -139,36 +139,54 @@
 // TEAM-276: Added high-level lifecycle operations
 // TEAM-316: Split lifecycle into start/stop modules (RULE ZERO - single responsibility)
 // TEAM-320: Removed ensure module (promotes explicit start/stop)
-pub mod get;
+// TEAM-328: Deleted get.rs and status.rs - consolidated into health.rs (RULE ZERO)
+// TEAM-328: Added paths module - centralized path constants to ensure install/uninstall consistency
 pub mod health;
 pub mod install;
 pub mod list;
 pub mod manager;
-pub mod rebuild;  // TEAM-316: Extracted from queen-lifecycle and hive-lifecycle
+pub mod paths; // TEAM-328: Centralized path logic
+pub mod rebuild; // TEAM-316: Extracted from queen-lifecycle and hive-lifecycle
 pub mod shutdown;
-pub mod start;    // TEAM-316: Extracted from lifecycle.rs
-pub mod status;
-pub mod stop;     // TEAM-316: Extracted from lifecycle.rs
+pub mod start; // TEAM-316: Extracted from lifecycle.rs
+pub mod stop; // TEAM-316: Extracted from lifecycle.rs
 pub mod timeout;
 pub mod uninstall;
 
 // TEAM-259: Re-export main types and functions
 // TEAM-276: Added UninstallConfig export
 // TEAM-276: Added health polling with exponential backoff
-// TEAM-259: Re-export main types and functions
-// TEAM-276: Added high-level lifecycle operations
 // TEAM-316: HttpDaemonConfig moved to daemon-contract, lifecycle split into start/stop
 // TEAM-320: Removed ensure exports (promotes explicit start/stop)
-pub use get::{get_daemon, GettableConfig};
-pub use health::{is_daemon_healthy, poll_until_healthy, HealthPollConfig};
-// TEAM-323: Deleted install_daemon() - RULE ZERO violation (use install_to_local_bin instead)
-pub use install::{install_to_local_bin, InstallConfig, InstallResult, UninstallConfig};
+// TEAM-328: Consolidated get.rs and status.rs into health.rs (RULE ZERO)
+// TEAM-328: Deleted check_daemon_status() - use check_daemon_health() directly
+// TEAM-328: Removed spawn_daemon export - RULE ZERO violation (unused wrapper)
+// TEAM-328: Aligned naming: verb_daemon() or verb_daemon_modifier() pattern
+pub use health::{
+    check_daemon_health, // TEAM-328: Renamed from is_daemon_healthy
+    poll_daemon_health,  // TEAM-328: Renamed from poll_until_healthy
+    HealthPollConfig,
+};
+pub use install::{
+    build_daemon,              // TEAM-328: Build binary from source (cargo build)
+    install_daemon,            // TEAM-328: Renamed from install_to_local_bin
+    InstallConfig,
+    InstallResult,
+    UninstallConfig,
+};
 pub use list::{list_daemons, ListableConfig};
-pub use manager::{spawn_daemon, DaemonManager};
-pub use shutdown::{force_shutdown, graceful_shutdown, ShutdownConfig};
-pub use start::start_http_daemon;
-pub use status::{check_daemon_status, StatusRequest, StatusResponse};
-pub use stop::stop_http_daemon;
+pub use manager::DaemonManager;
+pub use rebuild::{
+    rebuild_daemon, // TEAM-328: Renamed from rebuild_with_hot_reload
+    RebuildConfig,
+};
+pub use shutdown::{
+    shutdown_daemon_force,    // TEAM-328: Renamed from force_shutdown
+    shutdown_daemon_graceful, // TEAM-328: Renamed from graceful_shutdown
+    ShutdownConfig,
+};
+pub use start::start_daemon; // TEAM-328: Renamed from start_http_daemon
+pub use stop::stop_daemon; // TEAM-328: Renamed from stop_http_daemon
 pub use timeout::{timeout_after, with_timeout, TimeoutConfig};
 pub use uninstall::uninstall_daemon;
 

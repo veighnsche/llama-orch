@@ -3,7 +3,8 @@
 //! TEAM-312: Extracted from install.rs to separate module
 
 use anyhow::Result;
-use observability_narration_core::{n, with_narration_context, NarrationContext};
+use observability_narration_core::n;
+use observability_narration_macros::with_job_id;
 
 use crate::install::UninstallConfig;
 
@@ -41,49 +42,38 @@ use crate::install::UninstallConfig;
 /// # Ok(())
 /// # }
 /// ```
+#[with_job_id] // TEAM-328: Eliminates job_id context boilerplate
 pub async fn uninstall_daemon(config: UninstallConfig) -> Result<()> {
-    // TEAM-311: Migrated to n!() macro
-    let ctx = config.job_id.as_ref().map(|jid| NarrationContext::new().with_job_id(jid));
-    
-    let uninstall_impl = async {
-        n!("daemon_uninstall", "🗑️  Uninstalling daemon '{}'", config.daemon_name);
+    n!("daemon_uninstall", "🗑️  Uninstalling daemon '{}'", config.daemon_name);
 
-        // Step 1: Check if binary exists
-        let install_path = std::path::Path::new(&config.install_path);
-        if !install_path.exists() {
-            n!("daemon_not_installed", "⚠️  Daemon '{}' not installed at: {}", config.daemon_name, install_path.display());
-            return Ok(());
-        }
-
-        // Step 2: Check if daemon is running (if health_url provided)
-        if let Some(health_url) = config.health_url {
-            let timeout_secs = config.health_timeout_secs.unwrap_or(2);
-            let is_running = crate::health::is_daemon_healthy(
-                &health_url,
-                None, // Use default /health endpoint
-                Some(std::time::Duration::from_secs(timeout_secs)),
-            )
-            .await;
-
-            if is_running {
-                n!("daemon_still_running", "⚠️  Daemon '{}' is currently running. Stop it first.", config.daemon_name);
-                anyhow::bail!("Daemon {} is still running", config.daemon_name);
-            }
-        }
-
-        // Step 3: Remove binary file
-        std::fs::remove_file(&config.install_path)?;
-
-        n!("daemon_uninstalled", "✅ Daemon '{}' uninstalled successfully!", config.daemon_name);
-        n!("daemon_removed", "🗑️  Removed: {}", install_path.display());
-
-        Ok(())
-    };
-    
-    // Execute with context if job_id provided
-    if let Some(ctx) = ctx {
-        with_narration_context(ctx, uninstall_impl).await
-    } else {
-        uninstall_impl.await
+    // Step 1: Check if binary exists
+    let install_path = std::path::Path::new(&config.install_path);
+    if !install_path.exists() {
+        n!("daemon_not_installed", "⚠️  Daemon '{}' not installed at: {}", config.daemon_name, install_path.display());
+        return Ok(());
     }
+
+    // Step 2: Check if daemon is running (if health_url provided)
+    if let Some(health_url) = config.health_url {
+        let timeout_secs = config.health_timeout_secs.unwrap_or(2);
+        let is_running = crate::health::is_daemon_healthy(
+            &health_url,
+            None, // Use default /health endpoint
+            Some(std::time::Duration::from_secs(timeout_secs)),
+        )
+        .await;
+
+        if is_running {
+            n!("daemon_still_running", "⚠️  Daemon '{}' is currently running. Stop it first.", config.daemon_name);
+            anyhow::bail!("Daemon {} is still running", config.daemon_name);
+        }
+    }
+
+    // Step 3: Remove binary file
+    std::fs::remove_file(&config.install_path)?;
+
+    n!("daemon_uninstalled", "✅ Daemon '{}' uninstalled successfully!", config.daemon_name);
+    n!("daemon_removed", "🗑️  Removed: {}", install_path.display());
+
+    Ok(())
 }

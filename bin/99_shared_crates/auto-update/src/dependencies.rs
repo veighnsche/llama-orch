@@ -4,7 +4,6 @@
 use anyhow::{Context, Result};
 use cargo_toml::Manifest;
 use observability_narration_core::n;
-use observability_narration_macros::narrate_fn;
 use std::collections::HashSet;
 use std::path::{Path, PathBuf};
 use std::time::Instant;
@@ -24,7 +23,6 @@ impl DependencyParser {
     /// # Returns
     /// * `Ok(Vec<PathBuf>)` - List of dependency paths relative to workspace root
     /// * `Err` - Failed to parse dependencies
-    #[narrate_fn]
     pub fn parse(workspace_root: &Path, source_dir: &Path) -> Result<Vec<PathBuf>> {
         // TEAM-311: Phase 3 - Dependencies
         let start = Instant::now();

@@ -236,3 +236,10 @@ pub async fn force_shutdown(
         force_impl.await
     }
 }
+
+// TEAM-328: Renamed exports for consistent naming
+/// Alias for graceful_shutdown with consistent naming
+pub use graceful_shutdown as shutdown_daemon_graceful;
+
+/// Alias for force_shutdown with consistent naming
+pub use force_shutdown as shutdown_daemon_force;

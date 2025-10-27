@@ -3,7 +3,6 @@
 
 use anyhow::{anyhow, Context, Result};
 use observability_narration_core::n;
-use observability_narration_macros::narrate_fn;
 use std::process::Command;
 
 use crate::updater::AutoUpdater;
@@ -19,7 +18,6 @@ impl Rebuilder {
     /// # Returns
     /// * `Ok(())` - Build succeeded
     /// * `Err` - Build failed
-    #[narrate_fn]
     pub fn rebuild(updater: &AutoUpdater) -> Result<()> {
         // TEAM-309: Added narration
         n!("start", 

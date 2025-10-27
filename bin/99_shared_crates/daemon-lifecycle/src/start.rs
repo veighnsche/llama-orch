@@ -19,8 +19,8 @@ use crate::manager::DaemonManager;
 /// # Returns
 /// Path to PID file (e.g., ~/.local/var/run/queen-rbee.pid)
 fn get_pid_file_path(daemon_name: &str) -> Result<PathBuf> {
-    let home = std::env::var("HOME")?;
-    let run_dir = PathBuf::from(format!("{}/.local/var/run", home));
+    // TEAM-328: Use centralized path function
+    let run_dir = crate::paths::get_pid_dir()?;
     
     // Create directory if it doesn't exist
     std::fs::create_dir_all(&run_dir)?;
@@ -115,3 +115,7 @@ pub async fn start_http_daemon(config: HttpDaemonConfig) -> Result<u32> {
     // Step 7: Return PID for tracking (optional - PID file is primary)
     Ok(pid)
 }
+
+// TEAM-328: Renamed export for consistent naming
+/// Alias for start_http_daemon with consistent naming
+pub use start_http_daemon as start_daemon;

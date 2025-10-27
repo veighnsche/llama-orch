@@ -3,7 +3,6 @@
 
 use anyhow::{Context, Result};
 use observability_narration_core::n;
-use observability_narration_macros::narrate_fn;
 
 use std::path::{Path, PathBuf};
 use std::time::{Instant, SystemTime};
@@ -23,7 +22,6 @@ impl RebuildChecker {
     /// * `Ok(true)` - Rebuild needed
     /// * `Ok(false)` - Binary is up-to-date
     /// * `Err` - Failed to check
-    #[narrate_fn]
     pub fn check(updater: &AutoUpdater) -> Result<bool> {
         // TEAM-311: Phase 4 - Build State
         let start_phase4 = Instant::now();

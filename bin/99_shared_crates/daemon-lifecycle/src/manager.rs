@@ -178,8 +178,8 @@ impl DaemonManager {
     /// ```
     pub fn find_binary(name: &str) -> Result<PathBuf> {
         // Try installed location first
-        if let Ok(home) = std::env::var("HOME") {
-            let installed_path = PathBuf::from(format!("{}/.local/bin/{}", home, name));
+        // TEAM-328: Use centralized path function
+        if let Ok(installed_path) = crate::paths::get_install_path(name) {
             if installed_path.exists() {
                 n!("find_binary", "Found installed binary '{}' at: {}", name, installed_path.display());
                 return Ok(installed_path);
@@ -187,20 +187,6 @@ impl DaemonManager {
         }
         
         // Fall back to development builds
-        Self::find_in_target(name)
-    }
-
-    /// Find a binary in the target directory (for development)
-    /// Tries to find a binary in the standard Cargo target directory:
-    /// - `target/debug/{name}`
-    /// - `target/release/{name}`
-    ///
-    /// # Arguments
-    /// * `name` - Binary name (e.g., "queen-rbee")
-    ///
-    /// # Returns
-    /// Path to the binary if found
-    pub fn find_in_target(name: &str) -> Result<PathBuf> {
         // TEAM-255: Find workspace root by looking for Cargo.toml
         let mut current = std::env::current_dir()?;
         let workspace_root = loop {
@@ -220,7 +206,6 @@ impl DaemonManager {
         // Try debug first (development mode)
         let debug_path = workspace_root.join("target/debug").join(name);
         if debug_path.exists() {
-            // TEAM-311: Migrated to n!() macro
             n!("find_binary", "Found binary '{}' at: {}", name, debug_path.display());
             return Ok(debug_path);
         }
@@ -228,26 +213,14 @@ impl DaemonManager {
         // Try release
         let release_path = workspace_root.join("target/release").join(name);
         if release_path.exists() {
-            // TEAM-311: Migrated to n!() macro
             n!("find_binary", "Found binary '{}' at: {}", name, release_path.display());
             return Ok(release_path);
         }
 
-        // TEAM-311: Migrated to n!() macro
         n!("find_binary", "Binary '{}' not found in target/debug or target/release", name);
         anyhow::bail!("Binary '{}' not found in target/debug or target/release", name)
     }
 }
 
-/// Helper function to spawn a daemon with default settings
-///
-/// # Arguments
-/// * `binary_path` - Path to the daemon binary
-/// * `args` - Command-line arguments
-///
-/// # Returns
-/// Spawned child process
-pub async fn spawn_daemon<P: AsRef<Path>>(binary_path: P, args: Vec<String>) -> Result<Child> {
-    let manager = DaemonManager::new(binary_path.as_ref().to_path_buf(), args);
-    manager.spawn().await
-}
+// TEAM-328: Deleted spawn_daemon() - RULE ZERO violation (unused wrapper)
+// Use DaemonManager::new().spawn() directly instead
