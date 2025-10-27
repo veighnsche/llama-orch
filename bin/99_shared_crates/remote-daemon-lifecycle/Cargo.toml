@@ -1,0 +1,13 @@
+[package]
+name = "remote-daemon-lifecycle"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+anyhow = "1.0"
+tokio = { version = "1.0", features = ["full"] }
+observability-narration-core = { path = "../narration-core" }
+daemon-lifecycle = { path = "../daemon-lifecycle" }
+
+[dev-dependencies]
+tokio-test = "0.4"
