@@ -3,6 +3,7 @@
 //! TEAM-276: Extracted from main.rs for better organization
 //! TEAM-282: Added package manager handlers (sync, package_status, validate, migrate)
 //! TEAM-284: DELETED package manager handlers (SSH/remote operations removed)
+//! TEAM-313: Remove hive_check module (moving to rbee-hive)
 //!
 //! Each handler module implements the business logic for a specific
 //! command category (queen, hive, worker, model, infer).

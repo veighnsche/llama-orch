@@ -229,6 +229,7 @@ pub async fn hive_install(
             host,
             binary,
             install_dir,
+            build_remote: false, // TEAM-314: Default to local build + upload
         },
         &queen_url,
     )

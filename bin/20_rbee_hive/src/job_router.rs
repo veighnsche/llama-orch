@@ -25,15 +25,14 @@
 
 use anyhow::Result;
 use job_server::JobRegistry;
-use observability_narration_core::NarrationFactory;
+use observability_narration_core::n;
+use operations_contract::Operation; // TEAM-284: Renamed from rbee_operations
 use rbee_hive_artifact_catalog::{Artifact, ArtifactCatalog}; // TEAM-273: Traits for catalog methods
 use rbee_hive_model_catalog::ModelCatalog; // TEAM-268: Model catalog
 use rbee_hive_worker_catalog::WorkerCatalog; // TEAM-274: Worker catalog
-use operations_contract::Operation; // TEAM-284: Renamed from rbee_operations
 use std::sync::Arc;
 
-// TEAM-261: Narration factory for hive job router
-const NARRATE: NarrationFactory = NarrationFactory::new("hv-router");
+// TEAM-314: All narration migrated to n!() macro
 
 /// State required for job routing and execution
 #[derive(Clone)]
@@ -65,12 +64,7 @@ pub async fn create_job(state: JobState, payload: serde_json::Value) -> Result<J
     // Create job-specific SSE channel for isolation
     observability_narration_core::sse_sink::create_job_channel(job_id.clone(), 1000);
 
-    NARRATE
-        .action("job_create")
-        .context(&job_id)
-        .job_id(&job_id)
-        .human("Job {} created, waiting for client connection")
-        .emit();
+    n!("job_create", "Job {} created, waiting for client connection", job_id);
 
     Ok(JobResponse { job_id, sse_url })
 }
@@ -87,9 +81,12 @@ pub async fn execute_job(
     let state_clone = state.clone(); // TEAM-268: Clone full state for closure
 
     // TEAM-312: Pass None for timeout (no timeout needed for hive operations)
-    job_server::execute_and_stream(job_id, registry.clone(), move |job_id, payload| {
-        route_operation(job_id, payload, state_clone.clone())
-    }, None)
+    job_server::execute_and_stream(
+        job_id,
+        registry.clone(),
+        move |job_id, payload| route_operation(job_id, payload, state_clone.clone()),
+        None,
+    )
     .await
 }
 
@@ -107,12 +104,7 @@ async fn route_operation(
 
     let operation_name = operation.name();
 
-    NARRATE
-        .action("route_job")
-        .context(operation_name)
-        .job_id(&job_id)
-        .human("Executing operation: {}")
-        .emit();
+    n!("route_job", "Executing operation: {}", operation_name);
 
     // ============================================================================
     // OPERATION ROUTING
@@ -122,21 +114,33 @@ async fn route_operation(
     // (Hive operations like HiveStart/HiveStop are handled by queen-rbee)
     //
     match operation {
+        // TEAM-313: HiveCheck - narration test through hive SSE
+        // TEAM-314: Migrated to n!() macro
+        Operation::HiveCheck { .. } => {
+            use observability_narration_core::{with_narration_context, NarrationContext};
+
+            n!("hive_check_start", "🔍 Starting hive narration check");
+
+            // Set narration context so n!() calls route to SSE
+            let ctx = NarrationContext::new().with_job_id(&job_id);
+            with_narration_context(ctx, rbee_hive::hive_check::handle_hive_check()).await?;
+
+            n!("hive_check_complete", "✅ Hive narration check complete");
+        }
+
         // Worker operations
         // TEAM-284: Updated to use typed requests
         Operation::WorkerSpawn(request) => {
             // TEAM-272: Implemented worker spawning using worker-lifecycle
             use rbee_hive_worker_lifecycle::{start_worker, WorkerStartConfig};
 
-            NARRATE
-                .action("worker_spawn_start")
-                .job_id(&job_id)
-                .context(&request.hive_id)
-                .context(&request.model)
-                .context(&request.worker)
-                .context(&request.device.to_string())
-                .human("🚀 Spawning worker '{}' with model '{}' on device {}")
-                .emit();
+            n!(
+                "worker_spawn_start",
+                "🚀 Spawning worker '{}' with model '{}' on device {}",
+                request.worker,
+                request.model,
+                request.device
+            );
 
             // Allocate port (simple sequential allocation for now)
             // TODO: Implement proper port allocation
@@ -157,14 +161,13 @@ async fn route_operation(
 
             let result = start_worker(config).await?;
 
-            NARRATE
-                .action("worker_spawn_complete")
-                .job_id(&job_id)
-                .context(&result.worker_id)
-                .context(&result.pid.to_string())
-                .context(&result.port.to_string())
-                .human("✅ Worker '{}' spawned (PID: {}, port: {})")
-                .emit();
+            n!(
+                "worker_spawn_complete",
+                "✅ Worker '{}' spawned (PID: {}, port: {})",
+                result.worker_id,
+                result.pid,
+                result.port
+            );
         }
 
         // TEAM-278: DELETED WorkerBinaryList, WorkerBinaryGet, WorkerBinaryDelete (~110 LOC)
@@ -175,38 +178,18 @@ async fn route_operation(
             let hive_id = request.hive_id.clone();
             use rbee_hive_worker_lifecycle::list_workers;
 
-            NARRATE
-                .action("worker_proc_list_start")
-                .job_id(&job_id)
-                .context(&hive_id)
-                .human("📋 Listing worker processes on hive '{}'")
-                .emit();
+            n!("worker_proc_list_start", "📋 Listing worker processes on hive '{}'", hive_id);
 
             let processes = list_workers(&job_id).await?;
 
-            NARRATE
-                .action("worker_proc_list_result")
-                .job_id(&job_id)
-                .context(&processes.len().to_string())
-                .human("Found {} worker process(es)")
-                .emit();
+            n!("worker_proc_list_result", "Found {} worker process(es)", processes.len());
 
             if processes.is_empty() {
-                NARRATE
-                    .action("worker_proc_list_empty")
-                    .job_id(&job_id)
-                    .human("No worker processes found")
-                    .emit();
+                n!("worker_proc_list_empty", "No worker processes found");
             } else {
                 for proc in &processes {
                     // TEAM-278: WorkerInfo only has pid, command, args
-                    NARRATE
-                        .action("worker_proc_list_entry")
-                        .job_id(&job_id)
-                        .context(&proc.pid.to_string())
-                        .context(&proc.command)
-                        .human("  PID {} | {}")
-                        .emit();
+                    n!("worker_proc_list_entry", "  PID {} | {}", proc.pid, proc.command);
                 }
             }
         }
@@ -216,30 +199,23 @@ async fn route_operation(
             let pid = request.pid;
             use rbee_hive_worker_lifecycle::get_worker;
 
-            NARRATE
-                .action("worker_proc_get_start")
-                .job_id(&job_id)
-                .context(&hive_id)
-                .context(&pid.to_string())
-                .human("🔍 Getting worker process PID {} on hive '{}'")
-                .emit();
+            n!(
+                "worker_proc_get_start",
+                "🔍 Getting worker process PID {} on hive '{}'",
+                pid,
+                hive_id
+            );
 
             let proc_info = get_worker(&job_id, pid).await?;
 
             // TEAM-278: WorkerInfo only has pid, command, args
-            NARRATE
-                .action("worker_proc_get_found")
-                .job_id(&job_id)
-                .context(&proc_info.pid.to_string())
-                .context(&proc_info.command)
-                .human("✅ PID {}: {}")
-                .emit();
+            n!("worker_proc_get_found", "✅ PID {}: {}", proc_info.pid, proc_info.command);
 
             // Emit process details as JSON
             let json = serde_json::to_string_pretty(&proc_info)
                 .unwrap_or_else(|_| "Failed to serialize".to_string());
 
-            NARRATE.action("worker_proc_get_details").job_id(&job_id).human(&json).emit();
+            n!("worker_proc_get_details", "{}", json);
         }
 
         Operation::WorkerProcessDelete(request) => {
@@ -247,24 +223,18 @@ async fn route_operation(
             let pid = request.pid;
             use rbee_hive_worker_lifecycle::stop_worker;
 
-            NARRATE
-                .action("worker_proc_del_start")
-                .job_id(&job_id)
-                .context(&hive_id)
-                .context(&pid.to_string())
-                .human("🗑️  Deleting worker process PID {} on hive '{}'")
-                .emit();
+            n!(
+                "worker_proc_del_start",
+                "🗑️  Deleting worker process PID {} on hive '{}'",
+                pid,
+                hive_id
+            );
 
             // Worker ID is not known (hive is stateless), so use generic ID
             let worker_id = format!("pid-{}", pid);
             stop_worker(&job_id, &worker_id, pid).await?;
 
-            NARRATE
-                .action("worker_proc_del_ok")
-                .job_id(&job_id)
-                .context(&pid.to_string())
-                .human("✅ Worker process PID {} deleted successfully")
-                .emit();
+            n!("worker_proc_del_ok", "✅ Worker process PID {} deleted successfully", pid);
         }
 
         // Model operations
@@ -272,33 +242,19 @@ async fn route_operation(
             let hive_id = request.hive_id.clone();
             let model = request.model.clone();
             // TEAM-269: Implemented model download with provisioner
-            NARRATE
-                .action("model_download_start")
-                .job_id(&job_id)
-                .context(&hive_id)
-                .context(&model)
-                .human("📥 Downloading model '{}' on hive '{}'")
-                .emit();
+            n!("model_download_start", "📥 Downloading model '{}' on hive '{}'", model, hive_id);
 
             // Check if model already exists
             if state.model_catalog.contains(&model) {
-                NARRATE
-                    .action("model_download_exists")
-                    .job_id(&job_id)
-                    .context(&model)
-                    .human("⚠️  Model '{}' already exists in catalog")
-                    .emit();
-
+                n!("model_download_exists", "⚠️  Model '{}' already exists in catalog", model);
                 return Err(anyhow::anyhow!("Model '{}' already exists", model));
             }
 
             // TODO: TEAM-269 will implement model provisioner
-            NARRATE
-                .action("model_download_not_implemented")
-                .job_id(&job_id)
-                .context(&model)
-                .human("⚠️  Model download not yet implemented (waiting for TEAM-269)")
-                .emit();
+            n!(
+                "model_download_not_implemented",
+                "⚠️  Model download not yet implemented (waiting for TEAM-269)"
+            );
 
             return Err(anyhow::anyhow!(
                 "Model download not yet implemented (waiting for TEAM-269)"
@@ -308,25 +264,15 @@ async fn route_operation(
         Operation::ModelList(request) => {
             let hive_id = request.hive_id.clone();
             // TEAM-268: Implemented model list
-            NARRATE
-                .action("model_list_start")
-                .job_id(&job_id)
-                .context(&hive_id)
-                .human("📋 Listing models on hive '{}'")
-                .emit();
+            n!("model_list_start", "📋 Listing models on hive '{}'", hive_id);
 
             let models = state.model_catalog.list();
 
-            NARRATE
-                .action("model_list_result")
-                .job_id(&job_id)
-                .context(&models.len().to_string())
-                .human("Found {} model(s)")
-                .emit();
+            n!("model_list_result", "Found {} model(s)", models.len());
 
             // Format as JSON table
             if models.is_empty() {
-                NARRATE.action("model_list_empty").job_id(&job_id).human("No models found").emit();
+                n!("model_list_empty", "No models found");
             } else {
                 for model in &models {
                     let size_gb = model.size() as f64 / 1_000_000_000.0;
@@ -336,15 +282,14 @@ async fn route_operation(
                         rbee_hive_artifact_catalog::ArtifactStatus::Failed { .. } => "failed",
                     };
 
-                    NARRATE
-                        .action("model_list_entry")
-                        .job_id(&job_id)
-                        .context(model.id())
-                        .context(model.name())
-                        .context(&format!("{:.2} GB", size_gb))
-                        .context(status)
-                        .human("  {} | {} | {} | {}")
-                        .emit();
+                    n!(
+                        "model_list_entry",
+                        "  {} | {} | {:.2} GB | {}",
+                        model.id(),
+                        model.name(),
+                        size_gb,
+                        status
+                    );
                 }
             }
         }
@@ -353,39 +298,26 @@ async fn route_operation(
             let hive_id = request.hive_id.clone();
             let id = request.id.clone();
             // TEAM-268: Implemented model get
-            NARRATE
-                .action("model_get_start")
-                .job_id(&job_id)
-                .context(&hive_id)
-                .context(&id)
-                .human("🔍 Getting model '{}' on hive '{}'")
-                .emit();
+            n!("model_get_start", "🔍 Getting model '{}' on hive '{}'", id, hive_id);
 
             match state.model_catalog.get(&id) {
                 Ok(model) => {
-                    NARRATE
-                        .action("model_get_found")
-                        .job_id(&job_id)
-                        .context(model.id())
-                        .context(model.name())
-                        .context(&model.path().display().to_string())
-                        .human("✅ Model: {} | Name: {} | Path: {}")
-                        .emit();
+                    n!(
+                        "model_get_found",
+                        "✅ Model: {} | Name: {} | Path: {}",
+                        model.id(),
+                        model.name(),
+                        model.path().display()
+                    );
 
                     // Emit model details as JSON
                     let json = serde_json::to_string_pretty(&model)
                         .unwrap_or_else(|_| "Failed to serialize".to_string());
 
-                    NARRATE.action("model_get_details").job_id(&job_id).human(&json).emit();
+                    n!("model_get_details", "{}", json);
                 }
                 Err(e) => {
-                    NARRATE
-                        .action("model_get_error")
-                        .job_id(&job_id)
-                        .context(&id)
-                        .context(&e.to_string())
-                        .human("❌ Model '{}' not found: {}")
-                        .emit();
+                    n!("model_get_error", "❌ Model '{}' not found: {}", id, e);
                     return Err(e);
                 }
             }
@@ -395,31 +327,14 @@ async fn route_operation(
             let hive_id = request.hive_id.clone();
             let id = request.id.clone();
             // TEAM-268: Implemented model delete
-            NARRATE
-                .action("model_delete_start")
-                .job_id(&job_id)
-                .context(&hive_id)
-                .context(&id)
-                .human("🗑️  Deleting model '{}' on hive '{}'")
-                .emit();
+            n!("model_delete_start", "🗑️  Deleting model '{}' on hive '{}'", id, hive_id);
 
             match state.model_catalog.remove(&id) {
                 Ok(()) => {
-                    NARRATE
-                        .action("model_delete_complete")
-                        .job_id(&job_id)
-                        .context(&id)
-                        .human("✅ Model '{}' deleted successfully")
-                        .emit();
+                    n!("model_delete_complete", "✅ Model '{}' deleted successfully", id);
                 }
                 Err(e) => {
-                    NARRATE
-                        .action("model_delete_error")
-                        .job_id(&job_id)
-                        .context(&id)
-                        .context(&e.to_string())
-                        .human("❌ Failed to delete model '{}': {}")
-                        .emit();
+                    n!("model_delete_error", "❌ Failed to delete model '{}': {}", id, e);
                     return Err(e);
                 }
             }

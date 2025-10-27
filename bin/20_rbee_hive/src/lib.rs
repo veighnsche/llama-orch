@@ -12,5 +12,6 @@
 //! Core library code for rbee-hive daemon
 
 pub mod heartbeat; // TEAM-284: Hive heartbeat to queen
+pub mod hive_check; // TEAM-313: Hive narration check (tests SSE streaming)
 
 // TODO: Implement library functionality

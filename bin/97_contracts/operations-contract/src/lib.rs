@@ -78,6 +78,13 @@ pub enum Operation {
     
     /// TEAM-312: Deep narration test through queen job server (like self-check but via SSE)
     QueenCheck,
+    
+    /// TEAM-313: Deep narration test through hive job server (tests hive SSE streaming)
+    HiveCheck {
+        /// Hive alias (only "localhost" supported)
+        #[serde(default = "default_hive_id")]
+        alias: String,
+    },
 
     // Hive operations
     // TEAM-278: DELETED HiveInstall, HiveUninstall, SshTest
@@ -155,6 +162,7 @@ impl Operation {
         match self {
             Operation::Status => "status", // TEAM-190
             Operation::QueenCheck => "queen_check", // TEAM-312
+            Operation::HiveCheck { .. } => "hive_check", // TEAM-313
             // TEAM-278: DELETED ssh_test, hive_install, hive_uninstall
             // TEAM-284: DELETED package_sync, package_status, package_install, package_uninstall, package_validate, package_migrate
             // TEAM-285: DELETED hive_start, hive_stop (localhost-only, no lifecycle management)
@@ -186,6 +194,7 @@ impl Operation {
         match self {
             // TEAM-278: DELETED HiveInstall, HiveUninstall
             // TEAM-285: DELETED HiveStart, HiveStop (localhost-only, no lifecycle management)
+            Operation::HiveCheck { alias } => Some(alias), // TEAM-313
             Operation::HiveGet { alias } => Some(alias),
             Operation::HiveStatus { alias } => Some(alias),
             Operation::HiveRefreshCapabilities { alias } => Some(alias), // TEAM-196

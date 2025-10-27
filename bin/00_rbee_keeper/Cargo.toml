@@ -63,6 +63,7 @@ job-client = { path = "../99_shared_crates/job-client" }  # TEAM-259: Shared job
 queen-lifecycle = { path = "../05_rbee_keeper_crates/queen-lifecycle" }  # TEAM-259: Queen lifecycle management
 hive-lifecycle = { path = "../05_rbee_keeper_crates/hive-lifecycle" }  # TEAM-290: Hive lifecycle management (SSH)
 ssh-config = { path = "../05_rbee_keeper_crates/ssh-config" }  # TEAM-294: SSH config parser + local
+keeper-config-contract = { path = "../97_contracts/keeper-config-contract" }  # TEAM-315: Keeper configuration contract
 
 # TEAM-293/294: Tauri v2 dependencies for GUI
 # TEAM-297: Using tauri-specta v2.0.0-rc.21 for Tauri v2 support

@@ -3,11 +3,10 @@
 //! TEAM-290: Remote hive uninstallation via SSH
 
 use anyhow::{Context, Result};
-use observability_narration_core::NarrationFactory;
+use observability_narration_core::n;
+use ssh_config::SshClient; // TEAM-314: Use shared SSH client
 
-use crate::ssh::SshClient;
-
-const NARRATE: NarrationFactory = NarrationFactory::new("hive-rm");
+// TEAM-314: All narration migrated to n!() macro
 
 /// Uninstall rbee-hive from remote host
 ///
@@ -15,11 +14,7 @@ const NARRATE: NarrationFactory = NarrationFactory::new("hive-rm");
 /// * `host` - SSH host alias
 /// * `install_dir` - Remote installation directory
 pub async fn uninstall_hive(host: &str, install_dir: &str) -> Result<()> {
-    NARRATE
-        .action("uninstall_hive_start")
-        .context(host)
-        .human("🗑️  Uninstalling rbee-hive from '{}'")
-        .emit();
+    n!("uninstall_hive_start", "🗑️  Uninstalling rbee-hive from '{}'", host);
 
     let client = SshClient::connect(host).await?;
     let remote_path = format!("{}/rbee-hive", install_dir);
@@ -31,11 +26,7 @@ pub async fn uninstall_hive(host: &str, install_dir: &str) -> Result<()> {
         .is_ok();
 
     if is_running {
-        NARRATE
-            .action("uninstall_hive_stop")
-            .context(host)
-            .human("⚠️  Stopping rbee-hive on '{}'")
-            .emit();
+        n!("uninstall_hive_stop", "⚠️  Stopping rbee-hive on '{}'", host);
 
         // Stop hive
         client
@@ -50,11 +41,7 @@ pub async fn uninstall_hive(host: &str, install_dir: &str) -> Result<()> {
         .await
         .context("Failed to remove hive binary")?;
 
-    NARRATE
-        .action("uninstall_hive_complete")
-        .context(host)
-        .human("✅ Hive uninstalled from '{}'")
-        .emit();
+    n!("uninstall_hive_complete", "✅ Hive uninstalled from '{}'", host);
 
     Ok(())
 }

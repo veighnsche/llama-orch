@@ -12,7 +12,7 @@ use observability_narration_core::n;
 /// Queries the /v1/build-info endpoint to get build configuration details.
 ///
 /// # Arguments
-/// * `queen_url` - Base URL for queen (e.g., "http://localhost:8500")
+/// * `queen_url` - Base URL for queen (e.g., "http://localhost:7833")
 ///
 /// # Returns
 /// * `Ok(())` - Build info retrieved (prints to stdout)

@@ -31,6 +31,8 @@ tracing = "0.1"  # TEAM-284: For heartbeat logging
 hive-contract = { path = "../97_contracts/hive-contract" }
 reqwest = { workspace = true }  # TEAM-285: For sending heartbeats to queen
 observability-narration-core = { path = "../99_shared_crates/narration-core" }
+observability-narration-macros = { path = "../99_shared_crates/narration-macros" }  # TEAM-313: For n!() macro in hive_check
+stdext = "0.3"  # TEAM-313: Required for n!() macro (function_name!())
 
 # TEAM-205: Device detection for capabilities endpoint
 rbee-hive-device-detection = { path = "../25_rbee_hive_crates/device-detection" }

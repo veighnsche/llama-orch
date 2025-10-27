@@ -13,7 +13,7 @@ const NARRATE: NarrationFactory = NarrationFactory::new("kpr-life");
 /// Check if queen is healthy by calling /health endpoint
 ///
 /// # Arguments
-/// * `base_url` - Queen URL (e.g., "http://localhost:8500")
+/// * `base_url` - Queen URL (e.g., "http://localhost:7833")
 ///
 /// # Returns
 /// * `Ok(true)` - Queen is running and healthy

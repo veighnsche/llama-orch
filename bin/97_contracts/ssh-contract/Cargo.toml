@@ -1,0 +1,16 @@
+[package]
+name = "ssh-contract"
+version = "0.1.0"
+edition = "2021"
+license = "GPL-3.0-or-later"
+description = "SSH-related contracts for rbee ecosystem"
+authors.workspace = true
+
+[dependencies]
+serde = { version = "1.0", features = ["derive"] }
+
+[dev-dependencies]
+serde_json = "1.0"
+
+[lints]
+workspace = true

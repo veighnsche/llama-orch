@@ -49,9 +49,12 @@ pub enum HiveAction {
         /// Path to rbee-hive binary (auto-detects if not specified)
         #[arg(short = 'b', long = "binary")]
         binary: Option<String>,
-        /// Installation directory (default: ~/.local/bin for localhost, /usr/local/bin for remote)
+        /// Installation directory (default: ~/.local/bin)
         #[arg(short = 'd', long = "dir")]
         install_dir: Option<String>,
+        /// Build on remote host instead of locally (requires git, slower)
+        #[arg(long)]
+        build_remote: bool,
     },
     /// Uninstall rbee-hive from local or remote host
     Uninstall {
@@ -70,8 +73,8 @@ pub enum HiveAction {
         /// Installation directory
         #[arg(short = 'd', long = "dir")]
         install_dir: Option<String>,
-        /// HTTP port (default: 9000)
-        #[arg(short = 'p', long = "port", default_value = "9000")]
+        /// HTTP port (default: 7835)
+        #[arg(short = 'p', long = "port", default_value = "7835")]
         port: u16,
     },
     /// Stop rbee-hive on local or remote host
@@ -102,5 +105,22 @@ pub enum HiveAction {
         /// Hive alias (only "localhost" supported)
         #[arg(short = 'a', long = "host")]
         alias: String,
+    },
+    /// Run hive-check (narration test through hive SSE)
+    /// TEAM-313: Tests narration through hive SSE streaming pipeline
+    Check {
+        /// Hive alias (default: localhost)
+        #[arg(short = 'a', long = "host", default_value = "localhost")]
+        alias: String,
+    },
+    /// Rebuild rbee-hive from source (update operation)
+    /// TEAM-314: Added for parity with queen rebuild
+    Rebuild {
+        /// Host to rebuild on (default: localhost)
+        #[arg(short = 'a', long = "host", default_value = "localhost")]
+        host: String,
+        /// Build on remote host instead of locally (requires git, slower)
+        #[arg(long)]
+        build_remote: bool,
     },
 }

@@ -13,7 +13,7 @@ use crate::ensure::ensure_queen_running;
 /// Uses the ensure_queen_running pattern to start queen if not already running.
 ///
 /// # Arguments
-/// * `queen_url` - Base URL for queen (e.g., "http://localhost:8500")
+/// * `queen_url` - Base URL for queen (e.g., "http://localhost:7833")
 ///
 /// # Returns
 /// * `Ok(())` - Queen started successfully

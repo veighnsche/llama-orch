@@ -33,7 +33,7 @@
 //! use queen_lifecycle::ensure_queen_running;
 //!
 //! # async fn example() -> anyhow::Result<()> {
-//! let handle = ensure_queen_running("http://localhost:8500").await?;
+//! let handle = ensure_queen_running("http://localhost:7833").await?;
 //!
 //! // Use queen...
 //!
@@ -48,9 +48,9 @@
 //! use queen_lifecycle::{start_queen, stop_queen};
 //!
 //! # async fn example() -> anyhow::Result<()> {
-//! start_queen("http://localhost:8500").await?;
+//! start_queen("http://localhost:7833").await?;
 //! // ... use queen ...
-//! stop_queen("http://localhost:8500").await?;
+//! stop_queen("http://localhost:7833").await?;
 //! # Ok(())
 //! # }
 //! ```
@@ -62,7 +62,7 @@
 //! # async fn example() -> anyhow::Result<()> {
 //! install_queen(None).await?; // Auto-detect binary
 //! // ... use queen ...
-//! uninstall_queen("http://localhost:8500").await?;
+//! uninstall_queen("http://localhost:7833").await?;
 //! # Ok(())
 //! # }
 //! ```

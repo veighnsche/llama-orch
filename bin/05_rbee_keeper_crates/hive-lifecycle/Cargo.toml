@@ -10,9 +10,6 @@ description = "Hive lifecycle management for rbee-keeper (SSH + daemon-lifecycle
 license = "GPL-3.0-or-later"
 
 [dependencies]
-# SSH client (uses host SSH config)
-ssh2 = "0.9"
-
 # Async runtime
 tokio = { version = "1", features = ["process", "io-util", "rt"] }
 
@@ -26,6 +23,7 @@ thiserror = "1.0"
 # Shared crates
 daemon-lifecycle = { path = "../../99_shared_crates/daemon-lifecycle" }
 observability-narration-core = { path = "../../99_shared_crates/narration-core" }
+ssh-config = { path = "../ssh-config" }  # TEAM-314: Shared SSH client
 stdext = "0.3"  # TEAM-312: Required for n!() macro (function_name!())
 
 [lints]

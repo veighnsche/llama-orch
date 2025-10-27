@@ -13,7 +13,7 @@ const NARRATE: NarrationFactory = NarrationFactory::new("queen-life");
 /// Handles expected connection errors (queen shuts down before responding).
 ///
 /// # Arguments
-/// * `queen_url` - Base URL for queen (e.g., "http://localhost:8500")
+/// * `queen_url` - Base URL for queen (e.g., "http://localhost:7833")
 ///
 /// # Returns
 /// * `Ok(())` - Queen stopped successfully (or was not running)

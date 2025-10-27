@@ -24,9 +24,9 @@ use timeout_enforcer::TimeoutEnforcer;
 /// Submit a job to queen-rbee and stream its narration output.
 ///
 /// TEAM-186: Now accepts Operation directly instead of pre-serialized JSON
-/// TEAM-259: Refactored to use job-client shared crate
+/// TEAM-259:/// Submit job to queen-rbee and stream results
 ///
-/// This handles the complete lifecycle:
+/// TEAM-259: Simplified to use shared JobClient
 /// - Ensures queen is running
 /// - Submits the job with 10-second timeout
 /// - Streams SSE narration events with 30-second timeout
@@ -60,6 +60,32 @@ pub async fn submit_and_stream_job(queen_url: &str, operation: Operation) -> Res
     std::mem::forget(queen_handle);
 
     // Return result (timeout or success)
+    stream_result
+}
+
+/// Submit job directly to hive (no queen) and stream results
+///
+/// TEAM-314: For operations that talk directly to hive (HiveCheck, HiveStatus)
+/// - Does NOT ensure queen is running
+/// - Connects directly to hive HTTP server
+/// - Submits the job with 10-second timeout
+/// - Streams SSE narration events with 30-second timeout
+pub async fn submit_and_stream_job_to_hive(hive_url: &str, operation: Operation) -> Result<()> {
+    // TEAM-314: Direct hive connection - no queen involvement
+    
+    // Extract metadata before moving operation
+    let operation_name = operation.name();
+    let hive_id = operation.hive_id().map(|s| s.to_string());
+
+    n!("job_submit", "📋 Job submitted to hive: {}", operation_name);
+
+    // TEAM-314: Wrap SSE streaming with 30-second timeout
+    let stream_result = TimeoutEnforcer::new(Duration::from_secs(30))
+        .with_label("Streaming job results from hive")
+        .silent() // Don't show countdown - narration provides feedback
+        .enforce(stream_job_results(hive_url, operation, operation_name, hive_id))
+        .await;
+
     stream_result
 }
 

@@ -1,38 +1,25 @@
-//! SSH Config Parser for rbee-keeper
+//! SSH Config Parser and Client for rbee-keeper
 //!
 //! TEAM-294: Parse ~/.ssh/config to discover available hives
+//! TEAM-314: Added SSH client for remote command execution
+//! TEAM-315: Use SSH types from ssh-contract
+//!
+//! This crate provides two main components:
+//! 1. **Config Parser** - Parse ~/.ssh/config to discover SSH hosts
+//! 2. **SSH Client** - Execute commands, upload/download files via SSH
+//!
 //! Returns structured data for both CLI (NARRATE.table) and UI (JSON)
 
 use anyhow::{Context, Result};
-use serde::{Deserialize, Serialize};
 use std::fs;
 use std::path::Path;
 
-/// SSH target from ~/.ssh/config
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct SshTarget {
-    /// Host alias from SSH config (first word)
-    pub host: String,
-    /// Host subtitle (second word, optional)
-    pub host_subtitle: Option<String>,
-    /// Hostname (IP or domain)
-    pub hostname: String,
-    /// SSH username
-    pub user: String,
-    /// SSH port
-    pub port: u16,
-    /// Connection status
-    pub status: SshTargetStatus,
-}
+// Re-export SSH client
+pub mod client;
+pub use client::SshClient;
 
-/// SSH target connection status
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
-#[serde(rename_all = "lowercase")]
-pub enum SshTargetStatus {
-    Online,
-    Offline,
-    Unknown,
-}
+// TEAM-315: Use SSH types from contract
+pub use ssh_contract::{SshTarget, SshTargetStatus};
 
 /// Parse SSH config file and extract hosts
 ///

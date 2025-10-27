@@ -26,7 +26,7 @@ use crate::types::QueenHandle;
 ///    - Print: "✅ queen is awake and healthy."
 ///
 /// # Arguments
-/// * `base_url` - Queen URL (e.g., "http://localhost:8500")
+/// * `base_url` - Queen URL (e.g., "http://localhost:7833")
 ///
 /// # Returns
 /// * `Ok(QueenHandle)` - Handle to queen (tracks if we started it for cleanup)
@@ -57,8 +57,8 @@ async fn ensure_queen_running_inner(base_url: &str) -> Result<QueenHandle> {
             // Spawn logic: preflight + start
             spawn_queen_with_preflight(base_url).await
         },
-        || QueenHandle::already_running(base_url.to_string()),
-        || QueenHandle::started_by_us(base_url.to_string(), None),
+        || QueenHandle::already_running("queen-rbee", base_url),
+        || QueenHandle::started_by_us("queen-rbee", base_url, None),
     )
     .await?;
     

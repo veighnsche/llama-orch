@@ -18,6 +18,7 @@ serde_json = "1.0" # TEAM-292: For parsing queen info response
 
 # Shared crates
 daemon-lifecycle = { path = "../../99_shared_crates/daemon-lifecycle" }
+daemon-contract = { path = "../../97_contracts/daemon-contract" }  # TEAM-315: Generic daemon handle
 observability-narration-core = { path = "../../99_shared_crates/narration-core" }
 # TEAM-290: DELETED rbee-config dependency (file-based config deprecated)
 timeout-enforcer = { path = "../../99_shared_crates/timeout-enforcer" }

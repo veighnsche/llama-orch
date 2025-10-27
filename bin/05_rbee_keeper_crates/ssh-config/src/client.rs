@@ -1,17 +1,32 @@
-//! SSH client that uses host SSH config
+//! SSH client for remote command execution
 //!
-//! TEAM-290: Piggybacks on ~/.ssh/config and ~/.ssh/id_rsa
+//! TEAM-314: Migrated from hive-lifecycle to shared ssh-config crate
+//!
+//! This module provides an SSH client that:
+//! - Uses host SSH config (~/.ssh/config)
+//! - Executes commands on remote hosts
+//! - Uploads/downloads files via SCP
+//! - Provides narration for all operations
 
 use anyhow::{Context, Result};
-use observability_narration_core::NarrationFactory;
+use observability_narration_core::n;
 use std::path::Path;
 use tokio::process::Command;
-
-const NARRATE: NarrationFactory = NarrationFactory::new("hive-ssh");
 
 /// SSH client that uses host SSH config
 ///
 /// TEAM-290: Piggybacks on ~/.ssh/config and ~/.ssh/id_rsa
+/// TEAM-314: Migrated to shared ssh-config crate
+///
+/// # Example
+///
+/// ```rust,ignore
+/// use ssh_config::SshClient;
+///
+/// let client = SshClient::connect("workstation").await?;
+/// let output = client.execute("uname -a").await?;
+/// println!("Remote OS: {}", output);
+/// ```
 pub struct SshClient {
     /// SSH host alias (from ~/.ssh/config)
     host: String,
@@ -28,11 +43,7 @@ impl SshClient {
     /// let client = SshClient::connect("gpu-server").await?;
     /// ```
     pub async fn connect(host: &str) -> Result<Self> {
-        NARRATE
-            .action("ssh_connect")
-            .context(host)
-            .human("🔌 Connecting to SSH host '{}'")
-            .emit();
+        n!("ssh_connect", "🔌 Connecting to SSH host '{}'", host);
 
         // Verify SSH connection works
         let output = Command::new("ssh")
@@ -60,11 +71,7 @@ impl SshClient {
             );
         }
 
-        NARRATE
-            .action("ssh_connected")
-            .context(host)
-            .human("✅ Connected to '{}'")
-            .emit();
+        n!("ssh_connected", "✅ Connected to '{}'", host);
 
         Ok(Self {
             host: host.to_string(),
@@ -79,13 +86,14 @@ impl SshClient {
     /// # Returns
     /// * `Ok(String)` - Command output (stdout)
     /// * `Err` - If command fails
+    ///
+    /// # Example
+    /// ```rust,ignore
+    /// let output = client.execute("ls -la").await?;
+    /// println!("{}", output);
+    /// ```
     pub async fn execute(&self, command: &str) -> Result<String> {
-        NARRATE
-            .action("ssh_exec")
-            .context(&self.host)
-            .context(command)
-            .human("🔧 Executing on '{}': {}")
-            .emit();
+        n!("ssh_exec", "🔧 Executing on '{}': {}", self.host, command);
 
         let output = Command::new("ssh")
             .arg(&self.host)
@@ -101,11 +109,7 @@ impl SshClient {
 
         let stdout = String::from_utf8_lossy(&output.stdout).to_string();
 
-        NARRATE
-            .action("ssh_exec_complete")
-            .context(&self.host)
-            .human("✅ Command completed on '{}'")
-            .emit();
+        n!("ssh_exec_complete", "✅ Command completed on '{}'", self.host);
 
         Ok(stdout)
     }
@@ -115,14 +119,13 @@ impl SshClient {
     /// # Arguments
     /// * `local_path` - Local file path
     /// * `remote_path` - Remote file path
+    ///
+    /// # Example
+    /// ```rust,ignore
+    /// client.upload_file("./binary", "/usr/local/bin/binary").await?;
+    /// ```
     pub async fn upload_file(&self, local_path: &str, remote_path: &str) -> Result<()> {
-        NARRATE
-            .action("ssh_upload")
-            .context(&self.host)
-            .context(local_path)
-            .context(remote_path)
-            .human("📤 Uploading '{}' to '{}:{}'")
-            .emit();
+        n!("ssh_upload", "📤 Uploading '{}' to '{}' on '{}'", local_path, remote_path, self.host);
 
         // Verify local file exists
         if !Path::new(local_path).exists() {
@@ -142,11 +145,7 @@ impl SshClient {
             anyhow::bail!("Upload failed:\n{}", stderr);
         }
 
-        NARRATE
-            .action("ssh_upload_complete")
-            .context(&self.host)
-            .human("✅ Upload complete to '{}'")
-            .emit();
+        n!("ssh_upload_complete", "✅ Upload complete to '{}'", self.host);
 
         Ok(())
     }
@@ -156,14 +155,13 @@ impl SshClient {
     /// # Arguments
     /// * `remote_path` - Remote file path
     /// * `local_path` - Local file path
+    ///
+    /// # Example
+    /// ```rust,ignore
+    /// client.download_file("/var/log/app.log", "./app.log").await?;
+    /// ```
     pub async fn download_file(&self, remote_path: &str, local_path: &str) -> Result<()> {
-        NARRATE
-            .action("ssh_download")
-            .context(&self.host)
-            .context(remote_path)
-            .context(local_path)
-            .human("📥 Downloading '{}:{}' to '{}'")
-            .emit();
+        n!("ssh_download", "📥 Downloading '{}' from '{}' to '{}'", remote_path, self.host, local_path);
 
         let output = Command::new("scp")
             .arg(format!("{}:{}", self.host, remote_path))
@@ -177,11 +175,7 @@ impl SshClient {
             anyhow::bail!("Download failed:\n{}", stderr);
         }
 
-        NARRATE
-            .action("ssh_download_complete")
-            .context(&self.host)
-            .human("✅ Download complete from '{}'")
-            .emit();
+        n!("ssh_download_complete", "✅ Download complete from '{}'", self.host);
 
         Ok(())
     }
@@ -194,6 +188,13 @@ impl SshClient {
     /// # Returns
     /// * `Ok(true)` - File exists
     /// * `Ok(false)` - File does not exist
+    ///
+    /// # Example
+    /// ```rust,ignore
+    /// if client.file_exists("/usr/local/bin/app").await? {
+    ///     println!("App is installed");
+    /// }
+    /// ```
     pub async fn file_exists(&self, remote_path: &str) -> Result<bool> {
         let output = Command::new("ssh")
             .arg(&self.host)
@@ -208,6 +209,9 @@ impl SshClient {
     }
 
     /// Get remote host name
+    ///
+    /// # Returns
+    /// The SSH host alias
     pub fn host(&self) -> &str {
         &self.host
     }

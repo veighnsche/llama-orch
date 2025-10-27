@@ -4,7 +4,7 @@
 
 use anyhow::Result;
 
-use crate::ssh::SshClient;
+use ssh_config::SshClient; // TEAM-314: Use shared SSH client
 
 /// Check if rbee-hive is running on remote host
 ///

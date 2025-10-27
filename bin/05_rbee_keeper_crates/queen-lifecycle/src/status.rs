@@ -11,7 +11,7 @@ use observability_narration_core::n;
 /// Queries the /health endpoint to determine if queen is running.
 ///
 /// # Arguments
-/// * `queen_url` - Base URL for queen (e.g., "http://localhost:8500")
+/// * `queen_url` - Base URL for queen (e.g., "http://localhost:7833")
 ///
 /// # Returns
 /// * `Ok(())` - Status check completed (prints result to stdout)

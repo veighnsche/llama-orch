@@ -4,22 +4,17 @@
 //! TEAM-291: Added graceful shutdown (SIGTERM → wait → SIGKILL)
 
 use anyhow::{Context, Result};
-use observability_narration_core::NarrationFactory;
+use observability_narration_core::n;
+use ssh_config::SshClient; // TEAM-314: Use shared SSH client
 
-use crate::ssh::SshClient;
-
-const NARRATE: NarrationFactory = NarrationFactory::new("hive-stop");
+// TEAM-314: All narration migrated to n!() macro
 
 /// Stop rbee-hive on local or remote host
 ///
 /// # Arguments
 /// * `host` - Host to stop on ("localhost" for local, SSH alias for remote)
 pub async fn stop_hive(host: &str) -> Result<()> {
-    NARRATE
-        .action("stop_hive")
-        .context(host)
-        .human("⏹️  Stopping rbee-hive on '{}'")
-        .emit();
+    n!("stop_hive", "⏹️  Stopping rbee-hive on '{}'", host);
 
     // Check if localhost (direct stop) or remote (SSH stop)
     if host == "localhost" || host == "127.0.0.1" {
@@ -33,10 +28,7 @@ pub async fn stop_hive(host: &str) -> Result<()> {
 /// 
 /// TEAM-291: Graceful shutdown pattern (SIGTERM → wait → SIGKILL)
 async fn stop_hive_local() -> Result<()> {
-    NARRATE
-        .action("stop_hive_local")
-        .human("⏹️  Stopping rbee-hive locally...")
-        .emit();
+    n!("stop_hive_local", "⏹️  Stopping rbee-hive locally...");
 
     // ============================================================
     // TEAM-291: Graceful shutdown pattern
@@ -46,10 +38,7 @@ async fn stop_hive_local() -> Result<()> {
     // ============================================================
 
     // Step 1: Try graceful shutdown (SIGTERM)
-    NARRATE
-        .action("stop_hive_sigterm")
-        .human("📨 Sending SIGTERM (graceful shutdown)...")
-        .emit();
+    n!("stop_hive_sigterm", "📨 Sending SIGTERM (graceful shutdown)...");
 
     let output = tokio::process::Command::new("pkill")
         .arg("-TERM") // TEAM-291: Explicit SIGTERM for graceful shutdown
@@ -61,18 +50,12 @@ async fn stop_hive_local() -> Result<()> {
 
     if !output.status.success() {
         // pkill returns non-zero if no process found, which is fine
-        NARRATE
-            .action("stop_hive_not_running")
-            .human("ℹ️  rbee-hive was not running")
-            .emit();
+        n!("stop_hive_not_running", "ℹ️  rbee-hive was not running");
         return Ok(());
     }
 
     // Step 2: Wait for graceful shutdown (5 seconds)
-    NARRATE
-        .action("stop_hive_wait")
-        .human("⏳ Waiting for graceful shutdown (5 seconds)...")
-        .emit();
+    n!("stop_hive_wait", "⏳ Waiting for graceful shutdown (5 seconds)...");
 
     tokio::time::sleep(tokio::time::Duration::from_secs(5)).await;
 
@@ -86,10 +69,7 @@ async fn stop_hive_local() -> Result<()> {
 
     if output.status.success() {
         // Still running - force kill
-        NARRATE
-            .action("stop_hive_sigkill")
-            .human("⚠️  Graceful shutdown failed, sending SIGKILL (force)...")
-            .emit();
+        n!("stop_hive_sigkill", "⚠️  Graceful shutdown failed, sending SIGKILL (force)...");
 
         let output = tokio::process::Command::new("pkill")
             .arg("-KILL") // TEAM-291: Force kill
@@ -118,15 +98,9 @@ async fn stop_hive_local() -> Result<()> {
             anyhow::bail!("Hive failed to stop even after SIGKILL (still running)");
         }
 
-        NARRATE
-            .action("stop_hive_force_complete")
-            .human("✅ Hive stopped (force killed)")
-            .emit();
+        n!("stop_hive_force_complete", "✅ Hive stopped (force killed)");
     } else {
-        NARRATE
-            .action("stop_hive_graceful_complete")
-            .human("✅ Hive stopped (graceful shutdown)")
-            .emit();
+        n!("stop_hive_graceful_complete", "✅ Hive stopped (graceful shutdown)");
     }
 
     Ok(())
@@ -134,11 +108,7 @@ async fn stop_hive_local() -> Result<()> {
 
 /// Stop rbee-hive remotely via SSH
 async fn stop_hive_remote(host: &str) -> Result<()> {
-    NARRATE
-        .action("stop_hive_remote")
-        .context(host)
-        .human("⏹️  Stopping rbee-hive on '{}' via SSH...")
-        .emit();
+    n!("stop_hive_remote", "⏹️  Stopping rbee-hive on '{}' via SSH...", host);
 
     let client = SshClient::connect(host).await?;
 
@@ -161,11 +131,7 @@ async fn stop_hive_remote(host: &str) -> Result<()> {
         anyhow::bail!("Hive failed to stop on '{}'", host);
     }
 
-    NARRATE
-        .action("stop_hive_complete")
-        .context(host)
-        .human("✅ Hive stopped on '{}'")
-        .emit();
+    n!("stop_hive_complete", "✅ Hive stopped on '{}'", host);
 
     Ok(())
 }
