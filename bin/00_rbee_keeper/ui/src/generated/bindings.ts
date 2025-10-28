@@ -38,6 +38,18 @@ async sshOpenConfig() : Promise<Result<string, string>> {
 }
 },
 /**
+ * Get queen-rbee daemon status
+ * TEAM-338: Returns structured status (isRunning, isInstalled)
+ */
+async queenStatus() : Promise<Result<QueenStatus, string>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("queen_status") };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+/**
  * Start queen-rbee daemon on localhost
  * TEAM-335: Thin wrapper around handle_queen() - business logic in handlers/queen.rs
  */
@@ -197,6 +209,11 @@ async hiveRefreshCapabilities(alias: string) : Promise<Result<string, string>> {
  * Narration event payload for Tauri frontend
  */
 export type NarrationEvent = { level: string; message: string; timestamp: string }
+/**
+ * Queen status response
+ * TEAM-338: Structured status for TypeScript frontend
+ */
+export type QueenStatus = { is_running: boolean; is_installed: boolean }
 /**
  * SSH target from ~/.ssh/config
  * 

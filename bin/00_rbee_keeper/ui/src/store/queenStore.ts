@@ -4,7 +4,9 @@ import { commands } from "@/generated/bindings";
 import { withCommandExecution } from "./commandUtils";
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
+import { immer } from "zustand/middleware/immer";
 
+// TEAM-338: Define QueenStatus with camelCase (Tauri bindings use snake_case)
 export interface QueenStatus {
   isRunning: boolean;
   isInstalled: boolean;
@@ -27,28 +29,43 @@ interface QueenState {
 
 export const useQueenStore = create<QueenState>()(
   persist(
-    (set, get) => ({
+    immer((set, get) => ({
       status: null,
       isLoading: false,
       error: null,
 
       fetchStatus: async () => {
-        set({ isLoading: true, error: null });
+        set((state) => {
+          state.isLoading = true;
+          state.error = null;
+        });
         try {
-          // TEAM-338: For now, return a mock status until we have a status command
-          // TODO: Replace with actual queen_status command when available
-          const status: QueenStatus = {
-            isRunning: false,
-            isInstalled: false,
-          };
-          set({ status, isLoading: false });
+          // TEAM-338: Call Tauri command to get queen status
+          const result = await commands.queenStatus();
+          
+          if (result.status === "ok") {
+            // Convert snake_case to camelCase
+            const status: QueenStatus = {
+              isRunning: result.data.is_running,
+              isInstalled: result.data.is_installed,
+            };
+            set((state) => {
+              state.status = status;
+              state.isLoading = false;
+            });
+          } else {
+            set((state) => {
+              state.error = result.error;
+              state.isLoading = false;
+            });
+          }
         } catch (error) {
-          set({
-            error:
+          set((state) => {
+            state.error =
               error instanceof Error
                 ? error.message
-                : "Failed to fetch Queen status",
-            isLoading: false,
+                : "Failed to fetch Queen status";
+            state.isLoading = false;
           });
         }
       },
@@ -94,13 +111,13 @@ export const useQueenStore = create<QueenState>()(
       },
 
       reset: () => {
-        set({
-          status: null,
-          isLoading: false,
-          error: null,
+        set((state) => {
+          state.status = null;
+          state.isLoading = false;
+          state.error = null;
         });
       },
-    }),
+    })),
     {
       name: "queen-store",
       partialize: (state) => ({

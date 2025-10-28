@@ -79,7 +79,7 @@ pub use install::{install_daemon, InstallConfig};
 pub use rebuild::{rebuild_daemon, RebuildConfig};
 pub use shutdown::{shutdown_daemon, ShutdownConfig};
 pub use start::{start_daemon, StartConfig, HttpDaemonConfig}; // TEAM-330: HttpDaemonConfig moved inline
-pub use status::check_daemon_health; // TEAM-330: RULE ZERO - One function!
+pub use status::{check_daemon_health, DaemonStatus}; // TEAM-338: RULE ZERO - Updated function signature
 pub use stop::{stop_daemon, StopConfig};
 pub use uninstall::{uninstall_daemon, UninstallConfig};
 pub use utils::poll::HealthPollConfig; // TEAM-330: Moved from types/ to utils/poll

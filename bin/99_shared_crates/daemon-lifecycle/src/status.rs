@@ -39,22 +39,71 @@
 //! ```
 
 use std::time::Duration;
+use crate::SshConfig;
+use crate::utils::binary::check_binary_installed;
 
-/// Check daemon health
+/// Daemon status information
 ///
-/// TEAM-330: RULE ZERO - One function, not two!
-/// Used by utils/poll.rs and everywhere else
-pub async fn check_daemon_health(health_url: &str) -> bool {
+/// TEAM-338: RULE ZERO - Updated existing function to return struct
+#[derive(Debug, Clone)]
+pub struct DaemonStatus {
+    /// Is the daemon currently running?
+    pub is_running: bool,
+    /// Is the daemon binary installed?
+    pub is_installed: bool,
+}
+
+/// Check daemon health and installation status
+///
+/// TEAM-338: RULE ZERO - Updated existing function (was returning bool, now returns DaemonStatus)
+/// BREAKING CHANGE: Callers must now handle DaemonStatus struct
+///
+/// # Arguments
+/// - `health_url`: Health endpoint URL (e.g., "http://localhost:7833/health")
+/// - `daemon_name`: Name of daemon binary (e.g., "queen-rbee")
+/// - `ssh_config`: SSH config for remote check (use SshConfig::localhost() for local)
+///
+/// # Implementation
+/// 1. Check if running via HTTP health endpoint (no SSH)
+/// 2. Check if installed:
+///    - If localhost: Check ~/.local/bin/{daemon_name} exists
+///    - If remote: SSH command `test -f ~/.local/bin/{daemon_name}`
+///
+/// # Optimization
+/// If daemon is running, skip installation check (must be installed to run)
+pub async fn check_daemon_health(
+    health_url: &str,
+    daemon_name: &str,
+    ssh_config: &SshConfig,
+) -> DaemonStatus {
+    // Step 1: Check if running (HTTP, no SSH)
     let client = match reqwest::Client::builder()
         .timeout(Duration::from_secs(2))
         .build()
     {
         Ok(c) => c,
-        Err(_) => return false,
+        Err(_) => {
+            return DaemonStatus {
+                is_running: false,
+                is_installed: false, // Can't check, assume not installed
+            }
+        }
     };
     
-    match client.get(health_url).send().await {
+    let is_running = match client.get(health_url).send().await {
         Ok(response) => response.status().is_success(),
         Err(_) => false,
+    };
+    
+    // Step 2: Check if installed (only if not running - optimization)
+    let is_installed = if is_running {
+        true // If running, must be installed
+    } else {
+        check_binary_installed(daemon_name, ssh_config).await
+    };
+    
+    DaemonStatus {
+        is_running,
+        is_installed,
     }
 }

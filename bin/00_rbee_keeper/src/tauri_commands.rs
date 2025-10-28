@@ -33,6 +33,7 @@ mod tests {
                 test_narration,
                 ssh_list,
                 ssh_open_config,
+                queen_status,
                 queen_start,
                 queen_stop,
                 queen_install,
@@ -94,6 +95,38 @@ pub enum SshTargetStatus {
 // ============================================================================
 // QUEEN COMMANDS
 // ============================================================================
+
+/// Queen status response
+/// TEAM-338: Structured status for TypeScript frontend
+#[derive(Debug, Clone, Serialize, Deserialize, specta::Type)]
+pub struct QueenStatus {
+    pub is_running: bool,
+    pub is_installed: bool,
+}
+
+/// Get queen-rbee daemon status
+/// TEAM-338: Returns structured status (isRunning, isInstalled)
+/// TEAM-338: RULE ZERO - Updated to use new check_daemon_health signature
+#[tauri::command]
+#[specta::specta]
+pub async fn queen_status() -> Result<QueenStatus, String> {
+    use crate::Config;
+    use daemon_lifecycle::{check_daemon_health, SshConfig};
+    
+    let config = Config::load()
+        .map_err(|e| format!("Config error: {}", e))?;
+    let queen_url = config.queen_url();
+    
+    // Check status (running + installed)
+    let health_url = format!("{}/health", queen_url);
+    let ssh_config = SshConfig::localhost(); // Queen is always localhost
+    let status = check_daemon_health(&health_url, "queen-rbee", &ssh_config).await;
+    
+    Ok(QueenStatus {
+        is_running: status.is_running,
+        is_installed: status.is_installed,
+    })
+}
 
 /// Start queen-rbee daemon on localhost
 /// TEAM-335: Thin wrapper around handle_queen() - business logic in handlers/queen.rs

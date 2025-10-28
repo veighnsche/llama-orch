@@ -79,12 +79,13 @@ pub async fn handle_queen(action: QueenAction, queen_url: &str) -> Result<()> {
             };
             stop_daemon(config).await
         }
-        // TEAM-330: Use check_daemon_health() directly (takes only URL)
+        // TEAM-338: RULE ZERO - Updated to new check_daemon_health signature
         QueenAction::Status => {
             let health_url = format!("{}/health", queen_url);
-            let is_running = check_daemon_health(&health_url).await;
+            let ssh_config = SshConfig::localhost(); // Queen is always localhost
+            let status = check_daemon_health(&health_url, "queen-rbee", &ssh_config).await;
             
-            if is_running {
+            if status.is_running {
                 n!("queen_status", "✅ queen 'localhost' is running on {}", queen_url);
             } else {
                 n!("queen_status", "❌ queen 'localhost' is not running on {}", queen_url);

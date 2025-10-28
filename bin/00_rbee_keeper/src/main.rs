@@ -92,6 +92,7 @@ fn launch_gui() {
             // TEAM-335: Queen lifecycle commands (thin wrappers)
             queen_start,
             queen_stop,
+            queen_status,
             queen_install,
             queen_rebuild,
             queen_uninstall,

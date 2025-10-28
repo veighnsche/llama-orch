@@ -112,11 +112,12 @@ pub async fn handle_hive(action: HiveAction, queen_url: &str) -> Result<()> {
 
         HiveAction::Status { alias } => {
             // TEAM-332: Resolve SSH config from alias (localhost or ~/.ssh/config)
+            // TEAM-338: RULE ZERO - Updated to new check_daemon_health signature
             let ssh = resolve_ssh_config(&alias)?;
             let health_url = format!("http://{}:7835/health", ssh.hostname);
-            let is_running = check_daemon_health(&health_url).await;
+            let status = check_daemon_health(&health_url, "rbee-hive", &ssh).await;
             
-            if is_running {
+            if status.is_running {
                 n!("hive_status", "✅ hive '{}' is running on {}", alias, health_url);
             } else {
                 n!("hive_status", "❌ hive '{}' is not running on {}", alias, health_url);

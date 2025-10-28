@@ -57,6 +57,7 @@ use std::path::PathBuf;
 use timeout_enforcer::with_timeout;
 use crate::SshConfig;
 use crate::utils::ssh::{ssh_exec, scp_upload};
+use crate::utils::binary::check_binary_installed;
 use crate::build::{build_daemon, BuildConfig};
 
 /// Configuration for remote daemon installation
@@ -131,6 +132,14 @@ pub async fn install_daemon(install_config: InstallConfig) -> Result<()> {
     
     n!("install_start", "📦 Installing {} on {}@{}", 
         daemon_name, ssh_config.user, ssh_config.hostname);
+
+    // Step 0: Check if already installed
+    // TEAM-338: Use check_binary_installed utility
+    if check_binary_installed(daemon_name, ssh_config).await {
+        n!("already_installed", "⚠️  {} is already installed on {}@{}", 
+            daemon_name, ssh_config.user, ssh_config.hostname);
+        anyhow::bail!("{} is already installed. Use rebuild to update.", daemon_name);
+    }
 
     // Step 1: Build or locate binary locally
     let binary_path = if let Some(path) = install_config.local_binary_path {

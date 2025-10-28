@@ -141,9 +141,14 @@ pub async fn uninstall_daemon(uninstall_config: UninstallConfig) -> Result<()> {
             format!("{}/health", health_url)
         };
         
-        let is_running = crate::status::check_daemon_health(&full_health_url).await;
+        // TEAM-338: RULE ZERO - Updated to new signature
+        let status = crate::status::check_daemon_health(
+            &full_health_url,
+            daemon_name,
+            ssh_config
+        ).await;
 
-        if is_running {
+        if status.is_running {
             n!("daemon_still_running", "⚠️  Daemon '{}' is currently running. Stop it first.", daemon_name);
             anyhow::bail!("Daemon {} is still running at {}", daemon_name, health_url);
         }

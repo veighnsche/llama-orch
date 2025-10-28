@@ -14,8 +14,10 @@ pub mod poll; // TEAM-329: Extracted from health.rs - HTTP health polling (remot
 pub mod serde; // TEAM-329: Serde helpers (used by types/install.rs for timestamps)
 pub mod ssh; // TEAM-330: SSH/SCP operations (core remote functionality)
 pub mod local; // TEAM-331: Local process execution (bypasses SSH for localhost)
+pub mod binary; // TEAM-338: Binary installation checks (reusable across operations)
 
 // Re-export main functions
 pub use poll::{poll_daemon_health, HealthPollConfig}; // TEAM-330: Moved from types/
 pub use ssh::{ssh_exec, scp_upload}; // TEAM-330: SSH helpers
 pub use local::{local_exec, local_copy}; // TEAM-331: Local execution helpers
+pub use binary::check_binary_installed; // TEAM-338: Binary installation check
