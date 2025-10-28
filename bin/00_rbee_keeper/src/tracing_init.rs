@@ -10,11 +10,19 @@ use tauri::Emitter; // TEAM-336: Required for app_handle.emit() in Tauri v2
 use tracing_subscriber::{fmt, layer::SubscriberExt, util::SubscriberInitExt, EnvFilter, Layer}; // TEAM-337: Use existing formatting
 
 /// Narration event payload for Tauri frontend
+/// TEAM-339: Include ALL narration fields for rich UI display
 #[derive(Debug, Clone, Serialize, Deserialize, specta::Type)]
 pub struct NarrationEvent {
     pub level: String,
     pub message: String,
     pub timestamp: String,
+    // TEAM-339: Add all narration-specific fields
+    pub actor: Option<String>,
+    pub action: Option<String>,
+    pub context: Option<String>,
+    pub human: Option<String>,
+    pub fn_name: Option<String>,
+    pub target: Option<String>,
 }
 
 /// Initialize tracing for CLI mode (stderr only)
@@ -105,11 +113,26 @@ where
         let mut visitor = EventVisitor::default();
         event.record(&mut visitor);
 
-        // TEAM-337: Use extract_message() to properly handle narration events
+        // TEAM-339: Extract fields BEFORE calling extract_message() (which consumes visitor)
+        let actor = visitor.actor.clone();
+        let action = visitor.action.clone();
+        let context = visitor.context.clone();
+        let human = visitor.human.clone();
+        let fn_name = visitor.fn_name.clone();
+        let target = visitor.target.clone();
+        let message = visitor.extract_message();
+
+        // TEAM-339: Include ALL narration fields in payload
         let payload = NarrationEvent {
             level: event.metadata().level().to_string(),
-            message: visitor.extract_message(),
+            message,
             timestamp: chrono::Utc::now().to_rfc3339(),
+            actor,
+            action,
+            context,
+            human,
+            fn_name,
+            target,
         };
 
         // Emit to Tauri frontend (non-blocking, ignore errors)
@@ -159,6 +182,8 @@ struct EventVisitor {
     actor: Option<String>,
     action: Option<String>,
     fn_name: Option<String>, // TEAM-337: Extract fn_name for format_message_with_fn()
+    context: Option<String>, // TEAM-339: Extract context field
+    target: Option<String>,  // TEAM-339: Extract target field
 }
 
 impl tracing::field::Visit for EventVisitor {
@@ -198,6 +223,22 @@ impl tracing::field::Visit for EventVisitor {
                     fn_str
                 });
             }
+            "context" => {
+                let ctx_str = format!("{:?}", value);
+                self.context = Some(if ctx_str.starts_with('"') && ctx_str.ends_with('"') {
+                    ctx_str[1..ctx_str.len() - 1].to_string()
+                } else {
+                    ctx_str
+                });
+            }
+            "target" => {
+                let tgt_str = format!("{:?}", value);
+                self.target = Some(if tgt_str.starts_with('"') && tgt_str.ends_with('"') {
+                    tgt_str[1..tgt_str.len() - 1].to_string()
+                } else {
+                    tgt_str
+                });
+            }
             "message" => {
                 // Standard tracing message field
                 if self.message.is_empty() {
@@ -229,6 +270,12 @@ impl tracing::field::Visit for EventVisitor {
             }
             "fn_name" => {
                 self.fn_name = Some(value.to_string());
+            }
+            "context" => {
+                self.context = Some(value.to_string());
+            }
+            "target" => {
+                self.target = Some(value.to_string());
             }
             "message" => {
                 // Standard tracing message field

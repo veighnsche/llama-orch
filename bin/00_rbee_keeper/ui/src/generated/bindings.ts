@@ -225,8 +225,9 @@ is_running: boolean;
 is_installed: boolean }
 /**
  * Narration event payload for Tauri frontend
+ * TEAM-339: Include ALL narration fields for rich UI display
  */
-export type NarrationEvent = { level: string; message: string; timestamp: string }
+export type NarrationEvent = { level: string; message: string; timestamp: string; actor: string | null; action: string | null; context: string | null; human: string | null; fn_name: string | null; target: string | null }
 /**
  * SSH target from ~/.ssh/config
  * 

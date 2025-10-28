@@ -25,6 +25,7 @@ export function NarrationPanel() {
   // TEAM-338: Prepend new entries to top (newest first)
   useEffect(() => {
     const unlisten = listen<NarrationEvent>("narration", (event) => {
+      console.log(event);
       setEntries((prev) => [
         {
           ...event.payload,
@@ -104,22 +105,6 @@ export function NarrationPanel() {
       {/* Header */}
       <div className="flex items-center justify-between px-4 py-3 border-b border-border">
         <h2 className="text-sm font-semibold">Narration</h2>
-        <div className="flex gap-2">
-          <button
-            onClick={handleTest}
-            className="text-xs text-blue-500 hover:text-blue-600 transition-colors"
-            title="Test narration events"
-          >
-            Test
-          </button>
-          <button
-            onClick={handleClear}
-            className="text-xs text-muted-foreground hover:text-foreground transition-colors"
-            title="Clear all entries"
-          >
-            Clear
-          </button>
-        </div>
       </div>
 
       {/* Entries list */}
@@ -158,8 +143,24 @@ export function NarrationPanel() {
       </div>
 
       {/* Footer stats */}
-      <div className="px-4 py-2 border-t border-border text-xs text-muted-foreground">
+      <div className="flex items-center justify-between px-4 py-2 border-t border-border text-xs text-muted-foreground">
         {entries.length} {entries.length === 1 ? "entry" : "entries"}
+        <div className="flex gap-2">
+          <button
+            onClick={handleTest}
+            className="text-xs text-blue-500 hover:text-blue-600 transition-colors"
+            title="Test narration events"
+          >
+            Test
+          </button>
+          <button
+            onClick={handleClear}
+            className="text-xs text-muted-foreground hover:text-foreground transition-colors"
+            title="Clear all entries"
+          >
+            Clear
+          </button>
+        </div>
       </div>
     </div>
   );
