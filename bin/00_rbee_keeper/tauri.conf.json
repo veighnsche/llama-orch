@@ -27,10 +27,12 @@
         "fullscreen": false,
         "resizable": true,
         "title": "rbee Keeper",
-        "width": 1280,
-        "height": 800,
-        "minWidth": 800,
-        "minHeight": 600
+        "width": 960,
+        "height": 1080,
+        "minWidth": 600,
+        "minHeight": 800,
+        "decorations": false,
+        "transparent": false
       }
     ],
     "security": {

@@ -45,12 +45,7 @@ export function KeeperSidebar() {
   ];
 
   return (
-    <Sidebar collapsible="none" className="border-r border-border h-screen">
-      <SidebarHeader className="p-4">
-        <Link to="/">
-          <BrandLogo size="md" />
-        </Link>
-      </SidebarHeader>
+    <Sidebar collapsible="none" className="border-r border-border">
       <SidebarContent>
         <SidebarGroup>
           <SidebarGroupLabel>Main</SidebarGroupLabel>
