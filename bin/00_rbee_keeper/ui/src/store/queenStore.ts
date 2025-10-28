@@ -1,8 +1,7 @@
 // TEAM-338: Zustand store for Queen service state and commands
-// Imports commandStore internally to manage global isExecuting state
 import { create } from "zustand";
 import { commands } from "@/generated/bindings";
-import { useCommandStore } from "./commandStore";
+import { withCommandExecution } from "./commandUtils";
 
 export interface QueenStatus {
   isRunning: boolean;
@@ -23,24 +22,6 @@ interface QueenState {
   uninstall: () => Promise<void>;
   reset: () => void;
 }
-
-// Helper to wrap commands with global isExecuting state
-const withCommandExecution = async (
-  commandFn: () => Promise<unknown>,
-  refreshFn: () => Promise<void>,
-) => {
-  const { setIsExecuting } = useCommandStore.getState();
-  setIsExecuting(true);
-  try {
-    await commandFn();
-    await refreshFn();
-  } catch (error) {
-    console.error("Queen command failed:", error);
-    throw error;
-  } finally {
-    setIsExecuting(false);
-  }
-};
 
 export const useQueenStore = create<QueenState>((set, get) => ({
   status: null,
@@ -69,17 +50,26 @@ export const useQueenStore = create<QueenState>((set, get) => ({
   },
 
   start: async () => {
-    await withCommandExecution(() => commands.queenStart(), get().fetchStatus);
+    await withCommandExecution(
+      () => commands.queenStart(),
+      get().fetchStatus,
+      "Queen start",
+    );
   },
 
   stop: async () => {
-    await withCommandExecution(() => commands.queenStop(), get().fetchStatus);
+    await withCommandExecution(
+      () => commands.queenStop(),
+      get().fetchStatus,
+      "Queen stop",
+    );
   },
 
   install: async () => {
     await withCommandExecution(
       () => commands.queenInstall(null),
       get().fetchStatus,
+      "Queen install",
     );
   },
 
@@ -87,6 +77,7 @@ export const useQueenStore = create<QueenState>((set, get) => ({
     await withCommandExecution(
       () => commands.queenRebuild(false),
       get().fetchStatus,
+      "Queen rebuild",
     );
   },
 
@@ -94,6 +85,7 @@ export const useQueenStore = create<QueenState>((set, get) => ({
     await withCommandExecution(
       () => commands.queenUninstall(),
       get().fetchStatus,
+      "Queen uninstall",
     );
   },
 

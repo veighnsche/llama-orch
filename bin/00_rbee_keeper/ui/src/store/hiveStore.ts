@@ -1,10 +1,9 @@
 // TEAM-338: Zustand store for SSH Hives state
 // Replaces SshHivesContainer with idiomatic Zustand pattern
-// Imports commandStore internally to manage global isExecuting state
 import { create } from "zustand";
 import { commands } from "@/generated/bindings";
 import type { SshTarget } from "@/generated/bindings";
-import { useCommandStore } from "./commandStore";
+import { withCommandExecution } from "./commandUtils";
 
 export interface SshHive {
   host: string;
@@ -24,6 +23,10 @@ interface SshHivesState {
   // Actions
   fetchHives: () => Promise<void>;
   install: (targetId: string) => Promise<void>;
+  start: (hiveId: string) => Promise<void>;
+  stop: (hiveId: string) => Promise<void>;
+  uninstall: (hiveId: string) => Promise<void>;
+  refreshCapabilities: (hiveId: string) => Promise<void>;
   refresh: () => Promise<void>;
   reset: () => void;
 }
@@ -39,24 +42,6 @@ function convertToSshHive(target: SshTarget): SshHive {
     status: target.status,
   };
 }
-
-// Helper to wrap commands with global isExecuting state
-const withCommandExecution = async (
-  commandFn: () => Promise<unknown>,
-  refreshFn: () => Promise<void>,
-) => {
-  const { setIsExecuting } = useCommandStore.getState();
-  setIsExecuting(true);
-  try {
-    await commandFn();
-    await refreshFn();
-  } catch (error) {
-    console.error("Hive command failed:", error);
-    throw error;
-  } finally {
-    setIsExecuting(false);
-  }
-};
 
 export const useSshHivesStore = create<SshHivesState>((set, get) => ({
   hives: [],
@@ -87,6 +72,45 @@ export const useSshHivesStore = create<SshHivesState>((set, get) => ({
         }));
       },
       get().fetchHives,
+      "Hive install",
+    );
+  },
+
+  start: async (hiveId: string) => {
+    await withCommandExecution(
+      () => commands.hiveStart(hiveId),
+      get().fetchHives,
+      "Hive start",
+    );
+  },
+
+  stop: async (hiveId: string) => {
+    await withCommandExecution(
+      () => commands.hiveStop(hiveId),
+      get().fetchHives,
+      "Hive stop",
+    );
+  },
+
+  uninstall: async (hiveId: string) => {
+    await withCommandExecution(
+      async () => {
+        await commands.hiveUninstall(hiveId);
+        // Remove from installed hives list
+        set((state) => ({
+          installedHives: state.installedHives.filter((id) => id !== hiveId),
+        }));
+      },
+      get().fetchHives,
+      "Hive uninstall",
+    );
+  },
+
+  refreshCapabilities: async (hiveId: string) => {
+    await withCommandExecution(
+      () => commands.hiveRefreshCapabilities(hiveId),
+      get().fetchHives,
+      "Hive refresh capabilities",
     );
   },
 
