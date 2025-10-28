@@ -2,11 +2,11 @@
 
 **Author:** TEAM-296, TEAM-338  
 **Date:** October 28, 2025  
-**Status:** Active Pattern (Updated to Zustand)
+**Status:** Active Pattern (Zustand + CommandStore)
 
-## 🚨 CRITICAL: ZUSTAND IDIOMATIC PATTERN
+## 🚨 CRITICAL: ZUSTAND + COMMANDSTORE PATTERN
 
-This pattern uses **ZUSTAND STORES** for state management with **CUSTOM HOOKS**.
+This pattern uses **ZUSTAND STORES** for state management with **GLOBAL COMMAND EXECUTION STATE**.
 
 ## The Split
 
@@ -14,47 +14,53 @@ This pattern uses **ZUSTAND STORES** for state management with **CUSTOM HOOKS**.
 - ✅ **ONLY** state definitions
 - ✅ **ONLY** async actions (fetch, commands)
 - ✅ **ONLY** state updates
-- ✅ Exports custom hook (`useQueenStore`)
+- ✅ Imports `commandStore` internally (NOT exposed to components)
+- ✅ Uses `withCommandExecution` helper for all commands
+- ✅ Exports custom hook (`useQueenStore`, `useHiveStore`)
 - ✅ Exports type definitions
 - ❌ **NO** React components
 - ❌ **NO** UI imports
 - ❌ **NO** JSX
 
 ### 2. **Component** (`components/*Card.tsx`) - UI + HOOK USAGE
-- ✅ Uses store hook (`useQueenStore`)
+- ✅ Uses store hook (`useQueenStore`, `useHiveStore`)
+- ✅ Reads `isExecuting` from `commandStore` (for button disabled state)
 - ✅ Handles loading/error states in UI
-- ✅ Calls store actions
+- ✅ Calls store actions directly (e.g., `start()`, `stop()`, `install()`)
 - ✅ All UI/styling logic
 - ❌ **NO** direct state management
 - ❌ **NO** useState for data
 - ❌ **NO** manual fetch logic
+- ❌ **NO** manual `setIsExecuting` calls (store handles this)
 
-## 🔥 RULE ZERO: STORES ARE COMPONENT AGNOSTIC
+## 🔥 RULE ZERO: STORES MANAGE STATE + COMMANDS INTERNALLY
 
-**Stores provide STATE and ACTIONS. Components consume via hooks.**
+**Stores provide STATE and ACTIONS. Components consume via hooks. CommandStore is INTERNAL to stores.**
 
 ```tsx
-// ❌ WRONG - Component manages state
+// ❌ WRONG - Component manages isExecuting
 export function QueenCard() {
-  const [status, setStatus] = useState(null);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isExecuting, setIsExecuting] = useState(false);
+  const { start } = useQueenStore();
   
-  useEffect(() => {
-    fetchStatus().then(setStatus);
-  }, []);
+  const handleStart = async () => {
+    setIsExecuting(true);
+    try {
+      await start();
+    } finally {
+      setIsExecuting(false);
+    }
+  };
   
-  return <Card>...</Card>;
+  return <Button onClick={handleStart} disabled={isExecuting}>Start</Button>;
 }
 
-// ✅ RIGHT - Store manages state, component consumes
+// ✅ RIGHT - Store manages isExecuting internally, component just reads it
 export function QueenCard() {
-  const { status, isLoading, fetchStatus } = useQueenStore();
+  const { start } = useQueenStore();
+  const { isExecuting } = useCommandStore();
   
-  useEffect(() => {
-    fetchStatus();
-  }, [fetchStatus]);
-  
-  return <Card>...</Card>;
+  return <Button onClick={start} disabled={isExecuting}>Start</Button>;
 }
 ```
 
@@ -62,16 +68,25 @@ export function QueenCard() {
 
 ```
 store/
-└── queenStore.ts           # ✅ Zustand store with state + actions
+├── commandStore.ts         # ✅ Global isExecuting state (imported by other stores)
+├── queenStore.ts           # ✅ Zustand store with state + actions (imports commandStore)
+└── hiveStore.ts            # ✅ Zustand store with state + actions (imports commandStore)
 components/
-└── QueenCard.tsx           # ✅ Component using store hook
+├── QueenCard.tsx           # ✅ Component using queenStore + commandStore hooks
+└── InstallHiveCard.tsx     # ✅ Component using hiveStore + commandStore hooks
 pages/
-└── ServicesPage.tsx        # ✅ Just renders component
+└── ServicesPage.tsx        # ✅ Just renders components
 ```
 
 ## Reference Implementation
 
-**See:** `store/queenStore.ts` (state management) + `components/QueenCard.tsx` (UI) + `pages/ServicesPage.tsx` (usage)
+**See:** 
+- `store/commandStore.ts` - Global command execution state
+- `store/queenStore.ts` - Queen service state + actions (imports commandStore)
+- `store/hiveStore.ts` - Hive state + actions (imports commandStore)
+- `components/QueenCard.tsx` - UI using queenStore + commandStore
+- `components/InstallHiveCard.tsx` - UI using hiveStore + commandStore
+- `pages/ServicesPage.tsx` - Page composition
 
 ## Implementation Guide
 
@@ -164,10 +179,12 @@ export const useQueenStore = create<QueenState>((set, get) => ({
 ```
 
 **Key Points:**
-- ✅ Store imports `commandStore` internally (not exposed to components)
-- ✅ All command functions handle global `isExecuting` automatically
-- ✅ Commands auto-refresh status after execution
-- ✅ Components just call simple functions like `start()`, `stop()`, etc.
+- ✅ Store imports `commandStore` internally via `useCommandStore.getState()`
+- ✅ `withCommandExecution` helper wraps all commands with `setIsExecuting(true/false)`
+- ✅ Commands auto-refresh data after execution (e.g., `get().fetchStatus`)
+- ✅ Components just call simple functions like `start()`, `stop()`, `install()`
+- ✅ Components read `isExecuting` from `commandStore` for button disabled state
+- ✅ NO manual `setIsExecuting` calls in components
 
 ### 2. Component (`components/*Card.tsx`) - UI + HOOK USAGE
 
@@ -248,9 +265,9 @@ export function QueenCard() {
 **Key Points:**
 - ✅ Store exposes command functions directly (`start`, `stop`, `install`, etc.)
 - ✅ Component just calls functions - no command wrapping needed
-- ✅ Only reads `isExecuting` from `commandStore` (doesn't call `setIsExecuting`)
-- ✅ Store handles all command execution logic internally
-- ✅ Clean, simple component code
+- ✅ Component ONLY reads `isExecuting` from `commandStore` (NEVER calls `setIsExecuting`)
+- ✅ Store handles all command execution logic internally via `withCommandExecution`
+- ✅ Clean, simple component code - just call actions and read state
 
 ### 3. Usage in Pages - SIMPLE IMPORT
 
@@ -559,57 +576,82 @@ const result = await invoke<string>("hive_list");
 
 ## ✅ Checklist for New Components
 
-### Container (`*Container.tsx`)
-- [ ] Create container file in `/containers/`
-- [ ] Import ONLY: `react`, `@/generated/bindings`, `lucide-react` (AlertCircle), `@rbee/ui/atoms` (Button for error boundary)
-- [ ] ❌ NO UI component imports (Card, Table, etc.)
-- [ ] Define promise cache: `const promiseCache = new Map<string, Promise<any>>()`
-- [ ] Implement fetch function with cache
-- [ ] Implement error boundary (generic error UI)
-- [ ] Export `*DataProvider` component with render prop signature: `children: (data: any, refresh: () => void) => ReactNode`
-- [ ] Export type re-exports: `export type { YourType } from "../components/YourComponent"`
-- [ ] ❌ NO presentation components inside container
-
-### Presentation Component (`*Card.tsx` / `*Table.tsx`)
-- [ ] Create presentation file in `/components/`
-- [ ] Export data type interface
-- [ ] Export loading fallback component
-- [ ] Export presentation component with props interface
-- [ ] ❌ NO data fetching
-- [ ] ❌ NO `use()` hook
-- [ ] ❌ NO Suspense
-
-### Page (Wire them together)
-- [ ] Import `*DataProvider` from container
-- [ ] Import presentation components from components
-- [ ] Use render prop pattern:
+### Store (`store/*Store.ts`)
+- [ ] Create store file in `/store/`
+- [ ] Import `commandStore`: `import { useCommandStore } from './commandStore'`
+- [ ] Define state interface with data, isLoading, error fields
+- [ ] Define actions interface (fetch, command actions, reset)
+- [ ] Create `withCommandExecution` helper:
   ```tsx
-  <YourDataProvider fallback={<LoadingComponent />}>
-    {(data, onRefresh) => (
-      <YourComponent data={data} onRefresh={onRefresh} />
-    )}
-  </YourDataProvider>
+  const withCommandExecution = async (
+    commandFn: () => Promise<unknown>,
+    refreshFn: () => Promise<void>
+  ) => {
+    const { setIsExecuting } = useCommandStore.getState();
+    setIsExecuting(true);
+    try {
+      await commandFn();
+      await refreshFn();
+    } catch (error) {
+      console.error('Command failed:', error);
+      throw error;
+    } finally {
+      setIsExecuting(false);
+    }
+  };
   ```
+- [ ] Implement fetch action with isLoading/error handling
+- [ ] Implement command actions using `withCommandExecution`
+- [ ] Export store hook: `export const useYourStore = create<YourState>(...)`
+- [ ] Export type definitions
+- [ ] ❌ NO React imports
+- [ ] ❌ NO UI logic
+
+### Component (`components/*Card.tsx`)
+- [ ] Create component file in `/components/`
+- [ ] Import store hook: `import { useYourStore } from '../store/yourStore'`
+- [ ] Import commandStore: `import { useCommandStore } from '../store/commandStore'`
+- [ ] Destructure state and actions from store
+- [ ] Destructure `isExecuting` from commandStore
+- [ ] Call fetch action in `useEffect` on mount
+- [ ] Handle loading state (show spinner)
+- [ ] Handle error state (show error message)
+- [ ] Render UI with data
+- [ ] Pass `isExecuting` to button `disabled` prop
+- [ ] Call store actions directly on button clicks
+- [ ] ❌ NO useState for data
+- [ ] ❌ NO manual setIsExecuting calls
+- [ ] ❌ NO try/catch around store actions
+
+### Page (Composition)
+- [ ] Import components from `/components/`
+- [ ] Render components directly (no providers needed)
+- [ ] Store is globally accessible via hooks
+- [ ] Multiple components can share same store
 
 ## Resources
 
-- [React 19 `use()` Hook Documentation](https://react.dev/reference/react/use)
-- [Suspense Documentation](https://react.dev/reference/react/Suspense)
+- [Zustand Documentation](https://github.com/pmndrs/zustand)
 - **Reference Implementation:** 
-  - Container: `containers/QueenContainer.tsx` (data layer)
-  - Presentation: `components/QueenCard.tsx` (UI layer)
-  - Usage: `pages/ServicesPage.tsx` (wiring)
+  - Global State: `store/commandStore.ts` (isExecuting state)
+  - Service Store: `store/queenStore.ts` (state + actions with commandStore)
+  - Service Store: `store/hiveStore.ts` (state + actions with commandStore)
+  - Component: `components/QueenCard.tsx` (UI using stores)
+  - Component: `components/InstallHiveCard.tsx` (UI using stores)
+  - Page: `pages/ServicesPage.tsx` (composition)
 
 ## 🎯 TL;DR
 
-**CONTAINERS = DATA ONLY. NO UI.**
+**STORES = STATE + ACTIONS. IMPORT COMMANDSTORE INTERNALLY.**
 
-**PRESENTATION = UI ONLY. NO DATA FETCHING.**
+**COMPONENTS = UI + STORE HOOKS. READ isExecuting, NEVER SET IT.**
 
-**PAGES = WIRE THEM TOGETHER WITH RENDER PROPS.**
+**PAGES = JUST RENDER COMPONENTS.**
 
-If you put a `<Card>` or `<Table>` in a container, **YOU FUCKED UP.**
+If you call `setIsExecuting` in a component, **YOU FUCKED UP.**
 
-If you put `use()` or `Suspense` in a presentation component, **YOU FUCKED UP.**
+If you wrap store actions in try/catch in a component, **YOU FUCKED UP.**
 
-**Containers are COMPONENT AGNOSTIC. They provide DATA via render props. Consumers provide PRESENTATION.**
+If you use `useState` for data that should be in a store, **YOU FUCKED UP.**
+
+**Stores manage EVERYTHING internally. Components just call actions and read state.**

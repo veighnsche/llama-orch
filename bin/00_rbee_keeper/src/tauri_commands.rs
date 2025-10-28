@@ -32,11 +32,19 @@ mod tests {
             .commands(collect_commands![
                 test_narration,
                 ssh_list,
+                ssh_open_config,
                 queen_start,
                 queen_stop,
                 queen_install,
                 queen_rebuild,
                 queen_uninstall,
+                hive_start,
+                hive_stop,
+                hive_status,
+                hive_install,
+                hive_uninstall,
+                hive_rebuild,
+                hive_refresh_capabilities,
             ])
             .typ::<NarrationEvent>();
         
@@ -205,8 +213,198 @@ pub async fn test_narration() -> Result<String, String> {
 }
 
 // ============================================================================
+// HIVE COMMANDS
+// ============================================================================
+
+/// Start rbee-hive daemon
+/// TEAM-338: Thin wrapper around handle_hive()
+#[tauri::command]
+#[specta::specta]
+pub async fn hive_start(alias: String) -> Result<String, String> {
+    use crate::handlers::handle_hive;
+    use crate::cli::HiveAction;
+    use crate::Config;
+    
+    let config = Config::load()
+        .map_err(|e| format!("Config error: {}", e))?;
+    let queen_url = config.queen_url();
+    
+    handle_hive(HiveAction::Start { alias, port: None }, &queen_url)
+        .await
+        .map(|_| "Hive started successfully".to_string())
+        .map_err(|e| format!("{}", e))
+}
+
+/// Stop rbee-hive daemon
+/// TEAM-338: Thin wrapper around handle_hive()
+#[tauri::command]
+#[specta::specta]
+pub async fn hive_stop(alias: String) -> Result<String, String> {
+    use crate::handlers::handle_hive;
+    use crate::cli::HiveAction;
+    use crate::Config;
+    
+    let config = Config::load()
+        .map_err(|e| format!("Config error: {}", e))?;
+    let queen_url = config.queen_url();
+    
+    handle_hive(HiveAction::Stop { alias, port: None }, &queen_url)
+        .await
+        .map(|_| "Hive stopped successfully".to_string())
+        .map_err(|e| format!("{}", e))
+}
+
+/// Check rbee-hive status
+/// TEAM-338: Thin wrapper around handle_hive()
+#[tauri::command]
+#[specta::specta]
+pub async fn hive_status(alias: String) -> Result<String, String> {
+    use crate::handlers::handle_hive;
+    use crate::cli::HiveAction;
+    use crate::Config;
+    
+    let config = Config::load()
+        .map_err(|e| format!("Config error: {}", e))?;
+    let queen_url = config.queen_url();
+    
+    handle_hive(HiveAction::Status { alias }, &queen_url)
+        .await
+        .map(|_| "Hive status checked".to_string())
+        .map_err(|e| format!("{}", e))
+}
+
+/// Install rbee-hive binary
+/// TEAM-338: Thin wrapper around handle_hive()
+#[tauri::command]
+#[specta::specta]
+pub async fn hive_install(alias: String) -> Result<String, String> {
+    use crate::handlers::handle_hive;
+    use crate::cli::HiveAction;
+    use crate::Config;
+    
+    let config = Config::load()
+        .map_err(|e| format!("Config error: {}", e))?;
+    let queen_url = config.queen_url();
+    
+    handle_hive(HiveAction::Install { alias }, &queen_url)
+        .await
+        .map(|_| "Hive installed successfully".to_string())
+        .map_err(|e| format!("{}", e))
+}
+
+/// Uninstall rbee-hive binary
+/// TEAM-338: Thin wrapper around handle_hive()
+#[tauri::command]
+#[specta::specta]
+pub async fn hive_uninstall(alias: String) -> Result<String, String> {
+    use crate::handlers::handle_hive;
+    use crate::cli::HiveAction;
+    use crate::Config;
+    
+    let config = Config::load()
+        .map_err(|e| format!("Config error: {}", e))?;
+    let queen_url = config.queen_url();
+    
+    handle_hive(HiveAction::Uninstall { alias }, &queen_url)
+        .await
+        .map(|_| "Hive uninstalled successfully".to_string())
+        .map_err(|e| format!("{}", e))
+}
+
+/// Rebuild rbee-hive from source
+/// TEAM-338: Thin wrapper around handle_hive()
+#[tauri::command]
+#[specta::specta]
+pub async fn hive_rebuild(alias: String) -> Result<String, String> {
+    use crate::handlers::handle_hive;
+    use crate::cli::HiveAction;
+    use crate::Config;
+    
+    let config = Config::load()
+        .map_err(|e| format!("Config error: {}", e))?;
+    let queen_url = config.queen_url();
+    
+    handle_hive(HiveAction::Rebuild { alias }, &queen_url)
+        .await
+        .map(|_| "Hive rebuilt successfully".to_string())
+        .map_err(|e| format!("{}", e))
+}
+
+/// Refresh device capabilities for a hive
+/// TEAM-338: Thin wrapper around handle_hive()
+#[tauri::command]
+#[specta::specta]
+pub async fn hive_refresh_capabilities(alias: String) -> Result<String, String> {
+    use crate::handlers::handle_hive;
+    use crate::cli::HiveAction;
+    use crate::Config;
+    
+    let config = Config::load()
+        .map_err(|e| format!("Config error: {}", e))?;
+    let queen_url = config.queen_url();
+    
+    handle_hive(HiveAction::RefreshCapabilities { alias }, &queen_url)
+        .await
+        .map(|_| "Hive capabilities refreshed".to_string())
+        .map_err(|e| format!("{}", e))
+}
+
+// ============================================================================
 // SSH COMMANDS
 // ============================================================================
+
+/// Open SSH config file in default text editor
+/// TEAM-338: Opens ~/.ssh/config with system default editor
+#[tauri::command]
+#[specta::specta]
+pub async fn ssh_open_config() -> Result<String, String> {
+    use observability_narration_core::n;
+    use std::process::Command;
+    
+    n!("ssh_open_config", "Opening SSH config in default editor");
+    
+    let home = std::env::var("HOME")
+        .map_err(|_| "HOME environment variable not set".to_string())?;
+    let ssh_config_path = std::path::PathBuf::from(home).join(".ssh/config");
+    
+    // Create .ssh directory if it doesn't exist
+    if let Some(parent) = ssh_config_path.parent() {
+        std::fs::create_dir_all(parent)
+            .map_err(|e| format!("Failed to create .ssh directory: {}", e))?;
+    }
+    
+    // Create empty config file if it doesn't exist
+    if !ssh_config_path.exists() {
+        std::fs::write(&ssh_config_path, "")
+            .map_err(|e| format!("Failed to create SSH config file: {}", e))?;
+    }
+    
+    // Open with default editor (xdg-open on Linux, open on macOS, start on Windows)
+    #[cfg(target_os = "linux")]
+    let status = Command::new("xdg-open")
+        .arg(&ssh_config_path)
+        .spawn()
+        .map_err(|e| format!("Failed to open editor: {}", e))?;
+    
+    #[cfg(target_os = "macos")]
+    let status = Command::new("open")
+        .arg(&ssh_config_path)
+        .spawn()
+        .map_err(|e| format!("Failed to open editor: {}", e))?;
+    
+    #[cfg(target_os = "windows")]
+    let status = Command::new("cmd")
+        .args(["/C", "start", "", ssh_config_path.to_str().unwrap()])
+        .spawn()
+        .map_err(|e| format!("Failed to open editor: {}", e))?;
+    
+    #[cfg(not(any(target_os = "linux", target_os = "macos", target_os = "windows")))]
+    return Err("Unsupported operating system".to_string());
+    
+    drop(status); // Don't wait for editor to close
+    
+    Ok(format!("Opened SSH config: {}", ssh_config_path.display()))
+}
 
 #[tauri::command]
 #[specta::specta]

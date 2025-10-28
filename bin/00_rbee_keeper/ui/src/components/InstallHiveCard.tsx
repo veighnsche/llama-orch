@@ -1,6 +1,6 @@
 // TEAM-338: Card for installing hive to a new SSH target
-// DEPRECATED: Use HiveInstallCard.tsx instead (uses Zustand store)
-import { useState, useEffect } from "react";
+// Uses SshHivesDataProvider with React 19 use() hook - NO useEffect needed
+import { useState } from "react";
 import {
   Card,
   CardContent,
@@ -14,14 +14,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@rbee/ui/atoms";
-import { Download, Loader2, AlertCircle } from "lucide-react";
-import { useSshHivesStore, type SshHive } from "../store/sshHivesStore";
-import { useInstallationStore } from "../store/hiveStore";
-
-interface InstallHiveCardProps {
-  onInstall: (targetId: string) => void;
-  disabled?: boolean;
-}
+import { Download } from "lucide-react";
+import { SshHivesDataProvider } from "../containers/SshHivesContainer";
+import { useSshHivesStore } from "../store/hiveStore";
+import { useCommandStore } from "../store/commandStore";
 
 // SSH Target Select Item component
 function SshTargetItem({ name, subtitle }: { name: string; subtitle: string }) {
@@ -33,31 +29,59 @@ function SshTargetItem({ name, subtitle }: { name: string; subtitle: string }) {
   );
 }
 
-export function InstallHiveCard({
-  onInstall,
-  disabled = false,
-}: InstallHiveCardProps) {
+// Inner component that reads from store
+function InstallHiveContent() {
   const [selectedTarget, setSelectedTarget] = useState<string>("localhost");
-  const { installedHives } = useInstallationStore();
-  const { hives, isLoading, error, fetchHives } = useSshHivesStore();
+  const { hives, install } = useSshHivesStore();
+  const { isExecuting } = useCommandStore();
 
-  // Fetch hives on mount
-  useEffect(() => {
-    fetchHives();
-  }, [fetchHives]);
-
-  const handleInstall = () => {
-    onInstall(selectedTarget);
+  const handleInstall = async () => {
+    await install(selectedTarget);
   };
 
-  // Filter out already installed hives
-  const availableHives = hives.filter(
-    (hive) => !installedHives.includes(hive.host),
+  // TODO: Track installed hives via store to filter them out
+  const availableHives = hives;
+  const isLocalhostInstalled = false; // TODO: Check from store
+
+  return (
+    <>
+      <Select value={selectedTarget} onValueChange={setSelectedTarget}>
+        <SelectTrigger id="install-target" className="w-full h-auto py-3">
+          <SelectValue placeholder="Select target" />
+        </SelectTrigger>
+        <SelectContent>
+          {/* Always include localhost if not installed */}
+          {!isLocalhostInstalled && (
+            <SelectItem value="localhost">
+              <SshTargetItem name="localhost" subtitle="This machine" />
+            </SelectItem>
+          )}
+          {/* Dynamic SSH targets (filtered) */}
+          {availableHives.map((hive) => (
+            <SelectItem key={hive.host} value={hive.host}>
+              <SshTargetItem
+                name={hive.host}
+                subtitle={`${hive.user}@${hive.hostname}:${hive.port}`}
+              />
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+
+      {/* Install Button */}
+      <Button
+        onClick={handleInstall}
+        disabled={isExecuting}
+        className="w-full"
+      >
+        <Download className="mr-2 h-4 w-4" />
+        Install Hive
+      </Button>
+    </>
   );
+}
 
-  // Check if localhost is already installed
-  const isLocalhostInstalled = installedHives.includes("localhost");
-
+export function InstallHiveCard() {
   return (
     <Card>
       <CardHeader>
@@ -77,64 +101,18 @@ export function InstallHiveCard({
               Target
             </label>
 
-            {/* Loading state */}
-            {isLoading && hives.length === 0 ? (
-              <Select disabled>
-                <SelectTrigger id="install-target" className="w-full">
-                  <SelectValue placeholder="Loading targets..." />
-                </SelectTrigger>
-              </Select>
-            ) : error ? (
-              /* Error state */
-              <div className="flex items-center gap-2 text-destructive text-sm p-3 border border-destructive/50 rounded-md">
-                <AlertCircle className="h-4 w-4" />
-                <p>{error}</p>
-              </div>
-            ) : (
-              /* Success state */
-              <Select
-                value={selectedTarget}
-                onValueChange={setSelectedTarget}
-              >
-                <SelectTrigger
-                  id="install-target"
-                  className="w-full h-auto py-3"
-                >
-                  <SelectValue placeholder="Select target" />
-                </SelectTrigger>
-                <SelectContent>
-                  {/* Always include localhost if not installed */}
-                  {!isLocalhostInstalled && (
-                    <SelectItem value="localhost">
-                      <SshTargetItem
-                        name="localhost"
-                        subtitle="This machine"
-                      />
-                    </SelectItem>
-                  )}
-                  {/* Dynamic SSH targets (filtered) */}
-                  {availableHives.map((hive) => (
-                    <SelectItem key={hive.host} value={hive.host}>
-                      <SshTargetItem
-                        name={hive.host}
-                        subtitle={`${hive.user}@${hive.hostname}:${hive.port}`}
-                      />
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            )}
+            <SshHivesDataProvider
+              fallback={
+                <Select disabled>
+                  <SelectTrigger id="install-target" className="w-full">
+                    <SelectValue placeholder="Loading targets..." />
+                  </SelectTrigger>
+                </Select>
+              }
+            >
+              <InstallHiveContent />
+            </SshHivesDataProvider>
           </div>
-
-          {/* Install Button */}
-          <Button
-            onClick={handleInstall}
-            disabled={disabled || isLoading || !!error}
-            className="w-full"
-          >
-            <Download className="mr-2 h-4 w-4" />
-            Install Hive
-          </Button>
         </div>
       </CardContent>
     </Card>

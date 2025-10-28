@@ -26,6 +26,18 @@ async sshList() : Promise<Result<SshTarget[], string>> {
 }
 },
 /**
+ * Open SSH config file in default text editor
+ * TEAM-338: Opens ~/.ssh/config with system default editor
+ */
+async sshOpenConfig() : Promise<Result<string, string>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("ssh_open_config") };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+/**
  * Start queen-rbee daemon on localhost
  * TEAM-335: Thin wrapper around handle_queen() - business logic in handlers/queen.rs
  */
@@ -80,6 +92,90 @@ async queenRebuild(withLocalHive: boolean) : Promise<Result<string, string>> {
 async queenUninstall() : Promise<Result<string, string>> {
     try {
     return { status: "ok", data: await TAURI_INVOKE("queen_uninstall") };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+/**
+ * Start rbee-hive daemon
+ * TEAM-338: Thin wrapper around handle_hive()
+ */
+async hiveStart(alias: string) : Promise<Result<string, string>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("hive_start", { alias }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+/**
+ * Stop rbee-hive daemon
+ * TEAM-338: Thin wrapper around handle_hive()
+ */
+async hiveStop(alias: string) : Promise<Result<string, string>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("hive_stop", { alias }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+/**
+ * Check rbee-hive status
+ * TEAM-338: Thin wrapper around handle_hive()
+ */
+async hiveStatus(alias: string) : Promise<Result<string, string>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("hive_status", { alias }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+/**
+ * Install rbee-hive binary
+ * TEAM-338: Thin wrapper around handle_hive()
+ */
+async hiveInstall(alias: string) : Promise<Result<string, string>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("hive_install", { alias }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+/**
+ * Uninstall rbee-hive binary
+ * TEAM-338: Thin wrapper around handle_hive()
+ */
+async hiveUninstall(alias: string) : Promise<Result<string, string>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("hive_uninstall", { alias }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+/**
+ * Rebuild rbee-hive from source
+ * TEAM-338: Thin wrapper around handle_hive()
+ */
+async hiveRebuild(alias: string) : Promise<Result<string, string>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("hive_rebuild", { alias }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+/**
+ * Refresh device capabilities for a hive
+ * TEAM-338: Thin wrapper around handle_hive()
+ */
+async hiveRefreshCapabilities(alias: string) : Promise<Result<string, string>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("hive_refresh_capabilities", { alias }) };
 } catch (e) {
     if(e instanceof Error) throw e;
     else return { status: "error", error: e  as any };

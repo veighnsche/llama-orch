@@ -13,7 +13,7 @@
 
 import { PageContainer } from "@rbee/ui/molecules";
 import { QueenCard } from "../components/QueenCard";
-import { HiveInstallCard } from "@/components/HiveInstallCard";
+import { InstallHiveCard } from "@/components/InstallHiveCard";
 
 export default function KeeperPage() {
   return (
@@ -36,7 +36,7 @@ export default function KeeperPage() {
     >
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
         <QueenCard />
-        <HiveInstallCard />
+        <InstallHiveCard />
       </div>
     </PageContainer>
   );

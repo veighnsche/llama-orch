@@ -11,7 +11,10 @@ import {
   Component,
   type ReactNode,
 } from "react";
-import { useSshHivesStore } from "../store/sshHivesStore";
+import { AlertCircle } from "lucide-react";
+import { Alert, AlertTitle, AlertDescription } from "@rbee/ui/atoms";
+import { Button } from "@rbee/ui/atoms";
+import { useSshHivesStore } from "../store/hiveStore";
 
 // Promise cache - CRITICAL: Promises must be cached, not created in render
 const promiseCache = new Map<string, Promise<void>>();
@@ -25,45 +28,44 @@ function fetchSshHives(key: string): Promise<void> {
   return promiseCache.get(key)!;
 }
 
-// Error boundary for SSH hives loading
+// Error boundary for SSH hives loading - React 19 idiomatic pattern
 class SshHivesErrorBoundary extends Component<
   { children: ReactNode; onReset: () => void },
-  { hasError: boolean; error: Error | null }
+  { error: Error | null }
 > {
-  constructor(props: { children: ReactNode; onReset: () => void }) {
-    super(props);
-    this.state = { hasError: false, error: null };
-  }
+  state = { error: null as Error | null };
 
   static getDerivedStateFromError(error: Error) {
-    return { hasError: true, error };
+    return { error };
   }
 
   componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
+    // React 19: Single consolidated error log
     console.error("SSH Hives Error:", error, errorInfo);
   }
 
   render() {
-    if (this.state.hasError) {
+    if (this.state.error) {
       return (
-        <div className="flex flex-col items-center justify-center p-8 space-y-4">
-          <div className="text-center space-y-2">
-            <h3 className="text-lg font-semibold text-destructive">
-              Failed to load SSH targets
-            </h3>
-            <p className="text-sm text-muted-foreground max-w-md">
-              {this.state.error?.message || "Unknown error occurred"}
-            </p>
+        <div className="flex items-center justify-center p-4">
+          <div className="w-full max-w-md space-y-4">
+            <Alert variant="destructive">
+              <AlertCircle className="h-4 w-4" />
+              <AlertTitle>Failed to load SSH targets</AlertTitle>
+              <AlertDescription>
+                {this.state.error.message || "An unexpected error occurred"}
+              </AlertDescription>
+            </Alert>
+            <Button
+              onClick={() => {
+                this.setState({ error: null });
+                this.props.onReset();
+              }}
+              className="w-full"
+            >
+              Try Again
+            </Button>
           </div>
-          <button
-            onClick={() => {
-              this.setState({ hasError: false, error: null });
-              this.props.onReset();
-            }}
-            className="px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90"
-          >
-            Try Again
-          </button>
         </div>
       );
     }
@@ -116,4 +118,4 @@ export function SshHivesDataProvider({
 }
 
 // Re-export type for consumers
-export type { SshHive } from "../store/sshHivesStore";
+export type { SshHive } from "../store/hiveStore";
