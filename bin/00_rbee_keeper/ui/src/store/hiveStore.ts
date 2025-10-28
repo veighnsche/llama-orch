@@ -15,6 +15,7 @@ export interface SshHive {
   user: string;
   port: number;
   status: "online" | "offline" | "unknown";
+  isInstalled?: boolean; // TEAM-338: Track installation status
 }
 
 interface SshHivesState {
@@ -25,6 +26,7 @@ interface SshHivesState {
 
   // Actions
   fetchHives: () => Promise<void>;
+  fetchHiveStatus: (hiveId: string) => Promise<void>; // TEAM-338: Fetch individual hive status
   install: (targetId: string) => Promise<void>;
   start: (hiveId: string) => Promise<void>;
   stop: (hiveId: string) => Promise<void>;
@@ -75,6 +77,29 @@ export const useSshHivesStore = create<SshHivesState>()(
         }
       },
 
+      // TEAM-338: Fetch individual hive status (running + installed)
+      fetchHiveStatus: async (hiveId: string) => {
+        const result = await commands.hiveStatus(hiveId);
+        if (result.status === "ok") {
+          const { is_running, is_installed } = result.data;
+          set((state) => {
+            const hive = state.hives.find((h) => h.host === hiveId);
+            if (hive) {
+              hive.status = is_running ? "online" : "offline";
+              hive.isInstalled = is_installed;
+            }
+            // Update installedHives list
+            if (is_installed && !state.installedHives.includes(hiveId)) {
+              state.installedHives.push(hiveId);
+            } else if (!is_installed) {
+              state.installedHives = state.installedHives.filter(
+                (id) => id !== hiveId,
+              );
+            }
+          });
+        }
+      },
+
       install: async (targetId: string) => {
         await withCommandExecution(
           async () => {
@@ -92,7 +117,7 @@ export const useSshHivesStore = create<SshHivesState>()(
       start: async (hiveId: string) => {
         await withCommandExecution(
           () => commands.hiveStart(hiveId),
-          get().fetchHives,
+          () => get().fetchHiveStatus(hiveId), // TEAM-339: Fetch individual hive status after start
           "Hive start",
         );
       },
@@ -100,7 +125,7 @@ export const useSshHivesStore = create<SshHivesState>()(
       stop: async (hiveId: string) => {
         await withCommandExecution(
           () => commands.hiveStop(hiveId),
-          get().fetchHives,
+          () => get().fetchHiveStatus(hiveId), // TEAM-339: Fetch individual hive status after stop
           "Hive stop",
         );
       },

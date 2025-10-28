@@ -29,13 +29,13 @@ use tower_http::cors::{CorsLayer, Any}; // TEAM-288: CORS support for web UI
 use anyhow::Result; // TEAM-288: Import Result for main function
 use clap::Parser;
 use job_server::JobRegistry;
-use observability_narration_core::NarrationFactory;
+use observability_narration_core::n;
 // TEAM-290: DELETED rbee_config import (file-based config deprecated)
 use std::net::SocketAddr;
 use std::sync::Arc;
 
 // TEAM-192: Local narration factory for main.rs
-const NARRATE: NarrationFactory = NarrationFactory::new("queen");
+// TEAM-340: Migrated to n!() macro
 // TEAM-188: operations module doesn't exist yet
 // use crate::operations::*;
 
@@ -57,11 +57,7 @@ async fn main() -> Result<()> {
     // TEAM-164: Initialize SSE sink for distributed narration
     // TEAM-204: Removed init() - no global channel, job channels created on-demand
 
-    NARRATE
-        .action("start")
-        .context(args.port.to_string())
-        .human("Queen-rbee starting on port {} (localhost-only mode)")
-        .emit();
+    n!("start", "Queen-rbee starting on port {} (localhost-only mode)", args.port);
 
     // TEAM-290: No config loading (file-based config deprecated)
 
@@ -81,18 +77,13 @@ async fn main() -> Result<()> {
     let app = create_router(job_server, worker_registry);
     let addr = SocketAddr::from(([127, 0, 0, 1], args.port));
 
-    NARRATE.action("listen").context(addr.to_string()).human("Listening on http://{}").emit();
+    n!("listen", "Listening on http://{}", addr);
 
-    NARRATE.action("ready").human("Ready to accept connections").emit();
+    n!("ready", "Ready to accept connections");
 
     let listener = tokio::net::TcpListener::bind(addr).await?;
     axum::serve(listener, app).await.map_err(|e| {
-        NARRATE
-            .action("error")
-            .context(e.to_string())
-            .human("Server error: {}")
-            .error_kind("server_failed")
-            .emit();
+        n!("error", "Server error: {}", e);
         anyhow::anyhow!("Server failed: {}", e)
     })
 }
@@ -141,7 +132,7 @@ fn create_router(
         // Health check (no /v1 prefix for compatibility)
         .route("/health", get(http::handle_health))
         // TEAM-186: V1 API endpoints (matches API_REFERENCE.md)
-        // TEAM-327: Removed /v1/shutdown (use signal-based shutdown: SIGTERM/SIGKILL)
+        .route("/v1/shutdown", post(http::handle_shutdown)) // TEAM-339: Graceful shutdown endpoint
         .route("/v1/build-info", get(http::handle_build_info)) // TEAM-262: Build information
         .route("/v1/info", get(http::handle_info)) // TEAM-292: Queen info for service discovery
         // TEAM-275: Removed /v1/heartbeat endpoint (deprecated, use /v1/worker-heartbeat instead)
@@ -162,5 +153,3 @@ fn create_router(
         .merge(http::create_static_router())
         .layer(cors) // TEAM-288: Apply CORS layer to all routes
 }
-
-// TEAM-327: Removed handle_shutdown() - use signal-based shutdown (SIGTERM/SIGKILL) instead

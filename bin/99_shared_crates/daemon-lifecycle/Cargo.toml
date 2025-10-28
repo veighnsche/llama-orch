@@ -3,7 +3,13 @@ name = "daemon-lifecycle"
 version = "0.1.0"
 edition = "2021"
 
+[features]
+# TEAM-338: RULE ZERO FIX - Optional tauri feature for specta::Type on DaemonStatus
+tauri = ["dep:specta"]
+
 [dependencies]
+# TEAM-338: RULE ZERO FIX - Optional specta dependency for Tauri bindings (use RC version)
+specta = { version = "2.0.0-rc", optional = true }
 anyhow = "1.0"
 tokio = { version = "1.0", features = ["full"] }
 observability-narration-core = { path = "../narration-core" }

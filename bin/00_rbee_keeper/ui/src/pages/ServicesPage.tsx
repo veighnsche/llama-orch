@@ -2,6 +2,7 @@
 // TEAM-295: Added action buttons to Queen and Hive cards (icon-only with tooltips)
 // TEAM-296: Wired up queen lifecycle operations (install, update, uninstall)
 // TEAM-338: Migrated to Zustand store pattern with React 19 Suspense
+// TEAM-339: Use DaemonContainer directly (Rule Zero - deleted wrapper)
 // Updated: Replaced ServiceCard with dedicated QueenCard and HiveCard components
 //
 // Queen Lifecycle Operations:
@@ -13,7 +14,8 @@
 
 import { PageContainer } from "@rbee/ui/molecules";
 import { QueenCard } from "../components/QueenCard";
-import { QueenDataProvider } from "../containers/QueenContainer";
+import { DaemonContainer } from "../containers/DaemonContainer";
+import { useQueenStore } from "../store/queenStore";
 import { InstallHiveCard } from "@/components/InstallHiveCard";
 import { InstalledHiveList } from "@/components/InstalledHiveList";
 
@@ -37,9 +39,16 @@ export default function KeeperPage() {
       ]}
     >
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
-        <QueenDataProvider>
+        <DaemonContainer
+          cacheKey="queen"
+          metadata={{
+            name: "Queen",
+            description: "Smart API server",
+          }}
+          fetchFn={() => useQueenStore.getState().fetchStatus()}
+        >
           <QueenCard />
-        </QueenDataProvider>
+        </DaemonContainer>
         <InstalledHiveList />
         <InstallHiveCard />
       </div>

@@ -1,5 +1,9 @@
 // TEAM-336: Narration panel - displays real-time narration events from Rust backend
 // Listens to "narration" events emitted by custom tracing layer
+// TEAM-338: UX Design - Shell-like reading order
+//   - New messages prepend to top (newest first)
+//   - No auto-scroll (user controls position)
+//   - Read top-to-bottom to see latest first
 
 import { useEffect, useState, useRef } from "react";
 import { listen } from "@tauri-apps/api/event";
@@ -12,29 +16,21 @@ interface NarrationEntry extends NarrationEvent {
 
 export function NarrationPanel() {
   const [entries, setEntries] = useState<NarrationEntry[]>([]);
-  const scrollRef = useRef<HTMLDivElement>(null);
   const idCounter = useRef(0);
 
-  // Auto-scroll to bottom when new entries arrive
-  useEffect(() => {
-    if (scrollRef.current) {
-      const scrollElement = scrollRef.current.querySelector('[data-radix-scroll-area-viewport]');
-      if (scrollElement) {
-        scrollElement.scrollTop = scrollElement.scrollHeight;
-      }
-    }
-  }, [entries]);
+  // TEAM-338: No auto-scroll - user controls scroll position
 
   // Listen to narration events from Rust backend
   // TEAM-337: Requires core:event:allow-listen permission in tauri.conf.json
+  // TEAM-338: Prepend new entries to top (newest first)
   useEffect(() => {
     const unlisten = listen<NarrationEvent>("narration", (event) => {
       setEntries((prev) => [
-        ...prev,
         {
           ...event.payload,
           id: idCounter.current++,
         },
+        ...prev,
       ]);
     });
 
@@ -104,7 +100,7 @@ export function NarrationPanel() {
   };
 
   return (
-    <div className="w-80 border-l border-border bg-background flex flex-col">
+    <div className="w-full h-full border-l border-border bg-background flex flex-col">
       {/* Header */}
       <div className="flex items-center justify-between px-4 py-3 border-b border-border">
         <h2 className="text-sm font-semibold">Narration</h2>
@@ -127,7 +123,8 @@ export function NarrationPanel() {
       </div>
 
       {/* Entries list */}
-      <ScrollArea className="flex-1" ref={scrollRef}>
+      <div className="flex-1 overflow-hidden">
+        <ScrollArea className="h-full">
         <div className="p-2 space-y-2">
           {entries.length === 0 ? (
             <div className="text-center text-sm text-muted-foreground py-8">
@@ -157,7 +154,8 @@ export function NarrationPanel() {
             ))
           )}
         </div>
-      </ScrollArea>
+        </ScrollArea>
+      </div>
 
       {/* Footer stats */}
       <div className="px-4 py-2 border-t border-border text-xs text-muted-foreground">

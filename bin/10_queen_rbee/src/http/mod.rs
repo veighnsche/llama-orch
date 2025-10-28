@@ -19,6 +19,7 @@
 //! - `heartbeat_stream` - SSE endpoint for live heartbeat updates (TEAM-285)
 //! - `jobs` - Job creation and SSE streaming endpoints
 //! - `build_info` - Build information endpoint (TEAM-262)
+//! - `shutdown` - Graceful shutdown endpoint (TEAM-339)
 
 pub mod build_info;
 pub mod health;
@@ -26,6 +27,7 @@ pub mod heartbeat;
 pub mod heartbeat_stream; // TEAM-285: Live heartbeat streaming
 pub mod info; // TEAM-292: Queen info endpoint for service discovery
 pub mod jobs; // TEAM-262
+pub mod shutdown; // TEAM-339: Graceful shutdown endpoint
 pub mod static_files; // TEAM-293: Static file serving for web UI
 
 // Re-export commonly used types
@@ -40,4 +42,5 @@ pub use heartbeat::{
 };
 pub use heartbeat_stream::handle_heartbeat_stream; // TEAM-285: Live heartbeat streaming
 pub use jobs::{handle_cancel_job, handle_create_job, handle_stream_job, SchedulerState}; // TEAM-262, TEAM-305-FIX: Added handle_cancel_job
+pub use shutdown::handle_shutdown; // TEAM-339: Graceful shutdown handler
 pub use static_files::create_static_router; // TEAM-293: Static file serving for web UI

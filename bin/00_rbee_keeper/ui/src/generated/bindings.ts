@@ -40,8 +40,9 @@ async sshOpenConfig() : Promise<Result<string, string>> {
 /**
  * Get queen-rbee daemon status
  * TEAM-338: Returns structured status (isRunning, isInstalled)
+ * TEAM-338: RULE ZERO FIX - Use DaemonStatus directly (deleted QueenStatus duplicate)
  */
-async queenStatus() : Promise<Result<QueenStatus, string>> {
+async queenStatus() : Promise<Result<DaemonStatus, string>> {
     try {
     return { status: "ok", data: await TAURI_INVOKE("queen_status") };
 } catch (e) {
@@ -135,9 +136,10 @@ async hiveStop(alias: string) : Promise<Result<string, string>> {
 },
 /**
  * Check rbee-hive status
- * TEAM-338: Thin wrapper around handle_hive()
+ * TEAM-338: Returns structured status (isRunning, isInstalled)
+ * TEAM-338: RULE ZERO FIX - Use DaemonStatus directly (deleted HiveStatus duplicate)
  */
-async hiveStatus(alias: string) : Promise<Result<string, string>> {
+async hiveStatus(alias: string) : Promise<Result<DaemonStatus, string>> {
     try {
     return { status: "ok", data: await TAURI_INVOKE("hive_status", { alias }) };
 } catch (e) {
@@ -206,14 +208,25 @@ async hiveRefreshCapabilities(alias: string) : Promise<Result<string, string>> {
 /** user-defined types **/
 
 /**
+ * Daemon status information
+ * 
+ * TEAM-338: RULE ZERO - Updated existing function to return struct
+ * TEAM-338: RULE ZERO FIX - Added Serialize, Deserialize, specta::Type for Tauri bindings
+ * This is the SINGLE SOURCE OF TRUTH for daemon status (no QueenStatus/HiveStatus duplicates)
+ */
+export type DaemonStatus = { 
+/**
+ * Is the daemon currently running?
+ */
+is_running: boolean; 
+/**
+ * Is the daemon binary installed?
+ */
+is_installed: boolean }
+/**
  * Narration event payload for Tauri frontend
  */
 export type NarrationEvent = { level: string; message: string; timestamp: string }
-/**
- * Queen status response
- * TEAM-338: Structured status for TypeScript frontend
- */
-export type QueenStatus = { is_running: boolean; is_installed: boolean }
 /**
  * SSH target from ~/.ssh/config
  * 

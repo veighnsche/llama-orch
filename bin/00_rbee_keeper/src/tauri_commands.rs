@@ -22,6 +22,7 @@ mod tests {
         // TEAM-333: Updated to use ssh_list command
         // TEAM-335: Added queen lifecycle commands
         // TEAM-336: Include NarrationEvent type for frontend + test command
+        // TEAM-338: RULE ZERO FIX - Use DaemonStatus from daemon-lifecycle (deleted QueenStatus/HiveStatus)
         //
         // NOTE: NarrationEvent is NOT a tauri-specta Event - it's emitted from a
         // custom tracing layer using Tauri's Emitter trait. We export it as an
@@ -47,7 +48,8 @@ mod tests {
                 hive_rebuild,
                 hive_refresh_capabilities,
             ])
-            .typ::<NarrationEvent>();
+            .typ::<NarrationEvent>()
+            .typ::<daemon_lifecycle::DaemonStatus>();
         
         builder
             .export(
@@ -96,20 +98,12 @@ pub enum SshTargetStatus {
 // QUEEN COMMANDS
 // ============================================================================
 
-/// Queen status response
-/// TEAM-338: Structured status for TypeScript frontend
-#[derive(Debug, Clone, Serialize, Deserialize, specta::Type)]
-pub struct QueenStatus {
-    pub is_running: bool,
-    pub is_installed: bool,
-}
-
 /// Get queen-rbee daemon status
 /// TEAM-338: Returns structured status (isRunning, isInstalled)
-/// TEAM-338: RULE ZERO - Updated to use new check_daemon_health signature
+/// TEAM-338: RULE ZERO FIX - Use DaemonStatus directly (deleted QueenStatus duplicate)
 #[tauri::command]
 #[specta::specta]
-pub async fn queen_status() -> Result<QueenStatus, String> {
+pub async fn queen_status() -> Result<daemon_lifecycle::DaemonStatus, String> {
     use crate::Config;
     use daemon_lifecycle::{check_daemon_health, SshConfig};
     
@@ -120,12 +114,8 @@ pub async fn queen_status() -> Result<QueenStatus, String> {
     // Check status (running + installed)
     let health_url = format!("{}/health", queen_url);
     let ssh_config = SshConfig::localhost(); // Queen is always localhost
-    let status = check_daemon_health(&health_url, "queen-rbee", &ssh_config).await;
     
-    Ok(QueenStatus {
-        is_running: status.is_running,
-        is_installed: status.is_installed,
-    })
+    Ok(check_daemon_health(&health_url, "queen-rbee", &ssh_config).await)
 }
 
 /// Start queen-rbee daemon on localhost
@@ -288,22 +278,22 @@ pub async fn hive_stop(alias: String) -> Result<String, String> {
 }
 
 /// Check rbee-hive status
-/// TEAM-338: Thin wrapper around handle_hive()
+/// TEAM-338: Returns structured status (isRunning, isInstalled)
+/// TEAM-338: RULE ZERO FIX - Use DaemonStatus directly (deleted HiveStatus duplicate)
 #[tauri::command]
 #[specta::specta]
-pub async fn hive_status(alias: String) -> Result<String, String> {
-    use crate::handlers::handle_hive;
-    use crate::cli::HiveAction;
-    use crate::Config;
+pub async fn hive_status(alias: String) -> Result<daemon_lifecycle::DaemonStatus, String> {
+    use crate::ssh_resolver::resolve_ssh_config;
+    use daemon_lifecycle::check_daemon_health;
     
-    let config = Config::load()
-        .map_err(|e| format!("Config error: {}", e))?;
-    let queen_url = config.queen_url();
+    // Resolve SSH config for this hive (localhost or ~/.ssh/config)
+    let ssh = resolve_ssh_config(&alias)
+        .map_err(|e| format!("Failed to resolve SSH config for '{}': {}", alias, e))?;
     
-    handle_hive(HiveAction::Status { alias }, &queen_url)
-        .await
-        .map(|_| "Hive status checked".to_string())
-        .map_err(|e| format!("{}", e))
+    // Check status (running + installed)
+    let health_url = format!("http://{}:7835/health", ssh.hostname);
+    
+    Ok(check_daemon_health(&health_url, "rbee-hive", &ssh).await)
 }
 
 /// Install rbee-hive binary

@@ -45,7 +45,10 @@ use crate::utils::binary::check_binary_installed;
 /// Daemon status information
 ///
 /// TEAM-338: RULE ZERO - Updated existing function to return struct
-#[derive(Debug, Clone)]
+/// TEAM-338: RULE ZERO FIX - Added Serialize, Deserialize, specta::Type for Tauri bindings
+///           This is the SINGLE SOURCE OF TRUTH for daemon status (no QueenStatus/HiveStatus duplicates)
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
+#[cfg_attr(feature = "tauri", derive(specta::Type))]
 pub struct DaemonStatus {
     /// Is the daemon currently running?
     pub is_running: bool,

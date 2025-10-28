@@ -1,20 +1,15 @@
 // TEAM-338: Installed hives list - shows all installed hives with lifecycle controls
+// TEAM-339: Uses DaemonContainer with React 19 use() hook (no useEffect)
 // Fully self-contained component connected to hiveStore
 // Displays installed hives with start/stop/uninstall actions
 
-import { useEffect } from "react";
-import { Loader2, AlertCircle } from "lucide-react";
 import { useSshHivesStore } from "../store/hiveStore";
 import { HiveCard } from "./HiveCard";
+import { DaemonContainer } from "../containers/DaemonContainer";
 
-export function InstalledHiveList() {
-  const { hives, installedHives, isLoading, error, fetchHives } =
-    useSshHivesStore();
-
-  // Fetch hives on mount
-  useEffect(() => {
-    fetchHives();
-  }, [fetchHives]);
+// Inner component that renders after data is loaded
+function InstalledHiveCards() {
+  const { hives, installedHives } = useSshHivesStore();
 
   // Get installed hive details
   const installedHiveDetails = hives.filter((hive) =>
@@ -25,25 +20,6 @@ export function InstalledHiveList() {
   const hasLocalhost = installedHives.includes("localhost");
   const localhostInConfig = hives.some((h) => h.host === "localhost");
   const showLocalhost = hasLocalhost && !localhostInConfig;
-
-  // Loading state
-  if (isLoading && installedHives.length === 0) {
-    return (
-      <div className="flex items-center justify-center py-8">
-        <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
-      </div>
-    );
-  }
-
-  // Error state
-  if (error) {
-    return (
-      <div className="flex items-center gap-2 text-destructive p-4 rounded-lg border border-destructive/50 bg-destructive/10">
-        <AlertCircle className="h-4 w-4" />
-        <p className="text-sm">{error}</p>
-      </div>
-    );
-  }
 
   // Empty state - return null, no cards needed
   if (installedHives.length === 0) {
@@ -73,5 +49,29 @@ export function InstalledHiveList() {
         />
       ))}
     </>
+  );
+}
+
+export function InstalledHiveList() {
+  // TEAM-339: DaemonContainer handles loading/error states via Suspense
+  // Component only renders after successful fetch
+  return (
+    <DaemonContainer
+      cacheKey="hives-list"
+      metadata={{
+        name: "Hives",
+        description: "SSH hive targets",
+      }}
+      fetchFn={async () => {
+        // TEAM-339: Fetch hives list, then fetch individual status for each
+        await useSshHivesStore.getState().fetchHives();
+        const { installedHives, fetchHiveStatus } = useSshHivesStore.getState();
+        await Promise.all(
+          installedHives.map((hiveId) => fetchHiveStatus(hiveId))
+        );
+      }}
+    >
+      <InstalledHiveCards />
+    </DaemonContainer>
   );
 }
