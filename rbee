@@ -3,6 +3,13 @@
 # Auto-builds if source is newer than binary, then forwards all commands
 # Created by: TEAM-162
 # Updated by: TEAM-290 (auto-build xtask if not found)
+# Updated by: TEAM-334 (used by desktop entry at ~/.local/share/applications/rbee-dev.desktop)
+#
+# TEAM-334 NOTE: Desktop entry integration
+# - Desktop entry: ~/.local/share/applications/rbee-dev.desktop
+# - Flow: Desktop entry → ./rbee → xtask rbee → target/debug/rbee-keeper (GUI)
+# - Status: ⚠️ NOT WORKING YET (process starts but GUI doesn't appear)
+# - See: DESKTOP_ENTRY.md for details
 
 set -e
 

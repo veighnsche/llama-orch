@@ -68,6 +68,15 @@ async fn main() -> Result<()> {
 
 // TEAM-295: Launch Tauri GUI (synchronous, blocks until window closes)
 // TEAM-334: Cleaned up - only ssh_list command active, rest to be re-implemented
+//
+// TEAM-334 NOTE: Desktop entry integration
+// - This function is called when rbee-keeper is launched with no arguments
+// - Desktop entry: ~/.local/share/applications/rbee-dev.desktop
+// - Flow: Desktop entry → ./rbee → xtask rbee → rbee-keeper (no args) → launch_gui()
+// - Status: ⚠️ NOT WORKING YET from desktop entry (GUI doesn't appear)
+// - Works fine when launched directly: ./rbee
+// - Possible issues: Display environment, Wayland/X11, permissions
+// - See: DESKTOP_ENTRY.md for debugging
 fn launch_gui() {
     use rbee_keeper::tauri_commands::*;
     

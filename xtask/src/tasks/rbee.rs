@@ -2,6 +2,15 @@
 // Smart wrapper for rbee-keeper: checks if build is stale, rebuilds if needed, then forwards command
 // TEAM-193: Updated to use auto-update crate for dependency-aware rebuilds
 // TEAM-309: Added narration context for auto-update visibility
+// TEAM-334: Used by desktop entry (./rbee → xtask rbee → rbee-keeper)
+//
+// TEAM-334 NOTE: Desktop entry integration
+// - Called by: ./rbee script (root of repo)
+// - Desktop entry: ~/.local/share/applications/rbee-dev.desktop
+// - When called with no args, launches rbee-keeper GUI
+// - Status: ⚠️ NOT WORKING YET from desktop entry (process starts but GUI doesn't show)
+// - Works fine when called directly: ./rbee
+// - See: DESKTOP_ENTRY.md for debugging info
 
 use anyhow::{Context, Result};
 use auto_update::AutoUpdater;

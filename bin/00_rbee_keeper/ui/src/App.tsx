@@ -1,4 +1,5 @@
 // TEAM-295: rbee-keeper GUI - Main application component with routing
+// TEAM-334: Splash screen removed - didn't help with Niri compatibility issue
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { KeeperSidebar } from "./components/KeeperSidebar";
 import { SidebarProvider } from "@rbee/ui/atoms";
