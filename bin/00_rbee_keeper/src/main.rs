@@ -84,6 +84,12 @@ fn launch_gui() {
         .invoke_handler(tauri::generate_handler![
             // TEAM-333: SSH list command
             ssh_list,
+            // TEAM-335: Queen lifecycle commands (thin wrappers)
+            queen_start,
+            queen_stop,
+            queen_install,
+            queen_rebuild,
+            queen_uninstall,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

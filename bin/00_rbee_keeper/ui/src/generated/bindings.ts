@@ -12,6 +12,66 @@ async sshList() : Promise<Result<SshTarget[], string>> {
     if(e instanceof Error) throw e;
     else return { status: "error", error: e  as any };
 }
+},
+/**
+ * Start queen-rbee daemon on localhost
+ * TEAM-335: Thin wrapper around handle_queen() - business logic in handlers/queen.rs
+ */
+async queenStart() : Promise<Result<string, string>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("queen_start") };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+/**
+ * Stop queen-rbee daemon
+ * TEAM-335: Thin wrapper around handle_queen()
+ */
+async queenStop() : Promise<Result<string, string>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("queen_stop") };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+/**
+ * Install queen-rbee binary
+ * TEAM-335: Thin wrapper around handle_queen()
+ */
+async queenInstall(binary: string | null) : Promise<Result<string, string>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("queen_install", { binary }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+/**
+ * Rebuild queen-rbee from source
+ * TEAM-335: Thin wrapper around handle_queen()
+ */
+async queenRebuild(withLocalHive: boolean) : Promise<Result<string, string>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("queen_rebuild", { withLocalHive }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+/**
+ * Uninstall queen-rbee binary
+ * TEAM-335: Thin wrapper around handle_queen()
+ */
+async queenUninstall() : Promise<Result<string, string>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("queen_uninstall") };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
 }
 }
 

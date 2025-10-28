@@ -20,8 +20,16 @@ mod tests {
     fn export_typescript_bindings() {
         // TEAM-297: Test that exports TypeScript bindings
         // TEAM-333: Updated to use ssh_list command
+        // TEAM-335: Added queen lifecycle commands
         let builder = Builder::<tauri::Wry>::new()
-            .commands(collect_commands![ssh_list]);
+            .commands(collect_commands![
+                ssh_list,
+                queen_start,
+                queen_stop,
+                queen_install,
+                queen_rebuild,
+                queen_uninstall,
+            ]);
         
         builder
             .export(
@@ -64,6 +72,108 @@ pub enum SshTargetStatus {
     Online,
     Offline,
     Unknown,
+}
+
+// ============================================================================
+// QUEEN COMMANDS
+// ============================================================================
+
+/// Start queen-rbee daemon on localhost
+/// TEAM-335: Thin wrapper around handle_queen() - business logic in handlers/queen.rs
+#[tauri::command]
+#[specta::specta]
+pub async fn queen_start() -> Result<String, String> {
+    use crate::handlers::handle_queen;
+    use crate::cli::QueenAction;
+    use crate::Config;
+    use observability_narration_core::n;
+    
+    n!("queen_start", "🚀 Starting queen from Tauri GUI");
+    
+    let config = Config::load()
+        .map_err(|e| format!("Config error: {}", e))?;
+    let queen_url = config.queen_url();
+    
+    handle_queen(QueenAction::Start, &queen_url)
+        .await
+        .map(|_| "Queen started successfully".to_string())
+        .map_err(|e| format!("{}", e))
+}
+
+/// Stop queen-rbee daemon
+/// TEAM-335: Thin wrapper around handle_queen()
+#[tauri::command]
+#[specta::specta]
+pub async fn queen_stop() -> Result<String, String> {
+    use crate::handlers::handle_queen;
+    use crate::cli::QueenAction;
+    use crate::Config;
+    
+    let config = Config::load()
+        .map_err(|e| format!("Config error: {}", e))?;
+    let queen_url = config.queen_url();
+    
+    handle_queen(QueenAction::Stop, &queen_url)
+        .await
+        .map(|_| "Queen stopped successfully".to_string())
+        .map_err(|e| format!("{}", e))
+}
+
+/// Install queen-rbee binary
+/// TEAM-335: Thin wrapper around handle_queen()
+#[tauri::command]
+#[specta::specta]
+pub async fn queen_install(binary: Option<String>) -> Result<String, String> {
+    use crate::handlers::handle_queen;
+    use crate::cli::QueenAction;
+    use crate::Config;
+    
+    let config = Config::load()
+        .map_err(|e| format!("Config error: {}", e))?;
+    let queen_url = config.queen_url();
+    
+    handle_queen(QueenAction::Install { binary }, &queen_url)
+        .await
+        .map(|_| "Queen installed successfully".to_string())
+        .map_err(|e| format!("{}", e))
+}
+
+/// Rebuild queen-rbee from source
+/// TEAM-335: Thin wrapper around handle_queen()
+#[tauri::command]
+#[specta::specta]
+pub async fn queen_rebuild(_with_local_hive: bool) -> Result<String, String> {
+    use crate::handlers::handle_queen;
+    use crate::cli::QueenAction;
+    use crate::Config;
+    
+    let config = Config::load()
+        .map_err(|e| format!("Config error: {}", e))?;
+    let queen_url = config.queen_url();
+    
+    handle_queen(QueenAction::Rebuild, &queen_url)
+        .await
+        .map(|_| "Queen rebuilt successfully".to_string())
+        .map_err(|e| format!("{}", e))
+}
+
+/// Uninstall queen-rbee binary
+/// TEAM-335: Thin wrapper around handle_queen()
+#[tauri::command]
+#[specta::specta]
+pub async fn queen_uninstall() -> Result<String, String> {
+    use crate::handlers::handle_queen;
+    use crate::cli::QueenAction;
+    use crate::Config;
+    
+    let config = Config::load()
+        .map_err(|e| format!("Config error: {}", e))?;
+    let queen_url = config.queen_url();
+    
+    handle_queen(QueenAction::Uninstall, &queen_url)
+        .await
+        .map(|_| "Queen uninstalled successfully".to_string())
+        .map_err(|e| format!("{}", e))
 }
 
 // ============================================================================
