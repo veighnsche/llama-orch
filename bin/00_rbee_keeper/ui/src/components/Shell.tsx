@@ -4,24 +4,48 @@
 // TEAM-336: Added NarrationPanel on the right side
 // TEAM-339: Made panels resizable with react-resizable-panels library
 
-import { type ReactNode } from "react";
-import { Panel, PanelGroup, PanelResizeHandle } from "react-resizable-panels";
+import { useState, useEffect } from "react";
+import type { ReactNode } from "react";
 import { CustomTitlebar } from "./CustomTitlebar";
 import { KeeperSidebar } from "./KeeperSidebar";
 import { NarrationPanel } from "./NarrationPanel";
+import { Panel, PanelGroup, PanelResizeHandle } from "react-resizable-panels";
+import { listen } from "@tauri-apps/api/event";
+import type { NarrationEvent } from "../generated/bindings";
+import { useNarrationStore } from "../store/narrationStore";
+import { MessageSquare } from "lucide-react";
 
 interface ShellProps {
   children: ReactNode;
 }
 
 export function Shell({ children }: ShellProps) {
+  const [showNarration, setShowNarration] = useState(true);
+  const addEntry = useNarrationStore((state) => state.addEntry);
+
+  // TEAM-339: Listen to narration events at Shell level (always active)
+  // This ensures we don't miss events when panel is closed
+  useEffect(() => {
+    const unlisten = listen<NarrationEvent>("narration", (event) => {
+      addEntry(event.payload);
+    });
+
+    return () => {
+      unlisten.then((fn) => fn());
+    };
+  }, [addEntry]);
+
   return (
-    <div className="fixed inset-0 flex flex-col bg-background text-foreground">
+    <div className="h-screen w-screen flex flex-col overflow-hidden bg-background">
       {/* Titlebar - fixed height */}
       <CustomTitlebar />
 
       {/* Main content area - left sidebar + page content + right narration panel */}
-      <PanelGroup direction="horizontal" autoSaveId="keeper-layout" className="flex-1">
+      <PanelGroup
+        direction="horizontal"
+        autoSaveId="keeper-layout"
+        className="flex-1"
+      >
         {/* Left sidebar - navigation - resizable */}
         <Panel
           id="sidebar"
@@ -37,21 +61,38 @@ export function Shell({ children }: ShellProps) {
 
         {/* Page content area - scrollable container - takes remaining space */}
         <Panel id="main" minSize={30} order={2}>
-          <main className="h-full overflow-y-auto">{children}</main>
+          <div className="relative h-full">
+            <main className="h-full overflow-y-auto">{children}</main>
+
+            {/* TEAM-339: Show open narration button when panel is closed */}
+            {!showNarration && (
+              <button
+                onClick={() => setShowNarration(true)}
+                className="absolute top-4 right-4 p-2 rounded-lg text-primary-foreground hover:bg-primary/90 shadow-lg transition-colors"
+                aria-label="Open narration panel"
+              >
+                <MessageSquare className="h-5 w-5" />
+              </button>
+            )}
+          </div>
         </Panel>
 
-        <PanelResizeHandle className="w-1 bg-transparent hover:bg-blue-500 transition-colors" />
+        {showNarration && (
+          <>
+            <PanelResizeHandle className="w-1 bg-transparent hover:bg-blue-500 transition-colors" />
 
-        {/* Right panel - narration stream - resizable */}
-        <Panel
-          id="narration"
-          defaultSize={25}
-          minSize={20}
-          maxSize={40}
-          order={3}
-        >
-          <NarrationPanel />
-        </Panel>
+            {/* Right panel - narration stream - resizable */}
+            <Panel
+              id="narration"
+              defaultSize={25}
+              minSize={25}
+              maxSize={40}
+              order={3}
+            >
+              <NarrationPanel onClose={() => setShowNarration(false)} />
+            </Panel>
+          </>
+        )}
       </PanelGroup>
     </div>
   );

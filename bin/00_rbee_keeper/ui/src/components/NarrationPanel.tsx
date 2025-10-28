@@ -5,45 +5,22 @@
 //   - No auto-scroll (user controls position)
 //   - Read top-to-bottom to see latest first
 
-import { useEffect, useState, useRef } from "react";
-import { listen } from "@tauri-apps/api/event";
-import type { NarrationEvent } from "../generated/bindings";
 import { ScrollArea } from "@rbee/ui/atoms";
+import { X } from "lucide-react";
+import { useNarrationStore } from "../store/narrationStore";
 
-interface NarrationEntry extends NarrationEvent {
-  id: number;
+interface NarrationPanelProps {
+  onClose?: () => void;
 }
 
-export function NarrationPanel() {
-  const [entries, setEntries] = useState<NarrationEntry[]>([]);
-  const idCounter = useRef(0);
-
-  // TEAM-338: No auto-scroll - user controls scroll position
-
-  // Listen to narration events from Rust backend
-  // TEAM-337: Requires core:event:allow-listen permission in tauri.conf.json
-  // TEAM-338: Prepend new entries to top (newest first)
-  useEffect(() => {
-    const unlisten = listen<NarrationEvent>("narration", (event) => {
-      console.log(event);
-      setEntries((prev) => [
-        {
-          ...event.payload,
-          id: idCounter.current++,
-        },
-        ...prev,
-      ]);
-    });
-
-    return () => {
-      unlisten.then((fn) => fn());
-    };
-  }, []);
+export function NarrationPanel({ onClose }: NarrationPanelProps) {
+  // TEAM-339: Get entries from Zustand store (persisted even when panel closed)
+  const entries = useNarrationStore((state) => state.entries);
+  const clearEntries = useNarrationStore((state) => state.clearEntries);
 
   // Clear all entries
   const handleClear = () => {
-    setEntries([]);
-    idCounter.current = 0;
+    clearEntries();
   };
 
   // Format timestamp to HH:MM:SS
@@ -103,40 +80,70 @@ export function NarrationPanel() {
   return (
     <div className="w-full h-full border-l border-border bg-background flex flex-col">
       {/* Header */}
-      <div className="flex items-center justify-between px-4 py-3 border-b border-border">
-        <h2 className="text-sm font-semibold">Narration</h2>
+      <div className="flex items-center justify-between px-4 py-3 border-b border-border bg-background">
+        <h2 className="text-sm font-semibold text-foreground">Narration</h2>
+        {onClose && (
+          <button
+            onClick={onClose}
+            className="p-1 rounded hover:bg-muted transition-colors text-foreground"
+            aria-label="Close narration panel"
+          >
+            <X className="h-4 w-4" />
+          </button>
+        )}
       </div>
 
       {/* Entries list */}
       <div className="flex-1 overflow-hidden">
         <ScrollArea className="h-full">
-          <div className="p-2 space-y-2">
+          <div className="p-2">
             {entries.length === 0 ? (
               <div className="text-center text-sm text-muted-foreground py-8">
                 Waiting for events...
               </div>
             ) : (
-              entries.map((entry) => (
-                <div
-                  key={entry.id}
-                  className="p-2 rounded-md bg-muted/30 hover:bg-muted/50 transition-colors text-xs space-y-1"
-                >
-                  {/* Timestamp and level */}
-                  <div className="flex items-center justify-between gap-2">
-                    <span className="text-muted-foreground font-mono">
-                      {formatTime(entry.timestamp)}
-                    </span>
-                    <span className={getLevelBadge(entry.level)}>
-                      {entry.level.toUpperCase()}
-                    </span>
-                  </div>
+              entries.map((entry, index) => {
+                // TEAM-339: Check if fn_name changed from previous entry
+                const prevEntry = index > 0 ? entries[index - 1] : null;
+                const fnNameChanged =
+                  !prevEntry || prevEntry.fn_name !== entry.fn_name;
 
-                  {/* Message */}
-                  <div className="text-foreground break-words font-mono leading-relaxed">
-                    {entry.message}
+                return (
+                  <div key={entry.id}>
+                    {/* TEAM-339: Show fn_name title with timestamp when it changes */}
+                    {fnNameChanged && entry.fn_name && (
+                      <div className="px-3 py-1.5 text-xs font-medium bg-muted border-l-4 border-blue-500 mb-1">
+                        <div className="space-y-1">
+                          <div className="text-muted-foreground font-mono text-[10px]">
+                            {formatTime(entry.timestamp)}
+                          </div>
+                          <div className="text-foreground break-words">
+                            {entry.fn_name}
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
+                    <div className="p-2 rounded-md bg-muted/30 hover:bg-muted/50 transition-colors text-xs space-y-1">
+                      {/* Action and level */}
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="text-muted-foreground font-mono">
+                          {/* TEAM-339: Always show action */}
+                          {entry.action || "—"}
+                        </span>
+                        <span className={getLevelBadge(entry.level)}>
+                          {entry.level.toUpperCase()}
+                        </span>
+                      </div>
+
+                      {/* Message */}
+                      <div className="text-foreground break-words font-mono leading-relaxed">
+                        {entry.message}
+                      </div>
+                    </div>
                   </div>
-                </div>
-              ))
+                );
+              })
             )}
           </div>
         </ScrollArea>
