@@ -1,7 +1,7 @@
 use criterion::{black_box, criterion_group, criterion_main, BenchmarkId, Criterion};
 use observability_narration_core::{
-    generate_correlation_id, narrate, narrate_at_level, redact_secrets, sanitize_crlf,
-    sanitize_for_json, validate_correlation_id, NarrationFields, NarrationLevel, RedactionPolicy,
+    generate_correlation_id, narrate, narrate, redact_secrets, sanitize_crlf, sanitize_for_json,
+    validate_correlation_id, NarrationFields, NarrationLevel, RedactionPolicy,
 };
 
 fn bench_template_interpolation(c: &mut Criterion) {
@@ -108,7 +108,7 @@ fn bench_narration_levels(c: &mut Criterion) {
     ] {
         group.bench_with_input(BenchmarkId::from_parameter(level.0), &level.1, |b, &lvl| {
             b.iter(|| {
-                narrate_at_level(
+                narrate(
                     NarrationFields {
                         actor: "benchmark",
                         action: "test",

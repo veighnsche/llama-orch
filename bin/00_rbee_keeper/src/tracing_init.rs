@@ -4,10 +4,10 @@
 //! TEAM-336: Different behavior for CLI vs GUI modes
 //! TEAM-337: Use existing format_message_with_fn() for consistent formatting
 
-use tracing_subscriber::{fmt, layer::SubscriberExt, util::SubscriberInitExt, EnvFilter, Layer};
-use serde::{Serialize, Deserialize};
+use observability_narration_core::format_message;
+use serde::{Deserialize, Serialize};
 use tauri::Emitter; // TEAM-336: Required for app_handle.emit() in Tauri v2
-use observability_narration_core::format_message_with_fn; // TEAM-337: Use existing formatting
+use tracing_subscriber::{fmt, layer::SubscriberExt, util::SubscriberInitExt, EnvFilter, Layer}; // TEAM-337: Use existing formatting
 
 /// Narration event payload for Tauri frontend
 #[derive(Debug, Clone, Serialize, Deserialize, specta::Type)]
@@ -33,7 +33,7 @@ pub fn init_cli_tracing() {
 }
 
 /// Initialize tracing for GUI mode (stderr + Tauri events)
-/// 
+///
 /// TEAM-336: Dual output - stderr for debugging + Tauri events for React sidebar
 /// TEAM-337: Use existing format_message_with_fn() for consistent formatting
 pub fn init_gui_tracing(app_handle: tauri::AppHandle) {
@@ -46,9 +46,7 @@ pub fn init_gui_tracing(app_handle: tauri::AppHandle) {
     // Combine layers
     // TEAM-337: Check if tracing is already initialized
     tracing_subscriber::registry()
-        .with(
-            EnvFilter::try_from_default_env().unwrap_or_else(|_| EnvFilter::new("info")),
-        )
+        .with(EnvFilter::try_from_default_env().unwrap_or_else(|_| EnvFilter::new("info")))
         .with(stderr_layer)
         .with(tauri_layer)
         .try_init()
@@ -71,14 +69,14 @@ where
         // Extract event fields using same logic as TauriNarrationLayer
         let mut visitor = EventVisitor::default();
         event.record(&mut visitor);
-        
+
         // Extract values before consuming visitor
         let action = visitor.action.clone().unwrap_or_else(|| "unknown".to_string());
         let fn_name = visitor.fn_name.clone().unwrap_or_else(|| "unknown".to_string());
         let message = visitor.extract_message();
-        
+
         // TEAM-337: Use EXISTING format_message_with_fn() from narration-core
-        eprint!("{}", format_message_with_fn(&action, &message, &fn_name));
+        eprint!("{}", format_message(&action, &message, &fn_name));
     }
 }
 
@@ -252,12 +250,12 @@ impl EventVisitor {
         if let Some(human) = self.human {
             return human;
         }
-        
+
         // Priority 2: "message" field from standard tracing
         if !self.message.is_empty() {
             return self.message;
         }
-        
+
         // Priority 3: Build from actor/action if available
         match (self.actor, self.action) {
             (Some(actor), Some(action)) => format!("[{}] {}", actor, action),

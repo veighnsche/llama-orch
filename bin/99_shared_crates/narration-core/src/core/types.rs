@@ -40,7 +40,7 @@ impl NarrationLevel {
             NarrationLevel::Fatal => Some(Level::ERROR), // tracing doesn't have FATAL
         }
     }
-    
+
     /// TEAM-311: Check if this level should be emitted given the current filter level
     pub fn should_emit(self, filter: NarrationLevel) -> bool {
         use NarrationLevel::*;
@@ -81,11 +81,11 @@ pub struct NarrationFields {
 
     /// Human-readable description (ORCH-3305: ≤100 chars, present tense, SVO)
     pub human: String,
-    
+
     /// TEAM-311: Narration level (default: Info)
     #[serde(skip)]
     pub level: NarrationLevel,
-    
+
     /// TEAM-311: Function name (from #[narrate_fn] macro)
     pub fn_name: Option<String>,
 
@@ -186,11 +186,7 @@ impl NarrationFields {
     pub fn format(&self) -> String {
         // TEAM-312: If fn_name is unknown, use actor (crate name) instead
         let display_name = self.fn_name.as_deref().unwrap_or(self.actor);
-        
-        crate::format::format_message_with_fn(
-            self.action,
-            &self.human,
-            display_name
-        )
+
+        crate::format::format_message(self.action, &self.human, display_name)
     }
 }

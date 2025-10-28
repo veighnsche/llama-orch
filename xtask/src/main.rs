@@ -29,7 +29,7 @@ where
         event: &tracing::Event<'_>,
     ) -> std::fmt::Result {
         use tracing::field::{Field, Visit};
-        
+
         // Extract fields from the event
         // TEAM-311: Added fn_name field
         struct FieldVisitor {
@@ -39,7 +39,7 @@ where
             human: Option<String>,
             fn_name: Option<String>,
         }
-        
+
         impl Visit for FieldVisitor {
             fn record_str(&mut self, field: &Field, value: &str) {
                 match field.name() {
@@ -51,39 +51,44 @@ where
                     _ => {}
                 }
             }
-            
+
             fn record_debug(&mut self, field: &Field, value: &dyn std::fmt::Debug) {
                 match field.name() {
-                    "actor" => self.actor = Some(format!("{:?}", value).trim_matches('"').to_string()),
-                    "action" => self.action = Some(format!("{:?}", value).trim_matches('"').to_string()),
-                    "target" => self.target = Some(format!("{:?}", value).trim_matches('"').to_string()),
-                    "human" => self.human = Some(format!("{:?}", value).trim_matches('"').to_string()),
-                    "fn_name" => self.fn_name = Some(format!("{:?}", value).trim_matches('"').to_string()),
+                    "actor" => {
+                        self.actor = Some(format!("{:?}", value).trim_matches('"').to_string())
+                    }
+                    "action" => {
+                        self.action = Some(format!("{:?}", value).trim_matches('"').to_string())
+                    }
+                    "target" => {
+                        self.target = Some(format!("{:?}", value).trim_matches('"').to_string())
+                    }
+                    "human" => {
+                        self.human = Some(format!("{:?}", value).trim_matches('"').to_string())
+                    }
+                    "fn_name" => {
+                        self.fn_name = Some(format!("{:?}", value).trim_matches('"').to_string())
+                    }
                     _ => {}
                 }
             }
         }
-        
-        let mut visitor = FieldVisitor {
-            actor: None,
-            action: None,
-            target: None,
-            human: None,
-            fn_name: None,
-        };
-        
+
+        let mut visitor =
+            FieldVisitor { actor: None, action: None, target: None, human: None, fn_name: None };
+
         event.record(&mut visitor);
-        
+
         // TEAM-310: Use centralized format_message from narration-core
         // TEAM-311: Now uses format_message_with_fn to show function names
         // TEAM-312: Removed actor from formatting - fn_name provides full trace
         // Format: Bold fn_name (40 chars), dimmed action (20 chars), message on second line
         if let (Some(action), Some(human)) = (visitor.action, visitor.human) {
             // TEAM-311: Use format_message_with_fn to include function name
-            let formatted = observability_narration_core::format::format_message_with_fn(
-                &action, 
+            let formatted = observability_narration_core::format::format_message(
+                &action,
                 &human,
-                visitor.fn_name.as_deref().unwrap_or("unknown")
+                visitor.fn_name.as_deref().unwrap_or("unknown"),
             );
             write!(writer, "{}", formatted)
         } else {
@@ -96,20 +101,17 @@ where
 fn main() -> Result<()> {
     // TEAM-309: Set up tracing subscriber for narration visibility
     // This makes auto-update narration visible to users
-    use tracing_subscriber::{fmt, EnvFilter, Layer};
     use tracing_subscriber::layer::SubscriberExt;
     use tracing_subscriber::util::SubscriberInitExt;
-    
+    use tracing_subscriber::{fmt, EnvFilter, Layer};
+
     let narration_layer = fmt::layer()
         .with_writer(std::io::stderr)
         .event_format(NarrationFormatter)
-        .with_filter(EnvFilter::try_from_default_env()
-            .unwrap_or_else(|_| EnvFilter::new("info")));
-    
-    tracing_subscriber::registry()
-        .with(narration_layer)
-        .init();
-    
+        .with_filter(EnvFilter::try_from_default_env().unwrap_or_else(|_| EnvFilter::new("info")));
+
+    tracing_subscriber::registry().with(narration_layer).init();
+
     let xt = Xtask::parse();
     match xt.cmd {
         Cmd::RegenOpenapi => tasks::regen::regen_openapi()?,

@@ -8,4 +8,4 @@ pub mod macro_impl;
 // TEAM-310: short_job_id moved to format.rs module
 pub use builder::{Narration, NarrationFactory};
 pub use emit::*;
-pub use macro_impl::macro_emit_auto_with_fn; // TEAM-312: Deleted 5 backwards compat wrappers (RULE ZERO)
+pub use macro_impl::macro_emit; // TEAM-312: Deleted 5 backwards compat wrappers (RULE ZERO)

@@ -1,7 +1,7 @@
 // TEAM-297: Phase 0 - Macro implementation
 //! Internal implementation for the n!() macro
 
-use crate::{mode::get_narration_mode, NarrationFields, NarrationMode, NarrationLevel};
+use crate::{mode::get_narration_mode, NarrationFields, NarrationLevel, NarrationMode};
 
 /// Clean up closure names by removing `::{{closure}}` suffixes
 ///
@@ -59,7 +59,7 @@ fn clean_closure_name(name: &str) -> String {
 /// - `crate_name`: Crate name from env!("CARGO_CRATE_NAME")
 /// - `fn_name`: Function name from stdext::function_name!()
 #[doc(hidden)]
-pub fn macro_emit_auto_with_fn(
+pub fn macro_emit(
     action: &'static str,
     human: &str,
     cute: Option<&str>,
@@ -73,34 +73,32 @@ pub fn macro_emit_auto_with_fn(
     let explicit_fn_name = Some(fn_name);
     // TEAM-297: Get narration mode from global config
     let mode = get_narration_mode();
-    
+
     // TEAM-297: Select which message to display based on mode
     let selected_message = match mode {
         NarrationMode::Human => human,
         NarrationMode::Cute => cute.unwrap_or(human),
         NarrationMode::Story => story.unwrap_or(human),
     };
-    
+
     // TEAM-297: Get context if available (for job_id and correlation_id)
     // TEAM-300: Phase 2 - Now also gets actor from context
     let ctx = crate::context::get_context();
     let job_id = ctx.as_ref().and_then(|c| c.job_id.clone());
     let correlation_id = ctx.as_ref().and_then(|c| c.correlation_id.clone());
-    
+
     // TEAM-309: Actor priority: explicit_actor > context > "unknown"
-    let actor = explicit_actor
-        .or_else(|| ctx.as_ref().and_then(|c| c.actor))
-        .unwrap_or("unknown");
-    
+    let actor = explicit_actor.or_else(|| ctx.as_ref().and_then(|c| c.actor)).unwrap_or("unknown");
+
     // TEAM-312: Function name priority: explicit_fn_name > thread-local > None
     // Thread-local is set by #[narrate_fn], explicit_fn_name is from function_name!()
     let fn_name = explicit_fn_name
         .map(|s| clean_closure_name(s))
         .or_else(|| crate::thread_actor::get_target().map(|s| clean_closure_name(&s)));
-    
+
     // TEAM-309: Target defaults to action
     let target = action.to_string();
-    
+
     // TEAM-297: Build fields with selected message
     // TEAM-311: Include level and fn_name
     let fields = NarrationFields {
@@ -108,7 +106,7 @@ pub fn macro_emit_auto_with_fn(
         action,
         target,
         human: selected_message.to_string(),
-        level, // TEAM-311: Include level
+        level,   // TEAM-311: Include level
         fn_name, // TEAM-312: Function name from function_name!() or #[narrate_fn]
         cute: cute.map(|s| s.to_string()),
         story: story.map(|s| s.to_string()),
@@ -116,8 +114,8 @@ pub fn macro_emit_auto_with_fn(
         correlation_id,
         ..Default::default()
     };
-    
+
     // TEAM-311: CRITICAL FIX - Use narrate_at_level() not narrate()
     // narrate() always uses Info level, ignoring fields.level!
-    crate::narrate_at_level(fields, level);
+    crate::narrate(fields, level);
 }

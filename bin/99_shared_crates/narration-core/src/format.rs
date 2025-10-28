@@ -72,7 +72,7 @@ pub const SHORT_JOB_ID_SUFFIX: usize = 6;
 /// // ⭐ Use this - central formatting method!
 /// let formatted = fields.format();
 /// ```
-pub fn format_message_with_fn(action: &str, message: &str, fn_name: &str) -> String {
+pub fn format_message(action: &str, message: &str, fn_name: &str) -> String {
     format!(
         "\x1b[1m{:<width_fn$}\x1b[0m \x1b[2m{:<width_action$}\x1b[0m\n{}\n",
         fn_name,
@@ -242,7 +242,7 @@ mod tests {
     #[test]
     fn test_format_message() {
         // TEAM-312: Use format_message_with_fn() with None for fn_name
-        let formatted = format_message_with_fn("queen", "start", "Starting hive", None);
+        let formatted = format_message("queen", "start", "Starting hive", None);
         // Format: Bold first line with actor/action, message on second line, blank line after
         // Actor: 20 chars, Action: 20 chars
         assert_eq!(
@@ -254,8 +254,7 @@ mod tests {
     #[test]
     fn test_format_message_long_names() {
         // TEAM-312: Use format_message_with_fn() with None for fn_name
-        let formatted =
-            format_message_with_fn("very-long-actor", "very-long-action", "Message", None);
+        let formatted = format_message("very-long-actor", "very-long-action", "Message", None);
         assert!(formatted.contains("very-long-actor"));
         assert!(formatted.contains("very-long-action"));
         assert!(formatted.contains("\nMessage\n")); // Message on new line with trailing newline
