@@ -1,234 +1,243 @@
-# Data Fetching Pattern with React 19 `use()` Hook
+# Data Fetching Pattern with Zustand
 
 **Author:** TEAM-296, TEAM-338  
 **Date:** October 28, 2025  
-**Status:** Active Pattern
+**Status:** Active Pattern (Updated to Zustand)
 
-## 🚨 CRITICAL: WHAT THIS PATTERN IS
+## 🚨 CRITICAL: ZUSTAND IDIOMATIC PATTERN
 
-This pattern creates **COMPONENT-AGNOSTIC DATA PROVIDERS** that use **RENDER PROPS**.
+This pattern uses **ZUSTAND STORES** for state management with **CUSTOM HOOKS**.
 
 ## The Split
 
-### 1. **Container** (`*Container.tsx`) - DATA LAYER ONLY
-- ✅ **ONLY** data fetching logic
-- ✅ **ONLY** promise caching
-- ✅ **ONLY** error boundary
-- ✅ **ONLY** Suspense wrapper
-- ✅ Exports `*DataProvider` component with render prop pattern
+### 1. **Store** (`store/*Store.ts`) - STATE MANAGEMENT
+- ✅ **ONLY** state definitions
+- ✅ **ONLY** async actions (fetch, commands)
+- ✅ **ONLY** state updates
+- ✅ Exports custom hook (`useQueenStore`)
 - ✅ Exports type definitions
-- ❌ **NO** presentation components
-- ❌ **NO** UI imports (Card, Table, Button, etc.)
-- ❌ **NO** loading fallbacks
-- ❌ **NO** JSX except error boundary
+- ❌ **NO** React components
+- ❌ **NO** UI imports
+- ❌ **NO** JSX
 
-### 2. **Presentation Component** (`*Card.tsx`, `*Table.tsx`) - UI ONLY
-- ✅ Pure presentation logic
-- ✅ Receives data as props
-- ✅ Includes loading fallback component
+### 2. **Component** (`components/*Card.tsx`) - UI + HOOK USAGE
+- ✅ Uses store hook (`useQueenStore`)
+- ✅ Handles loading/error states in UI
+- ✅ Calls store actions
 - ✅ All UI/styling logic
-- ❌ **NO** data fetching
-- ❌ **NO** `use()` hook
-- ❌ **NO** Suspense
+- ❌ **NO** direct state management
+- ❌ **NO** useState for data
+- ❌ **NO** manual fetch logic
 
-## 🔥 RULE ZERO: CONTAINERS ARE COMPONENT AGNOSTIC
+## 🔥 RULE ZERO: STORES ARE COMPONENT AGNOSTIC
 
-**Containers provide DATA via render props. Consumers provide PRESENTATION.**
+**Stores provide STATE and ACTIONS. Components consume via hooks.**
 
 ```tsx
-// ❌ WRONG - Container includes presentation
-export function SshHivesContainer() {
-  return (
-    <SshHivesDataProvider>
-      {(hives, onRefresh) => (
-        <SshHivesTable hives={hives} onRefresh={onRefresh} />
-      )}
-    </SshHivesDataProvider>
-  );
+// ❌ WRONG - Component manages state
+export function QueenCard() {
+  const [status, setStatus] = useState(null);
+  const [isLoading, setIsLoading] = useState(false);
+  
+  useEffect(() => {
+    fetchStatus().then(setStatus);
+  }, []);
+  
+  return <Card>...</Card>;
 }
 
-// ✅ RIGHT - Container is component agnostic
-export function SshHivesDataProvider({ children, fallback }) {
-  // ... data fetching logic ...
-  return (
-    <ErrorBoundary>
-      <Suspense fallback={fallback}>
-        {children(data, refresh)}
-      </Suspense>
-    </ErrorBoundary>
-  );
+// ✅ RIGHT - Store manages state, component consumes
+export function QueenCard() {
+  const { status, isLoading, fetchStatus } = useQueenStore();
+  
+  useEffect(() => {
+    fetchStatus();
+  }, [fetchStatus]);
+  
+  return <Card>...</Card>;
 }
 ```
 
 ## File Structure
 
 ```
+store/
+└── queenStore.ts           # ✅ Zustand store with state + actions
 components/
-├── QueenCard.tsx           # ✅ Presentation + Loading fallback
-containers/
-└── QueenContainer.tsx      # ✅ Data fetching ONLY (component agnostic)
+└── QueenCard.tsx           # ✅ Component using store hook
 pages/
-└── ServicesPage.tsx        # ✅ Consumer wires them together
+└── ServicesPage.tsx        # ✅ Just renders component
 ```
 
 ## Reference Implementation
 
-**See:** `QueenContainer.tsx` (data layer) + `QueenCard.tsx` (presentation) + `ServicesPage.tsx` (usage)
+**See:** `store/queenStore.ts` (state management) + `components/QueenCard.tsx` (UI) + `pages/ServicesPage.tsx` (usage)
 
 ## Implementation Guide
 
-### 1. Container (`*Container.tsx`) - DATA LAYER ONLY
+### 1. Store (`store/*Store.ts`) - STATE MANAGEMENT
 
 ```tsx
-// QueenContainer.tsx
-import { use, useState, Suspense, useCallback, Component, type ReactNode } from "react";
-import { commands } from "@/generated/bindings";
-import { AlertCircle } from "lucide-react";
-import { Button } from "@rbee/ui/atoms";
+// store/queenStore.ts
+// Imports commandStore internally to manage global isExecuting state
+import { create } from 'zustand';
+import { commands } from '@/generated/bindings';
+import { useCommandStore } from './commandStore';
 
-// Re-export type from presentation component
-export type { QueenStatus } from "../components/QueenCard";
-
-// Promise cache
-const promiseCache = new Map<string, Promise<any>>();
-
-// Fetch function
-async function fetchQueenStatus(key: string): Promise<any> {
-  if (!promiseCache.has(key)) {
-    const promise = commands.queenStatus(); // Your Tauri command
-    promiseCache.set(key, promise);
-  }
-  return promiseCache.get(key)!;
-}
-
-// Error boundary (generic error UI)
-class QueenErrorBoundary extends Component<
-  { children: ReactNode; onReset: () => void },
-  { hasError: boolean; error: Error | null }
-> {
-  constructor(props: { children: ReactNode; onReset: () => void }) {
-    super(props);
-    this.state = { hasError: false, error: null };
-  }
-
-  static getDerivedStateFromError(error: Error) {
-    return { hasError: true, error };
-  }
-
-  render() {
-    if (this.state.hasError) {
-      return (
-        <div className="flex flex-col items-center justify-center p-8 space-y-4">
-          <AlertCircle className="h-12 w-12 text-destructive" />
-          <div className="text-center space-y-2">
-            <h3 className="text-lg font-semibold">Failed to load data</h3>
-            <p className="text-sm text-muted-foreground">
-              {this.state.error?.message || "Unknown error"}
-            </p>
-          </div>
-          <Button onClick={() => {
-            this.setState({ hasError: false, error: null });
-            this.props.onReset();
-          }}>
-            Try Again
-          </Button>
-        </div>
-      );
-    }
-    return this.props.children;
-  }
-}
-
-// COMPONENT AGNOSTIC DATA PROVIDER
-export function QueenDataProvider({
-  children,
-  fallback,
-}: {
-  children: (status: any, refresh: () => void) => ReactNode;
-  fallback?: ReactNode;
-}) {
-  const [refreshKey, setRefreshKey] = useState(0);
-
-  const handleRefresh = useCallback(() => {
-    const newKey = refreshKey + 1;
-    setRefreshKey(newKey);
-    promiseCache.delete(`queen-${refreshKey}`);
-  }, [refreshKey]);
-
-  return (
-    <QueenErrorBoundary onReset={handleRefresh}>
-      <Suspense fallback={fallback}>
-        <QueenContentWrapper promiseKey={`queen-${refreshKey}`}>
-          {(status) => children(status, handleRefresh)}
-        </QueenContentWrapper>
-      </Suspense>
-    </QueenErrorBoundary>
-  );
-}
-
-// Wrapper to use() the promise
-function QueenContentWrapper({
-  promiseKey,
-  children,
-}: {
-  promiseKey: string;
-  children: (status: any) => ReactNode;
-}) {
-  const status = use(fetchQueenStatus(promiseKey));
-  return <>{children(status)}</>;
-}
-```
-
-### 2. Presentation Component (`*Card.tsx`) - UI ONLY
-
-```tsx
-// QueenCard.tsx
-import { Card, CardContent, CardHeader, CardTitle, Button } from "@rbee/ui/atoms";
-import { Play, Loader2 } from "lucide-react";
-import { commands } from "@/generated/bindings";
-
-// Export the data type
 export interface QueenStatus {
   isRunning: boolean;
   isInstalled: boolean;
 }
 
-// Export the loading fallback
-export function LoadingQueen() {
+interface QueenState {
+  status: QueenStatus | null;
+  isLoading: boolean;
+  error: string | null;
+  
+  // Actions
+  fetchStatus: () => Promise<void>;
+  start: () => Promise<void>;
+  stop: () => Promise<void>;
+  install: () => Promise<void>;
+  rebuild: () => Promise<void>;
+  uninstall: () => Promise<void>;
+  reset: () => void;
+}
+
+// Helper to wrap commands with global isExecuting state
+const withCommandExecution = async (commandFn: () => Promise<unknown>, refreshFn: () => Promise<void>) => {
+  const { setIsExecuting } = useCommandStore.getState();
+  setIsExecuting(true);
+  try {
+    await commandFn();
+    await refreshFn();
+  } catch (error) {
+    console.error('Command failed:', error);
+    throw error;
+  } finally {
+    setIsExecuting(false);
+  }
+};
+
+export const useQueenStore = create<QueenState>((set, get) => ({
+  status: null,
+  isLoading: false,
+  error: null,
+
+  fetchStatus: async () => {
+    set({ isLoading: true, error: null });
+    try {
+      const status = await commands.queenStatus();
+      set({ status, isLoading: false });
+    } catch (error) {
+      set({ 
+        error: error instanceof Error ? error.message : 'Failed to fetch status',
+        isLoading: false 
+      });
+    }
+  },
+
+  start: async () => {
+    await withCommandExecution(() => commands.queenStart(), get().fetchStatus);
+  },
+
+  stop: async () => {
+    await withCommandExecution(() => commands.queenStop(), get().fetchStatus);
+  },
+
+  install: async () => {
+    await withCommandExecution(() => commands.queenInstall(null), get().fetchStatus);
+  },
+
+  rebuild: async () => {
+    await withCommandExecution(() => commands.queenRebuild(false), get().fetchStatus);
+  },
+
+  uninstall: async () => {
+    await withCommandExecution(() => commands.queenUninstall(), get().fetchStatus);
+  },
+
+  reset: () => {
+    set({ status: null, isLoading: false, error: null });
+  },
+}));
+```
+
+**Key Points:**
+- ✅ Store imports `commandStore` internally (not exposed to components)
+- ✅ All command functions handle global `isExecuting` automatically
+- ✅ Commands auto-refresh status after execution
+- ✅ Components just call simple functions like `start()`, `stop()`, etc.
+
+### 2. Component (`components/*Card.tsx`) - UI + HOOK USAGE
+
+```tsx
+// components/QueenCard.tsx
+import { useEffect } from "react";
+import { Card, CardContent, CardHeader, CardTitle, Button } from "@rbee/ui/atoms";
+import { Play, Loader2, AlertCircle } from "lucide-react";
+import { useQueenStore } from "../store/queenStore";
+import { useCommandStore } from "../store/commandStore";
+
+// Re-export type from store
+export type { QueenStatus } from "../store/queenStore";
+
+export function QueenCard() {
+  const { status, isLoading, error, fetchStatus, start, stop, install } = useQueenStore();
+  const { isExecuting } = useCommandStore();
+
+  // Fetch status on mount
+  useEffect(() => {
+    fetchStatus();
+  }, [fetchStatus]);
+
+  // Loading state
+  if (isLoading && !status) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>Queen</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="flex items-center justify-center py-4">
+            <Loader2 className="h-6 w-6 animate-spin" />
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  // Error state
+  if (error) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>Queen</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="flex items-center gap-2 text-destructive">
+            <AlertCircle className="h-4 w-4" />
+            <p className="text-sm">{error}</p>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
   return (
     <Card>
       <CardHeader>
         <CardTitle>Queen</CardTitle>
       </CardHeader>
       <CardContent>
-        <div className="flex items-center justify-center py-4">
-          <Loader2 className="h-6 w-6 animate-spin" />
-        </div>
-      </CardContent>
-    </Card>
-  );
-}
-
-// Export the presentation component
-export interface QueenCardProps {
-  status: QueenStatus;
-  onRefresh: () => void;
-}
-
-export function QueenCard({ status, onRefresh }: QueenCardProps) {
-  const handleStart = async () => {
-    await commands.queenStart();
-    onRefresh();
-  };
-
-  return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Queen</CardTitle>
-      </CardHeader>
-      <CardContent>
-        <Button onClick={handleStart} icon={<Play />}>
+        <Button onClick={start} disabled={isExecuting} icon={<Play />}>
           Start
+        </Button>
+        <Button onClick={stop} disabled={isExecuting}>
+          Stop
+        </Button>
+        <Button onClick={install} disabled={isExecuting}>
+          Install
         </Button>
       </CardContent>
     </Card>
@@ -236,165 +245,167 @@ export function QueenCard({ status, onRefresh }: QueenCardProps) {
 }
 ```
 
-### 3. Usage in Pages - WIRE THEM TOGETHER
+**Key Points:**
+- ✅ Store exposes command functions directly (`start`, `stop`, `install`, etc.)
+- ✅ Component just calls functions - no command wrapping needed
+- ✅ Only reads `isExecuting` from `commandStore` (doesn't call `setIsExecuting`)
+- ✅ Store handles all command execution logic internally
+- ✅ Clean, simple component code
+
+### 3. Usage in Pages - SIMPLE IMPORT
 
 ```tsx
 // pages/ServicesPage.tsx
-import { QueenDataProvider } from "../containers/QueenContainer";
-import { QueenCard, LoadingQueen } from "../components/QueenCard";
+import { QueenCard } from "../components/QueenCard";
 
 export default function ServicesPage() {
   return (
     <div>
       <h2>Services</h2>
-      
-      {/* Consumer provides presentation via render prop */}
-      <QueenDataProvider fallback={<LoadingQueen />}>
-        {(status, onRefresh) => (
-          <QueenCard status={status} onRefresh={onRefresh} />
-        )}
-      </QueenDataProvider>
+      <QueenCard />
     </div>
   );
 }
 ```
 
 **Key Points:**
-- ✅ Container exports `QueenDataProvider` (data layer)
-- ✅ Presentation exports `QueenCard` + `LoadingQueen` (UI layer)
-- ✅ Page wires them together with render prop
-- ✅ Consumer controls what UI to render
-- ✅ Same data provider can power different UIs (table, card, list, etc.)
+- ✅ Store manages all state and actions
+- ✅ Component handles UI and calls store actions
+- ✅ Page just renders component (no wiring needed)
+- ✅ Store is globally accessible via hook
+- ✅ Multiple components can share same store
 
 ## Key Concepts
 
-### React 19 `use()` Hook
+### Zustand Store Pattern
 
-The `use()` hook is a new React 19 primitive that:
-- Unwraps promises directly in render
-- Suspends component rendering until promise resolves
-- Eliminates need for `useEffect` and manual loading states
-- Handles race conditions automatically
+Zustand provides simple, hook-based state management:
+- No providers/context needed
+- Direct state access via hooks
+- Actions are just functions in the store
+- Automatic re-renders when state changes
 
-**Before (React 18):**
+**Benefits:**
+- ✅ Less boilerplate than Redux
+- ✅ No context providers needed
+- ✅ TypeScript-friendly
+- ✅ Easy to test
+- ✅ Minimal bundle size
+
+### State Management
+
 ```tsx
-function Component() {
-  const [data, setData] = useState([]);
-  const [loading, setLoading] = useState(true);
+export const useQueenStore = create<QueenState>((set, get) => ({
+  // State
+  status: null,
+  isLoading: false,
+  
+  // Actions
+  fetchStatus: async () => {
+    set({ isLoading: true });
+    const status = await commands.queenStatus();
+    set({ status, isLoading: false });
+  },
+}));
+```
+
+- `set()` updates state
+- `get()` reads current state
+- Actions can be async
+- State updates trigger re-renders
+
+### Component Usage
+
+```tsx
+export function QueenCard() {
+  const { status, isLoading, fetchStatus } = useQueenStore();
   
   useEffect(() => {
-    fetchData().then(setData).finally(() => setLoading(false));
-  }, []);
+    fetchStatus();
+  }, [fetchStatus]);
   
-  if (loading) return <Loading />;
-  return <Table data={data} />;
+  if (isLoading) return <Loading />;
+  return <Card>{status.isRunning ? 'Running' : 'Stopped'}</Card>;
 }
 ```
 
-**After (React 19):**
-```tsx
-function Container() {
-  const [promise, setPromise] = useState(() => fetchData());
-  
-  return (
-    <Suspense fallback={<Loading />}>
-      <Table data={use(promise)} />
-    </Suspense>
-  );
-}
-```
-
-### Suspense Boundary
-
-- Wraps the component that uses `use()`
-- Provides `fallback` prop for loading state
-- Automatically shows fallback while promise is pending
-- Automatically shows content when promise resolves
-
-### Promise State Management
-
-```tsx
-const [dataPromise, setDataPromise] = useState(() => fetchData());
-
-const handleRefresh = () => {
-  setDataPromise(fetchData()); // Create new promise to trigger re-fetch
-};
-```
-
-- Store the **promise itself**, not the data
-- Create new promise to trigger re-fetch
-- React handles the rest automatically
+- Destructure only what you need
+- Call actions directly
+- Component re-renders when used state changes
 
 ## Benefits
 
 ### ✅ Separation of Concerns
-- Presentation logic isolated from data fetching
+- State management isolated in store
+- UI logic isolated in component
 - Each file has single responsibility
 - Easy to reason about
 
 ### ✅ Testability
-- Presentation component easily tested with mock data
-- No need to mock Tauri invoke calls in presentation tests
-- Container can be tested separately
+- Store can be tested independently
+- Component can be tested with mock store
+- No need to mock Tauri commands in component tests
 
 ### ✅ Reusability
-- Presentation component can be used with different data sources
+- Store can be used by multiple components
+- Component can be reused in different contexts
 - Easy to create Storybook stories
-- Can be used in different contexts
 
 ### ✅ Cleaner Code
-- No `useEffect` boilerplate
-- No manual loading state management
-- No race condition handling
-- Automatic error boundaries (with ErrorBoundary wrapper)
+- No boilerplate providers/context
+- Simple hook-based API
+- TypeScript-friendly
+- Minimal bundle size
 
 ### ✅ Better UX
-- Suspense provides consistent loading states
-- Automatic handling of async operations
-- Smooth transitions between loading and loaded states
+- Centralized state management
+- Consistent loading/error states
+- Easy to share state across components
 
 ## Common Patterns
 
 ### Refresh/Reload
 
 ```tsx
-const [promise, setPromise] = useState(() => fetchData());
+// In store
+fetchStatus: async () => {
+  set({ isLoading: true });
+  const status = await commands.queenStatus();
+  set({ status, isLoading: false });
+}
 
-const handleRefresh = () => {
-  setPromise(fetchData()); // New promise = new fetch
-};
+// In component
+const { fetchStatus } = useQueenStore();
+<Button onClick={fetchStatus}>Refresh</Button>
 ```
 
 ### Error Handling
 
-Wrap the Suspense boundary with an ErrorBoundary:
-
 ```tsx
-<ErrorBoundary fallback={<ErrorComponent />}>
-  <Suspense fallback={<LoadingComponent />}>
-    <ComponentTable items={use(dataPromise)} onRefresh={handleRefresh} />
-  </Suspense>
-</ErrorBoundary>
+// In store
+fetchStatus: async () => {
+  set({ isLoading: true, error: null });
+  try {
+    const status = await commands.queenStatus();
+    set({ status, isLoading: false });
+  } catch (error) {
+    set({ 
+      error: error instanceof Error ? error.message : 'Failed',
+      isLoading: false 
+    });
+  }
+}
+
+// In component
+const { error } = useQueenStore();
+if (error) return <ErrorMessage>{error}</ErrorMessage>;
 ```
 
-### Conditional Fetching
+### Selective Re-renders
 
 ```tsx
-const [promise, setPromise] = useState<Promise<Data[]> | null>(null);
-
-useEffect(() => {
-  if (shouldFetch) {
-    setPromise(fetchData());
-  }
-}, [shouldFetch]);
-
-if (!promise) return <EmptyState />;
-
-return (
-  <Suspense fallback={<Loading />}>
-    <Component data={use(promise)} />
-  </Suspense>
-);
+// Only re-render when status changes (not when isLoading changes)
+const status = useQueenStore(state => state.status);
 ```
 
 ## Migration Guide
@@ -424,86 +435,87 @@ function Component() {
 
 **New Pattern:**
 ```tsx
-// Container.tsx
-function Container() {
-  const [promise, setPromise] = useState(() => fetchData());
-  return (
-    <ErrorBoundary fallback={<Error />}>
-      <Suspense fallback={<Loading />}>
-        <Table data={use(promise)} onRefresh={() => setPromise(fetchData())} />
-      </Suspense>
-    </ErrorBoundary>
-  );
-}
+// store/dataStore.ts
+export const useDataStore = create<DataState>((set) => ({
+  data: [],
+  isLoading: false,
+  error: null,
+  
+  fetchData: async () => {
+    set({ isLoading: true, error: null });
+    try {
+      const data = await fetchData();
+      set({ data, isLoading: false });
+    } catch (error) {
+      set({ error: error.message, isLoading: false });
+    }
+  },
+}));
 
-// Table.tsx
-function Table({ data, onRefresh }) {
-  return <div>{/* render data */}</div>;
+// Component.tsx
+function Component() {
+  const { data, isLoading, error, fetchData } = useDataStore();
+  
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
+  
+  if (isLoading) return <Loading />;
+  if (error) return <Error error={error} />;
+  return <Table data={data} />;
 }
 ```
 
 ## 🚨 Anti-Patterns (VIOLATIONS)
 
-### ❌ VIOLATION: Container includes presentation
+### ❌ VIOLATION: Component manages state
 
 ```tsx
-// ❌ WRONG - Container has UI components inside
-export function SshHivesContainer() {
-  return (
-    <SshHivesDataProvider>
-      {(hives, onRefresh) => (
-        <SshHivesTable hives={hives} onRefresh={onRefresh} />
-      )}
-    </SshHivesDataProvider>
-  );
+// ❌ WRONG - Component has useState for data
+export function QueenCard() {
+  const [status, setStatus] = useState(null);
+  const [isLoading, setIsLoading] = useState(false);
+  
+  useEffect(() => {
+    fetchStatus().then(setStatus);
+  }, []);
 }
 ```
 
-**Why wrong:** Container is NOT component agnostic. It hardcodes `SshHivesTable`. What if consumer wants a dropdown? A list? A grid?
+**Why wrong:** State should be in Zustand store, not component.
 
-### ❌ VIOLATION: Container imports UI components
-
-```tsx
-// ❌ WRONG - Container imports presentation
-import { SshHivesTable, LoadingHives } from "./SshHivesTable";
-import { Card, Table, Button } from "@rbee/ui/atoms";
-```
-
-**Why wrong:** Containers should ONLY import data-related things (commands, types). NO UI imports.
-
-### ❌ VIOLATION: Presentation component fetches data
+### ❌ VIOLATION: Direct Tauri calls in component
 
 ```tsx
-// ❌ WRONG - Presentation component uses use() hook
-export function ComponentTable() {
-  const data = use(fetchData()); // ❌ Wrong!
-  return <Table data={data} />;
+// ❌ WRONG - Component calls Tauri directly
+export function QueenCard() {
+  const handleStart = async () => {
+    await commands.queenStart();
+  };
 }
 ```
 
-**Why wrong:** Presentation should receive data as props. NO data fetching.
+**Why wrong:** Commands should be wrapped in store actions.
 
-### ❌ VIOLATION: Storing data in state instead of promise
-
-```tsx
-// ❌ WRONG - Store promise, not data
-const [data, setData] = useState([]);
-const promise = fetchData();
-promise.then(setData); // ❌ Wrong!
-```
-
-**Why wrong:** React 19 `use()` hook expects promises, not data.
-
-### ❌ VIOLATION: Conditional `use()` call
+### ❌ VIOLATION: Store has UI logic
 
 ```tsx
-// ❌ WRONG - use() must be called unconditionally
-if (shouldFetch) {
-  const data = use(promise); // ❌ Wrong!
-}
+// ❌ WRONG - Store imports React components
+import { toast } from "@rbee/ui/atoms";
+
+export const useQueenStore = create<QueenState>((set) => ({
+  fetchStatus: async () => {
+    try {
+      const status = await commands.queenStatus();
+      toast.success("Status loaded"); // ❌ Wrong!
+    } catch (error) {
+      toast.error("Failed"); // ❌ Wrong!
+    }
+  },
+}));
 ```
 
-**Why wrong:** React hooks must be called unconditionally.
+**Why wrong:** Store should only manage state, not UI.
 
 ## Tauri Command Bindings (Recommended)
 

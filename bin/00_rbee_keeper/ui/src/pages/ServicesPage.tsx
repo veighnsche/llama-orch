@@ -1,6 +1,7 @@
 // TEAM-294: Keeper page - Status cards and SSH targets table
 // TEAM-295: Added action buttons to Queen and Hive cards (icon-only with tooltips)
 // TEAM-296: Wired up queen lifecycle operations (install, update, uninstall)
+// TEAM-338: Migrated to Zustand store pattern - removed QueenContainer
 // Updated: Replaced ServiceCard with dedicated QueenCard and HiveCard components
 //
 // Queen Lifecycle Operations:
@@ -11,8 +12,8 @@
 // - uninstall: Remove binary from ~/.local/bin (errors if not installed)
 
 import { PageContainer } from "@rbee/ui/molecules";
-import { QueenDataProvider } from "../containers/QueenContainer";
-import { QueenCard, LoadingQueen } from "../components/QueenCard";
+import { QueenCard } from "../components/QueenCard";
+import { HiveInstallCard } from "@/components/HiveInstallCard";
 
 export default function KeeperPage() {
   return (
@@ -34,11 +35,8 @@ export default function KeeperPage() {
       ]}
     >
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
-        <QueenDataProvider fallback={<LoadingQueen />}>
-          {(status, onRefresh) => (
-            <QueenCard status={status} onRefresh={onRefresh} />
-          )}
-        </QueenDataProvider>
+        <QueenCard />
+        <HiveInstallCard />
       </div>
     </PageContainer>
   );

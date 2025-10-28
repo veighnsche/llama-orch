@@ -1,6 +1,7 @@
-// TEAM-297: SSH Hives data layer and container
-// Handles data fetching with React 19 use() hook and Suspense
-// Uses auto-generated Tauri bindings from tauri-specta v2.0.0-rc.21
+// TEAM-338: SSH Hives data provider using React 19 use() hook
+// Fetches data into Zustand store, handles loading/error states
+// Children get data from store - NO data passing via props
+// No useEffect needed - pure Suspense pattern
 
 import {
   use,
@@ -10,63 +11,21 @@ import {
   Component,
   type ReactNode,
 } from "react";
-import { commands } from "@/generated/bindings";
-import type { SshTarget } from "@/generated/bindings";
-import { AlertCircle } from "lucide-react";
-import { Button } from "@rbee/ui/atoms";
+import { useSshHivesStore } from "../store/sshHivesStore";
 
-// TEAM-338: SshHive type for consumers
-export interface SshHive {
-  host: string;
-  host_subtitle?: string;
-  hostname: string;
-  user: string;
-  port: number;
-  status: "online" | "offline" | "unknown";
-}
+// Promise cache - CRITICAL: Promises must be cached, not created in render
+const promiseCache = new Map<string, Promise<void>>();
 
-// TEAM-338: Convert tauri-specta SshTarget to SshHive
-function convertToSshHive(target: SshTarget) {
-  return {
-    host: target.host,
-    host_subtitle: target.host_subtitle ?? undefined,
-    hostname: target.hostname,
-    user: target.user,
-    port: target.port,
-    status: target.status,
-  };
-}
-
-// TEAM-338: Fetch function that returns a cached promise
-// React docs: "Promises created in Client Components are recreated on every render"
-// Solution: Use a cache to ensure the same promise is returned for the same key
-const promiseCache = new Map<string, Promise<any[]>>();
-
-function fetchSshHives(key: string): Promise<any[]> {
-  // Check if we already have a promise for this key
+function fetchSshHives(key: string): Promise<void> {
   if (!promiseCache.has(key)) {
-    // Create and cache the promise
-    // TEAM-333: Updated to use ssh_list command with error handling
-    const promise = commands
-      .sshList()
-      .then((result) => {
-        if (result.status === "ok") {
-          return result.data.map(convertToSshHive);
-        }
-        throw new Error(result.error || "Failed to load SSH hives");
-      })
-      .catch((error) => {
-        // TEAM-333: Throw error to trigger ErrorBoundary
-        console.error("Failed to fetch SSH targets:", error);
-        throw error;
-      });
+    // Fetch into store - promise resolves when store is updated
+    const promise = useSshHivesStore.getState().fetchHives();
     promiseCache.set(key, promise);
   }
-
   return promiseCache.get(key)!;
 }
 
-// TEAM-338: Error boundary for SSH hives loading
+// Error boundary for SSH hives loading
 class SshHivesErrorBoundary extends Component<
   { children: ReactNode; onReset: () => void },
   { hasError: boolean; error: Error | null }
@@ -80,27 +39,31 @@ class SshHivesErrorBoundary extends Component<
     return { hasError: true, error };
   }
 
+  componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
+    console.error("SSH Hives Error:", error, errorInfo);
+  }
+
   render() {
     if (this.state.hasError) {
       return (
         <div className="flex flex-col items-center justify-center p-8 space-y-4">
-          <AlertCircle className="h-12 w-12 text-destructive" />
           <div className="text-center space-y-2">
-            <h3 className="text-lg font-semibold">
+            <h3 className="text-lg font-semibold text-destructive">
               Failed to load SSH targets
             </h3>
             <p className="text-sm text-muted-foreground max-w-md">
               {this.state.error?.message || "Unknown error occurred"}
             </p>
           </div>
-          <Button
+          <button
             onClick={() => {
               this.setState({ hasError: false, error: null });
               this.props.onReset();
             }}
+            className="px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90"
           >
             Try Again
-          </Button>
+          </button>
         </div>
       );
     }
@@ -109,19 +72,32 @@ class SshHivesErrorBoundary extends Component<
   }
 }
 
-// TEAM-338: Generic data provider component with render prop pattern
-// COMPONENT AGNOSTIC - consumers provide their own presentation
+// Fetcher component - triggers fetch via use(), then renders children
+// Children get data from useSshHivesStore() themselves
+function SshHivesFetcher({
+  promiseKey,
+  children,
+}: {
+  promiseKey: string;
+  children: ReactNode;
+}) {
+  // use() hook - React will Suspend until promise resolves
+  // This populates the store, then children can read from it
+  use(fetchSshHives(promiseKey));
+  return <>{children}</>;
+}
+
+// Data provider - fetches into store, children read from store
 export function SshHivesDataProvider({
   children,
   fallback,
 }: {
-  children: (hives: any[], refresh: () => void) => ReactNode;
+  children: ReactNode;
   fallback?: ReactNode;
 }) {
   const [refreshKey, setRefreshKey] = useState(0);
 
   const handleRefresh = useCallback(() => {
-    // Generate new key to force refetch
     const newKey = refreshKey + 1;
     setRefreshKey(newKey);
     // Clear the old promise from cache
@@ -131,22 +107,13 @@ export function SshHivesDataProvider({
   return (
     <SshHivesErrorBoundary onReset={handleRefresh}>
       <Suspense fallback={fallback}>
-        <SshHivesContentWrapper promiseKey={`hives-${refreshKey}`}>
-          {(hives) => children(hives, handleRefresh)}
-        </SshHivesContentWrapper>
+        <SshHivesFetcher promiseKey={`hives-${refreshKey}`}>
+          {children}
+        </SshHivesFetcher>
       </Suspense>
     </SshHivesErrorBoundary>
   );
 }
 
-// TEAM-338: Wrapper to use() the promise and pass data to render prop
-function SshHivesContentWrapper({
-  promiseKey,
-  children,
-}: {
-  promiseKey: string;
-  children: (hives: any[]) => ReactNode;
-}) {
-  const hives = use(fetchSshHives(promiseKey));
-  return <>{children(hives)}</>;
-}
+// Re-export type for consumers
+export type { SshHive } from "../store/sshHivesStore";

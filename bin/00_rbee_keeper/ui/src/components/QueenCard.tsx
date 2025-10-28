@@ -1,7 +1,8 @@
-// TEAM-338: Queen service card - presentation component
-// Pure presentation logic, receives data as props
-// No data fetching - see QueenContainer.tsx for data layer
+// TEAM-338: Queen service card - uses Zustand store for state management
+// Follows idiomatic Zustand pattern with useQueenStore hook
+// Store handles command execution and global isExecuting internally
 
+import { useEffect } from "react";
 import {
   Card,
   CardContent,
@@ -12,60 +13,82 @@ import {
   DropdownMenuItem,
   DropdownMenuSeparator,
 } from "@rbee/ui/atoms";
-import { Play, Square, Download, RefreshCw, Trash2, Loader2 } from "lucide-react";
-import { commands } from "@/generated/bindings";
+import {
+  Play,
+  Square,
+  Download,
+  RefreshCw,
+  Trash2,
+  Loader2,
+  AlertCircle,
+} from "lucide-react";
+import { useQueenStore } from "../store/queenStore";
 import { useCommandStore } from "../store/commandStore";
 
-// TEAM-338: Export the status type
-export interface QueenStatus {
-  isRunning: boolean;
-  isInstalled: boolean;
-}
+// TEAM-338: Re-export the status type from store
+export type { QueenStatus } from "../store/queenStore";
 
-// TEAM-338: Export the loading fallback
-export function LoadingQueen() {
-  return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Queen</CardTitle>
-        <CardDescription>Smart API server</CardDescription>
-      </CardHeader>
-      <CardContent>
-        <div className="space-y-4">
-          <p className="text-sm text-muted-foreground leading-relaxed">
-            Job router that dispatches inference requests to workers in the
-            correct hive
-          </p>
-          <div className="flex items-center justify-center py-4">
-            <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+export function QueenCard() {
+  const {
+    status,
+    isLoading,
+    error,
+    fetchStatus,
+    start,
+    stop,
+    install,
+    rebuild,
+    uninstall,
+  } = useQueenStore();
+  const { isExecuting } = useCommandStore();
+
+  // TEAM-338: Fetch status on mount
+  useEffect(() => {
+    fetchStatus();
+  }, [fetchStatus]);
+
+  // TEAM-338: Loading state
+  if (isLoading && !status) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>Queen</CardTitle>
+          <CardDescription>Smart API server</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4">
+            <p className="text-sm text-muted-foreground leading-relaxed">
+              Job router that dispatches inference requests to workers in the
+              correct hive
+            </p>
+            <div className="flex items-center justify-center py-4">
+              <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+            </div>
           </div>
-        </div>
-      </CardContent>
-    </Card>
-  );
-}
+        </CardContent>
+      </Card>
+    );
+  }
 
-// TEAM-338: Export the presentation component
-export interface QueenCardProps {
-  status: QueenStatus;
-  onRefresh: () => void;
-}
-
-export function QueenCard({ status, onRefresh }: QueenCardProps) {
-  const { isExecuting, setIsExecuting } = useCommandStore();
-
-  const handleCommand = async (commandPromise: Promise<unknown>) => {
-    setIsExecuting(true);
-    try {
-      await commandPromise;
-      // Refresh status after command completes
-      onRefresh();
-    } catch (error) {
-      console.error("Queen command failed:", error);
-    } finally {
-      setIsExecuting(false);
-    }
-  };
+  // TEAM-338: Error state
+  if (error) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>Queen</CardTitle>
+          <CardDescription>Smart API server</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4">
+            <div className="flex items-center gap-2 text-destructive">
+              <AlertCircle className="h-4 w-4" />
+              <p className="text-sm">{error}</p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
 
   return (
     <Card>
@@ -83,35 +106,26 @@ export function QueenCard({ status, onRefresh }: QueenCardProps) {
             variant="default"
             size="default"
             icon={<Play className="h-4 w-4" />}
-            onClick={() => handleCommand(commands.queenStart())}
+            onClick={start}
             disabled={isExecuting}
             className="w-full"
             dropdownContent={
               <>
-                <DropdownMenuItem
-                  onClick={() => handleCommand(commands.queenStop())}
-                >
+                <DropdownMenuItem onClick={stop}>
                   <Square className="mr-2 h-4 w-4 text-danger" />
                   Stop
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem
-                  onClick={() => handleCommand(commands.queenInstall(null))}
-                >
+                <DropdownMenuItem onClick={install}>
                   <Download className="mr-2 h-4 w-4" />
                   Install
                 </DropdownMenuItem>
-                <DropdownMenuItem
-                  onClick={() => handleCommand(commands.queenRebuild(false))}
-                >
+                <DropdownMenuItem onClick={rebuild}>
                   <RefreshCw className="mr-2 h-4 w-4" />
                   Update
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem
-                  onClick={() => handleCommand(commands.queenUninstall())}
-                  variant="destructive"
-                >
+                <DropdownMenuItem onClick={uninstall} variant="destructive">
                   <Trash2 className="mr-2 h-4 w-4" />
                   Uninstall
                 </DropdownMenuItem>
