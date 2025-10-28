@@ -1,4 +1,4 @@
-// Queen service card with lifecycle controls
+// Card for managing an installed hive instance
 import { useState } from "react";
 import {
   Card,
@@ -20,9 +20,12 @@ export type ServiceStatus =
   | "unknown"
   | "checking";
 
-interface QueenCardProps {
+interface InstalledHiveCardProps {
+  targetId: string;
+  targetName: string;
+  targetSubtitle: string;
   status?: ServiceStatus;
-  onCommandClick: (command: string) => void;
+  onCommandClick: (command: string, targetId: string) => void;
   onStatusChange?: (status: ServiceStatus) => void;
   disabled?: boolean;
 }
@@ -43,14 +46,15 @@ const STATUS_CONFIG: Record<
   checking: { label: "Checking...", variant: "outline" },
 };
 
-const HEALTH_URL = "http://localhost:7833/health";
-
-export function QueenCard({
+export function InstalledHiveCard({
+  targetId,
+  targetName,
+  targetSubtitle,
   status = "unknown",
   onCommandClick,
   onStatusChange,
   disabled = false,
-}: QueenCardProps) {
+}: InstalledHiveCardProps) {
   const [localStatus, setLocalStatus] = useState<ServiceStatus>(status);
   const currentStatus = status !== "unknown" ? status : localStatus;
   const statusConfig = STATUS_CONFIG[currentStatus];
@@ -62,30 +66,26 @@ export function QueenCard({
     onStatusChange?.("checking");
 
     try {
-      const response = await fetch(HEALTH_URL, {
-        method: "GET",
-        signal: AbortSignal.timeout(5000),
-      });
-
-      if (response.ok) {
-        setLocalStatus("healthy");
-        onStatusChange?.("healthy");
-      } else {
-        setLocalStatus("unhealthy");
-        onStatusChange?.("unhealthy");
-      }
+      // TODO: Implement health check for remote hives
+      // For now, just set to unknown
+      setLocalStatus("unknown");
+      onStatusChange?.("unknown");
     } catch (error) {
       setLocalStatus("stopped");
       onStatusChange?.("stopped");
-      console.error("Queen health check failed:", error);
+      console.error(`Hive health check failed for ${targetId}:`, error);
     }
+  };
+
+  const handleCommand = (command: string) => {
+    onCommandClick(command, targetId);
   };
 
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Queen</CardTitle>
-        <CardDescription>Smart API server</CardDescription>
+        <CardTitle>{targetName}</CardTitle>
+        <CardDescription>{targetSubtitle}</CardDescription>
         <CardAction>
           <Badge
             variant={statusConfig.variant}
@@ -97,17 +97,11 @@ export function QueenCard({
         </CardAction>
       </CardHeader>
       <CardContent>
-        <div className="space-y-4">
-          <p className="text-sm text-muted-foreground leading-relaxed">
-            Job router that dispatches inference requests to workers in the
-            correct hive
-          </p>
-          <ServiceActionButtons
-            servicePrefix="queen"
-            onCommandClick={onCommandClick}
-            disabled={disabled}
-          />
-        </div>
+        <ServiceActionButtons
+          servicePrefix="hive"
+          onCommandClick={handleCommand}
+          disabled={disabled}
+        />
       </CardContent>
     </Card>
   );

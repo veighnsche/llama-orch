@@ -2,6 +2,7 @@
 import { useState } from "react";
 import {
   Card,
+  CardAction,
   CardContent,
   CardDescription,
   CardHeader,
@@ -15,6 +16,7 @@ import {
 } from "@rbee/ui/atoms";
 import { ServiceActionButtons } from "./ServiceActionButtons";
 import { useHiveStore } from "../store/hiveStore";
+import { SshHivesDataProvider, type SshHive } from "./SshHivesContainer";
 
 export type ServiceStatus =
   | "healthy"
@@ -49,6 +51,16 @@ const STATUS_CONFIG: Record<
 };
 
 const HEALTH_URL = "http://localhost:7835/health";
+
+// SSH Target Select Item component
+function SshTargetItem({ name, subtitle }: { name: string; subtitle: string }) {
+  return (
+    <div className="flex flex-col items-start">
+      <span className="font-medium">{name}</span>
+      <span className="text-xs text-muted-foreground">{subtitle}</span>
+    </div>
+  );
+}
 
 export function HiveCard({
   status = "unknown",
@@ -90,77 +102,59 @@ export function HiveCard({
   return (
     <Card>
       <CardHeader>
-        <div className="flex flex-col sm:flex-row items-start sm:items-start justify-between gap-3 sm:gap-4">
-          <div className="space-y-1.5 flex-1 min-w-0">
-            <CardTitle className="text-base sm:text-lg">Hive</CardTitle>
-            <CardDescription className="text-sm">
-              Worker Manager
-            </CardDescription>
-          </div>
+        <CardTitle>Hive</CardTitle>
+        <CardDescription>Worker Manager</CardDescription>
+        <CardAction>
           <Badge
             variant={statusConfig.variant}
-            className="cursor-pointer hover:opacity-80 transition-opacity shrink-0 self-start"
+            className="cursor-pointer hover:opacity-80 transition-opacity"
             onClick={handleHealthCheck}
           >
             {statusConfig.label}
           </Badge>
-        </div>
+        </CardAction>
       </CardHeader>
       <CardContent>
-        <div className="space-y-4">
-          <p className="text-sm text-muted-foreground leading-relaxed">
-            Manages workers and catalogs (models, worker binaries) on this
-            machine or remote SSH targets
-          </p>
-
+        <div className="space-y-2">
           {/* SSH Target Selection */}
-          <div className="space-y-2">
-            <label
-              htmlFor="ssh-target"
-              className="text-sm font-medium text-foreground"
-            >
-              Target
-            </label>
-            <Select value={selectedTarget} onValueChange={setSelectedTarget}>
-              <SelectTrigger id="ssh-target">
-                <SelectValue placeholder="Select target" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="localhost">
-                  <div className="flex flex-col items-start">
-                    <span className="font-medium">localhost</span>
-                    <span className="text-xs text-muted-foreground">
-                      This machine
-                    </span>
-                  </div>
-                </SelectItem>
-                <SelectItem value="infra">
-                  <div className="flex flex-col items-start">
-                    <span className="font-medium">infra</span>
-                    <span className="text-xs text-muted-foreground">
-                      vince@192.168.178.84:22
-                    </span>
-                  </div>
-                </SelectItem>
-                <SelectItem value="mac">
-                  <div className="flex flex-col items-start">
-                    <span className="font-medium">mac</span>
-                    <span className="text-xs text-muted-foreground">
-                      vinceliem@192.168.178.15:22
-                    </span>
-                  </div>
-                </SelectItem>
-                <SelectItem value="workstation">
-                  <div className="flex flex-col items-start">
-                    <span className="font-medium">workstation</span>
-                    <span className="text-xs text-muted-foreground">
-                      vince@192.168.178.29:22
-                    </span>
-                  </div>
-                </SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
+          <label
+            htmlFor="ssh-target"
+            className="text-sm font-medium text-foreground"
+          >
+            SSH Target
+          </label>
+          <SshHivesDataProvider
+            fallback={
+              <Select disabled>
+                <SelectTrigger id="ssh-target" className="w-full">
+                  <SelectValue placeholder="Loading targets..." />
+                </SelectTrigger>
+              </Select>
+            }
+          >
+            {(hives) => (
+              <Select value={selectedTarget} onValueChange={setSelectedTarget}>
+                <SelectTrigger id="ssh-target" className="w-full">
+                  <SelectValue placeholder="Select target" />
+                </SelectTrigger>
+                <SelectContent>
+                  {/* Always include localhost */}
+                  <SelectItem value="localhost">
+                    <SshTargetItem name="localhost" subtitle="This machine" />
+                  </SelectItem>
+                  {/* Dynamic SSH targets from ~/.ssh/config */}
+                  {hives.map((hive) => (
+                    <SelectItem key={hive.host} value={hive.host}>
+                      <SshTargetItem
+                        name={hive.host}
+                        subtitle={`${hive.user}@${hive.hostname}:${hive.port}`}
+                      />
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            )}
+          </SshHivesDataProvider>
 
           <ServiceActionButtons
             servicePrefix="hive"

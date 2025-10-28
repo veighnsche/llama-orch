@@ -1,49 +1,41 @@
-// Zustand store for Hive UI preferences (persistent)
+// Zustand store for installation state (persistent)
 // Service states (on/off) come from backend via heartbeats, not stored here
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 
-export interface SshTarget {
-  id: string;
-  name: string;
-  user: string;
-  hostname: string;
-  port: number;
+interface InstallationStore {
+  // Queen installation state
+  isQueenInstalled: boolean;
+  setQueenInstalled: (installed: boolean) => void;
+
+  // Installed hives (array of SSH target IDs where hive is installed)
+  installedHives: string[];
+  addInstalledHive: (targetId: string) => void;
+  removeInstalledHive: (targetId: string) => void;
+  isHiveInstalled: (targetId: string) => boolean;
 }
 
-interface HiveStore {
-  // Currently selected SSH target for Hive operations
-  selectedTarget: string;
-  setSelectedTarget: (target: string) => void;
-
-  // User's favorite SSH targets (for quick access)
-  favoriteTargets: string[];
-  addFavorite: (targetId: string) => void;
-  removeFavorite: (targetId: string) => void;
-  isFavorite: (targetId: string) => boolean;
-}
-
-export const useHiveStore = create<HiveStore>()(
+export const useInstallationStore = create<InstallationStore>()(
   persist(
     (set, get) => ({
-      // Default to localhost
-      selectedTarget: "localhost",
-      setSelectedTarget: (target) => set({ selectedTarget: target }),
+      // Queen not installed by default
+      isQueenInstalled: false,
+      setQueenInstalled: (installed) => set({ isQueenInstalled: installed }),
 
-      // Empty favorites by default
-      favoriteTargets: [],
-      addFavorite: (targetId) =>
+      // No hives installed by default
+      installedHives: [],
+      addInstalledHive: (targetId) =>
         set((state) => ({
-          favoriteTargets: [...new Set([...state.favoriteTargets, targetId])],
+          installedHives: [...new Set([...state.installedHives, targetId])],
         })),
-      removeFavorite: (targetId) =>
+      removeInstalledHive: (targetId) =>
         set((state) => ({
-          favoriteTargets: state.favoriteTargets.filter((id) => id !== targetId),
+          installedHives: state.installedHives.filter((id) => id !== targetId),
         })),
-      isFavorite: (targetId) => get().favoriteTargets.includes(targetId),
+      isHiveInstalled: (targetId) => get().installedHives.includes(targetId),
     }),
     {
-      name: "hive-preferences", // localStorage key
+      name: "installation-state", // localStorage key
     }
   )
 );

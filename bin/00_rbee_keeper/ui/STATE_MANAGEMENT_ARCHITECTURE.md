@@ -2,29 +2,29 @@
 
 ## Overview
 
-Conservative approach: **Zustand stores UI preferences only**. Service states come from backend.
+Conservative approach: **Zustand stores installation state only**. Service states come from backend.
 
 ## What Goes Where
 
 ### ✅ Zustand (Client-Side Persistent Storage)
 
-**File:** `src/store/hiveStore.ts`
+**File:** `src/store/hiveStore.ts` (renamed to `useInstallationStore`)
 
-Stores **UI preferences** that should persist across sessions:
+Stores **installation state** that should persist across sessions:
 
-1. **Selected SSH Target** (`selectedTarget: string`)
-   - Which target the user is currently managing
-   - Default: `"localhost"`
-   - Persists user's last selection
+1. **Queen Installation** (`isQueenInstalled: boolean`)
+   - Whether queen is installed locally
+   - Default: `false`
+   - Methods: `setQueenInstalled()`
 
-2. **Favorite SSH Targets** (`favoriteTargets: string[]`)
-   - User's bookmarked targets for quick access
+2. **Installed Hives** (`installedHives: string[]`)
+   - Array of SSH target IDs where hive is installed
    - Default: `[]`
-   - Methods: `addFavorite()`, `removeFavorite()`, `isFavorite()`
+   - Methods: `addInstalledHive()`, `removeInstalledHive()`, `isHiveInstalled()`
 
 **Storage:** Browser localStorage via Zustand's `persist` middleware
 
-**Key:** `hive-preferences`
+**Key:** `installation-state`
 
 ### ❌ NOT in Zustand (Backend State)
 

@@ -4,14 +4,17 @@
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import { ThemeProvider } from "@rbee/ui/providers";
+import { TauriProvider } from "./contexts/TauriContext";
 import "./globals.css";
 import "@rbee/ui/styles.css";
 import App from "./App.tsx";
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
-    <ThemeProvider>
-      <App />
-    </ThemeProvider>
+    <TauriProvider>
+      <ThemeProvider>
+        <App />
+      </ThemeProvider>
+    </TauriProvider>
   </StrictMode>,
 );

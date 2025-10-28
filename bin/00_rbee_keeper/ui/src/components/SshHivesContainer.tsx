@@ -16,6 +16,9 @@ import { SshHivesTable, LoadingHives, type SshHive } from "./SshHivesTable";
 import { AlertCircle } from "lucide-react";
 import { Button } from "@rbee/ui/atoms";
 
+// Re-export SshHive type for consumers
+export type { SshHive };
+
 // TEAM-297: Convert tauri-specta SshTarget to SshHive for table component
 function convertToSshHive(target: SshTarget): SshHive {
   return {
@@ -100,9 +103,15 @@ class SshHivesErrorBoundary extends Component<
   }
 }
 
-// TEAM-297: Container component with Suspense boundary
-// TEAM-333: Added ErrorBoundary for proper error handling
-export function SshHivesContainer() {
+// TEAM-297: Generic data provider component with render prop pattern
+// Can be used by any component that needs SSH targets data
+export function SshHivesDataProvider({
+  children,
+  fallback = <LoadingHives />,
+}: {
+  children: (hives: SshHive[], refresh: () => void) => ReactNode;
+  fallback?: ReactNode;
+}) {
   const [refreshKey, setRefreshKey] = useState(0);
 
   const handleRefresh = useCallback(() => {
@@ -115,24 +124,35 @@ export function SshHivesContainer() {
 
   return (
     <SshHivesErrorBoundary onReset={handleRefresh}>
-      <Suspense fallback={<LoadingHives />}>
-        <SshHivesContentWrapper
-          promiseKey={`hives-${refreshKey}`}
-          onRefresh={handleRefresh}
-        />
+      <Suspense fallback={fallback}>
+        <SshHivesContentWrapper promiseKey={`hives-${refreshKey}`}>
+          {(hives) => children(hives, handleRefresh)}
+        </SshHivesContentWrapper>
       </Suspense>
     </SshHivesErrorBoundary>
   );
 }
 
-// TEAM-297: Wrapper to pass refresh handler to table
+// TEAM-297: Wrapper to use() the promise and pass data to render prop
 function SshHivesContentWrapper({
   promiseKey,
-  onRefresh,
+  children,
 }: {
   promiseKey: string;
-  onRefresh: () => void;
+  children: (hives: SshHive[]) => ReactNode;
 }) {
   const hives = use(fetchSshHives(promiseKey));
-  return <SshHivesTable hives={hives} onRefresh={onRefresh} />;
+  return <>{children(hives)}</>;
+}
+
+// TEAM-297: Backward compatible container for table view
+// TEAM-333: Added ErrorBoundary for proper error handling
+export function SshHivesContainer() {
+  return (
+    <SshHivesDataProvider>
+      {(hives, onRefresh) => (
+        <SshHivesTable hives={hives} onRefresh={onRefresh} />
+      )}
+    </SshHivesDataProvider>
+  );
 }
