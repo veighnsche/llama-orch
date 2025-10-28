@@ -12,15 +12,21 @@ import {
 } from "react";
 import { commands } from "@/generated/bindings";
 import type { SshTarget } from "@/generated/bindings";
-import { SshHivesTable, LoadingHives, type SshHive } from "./SshHivesTable";
 import { AlertCircle } from "lucide-react";
 import { Button } from "@rbee/ui/atoms";
 
-// Re-export SshHive type for consumers
-export type { SshHive };
+// TEAM-338: SshHive type for consumers
+export interface SshHive {
+  host: string;
+  host_subtitle?: string;
+  hostname: string;
+  user: string;
+  port: number;
+  status: "online" | "offline" | "unknown";
+}
 
-// TEAM-297: Convert tauri-specta SshTarget to SshHive for table component
-function convertToSshHive(target: SshTarget): SshHive {
+// TEAM-338: Convert tauri-specta SshTarget to SshHive
+function convertToSshHive(target: SshTarget) {
   return {
     host: target.host,
     host_subtitle: target.host_subtitle ?? undefined,
@@ -31,12 +37,12 @@ function convertToSshHive(target: SshTarget): SshHive {
   };
 }
 
-// TEAM-297: Fetch function that returns a cached promise
+// TEAM-338: Fetch function that returns a cached promise
 // React docs: "Promises created in Client Components are recreated on every render"
 // Solution: Use a cache to ensure the same promise is returned for the same key
-const promiseCache = new Map<string, Promise<SshHive[]>>();
+const promiseCache = new Map<string, Promise<any[]>>();
 
-function fetchSshHives(key: string): Promise<SshHive[]> {
+function fetchSshHives(key: string): Promise<any[]> {
   // Check if we already have a promise for this key
   if (!promiseCache.has(key)) {
     // Create and cache the promise
@@ -60,7 +66,7 @@ function fetchSshHives(key: string): Promise<SshHive[]> {
   return promiseCache.get(key)!;
 }
 
-// TEAM-333: Error boundary for SSH hives loading
+// TEAM-338: Error boundary for SSH hives loading
 class SshHivesErrorBoundary extends Component<
   { children: ReactNode; onReset: () => void },
   { hasError: boolean; error: Error | null }
@@ -103,13 +109,13 @@ class SshHivesErrorBoundary extends Component<
   }
 }
 
-// TEAM-297: Generic data provider component with render prop pattern
-// Can be used by any component that needs SSH targets data
+// TEAM-338: Generic data provider component with render prop pattern
+// COMPONENT AGNOSTIC - consumers provide their own presentation
 export function SshHivesDataProvider({
   children,
-  fallback = <LoadingHives />,
+  fallback,
 }: {
-  children: (hives: SshHive[], refresh: () => void) => ReactNode;
+  children: (hives: any[], refresh: () => void) => ReactNode;
   fallback?: ReactNode;
 }) {
   const [refreshKey, setRefreshKey] = useState(0);
@@ -133,26 +139,14 @@ export function SshHivesDataProvider({
   );
 }
 
-// TEAM-297: Wrapper to use() the promise and pass data to render prop
+// TEAM-338: Wrapper to use() the promise and pass data to render prop
 function SshHivesContentWrapper({
   promiseKey,
   children,
 }: {
   promiseKey: string;
-  children: (hives: SshHive[]) => ReactNode;
+  children: (hives: any[]) => ReactNode;
 }) {
   const hives = use(fetchSshHives(promiseKey));
   return <>{children(hives)}</>;
-}
-
-// TEAM-297: Backward compatible container for table view
-// TEAM-333: Added ErrorBoundary for proper error handling
-export function SshHivesContainer() {
-  return (
-    <SshHivesDataProvider>
-      {(hives, onRefresh) => (
-        <SshHivesTable hives={hives} onRefresh={onRefresh} />
-      )}
-    </SshHivesDataProvider>
-  );
 }

@@ -14,7 +14,10 @@ import {
   SelectValue,
 } from "@rbee/ui/atoms";
 import { Download } from "lucide-react";
-import { SshHivesDataProvider, type SshHive } from "./SshHivesContainer";
+import {
+  SshHivesDataProvider,
+  type SshHive,
+} from "../containers/SshHivesContainer";
 import { useInstallationStore } from "../store/hiveStore";
 
 interface InstallHiveCardProps {
@@ -73,18 +76,22 @@ export function InstallHiveCard({
               {(hives) => {
                 // Filter out already installed hives
                 const availableHives = hives.filter(
-                  (hive) => !installedHives.includes(hive.host)
+                  (hive) => !installedHives.includes(hive.host),
                 );
 
                 // Check if localhost is already installed
-                const isLocalhostInstalled = installedHives.includes("localhost");
+                const isLocalhostInstalled =
+                  installedHives.includes("localhost");
 
                 return (
                   <Select
                     value={selectedTarget}
                     onValueChange={setSelectedTarget}
                   >
-                    <SelectTrigger id="install-target" className="w-full h-auto py-3">
+                    <SelectTrigger
+                      id="install-target"
+                      className="w-full h-auto py-3"
+                    >
                       <SelectValue placeholder="Select target" />
                     </SelectTrigger>
                     <SelectContent>

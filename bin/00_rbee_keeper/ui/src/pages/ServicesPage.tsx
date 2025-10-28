@@ -10,132 +10,11 @@
 // - update: Rebuild from source (cargo build --release)
 // - uninstall: Remove binary from ~/.local/bin (errors if not installed)
 
-import { invoke } from "@tauri-apps/api/core";
 import { PageContainer } from "@rbee/ui/molecules";
-import { QueenCard } from "../components/QueenCard";
-import { InstalledHiveCard } from "../components/InstalledHiveCard";
-import { InstallHiveCard } from "../components/InstallHiveCard";
-import { SshHivesDataProvider, type SshHive } from "../components/SshHivesContainer";
-import { useCommandStore } from "../store/commandStore";
-import { useInstallationStore } from "../store/hiveStore";
+import { QueenDataProvider } from "../containers/QueenContainer";
+import { QueenCard, LoadingQueen } from "../components/QueenCard";
 
 export default function KeeperPage() {
-  const { setActiveCommand, isExecuting, setIsExecuting } = useCommandStore();
-  const { installedHives, addInstalledHive, removeInstalledHive } =
-    useInstallationStore();
-
-  const handleCommand = async (command: string) => {
-    setActiveCommand(command);
-    setIsExecuting(true);
-
-    try {
-      switch (command) {
-        case "queen-start":
-          await invoke("queen_start");
-          break;
-        case "queen-stop":
-          await invoke("queen_stop");
-          break;
-        case "queen-install":
-          // TEAM-296: Build from source and install to ~/.local/bin
-          await invoke("queen_install", { binary: null });
-          break;
-        case "queen-update":
-          // TEAM-296: Rebuild from source (same as rebuild)
-          await invoke("queen_rebuild", { withLocalHive: false });
-          break;
-        case "queen-uninstall":
-          // TEAM-296: Remove binary from ~/.local/bin
-          await invoke("queen_uninstall");
-          break;
-        case "hive-start":
-          await invoke("hive_start", {
-            host: "localhost",
-            installDir: null,
-            port: 7835,
-          });
-          break;
-        case "hive-stop":
-          await invoke("hive_stop", { host: "localhost" });
-          break;
-        case "hive-install":
-          // TODO: Implement hive install
-          console.log("Hive install not yet implemented");
-          break;
-        case "hive-update":
-          // TODO: Implement hive update
-          console.log("Hive update not yet implemented");
-          break;
-        case "hive-uninstall":
-          // TODO: Implement hive uninstall
-          console.log("Hive uninstall not yet implemented");
-          break;
-      }
-    } catch (error) {
-      console.error("Command failed:", error);
-    } finally {
-      setIsExecuting(false);
-    }
-  };
-
-  const handleHiveCommand = async (command: string, targetId: string) => {
-    setActiveCommand(command);
-    setIsExecuting(true);
-
-    try {
-      switch (command) {
-        case "hive-start":
-          await invoke("hive_start", {
-            host: targetId,
-            installDir: null,
-            port: 7835,
-          });
-          break;
-        case "hive-stop":
-          await invoke("hive_stop", { host: targetId });
-          break;
-        case "hive-install":
-          // TODO: Implement hive install
-          console.log(`Hive install not yet implemented for ${targetId}`);
-          break;
-        case "hive-update":
-          // TODO: Implement hive update
-          console.log(`Hive update not yet implemented for ${targetId}`);
-          break;
-        case "hive-uninstall":
-          // Remove from installed hives when uninstalled
-          removeInstalledHive(targetId);
-          // TODO: Implement actual uninstall
-          console.log(`Hive uninstall not yet implemented for ${targetId}`);
-          break;
-      }
-    } catch (error) {
-      console.error("Command failed:", error);
-    } finally {
-      setIsExecuting(false);
-    }
-  };
-
-  const handleInstallHive = async (targetId: string) => {
-    setActiveCommand("hive-install");
-    setIsExecuting(true);
-
-    try {
-      // TODO: Implement actual install
-      await invoke("hive_start", {
-        host: targetId,
-        installDir: null,
-        port: 7835,
-      });
-      // Add to installed hives after successful install
-      addInstalledHive(targetId);
-    } catch (error) {
-      console.error("Install failed:", error);
-    } finally {
-      setIsExecuting(false);
-    }
-  };
-
   return (
     <PageContainer
       title="Services"
@@ -154,51 +33,12 @@ export default function KeeperPage() {
         },
       ]}
     >
-      <div className="space-y-4 sm:space-y-6">
-        {/* Queen Card */}
-        <QueenCard
-          status="unknown" // TODO: Implement state detection
-          onCommandClick={handleCommand}
-          disabled={isExecuting}
-        />
-
-        {/* Installed Hives - Need SSH data to show names */}
-        <SshHivesDataProvider fallback={null}>
-          {(hives) => (
-            <>
-              {installedHives.map((targetId) => {
-                // Find the hive data for this target
-                const hiveData = hives.find((h) => h.host === targetId);
-                const isLocalhost = targetId === "localhost";
-
-                const targetName = isLocalhost ? "Hive (localhost)" : hiveData?.host || targetId;
-                const targetSubtitle = isLocalhost
-                  ? "Local Worker Manager"
-                  : hiveData
-                  ? `${hiveData.user}@${hiveData.hostname}:${hiveData.port}`
-                  : "Worker Manager";
-
-                return (
-                  <InstalledHiveCard
-                    key={targetId}
-                    targetId={targetId}
-                    targetName={targetName}
-                    targetSubtitle={targetSubtitle}
-                    status="unknown" // TODO: Implement state detection
-                    onCommandClick={handleHiveCommand}
-                    disabled={isExecuting}
-                  />
-                );
-              })}
-            </>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
+        <QueenDataProvider fallback={<LoadingQueen />}>
+          {(status, onRefresh) => (
+            <QueenCard status={status} onRefresh={onRefresh} />
           )}
-        </SshHivesDataProvider>
-
-        {/* Install New Hive Card */}
-        <InstallHiveCard
-          onInstall={handleInstallHive}
-          disabled={isExecuting}
-        />
+        </QueenDataProvider>
       </div>
     </PageContainer>
   );

@@ -1,182 +1,270 @@
 # Data Fetching Pattern with React 19 `use()` Hook
 
-**Author:** TEAM-296  
-**Date:** October 26, 2025  
+**Author:** TEAM-296, TEAM-338  
+**Date:** October 28, 2025  
 **Status:** Active Pattern
 
-## Overview
+## 🚨 CRITICAL: WHAT THIS PATTERN IS
 
-This document describes our component architecture pattern for data fetching using React 19's `use()` hook with Suspense. This pattern separates presentation logic from data fetching logic, creating clean, testable, and maintainable components.
+This pattern creates **COMPONENT-AGNOSTIC DATA PROVIDERS** that use **RENDER PROPS**.
 
-## Pattern Architecture
+## The Split
 
-We split components into **two files**:
+### 1. **Container** (`*Container.tsx`) - DATA LAYER ONLY
+- ✅ **ONLY** data fetching logic
+- ✅ **ONLY** promise caching
+- ✅ **ONLY** error boundary
+- ✅ **ONLY** Suspense wrapper
+- ✅ Exports `*DataProvider` component with render prop pattern
+- ✅ Exports type definitions
+- ❌ **NO** presentation components
+- ❌ **NO** UI imports (Card, Table, Button, etc.)
+- ❌ **NO** loading fallbacks
+- ❌ **NO** JSX except error boundary
 
-1. **Presentation Component** (`*Table.tsx`, `*List.tsx`, etc.)
-   - Pure presentation logic
-   - Receives data as props
-   - No data fetching
-   - Includes loading fallback component
-   - Easily testable with mock data
-   - Storybook-ready
+### 2. **Presentation Component** (`*Card.tsx`, `*Table.tsx`) - UI ONLY
+- ✅ Pure presentation logic
+- ✅ Receives data as props
+- ✅ Includes loading fallback component
+- ✅ All UI/styling logic
+- ❌ **NO** data fetching
+- ❌ **NO** `use()` hook
+- ❌ **NO** Suspense
 
-2. **Container Component** (`*Container.tsx`)
-   - Handles data fetching
-   - Manages promise state
-   - Provides Suspense boundary
-   - Uses React 19 `use()` hook
-   - Minimal logic
+## 🔥 RULE ZERO: CONTAINERS ARE COMPONENT AGNOSTIC
 
-## Reference Implementation
+**Containers provide DATA via render props. Consumers provide PRESENTATION.**
 
-See `SshHivesContainer.tsx` and `SshHivesTable.tsx` for a complete working example.
+```tsx
+// ❌ WRONG - Container includes presentation
+export function SshHivesContainer() {
+  return (
+    <SshHivesDataProvider>
+      {(hives, onRefresh) => (
+        <SshHivesTable hives={hives} onRefresh={onRefresh} />
+      )}
+    </SshHivesDataProvider>
+  );
+}
+
+// ✅ RIGHT - Container is component agnostic
+export function SshHivesDataProvider({ children, fallback }) {
+  // ... data fetching logic ...
+  return (
+    <ErrorBoundary>
+      <Suspense fallback={fallback}>
+        {children(data, refresh)}
+      </Suspense>
+    </ErrorBoundary>
+  );
+}
+```
 
 ## File Structure
 
 ```
 components/
-├── SshHivesTable.tsx       # Presentation + Loading fallback
-└── SshHivesContainer.tsx   # Data fetching + Container
+├── QueenCard.tsx           # ✅ Presentation + Loading fallback
+containers/
+└── QueenContainer.tsx      # ✅ Data fetching ONLY (component agnostic)
+pages/
+└── ServicesPage.tsx        # ✅ Consumer wires them together
 ```
+
+## Reference Implementation
+
+**See:** `QueenContainer.tsx` (data layer) + `QueenCard.tsx` (presentation) + `ServicesPage.tsx` (usage)
 
 ## Implementation Guide
 
-### 1. Presentation Component (`ComponentTable.tsx`)
+### 1. Container (`*Container.tsx`) - DATA LAYER ONLY
 
 ```tsx
-// ComponentTable.tsx
-import { Table, Button } from "@rbee/ui/atoms";
-import { RefreshCw } from "lucide-react";
+// QueenContainer.tsx
+import { use, useState, Suspense, useCallback, Component, type ReactNode } from "react";
+import { commands } from "@/generated/bindings";
+import { AlertCircle } from "lucide-react";
+import { Button } from "@rbee/ui/atoms";
+
+// Re-export type from presentation component
+export type { QueenStatus } from "../components/QueenCard";
+
+// Promise cache
+const promiseCache = new Map<string, Promise<any>>();
+
+// Fetch function
+async function fetchQueenStatus(key: string): Promise<any> {
+  if (!promiseCache.has(key)) {
+    const promise = commands.queenStatus(); // Your Tauri command
+    promiseCache.set(key, promise);
+  }
+  return promiseCache.get(key)!;
+}
+
+// Error boundary (generic error UI)
+class QueenErrorBoundary extends Component<
+  { children: ReactNode; onReset: () => void },
+  { hasError: boolean; error: Error | null }
+> {
+  constructor(props: { children: ReactNode; onReset: () => void }) {
+    super(props);
+    this.state = { hasError: false, error: null };
+  }
+
+  static getDerivedStateFromError(error: Error) {
+    return { hasError: true, error };
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div className="flex flex-col items-center justify-center p-8 space-y-4">
+          <AlertCircle className="h-12 w-12 text-destructive" />
+          <div className="text-center space-y-2">
+            <h3 className="text-lg font-semibold">Failed to load data</h3>
+            <p className="text-sm text-muted-foreground">
+              {this.state.error?.message || "Unknown error"}
+            </p>
+          </div>
+          <Button onClick={() => {
+            this.setState({ hasError: false, error: null });
+            this.props.onReset();
+          }}>
+            Try Again
+          </Button>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
+
+// COMPONENT AGNOSTIC DATA PROVIDER
+export function QueenDataProvider({
+  children,
+  fallback,
+}: {
+  children: (status: any, refresh: () => void) => ReactNode;
+  fallback?: ReactNode;
+}) {
+  const [refreshKey, setRefreshKey] = useState(0);
+
+  const handleRefresh = useCallback(() => {
+    const newKey = refreshKey + 1;
+    setRefreshKey(newKey);
+    promiseCache.delete(`queen-${refreshKey}`);
+  }, [refreshKey]);
+
+  return (
+    <QueenErrorBoundary onReset={handleRefresh}>
+      <Suspense fallback={fallback}>
+        <QueenContentWrapper promiseKey={`queen-${refreshKey}`}>
+          {(status) => children(status, handleRefresh)}
+        </QueenContentWrapper>
+      </Suspense>
+    </QueenErrorBoundary>
+  );
+}
+
+// Wrapper to use() the promise
+function QueenContentWrapper({
+  promiseKey,
+  children,
+}: {
+  promiseKey: string;
+  children: (status: any) => ReactNode;
+}) {
+  const status = use(fetchQueenStatus(promiseKey));
+  return <>{children(status)}</>;
+}
+```
+
+### 2. Presentation Component (`*Card.tsx`) - UI ONLY
+
+```tsx
+// QueenCard.tsx
+import { Card, CardContent, CardHeader, CardTitle, Button } from "@rbee/ui/atoms";
+import { Play, Loader2 } from "lucide-react";
+import { commands } from "@/generated/bindings";
 
 // Export the data type
-export interface DataItem {
-  id: string;
-  name: string;
-  status: "online" | "offline";
+export interface QueenStatus {
+  isRunning: boolean;
+  isInstalled: boolean;
 }
 
 // Export the loading fallback
-export function LoadingComponent() {
+export function LoadingQueen() {
   return (
-    <div className="rounded-lg border border-border bg-card">
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>Name</TableHead>
-            <TableHead className="text-right">
-              <Button variant="ghost" size="icon-sm" disabled>
-                <RefreshCw className="animate-spin" />
-              </Button>
-            </TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          <TableRow>
-            <TableCell className="text-center text-muted-foreground">
-              Loading...
-            </TableCell>
-          </TableRow>
-        </TableBody>
-      </Table>
-    </div>
+    <Card>
+      <CardHeader>
+        <CardTitle>Queen</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <div className="flex items-center justify-center py-4">
+          <Loader2 className="h-6 w-6 animate-spin" />
+        </div>
+      </CardContent>
+    </Card>
   );
 }
 
 // Export the presentation component
-export interface ComponentTableProps {
-  items: DataItem[];
+export interface QueenCardProps {
+  status: QueenStatus;
   onRefresh: () => void;
 }
 
-export function ComponentTable({ items, onRefresh }: ComponentTableProps) {
-  return (
-    <div className="rounded-lg border border-border bg-card">
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>Name</TableHead>
-            <TableHead className="text-right">
-              <Button onClick={onRefresh} variant="ghost" size="icon-sm">
-                <RefreshCw />
-              </Button>
-            </TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {items.length === 0 ? (
-            <TableRow>
-              <TableCell className="text-center text-muted-foreground">
-                No items found
-              </TableCell>
-            </TableRow>
-          ) : (
-            items.map((item) => (
-              <TableRow key={item.id}>
-                <TableCell>{item.name}</TableCell>
-                <TableCell>{item.status}</TableCell>
-              </TableRow>
-            ))
-          )}
-        </TableBody>
-      </Table>
-    </div>
-  );
-}
-```
-
-### 2. Container Component (`ComponentContainer.tsx`)
-
-```tsx
-// ComponentContainer.tsx
-import { invoke } from "@tauri-apps/api/core";
-import { use, useState, Suspense } from "react";
-import type { CommandResponse } from "../api/types";
-import { COMMANDS } from "../api/commands.registry";
-import { ComponentTable, LoadingComponent, type DataItem } from "./ComponentTable";
-
-// Data fetching function
-async function fetchData(): Promise<DataItem[]> {
-  const result = await invoke<string>(COMMANDS.YOUR_COMMAND);
-  const response: CommandResponse = JSON.parse(result);
-
-  if (response.success && response.data) {
-    return JSON.parse(response.data) as DataItem[];
-  }
-
-  throw new Error(response.message || "Failed to load data");
-}
-
-// Container component
-export function ComponentContainer() {
-  const [dataPromise, setDataPromise] = useState(() => fetchData());
-
-  const handleRefresh = () => {
-    setDataPromise(fetchData());
+export function QueenCard({ status, onRefresh }: QueenCardProps) {
+  const handleStart = async () => {
+    await commands.queenStart();
+    onRefresh();
   };
 
   return (
-    <Suspense fallback={<LoadingComponent />}>
-      <ComponentTable items={use(dataPromise)} onRefresh={handleRefresh} />
-    </Suspense>
+    <Card>
+      <CardHeader>
+        <CardTitle>Queen</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <Button onClick={handleStart} icon={<Play />}>
+          Start
+        </Button>
+      </CardContent>
+    </Card>
   );
 }
 ```
 
-### 3. Usage in Pages
+### 3. Usage in Pages - WIRE THEM TOGETHER
 
 ```tsx
-// pages/SomePage.tsx
-import { ComponentContainer } from "../components/ComponentContainer";
+// pages/ServicesPage.tsx
+import { QueenDataProvider } from "../containers/QueenContainer";
+import { QueenCard, LoadingQueen } from "../components/QueenCard";
 
-export default function SomePage() {
+export default function ServicesPage() {
   return (
     <div>
-      <h2>My Data</h2>
-      <ComponentContainer />
+      <h2>Services</h2>
+      
+      {/* Consumer provides presentation via render prop */}
+      <QueenDataProvider fallback={<LoadingQueen />}>
+        {(status, onRefresh) => (
+          <QueenCard status={status} onRefresh={onRefresh} />
+        )}
+      </QueenDataProvider>
     </div>
   );
 }
 ```
+
+**Key Points:**
+- ✅ Container exports `QueenDataProvider` (data layer)
+- ✅ Presentation exports `QueenCard` + `LoadingQueen` (UI layer)
+- ✅ Page wires them together with render prop
+- ✅ Consumer controls what UI to render
+- ✅ Same data provider can power different UIs (table, card, list, etc.)
 
 ## Key Concepts
 
@@ -354,35 +442,68 @@ function Table({ data, onRefresh }) {
 }
 ```
 
-## Anti-Patterns
+## 🚨 Anti-Patterns (VIOLATIONS)
 
-### ❌ Don't use `use()` in presentation component
+### ❌ VIOLATION: Container includes presentation
 
 ```tsx
-// BAD - Presentation component shouldn't fetch data
+// ❌ WRONG - Container has UI components inside
+export function SshHivesContainer() {
+  return (
+    <SshHivesDataProvider>
+      {(hives, onRefresh) => (
+        <SshHivesTable hives={hives} onRefresh={onRefresh} />
+      )}
+    </SshHivesDataProvider>
+  );
+}
+```
+
+**Why wrong:** Container is NOT component agnostic. It hardcodes `SshHivesTable`. What if consumer wants a dropdown? A list? A grid?
+
+### ❌ VIOLATION: Container imports UI components
+
+```tsx
+// ❌ WRONG - Container imports presentation
+import { SshHivesTable, LoadingHives } from "./SshHivesTable";
+import { Card, Table, Button } from "@rbee/ui/atoms";
+```
+
+**Why wrong:** Containers should ONLY import data-related things (commands, types). NO UI imports.
+
+### ❌ VIOLATION: Presentation component fetches data
+
+```tsx
+// ❌ WRONG - Presentation component uses use() hook
 export function ComponentTable() {
   const data = use(fetchData()); // ❌ Wrong!
   return <Table data={data} />;
 }
 ```
 
-### ❌ Don't store data in state
+**Why wrong:** Presentation should receive data as props. NO data fetching.
+
+### ❌ VIOLATION: Storing data in state instead of promise
 
 ```tsx
-// BAD - Store promise, not data
+// ❌ WRONG - Store promise, not data
 const [data, setData] = useState([]);
 const promise = fetchData();
 promise.then(setData); // ❌ Wrong!
 ```
 
-### ❌ Don't call `use()` conditionally
+**Why wrong:** React 19 `use()` hook expects promises, not data.
+
+### ❌ VIOLATION: Conditional `use()` call
 
 ```tsx
-// BAD - use() must be called unconditionally
+// ❌ WRONG - use() must be called unconditionally
 if (shouldFetch) {
   const data = use(promise); // ❌ Wrong!
 }
 ```
+
+**Why wrong:** React hooks must be called unconditionally.
 
 ## Tauri Command Bindings (Recommended)
 
@@ -424,27 +545,59 @@ const result = await invoke<string>("hive_list");
 
 **See:** `TAURI_TYPEGEN_SETUP.md` for complete setup guide
 
-## Checklist for New Components
+## ✅ Checklist for New Components
 
-- [ ] Create presentation component file (`*Table.tsx`)
+### Container (`*Container.tsx`)
+- [ ] Create container file in `/containers/`
+- [ ] Import ONLY: `react`, `@/generated/bindings`, `lucide-react` (AlertCircle), `@rbee/ui/atoms` (Button for error boundary)
+- [ ] ❌ NO UI component imports (Card, Table, etc.)
+- [ ] Define promise cache: `const promiseCache = new Map<string, Promise<any>>()`
+- [ ] Implement fetch function with cache
+- [ ] Implement error boundary (generic error UI)
+- [ ] Export `*DataProvider` component with render prop signature: `children: (data: any, refresh: () => void) => ReactNode`
+- [ ] Export type re-exports: `export type { YourType } from "../components/YourComponent"`
+- [ ] ❌ NO presentation components inside container
+
+### Presentation Component (`*Card.tsx` / `*Table.tsx`)
+- [ ] Create presentation file in `/components/`
 - [ ] Export data type interface
 - [ ] Export loading fallback component
 - [ ] Export presentation component with props interface
-- [ ] Create container component file (`*Container.tsx`)
-- [ ] Import command from `@/generated/commands` (e.g., `import { hive_list } from "@/generated/commands"`)
-- [ ] Implement data fetching function using generated command
-- [ ] Use `useState(() => fetchData())` for promise
-- [ ] Wrap with `<Suspense fallback={<Loading />}>`
-- [ ] Use `use(promise)` inline in JSX
-- [ ] Implement refresh handler that creates new promise
-- [ ] Update page imports to use container component
+- [ ] ❌ NO data fetching
+- [ ] ❌ NO `use()` hook
+- [ ] ❌ NO Suspense
+
+### Page (Wire them together)
+- [ ] Import `*DataProvider` from container
+- [ ] Import presentation components from components
+- [ ] Use render prop pattern:
+  ```tsx
+  <YourDataProvider fallback={<LoadingComponent />}>
+    {(data, onRefresh) => (
+      <YourComponent data={data} onRefresh={onRefresh} />
+    )}
+  </YourDataProvider>
+  ```
 
 ## Resources
 
 - [React 19 `use()` Hook Documentation](https://react.dev/reference/react/use)
 - [Suspense Documentation](https://react.dev/reference/react/Suspense)
-- **Reference Implementation:** `SshHivesContainer.tsx` + `SshHivesTable.tsx`
+- **Reference Implementation:** 
+  - Container: `containers/QueenContainer.tsx` (data layer)
+  - Presentation: `components/QueenCard.tsx` (UI layer)
+  - Usage: `pages/ServicesPage.tsx` (wiring)
 
-## Questions?
+## 🎯 TL;DR
 
-If you're unsure about the pattern, look at `SshHivesContainer.tsx` and `SshHivesTable.tsx` for a complete, working example of this pattern in action.
+**CONTAINERS = DATA ONLY. NO UI.**
+
+**PRESENTATION = UI ONLY. NO DATA FETCHING.**
+
+**PAGES = WIRE THEM TOGETHER WITH RENDER PROPS.**
+
+If you put a `<Card>` or `<Table>` in a container, **YOU FUCKED UP.**
+
+If you put `use()` or `Suspense` in a presentation component, **YOU FUCKED UP.**
+
+**Containers are COMPONENT AGNOSTIC. They provide DATA via render props. Consumers provide PRESENTATION.**

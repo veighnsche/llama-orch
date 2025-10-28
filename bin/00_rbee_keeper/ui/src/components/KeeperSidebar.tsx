@@ -10,12 +10,11 @@ import {
   SidebarGroup,
   SidebarGroupContent,
   SidebarGroupLabel,
-  SidebarHeader,
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@rbee/ui/atoms";
-import { BrandLogo, ThemeToggle } from "@rbee/ui/molecules";
+import { ThemeToggle } from "@rbee/ui/molecules";
 
 export function KeeperSidebar() {
   const location = useLocation();
