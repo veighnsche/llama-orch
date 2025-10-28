@@ -125,35 +125,35 @@ export function NarrationPanel() {
       {/* Entries list */}
       <div className="flex-1 overflow-hidden">
         <ScrollArea className="h-full">
-        <div className="p-2 space-y-2">
-          {entries.length === 0 ? (
-            <div className="text-center text-sm text-muted-foreground py-8">
-              Waiting for events...
-            </div>
-          ) : (
-            entries.map((entry) => (
-              <div
-                key={entry.id}
-                className="p-2 rounded-md bg-muted/30 hover:bg-muted/50 transition-colors text-xs space-y-1"
-              >
-                {/* Timestamp and level */}
-                <div className="flex items-center justify-between gap-2">
-                  <span className="text-muted-foreground font-mono">
-                    {formatTime(entry.timestamp)}
-                  </span>
-                  <span className={getLevelBadge(entry.level)}>
-                    {entry.level.toUpperCase()}
-                  </span>
-                </div>
-
-                {/* Message */}
-                <div className="text-foreground break-words font-mono leading-relaxed">
-                  {entry.message}
-                </div>
+          <div className="p-2 space-y-2">
+            {entries.length === 0 ? (
+              <div className="text-center text-sm text-muted-foreground py-8">
+                Waiting for events...
               </div>
-            ))
-          )}
-        </div>
+            ) : (
+              entries.map((entry) => (
+                <div
+                  key={entry.id}
+                  className="p-2 rounded-md bg-muted/30 hover:bg-muted/50 transition-colors text-xs space-y-1"
+                >
+                  {/* Timestamp and level */}
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="text-muted-foreground font-mono">
+                      {formatTime(entry.timestamp)}
+                    </span>
+                    <span className={getLevelBadge(entry.level)}>
+                      {entry.level.toUpperCase()}
+                    </span>
+                  </div>
+
+                  {/* Message */}
+                  <div className="text-foreground break-words font-mono leading-relaxed">
+                    {entry.message}
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
         </ScrollArea>
       </div>
 
