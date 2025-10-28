@@ -33,9 +33,9 @@ criterion = "0.5"
 serial_test = "3.0"
 tokio = { version = "1", features = ["macros", "rt", "net"] } # TEAM-303: Added net for TcpListener
 tower = { version = "0.5", features = ["util"] }
-job-server = { path = "../job-server" } # TEAM-302: For test harness
-job-client = { path = "../job-client" } # TEAM-303: For E2E tests
-operations-contract = { path = "../../97_contracts/operations-contract" } # TEAM-303: For E2E tests
+# TEAM-337: REMOVED job-server and job-client - circular dependency
+# job-server depends on narration-core, so narration-core cannot depend on job-server
+# Tests that need job-server should be moved to integration tests in job-server crate
 futures = "0.3" # TEAM-303: For SSE streaming
 
 [[bench]]

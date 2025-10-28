@@ -2,10 +2,12 @@
 //!
 //! TEAM-336: Extracted repeated tracing setup from main.rs
 //! TEAM-336: Different behavior for CLI vs GUI modes
+//! TEAM-337: Use existing format_message_with_fn() for consistent formatting
 
 use tracing_subscriber::{fmt, layer::SubscriberExt, util::SubscriberInitExt, EnvFilter, Layer};
 use serde::{Serialize, Deserialize};
 use tauri::Emitter; // TEAM-336: Required for app_handle.emit() in Tauri v2
+use observability_narration_core::format_message_with_fn; // TEAM-337: Use existing formatting
 
 /// Narration event payload for Tauri frontend
 #[derive(Debug, Clone, Serialize, Deserialize, specta::Type)]
@@ -33,15 +35,10 @@ pub fn init_cli_tracing() {
 /// Initialize tracing for GUI mode (stderr + Tauri events)
 /// 
 /// TEAM-336: Dual output - stderr for debugging + Tauri events for React sidebar
-/// TEAM-337: Added error handling to detect if tracing is already initialized
+/// TEAM-337: Use existing format_message_with_fn() for consistent formatting
 pub fn init_gui_tracing(app_handle: tauri::AppHandle) {
-    // Layer 1: stderr output for debugging
-    let stderr_layer = fmt::layer()
-        .with_writer(std::io::stderr)
-        .with_ansi(true)
-        .with_line_number(false)
-        .with_file(false)
-        .with_target(false);
+    // Layer 1: stderr output - use format_message_with_fn() for consistent formatting
+    let stderr_layer = StderrNarrationLayer;
 
     // Layer 2: Tauri event emitter for React sidebar
     let tauri_layer = TauriNarrationLayer::new(app_handle);
@@ -56,6 +53,33 @@ pub fn init_gui_tracing(app_handle: tauri::AppHandle) {
         .with(tauri_layer)
         .try_init()
         .expect("Failed to initialize GUI tracing - already initialized?");
+}
+
+/// Custom tracing layer that outputs to stderr using format_message_with_fn()
+struct StderrNarrationLayer;
+
+impl<S> Layer<S> for StderrNarrationLayer
+where
+    S: tracing::Subscriber,
+    S: for<'a> tracing_subscriber::registry::LookupSpan<'a>,
+{
+    fn on_event(
+        &self,
+        event: &tracing::Event<'_>,
+        _ctx: tracing_subscriber::layer::Context<'_, S>,
+    ) {
+        // Extract event fields using same logic as TauriNarrationLayer
+        let mut visitor = EventVisitor::default();
+        event.record(&mut visitor);
+        
+        // Extract values before consuming visitor
+        let action = visitor.action.clone().unwrap_or_else(|| "unknown".to_string());
+        let fn_name = visitor.fn_name.clone().unwrap_or_else(|| "unknown".to_string());
+        let message = visitor.extract_message();
+        
+        // TEAM-337: Use EXISTING format_message_with_fn() from narration-core
+        eprint!("{}", format_message_with_fn(&action, &message, &fn_name));
+    }
 }
 
 /// Custom tracing layer that emits narration events to Tauri frontend
@@ -136,6 +160,7 @@ struct EventVisitor {
     human: Option<String>,
     actor: Option<String>,
     action: Option<String>,
+    fn_name: Option<String>, // TEAM-337: Extract fn_name for format_message_with_fn()
 }
 
 impl tracing::field::Visit for EventVisitor {
@@ -167,6 +192,14 @@ impl tracing::field::Visit for EventVisitor {
                     action_str
                 });
             }
+            "fn_name" => {
+                let fn_str = format!("{:?}", value);
+                self.fn_name = Some(if fn_str.starts_with('"') && fn_str.ends_with('"') {
+                    fn_str[1..fn_str.len() - 1].to_string()
+                } else {
+                    fn_str
+                });
+            }
             "message" => {
                 // Standard tracing message field
                 if self.message.is_empty() {
@@ -195,6 +228,9 @@ impl tracing::field::Visit for EventVisitor {
             }
             "action" => {
                 self.action = Some(value.to_string());
+            }
+            "fn_name" => {
+                self.fn_name = Some(value.to_string());
             }
             "message" => {
                 // Standard tracing message field
