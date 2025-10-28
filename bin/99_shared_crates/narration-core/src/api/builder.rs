@@ -473,7 +473,7 @@ impl Narration {
                 Some(SystemTime::now().duration_since(UNIX_EPOCH).unwrap_or_default().as_millis()
                     as u64);
         }
-        crate::narrate(self.fields)
+        crate::narrate(self.fields, crate::NarrationLevel::Info)
     }
 
     /// Emit the narration event to all configured outputs.
@@ -494,31 +494,31 @@ impl Narration {
             }
         }
 
-        crate::narrate(self.fields)
+        crate::narrate(self.fields, crate::NarrationLevel::Info)
     }
 
     /// Emit the narration at WARN level with auto-injection.
     #[deprecated(since = "0.5.0", note = "Use n!() macro instead")]
     pub fn emit_warn(self) {
-        crate::narrate_warn(self.fields)
+        crate::narrate(self.fields, crate::NarrationLevel::Warn)
     }
 
     /// Emit the narration at ERROR level with auto-injection.
     #[deprecated(since = "0.5.0", note = "Use n!() macro instead")]
     pub fn emit_error(self) {
-        crate::narrate_error(self.fields)
+        crate::narrate(self.fields, crate::NarrationLevel::Error)
     }
 
     /// Emit the narration at DEBUG level with auto-injection.
     #[cfg(feature = "debug-enabled")]
     pub fn emit_debug(self) {
-        crate::narrate_debug(self.fields)
+        crate::narrate(self.fields, crate::NarrationLevel::Debug)
     }
 
     /// Emit the narration at TRACE level with auto-injection.
     #[cfg(feature = "trace-enabled")]
     pub fn emit_trace(self) {
-        crate::narrate_trace(self.fields)
+        crate::narrate(self.fields, crate::NarrationLevel::Trace)
     }
 }
 

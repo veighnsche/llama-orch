@@ -104,13 +104,7 @@ mod thread_actor;
 pub use core::{NarrationFields, NarrationLevel};
 
 // API functions
-pub use api::{narrate, narrate, narrate_error, narrate_fatal, narrate_warn};
-
-// Feature-gated functions
-#[cfg(feature = "debug-enabled")]
-pub use api::narrate_debug;
-#[cfg(feature = "trace-enabled")]
-pub use api::narrate_trace;
+pub use api::narrate;
 
 // Legacy function (deprecated)
 #[deprecated(since = "0.1.0", note = "Use narrate() with NarrationFields instead")]
@@ -269,31 +263,31 @@ macro_rules! narration_macro {
 macro_rules! n {
     // Simple: n!("action", "message")
     ($action:expr, $msg:expr) => {{
-        $crate::macro_emit_auto_with_fn($action, $msg, None, None, env!("CARGO_CRATE_NAME"), stdext::function_name!());
+        $crate::macro_emit($action, $msg, None, None, env!("CARGO_CRATE_NAME"), stdext::function_name!());
     }};
 
     // With format: n!("action", "msg {}", arg)
     ($action:expr, $fmt:expr, $($arg:expr),+ $(,)?) => {{
-        $crate::macro_emit_auto_with_fn($action, &format!($fmt, $($arg),+), None, None, env!("CARGO_CRATE_NAME"), stdext::function_name!());
+        $crate::macro_emit($action, &format!($fmt, $($arg),+), None, None, env!("CARGO_CRATE_NAME"), stdext::function_name!());
     }};
 
     // Explicit human: n!(human: "action", "msg {}", arg)
     (human: $action:expr, $fmt:expr $(, $arg:expr)* $(,)?) => {{
-        $crate::macro_emit_auto_with_fn($action, &format!($fmt $(, $arg)*), None, None, env!("CARGO_CRATE_NAME"), stdext::function_name!());
+        $crate::macro_emit($action, &format!($fmt $(, $arg)*), None, None, env!("CARGO_CRATE_NAME"), stdext::function_name!());
     }};
 
     // Explicit cute: n!(cute: "action", "msg {}", arg)
     // TEAM-309: Use cute message as fallback for human (was empty string)
     (cute: $action:expr, $fmt:expr $(, $arg:expr)* $(,)?) => {{
         let msg = format!($fmt $(, $arg)*);
-        $crate::macro_emit_auto_with_fn($action, &msg, Some(&msg), None, env!("CARGO_CRATE_NAME"), stdext::function_name!());
+        $crate::macro_emit($action, &msg, Some(&msg), None, env!("CARGO_CRATE_NAME"), stdext::function_name!());
     }};
 
     // Explicit story: n!(story: "action", "msg {}", arg)
     // TEAM-309: Use story message as fallback for human (was empty string)
     (story: $action:expr, $fmt:expr $(, $arg:expr)* $(,)?) => {{
         let msg = format!($fmt $(, $arg)*);
-        $crate::macro_emit_auto_with_fn($action, &msg, None, Some(&msg), env!("CARGO_CRATE_NAME"), stdext::function_name!());
+        $crate::macro_emit($action, &msg, None, Some(&msg), env!("CARGO_CRATE_NAME"), stdext::function_name!());
     }};
 
     // Human + Cute: n!("action", human: "msg", cute: "msg", args...)
@@ -302,7 +296,7 @@ macro_rules! n {
      cute: $cute_fmt:expr
      $(, $arg:expr)* $(,)?
     ) => {{
-        $crate::macro_emit_auto_with_fn(
+        $crate::macro_emit(
             $action,
             &format!($human_fmt $(, $arg)*),
             Some(&format!($cute_fmt $(, $arg)*)),
@@ -318,7 +312,7 @@ macro_rules! n {
      story: $story_fmt:expr
      $(, $arg:expr)* $(,)?
     ) => {{
-        $crate::macro_emit_auto_with_fn(
+        $crate::macro_emit(
             $action,
             &format!($human_fmt $(, $arg)*),
             None,
@@ -335,7 +329,7 @@ macro_rules! n {
      story: $story_fmt:expr
      $(, $arg:expr)* $(,)?
     ) => {{
-        $crate::macro_emit_auto_with_fn(
+        $crate::macro_emit(
             $action,
             &format!($human_fmt $(, $arg)*),
             Some(&format!($cute_fmt $(, $arg)*)),

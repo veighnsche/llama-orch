@@ -57,7 +57,7 @@ macro_rules! emit_event {
 /// - NOT for legal/security audit trails
 ///
 /// **For compliance/audit logging, see:** `bin/99_shared_crates/audit-logging/`
-pub fn narrate_at_level(fields: NarrationFields, level: NarrationLevel) {
+pub fn narrate(fields: NarrationFields, level: NarrationLevel) {
     let Some(tracing_level) = level.to_tracing_level() else {
         return; // MUTE - no output
     };
@@ -134,47 +134,18 @@ pub fn narrate_at_level(fields: NarrationFields, level: NarrationLevel) {
     capture::notify(fields);
 }
 
-/// Emit INFO-level narration (default)
-pub fn narrate(fields: NarrationFields) {
-    narrate_at_level(fields, NarrationLevel::Info)
-}
-
-/// Emit WARN-level narration
-pub fn narrate_warn(fields: NarrationFields) {
-    narrate_at_level(fields, NarrationLevel::Warn)
-}
-
-/// Emit ERROR-level narration
-pub fn narrate_error(fields: NarrationFields) {
-    narrate_at_level(fields, NarrationLevel::Error)
-}
-
-/// Emit FATAL-level narration
-pub fn narrate_fatal(fields: NarrationFields) {
-    narrate_at_level(fields, NarrationLevel::Fatal)
-}
-
-/// Emit DEBUG-level narration (requires `debug-enabled` feature)
-#[cfg(feature = "debug-enabled")]
-pub fn narrate_debug(fields: NarrationFields) {
-    narrate_at_level(fields, NarrationLevel::Debug)
-}
-
-/// Emit TRACE-level narration (requires `trace-enabled` feature)
-#[cfg(feature = "trace-enabled")]
-pub fn narrate_trace(fields: NarrationFields) {
-    narrate_at_level(fields, NarrationLevel::Trace)
-}
-
 /// Legacy compatibility function for existing callers.
 /// Prefer `narrate()` with full `NarrationFields` for new code.
 #[deprecated(since = "0.1.0", note = "Use narrate() with NarrationFields instead")]
 pub fn human<S: AsRef<str>>(actor: &'static str, action: &'static str, target: &str, msg: S) {
-    narrate(NarrationFields {
-        actor,
-        action,
-        target: target.to_string(),
-        human: msg.as_ref().to_string(),
-        ..Default::default()
-    });
+    narrate(
+        NarrationFields {
+            actor,
+            action,
+            target: target.to_string(),
+            human: msg.as_ref().to_string(),
+            ..Default::default()
+        },
+        NarrationLevel::Info,
+    );
 }
