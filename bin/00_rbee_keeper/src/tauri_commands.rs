@@ -379,7 +379,7 @@ pub async fn ssh_open_config() -> Result<String, String> {
             .map_err(|e| format!("Failed to create SSH config file: {}", e))?;
     }
     
-    // Open with default editor (xdg-open on Linux, open on macOS, start on Windows)
+    // Open with default editor (xdg-open on Linux, open on macOS, notepad on Windows)
     #[cfg(target_os = "linux")]
     let status = Command::new("xdg-open")
         .arg(&ssh_config_path)
@@ -393,8 +393,8 @@ pub async fn ssh_open_config() -> Result<String, String> {
         .map_err(|e| format!("Failed to open editor: {}", e))?;
     
     #[cfg(target_os = "windows")]
-    let status = Command::new("cmd")
-        .args(["/C", "start", "", ssh_config_path.to_str().unwrap()])
+    let status = Command::new("notepad.exe")
+        .arg(&ssh_config_path)
         .spawn()
         .map_err(|e| format!("Failed to open editor: {}", e))?;
     

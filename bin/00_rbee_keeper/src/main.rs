@@ -48,21 +48,21 @@ use clap::Parser;
 
 use cli::{Cli, Commands};
 use handlers::{
-    handle_hive, handle_infer, handle_model, handle_queen,
-    handle_self_check, handle_status, handle_worker,
+    handle_hive, handle_infer, handle_model, handle_queen, handle_self_check, handle_status,
+    handle_worker,
 };
 // TEAM-284: DELETED handle_migrate, handle_package_status, handle_sync, handle_validate
 
 #[tokio::main]
 async fn main() -> Result<()> {
     let cli = Cli::parse();
-    
+
     // TEAM-295: If no subcommand provided, launch Tauri GUI instead
     if cli.command.is_none() {
         launch_gui();
         return Ok(());
     }
-    
+
     handle_command(cli).await
 }
 
@@ -80,19 +80,29 @@ async fn main() -> Result<()> {
 // - See: DESKTOP_ENTRY.md for debugging
 fn launch_gui() {
     use rbee_keeper::tauri_commands::*;
-    
+
     tauri::Builder::default()
         .invoke_handler(tauri::generate_handler![
             // TEAM-336: Test command for narration
             test_narration,
             // TEAM-333: SSH list command
             ssh_list,
+            // TEAM-338: SSH config editor
+            ssh_open_config,
             // TEAM-335: Queen lifecycle commands (thin wrappers)
             queen_start,
             queen_stop,
             queen_install,
             queen_rebuild,
             queen_uninstall,
+            // TEAM-338: Hive lifecycle commands
+            hive_start,
+            hive_stop,
+            hive_status,
+            hive_install,
+            hive_uninstall,
+            hive_rebuild,
+            hive_refresh_capabilities,
         ])
         .setup(|app| {
             // TEAM-336: Initialize tracing with Tauri event streaming
@@ -109,7 +119,7 @@ async fn handle_command(cli: Cli) -> Result<()> {
     // TEAM-336: CLI tracing setup (stderr only)
     // ============================================================
     rbee_keeper::init_cli_tracing();
-    
+
     let config = Config::load()?;
     let queen_url = config.queen_url();
 
@@ -125,7 +135,7 @@ async fn handle_command(cli: Cli) -> Result<()> {
     //   2. Call handler::handle_xxx()
     //   3. Handler constructs Operation and submits to queen
     // ============================================================================
-    
+
     // TEAM-295: Command is now Option, unwrap it here since we checked is_some earlier
     let command = cli.command.expect("Command should be Some if we reach here");
 
@@ -136,7 +146,7 @@ async fn handle_command(cli: Cli) -> Result<()> {
             // TEAM-312: Deep narration test through queen job server
             use operations_contract::Operation;
             use rbee_keeper::job_client::submit_and_stream_job;
-            
+
             submit_and_stream_job(&queen_url, Operation::QueenCheck).await
         }
         Commands::Queen { action } => handle_queen(action, &queen_url).await,
@@ -169,11 +179,9 @@ async fn handle_command(cli: Cli) -> Result<()> {
                 &queen_url,
             )
             .await
-        }
-
-        // ========================================================================
-        // TEAM-284: DELETED PACKAGE MANAGER COMMANDS
-        // ========================================================================
-        // Sync, PackageStatus, Validate, Migrate removed (SSH/remote operations)
+        } // ========================================================================
+          // TEAM-284: DELETED PACKAGE MANAGER COMMANDS
+          // ========================================================================
+          // Sync, PackageStatus, Validate, Migrate removed (SSH/remote operations)
     }
 }

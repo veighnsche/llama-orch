@@ -7,14 +7,16 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
-  Button,
+  SplitButton,
+  DropdownMenuItem,
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
 } from "@rbee/ui/atoms";
-import { Download } from "lucide-react";
+import { Download, RefreshCw, FileEdit } from "lucide-react";
+import { commands } from "@/generated/bindings";
 import { SshHivesDataProvider } from "../containers/SshHivesContainer";
 import { useSshHivesStore } from "../store/hiveStore";
 import { useCommandStore } from "../store/commandStore";
@@ -32,16 +34,22 @@ function SshTargetItem({ name, subtitle }: { name: string; subtitle: string }) {
 // Inner component that reads from store
 function InstallHiveContent() {
   const [selectedTarget, setSelectedTarget] = useState<string>("localhost");
-  const { hives, install } = useSshHivesStore();
+  const { hives, installedHives, install, refresh } = useSshHivesStore();
   const { isExecuting } = useCommandStore();
 
-  const handleInstall = async () => {
-    await install(selectedTarget);
+  const handleOpenSshConfig = async () => {
+    try {
+      await commands.sshOpenConfig();
+    } catch (error) {
+      console.error("Failed to open SSH config:", error);
+    }
   };
 
-  // TODO: Track installed hives via store to filter them out
-  const availableHives = hives;
-  const isLocalhostInstalled = false; // TODO: Check from store
+  // Filter out already installed hives
+  const availableHives = hives.filter(
+    (hive) => !installedHives.includes(hive.host),
+  );
+  const isLocalhostInstalled = installedHives.includes("localhost");
 
   return (
     <>
@@ -68,15 +76,27 @@ function InstallHiveContent() {
         </SelectContent>
       </Select>
 
-      {/* Install Button */}
-      <Button
-        onClick={handleInstall}
+      {/* Install Button with Actions */}
+      <SplitButton
+        onClick={() => install(selectedTarget)}
+        icon={<Download className="h-4 w-4" />}
         disabled={isExecuting}
         className="w-full"
+        dropdownContent={
+          <>
+            <DropdownMenuItem onClick={refresh}>
+              <RefreshCw className="mr-2 h-4 w-4" />
+              Refresh
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={handleOpenSshConfig}>
+              <FileEdit className="mr-2 h-4 w-4" />
+              Edit SSH Config
+            </DropdownMenuItem>
+          </>
+        }
       >
-        <Download className="mr-2 h-4 w-4" />
         Install Hive
-      </Button>
+      </SplitButton>
     </>
   );
 }

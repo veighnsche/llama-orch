@@ -17,6 +17,7 @@ export interface SshHive {
 
 interface SshHivesState {
   hives: SshHive[];
+  installedHives: string[]; // List of installed hive aliases
   isLoading: boolean;
   error: string | null;
 
@@ -59,6 +60,7 @@ const withCommandExecution = async (
 
 export const useSshHivesStore = create<SshHivesState>((set, get) => ({
   hives: [],
+  installedHives: [],
   isLoading: false,
   error: null,
 
@@ -77,7 +79,13 @@ export const useSshHivesStore = create<SshHivesState>((set, get) => ({
 
   install: async (targetId: string) => {
     await withCommandExecution(
-      () => commands.hiveInstall(targetId),
+      async () => {
+        await commands.hiveInstall(targetId);
+        // Add to installed hives list
+        set((state) => ({
+          installedHives: [...state.installedHives, targetId],
+        }));
+      },
       get().fetchHives,
     );
   },
@@ -89,6 +97,7 @@ export const useSshHivesStore = create<SshHivesState>((set, get) => ({
   reset: () => {
     set({
       hives: [],
+      installedHives: [],
       isLoading: false,
       error: null,
     });
