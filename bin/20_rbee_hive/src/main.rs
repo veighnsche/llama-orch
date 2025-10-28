@@ -13,11 +13,8 @@
 mod heartbeat; // TEAM-292: Re-enabled hive heartbeat
 mod http;
 mod job_router;
-mod narration;
-use narration::{
-    ACTION_CAPS_CPU_ADD, ACTION_CAPS_GPU_CHECK, ACTION_CAPS_GPU_FOUND, ACTION_CAPS_REQUEST,
-    ACTION_CAPS_RESPONSE, ACTION_LISTEN, ACTION_READY, ACTION_STARTUP, NARRATE,
-};
+
+use observability_narration_core::n;
 
 use axum::{
     routing::{delete, get, post}, // TEAM-305-FIX: Added delete for cancel endpoint
@@ -61,11 +58,8 @@ async fn main() -> anyhow::Result<()> {
     // This automatically goes through job-scoped SSE (if in job context)
     // and uses centralized formatting (TEAM-201)
     // TEAM-261: Simplified - no hive heartbeat (workers send to queen directly)
-    NARRATE
-        .action(ACTION_STARTUP)
-        .context(&args.port.to_string())
-        .human("🐝 Starting on port {}")
-        .emit();
+    // TEAM-340: Migrated to n!() macro
+    n!("startup", "🐝 Starting rbee-hive on port {}", args.port);
 
     // TEAM-261: Initialize job registry for dual-call pattern
     let job_registry: Arc<JobRegistry<String>> = Arc::new(JobRegistry::new());
@@ -73,21 +67,15 @@ async fn main() -> anyhow::Result<()> {
     // TEAM-268: Initialize model catalog
     let model_catalog = Arc::new(ModelCatalog::new().expect("Failed to initialize model catalog"));
 
-    NARRATE
-        .action("catalog_init")
-        .context(&model_catalog.len().to_string())
-        .human("📚 Model catalog initialized ({} models)")
-        .emit();
+    // TEAM-340: Migrated to n!() macro
+    n!("catalog_init", "📚 Model catalog initialized ({} models)", model_catalog.len());
 
     // TEAM-274: Initialize worker catalog
     let worker_catalog =
         Arc::new(WorkerCatalog::new().expect("Failed to initialize worker catalog"));
 
-    NARRATE
-        .action("worker_cat_init")
-        .context(&worker_catalog.len().to_string())
-        .human("🔧 Worker catalog initialized ({} binaries)")
-        .emit();
+    // TEAM-340: Migrated to n!() macro
+    n!("worker_cat_init", "🔧 Worker catalog initialized ({} binaries)", worker_catalog.len());
 
     // TODO: TEAM-269 will add model provisioner initialization here
 
@@ -138,16 +126,14 @@ async fn main() -> anyhow::Result<()> {
     let addr = SocketAddr::from(([0, 0, 0, 0], args.port));
 
     // TEAM-202: Narrate listen address
-    NARRATE
-        .action(ACTION_LISTEN)
-        .context(&format!("http://{}", addr))
-        .human("✅ Listening on {}")
-        .emit();
+    // TEAM-340: Migrated to n!() macro
+    n!("listen", "✅ Listening on http://{}", addr);
 
     let listener = tokio::net::TcpListener::bind(addr).await?;
 
     // TEAM-202: Narrate ready state
-    NARRATE.action(ACTION_READY).human("✅ Hive ready").emit();
+    // TEAM-340: Migrated to n!() macro
+    n!("ready", "✅ Hive ready");
 
     // TEAM-292: Start heartbeat task to send status to queen
     // Create HiveInfo with this hive's details
@@ -163,11 +149,8 @@ async fn main() -> anyhow::Result<()> {
     // Start heartbeat task (runs in background)
     let _heartbeat_handle = heartbeat::start_heartbeat_task(hive_info, args.queen_url.clone());
 
-    NARRATE
-        .action("heartbeat_start")
-        .context(&args.queen_url)
-        .human("💓 Heartbeat task started (sending to {})")
-        .emit();
+    // TEAM-340: Migrated to n!() macro
+    n!("heartbeat_start", "💓 Heartbeat task started (sending to {})", args.queen_url);
 
     axum::serve(listener, app).await?;
 
@@ -200,24 +183,23 @@ struct CapabilitiesResponse {
 /// TEAM-206: Added comprehensive narration for device detection visibility
 async fn get_capabilities() -> Json<CapabilitiesResponse> {
     // TEAM-206: Narrate incoming request
-    NARRATE.action(ACTION_CAPS_REQUEST).human("📡 Received capabilities request from queen").emit();
+    // TEAM-340: Migrated to n!() macro
+    n!("caps_request", "📡 Received capabilities request from queen");
 
     // TEAM-206: Narrate GPU detection attempt
-    NARRATE.action(ACTION_CAPS_GPU_CHECK).human("🔍 Detecting GPUs via nvidia-smi...").emit();
+    // TEAM-340: Migrated to n!() macro
+    n!("caps_gpu_check", "🔍 Detecting GPUs via nvidia-smi...");
 
     // Detect GPUs
     let gpu_info = rbee_hive_device_detection::detect_gpus();
 
     // TEAM-206: Narrate GPU detection results
-    NARRATE
-        .action(ACTION_CAPS_GPU_FOUND)
-        .context(gpu_info.count.to_string())
-        .human(if gpu_info.count > 0 {
-            "✅ Found {} GPU(s)"
-        } else {
-            "ℹ️  No GPUs detected, using CPU only"
-        })
-        .emit();
+    // TEAM-340: Migrated to n!() macro
+    if gpu_info.count > 0 {
+        n!("caps_gpu_found", "✅ Found {} GPU(s)", gpu_info.count);
+    } else {
+        n!("caps_gpu_none", "ℹ️  No GPUs detected, using CPU only");
+    }
 
     let mut devices: Vec<HiveDevice> = gpu_info
         .devices
@@ -239,12 +221,8 @@ async fn get_capabilities() -> Json<CapabilitiesResponse> {
     let system_ram_gb = rbee_hive_device_detection::get_system_ram_gb();
 
     // TEAM-206: Narrate CPU fallback
-    NARRATE
-        .action(ACTION_CAPS_CPU_ADD)
-        .context(cpu_cores.to_string())
-        .context(system_ram_gb.to_string())
-        .human("🖥️  Adding CPU-0: {0} cores, {1} GB RAM")
-        .emit();
+    // TEAM-340: Migrated to n!() macro
+    n!("caps_cpu_add", "🖥️  Adding CPU-0: {} cores, {} GB RAM", cpu_cores, system_ram_gb);
 
     // Add CPU device (always available) with actual system info
     devices.push(HiveDevice {
@@ -256,11 +234,8 @@ async fn get_capabilities() -> Json<CapabilitiesResponse> {
     });
 
     // TEAM-206: Narrate response being sent
-    NARRATE
-        .action(ACTION_CAPS_RESPONSE)
-        .context(devices.len().to_string())
-        .human("📤 Sending capabilities response ({} device(s))")
-        .emit();
+    // TEAM-340: Migrated to n!() macro
+    n!("caps_response", "📤 Sending capabilities response ({} device(s))", devices.len());
 
     Json(CapabilitiesResponse { devices })
 }
