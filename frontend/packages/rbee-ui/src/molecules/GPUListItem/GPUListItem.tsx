@@ -27,10 +27,7 @@ export function GPUListItem({
 
   return (
     <div
-      className={cn(
-        'flex items-center justify-between rounded border border-border bg-background/50 p-3',
-        className,
-      )}
+      className={cn('flex items-center justify-between rounded border border-border bg-background/50 p-3', className)}
     >
       <div className="flex items-center gap-3">
         <div className={cn('h-2 w-2 rounded-full', statusColors[status])} />

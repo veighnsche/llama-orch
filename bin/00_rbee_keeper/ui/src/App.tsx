@@ -1,11 +1,12 @@
 // TEAM-295: rbee-keeper GUI - Main application component with routing
 // TEAM-334: Uses Shell component for layout (titlebar + sidebar + content)
-import { BrowserRouter, Routes, Route } from "react-router-dom";
-import { Shell } from "./components/Shell";
-import { SidebarProvider } from "@rbee/ui/atoms";
-import KeeperPage from "./pages/ServicesPage";
-import SettingsPage from "./pages/SettingsPage";
-import HelpPage from "./pages/HelpPage";
+
+import { SidebarProvider } from '@rbee/ui/atoms'
+import { BrowserRouter, Route, Routes } from 'react-router-dom'
+import { Shell } from './components/Shell'
+import HelpPage from './pages/HelpPage'
+import KeeperPage from './pages/ServicesPage'
+import SettingsPage from './pages/SettingsPage'
 
 function App() {
   return (
@@ -20,7 +21,7 @@ function App() {
         </Shell>
       </SidebarProvider>
     </BrowserRouter>
-  );
+  )
 }
 
-export default App;
+export default App

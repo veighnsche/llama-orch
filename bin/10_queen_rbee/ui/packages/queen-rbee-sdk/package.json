@@ -4,23 +4,13 @@
   "description": "Rust SDK for queen-rbee that compiles to WASM for browser/Node.js usage",
   "main": "./pkg/bundler/rbee_sdk.js",
   "types": "./pkg/bundler/rbee_sdk.d.ts",
-  "files": [
-    "pkg/bundler"
-  ],
+  "files": ["pkg/bundler"],
   "scripts": {
     "build": "wasm-pack build --target bundler --out-dir pkg/bundler",
     "build:web": "wasm-pack build --target web --out-dir pkg/web",
     "build:all": "./build-wasm.sh"
   },
-  "keywords": [
-    "rbee",
-    "queen",
-    "llm",
-    "wasm",
-    "inference",
-    "ai",
-    "rust"
-  ],
+  "keywords": ["rbee", "queen", "llm", "wasm", "inference", "ai", "rust"],
   "author": "rbee Team",
   "license": "GPL-3.0-or-later",
   "repository": {

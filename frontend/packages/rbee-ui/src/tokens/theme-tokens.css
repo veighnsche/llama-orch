@@ -45,7 +45,7 @@
     --accent-foreground: #0f172a; /* text on pale ambers */
     --destructive: #dc2626;
     --destructive-foreground: #ffffff;
-    
+
     /* Action colors */
     --success: #10b981; /* emerald-500 */
     --success-foreground: #ffffff;
@@ -53,7 +53,7 @@
     --danger: #dc2626; /* red-600 */
     --danger-foreground: #ffffff;
     --danger-muted: #fee2e2; /* red-100 */
-    
+
     --border: #cbd5e1; /* slate-300 for stronger definition */
     --input: #cbd5e1;
     --ring: #f59e0b; /* brand ring for focus-visible */
@@ -188,7 +188,7 @@
     --secondary-foreground: #e5eaf1;
     --muted: #0e1726; /* slightly lighter than secondary for chips/rows */
     --muted-foreground: #a9b4c5; /* improve readability */
-    
+
     /* Action colors - dark mode */
     --success: #059669; /* emerald-600 - darker for dark mode */
     --success-foreground: #ffffff;

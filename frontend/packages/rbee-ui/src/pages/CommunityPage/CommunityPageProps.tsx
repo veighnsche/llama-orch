@@ -21,7 +21,7 @@
 
 import { NetworkMesh } from '@rbee/ui/atoms'
 import type { TemplateContainerProps } from '@rbee/ui/molecules'
-import { StatsGrid, type StatItem } from '@rbee/ui/molecules/StatsGrid'
+import { type StatItem, StatsGrid } from '@rbee/ui/molecules/StatsGrid'
 import type {
   CTATemplateProps,
   EmailCaptureProps,
@@ -67,7 +67,8 @@ export const communityHeroProps: HeroTemplateProps = {
     variant: 'simple',
     content: 'Join the rbee Community',
   },
-  subcopy: 'Connect with developers building private AI infrastructure. Contribute code, share knowledge, and help shape self-hosted AI.',
+  subcopy:
+    'Connect with developers building private AI infrastructure. Contribute code, share knowledge, and help shape self-hosted AI.',
   proofElements: {
     variant: 'stats-pills',
     items: [
@@ -556,7 +557,7 @@ export const featuredContributorsProps: TestimonialsTemplateProps = {
 export const roadmapContainerProps: Omit<TemplateContainerProps, 'children'> = {
   eyebrow: "What's Next",
   title: 'Project Roadmap',
-  description: 'Development milestones and what\'s coming next.',
+  description: "Development milestones and what's coming next.",
   background: {
     variant: 'secondary',
   },

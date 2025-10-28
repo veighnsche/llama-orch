@@ -1,13 +1,13 @@
 /**
  * Framework-agnostic theme provider
  * Compatible with Next.js (next-themes) and other React environments (Tauri, Vite, etc.)
- * 
+ *
  * Usage:
  * - Next.js: Use next-themes ThemeProvider (already installed)
  * - Tauri/Vite: Use this ThemeProvider
  */
 
-import { createContext, useContext, useEffect, useState, type ReactNode } from 'react'
+import { createContext, type ReactNode, useContext, useEffect, useState } from 'react'
 
 type Theme = 'light' | 'dark' | 'system'
 
@@ -28,11 +28,11 @@ export interface ThemeProviderProps {
 
 /**
  * Universal ThemeProvider for non-Next.js environments
- * 
+ *
  * @example
  * // Tauri/Vite app
  * import { ThemeProvider } from '@rbee/ui/providers'
- * 
+ *
  * <ThemeProvider>
  *   <App />
  * </ThemeProvider>

@@ -2,9 +2,7 @@
   "name": "@repo/eslint-config",
   "version": "0.0.0",
   "private": true,
-  "files": [
-    "react.js"
-  ],
+  "files": ["react.js"],
   "devDependencies": {
     "@eslint/js": "^9.36.0",
     "eslint-plugin-react-hooks": "^5.2.0",

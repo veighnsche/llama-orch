@@ -1,25 +1,16 @@
 // TEAM-292: Live heartbeat monitoring dashboard
 // Ported from web-ui.old
 
-import { useHeartbeat } from '../hooks/useHeartbeat';
-import { useRbeeStore } from '../stores/rbeeStore';
-import { Button } from '@rbee/ui/atoms';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@rbee/ui/atoms';
-import { PageContainer } from '@rbee/ui/molecules';
+import { Button, Card, CardContent, CardDescription, CardHeader, CardTitle } from '@rbee/ui/atoms'
+import { PageContainer } from '@rbee/ui/molecules'
+import { useHeartbeat } from '../hooks/useHeartbeat'
+import { useRbeeStore } from '../stores/rbeeStore'
 
 export default function DashboardPage() {
-  const { connected, loading, error } = useHeartbeat();
-  
+  const { connected, loading, error } = useHeartbeat()
+
   // TEAM-292: Get state from zustand store
-  const { 
-    queen, 
-    hives, 
-    hivesOnline, 
-    hivesAvailable,
-    workersOnline,
-    workersAvailable,
-    workerIds,
-  } = useRbeeStore();
+  const { queen, hives, hivesOnline, hivesAvailable, workersOnline, workersAvailable, workerIds } = useRbeeStore()
 
   // Loading state
   if (loading) {
@@ -29,7 +20,7 @@ export default function DashboardPage() {
           <p className="text-muted-foreground">Loading rbee SDK...</p>
         </div>
       </div>
-    );
+    )
   }
 
   // Error state
@@ -42,36 +33,25 @@ export default function DashboardPage() {
           <p className="text-sm text-red-500">{error.message}</p>
         </div>
       </div>
-    );
+    )
   }
 
   return (
-    <PageContainer
-      title="Dashboard"
-      description="Monitor your queen, hives, workers, and models"
-    >
+    <PageContainer title="Dashboard" description="Monitor your queen, hives, workers, and models">
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
         {/* Queen Status Card */}
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center justify-between">
               Queen Status
-              <span className={connected ? 'text-green-500' : 'text-red-500'}>
-                {connected ? '🟢' : '⚫'}
-              </span>
+              <span className={connected ? 'text-green-500' : 'text-red-500'}>{connected ? '🟢' : '⚫'}</span>
             </CardTitle>
             <CardDescription>Central orchestrator</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="flex items-center gap-2">
-              <div
-                className={`h-3 w-3 rounded-full ${
-                  connected ? 'bg-green-500' : 'bg-red-500'
-                }`}
-              />
-              <span className="capitalize">
-                {connected ? 'Connected' : 'Disconnected'}
-              </span>
+              <div className={`h-3 w-3 rounded-full ${connected ? 'bg-green-500' : 'bg-red-500'}`} />
+              <span className="capitalize">{connected ? 'Connected' : 'Disconnected'}</span>
             </div>
             {queen.lastUpdate && (
               <p className="text-xs text-muted-foreground mt-2">
@@ -88,12 +68,8 @@ export default function DashboardPage() {
             <CardDescription>Pool managers</CardDescription>
           </CardHeader>
           <CardContent>
-            <p className="text-2xl font-bold">
-              {hivesOnline}
-            </p>
-            <p className="text-sm text-muted-foreground">
-              {hivesAvailable} available
-            </p>
+            <p className="text-2xl font-bold">{hivesOnline}</p>
+            <p className="text-sm text-muted-foreground">{hivesAvailable} available</p>
             {hives.length > 0 && (
               <ul className="mt-2 space-y-1">
                 {hives.map((hive) => (
@@ -116,12 +92,8 @@ export default function DashboardPage() {
             <CardDescription>Active executors</CardDescription>
           </CardHeader>
           <CardContent>
-            <p className="text-2xl font-bold">
-              {workersOnline}
-            </p>
-            <p className="text-sm text-muted-foreground">
-              {workersAvailable} available
-            </p>
+            <p className="text-2xl font-bold">{workersOnline}</p>
+            <p className="text-sm text-muted-foreground">{workersAvailable} available</p>
             {workerIds.length > 0 && (
               <ul className="mt-2 space-y-1">
                 {workerIds.slice(0, 5).map((id) => (
@@ -130,9 +102,7 @@ export default function DashboardPage() {
                   </li>
                 ))}
                 {workerIds.length > 5 && (
-                  <li className="text-xs text-muted-foreground">
-                    +{workerIds.length - 5} more
-                  </li>
+                  <li className="text-xs text-muted-foreground">+{workerIds.length - 5} more</li>
                 )}
               </ul>
             )}
@@ -165,9 +135,7 @@ export default function DashboardPage() {
           </CardHeader>
           <CardContent>
             <p className="text-sm text-muted-foreground mb-4">
-              {connected
-                ? 'Ready for inference (feature coming soon)'
-                : 'Connect to queen to start inference'}
+              {connected ? 'Ready for inference (feature coming soon)' : 'Connect to queen to start inference'}
             </p>
             <Button variant="default" disabled={!connected}>
               Run Inference
@@ -176,5 +144,5 @@ export default function DashboardPage() {
         </Card>
       </div>
     </PageContainer>
-  );
+  )
 }

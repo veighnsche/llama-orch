@@ -62,24 +62,21 @@ const gradientVariants = cva(
   },
 )
 
-const iconBgVariants = cva(
-  'flex h-14 w-14 shrink-0 items-center justify-center rounded bg-gradient-to-br shadow-lg',
-  {
-    variants: {
-      color: {
-        primary: 'from-primary to-primary',
-        'chart-1': 'from-chart-1 to-chart-1',
-        'chart-2': 'from-chart-2 to-chart-2',
-        'chart-3': 'from-chart-3 to-chart-3',
-        'chart-4': 'from-chart-4 to-chart-4',
-        'chart-5': 'from-chart-5 to-chart-5',
-      },
-    },
-    defaultVariants: {
-      color: 'primary',
+const iconBgVariants = cva('flex h-14 w-14 shrink-0 items-center justify-center rounded bg-gradient-to-br shadow-lg', {
+  variants: {
+    color: {
+      primary: 'from-primary to-primary',
+      'chart-1': 'from-chart-1 to-chart-1',
+      'chart-2': 'from-chart-2 to-chart-2',
+      'chart-3': 'from-chart-3 to-chart-3',
+      'chart-4': 'from-chart-4 to-chart-4',
+      'chart-5': 'from-chart-5 to-chart-5',
     },
   },
-)
+  defaultVariants: {
+    color: 'primary',
+  },
+})
 
 const textVariants = cva('', {
   variants: {
@@ -157,9 +154,7 @@ export function AudienceCard({
                 </div>
               </div>
               {imageSlot && (
-                <div className="h-14 w-14 shrink-0 overflow-hidden rounded bg-card ring-1 ring-border">
-                  {imageSlot}
-                </div>
+                <div className="h-14 w-14 shrink-0 overflow-hidden rounded bg-card ring-1 ring-border">{imageSlot}</div>
               )}
             </div>
 

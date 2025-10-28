@@ -1,6 +1,6 @@
+import { Button, Card, CardContent, CardDescription, CardHeader, CardTitle } from '@rbee/ui/atoms'
 import type { Meta, StoryObj } from '@storybook/react'
 import { PageContainer } from './PageContainer'
-import { Button, Card, CardContent, CardDescription, CardHeader, CardTitle } from '@rbee/ui/atoms'
 
 const meta = {
   title: 'Molecules/PageContainer',

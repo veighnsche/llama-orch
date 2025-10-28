@@ -1,14 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react'
-import {
-  Download,
-  Mail,
-  Play,
-  Save,
-  Send,
-  Share2,
-  Trash2,
-  Upload,
-} from 'lucide-react'
+import { Download, Mail, Play, Save, Send, Share2, Trash2, Upload } from 'lucide-react'
 import { DropdownMenuItem, DropdownMenuSeparator } from '../DropdownMenu'
 import { SplitButton } from './SplitButton'
 

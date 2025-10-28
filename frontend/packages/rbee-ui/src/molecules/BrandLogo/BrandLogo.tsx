@@ -21,18 +21,18 @@ const sizeClasses = {
 
 /**
  * BrandLogo - Framework-agnostic brand logo component
- * 
+ *
  * @example
  * // Static logo
  * <BrandLogo />
- * 
+ *
  * @example
  * // With Next.js Link
  * import Link from 'next/link'
  * <Link href="/">
  *   <BrandLogo />
  * </Link>
- * 
+ *
  * @example
  * // With React Router Link
  * import { Link } from 'react-router-dom'

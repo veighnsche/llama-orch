@@ -1,10 +1,10 @@
 // TEAM-291: Standard React hook for rbee SDK
 
-'use client';
+'use client'
 
-import { useState, useEffect, useRef } from 'react';
-import type { RbeeSDK, LoadOptions } from '../types';
-import { loadSDKOnce } from '../loader';
+import { useEffect, useRef, useState } from 'react'
+import { loadSDKOnce } from '../loader'
+import type { LoadOptions, RbeeSDK } from '../types'
 
 /**
  * React hook for loading the rbee WASM SDK (client-only, retries with backoff)
@@ -21,34 +21,34 @@ import { loadSDKOnce } from '../loader';
  * ```
  */
 export function useRbeeSDK(options?: LoadOptions) {
-  const [sdk, setSDK] = useState<RbeeSDK | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<Error | null>(null);
-  const mountedRef = useRef(true);
+  const [sdk, setSDK] = useState<RbeeSDK | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<Error | null>(null)
+  const mountedRef = useRef(true)
 
   useEffect(() => {
-    mountedRef.current = true;
+    mountedRef.current = true
 
     // Options not in deps: we load once per mount, not on option changes
     loadSDKOnce(options)
       .then((result) => {
         if (mountedRef.current) {
-          setSDK(result.sdk);
-          setLoading(false);
+          setSDK(result.sdk)
+          setLoading(false)
         }
       })
       .catch((err) => {
         if (mountedRef.current) {
-          setError(err);
-          setLoading(false);
+          setError(err)
+          setLoading(false)
         }
-      });
+      })
 
     return () => {
-      mountedRef.current = false;
-    };
+      mountedRef.current = false
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [])
 
-  return { sdk, loading, error };
+  return { sdk, loading, error }
 }

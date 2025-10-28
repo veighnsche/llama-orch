@@ -5,11 +5,7 @@ import { ChevronDown } from 'lucide-react'
 import type * as React from 'react'
 import { Button, type ButtonProps } from '../Button'
 import { ButtonGroup, ButtonGroupSeparator } from '../ButtonGroup'
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuTrigger,
-} from '../DropdownMenu'
+import { DropdownMenu, DropdownMenuContent, DropdownMenuTrigger } from '../DropdownMenu'
 
 export interface SplitButtonProps {
   /** Primary button text */
@@ -43,13 +39,7 @@ export function SplitButton({
   return (
     <ButtonGroup className={className}>
       {/* Primary Action Button */}
-      <Button
-        variant={variant}
-        size={size}
-        onClick={onClick}
-        disabled={disabled}
-        className="flex-1 rounded-r-none"
-      >
+      <Button variant={variant} size={size} onClick={onClick} disabled={disabled} className="flex-1 rounded-r-none">
         {icon && icon}
         {children}
       </Button>

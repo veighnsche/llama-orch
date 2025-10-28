@@ -3,15 +3,16 @@
 // TEAM-296: Updated to use COMMANDS registry for type safety
 // TEAM-334: Cleaned up - only ssh_list command remains (rest removed with tauri commands cleanup)
 
-import { commands } from '../generated/bindings';
-export type { SshTarget, SshTargetStatus } from '../generated/bindings';
+import { commands } from '../generated/bindings'
+
+export type { SshTarget, SshTargetStatus } from '../generated/bindings'
 
 // ============================================================================
 // SSH COMMANDS
 // ============================================================================
 
 export async function sshList() {
-  return commands.sshList();
+  return commands.sshList()
 }
 
 // ============================================================================

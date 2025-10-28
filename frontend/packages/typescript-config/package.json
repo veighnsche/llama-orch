@@ -2,9 +2,5 @@
   "name": "@repo/typescript-config",
   "version": "0.0.0",
   "private": true,
-  "files": [
-    "base.json",
-    "react-app.json",
-    "vite.json"
-  ]
+  "files": ["base.json", "react-app.json", "vite.json"]
 }

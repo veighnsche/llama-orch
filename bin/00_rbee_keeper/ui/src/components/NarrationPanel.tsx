@@ -5,34 +5,34 @@
 //   - No auto-scroll (user controls position)
 //   - Read top-to-bottom to see latest first
 
-import { ScrollArea } from "@rbee/ui/atoms";
-import { X } from "lucide-react";
-import { useNarrationStore } from "../store/narrationStore";
+import { ScrollArea } from '@rbee/ui/atoms'
+import { X } from 'lucide-react'
+import { useNarrationStore } from '../store/narrationStore'
 
 interface NarrationPanelProps {
-  onClose?: () => void;
+  onClose?: () => void
 }
 
 export function NarrationPanel({ onClose }: NarrationPanelProps) {
   // TEAM-339: Get entries from Zustand store (persisted even when panel closed)
-  const entries = useNarrationStore((state) => state.entries);
-  const clearEntries = useNarrationStore((state) => state.clearEntries);
+  const entries = useNarrationStore((state) => state.entries)
+  const clearEntries = useNarrationStore((state) => state.clearEntries)
 
   // Clear all entries
   const handleClear = () => {
-    clearEntries();
-  };
+    clearEntries()
+  }
 
   // Format timestamp to HH:MM:SS
   const formatTime = (timestamp: string) => {
-    const date = new Date(timestamp);
-    return date.toLocaleTimeString("en-US", {
+    const date = new Date(timestamp)
+    return date.toLocaleTimeString('en-US', {
       hour12: false,
-      hour: "2-digit",
-      minute: "2-digit",
-      second: "2-digit",
-    });
-  };
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit',
+    })
+  }
 
   // Get color for log level (unused but kept for future use)
   // const getLevelColor = (level: string) => {
@@ -52,30 +52,30 @@ export function NarrationPanel({ onClose }: NarrationPanelProps) {
 
   // Get level badge style
   const getLevelBadge = (level: string) => {
-    const baseClasses = "px-1.5 py-0.5 rounded text-xs font-mono font-semibold";
+    const baseClasses = 'px-1.5 py-0.5 rounded text-xs font-mono font-semibold'
     switch (level.toLowerCase()) {
-      case "error":
-        return `${baseClasses} bg-red-500/10 text-red-500`;
-      case "warn":
-        return `${baseClasses} bg-yellow-500/10 text-yellow-500`;
-      case "info":
-        return `${baseClasses} bg-blue-500/10 text-blue-500`;
-      case "debug":
-        return `${baseClasses} bg-gray-500/10 text-gray-500`;
+      case 'error':
+        return `${baseClasses} bg-red-500/10 text-red-500`
+      case 'warn':
+        return `${baseClasses} bg-yellow-500/10 text-yellow-500`
+      case 'info':
+        return `${baseClasses} bg-blue-500/10 text-blue-500`
+      case 'debug':
+        return `${baseClasses} bg-gray-500/10 text-gray-500`
       default:
-        return `${baseClasses} bg-muted text-muted-foreground`;
+        return `${baseClasses} bg-muted text-muted-foreground`
     }
-  };
+  }
 
   // TEAM-336: Test button to verify narration pipeline
   const handleTest = async () => {
     try {
-      const { invoke } = await import("@tauri-apps/api/core");
-      await invoke("test_narration");
+      const { invoke } = await import('@tauri-apps/api/core')
+      await invoke('test_narration')
     } catch (error) {
-      console.error("[NarrationPanel] Test failed:", error);
+      console.error('[NarrationPanel] Test failed:', error)
     }
-  };
+  }
 
   return (
     <div className="w-full h-full border-l border-border bg-background flex flex-col">
@@ -96,53 +96,44 @@ export function NarrationPanel({ onClose }: NarrationPanelProps) {
       {/* Entries list */}
       <div className="flex-1 overflow-hidden">
         <ScrollArea className="h-full">
-          <div className="p-2">
+          <div className="p-2 overflow-x-hidden">
             {entries.length === 0 ? (
-              <div className="text-center text-sm text-muted-foreground py-8">
-                Waiting for events...
-              </div>
+              <div className="text-center text-sm text-muted-foreground py-8">Waiting for events...</div>
             ) : (
               entries.map((entry, index) => {
                 // TEAM-339: Check if fn_name changed from previous entry
-                const prevEntry = index > 0 ? entries[index - 1] : null;
-                const fnNameChanged =
-                  !prevEntry || prevEntry.fn_name !== entry.fn_name;
+                const prevEntry = index > 0 ? entries[index - 1] : null
+                const fnNameChanged = !prevEntry || prevEntry.fn_name !== entry.fn_name
 
                 return (
                   <div key={entry.id}>
                     {/* TEAM-339: Show fn_name title with timestamp when it changes */}
                     {fnNameChanged && entry.fn_name && (
-                      <div className="px-3 py-1.5 text-xs font-medium bg-muted border-l-4 border-blue-500 mb-1">
+                      <div className="px-3 py-1.5 text-xs font-medium bg-muted border-l-4 border-blue-500 mb-1 overflow-hidden">
                         <div className="space-y-1">
                           <div className="text-muted-foreground font-mono text-[10px]">
                             {formatTime(entry.timestamp)}
                           </div>
-                          <div className="text-foreground break-words">
-                            {entry.fn_name}
-                          </div>
+                          <div className="text-foreground break-words overflow-wrap-anywhere">{entry.fn_name}</div>
                         </div>
                       </div>
                     )}
 
-                    <div className="p-2 rounded-md bg-muted/30 hover:bg-muted/50 transition-colors text-xs space-y-1">
+                    <div className="p-2 rounded-md bg-muted/30 hover:bg-muted/50 transition-colors text-xs space-y-1 overflow-hidden">
                       {/* Action and level */}
-                      <div className="flex items-center justify-between gap-2">
-                        <span className="text-muted-foreground font-mono">
+                      <div className="flex items-center justify-between gap-2 min-w-0">
+                        <span className="text-muted-foreground font-mono truncate">
                           {/* TEAM-339: Always show action */}
-                          {entry.action || "—"}
+                          {entry.action || '—'}
                         </span>
-                        <span className={getLevelBadge(entry.level)}>
-                          {entry.level.toUpperCase()}
-                        </span>
+                        <span className={`${getLevelBadge(entry.level)} shrink-0`}>{entry.level.toUpperCase()}</span>
                       </div>
 
                       {/* Message */}
-                      <div className="text-foreground break-words font-mono leading-relaxed">
-                        {entry.message}
-                      </div>
+                      <div className="text-foreground break-words overflow-wrap-anywhere font-mono leading-relaxed">{entry.message}</div>
                     </div>
                   </div>
-                );
+                )
               })
             )}
           </div>
@@ -151,7 +142,7 @@ export function NarrationPanel({ onClose }: NarrationPanelProps) {
 
       {/* Footer stats */}
       <div className="flex items-center justify-between px-4 py-2 border-t border-border text-xs text-muted-foreground">
-        {entries.length} {entries.length === 1 ? "entry" : "entries"}
+        {entries.length} {entries.length === 1 ? 'entry' : 'entries'}
         <div className="flex gap-2">
           <button
             onClick={handleTest}
@@ -170,5 +161,5 @@ export function NarrationPanel({ onClose }: NarrationPanelProps) {
         </div>
       </div>
     </div>
-  );
+  )
 }

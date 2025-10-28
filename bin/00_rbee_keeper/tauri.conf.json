@@ -42,11 +42,7 @@
           "identifier": "main-capability",
           "description": "Main window capabilities",
           "windows": ["main"],
-          "permissions": [
-            "core:default",
-            "core:event:allow-listen",
-            "core:event:allow-emit"
-          ]
+          "permissions": ["core:default", "core:event:allow-listen", "core:event:allow-emit"]
         }
       ]
     }

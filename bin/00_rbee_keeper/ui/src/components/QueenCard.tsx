@@ -10,49 +10,49 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
-  SplitButton,
   DropdownMenuItem,
   DropdownMenuSeparator,
-} from "@rbee/ui/atoms";
-import { Play, Square, Download, RefreshCw, Trash2 } from "lucide-react";
-import { useQueenStore } from "../store/queenStore";
-import { useCommandStore } from "../store/commandStore";
-import { StatusBadge } from "./StatusBadge";
+  SplitButton,
+} from '@rbee/ui/atoms'
+import { Download, Play, RefreshCw, Square, Trash2 } from 'lucide-react'
+import { useCommandStore } from '../store/commandStore'
+import { useQueenStore } from '../store/queenStore'
+import { StatusBadge } from './StatusBadge'
 
 // TEAM-338: Re-export the status type from store
-export type { QueenStatus } from "../store/queenStore";
+export type { QueenStatus } from '../store/queenStore'
 
 export function QueenCard() {
-  const { status, isLoading, fetchStatus, start, stop, install, rebuild, uninstall } = useQueenStore();
-  const { isExecuting } = useCommandStore();
+  const { status, isLoading, fetchStatus, start, stop, install, rebuild, uninstall } = useQueenStore()
+  const { isExecuting } = useCommandStore()
 
   // TEAM-338: Compute UI state based on status (single source of truth)
-  const isRunning = status?.isRunning ?? false;
-  const isInstalled = status?.isInstalled ?? false;
+  const isRunning = status?.isRunning ?? false
+  const isInstalled = status?.isInstalled ?? false
 
   const uiState = !isInstalled
     ? {
         mainAction: install,
         mainIcon: <Download className="h-4 w-4" />,
-        mainLabel: "Install",
-        mainVariant: "default" as const,
-        badgeStatus: "unknown" as const,
+        mainLabel: 'Install',
+        mainVariant: 'default' as const,
+        badgeStatus: 'unknown' as const,
       }
     : isRunning
       ? {
           mainAction: stop,
           mainIcon: <Square className="h-4 w-4" />,
-          mainLabel: "Stop",
-          mainVariant: "destructive" as const,
-          badgeStatus: "running" as const,
+          mainLabel: 'Stop',
+          mainVariant: 'destructive' as const,
+          badgeStatus: 'running' as const,
         }
       : {
           mainAction: start,
           mainIcon: <Play className="h-4 w-4" />,
-          mainLabel: "Start",
-          mainVariant: "default" as const,
-          badgeStatus: "stopped" as const,
-        };
+          mainLabel: 'Start',
+          mainVariant: 'default' as const,
+          badgeStatus: 'stopped' as const,
+        }
 
   return (
     <Card>
@@ -60,18 +60,13 @@ export function QueenCard() {
         <CardTitle>Queen</CardTitle>
         <CardDescription>Smart API server</CardDescription>
         <CardAction>
-          <StatusBadge
-            status={uiState.badgeStatus}
-            onClick={fetchStatus}
-            isLoading={isLoading}
-          />
+          <StatusBadge status={uiState.badgeStatus} onClick={fetchStatus} isLoading={isLoading} />
         </CardAction>
       </CardHeader>
       <CardContent>
         <div className="space-y-4">
           <p className="text-sm text-muted-foreground leading-relaxed">
-            Job router that dispatches inference requests to workers in the
-            correct hive
+            Job router that dispatches inference requests to workers in the correct hive
           </p>
           <SplitButton
             variant={uiState.mainVariant}
@@ -138,5 +133,5 @@ export function QueenCard() {
         </div>
       </CardContent>
     </Card>
-  );
+  )
 }

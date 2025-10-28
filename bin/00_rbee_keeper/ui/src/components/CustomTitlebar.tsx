@@ -2,12 +2,12 @@
 // Replaces native window decorations with React component
 // Provides window controls (minimize, maximize, close) and drag area
 
-import { Component, type ReactNode } from "react";
-import { getCurrentWindow } from "@tauri-apps/api/window";
-import { X, Minus, Square, AlertCircle } from "lucide-react";
-import { Button } from "@rbee/ui/atoms";
-import { BrandLogo } from "@rbee/ui/molecules";
-import { useTauri } from "../contexts/TauriContext";
+import { Button } from '@rbee/ui/atoms'
+import { BrandLogo } from '@rbee/ui/molecules'
+import { getCurrentWindow } from '@tauri-apps/api/window'
+import { AlertCircle, Minus, Square, X } from 'lucide-react'
+import { Component, type ReactNode } from 'react'
+import { useTauri } from '../contexts/TauriContext'
 
 // Error boundary for CustomTitlebar
 class CustomTitlebarErrorBoundary extends Component<
@@ -15,16 +15,16 @@ class CustomTitlebarErrorBoundary extends Component<
   { hasError: boolean; error: Error | null }
 > {
   constructor(props: { children: ReactNode }) {
-    super(props);
-    this.state = { hasError: false, error: null };
+    super(props)
+    this.state = { hasError: false, error: null }
   }
 
   static getDerivedStateFromError(error: Error) {
-    return { hasError: true, error };
+    return { hasError: true, error }
   }
 
   componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
-    console.error("CustomTitlebar error:", error, errorInfo);
+    console.error('CustomTitlebar error:', error, errorInfo)
   }
 
   render() {
@@ -39,34 +39,32 @@ class CustomTitlebarErrorBoundary extends Component<
             <AlertCircle className="h-4 w-4" />
             <span>rbee</span>
           </div>
-          <div className="text-xs text-destructive">
-            Titlebar error: {this.state.error?.message}
-          </div>
+          <div className="text-xs text-destructive">Titlebar error: {this.state.error?.message}</div>
         </div>
-      );
+      )
     }
 
-    return this.props.children;
+    return this.props.children
   }
 }
 
 function CustomTitlebarContent() {
-  const { isTauri } = useTauri();
-  
+  const { isTauri } = useTauri()
+
   // Only get window if in Tauri environment
-  const appWindow = isTauri ? getCurrentWindow() : null;
+  const appWindow = isTauri ? getCurrentWindow() : null
 
   const handleMinimize = () => {
-    appWindow?.minimize();
-  };
+    appWindow?.minimize()
+  }
 
   const handleMaximize = () => {
-    appWindow?.toggleMaximize();
-  };
+    appWindow?.toggleMaximize()
+  }
 
   const handleClose = () => {
-    appWindow?.close();
-  };
+    appWindow?.close()
+  }
 
   return (
     <div
@@ -76,28 +74,16 @@ function CustomTitlebarContent() {
       {/* Left side - Brand logo */}
       <div className="flex items-center gap-2">
         <BrandLogo size="sm" />
-        {!isTauri && (
-          <span className="text-xs text-muted-foreground">(Browser Mode)</span>
-        )}
+        {!isTauri && <span className="text-xs text-muted-foreground">(Browser Mode)</span>}
       </div>
 
       {/* Right side - Window controls (only in Tauri) */}
       {isTauri && (
         <div className="flex items-center gap-1">
-          <Button
-            variant="ghost"
-            size="icon-sm"
-            onClick={handleMinimize}
-            aria-label="Minimize"
-          >
+          <Button variant="ghost" size="icon-sm" onClick={handleMinimize} aria-label="Minimize">
             <Minus />
           </Button>
-          <Button
-            variant="ghost"
-            size="icon-sm"
-            onClick={handleMaximize}
-            aria-label="Maximize"
-          >
+          <Button variant="ghost" size="icon-sm" onClick={handleMaximize} aria-label="Maximize">
             <Square className="h-3 w-3" />
           </Button>
           <Button
@@ -112,7 +98,7 @@ function CustomTitlebarContent() {
         </div>
       )}
     </div>
-  );
+  )
 }
 
 export function CustomTitlebar() {
@@ -120,5 +106,5 @@ export function CustomTitlebar() {
     <CustomTitlebarErrorBoundary>
       <CustomTitlebarContent />
     </CustomTitlebarErrorBoundary>
-  );
+  )
 }

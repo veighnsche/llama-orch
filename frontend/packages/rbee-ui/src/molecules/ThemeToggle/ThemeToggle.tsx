@@ -6,25 +6,25 @@ import * as React from 'react'
 
 /**
  * Framework-agnostic ThemeToggle component
- * 
+ *
  * This component works with any theme provider that follows the standard theme API.
  * It detects the current theme from the DOM and toggles between light and dark modes.
- * 
+ *
  * **Next.js with next-themes:**
  * ```tsx
  * import { ThemeProvider } from 'next-themes'
  * import { ThemeToggle } from '@rbee/ui/molecules'
- * 
+ *
  * <ThemeProvider attribute="class">
  *   <ThemeToggle />
  * </ThemeProvider>
  * ```
- * 
+ *
  * **Tauri/Vite with @rbee/ui/providers:**
  * ```tsx
  * import { ThemeProvider } from '@rbee/ui/providers'
  * import { ThemeToggle } from '@rbee/ui/molecules'
- * 
+ *
  * <ThemeProvider>
  *   <ThemeToggle />
  * </ThemeProvider>
@@ -37,7 +37,7 @@ export function ThemeToggle() {
   // Avoid hydration mismatch
   React.useEffect(() => {
     setMounted(true)
-    
+
     // Detect initial theme from DOM
     const root = document.documentElement
     const initialTheme = root.classList.contains('dark') ? 'dark' : 'light'
@@ -60,14 +60,14 @@ export function ThemeToggle() {
   const toggleTheme = () => {
     const root = document.documentElement
     const newTheme = theme === 'dark' ? 'light' : 'dark'
-    
+
     // Update DOM
     root.classList.remove('light', 'dark')
     root.classList.add(newTheme)
-    
+
     // Update localStorage (works with both next-themes and @rbee/ui/providers)
     localStorage.setItem('theme', newTheme)
-    
+
     // Update state
     setTheme(newTheme)
 

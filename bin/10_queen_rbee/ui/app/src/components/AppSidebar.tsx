@@ -2,13 +2,6 @@
 // Ported from web-ui.old - React Router instead of Next.js
 
 import {
-  HomeIcon,
-  TerminalIcon,
-  SettingsIcon,
-  HelpCircleIcon,
-} from "lucide-react";
-import { Link, useLocation } from "react-router-dom";
-import {
   Sidebar,
   SidebarContent,
   SidebarFooter,
@@ -19,41 +12,43 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
-} from "@rbee/ui/atoms";
-import { ThemeToggle } from "@rbee/ui/molecules";
+} from '@rbee/ui/atoms'
+import { ThemeToggle } from '@rbee/ui/molecules'
+import { HelpCircleIcon, HomeIcon, SettingsIcon, TerminalIcon } from 'lucide-react'
+import { Link, useLocation } from 'react-router-dom'
 
 export function AppSidebar() {
-  const location = useLocation();
+  const location = useLocation()
 
   const mainNavigation = [
     {
-      title: "Dashboard",
-      href: "/dashboard",
+      title: 'Dashboard',
+      href: '/dashboard',
       icon: HomeIcon,
-      tooltip: "View dashboard",
+      tooltip: 'View dashboard',
     },
     {
-      title: "Bee Keeper",
-      href: "/keeper",
+      title: 'Bee Keeper',
+      href: '/keeper',
       icon: TerminalIcon,
-      tooltip: "CLI operations",
+      tooltip: 'CLI operations',
     },
-  ];
+  ]
 
   const secondaryNavigation = [
     {
-      title: "Settings",
-      href: "/settings",
+      title: 'Settings',
+      href: '/settings',
       icon: SettingsIcon,
-      tooltip: "Configuration",
+      tooltip: 'Configuration',
     },
     {
-      title: "Help",
-      href: "/help",
+      title: 'Help',
+      href: '/help',
       icon: HelpCircleIcon,
-      tooltip: "Documentation",
+      tooltip: 'Documentation',
     },
-  ];
+  ]
 
   return (
     <Sidebar collapsible="none" className="border-r border-border h-screen">
@@ -70,11 +65,7 @@ export function AppSidebar() {
             <SidebarMenu>
               {mainNavigation.map((item) => (
                 <SidebarMenuItem key={item.href}>
-                  <SidebarMenuButton
-                    asChild
-                    isActive={location.pathname === item.href}
-                    tooltip={item.tooltip}
-                  >
+                  <SidebarMenuButton asChild isActive={location.pathname === item.href} tooltip={item.tooltip}>
                     <Link to={item.href}>
                       <item.icon />
                       <span>{item.title}</span>
@@ -91,11 +82,7 @@ export function AppSidebar() {
             <SidebarMenu>
               {secondaryNavigation.map((item) => (
                 <SidebarMenuItem key={item.href}>
-                  <SidebarMenuButton
-                    asChild
-                    isActive={location.pathname === item.href}
-                    tooltip={item.tooltip}
-                  >
+                  <SidebarMenuButton asChild isActive={location.pathname === item.href} tooltip={item.tooltip}>
                     <Link to={item.href}>
                       <item.icon />
                       <span>{item.title}</span>
@@ -109,12 +96,10 @@ export function AppSidebar() {
       </SidebarContent>
       <SidebarFooter className="mt-auto p-4">
         <div className="flex items-center justify-between">
-          <span className="text-xs text-muted-foreground font-mono">
-            v0.1.0
-          </span>
+          <span className="text-xs text-muted-foreground font-mono">v0.1.0</span>
           <ThemeToggle />
         </div>
       </SidebarFooter>
     </Sidebar>
-  );
+  )
 }

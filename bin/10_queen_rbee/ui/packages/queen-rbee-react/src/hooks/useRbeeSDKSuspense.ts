@@ -1,10 +1,10 @@
 // TEAM-291: Suspense-compatible hook for rbee SDK
 
-'use client';
+'use client'
 
-import type { RbeeSDK, LoadOptions } from '../types';
-import { getGlobalSlot } from '../globalSlot';
-import { loadSDKOnce } from '../loader';
+import { getGlobalSlot } from '../globalSlot'
+import { loadSDKOnce } from '../loader'
+import type { LoadOptions, RbeeSDK } from '../types'
 
 /**
  * Suspense-compatible hook for loading the rbee WASM SDK
@@ -24,18 +24,18 @@ import { loadSDKOnce } from '../loader';
  * ```
  */
 export function useRbeeSDKSuspense(options?: LoadOptions): RbeeSDK {
-  const slot = getGlobalSlot();
+  const slot = getGlobalSlot()
 
   // Already loaded
   if (slot.value) {
-    return slot.value.sdk;
+    return slot.value.sdk
   }
 
   // Previous error
   if (slot.error) {
-    throw slot.error;
+    throw slot.error
   }
 
   // Throw promise for Suspense
-  throw loadSDKOnce(options).then((r) => r.sdk);
+  throw loadSDKOnce(options).then((r) => r.sdk)
 }

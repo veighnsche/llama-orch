@@ -9,64 +9,55 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
-  SplitButton,
   DropdownMenuItem,
   DropdownMenuSeparator,
-} from "@rbee/ui/atoms";
-import { Play, Square, RefreshCw, Trash2, Download } from "lucide-react";
-import { useCommandStore } from "../store/commandStore";
-import { useSshHivesStore } from "../store/hiveStore";
-import { StatusBadge } from "./StatusBadge";
+  SplitButton,
+} from '@rbee/ui/atoms'
+import { Download, Play, RefreshCw, Square, Trash2 } from 'lucide-react'
+import { useCommandStore } from '../store/commandStore'
+import { useSshHivesStore } from '../store/hiveStore'
+import { StatusBadge } from './StatusBadge'
 
 interface HiveCardProps {
-  hiveId: string;
-  title: string;
-  description: string;
+  hiveId: string
+  title: string
+  description: string
 }
 
 export function HiveCard({ hiveId, title, description }: HiveCardProps) {
-  const { isExecuting } = useCommandStore();
-  const {
-    hives,
-    installedHives,
-    isLoading,
-    start,
-    stop,
-    install,
-    uninstall,
-    refreshCapabilities,
-    fetchHiveStatus,
-  } = useSshHivesStore();
+  const { isExecuting } = useCommandStore()
+  const { hives, installedHives, isLoading, start, stop, install, uninstall, refreshCapabilities, fetchHiveStatus } =
+    useSshHivesStore()
 
   // TEAM-338: Find hive status from store (single source of truth)
-  const hive = hives.find((h) => h.host === hiveId);
-  const isInstalled = hive?.isInstalled ?? installedHives.includes(hiveId);
-  const isRunning = hive?.status === "online";
+  const hive = hives.find((h) => h.host === hiveId)
+  const isInstalled = hive?.isInstalled ?? installedHives.includes(hiveId)
+  const isRunning = hive?.status === 'online'
 
   // TEAM-338: Compute UI state based on status (same pattern as QueenCard)
   const uiState = !isInstalled
     ? {
         mainAction: () => install(hiveId),
         mainIcon: <Download className="h-4 w-4" />,
-        mainLabel: "Install",
-        mainVariant: "default" as const,
-        badgeStatus: "unknown" as const,
+        mainLabel: 'Install',
+        mainVariant: 'default' as const,
+        badgeStatus: 'unknown' as const,
       }
     : isRunning
       ? {
           mainAction: () => stop(hiveId),
           mainIcon: <Square className="h-4 w-4" />,
-          mainLabel: "Stop",
-          mainVariant: "destructive" as const,
-          badgeStatus: "running" as const,
+          mainLabel: 'Stop',
+          mainVariant: 'destructive' as const,
+          badgeStatus: 'running' as const,
         }
       : {
           mainAction: () => start(hiveId),
           mainIcon: <Play className="h-4 w-4" />,
-          mainLabel: "Start",
-          mainVariant: "default" as const,
-          badgeStatus: "stopped" as const,
-        };
+          mainLabel: 'Start',
+          mainVariant: 'default' as const,
+          badgeStatus: 'stopped' as const,
+        }
 
   return (
     <Card>
@@ -74,18 +65,12 @@ export function HiveCard({ hiveId, title, description }: HiveCardProps) {
         <CardTitle>{title}</CardTitle>
         <CardDescription>{description}</CardDescription>
         <CardAction>
-          <StatusBadge
-            status={uiState.badgeStatus}
-            onClick={() => fetchHiveStatus(hiveId)}
-            isLoading={isLoading}
-          />
+          <StatusBadge status={uiState.badgeStatus} onClick={() => fetchHiveStatus(hiveId)} isLoading={isLoading} />
         </CardAction>
       </CardHeader>
       <CardContent>
         <div className="space-y-4">
-          <p className="text-sm text-muted-foreground leading-relaxed">
-            {description}
-          </p>
+          <p className="text-sm text-muted-foreground leading-relaxed">{description}</p>
           <SplitButton
             variant={uiState.mainVariant}
             size="default"
@@ -151,5 +136,5 @@ export function HiveCard({ hiveId, title, description }: HiveCardProps) {
         </div>
       </CardContent>
     </Card>
-  );
+  )
 }

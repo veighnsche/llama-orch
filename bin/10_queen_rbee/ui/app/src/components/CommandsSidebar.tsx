@@ -11,24 +11,20 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
-} from "@rbee/ui/atoms";
+} from '@rbee/ui/atoms'
 
 interface CommandItemProps {
-  commandId: string;
-  label: string;
+  commandId: string
+  label: string
 }
 
 interface CommandsSidebarProps {
-  onCommandClick: (command: string) => void;
-  activeCommand?: string;
-  disabled?: boolean;
+  onCommandClick: (command: string) => void
+  activeCommand?: string
+  disabled?: boolean
 }
 
-export function CommandsSidebar({
-  onCommandClick,
-  activeCommand,
-  disabled = false,
-}: CommandsSidebarProps) {
+export function CommandsSidebar({ onCommandClick, activeCommand, disabled = false }: CommandsSidebarProps) {
   function CommandItem({ commandId, label }: CommandItemProps) {
     return (
       <SidebarMenuItem>
@@ -40,7 +36,7 @@ export function CommandsSidebar({
           {label}
         </SidebarMenuButton>
       </SidebarMenuItem>
-    );
+    )
   }
 
   return (
@@ -93,5 +89,5 @@ export function CommandsSidebar({
         </SidebarGroup>
       </SidebarContent>
     </Sidebar>
-  );
+  )
 }

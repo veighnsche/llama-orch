@@ -4,16 +4,16 @@
 // TEAM-336: Added NarrationPanel on the right side
 // TEAM-339: Made panels resizable with react-resizable-panels library
 
-import { useState, useEffect } from "react";
+import { listen } from "@tauri-apps/api/event";
+import { MessageSquare } from "lucide-react";
 import type { ReactNode } from "react";
+import { useEffect, useState } from "react";
+import { Panel, PanelGroup, PanelResizeHandle } from "react-resizable-panels";
+import type { NarrationEvent } from "../generated/bindings";
+import { useNarrationStore } from "../store/narrationStore";
 import { CustomTitlebar } from "./CustomTitlebar";
 import { KeeperSidebar } from "./KeeperSidebar";
 import { NarrationPanel } from "./NarrationPanel";
-import { Panel, PanelGroup, PanelResizeHandle } from "react-resizable-panels";
-import { listen } from "@tauri-apps/api/event";
-import type { NarrationEvent } from "../generated/bindings";
-import { useNarrationStore } from "../store/narrationStore";
-import { MessageSquare } from "lucide-react";
 
 interface ShellProps {
   children: ReactNode;
@@ -84,8 +84,8 @@ export function Shell({ children }: ShellProps) {
             {/* Right panel - narration stream - resizable */}
             <Panel
               id="narration"
-              defaultSize={25}
-              minSize={25}
+              defaultSize={20}
+              minSize={20}
               maxSize={40}
               order={3}
             >

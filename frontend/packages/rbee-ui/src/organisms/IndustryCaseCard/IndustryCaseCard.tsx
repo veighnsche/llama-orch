@@ -42,13 +42,7 @@ export function IndustryCaseCard({
 }: IndustryCaseCardProps) {
   return (
     <Card className="p-8">
-      <IconCardHeader
-        icon={icon}
-        title={industry}
-        subtitle={segments}
-        iconSize="lg"
-        iconTone="primary"
-      />
+      <IconCardHeader icon={icon} title={industry} subtitle={segments} iconSize="lg" iconTone="primary" />
 
       <CardContent className="space-y-4 p-0">
         {/* Compliance badges */}

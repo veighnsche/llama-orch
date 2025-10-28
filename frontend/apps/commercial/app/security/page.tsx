@@ -5,14 +5,7 @@ export const metadata: Metadata = {
   title: 'rbee Security - Enterprise-Grade Security Architecture',
   description:
     'Enterprise-grade security architecture. 7-year audit retention, immutable logs, tamper detection. GDPR, SOC2, and ISO 27001 aligned.',
-  keywords: [
-    'AI security',
-    'security architecture',
-    'audit logs',
-    'GDPR security',
-    'SOC2 security',
-    'ISO 27001',
-  ],
+  keywords: ['AI security', 'security architecture', 'audit logs', 'GDPR security', 'SOC2 security', 'ISO 27001'],
   alternates: {
     canonical: '/security',
   },

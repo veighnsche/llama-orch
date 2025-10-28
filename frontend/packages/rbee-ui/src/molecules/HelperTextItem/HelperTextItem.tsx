@@ -7,10 +7,10 @@ export interface HelperTextItemProps {
 
 /**
  * HelperTextItem - Inline title + description for page footer help
- * 
+ *
  * Displays a muted helper text with an emphasized title inline with the description.
  * Used in PageContainer's helperText prop.
- * 
+ *
  * @example
  * ```tsx
  * <HelperTextItem

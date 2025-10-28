@@ -14,6 +14,7 @@ import {
   UseCasesTemplate,
 } from '@rbee/ui/templates'
 import {
+  CommunityStats,
   communityCTAContainerProps,
   communityCTAProps,
   communityEmailCaptureContainerProps,
@@ -24,7 +25,6 @@ import {
   communityGuidelinesProps,
   communityHeroContainerProps,
   communityHeroProps,
-  CommunityStats,
   communityStatsContainerProps,
   contributionTypesContainerProps,
   contributionTypesProps,

@@ -10,22 +10,13 @@
       "types": "./dist/index.d.ts"
     }
   },
-  "files": [
-    "dist"
-  ],
+  "files": ["dist"],
   "scripts": {
     "build": "tsc",
     "dev": "tsc --watch",
     "clean": "rm -rf dist"
   },
-  "keywords": [
-    "rbee",
-    "queen",
-    "react",
-    "hooks",
-    "wasm",
-    "llm"
-  ],
+  "keywords": ["rbee", "queen", "react", "hooks", "wasm", "llm"],
   "author": "rbee Team",
   "license": "GPL-3.0-or-later",
   "peerDependencies": {

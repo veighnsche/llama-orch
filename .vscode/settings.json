@@ -1,153 +1,153 @@
 {
-    // Respect repo conventions: default 4 spaces (Rust etc.), with JS/TS/Vue at 2 spaces
-    "editor.detectIndentation": false,
+  // Respect repo conventions: default 4 spaces (Rust etc.), with JS/TS/Vue at 2 spaces
+  "editor.detectIndentation": false,
+  "editor.insertSpaces": true,
+  "editor.tabSize": 4,
+  "editor.formatOnSave": true,
+  "editor.codeActionsOnSave": {
+    "source.fixAll.eslint": "explicit"
+  },
+  // Let Prettier handle formatting; ESLint applies fixes via codeActionsOnSave
+  "eslint.format.enable": false,
+
+  // Make sure Prettier reads .editorconfig for tab width rules
+  "prettier.useEditorConfig": true,
+
+  // Rust: 4 spaces via rust-analyzer / rustfmt
+  "[rust]": {
+    "editor.defaultFormatter": "rust-lang.rust-analyzer",
+    "editor.insertSpaces": true,
+    "editor.tabSize": 4
+  },
+
+  // JavaScript family: 2 spaces via Prettier
+  "[javascript]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
+    "editor.insertSpaces": true,
+    "editor.tabSize": 2,
+    "editor.formatOnSave": true
+  },
+  "[javascriptreact]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
+    "editor.insertSpaces": true,
+    "editor.tabSize": 2,
+    "editor.formatOnSave": true
+  },
+  "[typescript]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
+    "editor.insertSpaces": true,
+    "editor.tabSize": 2,
+    "editor.formatOnSave": true
+  },
+  "[typescriptreact]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
+    "editor.insertSpaces": true,
+    "editor.tabSize": 2,
+    "editor.formatOnSave": true
+  },
+  "[vue]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
+    "editor.insertSpaces": true,
+    "editor.tabSize": 2,
+    "editor.formatOnSave": true
+  },
+  // Stylesheets: 4 spaces and Prettier formatting
+  "[css]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
     "editor.insertSpaces": true,
     "editor.tabSize": 4,
-    "editor.formatOnSave": true,
-    "editor.codeActionsOnSave": {
-        "source.fixAll.eslint": "explicit"
-    },
-    // Let Prettier handle formatting; ESLint applies fixes via codeActionsOnSave
-    "eslint.format.enable": false,
+    "editor.formatOnSave": true
+  },
+  "[scss]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
+    "editor.insertSpaces": true,
+    "editor.tabSize": 4,
+    "editor.formatOnSave": true
+  },
+  "[less]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
+    "editor.insertSpaces": true,
+    "editor.tabSize": 4,
+    "editor.formatOnSave": true
+  },
+  "cmake.sourceDirectory": "/home/vince/Projects/llama-orch/reference/llama.cpp",
 
-    // Make sure Prettier reads .editorconfig for tab width rules
-    "prettier.useEditorConfig": true,
+  // ========================================
+  // CRITICAL: Exclude massive build artifacts from indexing
+  // Prevents language server from consuming 94GB+ of RAM
+  // ========================================
+  "files.exclude": {
+    "**/target": true,
+    "**/node_modules": true,
+    "**/.git": true,
+    "**/dist": true,
+    "**/build": true,
+    "**/.next": true,
+    "**/.cache": true,
+    "**/.turbo": true,
+    "**/.venv-testing": true,
+    "**/.pytest_cache": true,
+    "**/.runtime": true,
+    "**/*.pyc": true,
+    "**/__pycache__": true,
+    "**/queen-hive-catalog.db": true,
+    "**/queen-hive-catalog.db-shm": true,
+    "**/queen-hive-catalog.db-wal": true
+  },
 
-    // Rust: 4 spaces via rust-analyzer / rustfmt
-    "[rust]": {
-        "editor.defaultFormatter": "rust-lang.rust-analyzer",
-        "editor.insertSpaces": true,
-        "editor.tabSize": 4
-    },
+  "files.watcherExclude": {
+    "**/target/**": true,
+    "**/node_modules/**": true,
+    "**/.git/**": true,
+    "**/dist/**": true,
+    "**/build/**": true,
+    "**/.next/**": true,
+    "**/.cache/**": true,
+    "**/.turbo/**": true,
+    "**/.venv-testing/**": true,
+    "**/.pytest_cache/**": true,
+    "**/.runtime/**": true,
+    "**/__pycache__/**": true
+  },
 
-    // JavaScript family: 2 spaces via Prettier
-    "[javascript]": {
-        "editor.defaultFormatter": "esbenp.prettier-vscode",
-        "editor.insertSpaces": true,
-        "editor.tabSize": 2,
-        "editor.formatOnSave": true
-    },
-    "[javascriptreact]": {
-        "editor.defaultFormatter": "esbenp.prettier-vscode",
-        "editor.insertSpaces": true,
-        "editor.tabSize": 2,
-        "editor.formatOnSave": true
-    },
-    "[typescript]": {
-        "editor.defaultFormatter": "esbenp.prettier-vscode",
-        "editor.insertSpaces": true,
-        "editor.tabSize": 2,
-        "editor.formatOnSave": true
-    },
-    "[typescriptreact]": {
-        "editor.defaultFormatter": "esbenp.prettier-vscode",
-        "editor.insertSpaces": true,
-        "editor.tabSize": 2,
-        "editor.formatOnSave": true
-    },
-    "[vue]": {
-        "editor.defaultFormatter": "esbenp.prettier-vscode",
-        "editor.insertSpaces": true,
-        "editor.tabSize": 2,
-        "editor.formatOnSave": true
-    },
-    // Stylesheets: 4 spaces and Prettier formatting
-    "[css]": {
-        "editor.defaultFormatter": "esbenp.prettier-vscode",
-        "editor.insertSpaces": true,
-        "editor.tabSize": 4,
-        "editor.formatOnSave": true
-    },
-    "[scss]": {
-        "editor.defaultFormatter": "esbenp.prettier-vscode",
-        "editor.insertSpaces": true,
-        "editor.tabSize": 4,
-        "editor.formatOnSave": true
-    },
-    "[less]": {
-        "editor.defaultFormatter": "esbenp.prettier-vscode",
-        "editor.insertSpaces": true,
-        "editor.tabSize": 4,
-        "editor.formatOnSave": true
-    },
-    "cmake.sourceDirectory": "/home/vince/Projects/llama-orch/reference/llama.cpp",
+  "search.exclude": {
+    "**/target": true,
+    "**/node_modules": true,
+    "**/.git": true,
+    "**/dist": true,
+    "**/build": true,
+    "**/.venv-testing": true,
+    "**/.pytest_cache": true
+  },
 
-    // ========================================
-    // CRITICAL: Exclude massive build artifacts from indexing
-    // Prevents language server from consuming 94GB+ of RAM
-    // ========================================
-    "files.exclude": {
-        "**/target": true,
-        "**/node_modules": true,
-        "**/.git": true,
-        "**/dist": true,
-        "**/build": true,
-        "**/.next": true,
-        "**/.cache": true,
-        "**/.turbo": true,
-        "**/.venv-testing": true,
-        "**/.pytest_cache": true,
-        "**/.runtime": true,
-        "**/*.pyc": true,
-        "**/__pycache__": true,
-        "**/queen-hive-catalog.db": true,
-        "**/queen-hive-catalog.db-shm": true,
-        "**/queen-hive-catalog.db-wal": true
-    },
+  // ========================================
+  // Rust Analyzer: Disable heavy analysis features
+  // Proc-macros and build scripts cause exponential memory use
+  // ========================================
+  "rust-analyzer.procMacro.enable": false,
+  "rust-analyzer.cargo.buildScripts.enable": false,
+  "rust-analyzer.checkOnSave.enable": true,
+  "rust-analyzer.checkOnSave.command": "clippy",
+  "rust-analyzer.cargo.allFeatures": false,
+  "rust-analyzer.cargo.noDefaultFeatures": false,
 
-    "files.watcherExclude": {
-        "**/target/**": true,
-        "**/node_modules/**": true,
-        "**/.git/**": true,
-        "**/dist/**": true,
-        "**/build/**": true,
-        "**/.next/**": true,
-        "**/.cache/**": true,
-        "**/.turbo/**": true,
-        "**/.venv-testing/**": true,
-        "**/.pytest_cache/**": true,
-        "**/.runtime/**": true,
-        "**/__pycache__/**": true
-    },
+  // Limit parallel jobs to reduce memory spikes
+  "rust-analyzer.cargo.extraEnv": {
+    "CARGO_BUILD_JOBS": "4"
+  },
 
-    "search.exclude": {
-        "**/target": true,
-        "**/node_modules": true,
-        "**/.git": true,
-        "**/dist": true,
-        "**/build": true,
-        "**/.venv-testing": true,
-        "**/.pytest_cache": true
-    },
+  // Cache prune settings
+  "rust-analyzer.cachePriming.enable": true,
+  "rust-analyzer.cachePriming.numThreads": 4,
 
-    // ========================================
-    // Rust Analyzer: Disable heavy analysis features
-    // Proc-macros and build scripts cause exponential memory use
-    // ========================================
-    "rust-analyzer.procMacro.enable": false,
-    "rust-analyzer.cargo.buildScripts.enable": false,
-    "rust-analyzer.checkOnSave.enable": true,
-    "rust-analyzer.checkOnSave.command": "clippy",
-    "rust-analyzer.cargo.allFeatures": false,
-    "rust-analyzer.cargo.noDefaultFeatures": false,
-
-    // Limit parallel jobs to reduce memory spikes
-    "rust-analyzer.cargo.extraEnv": {
-        "CARGO_BUILD_JOBS": "4"
-    },
-
-    // Cache prune settings
-    "rust-analyzer.cachePriming.enable": true,
-    "rust-analyzer.cachePriming.numThreads": 4,
-
-    // Exclude heavy test directories from analysis
-    "rust-analyzer.files.excludeDirs": [
-        "target",
-        ".venv-testing",
-        ".pytest_cache",
-        ".runtime",
-        "node_modules",
-        "reference/llama.cpp"
-    ],
-    "typescript.tsdk": "node_modules/typescript/lib"
+  // Exclude heavy test directories from analysis
+  "rust-analyzer.files.excludeDirs": [
+    "target",
+    ".venv-testing",
+    ".pytest_cache",
+    ".runtime",
+    "node_modules",
+    "reference/llama.cpp"
+  ],
+  "typescript.tsdk": "node_modules/typescript/lib"
 }

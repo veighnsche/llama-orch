@@ -5,54 +5,46 @@
 // No useEffect needed - pure Suspense pattern
 
 import {
-  use,
-  useState,
-  Suspense,
-  useCallback,
-  Component,
-  type ReactNode,
-} from "react";
-import { AlertCircle, Loader2 } from "lucide-react";
-import {
+  Alert,
+  AlertDescription,
+  AlertTitle,
+  Button,
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@rbee/ui/atoms";
-import { Alert, AlertTitle, AlertDescription } from "@rbee/ui/atoms";
-import { Button } from "@rbee/ui/atoms";
+} from '@rbee/ui/atoms'
+import { AlertCircle, Loader2 } from 'lucide-react'
+import { Component, type ReactNode, Suspense, use, useCallback, useState } from 'react'
 
 // Promise cache - CRITICAL: Promises must be cached, not created in render
-const promiseCache = new Map<string, Promise<void>>();
+const promiseCache = new Map<string, Promise<void>>()
 
 interface DaemonMetadata {
-  name: string;
-  description: string;
+  name: string
+  description: string
 }
 
 interface DaemonContainerProps {
   /** Unique cache key for this daemon (e.g., "queen", "hive-localhost") */
-  cacheKey: string;
+  cacheKey: string
   /** Daemon display metadata */
-  metadata: DaemonMetadata;
+  metadata: DaemonMetadata
   /** Function that fetches daemon status into store */
-  fetchFn: () => Promise<void>;
+  fetchFn: () => Promise<void>
   /** Children to render after successful fetch */
-  children: ReactNode;
+  children: ReactNode
   /** Optional custom loading fallback */
-  fallback?: ReactNode;
+  fallback?: ReactNode
 }
 
-function fetchDaemonStatus(
-  key: string,
-  fetchFn: () => Promise<void>
-): Promise<void> {
+function fetchDaemonStatus(key: string, fetchFn: () => Promise<void>): Promise<void> {
   if (!promiseCache.has(key)) {
-    const promise = fetchFn();
-    promiseCache.set(key, promise);
+    const promise = fetchFn()
+    promiseCache.set(key, promise)
   }
-  return promiseCache.get(key)!;
+  return promiseCache.get(key)!
 }
 
 // Error boundary for daemon loading - React 19 idiomatic pattern
@@ -60,15 +52,15 @@ class DaemonErrorBoundary extends Component<
   { children: ReactNode; metadata: DaemonMetadata; onReset: () => void },
   { error: Error | null }
 > {
-  state = { error: null as Error | null };
+  state = { error: null as Error | null }
 
   static getDerivedStateFromError(error: Error) {
-    return { error };
+    return { error }
   }
 
   componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
     // React 19: Single consolidated error log
-    console.error(`${this.props.metadata.name} Error:`, error, errorInfo);
+    console.error(`${this.props.metadata.name} Error:`, error, errorInfo)
   }
 
   render() {
@@ -83,17 +75,13 @@ class DaemonErrorBoundary extends Component<
             <div className="space-y-4">
               <Alert variant="destructive">
                 <AlertCircle className="h-4 w-4" />
-                <AlertTitle>
-                  Failed to load {this.props.metadata.name} status
-                </AlertTitle>
-                <AlertDescription>
-                  {this.state.error.message || "An unexpected error occurred"}
-                </AlertDescription>
+                <AlertTitle>Failed to load {this.props.metadata.name} status</AlertTitle>
+                <AlertDescription>{this.state.error.message || 'An unexpected error occurred'}</AlertDescription>
               </Alert>
               <Button
                 onClick={() => {
-                  this.setState({ error: null });
-                  this.props.onReset();
+                  this.setState({ error: null })
+                  this.props.onReset()
                 }}
                 className="w-full"
               >
@@ -102,10 +90,10 @@ class DaemonErrorBoundary extends Component<
             </div>
           </CardContent>
         </Card>
-      );
+      )
     }
 
-    return this.props.children;
+    return this.props.children
   }
 }
 
@@ -116,14 +104,14 @@ function DaemonFetcher({
   fetchFn,
   children,
 }: {
-  promiseKey: string;
-  fetchFn: () => Promise<void>;
-  children: ReactNode;
+  promiseKey: string
+  fetchFn: () => Promise<void>
+  children: ReactNode
 }) {
   // use() hook - React will Suspend until promise resolves
   // This populates the store, then children can read from it
-  use(fetchDaemonStatus(promiseKey, fetchFn));
-  return <>{children}</>;
+  use(fetchDaemonStatus(promiseKey, fetchFn))
+  return <>{children}</>
 }
 
 // Loading fallback component
@@ -140,36 +128,27 @@ function DaemonLoadingFallback({ metadata }: { metadata: DaemonMetadata }) {
         </div>
       </CardContent>
     </Card>
-  );
+  )
 }
 
 // Generic data provider - fetches into store, children read from store
-export function DaemonContainer({
-  cacheKey,
-  metadata,
-  fetchFn,
-  children,
-  fallback,
-}: DaemonContainerProps) {
-  const [refreshKey, setRefreshKey] = useState(0);
+export function DaemonContainer({ cacheKey, metadata, fetchFn, children, fallback }: DaemonContainerProps) {
+  const [refreshKey, setRefreshKey] = useState(0)
 
   const handleRefresh = useCallback(() => {
-    const newKey = refreshKey + 1;
-    setRefreshKey(newKey);
+    const newKey = refreshKey + 1
+    setRefreshKey(newKey)
     // Clear the old promise from cache
-    promiseCache.delete(`${cacheKey}-${refreshKey}`);
-  }, [cacheKey, refreshKey]);
+    promiseCache.delete(`${cacheKey}-${refreshKey}`)
+  }, [cacheKey, refreshKey])
 
   return (
     <DaemonErrorBoundary metadata={metadata} onReset={handleRefresh}>
       <Suspense fallback={fallback ?? <DaemonLoadingFallback metadata={metadata} />}>
-        <DaemonFetcher
-          promiseKey={`${cacheKey}-${refreshKey}`}
-          fetchFn={fetchFn}
-        >
+        <DaemonFetcher promiseKey={`${cacheKey}-${refreshKey}`} fetchFn={fetchFn}>
           {children}
         </DaemonFetcher>
       </Suspense>
     </DaemonErrorBoundary>
-  );
+  )
 }

@@ -2,58 +2,58 @@
 // Ported from web-ui.old - Connected directly to rbee SDK
 // TEAM-294: Updated to use @rbee/queen-rbee-react
 
-import { create } from 'zustand';
-import type { HeartbeatMonitor } from '@rbee/queen-rbee-react';
+import type { HeartbeatMonitor } from '@rbee/queen-rbee-react'
+import { create } from 'zustand'
 
 // TEAM-292: Types from heartbeat snapshot
 export interface HeartbeatSnapshot {
-  timestamp: string;
-  workers_online: number;
-  workers_available: number;
-  hives_online: number;
-  hives_available: number;
-  worker_ids: string[];
-  hive_ids: string[];
+  timestamp: string
+  workers_online: number
+  workers_available: number
+  hives_online: number
+  hives_available: number
+  worker_ids: string[]
+  hive_ids: string[]
 }
 
 export interface QueenStatus {
-  connected: boolean;
-  lastUpdate: string | null;
-  error: string | null;
+  connected: boolean
+  lastUpdate: string | null
+  error: string | null
 }
 
 export interface HiveInfo {
-  id: string;
-  status: 'online' | 'offline';
-  lastSeen: string;
+  id: string
+  status: 'online' | 'offline'
+  lastSeen: string
 }
 
 // TEAM-292: Store state interface
 interface RbeeState {
   // Queen status
-  queen: QueenStatus;
-  
+  queen: QueenStatus
+
   // Hives
-  hives: HiveInfo[];
-  hivesOnline: number;
-  hivesAvailable: number;
-  
+  hives: HiveInfo[]
+  hivesOnline: number
+  hivesAvailable: number
+
   // Workers (for completeness)
-  workersOnline: number;
-  workersAvailable: number;
-  workerIds: string[];
-  
+  workersOnline: number
+  workersAvailable: number
+  workerIds: string[]
+
   // Raw heartbeat
-  lastHeartbeat: HeartbeatSnapshot | null;
-  
+  lastHeartbeat: HeartbeatSnapshot | null
+
   // SDK connection
-  monitor: HeartbeatMonitor | null;
-  
+  monitor: HeartbeatMonitor | null
+
   // Actions
-  setQueenError: (error: string | null) => void;
-  startMonitoring: (monitor: HeartbeatMonitor, baseUrl: string) => void;
-  stopMonitoring: () => void;
-  resetState: () => void;
+  setQueenError: (error: string | null) => void
+  startMonitoring: (monitor: HeartbeatMonitor, baseUrl: string) => void
+  stopMonitoring: () => void
+  resetState: () => void
 }
 
 // TEAM-292: Initial state
@@ -71,7 +71,7 @@ const initialState = {
   workerIds: [],
   lastHeartbeat: null,
   monitor: null,
-};
+}
 
 // TEAM-292: Create zustand store
 export const useRbeeStore = create<RbeeState>((set) => ({
@@ -93,7 +93,7 @@ export const useRbeeStore = create<RbeeState>((set) => ({
     set((state) => {
       // Stop existing monitor if any
       if (state.monitor) {
-        state.monitor.stop();
+        state.monitor.stop()
       }
 
       // Start new monitor - callback fires on EVERY heartbeat from queen
@@ -103,7 +103,7 @@ export const useRbeeStore = create<RbeeState>((set) => ({
           id,
           status: 'online' as const,
           lastSeen: snapshot.timestamp,
-        }));
+        }))
 
         // Update store immediately with latest data
         set({
@@ -119,27 +119,27 @@ export const useRbeeStore = create<RbeeState>((set) => ({
           workersAvailable: snapshot.workers_available,
           workerIds: snapshot.worker_ids,
           lastHeartbeat: snapshot,
-        });
-      });
+        })
+      })
 
-      return { monitor: monitorInstance };
+      return { monitor: monitorInstance }
     }),
 
   // TEAM-292: Stop monitoring
   stopMonitoring: () =>
     set((state) => {
       if (state.monitor) {
-        state.monitor.stop();
+        state.monitor.stop()
       }
-      return { monitor: null };
+      return { monitor: null }
     }),
 
   // TEAM-292: Reset to initial state
   resetState: () =>
     set((state) => {
       if (state.monitor) {
-        state.monitor.stop();
+        state.monitor.stop()
       }
-      return initialState;
+      return initialState
     }),
-}));
+}))

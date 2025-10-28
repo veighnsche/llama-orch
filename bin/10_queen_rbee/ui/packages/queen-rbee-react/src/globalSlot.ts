@@ -1,10 +1,10 @@
 // TEAM-291: Global singleton slot (HMR-safe, singleflight)
 
-import type { GlobalSlot } from './types';
+import type { GlobalSlot } from './types'
 
 declare global {
   // eslint-disable-next-line no-var
-  var __rbeeSDKInit_v1__: GlobalSlot | undefined;
+  var __rbeeSDKInit_v1__: GlobalSlot | undefined
 }
 
 /**
@@ -13,7 +13,7 @@ declare global {
  */
 export function getGlobalSlot(): GlobalSlot {
   if (!globalThis.__rbeeSDKInit_v1__) {
-    globalThis.__rbeeSDKInit_v1__ = {};
+    globalThis.__rbeeSDKInit_v1__ = {}
   }
-  return globalThis.__rbeeSDKInit_v1__;
+  return globalThis.__rbeeSDKInit_v1__
 }

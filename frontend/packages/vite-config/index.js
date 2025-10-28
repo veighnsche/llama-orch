@@ -1,7 +1,8 @@
 // TEAM-294: Shared Vite config for React + Tailwind apps
-import { defineConfig } from 'vite';
-import react from '@vitejs/plugin-react';
-import tailwindcss from '@tailwindcss/vite';
+
+import tailwindcss from '@tailwindcss/vite'
+import react from '@vitejs/plugin-react'
+import { defineConfig } from 'vite'
 
 /**
  * Create a Vite config for React + Tailwind apps
@@ -11,7 +12,7 @@ import tailwindcss from '@tailwindcss/vite';
 export function createViteConfig(overrides = {}) {
   return defineConfig({
     plugins: [
-      tailwindcss(),  // Official Tailwind v4 Vite plugin (must be first)
+      tailwindcss(), // Official Tailwind v4 Vite plugin (must be first)
       react({
         babel: {
           plugins: [['babel-plugin-react-compiler']],
@@ -24,9 +25,9 @@ export function createViteConfig(overrides = {}) {
       ...overrides.build,
     },
     define: {
-      'process.env': {},  // Polyfill for libraries that check process.env
+      'process.env': {}, // Polyfill for libraries that check process.env
       ...overrides.define,
     },
     ...overrides,
-  });
+  })
 }

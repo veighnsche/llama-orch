@@ -253,26 +253,22 @@ export const legalSolutionProps: SolutionTemplateProps = {
     {
       icon: <Lock className="size-6" />,
       title: 'Zero Data Leakage',
-      body:
-        'Models run on your servers. No API calls, no cloud uploads, no third-party access. Client data stays in your four walls.',
+      body: 'Models run on your servers. No API calls, no cloud uploads, no third-party access. Client data stays in your four walls.',
     },
     {
       icon: <FileSearch className="size-6" />,
       title: 'Firm Knowledge Base',
-      body:
-        'Index your precedents, memos, and case files. AI searches your internal documents first—results are tailored to your practice.',
+      body: 'Index your precedents, memos, and case files. AI searches your internal documents first—results are tailored to your practice.',
     },
     {
       icon: <Eye className="size-6" />,
       title: 'Audit Trail for Work Product',
-      body:
-        'Every AI query is logged with matter number, attorney, and timestamp. Demonstrate reasonable care for malpractice defense.',
+      body: 'Every AI query is logged with matter number, attorney, and timestamp. Demonstrate reasonable care for malpractice defense.',
     },
     {
       icon: <Users className="size-6" />,
       title: 'Multi-User Access Control',
-      body:
-        "Role-based permissions ensure associates only access matters they're assigned to. Partners control model access.",
+      body: "Role-based permissions ensure associates only access matters they're assigned to. Partners control model access.",
     },
   ],
 }
@@ -302,8 +298,9 @@ export const legalUseCasesProps: UseCasesTemplateProps = {
       scenario:
         "Associates spend hours searching case law and firm precedents. Public AI hallucinates citations and can't access your internal memos.",
       solution:
-        "Index your firm's knowledge base (briefs, memos, case files). Ask natural language questions: \"Find all cases where we successfully argued force majeure in NY.\"",
-      outcome: 'Instant access to firm precedents. AI cites actual documents, not hallucinated cases. Research time cut by 70%.',
+        'Index your firm\'s knowledge base (briefs, memos, case files). Ask natural language questions: "Find all cases where we successfully argued force majeure in NY."',
+      outcome:
+        'Instant access to firm precedents. AI cites actual documents, not hallucinated cases. Research time cut by 70%.',
     },
     {
       icon: <FileText className="size-8" />,
@@ -312,7 +309,8 @@ export const legalUseCasesProps: UseCasesTemplateProps = {
         'Litigation teams drown in discovery documents. Keyword search misses context, and manual review is prohibitively expensive.',
       solution:
         'Process discovery documents with semantic search. Ask: "Find all emails discussing the 2022 acquisition." AI understands synonyms and context.',
-      outcome: 'Reduce discovery review costs by 80%. Find smoking-gun documents faster. Maintain privilege over work product.',
+      outcome:
+        'Reduce discovery review costs by 80%. Find smoking-gun documents faster. Maintain privilege over work product.',
     },
   ],
   columns: 3,
@@ -525,9 +523,9 @@ export const legalROICalculatorContainerProps: Omit<TemplateContainerProps, 'chi
 }
 
 const legalGPUModels: ProvidersEarningsGPUModel[] = [
-  { name: 'Llama-3.1-8B (Contract Review)', baseRate: 0.50, vram: 16 },
-  { name: 'Llama-3.1-70B (Legal Research)', baseRate: 2.00, vram: 80 },
-  { name: 'Llama-3.1-405B (Complex Analysis)', baseRate: 8.00, vram: 400 },
+  { name: 'Llama-3.1-8B (Contract Review)', baseRate: 0.5, vram: 16 },
+  { name: 'Llama-3.1-70B (Legal Research)', baseRate: 2.0, vram: 80 },
+  { name: 'Llama-3.1-405B (Complex Analysis)', baseRate: 8.0, vram: 400 },
 ]
 
 const legalPresets: ProvidersEarningsPreset[] = [
@@ -559,8 +557,7 @@ export const legalROICalculatorProps: ProvidersEarningsProps = {
   utilizationLabel: 'Utilization %',
   earningsTitle: 'Time Savings',
   monthlyLabel: 'Monthly',
-  basedOnText: (hours: number, utilization: number) =>
-    `Based on ${hours}h/day at ${utilization}% utilization`,
+  basedOnText: (hours: number, utilization: number) => `Based on ${hours}h/day at ${utilization}% utilization`,
   takeHomeLabel: 'Hours Saved',
   dailyLabel: 'Daily',
   yearlyLabel: 'Yearly',
@@ -687,7 +684,7 @@ export const legalCTAProps: EnterpriseCTAProps = {
     {
       icon: <MessageSquare className="size-6" />,
       title: 'Talk to Legal Tech Team',
-      body: 'Discuss your firm\'s specific requirements with our legal AI specialists.',
+      body: "Discuss your firm's specific requirements with our legal AI specialists.",
       buttonText: 'Contact Us',
       buttonHref: '/contact/legal',
       buttonVariant: 'outline',

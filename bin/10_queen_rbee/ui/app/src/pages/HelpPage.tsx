@@ -1,17 +1,13 @@
 // TEAM-292: Help page
 // Ported from web-ui.old
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@rbee/ui/atoms';
-import { Button } from '@rbee/ui/atoms';
-import { PageContainer } from '@rbee/ui/molecules';
-import { ExternalLinkIcon } from 'lucide-react';
+import { Button, Card, CardContent, CardDescription, CardHeader, CardTitle } from '@rbee/ui/atoms'
+import { PageContainer } from '@rbee/ui/molecules'
+import { ExternalLinkIcon } from 'lucide-react'
 
 export default function HelpPage() {
   return (
-    <PageContainer
-      title="Help & Documentation"
-      description="Get started with rbee"
-    >
+    <PageContainer title="Help & Documentation" description="Get started with rbee">
       <div className="grid gap-6 md:grid-cols-2">
         <Card>
           <CardHeader>
@@ -35,9 +31,7 @@ export default function HelpPage() {
             <CardDescription>Complete API documentation</CardDescription>
           </CardHeader>
           <CardContent>
-            <p className="text-sm text-muted-foreground mb-4">
-              Detailed documentation for all API endpoints.
-            </p>
+            <p className="text-sm text-muted-foreground mb-4">Detailed documentation for all API endpoints.</p>
             <Button variant="outline" size="sm">
               View Docs
               <ExternalLinkIcon className="ml-2 h-4 w-4" />
@@ -51,9 +45,7 @@ export default function HelpPage() {
             <CardDescription>Source code and issues</CardDescription>
           </CardHeader>
           <CardContent>
-            <p className="text-sm text-muted-foreground mb-4">
-              Report bugs, request features, or contribute.
-            </p>
+            <p className="text-sm text-muted-foreground mb-4">Report bugs, request features, or contribute.</p>
             <Button variant="outline" size="sm">
               Open GitHub
               <ExternalLinkIcon className="ml-2 h-4 w-4" />
@@ -67,9 +59,7 @@ export default function HelpPage() {
             <CardDescription>Join the discussion</CardDescription>
           </CardHeader>
           <CardContent>
-            <p className="text-sm text-muted-foreground mb-4">
-              Connect with other rbee users and developers.
-            </p>
+            <p className="text-sm text-muted-foreground mb-4">Connect with other rbee users and developers.</p>
             <Button variant="outline" size="sm">
               Join Discord
               <ExternalLinkIcon className="ml-2 h-4 w-4" />
@@ -78,5 +68,5 @@ export default function HelpPage() {
         </Card>
       </div>
     </PageContainer>
-  );
+  )
 }

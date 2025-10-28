@@ -1,24 +1,18 @@
 // TEAM-295: Settings page for Bee Keeper
 
-import { PageContainer } from "@rbee/ui/molecules";
-import { Card, CardContent, CardHeader, CardTitle } from "@rbee/ui/atoms";
+import { Card, CardContent, CardHeader, CardTitle } from '@rbee/ui/atoms'
+import { PageContainer } from '@rbee/ui/molecules'
 
 export default function SettingsPage() {
   return (
-    <PageContainer
-      title="Settings"
-      description="Configure rbee keeper preferences"
-      padding="lg"
-    >
+    <PageContainer title="Settings" description="Configure rbee keeper preferences" padding="lg">
       <div className="space-y-6">
         <Card>
           <CardHeader>
             <CardTitle>Application Settings</CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-sm text-muted-foreground">
-              Settings configuration coming soon...
-            </p>
+            <p className="text-sm text-muted-foreground">Settings configuration coming soon...</p>
           </CardContent>
         </Card>
 
@@ -27,9 +21,7 @@ export default function SettingsPage() {
             <CardTitle>Connection Settings</CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-sm text-muted-foreground">
-              Configure Queen and Hive connection settings
-            </p>
+            <p className="text-sm text-muted-foreground">Configure Queen and Hive connection settings</p>
           </CardContent>
         </Card>
 
@@ -50,5 +42,5 @@ export default function SettingsPage() {
         </Card>
       </div>
     </PageContainer>
-  );
+  )
 }

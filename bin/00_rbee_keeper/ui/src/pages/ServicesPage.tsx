@@ -12,12 +12,12 @@
 // - update: Rebuild from source (cargo build --release)
 // - uninstall: Remove binary from ~/.local/bin (errors if not installed)
 
-import { PageContainer } from "@rbee/ui/molecules";
-import { QueenCard } from "../components/QueenCard";
-import { DaemonContainer } from "../containers/DaemonContainer";
-import { useQueenStore } from "../store/queenStore";
-import { InstallHiveCard } from "@/components/InstallHiveCard";
-import { InstalledHiveList } from "@/components/InstalledHiveList";
+import { PageContainer } from '@rbee/ui/molecules'
+import { InstalledHiveList } from '@/components/InstalledHiveList'
+import { InstallHiveCard } from '@/components/InstallHiveCard'
+import { QueenCard } from '../components/QueenCard'
+import { DaemonContainer } from '../containers/DaemonContainer'
+import { useQueenStore } from '../store/queenStore'
 
 export default function KeeperPage() {
   return (
@@ -27,14 +27,14 @@ export default function KeeperPage() {
       padding="lg"
       helperText={[
         {
-          title: "Queen",
+          title: 'Queen',
           description:
-            "routes inference jobs to the right worker in the right hive. Start Queen first to enable job routing.",
+            'routes inference jobs to the right worker in the right hive. Start Queen first to enable job routing.',
         },
         {
-          title: "Hive",
+          title: 'Hive',
           description:
-            "manages worker lifecycle and catalogs (models from HuggingFace, worker binaries). Start localhost hive to see local models and workers. Use SSH targets to start remote hives and access their catalogs.",
+            'manages worker lifecycle and catalogs (models from HuggingFace, worker binaries). Start localhost hive to see local models and workers. Use SSH targets to start remote hives and access their catalogs.',
         },
       ]}
     >
@@ -42,8 +42,8 @@ export default function KeeperPage() {
         <DaemonContainer
           cacheKey="queen"
           metadata={{
-            name: "Queen",
-            description: "Smart API server",
+            name: 'Queen',
+            description: 'Smart API server',
           }}
           fetchFn={() => useQueenStore.getState().fetchStatus()}
         >
@@ -53,5 +53,5 @@ export default function KeeperPage() {
         <InstallHiveCard />
       </div>
     </PageContainer>
-  );
+  )
 }

@@ -1,15 +1,11 @@
 // TEAM-295: Help page for Bee Keeper
 
-import { PageContainer } from "@rbee/ui/molecules";
-import { Card, CardContent, CardHeader, CardTitle } from "@rbee/ui/atoms";
+import { Card, CardContent, CardHeader, CardTitle } from '@rbee/ui/atoms'
+import { PageContainer } from '@rbee/ui/molecules'
 
 export default function HelpPage() {
   return (
-    <PageContainer
-      title="Help"
-      description="Documentation and support"
-      padding="lg"
-    >
+    <PageContainer title="Help" description="Documentation and support" padding="lg">
       <div className="space-y-6">
         <Card>
           <CardHeader>
@@ -20,13 +16,15 @@ export default function HelpPage() {
               <div>
                 <h4 className="font-semibold mb-2">Queen Service</h4>
                 <p className="text-sm text-muted-foreground">
-                  The Queen orchestrator manages your LLM infrastructure. Use the Start/Stop buttons on the dashboard to control the service.
+                  The Queen orchestrator manages your LLM infrastructure. Use the Start/Stop buttons on the dashboard to
+                  control the service.
                 </p>
               </div>
               <div>
                 <h4 className="font-semibold mb-2">Hive Service</h4>
                 <p className="text-sm text-muted-foreground">
-                  The Hive service runs on localhost and manages workers. Control it using the action buttons on the dashboard.
+                  The Hive service runs on localhost and manages workers. Control it using the action buttons on the
+                  dashboard.
                 </p>
               </div>
             </div>
@@ -56,5 +54,5 @@ export default function HelpPage() {
         </Card>
       </div>
     </PageContainer>
-  );
+  )
 }

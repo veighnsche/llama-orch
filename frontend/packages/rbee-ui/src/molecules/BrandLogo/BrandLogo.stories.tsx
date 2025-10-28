@@ -192,7 +192,7 @@ export const NavigationContext: Story = {
     docs: {
       description: {
         story:
-          'BrandLogo as it appears in the Navigation component. Wrapped in a link element, positioned top-left, medium size on desktop. In real usage, wrap with your framework\'s Link component.',
+          "BrandLogo as it appears in the Navigation component. Wrapped in a link element, positioned top-left, medium size on desktop. In real usage, wrap with your framework's Link component.",
       },
     },
   },
@@ -220,7 +220,7 @@ export const FooterContext: Story = {
     docs: {
       description: {
         story:
-          'BrandLogo as it appears in the Footer component. Wrapped in a link element with brand description below. In real usage, wrap with your framework\'s Link component.',
+          "BrandLogo as it appears in the Footer component. Wrapped in a link element with brand description below. In real usage, wrap with your framework's Link component.",
       },
     },
   },

@@ -1,14 +1,14 @@
 // TEAM-292: Main App component with React Router
 // Ported from web-ui.old Next.js layout to React/Vite
 
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
-import { ThemeProvider } from 'next-themes';
-import { SidebarProvider, SidebarInset } from '@rbee/ui/atoms';
-import { AppSidebar } from './components/AppSidebar';
-import DashboardPage from './pages/DashboardPage';
-import KeeperPage from './pages/KeeperPage';
-import SettingsPage from './pages/SettingsPage';
-import HelpPage from './pages/HelpPage';
+import { SidebarInset, SidebarProvider } from '@rbee/ui/atoms'
+import { ThemeProvider } from 'next-themes'
+import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
+import { AppSidebar } from './components/AppSidebar'
+import DashboardPage from './pages/DashboardPage'
+import HelpPage from './pages/HelpPage'
+import KeeperPage from './pages/KeeperPage'
+import SettingsPage from './pages/SettingsPage'
 
 function App() {
   return (
@@ -28,7 +28,7 @@ function App() {
         </SidebarProvider>
       </BrowserRouter>
     </ThemeProvider>
-  );
+  )
 }
 
-export default App;
+export default App
