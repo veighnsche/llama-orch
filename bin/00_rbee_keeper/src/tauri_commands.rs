@@ -21,15 +21,24 @@ mod tests {
         // TEAM-297: Test that exports TypeScript bindings
         // TEAM-333: Updated to use ssh_list command
         // TEAM-335: Added queen lifecycle commands
+        // TEAM-336: Include NarrationEvent type for frontend + test command
+        //
+        // NOTE: NarrationEvent is NOT a tauri-specta Event - it's emitted from a
+        // custom tracing layer using Tauri's Emitter trait. We export it as an
+        // extra type so TypeScript can listen to "narration" events with proper typing.
+        use crate::tracing_init::NarrationEvent;
+        
         let builder = Builder::<tauri::Wry>::new()
             .commands(collect_commands![
+                test_narration,
                 ssh_list,
                 queen_start,
                 queen_stop,
                 queen_install,
                 queen_rebuild,
                 queen_uninstall,
-            ]);
+            ])
+            .typ::<NarrationEvent>();
         
         builder
             .export(
@@ -174,6 +183,25 @@ pub async fn queen_uninstall() -> Result<String, String> {
         .await
         .map(|_| "Queen uninstalled successfully".to_string())
         .map_err(|e| format!("{}", e))
+}
+
+// ============================================================================
+// TEST COMMANDS
+// ============================================================================
+
+/// Test narration event emission
+/// TEAM-336: Debug command to verify narration pipeline works
+#[tauri::command]
+#[specta::specta]
+pub async fn test_narration() -> Result<String, String> {
+    use observability_narration_core::n;
+    
+    n!("test_narration", "🎯 Test narration event from Tauri command");
+    tracing::info!("This is a tracing::info! event");
+    tracing::warn!("This is a tracing::warn! event");
+    tracing::error!("This is a tracing::error! event");
+    
+    Ok("Narration test events emitted - check the panel!".to_string())
 }
 
 // ============================================================================

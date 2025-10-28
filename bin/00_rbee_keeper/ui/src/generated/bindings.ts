@@ -5,6 +5,18 @@
 
 
 export const commands = {
+/**
+ * Test narration event emission
+ * TEAM-336: Debug command to verify narration pipeline works
+ */
+async testNarration() : Promise<Result<string, string>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("test_narration") };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
 async sshList() : Promise<Result<SshTarget[], string>> {
     try {
     return { status: "ok", data: await TAURI_INVOKE("ssh_list") };
@@ -85,6 +97,10 @@ async queenUninstall() : Promise<Result<string, string>> {
 
 /** user-defined types **/
 
+/**
+ * Narration event payload for Tauri frontend
+ */
+export type NarrationEvent = { level: string; message: string; timestamp: string }
 /**
  * SSH target from ~/.ssh/config
  * 

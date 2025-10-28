@@ -68,6 +68,7 @@ async fn main() -> Result<()> {
 
 // TEAM-295: Launch Tauri GUI (synchronous, blocks until window closes)
 // TEAM-334: Cleaned up - only ssh_list command active, rest to be re-implemented
+// TEAM-336: Narration events stream to React sidebar via Tauri events
 //
 // TEAM-334 NOTE: Desktop entry integration
 // - This function is called when rbee-keeper is launched with no arguments
@@ -80,21 +81,10 @@ async fn main() -> Result<()> {
 fn launch_gui() {
     use rbee_keeper::tauri_commands::*;
     
-    // TEAM-335: Initialize tracing for GUI so narration events are visible
-    use tracing_subscriber::{fmt, EnvFilter};
-    
-    fmt()
-        .with_writer(std::io::stderr)
-        .with_ansi(true)
-        .with_line_number(false)
-        .with_file(false)
-        .with_target(false)
-        .with_env_filter(EnvFilter::try_from_default_env()
-            .unwrap_or_else(|_| EnvFilter::new("info")))
-        .init();
-    
     tauri::Builder::default()
         .invoke_handler(tauri::generate_handler![
+            // TEAM-336: Test command for narration
+            test_narration,
             // TEAM-333: SSH list command
             ssh_list,
             // TEAM-335: Queen lifecycle commands (thin wrappers)
@@ -104,27 +94,21 @@ fn launch_gui() {
             queen_rebuild,
             queen_uninstall,
         ])
+        .setup(|app| {
+            // TEAM-336: Initialize tracing with Tauri event streaming
+            // Events emitted on "narration" channel for React sidebar
+            rbee_keeper::init_gui_tracing(app.handle().clone());
+            Ok(())
+        })
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }
 
 async fn handle_command(cli: Cli) -> Result<()> {
     // ============================================================
-    // TEAM-334: Simple tracing setup for CLI narration
+    // TEAM-336: CLI tracing setup (stderr only)
     // ============================================================
-    // Use standard compact formatter - narration-core handles formatting
-    use tracing_subscriber::{fmt, EnvFilter};
-    
-    fmt()
-        .with_writer(std::io::stderr)
-        .with_ansi(true)
-        .with_line_number(false)
-        .with_file(false)
-        .with_target(false)
-        // TEAM-335: NO .compact() - it buffers! Use default formatter for immediate output
-        .with_env_filter(EnvFilter::try_from_default_env()
-            .unwrap_or_else(|_| EnvFilter::new("info")))
-        .init();
+    rbee_keeper::init_cli_tracing();
     
     let config = Config::load()?;
     let queen_url = config.queen_url();

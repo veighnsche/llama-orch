@@ -11,6 +11,7 @@ pub mod handlers;
 pub mod job_client;
 pub mod platform; // TEAM-293: Cross-platform abstraction layer
 pub mod ssh_resolver; // TEAM-332: SSH config resolver middleware
+pub mod tracing_init; // TEAM-336: Consolidated tracing setup for CLI and GUI
 
 // Re-export commonly used types
 pub use config::Config;
@@ -22,3 +23,6 @@ pub use handlers::{
 // TEAM-293: Tauri-specific module (always available for GUI binary)
 pub mod tauri_commands;
 pub mod process_utils; // TEAM-301: Process output streaming utilities
+
+// TEAM-336: Re-export tracing init functions for convenience
+pub use tracing_init::{init_cli_tracing, init_gui_tracing, NarrationEvent};
