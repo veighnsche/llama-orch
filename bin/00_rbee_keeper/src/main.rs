@@ -104,7 +104,11 @@ async fn handle_command(cli: Cli) -> Result<()> {
     
     fmt()
         .with_writer(std::io::stderr)
-        .compact()
+        .with_ansi(true)
+        .with_line_number(false)
+        .with_file(false)
+        .with_target(false)
+        // TEAM-335: NO .compact() - it buffers! Use default formatter for immediate output
         .with_env_filter(EnvFilter::try_from_default_env()
             .unwrap_or_else(|_| EnvFilter::new("info")))
         .init();
