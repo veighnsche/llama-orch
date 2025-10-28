@@ -130,6 +130,7 @@ pub async fn shutdown_daemon(shutdown_config: ShutdownConfig) -> Result<()> {
             sleep(Duration::from_secs(5)).await;
 
             // Check if daemon stopped
+            n!("checking_stopped", "🔍 Checking if daemon stopped after SIGTERM...");
             let client = reqwest::Client::builder().timeout(Duration::from_secs(2)).build()?;
 
             match client.get(health_url).send().await {

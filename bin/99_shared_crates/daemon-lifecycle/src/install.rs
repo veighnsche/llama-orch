@@ -153,7 +153,9 @@ pub async fn install_daemon(install_config: InstallConfig) -> Result<()> {
 
     // Step 1: Build or locate binary locally
     let binary_path = if let Some(path) = install_config.local_binary_path {
+        n!("verify_binary", "🔍 Verifying pre-built binary at: {}", path.display());
         if !path.exists() {
+            n!("binary_not_found", "❌ Binary not found at: {}", path.display());
             anyhow::bail!("Binary not found at: {}", path.display());
         }
         n!("using_binary", "📦 Using pre-built binary: {}", path.display());

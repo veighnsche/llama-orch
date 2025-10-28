@@ -109,7 +109,7 @@ pub async fn stop_daemon(stop_config: StopConfig) -> Result<()> {
             n!("http_success", "✅ HTTP shutdown request accepted");
 
             // Step 2: Poll health endpoint to verify shutdown
-            n!("polling", "⏳ Waiting for daemon to stop...");
+            n!("polling", "⏳ Waiting for daemon to stop (up to 10 attempts)...");
 
             for attempt in 1..=10 {
                 sleep(Duration::from_millis(500)).await;

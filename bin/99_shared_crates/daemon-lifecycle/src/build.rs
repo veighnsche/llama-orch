@@ -122,6 +122,7 @@ pub async fn build_daemon(build_config: BuildConfig) -> Result<PathBuf> {
     let mut child = capture.spawn(command).await.context("Failed to spawn cargo build")?;
 
     // Wait for build to complete
+    n!("build_waiting", "⏳ Waiting for cargo build to complete...");
     let status = child.wait().await.context("Failed to wait for cargo build")?;
 
     if !status.success() {
@@ -137,7 +138,9 @@ pub async fn build_daemon(build_config: BuildConfig) -> Result<PathBuf> {
     };
 
     // Verify binary exists
+    n!("build_verify", "🔍 Verifying binary at: {}", binary_path.display());
     if !binary_path.exists() {
+        n!("build_verify_failed", "❌ Binary not found at expected path");
         anyhow::bail!(
             "Binary not found at expected path: {}. Build may have failed.",
             binary_path.display()

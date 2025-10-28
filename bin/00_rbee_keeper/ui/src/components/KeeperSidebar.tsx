@@ -60,29 +60,31 @@ export function KeeperSidebar() {
               })}
             </nav>
           </div>
+        </div>
+      </div>
 
-          {/* System section */}
-          <div className="space-y-2">
-            <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider px-2">System</h3>
-            <nav className="space-y-1">
-              {secondaryNavigation.map((item) => {
-                const isActive = location.pathname === item.href
-                return (
-                  <Link
-                    key={item.href}
-                    to={item.href}
-                    title={item.tooltip}
-                    className={`flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
-                      isActive ? 'bg-primary text-primary-foreground' : 'text-foreground hover:bg-muted'
-                    }`}
-                  >
-                    <item.icon className="w-4 h-4 flex-shrink-0" />
-                    <span className="truncate">{item.title}</span>
-                  </Link>
-                )
-              })}
-            </nav>
-          </div>
+      {/* System section */}
+      <div className="border-t border-border p-4">
+        <div className="space-y-2">
+          <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider px-2">System</h3>
+          <nav className="space-y-1">
+            {secondaryNavigation.map((item) => {
+              const isActive = location.pathname === item.href
+              return (
+                <Link
+                  key={item.href}
+                  to={item.href}
+                  title={item.tooltip}
+                  className={`flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                    isActive ? 'bg-primary text-primary-foreground' : 'text-foreground hover:bg-muted'
+                  }`}
+                >
+                  <item.icon className="w-4 h-4 flex-shrink-0" />
+                  <span className="truncate">{item.title}</span>
+                </Link>
+              )
+            })}
+          </nav>
         </div>
       </div>
 

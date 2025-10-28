@@ -168,6 +168,7 @@ pub async fn rebuild_daemon(rebuild_config: RebuildConfig) -> Result<()> {
     // Extract base URL from daemon_config.health_url
     let health_url = daemon_config.health_url.clone();
     let shutdown_url = format!("{}/v1/shutdown", health_url.trim_end_matches("/health"));
+    n!("rebuild_shutdown_url", "📡 Using shutdown URL: {}", shutdown_url);
 
     let stop_config = StopConfig {
         daemon_name: daemon_name.clone(),

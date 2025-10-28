@@ -145,6 +145,7 @@ pub async fn uninstall_daemon(uninstall_config: UninstallConfig) -> Result<()> {
         } else {
             format!("{}/health", health_url)
         };
+        n!("health_url", "📡 Checking health at: {}", full_health_url);
 
         // TEAM-338: RULE ZERO - Updated to new signature
         let status =

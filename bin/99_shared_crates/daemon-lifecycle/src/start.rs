@@ -237,6 +237,7 @@ pub async fn start_daemon(start_config: StartConfig) -> Result<u32> {
     let binary_path = binary_path.trim();
 
     if binary_path == "NOT_FOUND" || binary_path.is_empty() {
+        n!("binary_not_found", "❌ Binary '{}' not found on remote", daemon_name);
         anyhow::bail!(
             "Binary '{}' not found on remote machine. Install it first with install_daemon()",
             daemon_name
@@ -253,6 +254,7 @@ pub async fn start_daemon(start_config: StartConfig) -> Result<u32> {
     let start_cmd = if args.is_empty() {
         format!("nohup {} > /dev/null 2>&1 & echo $!", binary_path)
     } else {
+        n!("start_with_args", "⚙️  Starting with args: {}", args);
         format!("nohup {} {} > /dev/null 2>&1 & echo $!", binary_path, args)
     };
 

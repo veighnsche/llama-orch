@@ -26,6 +26,7 @@
 use super::local::{local_copy, local_exec};
 use crate::SshConfig;
 use anyhow::{Context, Result};
+use observability_narration_core::n;
 use std::path::PathBuf; // TEAM-331: Localhost bypass
 
 /// Execute SSH command on remote machine
@@ -52,6 +53,9 @@ pub async fn ssh_exec(ssh_config: &SshConfig, command: &str) -> Result<String> {
         return local_exec(command).await;
     }
 
+    // TEAM-340: Narrate SSH execution for visibility
+    n!("ssh_exec", "📡 SSH: {}@{}: {}", ssh_config.user, ssh_config.hostname, command);
+
     use tokio::process::Command;
 
     let output = Command::new("ssh")
@@ -65,9 +69,11 @@ pub async fn ssh_exec(ssh_config: &SshConfig, command: &str) -> Result<String> {
 
     if !output.status.success() {
         let stderr = String::from_utf8_lossy(&output.stderr);
+        n!("ssh_exec_failed", "❌ SSH command failed: {}", stderr);
         anyhow::bail!("SSH command failed: {}", stderr);
     }
 
+    n!("ssh_exec_success", "✅ SSH command completed");
     Ok(String::from_utf8_lossy(&output.stdout).to_string())
 }
 
@@ -100,6 +106,16 @@ pub async fn scp_upload(
         return local_copy(local_path, remote_path).await;
     }
 
+    // TEAM-340: Narrate SCP upload for visibility
+    n!(
+        "scp_upload",
+        "📤 SCP: {} → {}@{}:{}",
+        local_path.display(),
+        ssh_config.user,
+        ssh_config.hostname,
+        remote_path
+    );
+
     use tokio::process::Command;
 
     let remote_target = format!("{}@{}:{}", ssh_config.user, ssh_config.hostname, remote_path);
@@ -115,9 +131,11 @@ pub async fn scp_upload(
 
     if !output.status.success() {
         let stderr = String::from_utf8_lossy(&output.stderr);
+        n!("scp_upload_failed", "❌ SCP upload failed: {}", stderr);
         anyhow::bail!("SCP failed: {}", stderr);
     }
 
+    n!("scp_upload_success", "✅ SCP upload completed");
     Ok(())
 }
 
