@@ -42,21 +42,6 @@ futures = "0.3" # TEAM-303: For SSE streaming
 name = "narration_benchmarks"
 harness = false
 
-# TEAM-303: Test binaries for E2E integration tests
-[[bin]]
-name = "fake-queen-rbee"
-path = "tests/bin/fake_queen.rs"
-required-features = ["axum"]
-
-[[bin]]
-name = "fake-rbee-hive"
-path = "tests/bin/fake_hive.rs"
-required-features = ["axum"]
-
-[[bin]]
-name = "fake-worker"
-path = "tests/bin/fake_worker.rs"
-
 [features]
 default = []
 trace-enabled = []  # Enable trace macros (dev/debug builds only)

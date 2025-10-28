@@ -101,7 +101,9 @@ members = [
     "tools/openapi-client",  # OpenAPI client generator
     "tools/readme-index",    # README index generator
     "tools/spec-extract",    # Spec extraction & validation
-    "xtask", "bin/97_contracts/ssh-contract", "bin/97_contracts/keeper-config-contract", # TEAM-329: Removed daemon-contract (inlined into daemon-lifecycle)
+    "xtask", 
+    "bin/97_contracts/ssh-contract", 
+    "bin/97_contracts/keeper-config-contract", # TEAM-329: Removed daemon-contract (inlined into daemon-lifecycle)
     
     # TEAM-330: Test stub binary for build.rs tests (compiles in <1s)
     "bin/99_shared_crates/daemon-lifecycle/tests/stub-binary",

@@ -30,7 +30,7 @@ use clap::Parser;
 use job_server::JobRegistry;
 use observability_narration_core::n;
 use tower_http::cors::{Any, CorsLayer}; // TEAM-288: CORS support for web UI
-// TEAM-290: DELETED rbee_config import (file-based config deprecated)
+                                        // TEAM-290: DELETED rbee_config import (file-based config deprecated)
 use std::net::SocketAddr;
 use std::sync::Arc;
 
