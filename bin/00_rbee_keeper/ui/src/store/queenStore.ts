@@ -1,7 +1,9 @@
 // TEAM-338: Zustand store for Queen service state and commands
-import { create } from "zustand";
+// TEAM-338: Added persist and immer middleware
 import { commands } from "@/generated/bindings";
 import { withCommandExecution } from "./commandUtils";
+import { create } from "zustand";
+import { persist } from "zustand/middleware";
 
 export interface QueenStatus {
   isRunning: boolean;
@@ -23,77 +25,87 @@ interface QueenState {
   reset: () => void;
 }
 
-export const useQueenStore = create<QueenState>((set, get) => ({
-  status: null,
-  isLoading: false,
-  error: null,
-
-  fetchStatus: async () => {
-    set({ isLoading: true, error: null });
-    try {
-      // TEAM-338: For now, return a mock status until we have a status command
-      // TODO: Replace with actual queen_status command when available
-      const status: QueenStatus = {
-        isRunning: false,
-        isInstalled: false,
-      };
-      set({ status, isLoading: false });
-    } catch (error) {
-      set({
-        error:
-          error instanceof Error
-            ? error.message
-            : "Failed to fetch Queen status",
-        isLoading: false,
-      });
-    }
-  },
-
-  start: async () => {
-    await withCommandExecution(
-      () => commands.queenStart(),
-      get().fetchStatus,
-      "Queen start",
-    );
-  },
-
-  stop: async () => {
-    await withCommandExecution(
-      () => commands.queenStop(),
-      get().fetchStatus,
-      "Queen stop",
-    );
-  },
-
-  install: async () => {
-    await withCommandExecution(
-      () => commands.queenInstall(null),
-      get().fetchStatus,
-      "Queen install",
-    );
-  },
-
-  rebuild: async () => {
-    await withCommandExecution(
-      () => commands.queenRebuild(false),
-      get().fetchStatus,
-      "Queen rebuild",
-    );
-  },
-
-  uninstall: async () => {
-    await withCommandExecution(
-      () => commands.queenUninstall(),
-      get().fetchStatus,
-      "Queen uninstall",
-    );
-  },
-
-  reset: () => {
-    set({
+export const useQueenStore = create<QueenState>()(
+  persist(
+    (set, get) => ({
       status: null,
       isLoading: false,
       error: null,
-    });
-  },
-}));
+
+      fetchStatus: async () => {
+        set({ isLoading: true, error: null });
+        try {
+          // TEAM-338: For now, return a mock status until we have a status command
+          // TODO: Replace with actual queen_status command when available
+          const status: QueenStatus = {
+            isRunning: false,
+            isInstalled: false,
+          };
+          set({ status, isLoading: false });
+        } catch (error) {
+          set({
+            error:
+              error instanceof Error
+                ? error.message
+                : "Failed to fetch Queen status",
+            isLoading: false,
+          });
+        }
+      },
+
+      start: async () => {
+        await withCommandExecution(
+          () => commands.queenStart(),
+          get().fetchStatus,
+          "Queen start",
+        );
+      },
+
+      stop: async () => {
+        await withCommandExecution(
+          () => commands.queenStop(),
+          get().fetchStatus,
+          "Queen stop",
+        );
+      },
+
+      install: async () => {
+        await withCommandExecution(
+          () => commands.queenInstall(null),
+          get().fetchStatus,
+          "Queen install",
+        );
+      },
+
+      rebuild: async () => {
+        await withCommandExecution(
+          () => commands.queenRebuild(false),
+          get().fetchStatus,
+          "Queen rebuild",
+        );
+      },
+
+      uninstall: async () => {
+        await withCommandExecution(
+          () => commands.queenUninstall(),
+          get().fetchStatus,
+          "Queen uninstall",
+        );
+      },
+
+      reset: () => {
+        set({
+          status: null,
+          isLoading: false,
+          error: null,
+        });
+      },
+    }),
+    {
+      name: "queen-store",
+      partialize: (state) => ({
+        status: state.status,
+      }),
+    },
+  ),
+);
