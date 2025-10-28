@@ -80,6 +80,19 @@ async fn main() -> Result<()> {
 fn launch_gui() {
     use rbee_keeper::tauri_commands::*;
     
+    // TEAM-335: Initialize tracing for GUI so narration events are visible
+    use tracing_subscriber::{fmt, EnvFilter};
+    
+    fmt()
+        .with_writer(std::io::stderr)
+        .with_ansi(true)
+        .with_line_number(false)
+        .with_file(false)
+        .with_target(false)
+        .with_env_filter(EnvFilter::try_from_default_env()
+            .unwrap_or_else(|_| EnvFilter::new("info")))
+        .init();
+    
     tauri::Builder::default()
         .invoke_handler(tauri::generate_handler![
             // TEAM-333: SSH list command
