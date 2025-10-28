@@ -16,7 +16,13 @@
    - `fake_queen.rs` (6,579 bytes)
    - `fake_worker.rs` (2,286 bytes)
 
-**Total removed:** ~15,300 bytes of disabled test code
+### Active Test Files Depending on Disabled Code (2 items)
+6. `tests/e2e_real_processes.rs` (15,520 bytes) - 7 tests depending on fake binaries
+7. `tests/harness/` - Directory with test infrastructure:
+   - `README.md` (6,282 bytes)
+   - `sse_utils.rs` (6,496 bytes)
+
+**Total removed:** ~43,600 bytes of test code and infrastructure
 
 ## Cargo.toml Changes
 
@@ -44,7 +50,10 @@ path = "tests/bin/fake_worker.rs"
 
 ✅ No `.disabled` files remain in narration-core
 ✅ No references to disabled files in code
+✅ No references to fake binaries in active tests
+✅ No orphaned harness directory
 ✅ `cargo check -p observability-narration-core` passes
+✅ `cargo fmt --package observability-narration-core` passes
 ✅ No broken references in documentation
 
 ## Rationale
