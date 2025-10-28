@@ -5,9 +5,9 @@
 
 
 export const commands = {
-async hiveList() : Promise<Result<SshTarget[], string>> {
+async sshList() : Promise<Result<SshTarget[], string>> {
     try {
-    return { status: "ok", data: await TAURI_INVOKE("hive_list") };
+    return { status: "ok", data: await TAURI_INVOKE("ssh_list") };
 } catch (e) {
     if(e instanceof Error) throw e;
     else return { status: "error", error: e  as any };
@@ -27,6 +27,8 @@ async hiveList() : Promise<Result<SshTarget[], string>> {
 
 /**
  * SSH target from ~/.ssh/config
+ * 
+ * TEAM-333: Type for SSH config entries with specta support for TypeScript bindings
  */
 export type SshTarget = { 
 /**
@@ -55,6 +57,8 @@ port: number;
 status: SshTargetStatus }
 /**
  * SSH target connection status
+ * 
+ * TEAM-333: Status enum for SSH targets
  */
 export type SshTargetStatus = "online" | "offline" | "unknown"
 

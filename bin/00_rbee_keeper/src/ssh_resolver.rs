@@ -81,6 +81,7 @@ fn get_ssh_config_path() -> Result<PathBuf> {
 /// Parse SSH config file into host entries
 ///
 /// TEAM-332: Simple SSH config parser (supports Host, HostName, User, Port)
+/// TEAM-333: Made public for use in tauri_commands
 ///
 /// # Format
 /// ```text
@@ -89,7 +90,7 @@ fn get_ssh_config_path() -> Result<PathBuf> {
 ///     User vince
 ///     Port 22
 /// ```
-fn parse_ssh_config(path: &PathBuf) -> Result<HashMap<String, SshConfig>> {
+pub fn parse_ssh_config(path: &PathBuf) -> Result<HashMap<String, SshConfig>> {
     // If file doesn't exist, return empty map (only localhost will work)
     if !path.exists() {
         return Ok(HashMap::new());

@@ -2,16 +2,13 @@
 //!
 //! TEAM-293: Created Tauri command wrappers for all CLI operations
 //! TEAM-297: Updated to use specta v2 for proper TypeScript type generation
+//! TEAM-334: Cleaned up - only keeping ssh_list, rest to be re-implemented later
 //!
-//! Each command in this module corresponds to a CLI command and delegates
-//! to the same handler functions used by the CLI.
+//! Currently only exposes SSH config parsing. Other commands will be added
+//! as the architecture stabilizes.
 
-use crate::cli::{HiveAction, ModelAction, QueenAction, WorkerAction, WorkerProcessAction};
-use crate::config::Config;
-use crate::handlers;
-use anyhow::Result;
+use crate::ssh_resolver;
 use serde::{Deserialize, Serialize};
-use specta::Type;
 
 #[cfg(test)]
 mod tests {
@@ -22,8 +19,9 @@ mod tests {
     #[test]
     fn export_typescript_bindings() {
         // TEAM-297: Test that exports TypeScript bindings
+        // TEAM-333: Updated to use ssh_list command
         let builder = Builder::<tauri::Wry>::new()
-            .commands(collect_commands![hive_list]);
+            .commands(collect_commands![ssh_list]);
         
         builder
             .export(
@@ -35,349 +33,104 @@ mod tests {
 }
 
 // ============================================================================
-// RESPONSE TYPES
+// SSH TYPES
 // ============================================================================
-// TEAM-323: DELETED ssh_contract - SSH/remote operations removed
-// Tauri GUI commands are localhost-only now
 
-#[derive(Serialize, Deserialize)]
-pub struct CommandResponse {
-    pub success: bool,
-    pub message: String,
-    pub data: Option<String>,
+/// SSH target from ~/.ssh/config
+/// 
+/// TEAM-333: Type for SSH config entries with specta support for TypeScript bindings
+#[derive(Debug, Clone, Serialize, Deserialize, specta::Type)]
+pub struct SshTarget {
+    /// Host alias from SSH config
+    pub host: String,
+    /// Host subtitle (optional)
+    pub host_subtitle: Option<String>,
+    /// Hostname (IP or domain)
+    pub hostname: String,
+    /// SSH username
+    pub user: String,
+    /// SSH port
+    pub port: u16,
+    /// Connection status
+    pub status: SshTargetStatus,
 }
 
-impl CommandResponse {
-    pub fn success(message: impl Into<String>) -> Self {
-        Self {
-            success: true,
-            message: message.into(),
-            data: None,
-        }
-    }
-
-    pub fn success_with_data(message: impl Into<String>, data: impl Into<String>) -> Self {
-        Self {
-            success: true,
-            message: message.into(),
-            data: Some(data.into()),
-        }
-    }
-
-    pub fn error(message: impl Into<String>) -> Self {
-        Self {
-            success: false,
-            message: message.into(),
-            data: None,
-        }
-    }
-}
-
-// Helper for handlers that return Result<()>
-fn to_response_unit(result: Result<()>) -> Result<String, String> {
-    match result {
-        Ok(()) => Ok(serde_json::to_string(&CommandResponse::success(
-            "Operation completed successfully",
-        ))
-        .unwrap()),
-        Err(e) => Ok(serde_json::to_string(&CommandResponse::error(e.to_string())).unwrap()),
-    }
+/// SSH target connection status
+/// 
+/// TEAM-333: Status enum for SSH targets
+#[derive(Debug, Clone, Serialize, Deserialize, specta::Type)]
+#[serde(rename_all = "lowercase")]
+pub enum SshTargetStatus {
+    Online,
+    Offline,
+    Unknown,
 }
 
 // ============================================================================
-// STATUS COMMANDS
+// SSH COMMANDS
 // ============================================================================
-
-#[tauri::command]
-pub async fn get_status() -> Result<String, String> {
-    let config = Config::load().map_err(|e| e.to_string())?;
-    let queen_url = config.queen_url();
-    
-    let result = handlers::handle_status(&queen_url).await;
-    to_response_unit(result)
-}
-
-// ============================================================================
-// QUEEN COMMANDS
-// ============================================================================
-
-#[tauri::command]
-pub async fn queen_start() -> Result<String, String> {
-    let config = Config::load().map_err(|e| e.to_string())?;
-    let queen_url = config.queen_url();
-    
-    let result = handlers::handle_queen(QueenAction::Start, &queen_url).await;
-    to_response_unit(result)
-}
-
-#[tauri::command]
-pub async fn queen_stop() -> Result<String, String> {
-    let config = Config::load().map_err(|e| e.to_string())?;
-    let queen_url = config.queen_url();
-    
-    let result = handlers::handle_queen(QueenAction::Stop, &queen_url).await;
-    to_response_unit(result)
-}
-
-#[tauri::command]
-pub async fn queen_status() -> Result<String, String> {
-    let config = Config::load().map_err(|e| e.to_string())?;
-    let queen_url = config.queen_url();
-    
-    let result = handlers::handle_queen(QueenAction::Status, &queen_url).await;
-    to_response_unit(result)
-}
-
-#[tauri::command]
-pub async fn queen_rebuild() -> Result<String, String> {
-    let config = Config::load().map_err(|e| e.to_string())?;
-    let queen_url = config.queen_url();
-    
-    let result = handlers::handle_queen(
-        QueenAction::Rebuild,
-        &queen_url,
-    )
-    .await;
-    to_response_unit(result)
-}
-
-// TEAM-323: DELETED queen_info - use curl http://localhost:7833/v1/build-info directly
-
-#[tauri::command]
-pub async fn queen_install(binary: Option<String>) -> Result<String, String> {
-    let config = Config::load().map_err(|e| e.to_string())?;
-    let queen_url = config.queen_url();
-    
-    let result = handlers::handle_queen(QueenAction::Install { binary }, &queen_url).await;
-    to_response_unit(result)
-}
-
-#[tauri::command]
-pub async fn queen_uninstall() -> Result<String, String> {
-    let config = Config::load().map_err(|e| e.to_string())?;
-    let queen_url = config.queen_url();
-    
-    let result = handlers::handle_queen(QueenAction::Uninstall, &queen_url).await;
-    to_response_unit(result)
-}
-
-// ============================================================================
-// HIVE COMMANDS
-// ============================================================================
-
-#[tauri::command]
-pub async fn hive_install(alias: String) -> Result<String, String> {
-    let config = Config::load().map_err(|e| e.to_string())?;
-    let queen_url = config.queen_url();
-    
-    let result = handlers::handle_hive(
-        HiveAction::Install { alias },
-        &queen_url,
-    )
-    .await;
-    to_response_unit(result)
-}
-
-#[tauri::command]
-pub async fn hive_uninstall(alias: String) -> Result<String, String> {
-    let config = Config::load().map_err(|e| e.to_string())?;
-    let queen_url = config.queen_url();
-    
-    let result = handlers::handle_hive(
-        HiveAction::Uninstall { alias },
-        &queen_url,
-    )
-    .await;
-    to_response_unit(result)
-}
-
-#[tauri::command]
-pub async fn hive_start(alias: Option<String>, port: Option<u16>) -> Result<String, String> {
-    let config = Config::load().map_err(|e| e.to_string())?;
-    let queen_url = config.queen_url();
-    let alias = alias.unwrap_or_else(|| "localhost".to_string());
-    
-    let result = handlers::handle_hive(
-        HiveAction::Start { alias, port },
-        &queen_url,
-    )
-    .await;
-    to_response_unit(result)
-}
-
-#[tauri::command]
-pub async fn hive_stop(alias: Option<String>, port: Option<u16>) -> Result<String, String> {
-    let config = Config::load().map_err(|e| e.to_string())?;
-    let queen_url = config.queen_url();
-    let alias = alias.unwrap_or_else(|| "localhost".to_string());
-    
-    let result = handlers::handle_hive(HiveAction::Stop { alias, port }, &queen_url).await;
-    to_response_unit(result)
-}
 
 #[tauri::command]
 #[specta::specta]
-pub async fn hive_list() -> Result<Vec<String>, String> {
-    // TEAM-323: DELETED SSH support - localhost only
-    // Returns just ["localhost"] for now
+pub async fn ssh_list() -> Result<Vec<SshTarget>, String> {
+    // TEAM-333: Parse ~/.ssh/config and return list of SSH targets
+    // TEAM-333: Deduplicate by hostname, keep shortest host alias
     use observability_narration_core::n;
+    use std::collections::HashMap;
     
-    n!("hive_list", "Returning localhost hive");
+    n!("ssh_list", "Reading SSH config");
     
-    Ok(vec!["localhost".to_string()])
-}
-
-#[tauri::command]
-pub async fn hive_status(alias: String) -> Result<String, String> {
-    let config = Config::load().map_err(|e| e.to_string())?;
-    let queen_url = config.queen_url();
+    // Get SSH config path
+    let home = std::env::var("HOME")
+        .map_err(|_| "HOME environment variable not set".to_string())?;
+    let ssh_config_path = std::path::PathBuf::from(home).join(".ssh/config");
     
-    let result = handlers::handle_hive(HiveAction::Status { alias }, &queen_url).await;
-    to_response_unit(result)
-}
-
-#[tauri::command]
-pub async fn hive_refresh_capabilities(alias: String) -> Result<String, String> {
-    let config = Config::load().map_err(|e| e.to_string())?;
-    let queen_url = config.queen_url();
+    // Parse SSH config
+    let hosts = ssh_resolver::parse_ssh_config(&ssh_config_path)
+        .map_err(|e| format!("Failed to parse SSH config: {}", e))?;
     
-    let result = handlers::handle_hive(HiveAction::RefreshCapabilities { alias }, &queen_url).await;
-    to_response_unit(result)
-}
-
-// ============================================================================
-// WORKER COMMANDS
-// ============================================================================
-
-#[tauri::command]
-pub async fn worker_spawn(hive_id: String, model: String, device: String) -> Result<String, String> {
-    let config = Config::load().map_err(|e| e.to_string())?;
-    let queen_url = config.queen_url();
+    // TEAM-333: Deduplicate by hostname - collect all aliases first, then pick shortest
+    let mut by_hostname: HashMap<String, Vec<String>> = HashMap::new();
+    let mut configs_map: HashMap<String, daemon_lifecycle::SshConfig> = HashMap::new();
     
-    let result = handlers::handle_worker(
-        hive_id,
-        WorkerAction::Spawn { model, device },
-        &queen_url,
-    )
-    .await;
-    to_response_unit(result)
-}
-
-#[tauri::command]
-pub async fn worker_process_list(hive_id: String) -> Result<String, String> {
-    let config = Config::load().map_err(|e| e.to_string())?;
-    let queen_url = config.queen_url();
+    // First pass: collect all aliases for each unique hostname
+    for (host, config) in hosts {
+        let key = format!("{}:{}@{}", config.hostname, config.port, config.user);
+        by_hostname.entry(key.clone()).or_insert_with(Vec::new).push(host);
+        configs_map.insert(key, config);
+    }
     
-    let result = handlers::handle_worker(
-        hive_id,
-        WorkerAction::Process(WorkerProcessAction::List),
-        &queen_url,
-    )
-    .await;
-    to_response_unit(result)
-}
-
-#[tauri::command]
-pub async fn worker_process_get(hive_id: String, pid: u32) -> Result<String, String> {
-    let config = Config::load().map_err(|e| e.to_string())?;
-    let queen_url = config.queen_url();
+    // Second pass: for each hostname, pick shortest alias and use others as subtitle
+    let mut targets: Vec<SshTarget> = Vec::new();
+    for (key, mut aliases) in by_hostname {
+        // Sort aliases by length (shortest first)
+        aliases.sort_by_key(|a| a.len());
+        
+        let config = configs_map.get(&key).unwrap();
+        let primary = aliases[0].clone();
+        let subtitle = if aliases.len() > 1 {
+            Some(aliases[1..].join(", "))
+        } else {
+            None
+        };
+        
+        targets.push(SshTarget {
+            host: primary,
+            host_subtitle: subtitle,
+            hostname: config.hostname.clone(),
+            user: config.user.clone(),
+            port: config.port,
+            status: SshTargetStatus::Unknown,
+        });
+    }
     
-    let result = handlers::handle_worker(
-        hive_id,
-        WorkerAction::Process(WorkerProcessAction::Get { pid }),
-        &queen_url,
-    )
-    .await;
-    to_response_unit(result)
-}
-
-#[tauri::command]
-pub async fn worker_process_delete(hive_id: String, pid: u32) -> Result<String, String> {
-    let config = Config::load().map_err(|e| e.to_string())?;
-    let queen_url = config.queen_url();
+    // Sort by host name
+    targets.sort_by(|a, b| a.host.cmp(&b.host));
     
-    let result = handlers::handle_worker(
-        hive_id,
-        WorkerAction::Process(WorkerProcessAction::Delete { pid }),
-        &queen_url,
-    )
-    .await;
-    to_response_unit(result)
-}
-
-// ============================================================================
-// MODEL COMMANDS
-// ============================================================================
-
-#[tauri::command]
-pub async fn model_download(hive_id: String, model: String) -> Result<String, String> {
-    let config = Config::load().map_err(|e| e.to_string())?;
-    let queen_url = config.queen_url();
+    // TEAM-333: NO localhost injection - only show what's in SSH config
+    // If user wants localhost, they can add it to ~/.ssh/config
     
-    let result = handlers::handle_model(hive_id, ModelAction::Download { model }, &queen_url).await;
-    to_response_unit(result)
-}
-
-#[tauri::command]
-pub async fn model_list(hive_id: String) -> Result<String, String> {
-    let config = Config::load().map_err(|e| e.to_string())?;
-    let queen_url = config.queen_url();
+    n!("ssh_list", "Found {} unique SSH targets", targets.len());
     
-    let result = handlers::handle_model(hive_id, ModelAction::List, &queen_url).await;
-    to_response_unit(result)
-}
-
-#[tauri::command]
-pub async fn model_get(hive_id: String, id: String) -> Result<String, String> {
-    let config = Config::load().map_err(|e| e.to_string())?;
-    let queen_url = config.queen_url();
-    
-    let result = handlers::handle_model(hive_id, ModelAction::Get { id }, &queen_url).await;
-    to_response_unit(result)
-}
-
-#[tauri::command]
-pub async fn model_delete(hive_id: String, id: String) -> Result<String, String> {
-    let config = Config::load().map_err(|e| e.to_string())?;
-    let queen_url = config.queen_url();
-    
-    let result = handlers::handle_model(hive_id, ModelAction::Delete { id }, &queen_url).await;
-    to_response_unit(result)
-}
-
-// ============================================================================
-// INFERENCE COMMANDS
-// ============================================================================
-
-#[tauri::command]
-pub async fn infer(
-    hive_id: String,
-    model: String,
-    prompt: String,
-    max_tokens: Option<u32>,
-    temperature: Option<f32>,
-    top_p: Option<f32>,
-    top_k: Option<u32>,
-    device: Option<String>,
-    worker_id: Option<String>,
-    stream: Option<bool>,
-) -> Result<String, String> {
-    let config = Config::load().map_err(|e| e.to_string())?;
-    let queen_url = config.queen_url();
-    
-    let result = handlers::handle_infer(
-        hive_id,
-        model,
-        prompt,
-        max_tokens.unwrap_or(20),
-        temperature.unwrap_or(0.7),
-        top_p,
-        top_k,
-        device,
-        worker_id,
-        stream.unwrap_or(true),
-        &queen_url,
-    )
-    .await;
-    to_response_unit(result)
+    Ok(targets)
 }

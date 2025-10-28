@@ -66,7 +66,7 @@ async fn stream_job_results(
     queen_url: &str,
     operation: Operation,
     operation_name: &'static str,
-    hive_id: Option<String>,
+    _hive_id: Option<String>, // TEAM-334: Unused but kept for future use
 ) -> Result<()> {
     n!("job_stream", "📡 Streaming results for {}", operation_name);
 

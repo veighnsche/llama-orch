@@ -6,8 +6,8 @@ name = "rbee-keeper"
 version = "0.1.0"
 edition = "2021"
 license = "GPL-3.0-or-later"
-# TEAM-294: Default to GUI binary for Tauri
-default-run = "rbee-keeper-gui"
+# TEAM-333: RULE ZERO - Single entry point for both CLI and GUI
+# No default-run needed - main.rs handles both modes
 
 # TEAM-293: Support both CLI and GUI modes
 [lib]
@@ -17,10 +17,6 @@ path = "src/lib.rs"
 [[bin]]
 name = "rbee-keeper"
 path = "src/main.rs"
-
-[[bin]]
-name = "rbee-keeper-gui"
-path = "src/tauri_main.rs"
 
 [dependencies]
 # CLI parsing
