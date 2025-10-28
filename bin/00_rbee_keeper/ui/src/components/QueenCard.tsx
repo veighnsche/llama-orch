@@ -1,7 +1,4 @@
-// TEAM-296: Reusable service card component for Queen and Hive
-// TEAM-296: Added status badge support (healthy, unhealthy, stopped, not-installed, out-of-date)
-// TEAM-296: Added health check on badge click
-
+// Queen service card with lifecycle controls
 import { useState } from "react";
 import {
   Card,
@@ -22,11 +19,7 @@ export type ServiceStatus =
   | "unknown"
   | "checking";
 
-interface ServiceCardProps {
-  title: string;
-  description: string;
-  details: string;
-  servicePrefix: "queen" | "hive";
+interface QueenCardProps {
   status?: ServiceStatus;
   onCommandClick: (command: string) => void;
   onStatusChange?: (status: ServiceStatus) => void;
@@ -49,38 +42,28 @@ const STATUS_CONFIG: Record<
   checking: { label: "Checking...", variant: "outline" },
 };
 
-// Health check URLs for each service
-const HEALTH_URLS: Record<"queen" | "hive", string> = {
-  queen: "http://localhost:7833/health",
-  hive: "http://localhost:7835/health",
-};
+const HEALTH_URL = "http://localhost:7833/health";
 
-export function ServiceCard({
-  title,
-  description,
-  details,
-  servicePrefix,
+export function QueenCard({
   status = "unknown",
   onCommandClick,
   onStatusChange,
   disabled = false,
-}: ServiceCardProps) {
+}: QueenCardProps) {
   const [localStatus, setLocalStatus] = useState<ServiceStatus>(status);
   const currentStatus = status !== "unknown" ? status : localStatus;
   const statusConfig = STATUS_CONFIG[currentStatus];
 
   const handleHealthCheck = async () => {
-    // Don't check if already checking
     if (currentStatus === "checking") return;
 
     setLocalStatus("checking");
     onStatusChange?.("checking");
 
     try {
-      const healthUrl = HEALTH_URLS[servicePrefix];
-      const response = await fetch(healthUrl, {
+      const response = await fetch(HEALTH_URL, {
         method: "GET",
-        signal: AbortSignal.timeout(5000), // 5 second timeout
+        signal: AbortSignal.timeout(5000),
       });
 
       if (response.ok) {
@@ -91,10 +74,9 @@ export function ServiceCard({
         onStatusChange?.("unhealthy");
       }
     } catch (error) {
-      // Network error or timeout = service is stopped/unreachable
       setLocalStatus("stopped");
       onStatusChange?.("stopped");
-      console.error(`Health check failed for ${servicePrefix}:`, error);
+      console.error("Queen health check failed:", error);
     }
   };
 
@@ -103,8 +85,10 @@ export function ServiceCard({
       <CardHeader>
         <div className="flex flex-col sm:flex-row items-start sm:items-start justify-between gap-3 sm:gap-4">
           <div className="space-y-1.5 flex-1 min-w-0">
-            <CardTitle className="text-base sm:text-lg">{title}</CardTitle>
-            <CardDescription className="text-sm">{description}</CardDescription>
+            <CardTitle className="text-base sm:text-lg">Queen</CardTitle>
+            <CardDescription className="text-sm">
+              Smart API server
+            </CardDescription>
           </div>
           <Badge
             variant={statusConfig.variant}
@@ -117,9 +101,12 @@ export function ServiceCard({
       </CardHeader>
       <CardContent>
         <div className="space-y-4">
-          <p className="text-sm text-muted-foreground leading-relaxed">{details}</p>
+          <p className="text-sm text-muted-foreground leading-relaxed">
+            Job router that dispatches inference requests to workers in the
+            correct hive
+          </p>
           <ServiceActionButtons
-            servicePrefix={servicePrefix}
+            servicePrefix="queen"
             onCommandClick={onCommandClick}
             disabled={disabled}
           />

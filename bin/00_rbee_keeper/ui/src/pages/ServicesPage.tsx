@@ -1,6 +1,7 @@
 // TEAM-294: Keeper page - Status cards and SSH targets table
 // TEAM-295: Added action buttons to Queen and Hive cards (icon-only with tooltips)
 // TEAM-296: Wired up queen lifecycle operations (install, update, uninstall)
+// Updated: Replaced ServiceCard with dedicated QueenCard and HiveCard components
 //
 // Queen Lifecycle Operations:
 // - start: Run the queen daemon
@@ -11,8 +12,8 @@
 
 import { invoke } from "@tauri-apps/api/core";
 import { PageContainer } from "@rbee/ui/molecules";
-import { SshHivesContainer } from "../components/SshHivesContainer";
-import { ServiceCard } from "../components/ServiceCard";
+import { QueenCard } from "../components/QueenCard";
+import { HiveCard } from "../components/HiveCard";
 import { useCommandStore } from "../store/commandStore";
 
 export default function KeeperPage() {
@@ -75,7 +76,7 @@ export default function KeeperPage() {
   return (
     <PageContainer
       title="Services"
-      description="Manage Queen, Hive, and SSH connections"
+      description="Manage Queen and Hive services"
       padding="lg"
       helperText={[
         {
@@ -86,39 +87,22 @@ export default function KeeperPage() {
         {
           title: "Hive",
           description:
-            "manages worker lifecycle and catalogs (models from HuggingFace, worker binaries). Start localhost hive to see local models and workers. Use SSH targets above to start remote hives and access their catalogs.",
+            "manages worker lifecycle and catalogs (models from HuggingFace, worker binaries). Start localhost hive to see local models and workers. Use SSH targets to start remote hives and access their catalogs.",
         },
       ]}
     >
-      <div className="space-y-6">
-        {/* Status Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <ServiceCard
-            title="Queen"
-            description="Smart API server"
-            details="Job router that dispatches inference requests to workers in the correct hive"
-            servicePrefix="queen"
-            status="unknown" // TODO: Implement state detection
-            onCommandClick={handleCommand}
-            disabled={isExecuting}
-          />
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
+        <QueenCard
+          status="unknown" // TODO: Implement state detection
+          onCommandClick={handleCommand}
+          disabled={isExecuting}
+        />
 
-          <ServiceCard
-            title="Hive"
-            description="Local Worker Manager"
-            details="Manages workers and catalogs (models, worker binaries) on this machine"
-            servicePrefix="hive"
-            status="unknown" // TODO: Implement state detection
-            onCommandClick={handleCommand}
-            disabled={isExecuting}
-          />
-        </div>
-
-        {/* SSH Hives Table */}
-        <div>
-          <h3 className="text-lg font-semibold mb-4">SSH Hives</h3>
-          <SshHivesContainer />
-        </div>
+        <HiveCard
+          status="unknown" // TODO: Implement state detection
+          onCommandClick={handleCommand}
+          disabled={isExecuting}
+        />
       </div>
     </PageContainer>
   );

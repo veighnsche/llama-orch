@@ -1,10 +1,10 @@
 // TEAM-295: Reusable service action buttons component
+// Updated: Using SplitButton with wide Play button + dropdown for other actions
 
 import {
-  Button,
-  Tooltip,
-  TooltipTrigger,
-  TooltipContent,
+  SplitButton,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
 } from "@rbee/ui/atoms";
 import { Play, Square, Download, RefreshCw, Trash2 } from "lucide-react";
 
@@ -20,76 +20,46 @@ export function ServiceActionButtons({
   disabled = false,
 }: ServiceActionButtonsProps) {
   return (
-    <div className="flex flex-wrap justify-around gap-2">
-      <Tooltip>
-        <TooltipTrigger asChild>
-          <Button
-            size="icon-sm"
-            variant="ghost"
-            onClick={() => onCommandClick(`${servicePrefix}-start`)}
-            disabled={disabled}
-          >
-            <Play className="h-4 w-4 text-success" />
-          </Button>
-        </TooltipTrigger>
-        <TooltipContent>Start</TooltipContent>
-      </Tooltip>
-
-      <Tooltip>
-        <TooltipTrigger asChild>
-          <Button
-            size="icon-sm"
-            variant="ghost"
+    <SplitButton
+      variant="default"
+      size="default"
+      icon={<Play className="h-4 w-4" />}
+      onClick={() => onCommandClick(`${servicePrefix}-start`)}
+      disabled={disabled}
+      className="w-full"
+      dropdownContent={
+        <>
+          <DropdownMenuItem
             onClick={() => onCommandClick(`${servicePrefix}-stop`)}
-            disabled={disabled}
           >
-            <Square className="h-4 w-4 text-danger" />
-          </Button>
-        </TooltipTrigger>
-        <TooltipContent>Stop</TooltipContent>
-      </Tooltip>
-
-      <Tooltip>
-        <TooltipTrigger asChild>
-          <Button
-            size="icon-sm"
-            variant="ghost"
+            <Square className="mr-2 h-4 w-4 text-danger" />
+            Stop
+          </DropdownMenuItem>
+          <DropdownMenuSeparator />
+          <DropdownMenuItem
             onClick={() => onCommandClick(`${servicePrefix}-install`)}
-            disabled={disabled}
           >
-            <Download className="h-4 w-4" />
-          </Button>
-        </TooltipTrigger>
-        <TooltipContent>Install</TooltipContent>
-      </Tooltip>
-
-      <Tooltip>
-        <TooltipTrigger asChild>
-          <Button
-            size="icon-sm"
-            variant="ghost"
+            <Download className="mr-2 h-4 w-4" />
+            Install
+          </DropdownMenuItem>
+          <DropdownMenuItem
             onClick={() => onCommandClick(`${servicePrefix}-update`)}
-            disabled={disabled}
           >
-            <RefreshCw className="h-4 w-4" />
-          </Button>
-        </TooltipTrigger>
-        <TooltipContent>Update</TooltipContent>
-      </Tooltip>
-
-      <Tooltip>
-        <TooltipTrigger asChild>
-          <Button
-            size="icon-sm"
-            variant="ghost"
+            <RefreshCw className="mr-2 h-4 w-4" />
+            Update
+          </DropdownMenuItem>
+          <DropdownMenuSeparator />
+          <DropdownMenuItem
             onClick={() => onCommandClick(`${servicePrefix}-uninstall`)}
-            disabled={disabled}
+            variant="destructive"
           >
-            <Trash2 className="h-4 w-4" />
-          </Button>
-        </TooltipTrigger>
-        <TooltipContent>Uninstall</TooltipContent>
-      </Tooltip>
-    </div>
+            <Trash2 className="mr-2 h-4 w-4" />
+            Uninstall
+          </DropdownMenuItem>
+        </>
+      }
+    >
+      Start
+    </SplitButton>
   );
 }

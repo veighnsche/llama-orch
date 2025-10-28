@@ -1,5 +1,6 @@
 import { cn } from "@rbee/ui/utils";
 import type { ReactNode } from "react";
+import { ScrollArea } from "@rbee/ui/atoms";
 import { HelperTextItem, type HelperTextItemProps } from "../HelperTextItem";
 
 export interface PageContainerProps {
@@ -66,40 +67,42 @@ export function PageContainer({
   helperText,
 }: PageContainerProps) {
   return (
-    <div className={cn(paddingClasses[padding], className)}>
-      {/* Header */}
-      <div
-        className={cn(
-          "flex items-start justify-between gap-4 mb-6",
-          actions ? "flex-wrap sm:flex-nowrap" : "",
-        )}
-      >
-        <div className="min-w-0 flex-1">
-          <h1 className="text-3xl font-bold tracking-tight">{title}</h1>
-          {description && (
-            <p className="text-muted-foreground mt-1">{description}</p>
+    <ScrollArea className="h-full">
+      <div className={cn(paddingClasses[padding], className)}>
+        {/* Header */}
+        <div
+          className={cn(
+            "flex items-start justify-between gap-4 mb-6",
+            actions ? "flex-wrap sm:flex-nowrap" : "",
+          )}
+        >
+          <div className="min-w-0 flex-1">
+            <h1 className="text-3xl font-bold tracking-tight">{title}</h1>
+            {description && (
+              <p className="text-muted-foreground mt-1">{description}</p>
+            )}
+          </div>
+          {actions && (
+            <div className="flex items-center gap-2 shrink-0">{actions}</div>
           )}
         </div>
-        {actions && (
-          <div className="flex items-center gap-2 shrink-0">{actions}</div>
+
+        {/* Content */}
+        <div className={cn(spacingClasses[spacing])}>{children}</div>
+
+        {/* Helper Text */}
+        {helperText && helperText.length > 0 && (
+          <div className="mt-8 pt-6 border-t border-border/50 space-y-3">
+            {helperText.map((item, index) => (
+              <HelperTextItem
+                key={index}
+                title={item.title}
+                description={item.description}
+              />
+            ))}
+          </div>
         )}
       </div>
-
-      {/* Content */}
-      <div className={cn(spacingClasses[spacing])}>{children}</div>
-
-      {/* Helper Text */}
-      {helperText && helperText.length > 0 && (
-        <div className="mt-8 pt-6 border-t border-border/50 space-y-3">
-          {helperText.map((item, index) => (
-            <HelperTextItem
-              key={index}
-              title={item.title}
-              description={item.description}
-            />
-          ))}
-        </div>
-      )}
-    </div>
+    </ScrollArea>
   );
 }
