@@ -19,17 +19,17 @@ mod narration; // TEAM-188: Narration constants
                // TEAM-188: operations module doesn't exist yet
                // mod operations;
 
+use anyhow::Result; // TEAM-288: Import Result for main function
 use axum::{
     extract::State,
     http::StatusCode,
     response::Json,
     routing::{delete, get, post}, // TEAM-305-FIX: Added delete for cancel endpoint
 };
-use tower_http::cors::{CorsLayer, Any}; // TEAM-288: CORS support for web UI
-use anyhow::Result; // TEAM-288: Import Result for main function
 use clap::Parser;
 use job_server::JobRegistry;
 use observability_narration_core::n;
+use tower_http::cors::{Any, CorsLayer}; // TEAM-288: CORS support for web UI
 // TEAM-290: DELETED rbee_config import (file-based config deprecated)
 use std::net::SocketAddr;
 use std::sync::Arc;
@@ -110,11 +110,11 @@ fn create_router(
 
     // TEAM-284: Initialize both worker and hive registries
     let hive_registry = Arc::new(queen_rbee_hive_registry::HiveRegistry::new());
-    
+
     // TEAM-288: Create broadcast channel for real-time heartbeat events
     // Capacity of 100 events - if clients are slow, old events are dropped
     let (event_tx, _) = tokio::sync::broadcast::channel(100);
-    
+
     let heartbeat_state = http::HeartbeatState {
         worker_registry: worker_registry.clone(),
         hive_registry,
@@ -149,7 +149,5 @@ fn create_router(
 
     // TEAM-293: Merge API routes with static file serving
     // API routes take priority - static files are fallback
-    api_router
-        .merge(http::create_static_router())
-        .layer(cors) // TEAM-288: Apply CORS layer to all routes
+    api_router.merge(http::create_static_router()).layer(cors) // TEAM-288: Apply CORS layer to all routes
 }

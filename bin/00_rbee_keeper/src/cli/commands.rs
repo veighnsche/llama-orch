@@ -29,7 +29,7 @@ pub enum Commands {
     /// Run self-check with narration test
     /// TEAM-309: Tests narration system with all 3 modes
     SelfCheck,
-    
+
     /// Run queen-check (deep narration test through queen job server)
     /// TEAM-312: Tests narration through entire SSE streaming pipeline
     QueenCheck,
@@ -96,7 +96,6 @@ pub enum Commands {
         #[arg(long, default_value = "true")]
         stream: bool,
     },
-
     // ============================================================================
     // TEAM-284: DELETED PACKAGE MANAGER COMMANDS
     // ============================================================================

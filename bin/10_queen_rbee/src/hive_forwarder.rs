@@ -83,7 +83,7 @@ use observability_narration_core::NarrationFactory;
 // TEAM-285: DELETED execute_hive_start, HiveStartRequest (localhost-only, no lifecycle management)
 // TEAM-290: DELETED rbee_config import (file-based config deprecated)
 use operations_contract::Operation; // TEAM-284: Renamed from rbee_operations
-// TEAM-290: DELETED Duration import (not needed anymore)
+                                    // TEAM-290: DELETED Duration import (not needed anymore)
 
 const NARRATE: NarrationFactory = NarrationFactory::new("qn-fwd");
 
@@ -127,10 +127,7 @@ const NARRATE: NarrationFactory = NarrationFactory::new("qn-fwd");
 /// - HTTP communication failure
 ///
 /// TEAM-290: Localhost-only mode (rbee-config removed)
-pub async fn forward_to_hive(
-    job_id: &str,
-    operation: Operation,
-) -> Result<()> {
+pub async fn forward_to_hive(job_id: &str, operation: Operation) -> Result<()> {
     // Extract metadata before moving operation
     let operation_name = operation.name();
     let hive_id = operation

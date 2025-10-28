@@ -2,8 +2,8 @@
 //!
 //! TEAM-338: Extracted from status.rs - reusable across install/uninstall/status
 
-use crate::SshConfig;
 use crate::utils::ssh::ssh_exec;
+use crate::SshConfig;
 
 /// Check if daemon binary is installed
 ///
@@ -25,9 +25,7 @@ pub async fn check_binary_installed(daemon_name: &str, ssh_config: &SshConfig) -
             Ok(h) => h,
             Err(_) => return false,
         };
-        let binary_path = std::path::PathBuf::from(home)
-            .join(".local/bin")
-            .join(daemon_name);
+        let binary_path = std::path::PathBuf::from(home).join(".local/bin").join(daemon_name);
         binary_path.exists()
     } else {
         // Remote: SSH check

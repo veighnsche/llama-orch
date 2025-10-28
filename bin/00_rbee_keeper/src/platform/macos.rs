@@ -3,7 +3,7 @@
 //! TEAM-293: Platform abstraction for macOS
 
 use super::{PlatformPaths, PlatformProcess, PlatformRemote};
-use anyhow::{Result, Context};
+use anyhow::{Context, Result};
 use std::path::PathBuf;
 
 pub struct MacOSPlatform;
@@ -34,7 +34,7 @@ impl PlatformPaths for MacOSPlatform {
 impl PlatformProcess for MacOSPlatform {
     fn is_running(pid: u32) -> bool {
         use std::process::Command;
-        
+
         // Use ps command on macOS
         Command::new("ps")
             .arg("-p")
@@ -46,25 +46,25 @@ impl PlatformProcess for MacOSPlatform {
 
     fn terminate(pid: u32) -> Result<()> {
         use std::process::Command;
-        
+
         Command::new("kill")
             .arg("-TERM")
             .arg(pid.to_string())
             .output()
             .context("Failed to send SIGTERM")?;
-        
+
         Ok(())
     }
 
     fn kill(pid: u32) -> Result<()> {
         use std::process::Command;
-        
+
         Command::new("kill")
             .arg("-KILL")
             .arg(pid.to_string())
             .output()
             .context("Failed to send SIGKILL")?;
-        
+
         Ok(())
     }
 }
@@ -80,12 +80,10 @@ impl PlatformRemote for MacOSPlatform {
 
     fn check_ssh_available() -> Result<bool> {
         use std::process::Command;
-        
-        let output = Command::new("which")
-            .arg("ssh")
-            .output()
-            .context("Failed to check for ssh")?;
-        
+
+        let output =
+            Command::new("which").arg("ssh").output().context("Failed to check for ssh")?;
+
         Ok(output.status.success())
     }
 }

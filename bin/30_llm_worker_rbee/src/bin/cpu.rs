@@ -89,11 +89,9 @@ async fn main() -> Result<()> {
         implementation: "llm-worker-rbee-cpu".to_string(),
         version: env!("CARGO_PKG_VERSION").to_string(),
     };
-    
-    let _heartbeat_handle = llm_worker_rbee::heartbeat::start_heartbeat_task(
-        worker_info,
-        args.hive_url.clone(),
-    );
+
+    let _heartbeat_handle =
+        llm_worker_rbee::heartbeat::start_heartbeat_task(worker_info, args.hive_url.clone());
     tracing::info!("Heartbeat task started (30s interval)");
 
     // ============================================================

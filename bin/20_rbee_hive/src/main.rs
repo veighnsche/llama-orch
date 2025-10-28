@@ -21,7 +21,8 @@ use narration::{
 
 use axum::{
     routing::{delete, get, post}, // TEAM-305-FIX: Added delete for cancel endpoint
-    Json, Router,
+    Json,
+    Router,
 };
 use clap::Parser;
 use job_server::JobRegistry;
@@ -40,12 +41,12 @@ struct Args {
     /// HTTP server port
     #[arg(short, long, default_value = "7835")]
     port: u16,
-    
+
     /// Queen URL for heartbeat reporting
     /// TEAM-292: Added to enable hive heartbeat
     #[arg(long, default_value = "http://localhost:7833")]
     queen_url: String,
-    
+
     /// Hive ID (alias)
     /// TEAM-292: Added to identify this hive
     #[arg(long, default_value = "localhost")]
@@ -121,7 +122,7 @@ async fn main() -> anyhow::Result<()> {
     // - pgrep -f rbee-hive - SUCCESS (process running)
     // - curl http://localhost:9000/health - SUCCESS (returns "ok")
     // ============================================================
-    
+
     // Create router with health, capabilities, and job endpoints
     let app = Router::new()
         .route("/health", get(health_check))
@@ -158,10 +159,10 @@ async fn main() -> anyhow::Result<()> {
         health_status: hive_contract::HealthStatus::Healthy,
         version: env!("CARGO_PKG_VERSION").to_string(),
     };
-    
+
     // Start heartbeat task (runs in background)
     let _heartbeat_handle = heartbeat::start_heartbeat_task(hive_info, args.queen_url.clone());
-    
+
     NARRATE
         .action("heartbeat_start")
         .context(&args.queen_url)

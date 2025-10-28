@@ -70,7 +70,7 @@ pub mod status;
 pub mod stop;
 pub mod uninstall;
 pub mod utils; // TEAM-330: Utils folder (includes SSH)
-// TEAM-330: types/ folder deleted (RULE ZERO - moved inline to operation files)
+               // TEAM-330: types/ folder deleted (RULE ZERO - moved inline to operation files)
 
 // Re-export main functions
 // TEAM-330: Removed "_remote" suffix - all operations are remote via SSH (RULE ZERO)
@@ -78,7 +78,7 @@ pub use build::{build_daemon, BuildConfig};
 pub use install::{install_daemon, InstallConfig};
 pub use rebuild::{rebuild_daemon, RebuildConfig};
 pub use shutdown::{shutdown_daemon, ShutdownConfig};
-pub use start::{start_daemon, StartConfig, HttpDaemonConfig}; // TEAM-330: HttpDaemonConfig moved inline
+pub use start::{start_daemon, HttpDaemonConfig, StartConfig}; // TEAM-330: HttpDaemonConfig moved inline
 pub use status::{check_daemon_health, DaemonStatus}; // TEAM-338: RULE ZERO - Updated function signature
 pub use stop::{stop_daemon, StopConfig};
 pub use uninstall::{uninstall_daemon, UninstallConfig};
@@ -89,10 +89,10 @@ pub use utils::poll::HealthPollConfig; // TEAM-330: Moved from types/ to utils/p
 pub struct SshConfig {
     /// Remote hostname or IP address
     pub hostname: String,
-    
+
     /// SSH username
     pub user: String,
-    
+
     /// SSH port (default: 22)
     pub port: u16,
 }
@@ -102,22 +102,16 @@ impl SshConfig {
     pub fn new(hostname: String, user: String, port: u16) -> Self {
         Self { hostname, user, port }
     }
-    
+
     /// Create localhost SSH config (bypasses SSH when possible)
     /// TEAM-331: Localhost mode - avoids SSH overhead for local operations
     pub fn localhost() -> Self {
-        Self {
-            hostname: "localhost".to_string(),
-            user: whoami::username(),
-            port: 22,
-        }
+        Self { hostname: "localhost".to_string(), user: whoami::username(), port: 22 }
     }
-    
+
     /// Check if this config points to localhost
     /// TEAM-331: Used to bypass SSH for local operations
     pub fn is_localhost(&self) -> bool {
-        self.hostname == "localhost" 
-            || self.hostname == "127.0.0.1"
-            || self.hostname == "::1"
+        self.hostname == "localhost" || self.hostname == "127.0.0.1" || self.hostname == "::1"
     }
 }

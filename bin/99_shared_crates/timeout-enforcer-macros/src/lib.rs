@@ -41,12 +41,10 @@
 //! ```
 
 use proc_macro::TokenStream;
-use quote::{quote, format_ident};
+use quote::{format_ident, quote};
 use syn::{
-    parse_macro_input, ItemFn, Expr, ExprLit, Lit, Meta, FnArg, Pat,
-    parse::Parser,
-    punctuated::Punctuated,
-    Token,
+    parse::Parser, parse_macro_input, punctuated::Punctuated, Expr, ExprLit, FnArg, ItemFn, Lit,
+    Meta, Pat, Token,
 };
 
 /// Attribute macro to enforce timeouts on async functions
@@ -141,7 +139,7 @@ pub fn with_timeout(args: TokenStream, item: TokenStream) -> TokenStream {
         None => {
             return syn::Error::new(
                 proc_macro2::Span::call_site(),
-                "#[with_timeout] requires `secs = <u64>` argument"
+                "#[with_timeout] requires `secs = <u64>` argument",
             )
             .to_compile_error()
             .into();
@@ -152,12 +150,9 @@ pub fn with_timeout(args: TokenStream, item: TokenStream) -> TokenStream {
 
     // Ensure it's async
     if func.sig.asyncness.is_none() {
-        return syn::Error::new_spanned(
-            &func.sig.fn_token,
-            "#[with_timeout] requires an async fn"
-        )
-        .to_compile_error()
-        .into();
+        return syn::Error::new_spanned(&func.sig.fn_token, "#[with_timeout] requires an async fn")
+            .to_compile_error()
+            .into();
     }
 
     // Extract function components

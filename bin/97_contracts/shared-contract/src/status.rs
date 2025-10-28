@@ -23,7 +23,7 @@ use serde::{Deserialize, Serialize};
 pub enum HealthStatus {
     /// Component is healthy and operating normally
     Healthy,
-    
+
     /// Component is degraded but still functional
     ///
     /// Examples: High memory usage, thermal throttling, slow responses
@@ -31,7 +31,7 @@ pub enum HealthStatus {
         /// Reason for degradation
         reason: String,
     },
-    
+
     /// Component is unhealthy and may not function correctly
     ///
     /// Examples: Hardware errors, critical resource exhaustion
@@ -46,17 +46,17 @@ impl HealthStatus {
     pub fn is_healthy(&self) -> bool {
         matches!(self, HealthStatus::Healthy)
     }
-    
+
     /// Check if component is degraded
     pub fn is_degraded(&self) -> bool {
         matches!(self, HealthStatus::Degraded { .. })
     }
-    
+
     /// Check if component is unhealthy
     pub fn is_unhealthy(&self) -> bool {
         matches!(self, HealthStatus::Unhealthy { .. })
     }
-    
+
     /// Check if component is operational (healthy or degraded)
     pub fn is_operational(&self) -> bool {
         !self.is_unhealthy()
@@ -83,16 +83,16 @@ impl HealthStatus {
 pub enum OperationalStatus {
     /// Component is starting up
     Starting,
-    
+
     /// Component is ready to accept work
     Ready,
-    
+
     /// Component is busy processing work
     Busy,
-    
+
     /// Component is shutting down
     Stopping,
-    
+
     /// Component is stopped
     Stopped,
 }
@@ -102,17 +102,17 @@ impl OperationalStatus {
     pub fn is_ready(&self) -> bool {
         matches!(self, OperationalStatus::Ready)
     }
-    
+
     /// Check if component is busy
     pub fn is_busy(&self) -> bool {
         matches!(self, OperationalStatus::Busy)
     }
-    
+
     /// Check if component is available (ready or busy but not stopped)
     pub fn is_available(&self) -> bool {
         matches!(self, OperationalStatus::Ready | OperationalStatus::Busy)
     }
-    
+
     /// Check if component is stopped or stopping
     pub fn is_stopped(&self) -> bool {
         matches!(self, OperationalStatus::Stopped | OperationalStatus::Stopping)
@@ -134,9 +134,7 @@ mod tests {
 
     #[test]
     fn health_status_degraded() {
-        let status = HealthStatus::Degraded {
-            reason: "High memory".to_string(),
-        };
+        let status = HealthStatus::Degraded { reason: "High memory".to_string() };
         assert!(!status.is_healthy());
         assert!(status.is_degraded());
         assert!(!status.is_unhealthy());
@@ -145,9 +143,7 @@ mod tests {
 
     #[test]
     fn health_status_unhealthy() {
-        let status = HealthStatus::Unhealthy {
-            reason: "GPU error".to_string(),
-        };
+        let status = HealthStatus::Unhealthy { reason: "GPU error".to_string() };
         assert!(!status.is_healthy());
         assert!(!status.is_degraded());
         assert!(status.is_unhealthy());
@@ -187,9 +183,7 @@ mod tests {
         let json = serde_json::to_string(&healthy).unwrap();
         assert!(json.contains("\"status\":\"healthy\""));
 
-        let degraded = HealthStatus::Degraded {
-            reason: "test".to_string(),
-        };
+        let degraded = HealthStatus::Degraded { reason: "test".to_string() };
         let json = serde_json::to_string(&degraded).unwrap();
         assert!(json.contains("\"status\":\"degraded\""));
         assert!(json.contains("\"reason\":\"test\""));

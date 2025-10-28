@@ -47,6 +47,7 @@ use steps::world::World;
 #[tokio::main]
 async fn main() {
     World::cucumber()
-        .max_concurrent_scenarios(1)  // TEAM-308: Force sequential to fix race condition
-        .run_and_exit("features").await;
+        .max_concurrent_scenarios(1) // TEAM-308: Force sequential to fix race condition
+        .run_and_exit("features")
+        .await;
 }

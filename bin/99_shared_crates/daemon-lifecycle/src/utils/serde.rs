@@ -39,23 +39,13 @@ mod tests {
             time: SystemTime,
         }
 
-        let original = TestStruct {
-            time: SystemTime::now(),
-        };
+        let original = TestStruct { time: SystemTime::now() };
         let json = serde_json::to_string(&original).unwrap();
         let deserialized: TestStruct = serde_json::from_str(&json).unwrap();
 
         // Compare as Unix timestamps (within 1 second tolerance)
-        let orig_secs = original
-            .time
-            .duration_since(UNIX_EPOCH)
-            .unwrap()
-            .as_secs();
-        let deser_secs = deserialized
-            .time
-            .duration_since(UNIX_EPOCH)
-            .unwrap()
-            .as_secs();
+        let orig_secs = original.time.duration_since(UNIX_EPOCH).unwrap().as_secs();
+        let deser_secs = deserialized.time.duration_since(UNIX_EPOCH).unwrap().as_secs();
         assert_eq!(orig_secs, deser_secs);
     }
 }

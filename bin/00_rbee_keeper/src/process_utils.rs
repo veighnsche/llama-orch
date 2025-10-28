@@ -4,9 +4,9 @@
 // Used by keeper to show daemon startup output to the user.
 
 use anyhow::Result;
+use std::process::Stdio;
 use tokio::io::{AsyncBufReadExt, BufReader};
 use tokio::process::{Child, Command};
-use std::process::Stdio;
 
 /// Spawn command with stdout/stderr streaming to terminal
 ///
@@ -28,9 +28,9 @@ use std::process::Stdio;
 pub async fn spawn_with_output_streaming(mut command: Command) -> Result<Child> {
     command.stdout(Stdio::piped());
     command.stderr(Stdio::piped());
-    
+
     let mut child = command.spawn()?;
-    
+
     // Stream stdout to terminal
     if let Some(stdout) = child.stdout.take() {
         tokio::spawn(async move {
@@ -41,7 +41,7 @@ pub async fn spawn_with_output_streaming(mut command: Command) -> Result<Child> 
             }
         });
     }
-    
+
     // Stream stderr to terminal
     if let Some(stderr) = child.stderr.take() {
         tokio::spawn(async move {
@@ -52,7 +52,7 @@ pub async fn spawn_with_output_streaming(mut command: Command) -> Result<Child> 
             }
         });
     }
-    
+
     Ok(child)
 }
 
@@ -74,7 +74,7 @@ pub fn stream_child_output(child: &mut Child) {
             }
         });
     }
-    
+
     // Stream stderr if available
     if let Some(stderr) = child.stderr.take() {
         tokio::spawn(async move {

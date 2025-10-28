@@ -14,7 +14,7 @@ thread_local! {
 }
 
 /// Set thread-local target (called by narrate_fn macro)
-/// 
+///
 /// TEAM-311: Pushes onto stack instead of replacing
 #[doc(hidden)]
 pub fn set_target(target: &str) {
@@ -37,7 +37,5 @@ pub fn clear_target() {
 ///
 /// TEAM-311: Returns the top of the stack (most recent function)
 pub(crate) fn get_target() -> Option<String> {
-    THREAD_TARGET_STACK.with(|stack| {
-        stack.borrow().last().cloned()
-    })
+    THREAD_TARGET_STACK.with(|stack| stack.borrow().last().cloned())
 }

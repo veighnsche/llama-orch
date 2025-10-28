@@ -42,14 +42,14 @@
 //! # }
 //! ```
 
+use crate::shutdown::{shutdown_daemon, ShutdownConfig};
+use crate::SshConfig;
 use anyhow::{Context, Result};
 use observability_narration_core::n;
 use observability_narration_macros::with_job_id;
-use timeout_enforcer::with_timeout;
 use std::time::Duration;
+use timeout_enforcer::with_timeout;
 use tokio::time::sleep;
-use crate::SshConfig;
-use crate::shutdown::{shutdown_daemon, ShutdownConfig};
 
 /// Configuration for stopping daemon on remote machine
 ///
@@ -58,16 +58,16 @@ use crate::shutdown::{shutdown_daemon, ShutdownConfig};
 pub struct StopConfig {
     /// Name of daemon to stop
     pub daemon_name: String,
-    
+
     /// HTTP shutdown endpoint URL
     pub shutdown_url: String,
-    
+
     /// Health endpoint URL (for polling)
     pub health_url: String,
-    
+
     /// SSH connection configuration (for fallback)
     pub ssh_config: SshConfig,
-    
+
     /// Optional job ID for SSE narration routing
     pub job_id: Option<String>,
 }
@@ -96,27 +96,24 @@ pub async fn stop_daemon(stop_config: StopConfig) -> Result<()> {
     let shutdown_url = &stop_config.shutdown_url;
     let health_url = &stop_config.health_url;
     let ssh_config = &stop_config.ssh_config;
-    
-    n!("stop_start", "🛑 Stopping {} on {}@{}", 
-        daemon_name, ssh_config.user, ssh_config.hostname);
+
+    n!("stop_start", "🛑 Stopping {} on {}@{}", daemon_name, ssh_config.user, ssh_config.hostname);
 
     // Step 1: Try HTTP shutdown endpoint
     n!("http_shutdown", "📡 Attempting HTTP shutdown: {}", shutdown_url);
-    
-    let client = reqwest::Client::builder()
-        .timeout(Duration::from_secs(10))
-        .build()?;
-    
+
+    let client = reqwest::Client::builder().timeout(Duration::from_secs(10)).build()?;
+
     match client.post(shutdown_url).send().await {
         Ok(response) if response.status().is_success() => {
             n!("http_success", "✅ HTTP shutdown request accepted");
-            
+
             // Step 2: Poll health endpoint to verify shutdown
             n!("polling", "⏳ Waiting for daemon to stop...");
-            
+
             for attempt in 1..=10 {
                 sleep(Duration::from_millis(500)).await;
-                
+
                 match client.get(health_url).send().await {
                     Ok(resp) if resp.status().is_success() => {
                         n!("still_running", "⏳ Daemon still running (attempt {}/10)", attempt);
@@ -129,11 +126,15 @@ pub async fn stop_daemon(stop_config: StopConfig) -> Result<()> {
                     }
                 }
             }
-            
+
             n!("http_timeout", "⚠️  Daemon didn't stop after HTTP shutdown, falling back to SSH");
         }
         Ok(response) => {
-            n!("http_failed", "⚠️  HTTP shutdown failed: {}, falling back to SSH", response.status());
+            n!(
+                "http_failed",
+                "⚠️  HTTP shutdown failed: {}, falling back to SSH",
+                response.status()
+            );
         }
         Err(e) => {
             n!("http_error", "⚠️  HTTP shutdown error: {}, falling back to SSH", e);
@@ -142,7 +143,7 @@ pub async fn stop_daemon(stop_config: StopConfig) -> Result<()> {
 
     // Step 3: Fallback to SSH-based shutdown
     n!("ssh_fallback", "🔄 Falling back to SSH-based shutdown...");
-    
+
     let shutdown_config = ShutdownConfig {
         daemon_name: daemon_name.to_string(),
         shutdown_url: shutdown_url.to_string(),
@@ -150,12 +151,10 @@ pub async fn stop_daemon(stop_config: StopConfig) -> Result<()> {
         ssh_config: ssh_config.clone(),
         job_id: stop_config.job_id.clone(),
     };
-    
-    shutdown_daemon(shutdown_config)
-        .await
-        .context("SSH-based shutdown failed")?;
-    
+
+    shutdown_daemon(shutdown_config).await.context("SSH-based shutdown failed")?;
+
     n!("stop_complete", "🎉 {} stopped via SSH fallback", daemon_name);
-    
+
     Ok(())
 }

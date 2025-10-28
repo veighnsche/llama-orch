@@ -34,10 +34,10 @@ pub struct HealthPollConfig {
 
     /// Optional daemon name for narration (default: "daemon")
     pub daemon_name: Option<String>,
-    
+
     /// TEAM-338: Binary name for installation check (e.g., "queen-rbee")
     pub daemon_binary_name: String,
-    
+
     /// TEAM-338: SSH config for remote checks
     pub ssh_config: crate::SshConfig,
 }
@@ -136,12 +136,10 @@ pub async fn poll_daemon_health(config: HealthPollConfig) -> anyhow::Result<()> 
     for attempt in 1..=config.max_attempts {
         // Check health
         // TEAM-338: RULE ZERO - Updated to new signature with daemon_name and ssh_config
-        let status = check_daemon_health(
-            &config.base_url,
-            &config.daemon_binary_name,
-            &config.ssh_config
-        ).await;
-        
+        let status =
+            check_daemon_health(&config.base_url, &config.daemon_binary_name, &config.ssh_config)
+                .await;
+
         if status.is_running {
             // Success!
             n!("daemon_healthy", "✅ {} is healthy (attempt {})", daemon_name, attempt);

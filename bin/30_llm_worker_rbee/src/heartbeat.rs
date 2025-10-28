@@ -32,7 +32,7 @@ const ACTION_SEND: &str = "send_heartbeat";
 ///
 /// This is called periodically (e.g., every 30s) to signal worker is alive
 pub async fn send_heartbeat_to_queen(
-    worker_info: &WorkerInfo,  // TEAM-284: Pass full worker info
+    worker_info: &WorkerInfo, // TEAM-284: Pass full worker info
     queen_url: &str,
 ) -> Result<()> {
     Narration::new(ACTOR_WORKER_HEARTBEAT, ACTION_SEND, &worker_info.id)
@@ -65,21 +65,18 @@ pub async fn send_heartbeat_to_queen(
 ///
 /// This runs in the background for the lifetime of the worker
 pub fn start_heartbeat_task(
-    worker_info: WorkerInfo,  // TEAM-284: Pass full worker info
+    worker_info: WorkerInfo, // TEAM-284: Pass full worker info
     queen_url: String,
 ) -> tokio::task::JoinHandle<()> {
     tokio::spawn(async move {
         let mut interval = tokio::time::interval(tokio::time::Duration::from_secs(30));
-        
+
         loop {
             interval.tick().await;
-            
+
             // TEAM-261: Send heartbeat to queen (not hive)
             // TEAM-284: Send full WorkerInfo
-            if let Err(e) = send_heartbeat_to_queen(
-                &worker_info,
-                &queen_url,
-            ).await {
+            if let Err(e) = send_heartbeat_to_queen(&worker_info, &queen_url).await {
                 eprintln!("Failed to send heartbeat: {}", e);
             }
         }

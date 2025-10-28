@@ -264,15 +264,15 @@ impl ProcessNarrationCapture {
             // Use low-level narrate() with NarrationFields to use owned strings
             // TEAM-300: We preserve the worker's actor and action from stdout!
             use crate::{narrate, NarrationFields};
-            
+
             // TEAM-300: Format human field before moving values into struct!
             let human_text = format!("[{}] {}: {}", actor, action, message);
-            
+
             narrate(
                 NarrationFields {
                     actor: "proc-cap", // TEAM-300: We use "proc-cap" as actor (process capture!)
                     action: "reemit", // TEAM-300: Action is "reemit" (we're re-emitting worker narration!)
-                    target: actor, // TEAM-300: Target is the original actor (e.g., "worker")
+                    target: actor,    // TEAM-300: Target is the original actor (e.g., "worker")
                     human: human_text, // TEAM-300: Include original actor/action in message!
                     ..Default::default()
                 },

@@ -56,20 +56,20 @@ const DEFAULT_CHANNEL_CAPACITY: usize = 1000;
 // ============================================================================
 // DEPRECATED CONSTANTS (TEAM-310)
 // ============================================================================
-// 
+//
 // ⚠️ DEPRECATED: ACTOR_WIDTH and ACTION_WIDTH moved to format.rs module
-// 
+//
 // Old location (pre-TEAM-310):
 //   const ACTOR_WIDTH: usize = 10;
 //   const ACTION_WIDTH: usize = 15;
-// 
+//
 // New location (TEAM-310):
 //   observability_narration_core::format::ACTOR_WIDTH (now 20)
 //   observability_narration_core::format::ACTION_WIDTH (now 20)
-// 
+//
 // Migration: Import from format module instead:
 //   use observability_narration_core::format::{ACTOR_WIDTH, ACTION_WIDTH};
-// 
+//
 // See: TEAM_310_FORMAT_MODULE.md for full migration guide
 
 // ============================================================================
@@ -147,14 +147,14 @@ impl From<NarrationFields> for NarrationEvent {
         //
         // All formatting goes through NarrationFields::format() to ensure consistency
         // across all code paths (SSE, CLI, tests).
-        // 
+        //
         // ⚠️ DEPRECATED: Inline formatting removed (pre-TEAM-310)
         // Old code (REMOVED):
         //   let formatted = format!(
         //       "[{:<10}] {:<15}: {}",
         //       fields.actor, fields.action, fields.human
         //   );
-        // 
+        //
         // ⚠️ OLD: Direct format_message_with_fn() call (TEAM-310/311)
         // Now replaced with fields.format() for central formatting
         let formatted = fields.format();
@@ -401,7 +401,7 @@ pub fn send(fields: &NarrationFields) {
 pub fn try_send(fields: &NarrationFields) -> bool {
     // TEAM-298: Early return if no job_id (security: prevent leaks)
     let Some(job_id) = &fields.job_id else {
-        return false;  // No job_id = can't route to SSE
+        return false; // No job_id = can't route to SSE
     };
 
     let event = NarrationEvent::from(fields.clone());
@@ -491,7 +491,10 @@ mod team_201_formatting_tests {
         // Formatted field should match new format: bold first line, message on second line, trailing newline
         // Format: \x1b[1m[actor              ] action              \x1b[0m\nmessage\n
         // test-actor (10 chars) + 10 spaces = 20, test-action (11 chars) + 9 spaces = 20
-        assert_eq!(event.formatted, "\x1b[1m[test-actor          ] test-action         \x1b[0m\nTest message\n");
+        assert_eq!(
+            event.formatted,
+            "\x1b[1m[test-actor          ] test-action         \x1b[0m\nTest message\n"
+        );
 
         // Verify components
         assert!(event.formatted.contains("[test-actor"));
@@ -507,7 +510,10 @@ mod team_201_formatting_tests {
 
         // Should pad to ACTOR_WIDTH (20) chars for actor, ACTION_WIDTH (20) for action
         // TEAM-310: New format with bold, newline, and trailing newline
-        assert_eq!(event.formatted, "\x1b[1m[abc                 ] xyz                 \x1b[0m\nShort\n");
+        assert_eq!(
+            event.formatted,
+            "\x1b[1m[abc                 ] xyz                 \x1b[0m\nShort\n"
+        );
     }
 
     #[test]

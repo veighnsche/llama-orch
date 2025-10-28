@@ -133,7 +133,7 @@ impl JobClient {
 
         while let Some(chunk) = stream.next().await {
             let chunk = chunk.map_err(|e| anyhow::anyhow!("Stream error: {}", e))?;
-            
+
             // Append to buffer
             buffer.extend_from_slice(&chunk);
 
@@ -142,11 +142,11 @@ impl JobClient {
             while let Some(newline_pos) = buffer.iter().position(|&b| b == b'\n') {
                 // Extract line (including newline)
                 let line_bytes = buffer.drain(..=newline_pos).collect::<Vec<_>>();
-                
+
                 // Convert to string (skip if invalid UTF-8)
                 if let Ok(line) = std::str::from_utf8(&line_bytes) {
                     let line = line.trim();
-                    
+
                     // Strip "data:" or "data: " prefix if present (SSE format)
                     // TEAM-312: Handle both "data:" (empty event) and "data: content"
                     let data = line
@@ -166,12 +166,12 @@ impl JobClient {
                     if data.contains("[DONE]") {
                         return Ok(job_id);
                     }
-                    
+
                     // TEAM-305-FIX: Check for [CANCELLED] marker
                     if data.contains("[CANCELLED]") {
                         return Err(anyhow::anyhow!("Job was cancelled"));
                     }
-                    
+
                     // TEAM-304: Check for [ERROR] marker
                     if data.contains("[ERROR]") {
                         let error_msg = data.strip_prefix("[ERROR]").unwrap_or(data).trim();

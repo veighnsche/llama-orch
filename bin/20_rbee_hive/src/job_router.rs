@@ -145,8 +145,8 @@ async fn route_operation(
         // - WorkerProcessList/Get/Delete: Manage running processes (ps/kill)
         //
         Operation::WorkerSpawn(request) => {
-            use daemon_lifecycle::{start_daemon, StartConfig, HttpDaemonConfig, SshConfig};
-            use rbee_hive_worker_catalog::{WorkerType, Platform};
+            use daemon_lifecycle::{start_daemon, HttpDaemonConfig, SshConfig, StartConfig};
+            use rbee_hive_worker_catalog::{Platform, WorkerType};
 
             n!(
                 "worker_spawn_start",
@@ -169,12 +169,16 @@ async fn route_operation(
             // Find worker binary in catalog
             // NOTE: If binary not found, it means worker-catalog needs to install it first!
             // Hive does NOT install worker binaries - that's worker-catalog's job.
-            let worker_binary = state.worker_catalog.find_by_type_and_platform(worker_type, Platform::current())
-                .ok_or_else(|| anyhow::anyhow!(
-                    "Worker binary not found for {:?}. \
+            let worker_binary = state
+                .worker_catalog
+                .find_by_type_and_platform(worker_type, Platform::current())
+                .ok_or_else(|| {
+                    anyhow::anyhow!(
+                        "Worker binary not found for {:?}. \
                      Worker binaries must be installed via worker-catalog first!",
-                    worker_type
-                ))?;
+                        worker_type
+                    )
+                })?;
 
             // Allocate port
             let port = 9000 + (rand::random::<u16>() % 1000);
@@ -183,11 +187,16 @@ async fn route_operation(
 
             // Build worker arguments
             let args = vec![
-                "--worker-id".to_string(), worker_id.clone(),
-                "--model".to_string(), request.model.clone(),
-                "--device".to_string(), request.device.to_string(),
-                "--port".to_string(), port.to_string(),
-                "--queen-url".to_string(), queen_url.clone(),
+                "--worker-id".to_string(),
+                worker_id.clone(),
+                "--model".to_string(),
+                request.model.clone(),
+                "--device".to_string(),
+                request.device.to_string(),
+                "--port".to_string(),
+                port.to_string(),
+                "--queen-url".to_string(),
+                queen_url.clone(),
             ];
 
             // Start worker using daemon-lifecycle
@@ -251,7 +260,8 @@ async fn route_operation(
                 .map_err(|e| anyhow::anyhow!("Failed to run ps: {}", e))?;
 
             let stdout = String::from_utf8_lossy(&output.stdout);
-            let worker_lines: Vec<_> = stdout.lines()
+            let worker_lines: Vec<_> = stdout
+                .lines()
                 .filter(|line| line.contains("llm-worker") || line.contains("worker-rbee"))
                 .collect();
 

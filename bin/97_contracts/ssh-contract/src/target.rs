@@ -34,20 +34,20 @@ use specta::Type;
 pub struct SshTarget {
     /// Host alias from SSH config (first word)
     pub host: String,
-    
+
     /// Host subtitle (second word, optional)
     #[serde(skip_serializing_if = "Option::is_none")]
     pub host_subtitle: Option<String>,
-    
+
     /// Hostname (IP or domain)
     pub hostname: String,
-    
+
     /// SSH username
     pub user: String,
-    
+
     /// SSH port
     pub port: u16,
-    
+
     /// Connection status
     pub status: SshTargetStatus,
 }
@@ -112,10 +112,10 @@ mod tests {
     fn test_serialization() {
         let target = SshTarget::new("workstation", "192.168.1.100", "vince", 22)
             .with_status(SshTargetStatus::Online);
-        
+
         let json = serde_json::to_string(&target).unwrap();
         let deserialized: SshTarget = serde_json::from_str(&json).unwrap();
-        
+
         assert_eq!(target, deserialized);
     }
 }

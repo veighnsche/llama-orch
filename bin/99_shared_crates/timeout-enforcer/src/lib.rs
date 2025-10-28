@@ -66,8 +66,8 @@
 //! ```
 
 // TEAM-330: Modular structure for better readability
-mod enforcer;
 mod enforcement;
+mod enforcer;
 
 #[cfg(test)]
 mod tests;

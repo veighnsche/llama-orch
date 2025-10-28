@@ -9,8 +9,8 @@ pub mod world;
 
 // TEAM-307: New step modules
 pub mod context_steps;
-pub mod sse_steps;
 pub mod job_steps;
+pub mod sse_steps;
 
 // TEAM-308: Cute mode step implementations
 pub mod cute_mode;
@@ -22,7 +22,7 @@ pub mod story_mode_extended;
 pub mod failure_scenarios;
 
 // TEAM-309: Additional step implementations
-pub mod levels;
 pub mod job_lifecycle;
+pub mod levels;
 pub mod sse_extended;
 pub mod worker_integration;

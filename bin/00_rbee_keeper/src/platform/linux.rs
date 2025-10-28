@@ -3,28 +3,22 @@
 //! TEAM-293: Platform abstraction for Linux
 
 use super::{PlatformPaths, PlatformProcess, PlatformRemote};
-use anyhow::{Result, Context};
+use anyhow::{Context, Result};
 use std::path::PathBuf;
 
 pub struct LinuxPlatform;
 
 impl PlatformPaths for LinuxPlatform {
     fn config_dir() -> Result<PathBuf> {
-        dirs::config_dir()
-            .map(|p| p.join("rbee"))
-            .context("Failed to get config directory")
+        dirs::config_dir().map(|p| p.join("rbee")).context("Failed to get config directory")
     }
 
     fn data_dir() -> Result<PathBuf> {
-        dirs::data_local_dir()
-            .map(|p| p.join("rbee"))
-            .context("Failed to get data directory")
+        dirs::data_local_dir().map(|p| p.join("rbee")).context("Failed to get data directory")
     }
 
     fn bin_dir() -> Result<PathBuf> {
-        dirs::home_dir()
-            .map(|p| p.join(".local/bin"))
-            .context("Failed to get bin directory")
+        dirs::home_dir().map(|p| p.join(".local/bin")).context("Failed to get bin directory")
     }
 
     fn exe_extension() -> &'static str {
@@ -39,25 +33,25 @@ impl PlatformProcess for LinuxPlatform {
 
     fn terminate(pid: u32) -> Result<()> {
         use std::process::Command;
-        
+
         Command::new("kill")
             .arg("-TERM")
             .arg(pid.to_string())
             .output()
             .context("Failed to send SIGTERM")?;
-        
+
         Ok(())
     }
 
     fn kill(pid: u32) -> Result<()> {
         use std::process::Command;
-        
+
         Command::new("kill")
             .arg("-KILL")
             .arg(pid.to_string())
             .output()
             .context("Failed to send SIGKILL")?;
-        
+
         Ok(())
     }
 }
@@ -73,12 +67,10 @@ impl PlatformRemote for LinuxPlatform {
 
     fn check_ssh_available() -> Result<bool> {
         use std::process::Command;
-        
-        let output = Command::new("which")
-            .arg("ssh")
-            .output()
-            .context("Failed to check for ssh")?;
-        
+
+        let output =
+            Command::new("which").arg("ssh").output().context("Failed to check for ssh")?;
+
         Ok(output.status.success())
     }
 }

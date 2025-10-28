@@ -19,24 +19,24 @@ impl WorkspaceFinder {
         // TEAM-311: Phase 2 - Workspace
         let start = Instant::now();
         n!("phase_workspace", "🧭 Workspace detection");
-        
+
         let mut current = std::env::current_dir().context("Failed to get current directory")?;
         let mut depth = 0;
 
         loop {
             let cargo_toml = current.join("Cargo.toml");
-            
+
             if cargo_toml.exists() {
                 let contents =
                     std::fs::read_to_string(&cargo_toml).context("Failed to read Cargo.toml")?;
-                    
+
                 if contents.contains("[workspace]") {
                     n!("find_workspace", "Searching for workspace root · depth: {}", depth);
                     n!("workspace_found", "Workspace: {}", current.display());
-                    
+
                     let elapsed = start.elapsed().as_millis();
                     n!("summary", "✅ Workspace ok · {}ms", elapsed);
-                    
+
                     return Ok(current);
                 }
             }

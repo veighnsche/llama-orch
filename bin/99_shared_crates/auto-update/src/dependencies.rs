@@ -33,18 +33,29 @@ impl DependencyParser {
         let mut visited = HashSet::new();
         let mut toml_files = Vec::new();
 
-        Self::collect_recursive(workspace_root, source_dir, &mut all_deps, &mut visited, &mut toml_files)?;
+        Self::collect_recursive(
+            workspace_root,
+            source_dir,
+            &mut all_deps,
+            &mut visited,
+            &mut toml_files,
+        )?;
 
         // TEAM-311: Batch summary
         n!("collect_tomls", "Queued Cargo.toml files: {}", toml_files.len());
-        
+
         let local_deps = all_deps.len();
         let transitive_deps = toml_files.len().saturating_sub(1); // Root crate doesn't count as transitive
-        n!("parse_batch", "Parsed {} deps · {} local path · {} transitive", 
-            toml_files.len(), local_deps, transitive_deps);
-        
+        n!(
+            "parse_batch",
+            "Parsed {} deps · {} local path · {} transitive",
+            toml_files.len(),
+            local_deps,
+            transitive_deps
+        );
+
         // TEAM-312: Removed nd!() debug logging (entropy)
-        
+
         let elapsed = start.elapsed().as_millis();
         n!("summary", "✅ Deps ok · {}ms", elapsed);
 
@@ -148,7 +159,13 @@ impl DependencyParser {
 
                     // Recursively check this dependency's dependencies
                     let before_len = all_deps.len();
-                    Self::collect_recursive(workspace_root, &dep_relative, all_deps, visited, toml_files)?;
+                    Self::collect_recursive(
+                        workspace_root,
+                        &dep_relative,
+                        all_deps,
+                        visited,
+                        toml_files,
+                    )?;
                     transitive_count += all_deps.len() - before_len;
                 }
             }

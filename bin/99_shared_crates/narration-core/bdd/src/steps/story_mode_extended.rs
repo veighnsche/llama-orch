@@ -35,7 +35,8 @@ async fn when_emit_story_in_context(world: &mut World, action: String, story: St
                 story: Some(story),
                 ..Default::default()
             });
-        }).await;
+        })
+        .await;
     }
 }
 
@@ -84,7 +85,7 @@ async fn then_story_contains(world: &mut World, expected: String) {
         let captured = adapter.captured();
         assert!(!captured.is_empty(), "Should have captured narration");
         let last = captured.last().unwrap();
-        
+
         if let Some(story) = &last.story {
             assert!(
                 story.contains(&expected),
@@ -104,7 +105,7 @@ async fn then_story_not_contains(world: &mut World, unexpected: String) {
         let captured = adapter.captured();
         assert!(!captured.is_empty(), "Should have captured narration");
         let last = captured.last().unwrap();
-        
+
         if let Some(story) = &last.story {
             assert!(
                 !story.contains(&unexpected),
@@ -142,7 +143,7 @@ async fn then_story_length_at_most(world: &mut World, max_length: usize) {
         let captured = adapter.captured();
         assert!(!captured.is_empty(), "Should have captured narration");
         let last = captured.last().unwrap();
-        
+
         if let Some(story) = &last.story {
             assert!(
                 story.len() <= max_length,
@@ -200,16 +201,16 @@ async fn then_event_n_story_contains(world: &mut World, event_num: usize, expect
     if let Some(adapter) = &world.adapter {
         let captured = adapter.captured();
         let index = event_num - 1; // Convert to 0-indexed
-        
+
         assert!(
             index < captured.len(),
             "Event {} does not exist (only {} events captured)",
             event_num,
             captured.len()
         );
-        
+
         let event = &captured[world.initial_event_count + index];
-        
+
         if let Some(story) = &event.story {
             assert!(
                 story.contains(&expected),
@@ -234,7 +235,7 @@ async fn then_story_includes_correlation_id(world: &mut World, correlation_id: S
         let captured = adapter.captured();
         assert!(!captured.is_empty(), "Should have captured narration");
         let last = captured.last().unwrap();
-        
+
         // Check if the event has the correlation_id
         assert!(
             last.correlation_id.as_ref().map_or(false, |id| id == &correlation_id),

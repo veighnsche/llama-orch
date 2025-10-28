@@ -7,8 +7,8 @@
 
 use anyhow::{Context, Result};
 use std::fs;
-use std::path::PathBuf;
 use std::ops::{Deref, DerefMut};
+use std::path::PathBuf;
 
 // TEAM-315: Use KeeperConfig from contract
 pub use keeper_config_contract::KeeperConfig;
@@ -52,8 +52,9 @@ impl Config {
 
         let contents = fs::read_to_string(&config_path).context("Failed to read config file")?;
 
-        let keeper_config = KeeperConfig::from_toml(&contents).context("Failed to parse config file")?;
-        
+        let keeper_config =
+            KeeperConfig::from_toml(&contents).context("Failed to parse config file")?;
+
         // Validate
         keeper_config.validate().context("Invalid configuration")?;
 

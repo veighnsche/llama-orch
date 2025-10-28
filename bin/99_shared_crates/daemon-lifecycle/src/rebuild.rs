@@ -56,16 +56,16 @@
 //! # }
 //! ```
 
+use crate::build::{build_daemon, BuildConfig};
+use crate::install::{install_daemon, InstallConfig};
+use crate::start::HttpDaemonConfig; // TEAM-330: Moved from types/
+use crate::start::{start_daemon, StartConfig};
+use crate::stop::{stop_daemon, StopConfig};
+use crate::SshConfig;
 use anyhow::{Context, Result};
 use observability_narration_core::n;
 use observability_narration_macros::with_job_id;
 use timeout_enforcer::with_timeout;
-use crate::SshConfig;
-use crate::start::HttpDaemonConfig; // TEAM-330: Moved from types/
-use crate::build::{build_daemon, BuildConfig};
-use crate::stop::{stop_daemon, StopConfig};
-use crate::install::{install_daemon, InstallConfig};
-use crate::start::{start_daemon, StartConfig};
 
 /// Configuration for rebuilding daemon on remote machine
 ///
@@ -91,13 +91,13 @@ use crate::start::{start_daemon, StartConfig};
 pub struct RebuildConfig {
     /// Name of the daemon binary
     pub daemon_name: String,
-    
+
     /// SSH connection configuration
     pub ssh_config: SshConfig,
-    
+
     /// Daemon configuration (for restart)
     pub daemon_config: HttpDaemonConfig,
-    
+
     /// Optional job ID for SSE narration routing
     /// When set, all narration (including timeout countdown) goes through SSE
     pub job_id: Option<String>,
@@ -141,9 +141,14 @@ pub async fn rebuild_daemon(rebuild_config: RebuildConfig) -> Result<()> {
     let daemon_name = &rebuild_config.daemon_name;
     let ssh_config = &rebuild_config.ssh_config;
     let daemon_config = &rebuild_config.daemon_config;
-    
-    n!("rebuild_start", "🔄 Rebuilding {} on {}@{}", 
-        daemon_name, ssh_config.user, ssh_config.hostname);
+
+    n!(
+        "rebuild_start",
+        "🔄 Rebuilding {} on {}@{}",
+        daemon_name,
+        ssh_config.user,
+        ssh_config.hostname
+    );
 
     // Step 1: Build binary locally
     n!("rebuild_build", "🔨 Building {} locally", daemon_name);
@@ -152,20 +157,18 @@ pub async fn rebuild_daemon(rebuild_config: RebuildConfig) -> Result<()> {
         target: None,
         job_id: rebuild_config.job_id.clone(),
     };
-    
-    let binary_path = build_daemon(build_config)
-        .await
-        .context("Failed to build daemon")?;
-    
+
+    let binary_path = build_daemon(build_config).await.context("Failed to build daemon")?;
+
     n!("rebuild_built", "✅ Built: {}", binary_path.display());
 
     // Step 2: Stop running daemon (if running)
     n!("rebuild_stop", "🛑 Stopping running daemon");
-    
+
     // Extract base URL from daemon_config.health_url
     let health_url = daemon_config.health_url.clone();
     let shutdown_url = format!("{}/v1/shutdown", health_url.trim_end_matches("/health"));
-    
+
     let stop_config = StopConfig {
         daemon_name: daemon_name.clone(),
         shutdown_url,
@@ -173,7 +176,7 @@ pub async fn rebuild_daemon(rebuild_config: RebuildConfig) -> Result<()> {
         ssh_config: ssh_config.clone(),
         job_id: rebuild_config.job_id.clone(),
     };
-    
+
     // Ignore errors if daemon is not running
     if let Err(e) = stop_daemon(stop_config).await {
         n!("rebuild_stop_warning", "⚠️  Stop failed (daemon may not be running): {}", e);
@@ -189,11 +192,9 @@ pub async fn rebuild_daemon(rebuild_config: RebuildConfig) -> Result<()> {
         local_binary_path: Some(binary_path),
         job_id: rebuild_config.job_id.clone(),
     };
-    
-    install_daemon(install_config)
-        .await
-        .context("Failed to install new binary")?;
-    
+
+    install_daemon(install_config).await.context("Failed to install new binary")?;
+
     n!("rebuild_installed", "✅ New binary installed");
 
     // Step 4: Start daemon with new binary
@@ -203,15 +204,18 @@ pub async fn rebuild_daemon(rebuild_config: RebuildConfig) -> Result<()> {
         daemon_config: daemon_config.clone(),
         job_id: rebuild_config.job_id.clone(),
     };
-    
-    let pid = start_daemon(start_config)
-        .await
-        .context("Failed to start daemon with new binary")?;
-    
+
+    let pid = start_daemon(start_config).await.context("Failed to start daemon with new binary")?;
+
     n!("rebuild_started", "✅ Daemon started with PID: {}", pid);
 
-    n!("rebuild_complete", "🎉 {} rebuilt and restarted successfully on {}@{}", 
-        daemon_name, ssh_config.user, ssh_config.hostname);
+    n!(
+        "rebuild_complete",
+        "🎉 {} rebuilt and restarted successfully on {}@{}",
+        daemon_name,
+        ssh_config.user,
+        ssh_config.hostname
+    );
 
     Ok(())
 }

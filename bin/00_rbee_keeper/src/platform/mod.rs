@@ -28,8 +28,8 @@ pub use macos::*;
 #[cfg(target_os = "windows")]
 pub use windows::*;
 
-use std::path::PathBuf;
 use anyhow::Result;
+use std::path::PathBuf;
 
 /// Platform-specific paths and directories
 pub trait PlatformPaths {
@@ -71,7 +71,7 @@ pub trait PlatformProcess {
 }
 
 /// Platform-specific remote operations
-/// 
+///
 /// Note: SSH is available on all platforms but with different setups:
 /// - Linux: Native OpenSSH
 /// - macOS: Native OpenSSH
@@ -108,10 +108,10 @@ mod tests {
     #[test]
     fn test_exe_extension() {
         let ext = exe_extension();
-        
+
         #[cfg(target_os = "windows")]
         assert_eq!(ext, ".exe");
-        
+
         #[cfg(not(target_os = "windows"))]
         assert_eq!(ext, "");
     }
@@ -121,10 +121,10 @@ mod tests {
         // All platforms should report whether they support SSH
         let has_support = has_ssh_support();
         let executable = ssh_executable();
-        
+
         #[cfg(any(target_os = "linux", target_os = "macos"))]
         assert!(has_support, "Linux/macOS should have SSH support");
-        
+
         // Don't assert on Windows as it depends on installation
         println!("Platform SSH support: {}", has_support);
         println!("SSH executable: {}", executable);

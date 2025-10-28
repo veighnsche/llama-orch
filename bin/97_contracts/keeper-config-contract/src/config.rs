@@ -31,9 +31,7 @@ fn default_queen_port() -> u16 {
 
 impl Default for KeeperConfig {
     fn default() -> Self {
-        Self {
-            queen_port: default_queen_port(),
-        }
+        Self { queen_port: default_queen_port() }
     }
 }
 
@@ -84,43 +82,35 @@ mod tests {
 
     #[test]
     fn test_queen_url() {
-        let config = KeeperConfig {
-            queen_port: 8080,
-        };
+        let config = KeeperConfig { queen_port: 8080 };
         assert_eq!(config.queen_url(), "http://localhost:8080");
     }
 
     #[test]
     fn test_validation_valid() {
-        let config = KeeperConfig {
-            queen_port: 7833,
-        };
+        let config = KeeperConfig { queen_port: 7833 };
         assert!(config.validate().is_ok());
     }
 
     #[test]
     fn test_validation_port_too_low() {
-        let config = KeeperConfig {
-            queen_port: 80,
-        };
+        let config = KeeperConfig { queen_port: 80 };
         assert!(config.validate().is_err());
     }
 
     #[test]
     fn test_toml_roundtrip() {
-        let config = KeeperConfig {
-            queen_port: 7833,
-        };
-        
+        let config = KeeperConfig { queen_port: 7833 };
+
         let toml_str = config.to_toml().unwrap();
         let parsed = KeeperConfig::from_toml(&toml_str).unwrap();
-        
+
         assert_eq!(config, parsed);
     }
 
     #[test]
     fn test_toml_with_defaults() {
-        let toml_str = "";  // Empty config should use defaults
+        let toml_str = ""; // Empty config should use defaults
         let config = KeeperConfig::from_toml(toml_str).unwrap();
         assert_eq!(config.queen_port, 7833);
     }

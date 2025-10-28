@@ -47,12 +47,12 @@
 //! # }
 //! ```
 
+use crate::utils::ssh::ssh_exec;
+use crate::SshConfig;
 use anyhow::{Context, Result};
 use observability_narration_core::n;
 use observability_narration_macros::with_job_id;
 use timeout_enforcer::with_timeout;
-use crate::SshConfig;
-use crate::utils::ssh::ssh_exec;
 
 /// Configuration for remote daemon uninstallation
 ///
@@ -75,17 +75,17 @@ use crate::utils::ssh::ssh_exec;
 pub struct UninstallConfig {
     /// Name of the daemon binary
     pub daemon_name: String,
-    
+
     /// SSH connection configuration
     pub ssh_config: SshConfig,
-    
+
     /// Optional health URL to check if daemon is running
     /// If provided, will verify daemon is stopped before uninstalling
     pub health_url: Option<String>,
-    
+
     /// Health check timeout in seconds (default: 2)
     pub health_timeout_secs: Option<u64>,
-    
+
     /// Optional job ID for SSE narration routing
     /// When set, all narration (including timeout countdown) goes through SSE
     pub job_id: Option<String>,
@@ -126,59 +126,66 @@ pub struct UninstallConfig {
 pub async fn uninstall_daemon(uninstall_config: UninstallConfig) -> Result<()> {
     let daemon_name = &uninstall_config.daemon_name;
     let ssh_config = &uninstall_config.ssh_config;
-    
-    n!("uninstall_start", "🗑️  Uninstalling {} from {}@{}", 
-        daemon_name, ssh_config.user, ssh_config.hostname);
+
+    n!(
+        "uninstall_start",
+        "🗑️  Uninstalling {} from {}@{}",
+        daemon_name,
+        ssh_config.user,
+        ssh_config.hostname
+    );
 
     // Step 1: Check if daemon is running (if health_url provided)
     if let Some(health_url) = &uninstall_config.health_url {
         n!("health_check", "🔍 Checking if daemon is running");
-        
+
         // Build full health URL (append /health if not already present)
         let full_health_url = if health_url.ends_with("/health") {
             health_url.clone()
         } else {
             format!("{}/health", health_url)
         };
-        
+
         // TEAM-338: RULE ZERO - Updated to new signature
-        let status = crate::status::check_daemon_health(
-            &full_health_url,
-            daemon_name,
-            ssh_config
-        ).await;
+        let status =
+            crate::status::check_daemon_health(&full_health_url, daemon_name, ssh_config).await;
 
         if status.is_running {
-            n!("daemon_still_running", "⚠️  Daemon '{}' is currently running. Stop it first.", daemon_name);
+            n!(
+                "daemon_still_running",
+                "⚠️  Daemon '{}' is currently running. Stop it first.",
+                daemon_name
+            );
             anyhow::bail!("Daemon {} is still running at {}", daemon_name, health_url);
         }
-        
+
         n!("daemon_stopped", "✅ Daemon is not running, safe to uninstall");
     }
 
     // Step 2: Remove binary from remote machine
     let remote_path = format!("~/.local/bin/{}", daemon_name);
     n!("removing", "🗑️  Removing {} from {}", daemon_name, remote_path);
-    
+
     // Use rm -f to not fail if file doesn't exist
     let rm_cmd = format!("rm -f ~/.local/bin/{}", daemon_name);
-    ssh_exec(&ssh_config, &rm_cmd)
-        .await
-        .context("Failed to remove binary from remote")?;
+    ssh_exec(&ssh_config, &rm_cmd).await.context("Failed to remove binary from remote")?;
 
     // Step 3: Verify removal (optional, but good practice)
     n!("verify", "✅ Verifying removal");
     let verify_cmd = format!("test ! -f ~/.local/bin/{} && echo 'REMOVED'", daemon_name);
-    let output = ssh_exec(&ssh_config, &verify_cmd)
-        .await
-        .context("Failed to verify removal")?;
-    
+    let output = ssh_exec(&ssh_config, &verify_cmd).await.context("Failed to verify removal")?;
+
     if !output.trim().contains("REMOVED") {
         n!("verify_warning", "⚠️  Could not verify removal (file may still exist)");
     }
 
-    n!("uninstall_complete", "🎉 {} uninstalled successfully from {}@{}", 
-        daemon_name, ssh_config.user, ssh_config.hostname);
+    n!(
+        "uninstall_complete",
+        "🎉 {} uninstalled successfully from {}@{}",
+        daemon_name,
+        ssh_config.user,
+        ssh_config.hostname
+    );
 
     Ok(())
 }

@@ -49,8 +49,7 @@ async fn test_operation_failure() {
         anyhow::bail!("operation failed")
     }
 
-    let result =
-        TimeoutEnforcer::new(Duration::from_secs(1)).silent().enforce(failing_op()).await;
+    let result = TimeoutEnforcer::new(Duration::from_secs(1)).silent().enforce(failing_op()).await;
 
     assert!(result.is_err());
     let err_msg = result.unwrap_err().to_string();

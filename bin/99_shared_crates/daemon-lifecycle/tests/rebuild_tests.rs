@@ -15,7 +15,7 @@
 //!
 //! Total: 18 tests
 
-use daemon_lifecycle::{RebuildConfig, SshConfig, HttpDaemonConfig};
+use daemon_lifecycle::{HttpDaemonConfig, RebuildConfig, SshConfig};
 
 // ============================================================================
 // TEST HELPERS
@@ -34,7 +34,7 @@ use daemon_lifecycle::{RebuildConfig, SshConfig, HttpDaemonConfig};
 fn test_rebuild_config_creation_all_fields() {
     let ssh = SshConfig::new("192.168.1.100".to_string(), "test".to_string(), 22);
     let daemon_config = HttpDaemonConfig::new("test-daemon", "http://192.168.1.100:8080/health");
-    
+
     let config = RebuildConfig {
         daemon_name: "test-daemon".to_string(),
         ssh_config: ssh,
@@ -52,7 +52,7 @@ fn test_rebuild_config_creation_all_fields() {
 fn test_rebuild_config_no_job_id() {
     let ssh = SshConfig::localhost();
     let daemon_config = HttpDaemonConfig::new("test-daemon", "http://localhost:8080/health");
-    
+
     let config = RebuildConfig {
         daemon_name: "test-daemon".to_string(),
         ssh_config: ssh,
@@ -67,7 +67,7 @@ fn test_rebuild_config_no_job_id() {
 fn test_rebuild_config_is_debug() {
     let ssh = SshConfig::localhost();
     let daemon_config = HttpDaemonConfig::new("test-daemon", "http://localhost:8080/health");
-    
+
     let config = RebuildConfig {
         daemon_name: "test-daemon".to_string(),
         ssh_config: ssh,
@@ -83,7 +83,7 @@ fn test_rebuild_config_is_debug() {
 fn test_rebuild_config_is_clone() {
     let ssh = SshConfig::localhost();
     let daemon_config = HttpDaemonConfig::new("test-daemon", "http://localhost:8080/health");
-    
+
     let config = RebuildConfig {
         daemon_name: "test-daemon".to_string(),
         ssh_config: ssh,
@@ -119,7 +119,7 @@ fn test_orchestration_steps_order() {
     // 2. Stop
     // 3. Install
     // 4. Start
-    
+
     // This is verified by reading the source code
     // The actual execution order is tested in integration tests
     assert!(true);
@@ -129,7 +129,7 @@ fn test_orchestration_steps_order() {
 fn test_shutdown_url_construction() {
     let health_url = "http://localhost:8080/health";
     let shutdown_url = format!("{}/v1/shutdown", health_url.trim_end_matches("/health"));
-    
+
     assert_eq!(shutdown_url, "http://localhost:8080/v1/shutdown");
 }
 
@@ -137,7 +137,7 @@ fn test_shutdown_url_construction() {
 fn test_shutdown_url_with_trailing_slash() {
     let health_url = "http://localhost:8080/health/";
     let shutdown_url = format!("{}/v1/shutdown", health_url.trim_end_matches("/health"));
-    
+
     // Should handle trailing slash
     assert!(shutdown_url.contains("/v1/shutdown"));
 }
@@ -146,7 +146,7 @@ fn test_shutdown_url_with_trailing_slash() {
 fn test_job_id_propagates_to_all_steps() {
     let ssh = SshConfig::localhost();
     let daemon_config = HttpDaemonConfig::new("test-daemon", "http://localhost:8080/health");
-    
+
     let config = RebuildConfig {
         daemon_name: "test-daemon".to_string(),
         ssh_config: ssh,
@@ -156,7 +156,7 @@ fn test_job_id_propagates_to_all_steps() {
 
     // Verify job_id is present
     assert_eq!(config.job_id, Some("job-propagate".to_string()));
-    
+
     // In actual execution, this job_id is passed to:
     // - build_daemon
     // - stop_daemon
@@ -181,7 +181,7 @@ fn test_stop_failure_is_ignored() {
     // The rebuild process ignores stop failures
     // This is tested by the warning narration in the source:
     // n!("rebuild_stop_warning", "⚠️  Stop failed (daemon may not be running): {}", e);
-    
+
     // This allows rebuilding even if daemon is not currently running
     assert!(true);
 }
@@ -193,7 +193,7 @@ fn test_error_messages_have_context() {
     // .context("Failed to build daemon")
     // .context("Failed to install new binary")
     // .context("Failed to start daemon with new binary")
-    
+
     assert!(true);
 }
 
@@ -202,7 +202,7 @@ fn test_partial_failure_cleanup() {
     // If install or start fails, the system is left in a partially updated state
     // This is acceptable for rebuild operations
     // The old binary is stopped, new binary may be installed but not running
-    
+
     // This is by design - rebuild is not transactional
     assert!(true);
 }
@@ -226,14 +226,17 @@ fn test_timeout_covers_all_steps() {
     // - Install: up to 5 minutes
     // - Start: 2 minutes
     // Total: ~12 minutes max, but typical is much faster
-    
+
     let build_max = 5 * 60;
     let stop_max = 20;
     let install_max = 5 * 60;
     let start_max = 2 * 60;
-    
+
     let total_max = build_max + stop_max + install_max + start_max;
-    assert!(total_max > 600, "Individual timeouts exceed total (by design - they run sequentially)");
+    assert!(
+        total_max > 600,
+        "Individual timeouts exceed total (by design - they run sequentially)"
+    );
 }
 
 // ============================================================================
@@ -250,12 +253,8 @@ fn test_timeout_covers_all_steps() {
 fn test_rebuild_config_with_args() {
     let ssh = SshConfig::localhost();
     let daemon_config = HttpDaemonConfig::new("test-daemon", "http://localhost:8080/health")
-        .with_args(vec![
-            "--port".to_string(),
-            "8080".to_string(),
-            "--verbose".to_string(),
-        ]);
-    
+        .with_args(vec!["--port".to_string(), "8080".to_string(), "--verbose".to_string()]);
+
     let config = RebuildConfig {
         daemon_name: "test-daemon".to_string(),
         ssh_config: ssh,
@@ -272,7 +271,7 @@ fn test_rebuild_preserves_daemon_config() {
     let ssh = SshConfig::localhost();
     let daemon_config = HttpDaemonConfig::new("test-daemon", "http://localhost:8080/health")
         .with_args(vec!["--config".to_string(), "test.toml".to_string()]);
-    
+
     let config = RebuildConfig {
         daemon_name: "test-daemon".to_string(),
         ssh_config: ssh,
@@ -307,11 +306,7 @@ fn test_health_url_variations() {
 
     for (health_url, _expected_shutdown) in test_cases {
         let shutdown_url = format!("{}/v1/shutdown", health_url.trim_end_matches("/health"));
-        assert!(
-            shutdown_url.contains("/v1/shutdown"),
-            "Failed for health_url: {}",
-            health_url
-        );
+        assert!(shutdown_url.contains("/v1/shutdown"), "Failed for health_url: {}", health_url);
     }
 }
 
@@ -319,7 +314,7 @@ fn test_health_url_variations() {
 fn test_daemon_name_matches_config() {
     let ssh = SshConfig::localhost();
     let daemon_config = HttpDaemonConfig::new("test-daemon", "http://localhost:8080/health");
-    
+
     let config = RebuildConfig {
         daemon_name: "test-daemon".to_string(),
         ssh_config: ssh,
@@ -335,7 +330,7 @@ fn test_daemon_name_matches_config() {
 fn test_localhost_detection() {
     let ssh_local = SshConfig::localhost();
     assert!(ssh_local.is_localhost());
-    
+
     let ssh_remote = SshConfig::new("192.168.1.100".to_string(), "test".to_string(), 22);
     assert!(!ssh_remote.is_localhost());
 }
@@ -351,7 +346,7 @@ fn test_documented_ssh_call_count() {
     // - Install: 3 calls (mkdir, scp, chmod)
     // - Start: 2 calls (find binary, start daemon)
     // - Build: 0 calls (local only)
-    
+
     // Total: 6-7 SSH calls in practice
     // Documentation says 3-4 which is conservative
     assert!(true);
@@ -364,7 +359,7 @@ fn test_documented_timeout_breakdown() {
     // - Stop: 20 seconds
     // - Install: up to 5 minutes
     // - Start: 2 minutes
-    
+
     assert!(true);
 }
 
@@ -375,6 +370,6 @@ fn test_documented_error_conditions() {
     // - Stop failed (daemon stuck)
     // - Install failed (SCP error)
     // - Start failed (new binary broken)
-    
+
     assert!(true);
 }

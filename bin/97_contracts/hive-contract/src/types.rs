@@ -28,22 +28,21 @@ use shared_contract::{HealthStatus, OperationalStatus};
 pub struct HiveInfo {
     /// Hive ID (alias from config, e.g., "localhost", "gpu-server-1")
     pub id: String,
-    
+
     /// Hostname or IP address
     pub hostname: String,
-    
+
     /// HTTP port hive is listening on
     pub port: u16,
-    
+
     /// Current operational status
     pub operational_status: OperationalStatus,
-    
+
     /// Current health status
     pub health_status: HealthStatus,
-    
+
     /// Hive version
     pub version: String,
-    
     // TODO: TEAM-284: Add system stats
     // pub cpu_usage_percent: f32,
     // pub ram_used_gb: f32,
@@ -57,12 +56,12 @@ impl HiveInfo {
     pub fn is_available(&self) -> bool {
         self.operational_status.is_available() && self.health_status.is_operational()
     }
-    
+
     /// Check if hive is ready to accept new workers
     pub fn is_ready(&self) -> bool {
         self.operational_status.is_ready() && self.health_status.is_healthy()
     }
-    
+
     /// Get hive endpoint URL
     pub fn endpoint_url(&self) -> String {
         format!("http://{}:{}", self.hostname, self.port)
@@ -88,10 +87,10 @@ mod tests {
     fn hive_is_available() {
         let mut hive = create_test_hive();
         assert!(hive.is_available());
-        
+
         hive.operational_status = OperationalStatus::Busy;
         assert!(hive.is_available());
-        
+
         hive.operational_status = OperationalStatus::Stopped;
         assert!(!hive.is_available());
     }
@@ -100,13 +99,11 @@ mod tests {
     fn hive_is_ready() {
         let mut hive = create_test_hive();
         assert!(hive.is_ready());
-        
+
         hive.operational_status = OperationalStatus::Busy;
         assert!(!hive.is_ready());
-        
-        hive.health_status = HealthStatus::Degraded {
-            reason: "High load".to_string(),
-        };
+
+        hive.health_status = HealthStatus::Degraded { reason: "High load".to_string() };
         assert!(!hive.is_ready());
     }
 
@@ -120,11 +117,11 @@ mod tests {
     fn hive_serialization() {
         let hive = create_test_hive();
         let json = serde_json::to_string(&hive).unwrap();
-        
+
         assert!(json.contains("\"id\":\"test-hive\""));
         assert!(json.contains("\"hostname\":\"localhost\""));
         assert!(json.contains("\"port\":9200"));
-        
+
         // Deserialize back
         let deserialized: HiveInfo = serde_json::from_str(&json).unwrap();
         assert_eq!(hive, deserialized);

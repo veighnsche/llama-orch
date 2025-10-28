@@ -75,16 +75,10 @@ pub async fn handle_worker(hive_id: String, action: WorkerAction, queen_url: &st
                 Operation::WorkerProcessList(WorkerProcessListRequest { hive_id })
             }
             WorkerProcessAction::Get { pid } => {
-                Operation::WorkerProcessGet(WorkerProcessGetRequest {
-                    hive_id,
-                    pid: *pid,
-                })
+                Operation::WorkerProcessGet(WorkerProcessGetRequest { hive_id, pid: *pid })
             }
             WorkerProcessAction::Delete { pid } => {
-                Operation::WorkerProcessDelete(WorkerProcessDeleteRequest {
-                    hive_id,
-                    pid: *pid,
-                })
+                Operation::WorkerProcessDelete(WorkerProcessDeleteRequest { hive_id, pid: *pid })
             }
         },
     };

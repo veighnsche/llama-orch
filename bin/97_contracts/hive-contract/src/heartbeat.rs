@@ -52,7 +52,7 @@ use shared_contract::{HeartbeatPayload, HeartbeatTimestamp, HEARTBEAT_TIMEOUT_SE
 pub struct HiveHeartbeat {
     /// Complete hive information
     pub hive: HiveInfo,
-    
+
     /// Timestamp when heartbeat was sent
     pub timestamp: HeartbeatTimestamp,
 }
@@ -60,12 +60,9 @@ pub struct HiveHeartbeat {
 impl HiveHeartbeat {
     /// Create a new heartbeat with current timestamp
     pub fn new(hive: HiveInfo) -> Self {
-        Self {
-            hive,
-            timestamp: HeartbeatTimestamp::now(),
-        }
+        Self { hive, timestamp: HeartbeatTimestamp::now() }
     }
-    
+
     /// Check if heartbeat is recent (within timeout window)
     pub fn is_recent(&self) -> bool {
         self.timestamp.is_recent(HEARTBEAT_TIMEOUT_SECS)
@@ -76,7 +73,7 @@ impl HeartbeatPayload for HiveHeartbeat {
     fn component_id(&self) -> &str {
         &self.hive.id
     }
-    
+
     fn timestamp(&self) -> &HeartbeatTimestamp {
         &self.timestamp
     }
@@ -124,7 +121,7 @@ mod tests {
     fn heartbeat_new() {
         let hive = create_test_hive();
         let heartbeat = HiveHeartbeat::new(hive.clone());
-        
+
         assert_eq!(heartbeat.hive.id, "test-hive");
         assert!(heartbeat.is_recent());
     }
@@ -132,17 +129,14 @@ mod tests {
     #[test]
     fn heartbeat_is_recent() {
         let hive = create_test_hive();
-        
+
         // Recent heartbeat
         let heartbeat = HiveHeartbeat::new(hive.clone());
         assert!(heartbeat.is_recent());
-        
+
         // Old heartbeat (91 seconds ago)
         let old_timestamp = HeartbeatTimestamp::from_datetime(Utc::now() - Duration::seconds(91));
-        let old_heartbeat = HiveHeartbeat {
-            hive,
-            timestamp: old_timestamp,
-        };
+        let old_heartbeat = HiveHeartbeat { hive, timestamp: old_timestamp };
         assert!(!old_heartbeat.is_recent());
     }
 
@@ -150,7 +144,7 @@ mod tests {
     fn heartbeat_payload_trait() {
         let hive = create_test_hive();
         let heartbeat = HiveHeartbeat::new(hive);
-        
+
         // Test HeartbeatPayload trait methods
         assert_eq!(heartbeat.component_id(), "test-hive");
         assert!(heartbeat.is_recent(90));
@@ -160,14 +154,14 @@ mod tests {
     fn heartbeat_serialization() {
         let hive = create_test_hive();
         let heartbeat = HiveHeartbeat::new(hive);
-        
+
         let json = serde_json::to_string(&heartbeat).unwrap();
-        
+
         // Verify all fields are present
         assert!(json.contains("\"id\":\"test-hive\""));
         assert!(json.contains("\"hostname\":\"localhost\""));
         assert!(json.contains("\"port\":9200"));
-        
+
         // Verify it can be deserialized
         let deserialized: HiveHeartbeat = serde_json::from_str(&json).unwrap();
         assert_eq!(deserialized.hive.id, "test-hive");

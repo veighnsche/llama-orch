@@ -32,7 +32,7 @@ mod tests {
         assert_eq!(HEARTBEAT_TIMEOUT_SECS, 90);
         assert_eq!(MAX_HEARTBEAT_AGE_SECS, 90);
         assert_eq!(CLEANUP_INTERVAL_SECS, 60);
-        
+
         // Timeout should be at least 2x interval
         assert!(HEARTBEAT_TIMEOUT_SECS >= HEARTBEAT_INTERVAL_SECS * 2);
     }

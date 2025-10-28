@@ -78,10 +78,7 @@ pub struct HeartbeatAck {
 impl WorkerHeartbeat {
     /// Create a new heartbeat with current timestamp
     pub fn new(worker: WorkerInfo) -> Self {
-        Self {
-            worker,
-            timestamp: shared_contract::HeartbeatTimestamp::now(),
-        }
+        Self { worker, timestamp: shared_contract::HeartbeatTimestamp::now() }
     }
 
     /// Check if heartbeat is recent (within timeout window)

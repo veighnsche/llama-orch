@@ -20,10 +20,10 @@ pub struct HiveApiSpec;
 impl HiveApiSpec {
     /// Health check endpoint
     pub const HEALTH: &'static str = "/health";
-    
+
     /// Capabilities endpoint
     pub const CAPABILITIES: &'static str = "/capabilities";
-    
+
     /// Workers endpoint
     pub const WORKERS: &'static str = "/workers";
 }
@@ -33,7 +33,7 @@ impl HiveApiSpec {
 pub struct HealthResponse {
     /// Status (e.g., "ok")
     pub status: String,
-    
+
     /// Optional message
     pub message: Option<String>,
 }
@@ -41,10 +41,7 @@ pub struct HealthResponse {
 impl HealthResponse {
     /// Create a healthy response
     pub fn ok() -> Self {
-        Self {
-            status: "ok".to_string(),
-            message: None,
-        }
+        Self { status: "ok".to_string(), message: None }
     }
 }
 

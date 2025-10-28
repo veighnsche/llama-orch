@@ -159,10 +159,10 @@ mod tests {
         };
 
         let json = serde_json::to_string(&request).unwrap();
-        
+
         // top_p should be present
         assert!(json.contains("\"top_p\":0.9"));
-        
+
         // top_k should be omitted
         assert!(!json.contains("\"top_k\""));
     }

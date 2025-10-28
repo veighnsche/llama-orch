@@ -88,7 +88,7 @@ fn test_payload_with_binary_data() {
 #[test]
 fn test_payload_serialization_errors() {
     // TEAM-308: Test payload serialization edge cases
-    
+
     // TEAM-308: serde_json serializes NaN/Infinity as null, not as error
     // This is valid JSON behavior per the spec
     let result = serde_json::to_string(&f64::NAN);
@@ -98,7 +98,7 @@ fn test_payload_serialization_errors() {
     let result = serde_json::to_string(&f64::INFINITY);
     assert!(result.is_ok(), "Infinity serializes to null");
     assert_eq!(result.unwrap(), "null");
-    
+
     // TEAM-308: Test that valid payloads serialize correctly
     let payload = serde_json::json!({
         "number": 42,

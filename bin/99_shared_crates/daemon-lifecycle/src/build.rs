@@ -58,10 +58,10 @@ use tokio::process::Command;
 pub struct BuildConfig {
     /// Name of the daemon binary
     pub daemon_name: String,
-    
+
     /// Optional cross-compilation target
     pub target: Option<String>,
-    
+
     /// Optional job ID for SSE narration routing
     /// When set, cargo build output streams through SSE!
     pub job_id: Option<String>,
@@ -96,23 +96,19 @@ pub struct BuildConfig {
 pub async fn build_daemon(build_config: BuildConfig) -> Result<PathBuf> {
     let daemon_name = &build_config.daemon_name;
     let target = build_config.target.as_deref();
-    
+
     n!("build_start", "🔨 Building {} from source...", daemon_name);
 
     // TEAM-330: Extract job_id from config for SSE streaming
     // The #[with_job_id] macro automatically wraps this in NarrationContext
     let job_id = build_config.job_id;
-    
+
     // Create process capture - cargo output streams through SSE if job_id is set!
     let capture = ProcessNarrationCapture::new(job_id);
 
     // Build cargo command
     let mut command = Command::new("cargo");
-    command
-        .arg("build")
-        .arg("--release")
-        .arg("--bin")
-        .arg(daemon_name);
+    command.arg("build").arg("--release").arg("--bin").arg(daemon_name);
 
     // Add target if specified (for cross-compilation)
     if let Some(target_triple) = target {
@@ -123,12 +119,10 @@ pub async fn build_daemon(build_config: BuildConfig) -> Result<PathBuf> {
     n!("build_running", "⚙️  Running cargo build (output streaming via SSE)...");
 
     // Spawn with capture - stdout/stderr stream through SSE!
-    let mut child = capture.spawn(command).await
-        .context("Failed to spawn cargo build")?;
+    let mut child = capture.spawn(command).await.context("Failed to spawn cargo build")?;
 
     // Wait for build to complete
-    let status = child.wait().await
-        .context("Failed to wait for cargo build")?;
+    let status = child.wait().await.context("Failed to wait for cargo build")?;
 
     if !status.success() {
         n!("build_failed", "❌ Cargo build failed with exit code: {:?}", status.code());

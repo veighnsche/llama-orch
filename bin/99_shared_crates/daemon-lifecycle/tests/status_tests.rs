@@ -33,7 +33,7 @@ use daemon_lifecycle::check_daemon_health;
 async fn test_returns_bool() {
     // Function returns bool, not Result
     let result = check_daemon_health("http://invalid.test").await;
-    
+
     // Type check - should be bool
     let _is_bool: bool = result;
     assert!(result == true || result == false);
@@ -43,7 +43,7 @@ async fn test_returns_bool() {
 fn test_function_signature() {
     // Verify function signature:
     // pub async fn check_daemon_health(health_url: &str) -> bool
-    
+
     // This is verified by compilation
     assert!(true);
 }
@@ -79,7 +79,7 @@ async fn test_success_status_returns_true() {
     // We can't easily test against a real server in unit tests,
     // but we can verify the logic pattern from the source:
     // Ok(response) => response.status().is_success()
-    
+
     // is_success() returns true for 200-299 status codes
     assert!(true);
 }
@@ -88,7 +88,7 @@ async fn test_success_status_returns_true() {
 fn test_status_code_2xx_is_success() {
     // Verify that 2xx status codes are considered success
     use reqwest::StatusCode;
-    
+
     assert!(StatusCode::OK.is_success()); // 200
     assert!(StatusCode::CREATED.is_success()); // 201
     assert!(StatusCode::ACCEPTED.is_success()); // 202
@@ -99,7 +99,7 @@ fn test_status_code_2xx_is_success() {
 fn test_status_code_non_2xx_is_not_success() {
     // Verify that non-2xx status codes are not success
     use reqwest::StatusCode;
-    
+
     assert!(!StatusCode::BAD_REQUEST.is_success()); // 400
     assert!(!StatusCode::NOT_FOUND.is_success()); // 404
     assert!(!StatusCode::INTERNAL_SERVER_ERROR.is_success()); // 500
@@ -155,11 +155,14 @@ async fn test_timeout_after_2_seconds() {
     let start = std::time::Instant::now();
     let result = check_daemon_health("http://192.0.2.1:80/health").await;
     let duration = start.elapsed();
-    
+
     assert!(!result, "Timeout should return false");
     // Should timeout around 2 seconds (allow some variance)
-    assert!(duration.as_secs() >= 2 && duration.as_secs() <= 4, 
-        "Should timeout around 2 seconds, got {} seconds", duration.as_secs());
+    assert!(
+        duration.as_secs() >= 2 && duration.as_secs() <= 4,
+        "Should timeout around 2 seconds, got {} seconds",
+        duration.as_secs()
+    );
 }
 
 #[test]
@@ -205,7 +208,7 @@ fn test_documented_behavior() {
     // - Connection refused → return false
     // - HTTP error → return false
     // - 200 OK → return true
-    
+
     assert!(true);
 }
 
@@ -229,12 +232,12 @@ fn test_rule_zero_one_function() {
 #[tokio::test]
 async fn test_multiple_calls_same_url() {
     let url = "http://localhost:59998/health";
-    
+
     // Multiple calls should all return false (no server)
     let result1 = check_daemon_health(url).await;
     let result2 = check_daemon_health(url).await;
     let result3 = check_daemon_health(url).await;
-    
+
     assert!(!result1);
     assert!(!result2);
     assert!(!result3);
@@ -247,7 +250,7 @@ async fn test_different_urls() {
         "http://localhost:8081/health",
         "http://localhost:8082/health",
     ];
-    
+
     for url in urls {
         let result = check_daemon_health(url).await;
         // All should return false (no servers running)

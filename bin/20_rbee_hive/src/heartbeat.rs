@@ -20,21 +20,15 @@ use hive_contract::{HiveHeartbeat, HiveInfo};
 /// 3. Return acknowledgement
 ///
 /// This is called periodically (e.g., every 30s) to signal hive is alive
-pub async fn send_heartbeat_to_queen(
-    hive_info: &HiveInfo,
-    queen_url: &str,
-) -> Result<()> {
+pub async fn send_heartbeat_to_queen(hive_info: &HiveInfo, queen_url: &str) -> Result<()> {
     tracing::debug!("Sending hive heartbeat to queen at {}", queen_url);
 
     // TEAM-285: Implemented HTTP POST to queen
     let heartbeat = HiveHeartbeat::new(hive_info.clone());
 
     let client = reqwest::Client::new();
-    let response = client
-        .post(format!("{}/v1/hive-heartbeat", queen_url))
-        .json(&heartbeat)
-        .send()
-        .await?;
+    let response =
+        client.post(format!("{}/v1/hive-heartbeat", queen_url)).json(&heartbeat).send().await?;
 
     if !response.status().is_success() {
         let status = response.status();
@@ -56,21 +50,15 @@ pub async fn send_heartbeat_to_queen(
 /// 3. Continue until task is cancelled
 ///
 /// This runs in the background for the lifetime of the hive
-pub fn start_heartbeat_task(
-    hive_info: HiveInfo,
-    queen_url: String,
-) -> tokio::task::JoinHandle<()> {
+pub fn start_heartbeat_task(hive_info: HiveInfo, queen_url: String) -> tokio::task::JoinHandle<()> {
     tokio::spawn(async move {
         let mut interval = tokio::time::interval(tokio::time::Duration::from_secs(30));
-        
+
         loop {
             interval.tick().await;
-            
+
             // Send heartbeat to queen with full HiveInfo
-            if let Err(e) = send_heartbeat_to_queen(
-                &hive_info,
-                &queen_url,
-            ).await {
+            if let Err(e) = send_heartbeat_to_queen(&hive_info, &queen_url).await {
                 tracing::warn!("Failed to send hive heartbeat: {}", e);
             }
         }

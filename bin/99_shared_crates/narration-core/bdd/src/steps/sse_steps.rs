@@ -1,7 +1,7 @@
 // TEAM-307: SSE streaming step definitions
 
-use cucumber::{given, when, then};
 use crate::steps::world::World;
+use cucumber::{given, then, when};
 
 // ============================================================================
 // Given Steps - SSE Setup
@@ -16,9 +16,7 @@ async fn two_jobs(world: &mut World, job_id1: String, job_id2: String) {
 
 #[given(regex = r#"^(\d+) concurrent jobs$"#)]
 async fn concurrent_jobs(world: &mut World, count: usize) {
-    world.job_ids = (0..count)
-        .map(|i| format!("job-concurrent-{}", i))
-        .collect();
+    world.job_ids = (0..count).map(|i| format!("job-concurrent-{}", i)).collect();
 }
 
 // ============================================================================
@@ -125,8 +123,7 @@ async fn events_in_order(world: &mut World) {
 #[then("each job should have isolated SSE channel")]
 async fn jobs_isolated(world: &mut World) {
     for job_id in &world.job_ids {
-        assert!(world.sse_channels.contains_key(job_id), 
-            "Job {} should have SSE channel", job_id);
+        assert!(world.sse_channels.contains_key(job_id), "Job {} should have SSE channel", job_id);
     }
 }
 

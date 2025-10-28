@@ -39,7 +39,7 @@
 //!
 //! # async fn example() -> anyhow::Result<()> {
 //! let ssh = SshConfig::new("192.168.1.100".to_string(), "vince".to_string(), 22);
-//! 
+//!
 //! // Option 1: Build and install
 //! install_daemon("rbee-hive", ssh.clone(), None).await?;
 //!
@@ -50,15 +50,15 @@
 //! # }
 //! ```
 
+use crate::build::{build_daemon, BuildConfig};
+use crate::utils::binary::check_binary_installed;
+use crate::utils::ssh::{scp_upload, ssh_exec};
+use crate::SshConfig;
 use anyhow::{Context, Result};
 use observability_narration_core::n;
 use observability_narration_macros::with_job_id;
 use std::path::PathBuf;
 use timeout_enforcer::with_timeout;
-use crate::SshConfig;
-use crate::utils::ssh::{ssh_exec, scp_upload};
-use crate::utils::binary::check_binary_installed;
-use crate::build::{build_daemon, BuildConfig};
 
 /// Configuration for remote daemon installation
 ///
@@ -80,13 +80,13 @@ use crate::build::{build_daemon, BuildConfig};
 pub struct InstallConfig {
     /// Name of the daemon binary
     pub daemon_name: String,
-    
+
     /// SSH connection configuration
     pub ssh_config: SshConfig,
-    
+
     /// Optional path to pre-built binary (if None, will build from source)
     pub local_binary_path: Option<PathBuf>,
-    
+
     /// Optional job ID for SSE narration routing
     /// When set, all narration (including timeout countdown) goes through SSE
     pub job_id: Option<String>,
@@ -129,15 +129,25 @@ pub struct InstallConfig {
 pub async fn install_daemon(install_config: InstallConfig) -> Result<()> {
     let daemon_name = &install_config.daemon_name;
     let ssh_config = &install_config.ssh_config;
-    
-    n!("install_start", "📦 Installing {} on {}@{}", 
-        daemon_name, ssh_config.user, ssh_config.hostname);
+
+    n!(
+        "install_start",
+        "📦 Installing {} on {}@{}",
+        daemon_name,
+        ssh_config.user,
+        ssh_config.hostname
+    );
 
     // Step 0: Check if already installed
     // TEAM-338: Use check_binary_installed utility
     if check_binary_installed(daemon_name, ssh_config).await {
-        n!("already_installed", "⚠️  {} is already installed on {}@{}", 
-            daemon_name, ssh_config.user, ssh_config.hostname);
+        n!(
+            "already_installed",
+            "⚠️  {} is already installed on {}@{}",
+            daemon_name,
+            ssh_config.user,
+            ssh_config.hostname
+        );
         anyhow::bail!("{} is already installed. Use rebuild to update.", daemon_name);
     }
 
@@ -155,22 +165,26 @@ pub async fn install_daemon(install_config: InstallConfig) -> Result<()> {
             target: None,
             job_id: install_config.job_id.clone(),
         };
-        
+
         build_daemon(build_config).await?
     };
 
     // Step 2: Create remote directory
     n!("create_dir", "📁 Creating ~/.local/bin on remote");
     let create_dir_cmd = format!("mkdir -p ~/.local/bin");
-    ssh_exec(&ssh_config, &create_dir_cmd)
-        .await
-        .context("Failed to create remote directory")?;
+    ssh_exec(&ssh_config, &create_dir_cmd).await.context("Failed to create remote directory")?;
 
     // Step 3: Copy binary via SCP
     let remote_path = format!("~/.local/bin/{}", daemon_name);
-    n!("copying", "📤 Copying {} to {}@{}:{}", 
-        daemon_name, ssh_config.user, ssh_config.hostname, remote_path);
-    
+    n!(
+        "copying",
+        "📤 Copying {} to {}@{}:{}",
+        daemon_name,
+        ssh_config.user,
+        ssh_config.hostname,
+        remote_path
+    );
+
     scp_upload(&ssh_config, &binary_path, &remote_path)
         .await
         .context("Failed to copy binary to remote")?;
@@ -178,23 +192,25 @@ pub async fn install_daemon(install_config: InstallConfig) -> Result<()> {
     // Step 4: Make executable
     n!("chmod", "🔐 Making binary executable");
     let chmod_cmd = format!("chmod +x ~/.local/bin/{}", daemon_name);
-    ssh_exec(&ssh_config, &chmod_cmd)
-        .await
-        .context("Failed to make binary executable")?;
+    ssh_exec(&ssh_config, &chmod_cmd).await.context("Failed to make binary executable")?;
 
     // Step 5: Verify installation
     n!("verify", "✅ Verifying installation");
     let verify_cmd = format!("test -x ~/.local/bin/{} && echo 'OK'", daemon_name);
-    let output = ssh_exec(&ssh_config, &verify_cmd)
-        .await
-        .context("Failed to verify installation")?;
-    
+    let output =
+        ssh_exec(&ssh_config, &verify_cmd).await.context("Failed to verify installation")?;
+
     if !output.trim().contains("OK") {
         anyhow::bail!("Installation verification failed");
     }
 
-    n!("install_complete", "🎉 {} installed successfully on {}@{}", 
-        daemon_name, ssh_config.user, ssh_config.hostname);
+    n!(
+        "install_complete",
+        "🎉 {} installed successfully on {}@{}",
+        daemon_name,
+        ssh_config.user,
+        ssh_config.hostname
+    );
 
     Ok(())
 }

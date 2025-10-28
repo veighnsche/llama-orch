@@ -13,13 +13,13 @@ pub async fn handle_shutdown() -> StatusCode {
     tokio::spawn(async {
         // Give the HTTP response time to be sent (increased from 100ms to 500ms)
         tokio::time::sleep(tokio::time::Duration::from_millis(500)).await;
-        
+
         eprintln!("🛑 Shutdown requested via /v1/shutdown endpoint");
         eprintln!("🛑 Exiting process now...");
-        
+
         // Use std::process::exit which immediately terminates
         std::process::exit(0);
     });
-    
+
     StatusCode::OK
 }

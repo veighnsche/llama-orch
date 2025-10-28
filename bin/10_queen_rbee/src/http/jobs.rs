@@ -75,7 +75,7 @@ pub async fn handle_cancel_job(
     State(state): State<SchedulerState>,
 ) -> Result<Json<serde_json::Value>, (StatusCode, String)> {
     let cancelled = state.registry.cancel_job(&job_id);
-    
+
     if cancelled {
         Ok(Json(serde_json::json!({
             "job_id": job_id,
@@ -84,7 +84,7 @@ pub async fn handle_cancel_job(
     } else {
         Err((
             StatusCode::NOT_FOUND,
-            format!("Job {} not found or cannot be cancelled (already completed/failed)", job_id)
+            format!("Job {} not found or cannot be cancelled (already completed/failed)", job_id),
         ))
     }
 }

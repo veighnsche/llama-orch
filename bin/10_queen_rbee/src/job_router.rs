@@ -37,7 +37,7 @@ use operations_contract::Operation; // TEAM-284: Renamed from rbee_operations
 use std::sync::Arc;
 
 use super::hive_forwarder; // TEAM-258: Generic forwarding for hive-managed operations
-// TEAM-284: DELETED daemon_sync import (SSH/remote operations removed)
+                           // TEAM-284: DELETED daemon_sync import (SSH/remote operations removed)
 
 // TEAM-312: Migrated to n!() macro
 
@@ -92,9 +92,12 @@ pub async fn execute_job(
     let hive_registry = state.hive_registry.clone(); // TEAM-190
 
     // TEAM-312: Pass None for timeout (no timeout needed for queen operations)
-    job_server::execute_and_stream(job_id, registry.clone(), move |job_id, payload| {
-        route_operation(job_id, payload, registry, hive_registry)
-    }, None)
+    job_server::execute_and_stream(
+        job_id,
+        registry.clone(),
+        move |job_id, payload| route_operation(job_id, payload, registry, hive_registry),
+        None,
+    )
     .await
 }
 
@@ -152,11 +155,13 @@ async fn route_operation(
             let online_workers = state.hive_registry.list_online_workers();
 
             if online_workers.is_empty() {
-                n!("status_empty", 
-                   "No online workers found.\n\n\
+                n!(
+                    "status_empty",
+                    "No online workers found.\n\n\
                     Workers must send heartbeats to appear here.\n\n\
                     To spawn a worker:\n\n  \
-                    ./rbee worker spawn --model <model> --device <device>");
+                    ./rbee worker spawn --model <model> --device <device>"
+                );
                 return Ok(());
             }
 
@@ -175,9 +180,12 @@ async fn route_operation(
             // Display as table
             n!("status_result", "Live Status ({} worker(s))", online_workers.len());
             // TEAM-312: Table display via println for now
-            println!("{}", serde_json::to_string_pretty(&serde_json::Value::Array(all_rows)).unwrap());
+            println!(
+                "{}",
+                serde_json::to_string_pretty(&serde_json::Value::Array(all_rows)).unwrap()
+            );
         }
-        
+
         // TEAM-312: Queen-check operation for deep narration testing
         Operation::QueenCheck => {
             // TEAM-312: Set narration context so n!() calls route to SSE
@@ -237,7 +245,7 @@ async fn route_operation(
 
             // Create line handler that emits to SSE
             let line_handler = |line: &str| -> Result<(), queen_rbee_scheduler::SchedulerError> {
-                println!("{}", line);  // TEAM-312: Direct output for streaming
+                println!("{}", line); // TEAM-312: Direct output for streaming
                 Ok(())
             };
 
@@ -256,7 +264,10 @@ async fn route_operation(
             n!("active_worker_list_start", "📋 Listing active workers");
 
             // TODO: Query worker registry
-            n!("active_worker_list_empty", "No active workers found (worker registry not yet implemented)");
+            n!(
+                "active_worker_list_empty",
+                "No active workers found (worker registry not yet implemented)"
+            );
 
             // Future implementation:
             // let workers = state.worker_registry.list_active();
@@ -313,9 +324,7 @@ async fn route_operation(
         // TEAM-258: All worker/model operations are forwarded to hive
         // This allows new operations to be added to rbee-hive without modifying queen-rbee
         // TEAM-290: No config needed (localhost-only)
-        op if op.should_forward_to_hive() => {
-            hive_forwarder::forward_to_hive(&job_id, op).await?
-        }
+        op if op.should_forward_to_hive() => hive_forwarder::forward_to_hive(&job_id, op).await?,
 
         // Catch-all for any unhandled operations
         op => {

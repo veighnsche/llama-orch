@@ -14,7 +14,7 @@
 
 use anyhow::{Context, Result};
 use auto_update::AutoUpdater;
-use observability_narration_core::{NarrationContext, with_narration_context};
+use observability_narration_core::{with_narration_context, NarrationContext};
 use std::path::PathBuf;
 use std::process::Command;
 

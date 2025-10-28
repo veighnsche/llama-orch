@@ -111,15 +111,16 @@ async fn test_macro_with_ref_params() {
 // TEAM-330: Test with context propagation
 #[tokio::test]
 async fn test_macro_with_context() {
-    use observability_narration_core::{NarrationContext, with_narration_context};
+    use observability_narration_core::{with_narration_context, NarrationContext};
 
     let ctx = NarrationContext::new().with_job_id("test-job-123");
-    
+
     let result = with_narration_context(ctx, async {
         // Timeout narration automatically includes job_id!
         quick_operation().await
-    }).await;
-    
+    })
+    .await;
+
     assert!(result.is_ok());
     assert_eq!(result.unwrap(), "success");
 }
@@ -129,10 +130,10 @@ async fn test_macro_with_context() {
 async fn test_macro_sequential_operations() {
     let result1 = quick_operation().await;
     assert!(result1.is_ok());
-    
+
     let result2 = labeled_operation().await;
     assert!(result2.is_ok());
-    
+
     let result3 = operation_with_params(10, 20).await;
     assert!(result3.is_ok());
     assert_eq!(result3.unwrap(), 30);

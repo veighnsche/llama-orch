@@ -24,19 +24,14 @@ pub enum ModelAction {
 pub async fn handle_model(hive_id: String, action: ModelAction, queen_url: &str) -> Result<()> {
     // TEAM-284: Use typed requests
     let operation = match &action {
-        ModelAction::Download { model } => Operation::ModelDownload(ModelDownloadRequest {
-            hive_id,
-            model: model.clone(),
-        }),
+        ModelAction::Download { model } => {
+            Operation::ModelDownload(ModelDownloadRequest { hive_id, model: model.clone() })
+        }
         ModelAction::List => Operation::ModelList(ModelListRequest { hive_id }),
-        ModelAction::Get { id } => Operation::ModelGet(ModelGetRequest {
-            hive_id,
-            id: id.clone(),
-        }),
-        ModelAction::Delete { id } => Operation::ModelDelete(ModelDeleteRequest {
-            hive_id,
-            id: id.clone(),
-        }),
+        ModelAction::Get { id } => Operation::ModelGet(ModelGetRequest { hive_id, id: id.clone() }),
+        ModelAction::Delete { id } => {
+            Operation::ModelDelete(ModelDeleteRequest { hive_id, id: id.clone() })
+        }
     };
     submit_and_stream_job(queen_url, operation).await
 }

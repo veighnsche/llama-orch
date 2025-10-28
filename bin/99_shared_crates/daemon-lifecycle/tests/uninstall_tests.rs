@@ -17,7 +17,7 @@
 //!
 //! Total: 24 tests
 
-use daemon_lifecycle::{UninstallConfig, SshConfig};
+use daemon_lifecycle::{SshConfig, UninstallConfig};
 
 // ============================================================================
 // TEST HELPERS
@@ -117,7 +117,7 @@ fn test_uninstall_config_with_localhost() {
 #[test]
 fn test_uninstall_config_optional_fields() {
     let ssh = SshConfig::localhost();
-    
+
     // Test with health_url but no timeout
     let config1 = UninstallConfig {
         daemon_name: "test".to_string(),
@@ -128,7 +128,7 @@ fn test_uninstall_config_optional_fields() {
     };
     assert!(config1.health_url.is_some());
     assert!(config1.health_timeout_secs.is_none());
-    
+
     // Test with timeout but no health_url
     let config2 = UninstallConfig {
         daemon_name: "test".to_string(),
@@ -158,7 +158,7 @@ fn test_uninstall_process_order() {
     // 1. Check if daemon is running (HTTP health check)
     // 2. Remove binary via SSH
     // 3. Verify removal
-    
+
     assert!(true);
 }
 
@@ -166,7 +166,7 @@ fn test_uninstall_process_order() {
 fn test_health_check_optional() {
     // Health check only runs if health_url is provided
     // From source: if let Some(health_url) = &uninstall_config.health_url
-    
+
     assert!(true);
 }
 
@@ -174,7 +174,7 @@ fn test_health_check_optional() {
 fn test_single_ssh_call_for_removal() {
     // From documentation: "Total: 1 SSH call (rm command)"
     // Actually 2 SSH calls: rm + verify
-    
+
     assert!(true);
 }
 
@@ -182,7 +182,7 @@ fn test_single_ssh_call_for_removal() {
 fn test_verification_is_optional() {
     // Verification runs but failure is non-fatal (warning only)
     // From source: n!("verify_warning", "⚠️  Could not verify removal...")
-    
+
     assert!(true);
 }
 
@@ -198,7 +198,7 @@ fn test_health_url_appends_health() {
     } else {
         format!("{}/health", base_url)
     };
-    
+
     assert_eq!(full_url, "http://localhost:8080/health");
 }
 
@@ -210,7 +210,7 @@ fn test_health_url_already_has_health() {
     } else {
         format!("{}/health", base_url)
     };
-    
+
     assert_eq!(full_url, "http://localhost:8080/health");
 }
 
@@ -218,7 +218,7 @@ fn test_health_url_already_has_health() {
 fn test_daemon_running_returns_error() {
     // From source: if is_running { anyhow::bail!(...) }
     // Should return error if daemon is still running
-    
+
     assert!(true);
 }
 
@@ -226,7 +226,7 @@ fn test_daemon_running_returns_error() {
 fn test_daemon_stopped_continues() {
     // From source: if !is_running, continues to removal
     // Should continue if daemon is stopped
-    
+
     assert!(true);
 }
 
@@ -238,7 +238,7 @@ fn test_daemon_stopped_continues() {
 fn test_removal_command_construction() {
     let daemon_name = "test-daemon";
     let rm_cmd = format!("rm -f ~/.local/bin/{}", daemon_name);
-    
+
     assert_eq!(rm_cmd, "rm -f ~/.local/bin/test-daemon");
 }
 
@@ -246,7 +246,7 @@ fn test_removal_command_construction() {
 fn test_removal_uses_force_flag() {
     // From source: rm -f (force flag)
     // Should use -f to not fail if file doesn't exist
-    
+
     let rm_cmd = "rm -f ~/.local/bin/test-daemon";
     assert!(rm_cmd.contains("-f"));
 }
@@ -255,7 +255,7 @@ fn test_removal_uses_force_flag() {
 fn test_removal_path_is_local_bin() {
     let daemon_name = "test-daemon";
     let remote_path = format!("~/.local/bin/{}", daemon_name);
-    
+
     assert_eq!(remote_path, "~/.local/bin/test-daemon");
 }
 
@@ -267,7 +267,7 @@ fn test_removal_path_is_local_bin() {
 fn test_verification_command_construction() {
     let daemon_name = "test-daemon";
     let verify_cmd = format!("test ! -f ~/.local/bin/{} && echo 'REMOVED'", daemon_name);
-    
+
     assert_eq!(verify_cmd, "test ! -f ~/.local/bin/test-daemon && echo 'REMOVED'");
 }
 
@@ -275,10 +275,10 @@ fn test_verification_command_construction() {
 fn test_verification_checks_for_removed_marker() {
     // From source: if !output.trim().contains("REMOVED")
     // Should check for "REMOVED" marker in output
-    
+
     let output = "REMOVED\n";
     assert!(output.trim().contains("REMOVED"));
-    
+
     let output_fail = "file exists\n";
     assert!(!output_fail.trim().contains("REMOVED"));
 }
@@ -299,13 +299,13 @@ fn test_timeout_breakdown() {
     // - Health check: 2 seconds (configurable)
     // - SSH commands: <1 second each
     // - Total: 1 minute
-    
+
     let health_check = 2;
     let ssh_rm = 1;
     let ssh_verify = 1;
     let buffer = 56;
     let total = 60;
-    
+
     assert_eq!(health_check + ssh_rm + ssh_verify + buffer, total);
 }
 
@@ -396,7 +396,7 @@ fn test_localhost_vs_remote() {
 fn test_documented_ssh_call_count() {
     // From documentation: "Total: 1 SSH call (rm command)"
     // Actually 2 SSH calls: rm + verify
-    
+
     assert!(true);
 }
 
@@ -406,7 +406,7 @@ fn test_documented_error_handling() {
     // - Daemon still running (must stop first)
     // - SSH connection failed
     // - Permission denied (can't delete file)
-    
+
     assert!(true);
 }
 
@@ -415,7 +415,7 @@ fn test_documented_process() {
     // From documentation:
     // 1. Check if daemon is running (HTTP, NO SSH)
     // 2. Remove binary from remote machine (ONE ssh call)
-    
+
     assert!(true);
 }
 
@@ -434,6 +434,6 @@ fn test_narration_events_documented() {
     // - verify
     // - verify_warning
     // - uninstall_complete
-    
+
     assert!(true);
 }

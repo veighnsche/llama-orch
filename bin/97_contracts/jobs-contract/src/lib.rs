@@ -44,37 +44,37 @@ pub enum JobState {
 pub trait JobRegistryInterface<T>: Send + Sync {
     /// Create a new job and return job_id
     fn create_job(&self) -> String;
-    
+
     /// Set payload for a job (for deferred execution)
     fn set_payload(&self, job_id: &str, payload: serde_json::Value);
-    
+
     /// Take payload from a job (consumes it)
     fn take_payload(&self, job_id: &str) -> Option<serde_json::Value>;
-    
+
     /// Check if job exists
     fn has_job(&self, job_id: &str) -> bool;
-    
+
     /// Get job state
     fn get_job_state(&self, job_id: &str) -> Option<JobState>;
-    
+
     /// Update job state
     fn update_state(&self, job_id: &str, state: JobState);
-    
+
     /// Set token receiver for streaming
     fn set_token_receiver(&self, job_id: &str, receiver: UnboundedReceiver<T>);
-    
+
     /// Take the token receiver for a job (consumes it)
     fn take_token_receiver(&self, job_id: &str) -> Option<UnboundedReceiver<T>>;
-    
+
     /// Remove a job from the registry
     fn remove_job(&self, job_id: &str);
-    
+
     /// Get count of jobs in registry
     fn job_count(&self) -> usize;
-    
+
     /// Get all job IDs
     fn job_ids(&self) -> Vec<String>;
-    
+
     /// Cancel a job (TEAM-305: Added for cancellation support)
     fn cancel_job(&self, job_id: &str) -> bool;
 }

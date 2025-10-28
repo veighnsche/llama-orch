@@ -185,10 +185,7 @@ async fn then_operation_fails_connection(world: &mut World) {
 #[then("the operation should fail with timeout error")]
 async fn then_operation_fails_timeout(world: &mut World) {
     // TEAM-308: Verify timeout occurred
-    assert!(
-        world.network_timeout_ms.is_some(),
-        "Expected timeout to be configured"
-    );
+    assert!(world.network_timeout_ms.is_some(), "Expected timeout to be configured");
 }
 
 #[then("no panic should occur")]
@@ -201,10 +198,7 @@ async fn then_no_panic(_world: &mut World) {
 #[then("the error should be user-friendly")]
 async fn then_error_user_friendly(world: &mut World) {
     // TEAM-308: Verify error message exists
-    assert!(
-        world.last_error.is_some(),
-        "Expected error message to be present"
-    );
+    assert!(world.last_error.is_some(), "Expected error message to be present");
 }
 
 #[then("resources should be cleaned up")]
@@ -286,19 +280,13 @@ async fn then_narration_preserved(world: &mut World) {
 async fn then_job_marked_failed(world: &mut World) {
     // TEAM-308: Verify job state
     // In real implementation, would check actual job state
-    assert!(
-        world.job_state.is_some() || world.last_error.is_some(),
-        "Job should have error state"
-    );
+    assert!(world.job_state.is_some() || world.last_error.is_some(), "Job should have error state");
 }
 
 #[then("the error should be logged")]
 async fn then_error_logged(world: &mut World) {
     // TEAM-308: Verify error was recorded
-    assert!(
-        world.last_error.is_some(),
-        "Error should be logged"
-    );
+    assert!(world.last_error.is_some(), "Error should be logged");
 }
 
 #[then("the system should continue operating")]

@@ -3,7 +3,7 @@
 //! TEAM-293: Platform abstraction for Windows
 
 use super::{PlatformPaths, PlatformProcess, PlatformRemote};
-use anyhow::{Result, Context, bail};
+use anyhow::{bail, Context, Result};
 use std::path::PathBuf;
 
 pub struct WindowsPlatform;
@@ -11,16 +11,12 @@ pub struct WindowsPlatform;
 impl PlatformPaths for WindowsPlatform {
     fn config_dir() -> Result<PathBuf> {
         // Windows uses %APPDATA%
-        dirs::config_dir()
-            .map(|p| p.join("rbee"))
-            .context("Failed to get config directory")
+        dirs::config_dir().map(|p| p.join("rbee")).context("Failed to get config directory")
     }
 
     fn data_dir() -> Result<PathBuf> {
         // Windows uses %LOCALAPPDATA%
-        dirs::data_local_dir()
-            .map(|p| p.join("rbee"))
-            .context("Failed to get data directory")
+        dirs::data_local_dir().map(|p| p.join("rbee")).context("Failed to get data directory")
     }
 
     fn bin_dir() -> Result<PathBuf> {
@@ -38,40 +34,40 @@ impl PlatformPaths for WindowsPlatform {
 impl PlatformProcess for WindowsPlatform {
     fn is_running(pid: u32) -> bool {
         use std::process::Command;
-        
+
         // Use tasklist on Windows
         Command::new("tasklist")
             .arg("/FI")
             .arg(format!("PID eq {}", pid))
             .output()
-            .map(|output| {
-                String::from_utf8_lossy(&output.stdout)
-                    .contains(&pid.to_string())
-            })
+            .map(|output| String::from_utf8_lossy(&output.stdout).contains(&pid.to_string()))
             .unwrap_or(false)
     }
 
     fn terminate(pid: u32) -> Result<()> {
         use std::process::Command;
-        
+
         // Use taskkill on Windows
         let output = Command::new("taskkill")
             .arg("/PID")
             .arg(pid.to_string())
             .output()
             .context("Failed to execute taskkill")?;
-        
+
         if !output.status.success() {
-            bail!("Failed to terminate process {}: {}", 
-                  pid, String::from_utf8_lossy(&output.stderr));
+            bail!(
+                "Failed to terminate process {}: {}",
+                pid,
+                String::from_utf8_lossy(&output.stderr)
+            );
         }
-        
+
         Ok(())
     }
 
     fn kill(pid: u32) -> Result<()> {
         use std::process::Command;
-        
+
         // Use taskkill /F (force) on Windows
         let output = Command::new("taskkill")
             .arg("/F")
@@ -79,12 +75,11 @@ impl PlatformProcess for WindowsPlatform {
             .arg(pid.to_string())
             .output()
             .context("Failed to execute taskkill /F")?;
-        
+
         if !output.status.success() {
-            bail!("Failed to kill process {}: {}", 
-                  pid, String::from_utf8_lossy(&output.stderr));
+            bail!("Failed to kill process {}: {}", pid, String::from_utf8_lossy(&output.stderr));
         }
-        
+
         Ok(())
     }
 }
@@ -102,23 +97,17 @@ impl PlatformRemote for WindowsPlatform {
 
     fn check_ssh_available() -> Result<bool> {
         use std::process::Command;
-        
+
         // Try to run ssh --version
-        let output = Command::new("ssh.exe")
-            .arg("--version")
-            .output();
-        
+        let output = Command::new("ssh.exe").arg("--version").output();
+
         match output {
             Ok(output) => Ok(output.status.success()),
             Err(_) => {
                 // Try where command to find ssh.exe
-                let where_output = Command::new("where")
-                    .arg("ssh.exe")
-                    .output();
-                
-                Ok(where_output
-                    .map(|o| o.status.success())
-                    .unwrap_or(false))
+                let where_output = Command::new("where").arg("ssh.exe").output();
+
+                Ok(where_output.map(|o| o.status.success()).unwrap_or(false))
             }
         }
     }

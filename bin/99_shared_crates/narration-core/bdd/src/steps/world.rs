@@ -12,28 +12,28 @@ pub struct World {
 
     // Current narration fields being built
     pub fields: NarrationFields,
-    
+
     // TEAM-307: Context propagation
     pub context: Option<NarrationContext>,
     pub outer_context: Option<NarrationContext>,
     pub inner_context: Option<NarrationContext>,
     pub context_a: Option<NarrationContext>,
     pub context_b: Option<NarrationContext>,
-    
+
     // TEAM-307: Job lifecycle
     pub job_id: Option<String>,
     pub job_ids: Vec<String>,
     pub job_state: Option<String>,
     pub job_error: Option<String>,
-    
+
     // TEAM-307: SSE streaming
     pub sse_channels: HashMap<String, bool>,
     pub sse_events: Vec<String>,
-    
+
     // TEAM-307: Failure scenarios
     pub last_error: Option<String>,
     pub network_timeout_ms: Option<u64>,
-    
+
     // TEAM-308: Per-scenario event tracking (fixes BUG-003)
     pub initial_event_count: usize,
 }

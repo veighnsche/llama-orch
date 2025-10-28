@@ -23,10 +23,10 @@
 //! scp_upload(&ssh_config, &local_path, "~/.local/bin/daemon").await?;
 //! ```
 
-use anyhow::{Context, Result};
-use std::path::PathBuf;
+use super::local::{local_copy, local_exec};
 use crate::SshConfig;
-use super::local::{local_exec, local_copy}; // TEAM-331: Localhost bypass
+use anyhow::{Context, Result};
+use std::path::PathBuf; // TEAM-331: Localhost bypass
 
 /// Execute SSH command on remote machine
 ///
@@ -51,11 +51,12 @@ pub async fn ssh_exec(ssh_config: &SshConfig, command: &str) -> Result<String> {
     if ssh_config.is_localhost() {
         return local_exec(command).await;
     }
-    
+
     use tokio::process::Command;
-    
+
     let output = Command::new("ssh")
-        .arg("-p").arg(ssh_config.port.to_string())
+        .arg("-p")
+        .arg(ssh_config.port.to_string())
         .arg(format!("{}@{}", ssh_config.user, ssh_config.hostname))
         .arg(command)
         .output()
@@ -89,19 +90,23 @@ pub async fn ssh_exec(ssh_config: &SshConfig, command: &str) -> Result<String> {
 /// let local = PathBuf::from("target/release/daemon");
 /// scp_upload(&ssh_config, &local, "~/.local/bin/daemon").await?;
 /// ```
-pub async fn scp_upload(ssh_config: &SshConfig, local_path: &PathBuf, remote_path: &str) -> Result<()> {
+pub async fn scp_upload(
+    ssh_config: &SshConfig,
+    local_path: &PathBuf,
+    remote_path: &str,
+) -> Result<()> {
     // TEAM-331: Bypass SCP for localhost
     if ssh_config.is_localhost() {
         return local_copy(local_path, remote_path).await;
     }
-    
+
     use tokio::process::Command;
-    
-    let remote_target = format!("{}@{}:{}", 
-        ssh_config.user, ssh_config.hostname, remote_path);
-    
+
+    let remote_target = format!("{}@{}:{}", ssh_config.user, ssh_config.hostname, remote_path);
+
     let output = Command::new("scp")
-        .arg("-P").arg(ssh_config.port.to_string())
+        .arg("-P")
+        .arg(ssh_config.port.to_string())
         .arg(local_path)
         .arg(&remote_target)
         .output()
@@ -122,7 +127,7 @@ mod tests {
 
     // Note: These are integration tests that require actual SSH access
     // They are marked as ignored by default
-    
+
     #[tokio::test]
     #[ignore]
     async fn test_ssh_exec() {

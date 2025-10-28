@@ -21,7 +21,7 @@ async fn when_narrate_info(world: &mut World, message: String) {
         human: message,
         ..Default::default()
     });
-    
+
     // Track for assertions
     if let Some(adapter) = &world.adapter {
         let count = adapter.captured().len();
@@ -41,7 +41,7 @@ async fn when_narrate_warn(world: &mut World, message: String) {
         human: message,
         ..Default::default()
     });
-    
+
     // Track for assertions
     if let Some(adapter) = &world.adapter {
         let count = adapter.captured().len();
@@ -61,7 +61,7 @@ async fn when_narrate_error(world: &mut World, message: String) {
         human: message,
         ..Default::default()
     });
-    
+
     // Track for assertions
     if let Some(adapter) = &world.adapter {
         let count = adapter.captured().len();
@@ -81,7 +81,7 @@ async fn when_narrate_fatal(world: &mut World, message: String) {
         human: message,
         ..Default::default()
     });
-    
+
     // Track for assertions
     if let Some(adapter) = &world.adapter {
         let count = adapter.captured().len();
@@ -113,12 +113,9 @@ async fn then_level_should_be(world: &mut World, expected_level: String) {
     if let Some(adapter) = &world.adapter {
         let captured = adapter.captured();
         let new_events_start = world.initial_event_count;
-        
-        assert!(
-            captured.len() > new_events_start,
-            "Should have at least one new event"
-        );
-        
+
+        assert!(captured.len() > new_events_start, "Should have at least one new event");
+
         let last_event = &captured[captured.len() - 1];
         // TEAM-309: Level field not implemented yet, just verify event exists
         let _ = expected_level; // Suppress unused warning
@@ -132,12 +129,14 @@ async fn then_event_n_level_should_be(world: &mut World, event_num: usize, expec
     if let Some(adapter) = &world.adapter {
         let captured = adapter.captured();
         let event_index = world.initial_event_count + event_num - 1;
-        
+
         assert!(
             event_index < captured.len(),
-            "Event {} not found (only {} events)", event_num, captured.len() - world.initial_event_count
+            "Event {} not found (only {} events)",
+            event_num,
+            captured.len() - world.initial_event_count
         );
-        
+
         let event = &captured[event_index];
         // TEAM-309: Level field not implemented yet, just verify event exists
         let _ = expected_level; // Suppress unused warning

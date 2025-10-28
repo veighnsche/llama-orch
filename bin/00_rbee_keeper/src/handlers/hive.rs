@@ -8,8 +8,8 @@ use anyhow::Result;
 use clap::Subcommand;
 use daemon_lifecycle::{
     check_daemon_health, install_daemon, rebuild_daemon, start_daemon, stop_daemon,
-    uninstall_daemon, HttpDaemonConfig, InstallConfig, RebuildConfig,
-    StartConfig, StopConfig, UninstallConfig,
+    uninstall_daemon, HttpDaemonConfig, InstallConfig, RebuildConfig, StartConfig, StopConfig,
+    UninstallConfig,
 };
 use observability_narration_core::n;
 use operations_contract::Operation;
@@ -86,11 +86,7 @@ pub async fn handle_hive(action: HiveAction, queen_url: &str) -> Result<()> {
                 alias.clone(),
             ];
             let daemon_config = HttpDaemonConfig::new("rbee-hive", &health_url).with_args(args);
-            let config = StartConfig {
-                ssh_config: ssh,
-                daemon_config,
-                job_id: None,
-            };
+            let config = StartConfig { ssh_config: ssh, daemon_config, job_id: None };
             let _pid = start_daemon(config).await?;
             Ok(())
         }
@@ -116,7 +112,7 @@ pub async fn handle_hive(action: HiveAction, queen_url: &str) -> Result<()> {
             let ssh = resolve_ssh_config(&alias)?;
             let health_url = format!("http://{}:7835/health", ssh.hostname);
             let status = check_daemon_health(&health_url, "rbee-hive", &ssh).await;
-            
+
             if status.is_running {
                 n!("hive_status", "✅ hive '{}' is running on {}", alias, health_url);
             } else {

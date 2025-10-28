@@ -50,10 +50,7 @@ pub struct JobResponse {
 impl JobResponse {
     /// Create a job response
     pub fn new(job_id: String) -> Self {
-        Self {
-            sse_url: format!("/v1/jobs/{}/stream", job_id),
-            job_id,
-        }
+        Self { sse_url: format!("/v1/jobs/{}/stream", job_id), job_id }
     }
 }
 
@@ -70,18 +67,12 @@ pub struct HealthResponse {
 impl HealthResponse {
     /// Create a healthy response
     pub fn ok() -> Self {
-        Self {
-            status: "ok".to_string(),
-            message: None,
-        }
+        Self { status: "ok".to_string(), message: None }
     }
 
     /// Create an unhealthy response
     pub fn error(message: String) -> Self {
-        Self {
-            status: "error".to_string(),
-            message: Some(message),
-        }
+        Self { status: "error".to_string(), message: Some(message) }
     }
 }
 
@@ -99,7 +90,7 @@ mod tests {
     #[test]
     fn test_job_response_creates_sse_url() {
         let response = JobResponse::new("job-123".to_string());
-        
+
         assert_eq!(response.job_id, "job-123");
         assert_eq!(response.sse_url, "/v1/jobs/job-123/stream");
     }
@@ -107,10 +98,10 @@ mod tests {
     #[test]
     fn test_health_response_ok() {
         let response = HealthResponse::ok();
-        
+
         assert_eq!(response.status, "ok");
         assert_eq!(response.message, None);
-        
+
         let json = serde_json::to_string(&response).unwrap();
         assert!(!json.contains("\"message\""));
     }
@@ -118,7 +109,7 @@ mod tests {
     #[test]
     fn test_health_response_error() {
         let response = HealthResponse::error("Something went wrong".to_string());
-        
+
         assert_eq!(response.status, "error");
         assert_eq!(response.message, Some("Something went wrong".to_string()));
     }

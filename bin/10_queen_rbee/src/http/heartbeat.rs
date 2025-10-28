@@ -24,17 +24,9 @@ use worker_contract::WorkerHeartbeat; // TEAM-284: Worker heartbeat types
 #[serde(tag = "type", rename_all = "snake_case")]
 pub enum HeartbeatEvent {
     /// Worker heartbeat received
-    Worker {
-        worker_id: String,
-        status: String,
-        timestamp: String,
-    },
+    Worker { worker_id: String, status: String, timestamp: String },
     /// Hive heartbeat received
-    Hive {
-        hive_id: String,
-        status: String,
-        timestamp: String,
-    },
+    Hive { hive_id: String, status: String, timestamp: String },
     /// Queen's own heartbeat (sent every 2.5 seconds)
     Queen {
         workers_online: usize,
@@ -58,11 +50,11 @@ pub struct HeartbeatState {
     /// Registry for runtime worker state (RAM)
     /// TEAM-262: Renamed to WorkerRegistry
     pub worker_registry: Arc<WorkerRegistry>,
-    
+
     /// Registry for runtime hive state (RAM)
     /// TEAM-284: Added hive registry
     pub hive_registry: Arc<HiveRegistry>,
-    
+
     /// TEAM-288: Broadcast channel for real-time heartbeat events
     /// All heartbeats (worker, hive, queen) are broadcast here
     pub event_tx: broadcast::Sender<HeartbeatEvent>,
@@ -98,7 +90,7 @@ pub struct HttpHeartbeatAcknowledgement {
 /// **Note:** This bypasses hive - workers talk directly to queen
 pub async fn handle_worker_heartbeat(
     State(state): State<HeartbeatState>,
-    Json(heartbeat): Json<WorkerHeartbeat>,  // TEAM-284: Changed to WorkerHeartbeat
+    Json(heartbeat): Json<WorkerHeartbeat>, // TEAM-284: Changed to WorkerHeartbeat
 ) -> Result<Json<HttpHeartbeatAcknowledgement>, (StatusCode, String)> {
     // TEAM-261: Update worker state in registry
     // TEAM-284: Now properly implemented with worker-contract types
@@ -146,7 +138,7 @@ pub async fn handle_worker_heartbeat(
 /// **Note:** This mirrors the worker heartbeat pattern
 pub async fn handle_hive_heartbeat(
     State(state): State<HeartbeatState>,
-    Json(heartbeat): Json<HiveHeartbeat>,  // TEAM-284: Changed to HiveHeartbeat
+    Json(heartbeat): Json<HiveHeartbeat>, // TEAM-284: Changed to HiveHeartbeat
 ) -> Result<Json<HttpHeartbeatAcknowledgement>, (StatusCode, String)> {
     // TEAM-284: Update hive state in registry (now properly implemented)
 

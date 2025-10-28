@@ -35,7 +35,7 @@ async fn static_handler(uri: Uri) -> impl IntoResponse {
     // Try to serve the requested file
     if let Some(content) = Assets::get(path) {
         let mime = mime_guess::from_path(path).first_or_octet_stream();
-        
+
         return Response::builder()
             .status(StatusCode::OK)
             .header(header::CONTENT_TYPE, mime.as_ref())
@@ -53,8 +53,5 @@ async fn static_handler(uri: Uri) -> impl IntoResponse {
     }
 
     // If even index.html is missing, return 404
-    Response::builder()
-        .status(StatusCode::NOT_FOUND)
-        .body(Body::from("404 - Not Found"))
-        .unwrap()
+    Response::builder().status(StatusCode::NOT_FOUND).body(Body::from("404 - Not Found")).unwrap()
 }

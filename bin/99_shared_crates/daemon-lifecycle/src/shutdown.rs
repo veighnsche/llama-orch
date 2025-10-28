@@ -53,14 +53,14 @@
 //! # }
 //! ```
 
+use crate::utils::ssh::ssh_exec;
+use crate::SshConfig;
 use anyhow::{Context, Result};
 use observability_narration_core::n;
 use observability_narration_macros::with_job_id;
-use timeout_enforcer::with_timeout;
 use std::time::Duration;
+use timeout_enforcer::with_timeout;
 use tokio::time::sleep;
-use crate::SshConfig;
-use crate::utils::ssh::ssh_exec;
 
 /// Configuration for shutting down daemon on remote machine
 ///
@@ -69,16 +69,16 @@ use crate::utils::ssh::ssh_exec;
 pub struct ShutdownConfig {
     /// Name of daemon to shutdown
     pub daemon_name: String,
-    
+
     /// HTTP shutdown endpoint URL
     pub shutdown_url: String,
-    
+
     /// Health endpoint URL (for polling)
     pub health_url: String,
-    
+
     /// SSH connection configuration (for fallback)
     pub ssh_config: SshConfig,
-    
+
     /// Optional job ID for SSE narration routing
     pub job_id: Option<String>,
 }
@@ -109,26 +109,29 @@ pub async fn shutdown_daemon(shutdown_config: ShutdownConfig) -> Result<()> {
     let daemon_name = &shutdown_config.daemon_name;
     let health_url = &shutdown_config.health_url;
     let ssh_config = &shutdown_config.ssh_config;
-    
-    n!("ssh_shutdown_start", "🔪 SSH-based shutdown for {} on {}@{}", 
-        daemon_name, ssh_config.user, ssh_config.hostname);
+
+    n!(
+        "ssh_shutdown_start",
+        "🔪 SSH-based shutdown for {} on {}@{}",
+        daemon_name,
+        ssh_config.user,
+        ssh_config.hostname
+    );
 
     // Step 1: Send SIGTERM via SSH
     n!("sigterm", "🔪 Sending SIGTERM via SSH...");
-    
+
     let sigterm_cmd = format!("pkill -TERM -f {}", daemon_name);
     match ssh_exec(ssh_config, &sigterm_cmd).await {
         Ok(_) => {
             n!("sigterm_sent", "✅ SIGTERM sent, waiting 5s for graceful shutdown...");
-            
+
             // Wait for graceful shutdown
             sleep(Duration::from_secs(5)).await;
-            
+
             // Check if daemon stopped
-            let client = reqwest::Client::builder()
-                .timeout(Duration::from_secs(2))
-                .build()?;
-                
+            let client = reqwest::Client::builder().timeout(Duration::from_secs(2)).build()?;
+
             match client.get(health_url).send().await {
                 Ok(resp) if resp.status().is_success() => {
                     n!("still_alive", "⚠️  Daemon still running after SIGTERM, sending SIGKILL");
@@ -147,18 +150,16 @@ pub async fn shutdown_daemon(shutdown_config: ShutdownConfig) -> Result<()> {
 
     // Step 2: Send SIGKILL via SSH (force kill)
     n!("sigkill", "💀 Sending SIGKILL via SSH (force kill)...");
-    
+
     let sigkill_cmd = format!("pkill -KILL -f {}", daemon_name);
-    ssh_exec(ssh_config, &sigkill_cmd)
-        .await
-        .context("Failed to send SIGKILL")?;
-    
+    ssh_exec(ssh_config, &sigkill_cmd).await.context("Failed to send SIGKILL")?;
+
     n!("sigkill_sent", "✅ SIGKILL sent");
-    
+
     // Give it a moment
     sleep(Duration::from_secs(2)).await;
-    
+
     n!("shutdown_complete", "🎉 {} force killed via SSH", daemon_name);
-    
+
     Ok(())
 }

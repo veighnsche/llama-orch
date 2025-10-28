@@ -13,8 +13,8 @@ use anyhow::Result;
 use clap::Subcommand;
 use daemon_lifecycle::{
     check_daemon_health, install_daemon, rebuild_daemon, start_daemon, stop_daemon,
-    uninstall_daemon, HttpDaemonConfig, InstallConfig, RebuildConfig, SshConfig,
-    StartConfig, StopConfig, UninstallConfig,
+    uninstall_daemon, HttpDaemonConfig, InstallConfig, RebuildConfig, SshConfig, StartConfig,
+    StopConfig, UninstallConfig,
 };
 use observability_narration_core::n;
 
@@ -46,23 +46,16 @@ pub enum QueenAction {
 pub async fn handle_queen(action: QueenAction, queen_url: &str) -> Result<()> {
     // TEAM-322: Extract port from queen_url (always localhost)
     // TEAM-327: Use next_back() instead of last() for efficiency (clippy::double_ended_iterator_last)
-    let port: u16 = queen_url
-        .split(':')
-        .next_back()
-        .and_then(|p| p.parse().ok())
-        .unwrap_or(7833);
-    
+    let port: u16 = queen_url.split(':').next_back().and_then(|p| p.parse().ok()).unwrap_or(7833);
+
     match action {
         QueenAction::Start => {
             // TEAM-333: Queen is always localhost - use SshConfig::localhost() directly
             let base_url = format!("http://localhost:{}", port);
             let args = vec!["--port".to_string(), port.to_string()];
             let daemon_config = HttpDaemonConfig::new("queen-rbee", &base_url).with_args(args);
-            let config = StartConfig {
-                ssh_config: SshConfig::localhost(),
-                daemon_config,
-                job_id: None,
-            };
+            let config =
+                StartConfig { ssh_config: SshConfig::localhost(), daemon_config, job_id: None };
             let _pid = start_daemon(config).await?;
             Ok(())
         }
@@ -84,7 +77,7 @@ pub async fn handle_queen(action: QueenAction, queen_url: &str) -> Result<()> {
             let health_url = format!("{}/health", queen_url);
             let ssh_config = SshConfig::localhost(); // Queen is always localhost
             let status = check_daemon_health(&health_url, "queen-rbee", &ssh_config).await;
-            
+
             if status.is_running {
                 n!("queen_status", "✅ queen 'localhost' is running on {}", queen_url);
             } else {

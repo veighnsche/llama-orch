@@ -75,10 +75,10 @@ pub enum Operation {
     // System-wide operations
     /// TEAM-190: Show live status of all hives and workers from registry
     Status,
-    
+
     /// TEAM-312: Deep narration test through queen job server (like self-check but via SSE)
     QueenCheck,
-    
+
     /// TEAM-313: Deep narration test through hive job server (tests hive SSE streaming)
     HiveCheck {
         /// Hive alias (only "localhost" supported)
@@ -161,8 +161,8 @@ impl Operation {
     /// Get the operation name as a string (for logging/narration)
     pub fn name(&self) -> &'static str {
         match self {
-            Operation::Status => "status", // TEAM-190
-            Operation::QueenCheck => "queen_check", // TEAM-312
+            Operation::Status => "status",               // TEAM-190
+            Operation::QueenCheck => "queen_check",      // TEAM-312
             Operation::HiveCheck { .. } => "hive_check", // TEAM-313
             // TEAM-278: DELETED ssh_test, hive_install, hive_uninstall
             // TEAM-284: DELETED package_sync, package_status, package_install, package_uninstall, package_validate, package_migrate

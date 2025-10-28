@@ -77,34 +77,34 @@ pub fn narrate(fields: NarrationFields, level: NarrationLevel) {
 
     // TEAM-299: Phase 1 Privacy Fix - CRITICAL SECURITY CHANGE
     // TEAM-310: Formatting now centralized in format.rs module
-    // 
+    //
     // REMOVED: Global stderr output (was line 559)
-    // 
+    //
     // WHY REMOVED:
     // Previous implementation printed ALL narration to global stderr:
     //   ⚠️ DEPRECATED FORMAT (pre-TEAM-310):
     //   eprintln!("[{:<10}] {:<15}: {}", fields.actor, fields.action, message);
-    //   
+    //
     //   This format is DEPRECATED. Use observability_narration_core::format::format_message() instead.
     //   New format: Bold first line + message on newline (20-char fields)
-    // 
+    //
     // This caused CRITICAL privacy violation in multi-tenant environments:
     //   - User A's narration visible to User B (data leak)
     //   - Sensitive data (job_id, inference prompts) exposed globally
     //   - No isolation between jobs (security violation)
-    // 
+    //
     // SECURITY BY DESIGN:
     // Code that doesn't exist cannot be exploited. Environment variables
     // and feature flags are bypassable. Complete removal is the ONLY
     // secure solution.
-    // 
+    //
     // NEW ARCHITECTURE:
     //   - SSE is PRIMARY output (job-scoped, secure, isolated)
     //   - No global stderr in narration-core (not even conditional)
     //   - Keeper displays via separate SSE subscription (Phase 4)
     //   - Tests use capture adapter (no stderr dependency)
     //   - Formatting: Centralized in format.rs (TEAM-310)
-    // 
+    //
     // See: .plan/PRIVACY_FIX_FINAL_APPROACH.md
     // See: .plan/PRIVACY_FIX_REQUIRED.md
     // See: TEAM_310_FORMAT_MODULE.md (formatting centralization)

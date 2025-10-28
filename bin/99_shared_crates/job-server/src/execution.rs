@@ -5,10 +5,10 @@
 //! TEAM-312: Extracted to separate module, migrated to n!() macro
 //! TEAM-312: DELETED execute_and_stream - use execute_and_stream instead with timeout: None
 
-use std::sync::Arc;
-use std::time::Duration;
 use futures::stream::{self, Stream};
 use observability_narration_core::n;
+use std::sync::Arc;
+use std::time::Duration;
 
 use crate::{JobError, JobRegistry, JobState};
 
@@ -77,14 +77,15 @@ where
     if let Some(payload) = payload {
         let job_id_clone = job_id.clone();
         let registry_clone = registry.clone();
-        
+
         tokio::spawn(async move {
             n!("execute", "Executing job {}", job_id_clone);
 
             // Execute with timeout and cancellation support using JobError
             let execution_future = executor(job_id_clone.clone(), payload);
-            
-            let result: Result<(), JobError> = if let Some(cancellation_token) = cancellation_token {
+
+            let result: Result<(), JobError> = if let Some(cancellation_token) = cancellation_token
+            {
                 // With cancellation support
                 if let Some(timeout_duration) = timeout {
                     // With both timeout and cancellation
@@ -116,7 +117,7 @@ where
                 // No timeout or cancellation
                 execution_future.await.map_err(JobError::from)
             };
-            
+
             // Update state based on JobError type
             match result {
                 Ok(_) => {
@@ -146,7 +147,8 @@ where
     let registry_clone = registry.clone();
     let job_id_clone = job_id.clone();
 
-    stream::unfold((receiver, false, job_id_clone, registry_clone), 
+    stream::unfold(
+        (receiver, false, job_id_clone, registry_clone),
         |(rx_opt, done_sent, job_id, registry)| async move {
             if done_sent {
                 return None;
@@ -179,6 +181,6 @@ where
                     Some((signal, (None, true, job_id, registry)))
                 }
             }
-        }
+        },
     )
 }

@@ -2,9 +2,11 @@
 // Implements complete job lifecycle steps for job_lifecycle.feature
 
 use crate::steps::world::World;
-use cucumber::{given, then, when};
 use cucumber::gherkin::Step;
-use observability_narration_core::{narrate, NarrationFields, with_narration_context, NarrationContext};
+use cucumber::{given, then, when};
+use observability_narration_core::{
+    narrate, with_narration_context, NarrationContext, NarrationFields,
+};
 use std::time::Duration;
 use tokio::time::sleep;
 
@@ -60,7 +62,8 @@ async fn given_n_jobs_with_ids(world: &mut World, count: usize, step: &Step) {
     // TEAM-309: Create multiple jobs from table
     if let Some(table) = &step.table {
         world.job_ids.clear();
-        for row in &table.rows[1..] { // Skip header
+        for row in &table.rows[1..] {
+            // Skip header
             if !row.is_empty() {
                 world.job_ids.push(row[0].clone());
             }
@@ -131,7 +134,8 @@ async fn when_job_emits_narration_with_n(world: &mut World, action: String, mess
                 human: message,
                 ..Default::default()
             });
-        }).await;
+        })
+        .await;
     }
 }
 
@@ -141,8 +145,9 @@ async fn when_job_emits_events(world: &mut World, step: &Step) {
     if let Some(table) = &step.table {
         if let Some(job_id) = &world.job_id {
             let job_id_static: &'static str = Box::leak(job_id.clone().into_boxed_str());
-            
-            for row in &table.rows[1..] { // Skip header
+
+            for row in &table.rows[1..] {
+                // Skip header
                 if row.len() >= 2 {
                     let action_static: &'static str = Box::leak(row[0].clone().into_boxed_str());
                     narrate(NarrationFields {
@@ -205,7 +210,7 @@ async fn when_job_fails(world: &mut World) {
 async fn when_job_runs_for_seconds(world: &mut World, seconds: u64) {
     // TEAM-309: Simulate job running for duration
     sleep(Duration::from_millis(seconds * 100)).await; // Shortened for testing
-    
+
     // Check if timeout should trigger
     if let Some(timeout_ms) = world.network_timeout_ms {
         if seconds * 1000 > timeout_ms {
@@ -289,7 +294,7 @@ async fn then_job_id_matches_pattern(world: &mut World, pattern: String) {
     // TEAM-309: Verify job ID pattern
     assert!(world.job_id.is_some(), "Job should have an ID");
     let job_id = world.job_id.as_ref().unwrap();
-    
+
     if pattern == "job-[uuid]" {
         assert!(job_id.starts_with("job-"), "Job ID should start with 'job-'");
         assert!(job_id.len() > 10, "Job ID should contain UUID");
@@ -313,16 +318,13 @@ async fn then_narration_captured_with_job_id(world: &mut World) {
     if let Some(adapter) = &world.adapter {
         let captured = adapter.captured();
         let new_events_start = world.initial_event_count;
-        
-        assert!(
-            captured.len() > new_events_start,
-            "Should have captured events"
-        );
-        
+
+        assert!(captured.len() > new_events_start, "Should have captured events");
+
         if let Some(job_id) = &world.job_id {
-            let has_job_id = captured[new_events_start..].iter().any(|event| 
-                event.job_id.as_deref() == Some(job_id.as_str())
-            );
+            let has_job_id = captured[new_events_start..]
+                .iter()
+                .any(|event| event.job_id.as_deref() == Some(job_id.as_str()));
             assert!(has_job_id, "Narration should include job_id");
         }
     }
@@ -331,11 +333,7 @@ async fn then_narration_captured_with_job_id(world: &mut World) {
 #[then("the job should complete successfully")]
 async fn then_job_completes_successfully(world: &mut World) {
     // TEAM-309: Verify successful completion
-    assert_eq!(
-        world.job_state.as_deref(),
-        Some("Completed"),
-        "Job should be completed"
-    );
+    assert_eq!(world.job_state.as_deref(), Some("Completed"), "Job should be completed");
 }
 
 #[then(regex = r#"^all narration should have job_id "([^"]+)"$"#)]
@@ -344,7 +342,7 @@ async fn then_all_narration_has_job_id(world: &mut World, expected_job_id: Strin
     if let Some(adapter) = &world.adapter {
         let captured = adapter.captured();
         let new_events_start = world.initial_event_count;
-        
+
         for event in &captured[new_events_start..] {
             if event.job_id.is_some() {
                 assert_eq!(
@@ -375,11 +373,7 @@ async fn then_sse_client_receives_n_events(world: &mut World, expected_count: us
 #[then(regex = r#"^the final event should be "\[DONE\]"$"#)]
 async fn then_final_event_is_done(world: &mut World) {
     // TEAM-309: Verify [DONE] marker
-    assert_eq!(
-        world.job_state.as_deref(),
-        Some("Completed"),
-        "Job should be completed for [DONE]"
-    );
+    assert_eq!(world.job_state.as_deref(), Some("Completed"), "Job should be completed for [DONE]");
 }
 
 #[then(regex = r#"^the job state should be "([^"]+)"$"#)]
@@ -396,11 +390,7 @@ async fn then_job_state_is(world: &mut World, expected_state: String) {
 #[then(regex = r#"^the SSE stream should send "\[DONE\]"$"#)]
 async fn then_sse_sends_done(world: &mut World) {
     // TEAM-309: Verify [DONE] sent
-    assert_eq!(
-        world.job_state.as_deref(),
-        Some("Completed"),
-        "Job should be completed"
-    );
+    assert_eq!(world.job_state.as_deref(), Some("Completed"), "Job should be completed");
 }
 
 #[then("the job should be cleanable")]
@@ -412,10 +402,7 @@ async fn then_job_is_cleanable(_world: &mut World) {
 #[then("the result should be accessible")]
 async fn then_result_is_accessible(world: &mut World) {
     // TEAM-309: Verify result data exists
-    assert!(
-        world.last_error.is_some(),
-        "Result data should be accessible"
-    );
+    assert!(world.last_error.is_some(), "Result data should be accessible");
 }
 
 #[then("the result should be included in completion narration")]
@@ -451,10 +438,7 @@ async fn then_narration_before_failure_captured(world: &mut World) {
     // TEAM-309: Verify narration was captured
     if let Some(adapter) = &world.adapter {
         let captured = adapter.captured();
-        assert!(
-            captured.len() > world.initial_event_count,
-            "Should have captured narration"
-        );
+        assert!(captured.len() > world.initial_event_count, "Should have captured narration");
     }
 }
 
@@ -493,31 +477,19 @@ async fn then_error_mentions(world: &mut World, text: String) {
 #[then(regex = r#"^the SSE stream should send "\[CANCELLED\]"$"#)]
 async fn then_sse_sends_cancelled(world: &mut World) {
     // TEAM-309: Verify [CANCELLED] sent
-    assert_eq!(
-        world.job_state.as_deref(),
-        Some("Cancelled"),
-        "Job should be cancelled"
-    );
+    assert_eq!(world.job_state.as_deref(), Some("Cancelled"), "Job should be cancelled");
 }
 
 #[then("the job should stop executing")]
 async fn then_job_stops_executing(world: &mut World) {
     // TEAM-309: Verify job stopped
-    assert_eq!(
-        world.job_state.as_deref(),
-        Some("Cancelled"),
-        "Job should be cancelled"
-    );
+    assert_eq!(world.job_state.as_deref(), Some("Cancelled"), "Job should be cancelled");
 }
 
 #[then("the job should never start executing")]
 async fn then_job_never_starts(world: &mut World) {
     // TEAM-309: Verify job never ran
-    assert_ne!(
-        world.job_state.as_deref(),
-        Some("Running"),
-        "Job should not be running"
-    );
+    assert_ne!(world.job_state.as_deref(), Some("Running"), "Job should not be running");
 }
 
 #[then("the cancellation should be rejected")]

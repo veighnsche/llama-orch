@@ -17,7 +17,7 @@
 //!
 //! Total: 21 tests
 
-use daemon_lifecycle::{StopConfig, SshConfig};
+use daemon_lifecycle::{SshConfig, StopConfig};
 
 // ============================================================================
 // TEST HELPERS
@@ -123,7 +123,7 @@ fn test_stop_strategy_order() {
     // 1. Try HTTP shutdown endpoint (10s timeout)
     // 2. Poll health endpoint to verify shutdown (5s max)
     // 3. If HTTP fails, fallback to shutdown_daemon() (SSH-based)
-    
+
     assert!(true);
 }
 
@@ -131,7 +131,7 @@ fn test_stop_strategy_order() {
 fn test_http_first_ssh_fallback() {
     // Strategy: Try HTTP first, fallback to SSH if needed
     // This minimizes SSH calls
-    
+
     assert!(true);
 }
 
@@ -145,7 +145,7 @@ fn test_best_case_no_ssh() {
 fn test_worst_case_ssh_fallback() {
     // From documentation: "Worst case: 1 SSH call (force kill)"
     // Actually calls shutdown_daemon which makes 1-2 SSH calls
-    
+
     assert!(true);
 }
 
@@ -157,7 +157,7 @@ fn test_worst_case_ssh_fallback() {
 fn test_http_shutdown_uses_post() {
     // From source: client.post(shutdown_url).send().await
     // Uses POST method, not GET
-    
+
     assert!(true);
 }
 
@@ -173,7 +173,7 @@ fn test_http_shutdown_timeout_10_seconds() {
 fn test_http_shutdown_success_is_2xx() {
     // From source: response.status().is_success()
     // Success is 2xx status codes
-    
+
     use reqwest::StatusCode;
     assert!(StatusCode::OK.is_success());
     assert!(StatusCode::ACCEPTED.is_success());
@@ -216,7 +216,7 @@ fn test_health_polling_total_5_seconds() {
 fn test_ssh_fallback_calls_shutdown_daemon() {
     // From source: shutdown_daemon(shutdown_config).await
     // Falls back to shutdown_daemon() which uses SSH
-    
+
     assert!(true);
 }
 
@@ -224,7 +224,7 @@ fn test_ssh_fallback_calls_shutdown_daemon() {
 fn test_ssh_fallback_propagates_job_id() {
     // From source: job_id: stop_config.job_id.clone()
     // job_id is propagated to shutdown_daemon
-    
+
     assert!(true);
 }
 
@@ -244,12 +244,12 @@ fn test_timeout_breakdown() {
     // - HTTP shutdown: 10 seconds
     // - Health polling: 5 seconds (10 × 500ms)
     // - Buffer: 5 seconds
-    
+
     let http_timeout = 10;
     let health_polling = 5;
     let buffer = 5;
     let total = 20;
-    
+
     assert_eq!(http_timeout + health_polling + buffer, total);
 }
 
@@ -346,7 +346,7 @@ fn test_documented_ssh_call_count() {
     // - Best case: 0 SSH calls (HTTP shutdown succeeds)
     // - Worst case: 1 SSH call (force kill)
     // Actually: shutdown_daemon makes 1-2 SSH calls (SIGTERM + SIGKILL)
-    
+
     assert!(true);
 }
 
@@ -356,7 +356,7 @@ fn test_documented_error_handling() {
     // - SSH connection failed
     // - Process not found (not an error - daemon already stopped)
     // - Kill command failed
-    
+
     assert!(true);
 }
 
@@ -365,7 +365,7 @@ fn test_documented_process() {
     // From documentation:
     // 1. Try graceful shutdown via HTTP shutdown endpoint (NO SSH)
     // 2. Force kill via SSH (ONE ssh call)
-    
+
     assert!(true);
 }
 
@@ -387,6 +387,6 @@ fn test_narration_events_documented() {
     // - http_error
     // - ssh_fallback
     // - stop_complete
-    
+
     assert!(true);
 }

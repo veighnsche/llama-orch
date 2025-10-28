@@ -152,12 +152,19 @@ pub async fn then_captured_has_n_events(world: &mut World, count: usize) {
     if let Some(adapter) = &world.adapter {
         let captured = adapter.captured();
         let new_events = captured.len().saturating_sub(world.initial_event_count);
-        
-        assert_eq!(new_events, count, 
+
+        assert_eq!(
+            new_events,
+            count,
             "Expected {} new events since scenario start, got {}. \n\
-             Total events in buffer: {}, Baseline: {}, Current scenario events: {:?}", 
-            count, new_events, captured.len(), world.initial_event_count,
-            captured.get(world.initial_event_count..).unwrap_or(&[])
+             Total events in buffer: {}, Baseline: {}, Current scenario events: {:?}",
+            count,
+            new_events,
+            captured.len(),
+            world.initial_event_count,
+            captured
+                .get(world.initial_event_count..)
+                .unwrap_or(&[])
                 .iter()
                 .map(|e| (&e.action, &e.job_id))
                 .collect::<Vec<_>>()
@@ -171,15 +178,15 @@ pub async fn then_captured_includes(world: &mut World, field: String) {
         let captured = adapter.captured();
         assert!(!captured.is_empty(), "Should have captured narration");
         let last = captured.last().unwrap();
-        
+
         // Check if field appears in any of the narration fields
-        let found = last.human.contains(&field) 
+        let found = last.human.contains(&field)
             || last.cute.as_ref().map_or(false, |c| c.contains(&field))
             || last.story.as_ref().map_or(false, |s| s.contains(&field))
             || last.actor.contains(&field)
             || last.action.contains(&field)
             || last.target.contains(&field);
-            
+
         assert!(found, "Captured narration should include '{}'", field);
     }
 }

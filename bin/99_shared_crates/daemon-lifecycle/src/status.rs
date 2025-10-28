@@ -38,9 +38,9 @@
 //! # }
 //! ```
 
-use std::time::Duration;
-use crate::SshConfig;
 use crate::utils::binary::check_binary_installed;
+use crate::SshConfig;
+use std::time::Duration;
 
 /// Daemon status information
 ///
@@ -80,33 +80,27 @@ pub async fn check_daemon_health(
     ssh_config: &SshConfig,
 ) -> DaemonStatus {
     // Step 1: Check if running (HTTP, no SSH)
-    let client = match reqwest::Client::builder()
-        .timeout(Duration::from_secs(2))
-        .build()
-    {
+    let client = match reqwest::Client::builder().timeout(Duration::from_secs(2)).build() {
         Ok(c) => c,
         Err(_) => {
             return DaemonStatus {
                 is_running: false,
                 is_installed: false, // Can't check, assume not installed
-            }
+            };
         }
     };
-    
+
     let is_running = match client.get(health_url).send().await {
         Ok(response) => response.status().is_success(),
         Err(_) => false,
     };
-    
+
     // Step 2: Check if installed (only if not running - optimization)
     let is_installed = if is_running {
         true // If running, must be installed
     } else {
         check_binary_installed(daemon_name, ssh_config).await
     };
-    
-    DaemonStatus {
-        is_running,
-        is_installed,
-    }
+
+    DaemonStatus { is_running, is_installed }
 }

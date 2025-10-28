@@ -104,7 +104,7 @@ impl TimeoutEnforcer {
             loop {
                 ticker.tick().await;
                 elapsed += 1;
-                
+
                 // TEAM-330: Emit progress as narration (goes through SSE if job_id set!)
                 n!("progress", "⏱️  {} - {}s / {}s elapsed", label_clone, elapsed, total_secs);
 

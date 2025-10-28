@@ -47,11 +47,11 @@ pub async fn handle_heartbeat_stream(
 ) -> Sse<impl Stream<Item = Result<Event, Infallible>>> {
     // TEAM-288: Subscribe to broadcast channel for real-time events
     let mut event_rx = state.event_tx.subscribe();
-    
+
     // TEAM-288: Create interval for queen's own heartbeat (every 2.5 seconds)
     let mut queen_interval = interval(Duration::from_millis(2500));
     queen_interval.set_missed_tick_behavior(tokio::time::MissedTickBehavior::Skip);
-    
+
     // TEAM-288: Create stream that merges queen heartbeats and broadcast events
     let stream = async_stream::stream! {
         loop {
@@ -62,7 +62,7 @@ pub async fn handle_heartbeat_stream(
                     let json = serde_json::to_string(&event).unwrap_or_else(|_| "{}".to_string());
                     yield Ok(Event::default().event("heartbeat").data(json));
                 }
-                
+
                 // TEAM-288: Forward worker/hive heartbeats immediately
                 Ok(event) = event_rx.recv() => {
                     let json = serde_json::to_string(&event).unwrap_or_else(|_| "{}".to_string());
@@ -81,21 +81,13 @@ fn create_queen_heartbeat(state: &HeartbeatState) -> HeartbeatEvent {
     let workers_available = state.worker_registry.count_available();
     let hives_online = state.hive_registry.count_online();
     let hives_available = state.hive_registry.count_available();
-    
-    let worker_ids: Vec<String> = state
-        .worker_registry
-        .list_online_workers()
-        .into_iter()
-        .map(|w| w.id)
-        .collect();
-    
-    let hive_ids: Vec<String> = state
-        .hive_registry
-        .list_online_hives()
-        .into_iter()
-        .map(|h| h.id)
-        .collect();
-    
+
+    let worker_ids: Vec<String> =
+        state.worker_registry.list_online_workers().into_iter().map(|w| w.id).collect();
+
+    let hive_ids: Vec<String> =
+        state.hive_registry.list_online_hives().into_iter().map(|h| h.id).collect();
+
     HeartbeatEvent::Queen {
         workers_online,
         workers_available,
@@ -124,7 +116,7 @@ mod tests {
         };
 
         let snapshot = create_snapshot(&state);
-        
+
         assert_eq!(snapshot.workers_online, 0);
         assert_eq!(snapshot.hives_online, 0);
         assert!(snapshot.worker_ids.is_empty());
@@ -159,13 +151,10 @@ mod tests {
         };
         hive_registry.update_hive(HiveHeartbeat::new(hive));
 
-        let state = HeartbeatState {
-            worker_registry,
-            hive_registry,
-        };
+        let state = HeartbeatState { worker_registry, hive_registry };
 
         let snapshot = create_snapshot(&state);
-        
+
         assert_eq!(snapshot.workers_online, 1);
         assert_eq!(snapshot.hives_online, 1);
         assert_eq!(snapshot.worker_ids, vec!["worker-1"]);

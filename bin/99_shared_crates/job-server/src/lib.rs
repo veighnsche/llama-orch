@@ -22,15 +22,15 @@
 
 // TEAM-312: Module organization
 mod error;
-mod state;
-mod registry;
 mod execution;
+mod registry;
+mod state;
 
 // Re-exports
 pub use error::JobError;
-pub use state::JobState;
+pub use execution::execute_and_stream;
 pub use registry::{Job, JobRegistry, TokenReceiver, TokenSender};
-pub use execution::execute_and_stream; // TEAM-312: Deleted execute_and_stream_with_timeout (backwards compat trap)
+pub use state::JobState; // TEAM-312: Deleted execute_and_stream_with_timeout (backwards compat trap)
 
 // ============================================================================
 // TEAM-305/312: Trait Implementation for jobs-contract
@@ -43,19 +43,19 @@ where
     fn create_job(&self) -> String {
         self.create_job()
     }
-    
+
     fn set_payload(&self, job_id: &str, payload: serde_json::Value) {
         self.set_payload(job_id, payload)
     }
-    
+
     fn take_payload(&self, job_id: &str) -> Option<serde_json::Value> {
         self.take_payload(job_id)
     }
-    
+
     fn has_job(&self, job_id: &str) -> bool {
         self.has_job(job_id)
     }
-    
+
     fn get_job_state(&self, job_id: &str) -> Option<jobs_contract::JobState> {
         self.get_job_state(job_id).map(|state| match state {
             JobState::Queued => jobs_contract::JobState::Queued,
@@ -65,7 +65,7 @@ where
             JobState::Cancelled => jobs_contract::JobState::Cancelled,
         })
     }
-    
+
     fn update_state(&self, job_id: &str, state: jobs_contract::JobState) {
         let local_state = match state {
             jobs_contract::JobState::Queued => JobState::Queued,
@@ -76,27 +76,27 @@ where
         };
         self.update_state(job_id, local_state)
     }
-    
+
     fn set_token_receiver(&self, job_id: &str, receiver: tokio::sync::mpsc::UnboundedReceiver<T>) {
         self.set_token_receiver(job_id, receiver)
     }
-    
+
     fn take_token_receiver(&self, job_id: &str) -> Option<tokio::sync::mpsc::UnboundedReceiver<T>> {
         self.take_token_receiver(job_id)
     }
-    
+
     fn remove_job(&self, job_id: &str) {
         self.remove_job(job_id);
     }
-    
+
     fn job_count(&self) -> usize {
         self.job_count()
     }
-    
+
     fn job_ids(&self) -> Vec<String> {
         self.job_ids()
     }
-    
+
     fn cancel_job(&self, job_id: &str) -> bool {
         self.cancel_job(job_id)
     }

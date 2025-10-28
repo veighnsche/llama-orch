@@ -42,9 +42,7 @@ pub struct HiveRegistry {
 impl HiveRegistry {
     /// Create a new empty registry
     pub fn new() -> Self {
-        Self {
-            inner: HeartbeatRegistry::new(),
-        }
+        Self { inner: HeartbeatRegistry::new() }
     }
 
     /// Update hive from heartbeat
@@ -180,10 +178,7 @@ mod tests {
         // Add old hive
         let hive2 = create_hive("hive-2", OperationalStatus::Ready);
         let old_timestamp = HeartbeatTimestamp::from_datetime(Utc::now() - Duration::seconds(120));
-        let old_heartbeat = HiveHeartbeat {
-            hive: hive2,
-            timestamp: old_timestamp,
-        };
+        let old_heartbeat = HiveHeartbeat { hive: hive2, timestamp: old_timestamp };
         registry.update_hive(old_heartbeat);
 
         let online = registry.list_online_hives();
@@ -235,10 +230,7 @@ mod tests {
         // Add old hive
         let hive2 = create_hive("hive-2", OperationalStatus::Ready);
         let old_timestamp = HeartbeatTimestamp::from_datetime(Utc::now() - Duration::seconds(120));
-        let old_heartbeat = HiveHeartbeat {
-            hive: hive2,
-            timestamp: old_timestamp,
-        };
+        let old_heartbeat = HiveHeartbeat { hive: hive2, timestamp: old_timestamp };
         registry.update_hive(old_heartbeat);
 
         let removed = registry.cleanup_stale();

@@ -8,9 +8,9 @@ use serial_test::serial;
 #[serial(capture_adapter)]
 fn test_simple_narration() {
     let adapter = CaptureAdapter::install();
-    
+
     n!("test", "Simple message");
-    
+
     let captured = adapter.captured();
     assert_eq!(captured.len(), 1);
     assert_eq!(captured[0].action, "test");
@@ -21,9 +21,9 @@ fn test_simple_narration() {
 #[serial(capture_adapter)]
 fn test_narration_with_single_format() {
     let adapter = CaptureAdapter::install();
-    
+
     n!("test", "Message with {}", "arg1");
-    
+
     let captured = adapter.captured();
     assert_eq!(captured.len(), 1);
     assert_eq!(captured[0].human, "Message with arg1");
@@ -33,9 +33,9 @@ fn test_narration_with_single_format() {
 #[serial(capture_adapter)]
 fn test_narration_with_multiple_format() {
     let adapter = CaptureAdapter::install();
-    
+
     n!("test", "Message with {} and {}", "arg1", "arg2");
-    
+
     let captured = adapter.captured();
     assert_eq!(captured.len(), 1);
     assert_eq!(captured[0].human, "Message with arg1 and arg2");
@@ -45,9 +45,9 @@ fn test_narration_with_multiple_format() {
 #[serial(capture_adapter)]
 fn test_narration_with_format_specifiers() {
     let adapter = CaptureAdapter::install();
-    
+
     n!("test", "Number: {}, Hex: {:x}, Debug: {:?}", 42, 255, vec![1, 2, 3]);
-    
+
     let captured = adapter.captured();
     assert_eq!(captured.len(), 1);
     assert_eq!(captured[0].human, "Number: 42, Hex: ff, Debug: [1, 2, 3]");
@@ -57,13 +57,13 @@ fn test_narration_with_format_specifiers() {
 #[serial(capture_adapter)]
 fn test_narration_modes_all_three() {
     let adapter = CaptureAdapter::install();
-    
+
     n!("test",
         human: "Technical message",
         cute: "🐝 Fun message",
         story: "Story message"
     );
-    
+
     let captured = adapter.captured();
     assert_eq!(captured.len(), 1);
     assert_eq!(captured[0].human, "Technical message");
@@ -75,14 +75,14 @@ fn test_narration_modes_all_three() {
 #[serial(capture_adapter)]
 fn test_narration_modes_with_format_args() {
     let adapter = CaptureAdapter::install();
-    
+
     n!("test",
         human: "Deploying {}",
         cute: "🚀 Launching {}!",
         story: "'Fly, {}', whispered the system",
         "my-service"
     );
-    
+
     let captured = adapter.captured();
     assert_eq!(captured.len(), 1);
     assert_eq!(captured[0].human, "Deploying my-service");
@@ -95,13 +95,13 @@ fn test_narration_modes_with_format_args() {
 fn test_mode_selection_human() {
     set_narration_mode(NarrationMode::Human);
     let adapter = CaptureAdapter::install();
-    
+
     n!("test",
         human: "Human message",
         cute: "Cute message",
         story: "Story message"
     );
-    
+
     let captured = adapter.captured();
     assert_eq!(captured.len(), 1);
     // Mode selection happens in narrate_at_level, not in macro
@@ -113,10 +113,10 @@ fn test_mode_selection_human() {
 #[serial(capture_adapter)]
 fn test_mode_selection_cute() {
     set_narration_mode(NarrationMode::Cute);
-    
+
     let mode = get_narration_mode();
     assert_eq!(mode, NarrationMode::Cute);
-    
+
     // Reset for next test
     set_narration_mode(NarrationMode::Human);
 }
@@ -125,10 +125,10 @@ fn test_mode_selection_cute() {
 #[serial(capture_adapter)]
 fn test_mode_selection_story() {
     set_narration_mode(NarrationMode::Story);
-    
+
     let mode = get_narration_mode();
     assert_eq!(mode, NarrationMode::Story);
-    
+
     // Reset for next test
     set_narration_mode(NarrationMode::Human);
 }
@@ -137,10 +137,10 @@ fn test_mode_selection_story() {
 #[serial(capture_adapter)]
 fn test_fallback_to_human() {
     let adapter = CaptureAdapter::install();
-    
+
     // Only human provided, should work in any mode
     n!("test", "Only human message");
-    
+
     let captured = adapter.captured();
     assert_eq!(captured.len(), 1);
     assert_eq!(captured[0].human, "Only human message");
@@ -152,9 +152,9 @@ fn test_fallback_to_human() {
 #[serial(capture_adapter)]
 fn test_explicit_human_mode() {
     let adapter = CaptureAdapter::install();
-    
+
     n!(human: "test", "Human mode message");
-    
+
     let captured = adapter.captured();
     assert_eq!(captured.len(), 1);
     assert_eq!(captured[0].human, "Human mode message");
@@ -166,9 +166,9 @@ fn test_explicit_human_mode() {
 #[serial(capture_adapter)]
 fn test_explicit_cute_mode() {
     let adapter = CaptureAdapter::install();
-    
+
     n!(cute: "test", "🐝 Cute message");
-    
+
     let captured = adapter.captured();
     assert_eq!(captured.len(), 1);
     // TEAM-309: When only cute is provided, it's used as fallback for human
@@ -181,9 +181,9 @@ fn test_explicit_cute_mode() {
 #[serial(capture_adapter)]
 fn test_explicit_story_mode() {
     let adapter = CaptureAdapter::install();
-    
+
     n!(story: "test", "'Hello', said the system");
-    
+
     let captured = adapter.captured();
     assert_eq!(captured.len(), 1);
     // TEAM-309: When only story is provided, it's used as fallback for human
@@ -196,9 +196,9 @@ fn test_explicit_story_mode() {
 #[serial(capture_adapter)]
 fn test_explicit_human_with_format() {
     let adapter = CaptureAdapter::install();
-    
+
     n!(human: "test", "Message {} and {}", "arg1", "arg2");
-    
+
     let captured = adapter.captured();
     assert_eq!(captured.len(), 1);
     assert_eq!(captured[0].human, "Message arg1 and arg2");
@@ -208,9 +208,9 @@ fn test_explicit_human_with_format() {
 #[serial(capture_adapter)]
 fn test_explicit_cute_with_format() {
     let adapter = CaptureAdapter::install();
-    
+
     n!(cute: "test", "🐝 Message {}", "arg1");
-    
+
     let captured = adapter.captured();
     assert_eq!(captured.len(), 1);
     assert_eq!(captured[0].cute, Some("🐝 Message arg1".to_string()));
@@ -220,9 +220,9 @@ fn test_explicit_cute_with_format() {
 #[serial(capture_adapter)]
 fn test_explicit_story_with_format() {
     let adapter = CaptureAdapter::install();
-    
+
     n!(story: "test", "'Hello, {}', said the system", "world");
-    
+
     let captured = adapter.captured();
     assert_eq!(captured.len(), 1);
     assert_eq!(captured[0].story, Some("'Hello, world', said the system".to_string()));
@@ -232,9 +232,9 @@ fn test_explicit_story_with_format() {
 #[serial(capture_adapter)]
 fn test_trailing_comma_simple() {
     let adapter = CaptureAdapter::install();
-    
+
     n!("test", "Message with {}", "arg",);
-    
+
     let captured = adapter.captured();
     assert_eq!(captured.len(), 1);
     assert_eq!(captured[0].human, "Message with arg");
@@ -244,14 +244,14 @@ fn test_trailing_comma_simple() {
 #[serial(capture_adapter)]
 fn test_trailing_comma_all_modes() {
     let adapter = CaptureAdapter::install();
-    
+
     n!("test",
         human: "Human {}",
         cute: "Cute {}",
         story: "Story {}",
         "arg",
     );
-    
+
     let captured = adapter.captured();
     assert_eq!(captured.len(), 1);
     assert_eq!(captured[0].human, "Human arg");
@@ -263,23 +263,21 @@ fn test_trailing_comma_all_modes() {
 #[serial(capture_adapter)]
 fn test_comparison_old_vs_new() {
     let adapter = CaptureAdapter::install();
-    
+
     // Old way (builder)
-    Narration::new("test-actor", "test-action", "target")
-        .human("Old way message")
-        .emit();
-    
+    Narration::new("test-actor", "test-action", "target").human("Old way message").emit();
+
     // New way (macro)
     n!("test-action", "New way message");
-    
+
     let captured = adapter.captured();
     assert_eq!(captured.len(), 2);
-    
+
     // Old way
     assert_eq!(captured[0].actor, "test-actor");
     assert_eq!(captured[0].action, "test-action");
     assert_eq!(captured[0].human, "Old way message");
-    
+
     // New way - TEAM-312: Actor is now auto-detected from crate name
     assert_eq!(captured[1].actor, "macro_tests"); // Auto-detected from test crate name
     assert_eq!(captured[1].action, "test-action");
@@ -290,14 +288,14 @@ fn test_comparison_old_vs_new() {
 #[serial(capture_adapter)]
 fn test_backward_compatibility_builder_still_works() {
     let adapter = CaptureAdapter::install();
-    
+
     // Old builder API should still work
     Narration::new("test-actor", "test-action", "target")
         .context("value1")
         .context("value2")
         .human("Message {0} and {1}")
         .emit();
-    
+
     let captured = adapter.captured();
     assert_eq!(captured.len(), 1);
     assert_eq!(captured[0].human, "Message value1 and value2");
@@ -308,13 +306,13 @@ fn test_backward_compatibility_builder_still_works() {
 #[serial(capture_adapter)]
 fn test_partial_human_cute() {
     let adapter = CaptureAdapter::install();
-    
+
     n!("test",
         human: "Technical message {}",
         cute: "🐝 Fun message {}",
         "arg1"
     );
-    
+
     let captured = adapter.captured();
     assert_eq!(captured.len(), 1);
     assert_eq!(captured[0].human, "Technical message arg1");
@@ -327,13 +325,13 @@ fn test_partial_human_cute() {
 #[serial(capture_adapter)]
 fn test_partial_human_story() {
     let adapter = CaptureAdapter::install();
-    
+
     n!("test",
         human: "Technical message {}",
         story: "'Message {}', said the system",
         "arg1"
     );
-    
+
     let captured = adapter.captured();
     assert_eq!(captured.len(), 1);
     assert_eq!(captured[0].human, "Technical message arg1");
@@ -347,15 +345,15 @@ fn test_partial_human_story() {
 fn test_fallback_cute_to_human_mode() {
     set_narration_mode(NarrationMode::Human);
     let adapter = CaptureAdapter::install();
-    
+
     // Use cute: syntax, but mode is Human
     n!(cute: "test", "🐝 Cute message");
-    
+
     let captured = adapter.captured();
     assert_eq!(captured.len(), 1);
     // Should show the cute message (which is also stored in human field)
     assert_eq!(captured[0].human, "🐝 Cute message");
-    
+
     // Reset mode
     set_narration_mode(NarrationMode::Human);
 }
@@ -366,7 +364,7 @@ fn test_mode_enum_properties() {
     assert_eq!(NarrationMode::Human as u8, 0);
     assert_eq!(NarrationMode::Cute as u8, 1);
     assert_eq!(NarrationMode::Story as u8, 2);
-    
+
     // Test equality
     assert_eq!(NarrationMode::Human, NarrationMode::Human);
     assert_ne!(NarrationMode::Human, NarrationMode::Cute);
@@ -377,13 +375,13 @@ fn test_mode_switching_thread_safe() {
     // Test that mode switching is thread-safe
     set_narration_mode(NarrationMode::Human);
     assert_eq!(get_narration_mode(), NarrationMode::Human);
-    
+
     set_narration_mode(NarrationMode::Cute);
     assert_eq!(get_narration_mode(), NarrationMode::Cute);
-    
+
     set_narration_mode(NarrationMode::Story);
     assert_eq!(get_narration_mode(), NarrationMode::Story);
-    
+
     // Reset
     set_narration_mode(NarrationMode::Human);
 }

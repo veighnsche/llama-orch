@@ -121,7 +121,7 @@ fn test_shutdown_strategy_order() {
     // 1. Send SIGTERM via SSH (graceful)
     // 2. Wait 5s and check if stopped
     // 3. Send SIGKILL via SSH (force kill)
-    
+
     // This is verified by reading the source code
     assert!(true);
 }
@@ -151,7 +151,7 @@ fn test_health_check_timeout() {
 fn test_sigterm_failure_continues_to_sigkill() {
     // From source: If SIGTERM fails, continue to SIGKILL
     // n!("sigterm_failed", "⚠️  SIGTERM failed: {}, sending SIGKILL", e);
-    
+
     // This is the documented behavior
     assert!(true);
 }
@@ -160,7 +160,7 @@ fn test_sigterm_failure_continues_to_sigkill() {
 fn test_daemon_stopped_after_sigterm_returns_early() {
     // From source: If health check fails after SIGTERM, return Ok
     // This means daemon stopped successfully
-    
+
     // Early return pattern:
     // if daemon_stopped { return Ok(()); }
     assert!(true);
@@ -183,12 +183,12 @@ fn test_timeout_breakdown() {
     // - SIGTERM wait: 5 seconds
     // - SIGKILL wait: 2 seconds
     // - Buffer: 8 seconds
-    
+
     let sigterm_wait = 5;
     let sigkill_wait = 2;
     let buffer = 8;
     let total = 15;
-    
+
     assert_eq!(sigterm_wait + sigkill_wait + buffer, total);
 }
 
@@ -200,7 +200,7 @@ fn test_timeout_breakdown() {
 fn test_sigterm_command_construction() {
     let daemon_name = "test-daemon";
     let sigterm_cmd = format!("pkill -TERM -f {}", daemon_name);
-    
+
     assert_eq!(sigterm_cmd, "pkill -TERM -f test-daemon");
 }
 
@@ -208,7 +208,7 @@ fn test_sigterm_command_construction() {
 fn test_sigkill_command_construction() {
     let daemon_name = "test-daemon";
     let sigkill_cmd = format!("pkill -KILL -f {}", daemon_name);
-    
+
     assert_eq!(sigkill_cmd, "pkill -KILL -f test-daemon");
 }
 
@@ -217,7 +217,7 @@ fn test_command_with_special_characters() {
     let daemon_name = "test-daemon-with-dashes";
     let sigterm_cmd = format!("pkill -TERM -f {}", daemon_name);
     let sigkill_cmd = format!("pkill -KILL -f {}", daemon_name);
-    
+
     assert_eq!(sigterm_cmd, "pkill -TERM -f test-daemon-with-dashes");
     assert_eq!(sigkill_cmd, "pkill -KILL -f test-daemon-with-dashes");
 }
@@ -314,12 +314,12 @@ fn test_documented_ssh_call_count() {
     // From documentation:
     // - Best case: 0 SSH calls (HTTP shutdown succeeds) - NOT APPLICABLE (this is SSH-only)
     // - Worst case: 2 SSH calls (SIGTERM + SIGKILL)
-    
+
     // Actually: This function ALWAYS uses SSH
     // - SIGTERM: 1 SSH call
     // - SIGKILL: 1 SSH call (if needed)
     // Total: 1-2 SSH calls
-    
+
     assert!(true);
 }
 
@@ -328,7 +328,7 @@ fn test_documented_error_handling() {
     // From documentation:
     // - SIGTERM failed (continue to SIGKILL)
     // - SIGKILL failed (return error)
-    
+
     assert!(true);
 }
 
@@ -338,7 +338,7 @@ fn test_documented_process() {
     // 1. Send SIGTERM via SSH (graceful)
     // 2. Wait 5s and check if stopped
     // 3. Send SIGKILL via SSH (force kill)
-    
+
     assert!(true);
 }
 
@@ -358,6 +358,6 @@ fn test_narration_events_documented() {
     // - sigkill
     // - sigkill_sent
     // - shutdown_complete
-    
+
     assert!(true);
 }

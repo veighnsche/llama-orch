@@ -43,7 +43,7 @@ use std::path::{Path, PathBuf};
 /// ```
 pub async fn local_exec(command: &str) -> Result<String> {
     use tokio::process::Command;
-    
+
     let output = Command::new("sh")
         .arg("-c")
         .arg(command)
@@ -78,30 +78,25 @@ pub async fn local_exec(command: &str) -> Result<String> {
 /// ```
 pub async fn local_copy(local_path: &Path, dest_path: &str) -> Result<()> {
     use tokio::fs;
-    
+
     // Expand ~ in destination path
     let expanded_dest = if dest_path.starts_with('~') {
-        let home = std::env::var("HOME")
-            .context("HOME environment variable not set")?;
+        let home = std::env::var("HOME").context("HOME environment variable not set")?;
         dest_path.replacen('~', &home, 1)
     } else {
         dest_path.to_string()
     };
-    
+
     let dest = PathBuf::from(expanded_dest);
-    
+
     // Create parent directory if needed
     if let Some(parent) = dest.parent() {
-        fs::create_dir_all(parent)
-            .await
-            .context("Failed to create destination directory")?;
+        fs::create_dir_all(parent).await.context("Failed to create destination directory")?;
     }
-    
+
     // Copy file
-    fs::copy(local_path, &dest)
-        .await
-        .context("Failed to copy file")?;
-    
+    fs::copy(local_path, &dest).await.context("Failed to copy file")?;
+
     Ok(())
 }
 
@@ -129,15 +124,15 @@ mod tests {
         let temp_dir = std::env::temp_dir();
         let src = temp_dir.join("test_src.txt");
         let dest = temp_dir.join("test_dest.txt");
-        
+
         std::fs::write(&src, "test content").unwrap();
-        
+
         let result = local_copy(&src, dest.to_str().unwrap()).await;
         assert!(result.is_ok());
-        
+
         let content = std::fs::read_to_string(&dest).unwrap();
         assert_eq!(content, "test content");
-        
+
         // Cleanup
         std::fs::remove_file(&src).ok();
         std::fs::remove_file(&dest).ok();

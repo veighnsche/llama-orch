@@ -1,7 +1,7 @@
 // TEAM-307: Job lifecycle step definitions
 
-use cucumber::{given, when, then};
 use crate::steps::world::World;
+use cucumber::{given, then, when};
 
 // ============================================================================
 // Given Steps - Job Setup
@@ -98,9 +98,7 @@ async fn cleanup_job(world: &mut World) {
 
 #[when(regex = r#"^I create (\d+) concurrent jobs$"#)]
 async fn create_concurrent_jobs(world: &mut World, count: usize) {
-    world.job_ids = (0..count)
-        .map(|i| format!("job-concurrent-{}", i))
-        .collect();
+    world.job_ids = (0..count).map(|i| format!("job-concurrent-{}", i)).collect();
 }
 
 #[when("all jobs execute")]
@@ -121,15 +119,19 @@ async fn job_has_unique_id(world: &mut World) {
 
 #[then(regex = r#"^the job should be in "([^"]+)" state$"#)]
 async fn job_in_expected_state(world: &mut World, expected_state: String) {
-    assert_eq!(world.job_state.as_deref(), Some(expected_state.as_str()),
-        "Job should be in {} state", expected_state);
+    assert_eq!(
+        world.job_state.as_deref(),
+        Some(expected_state.as_str()),
+        "Job should be in {} state",
+        expected_state
+    );
 }
 
 #[then(regex = r#"^the job_id should match pattern "([^"]+)"$"#)]
 async fn job_id_matches_pattern(world: &mut World, pattern: String) {
     assert!(world.job_id.is_some(), "Job should have an ID");
     let job_id = world.job_id.as_ref().unwrap();
-    
+
     if pattern == "job-[uuid]" {
         assert!(job_id.starts_with("job-"), "Job ID should start with 'job-'");
         assert!(job_id.len() > 10, "Job ID should contain UUID");
@@ -141,11 +143,10 @@ async fn narration_includes_job_id(world: &mut World) {
     if let Some(adapter) = &world.adapter {
         let captured = adapter.captured();
         assert!(!captured.is_empty(), "Should have captured events");
-        
+
         if let Some(job_id) = &world.job_id {
-            let has_job_id = captured.iter().any(|event| 
-                event.job_id.as_deref() == Some(job_id.as_str())
-            );
+            let has_job_id =
+                captured.iter().any(|event| event.job_id.as_deref() == Some(job_id.as_str()));
             assert!(has_job_id, "Narration should include job_id");
         }
     }

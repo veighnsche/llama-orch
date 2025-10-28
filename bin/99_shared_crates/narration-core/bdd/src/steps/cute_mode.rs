@@ -3,7 +3,9 @@
 
 use crate::steps::world::World;
 use cucumber::{gherkin::Step, given, then, when};
-use observability_narration_core::{narrate, with_narration_context, CaptureAdapter, NarrationFields};
+use observability_narration_core::{
+    narrate, with_narration_context, CaptureAdapter, NarrationFields,
+};
 use std::collections::HashMap;
 
 // ============================================================
@@ -39,14 +41,15 @@ async fn when_emit_cute_narration(_world: &mut World, action: String, cute: Stri
 async fn when_narrate_with_table(_world: &mut World, step: &Step) {
     if let Some(table) = &step.table {
         let mut fields = HashMap::new();
-        
+
         // Parse table into HashMap
-        for row in &table.rows[1..] { // Skip header row
+        for row in &table.rows[1..] {
+            // Skip header row
             if row.len() >= 2 {
                 fields.insert(row[0].clone(), row[1].clone());
             }
         }
-        
+
         // Extract fields with defaults
         let actor = fields.get("actor").map(|s| s.as_str()).unwrap_or("test");
         let action = fields.get("action").map(|s| s.as_str()).unwrap_or("test");
@@ -54,11 +57,11 @@ async fn when_narrate_with_table(_world: &mut World, step: &Step) {
         let human = fields.get("human").cloned().unwrap_or_else(|| "Test message".to_string());
         let cute = fields.get("cute").cloned();
         let story = fields.get("story").cloned();
-        
+
         // Leak actor and action strings for 'static lifetime
         let actor_static: &'static str = Box::leak(actor.to_string().into_boxed_str());
         let action_static: &'static str = Box::leak(action.to_string().into_boxed_str());
-        
+
         narrate(NarrationFields {
             actor: actor_static,
             action: action_static,
@@ -84,7 +87,8 @@ async fn when_emit_cute_in_context(world: &mut World, action: String, cute: Stri
                 cute: Some(cute),
                 ..Default::default()
             });
-        }).await;
+        })
+        .await;
     }
 }
 
@@ -173,7 +177,7 @@ async fn then_cute_contains(world: &mut World, expected: String) {
         let captured = adapter.captured();
         assert!(!captured.is_empty(), "Should have captured narration");
         let last = captured.last().unwrap();
-        
+
         if let Some(cute) = &last.cute {
             assert!(
                 cute.contains(&expected),
@@ -193,7 +197,7 @@ async fn then_cute_not_contains(world: &mut World, unexpected: String) {
         let captured = adapter.captured();
         assert!(!captured.is_empty(), "Should have captured narration");
         let last = captured.last().unwrap();
-        
+
         if let Some(cute) = &last.cute {
             assert!(
                 !cute.contains(&unexpected),
@@ -231,7 +235,7 @@ async fn then_cute_length_at_most(world: &mut World, max_length: usize) {
         let captured = adapter.captured();
         assert!(!captured.is_empty(), "Should have captured narration");
         let last = captured.last().unwrap();
-        
+
         if let Some(cute) = &last.cute {
             assert!(
                 cute.len() <= max_length,
@@ -250,16 +254,16 @@ async fn then_event_n_cute_contains(world: &mut World, event_num: usize, expecte
     if let Some(adapter) = &world.adapter {
         let captured = adapter.captured();
         let index = event_num - 1; // Convert to 0-indexed
-        
+
         assert!(
             index < captured.len(),
             "Event {} does not exist (only {} events captured)",
             event_num,
             captured.len()
         );
-        
+
         let event = &captured[world.initial_event_count + index];
-        
+
         if let Some(cute) = &event.cute {
             assert!(
                 cute.contains(&expected),
@@ -284,7 +288,7 @@ async fn then_human_contains(world: &mut World, expected: String) {
         let captured = adapter.captured();
         assert!(!captured.is_empty(), "Should have captured narration");
         let last = captured.last().unwrap();
-        
+
         assert!(
             last.human.contains(&expected),
             "Human field '{}' should contain '{}'",

@@ -1,7 +1,7 @@
 // TEAM-309: Extracted AutoUpdater struct and public API
 //! Core AutoUpdater struct and public methods
 
-use anyhow::{Result};
+use anyhow::Result;
 use observability_narration_core::{n, with_narration_context, NarrationContext};
 use std::path::PathBuf;
 use std::time::Instant;
@@ -42,7 +42,7 @@ pub struct AutoUpdater {
 
     /// Cached dependency graph
     pub(crate) dependencies: Vec<PathBuf>,
-    
+
     /// Optional job_id for narration context
     pub(crate) job_id: Option<String>,
 }
@@ -63,7 +63,7 @@ impl AutoUpdater {
     /// ```rust,ignore
     /// let updater = AutoUpdater::new("queen-rbee", "bin/10_queen_rbee")?;
     /// ```
-    /// 
+    ///
     pub fn new(binary_name: impl Into<String>, source_dir: impl Into<PathBuf>) -> Result<Self> {
         let binary_name = binary_name.into();
         let source_dir = source_dir.into();
@@ -71,10 +71,10 @@ impl AutoUpdater {
         // TEAM-311: Phase 1 - Init
         let start = Instant::now();
         n!("phase_init", "🚧 Initializing auto-updater for {}", binary_name);
-        
+
         let mode = if cfg!(debug_assertions) { "debug" } else { "release" };
         n!("init", "Mode: {} · Binary: {} · Source: {}", mode, binary_name, source_dir.display());
-        
+
         let elapsed = start.elapsed().as_millis();
         n!("summary", "✅ Init ok · {}ms", elapsed);
 
@@ -86,7 +86,7 @@ impl AutoUpdater {
 
         Ok(Self { binary_name, source_dir, workspace_root, dependencies, job_id: None })
     }
-    
+
     /// Set job_id for narration context
     ///
     /// TEAM-311: Enables context propagation for all narrations
@@ -108,7 +108,7 @@ impl AutoUpdater {
     /// * `Err` - Failed to check
     pub fn needs_rebuild(&self) -> Result<bool> {
         use crate::checker::RebuildChecker;
-        
+
         RebuildChecker::check(self)
     }
 
@@ -135,7 +135,7 @@ impl AutoUpdater {
     /// * `Err` - Binary not found
     pub fn find_binary(&self) -> Result<PathBuf> {
         use crate::binary::BinaryFinder;
-        
+
         BinaryFinder::find_path(self)
     }
 
@@ -163,7 +163,7 @@ impl AutoUpdater {
     pub async fn ensure_built(self) -> Result<PathBuf> {
         // TEAM-311: Wrap in context if job_id provided
         let ctx = self.job_id.as_ref().map(|jid| NarrationContext::new().with_job_id(jid));
-        
+
         let impl_fn = async {
             // All phases run with context
             if self.needs_rebuild()? {
@@ -173,7 +173,7 @@ impl AutoUpdater {
             let binary_path = self.find_binary()?;
             Ok(binary_path)
         };
-        
+
         if let Some(ctx) = ctx {
             with_narration_context(ctx, impl_fn).await
         } else {

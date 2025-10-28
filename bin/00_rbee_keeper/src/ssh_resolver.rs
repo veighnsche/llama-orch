@@ -50,15 +50,14 @@ pub fn resolve_ssh_config(host_alias: &str) -> Result<SshConfig> {
     if host_alias == "localhost" {
         return Ok(SshConfig::localhost());
     }
-    
+
     // Parse ~/.ssh/config for remote host
     let ssh_config_path = get_ssh_config_path()?;
     let hosts = parse_ssh_config(&ssh_config_path)?;
-    
+
     // Look up host alias
-    hosts.get(host_alias)
-        .cloned()
-        .ok_or_else(|| anyhow::anyhow!(
+    hosts.get(host_alias).cloned().ok_or_else(|| {
+        anyhow::anyhow!(
             "Host '{}' not found in ~/.ssh/config\n\
              \n\
              Add an entry like:\n\
@@ -67,14 +66,15 @@ pub fn resolve_ssh_config(host_alias: &str) -> Result<SshConfig> {
                  HostName 192.168.1.100\n\
                  User vince\n\
                  Port 22",
-            host_alias, host_alias
-        ))
+            host_alias,
+            host_alias
+        )
+    })
 }
 
 /// Get path to SSH config file
 fn get_ssh_config_path() -> Result<PathBuf> {
-    let home = std::env::var("HOME")
-        .context("HOME environment variable not set")?;
+    let home = std::env::var("HOME").context("HOME environment variable not set")?;
     Ok(PathBuf::from(home).join(".ssh/config"))
 }
 
@@ -95,46 +95,47 @@ pub fn parse_ssh_config(path: &PathBuf) -> Result<HashMap<String, SshConfig>> {
     if !path.exists() {
         return Ok(HashMap::new());
     }
-    
-    let content = fs::read_to_string(path)
-        .context("Failed to read ~/.ssh/config")?;
-    
+
+    let content = fs::read_to_string(path).context("Failed to read ~/.ssh/config")?;
+
     let mut hosts = HashMap::new();
     let mut current_host: Option<String> = None;
     let mut current_hostname: Option<String> = None;
     let mut current_user: Option<String> = None;
     let mut current_port: u16 = 22;
-    
+
     for line in content.lines() {
         let line = line.trim();
-        
+
         // Skip comments and empty lines
         if line.is_empty() || line.starts_with('#') {
             continue;
         }
-        
+
         // Parse key-value pairs
         let parts: Vec<&str> = line.split_whitespace().collect();
         if parts.len() < 2 {
             continue;
         }
-        
+
         let key = parts[0].to_lowercase();
         let value = parts[1..].join(" ");
-        
+
         match key.as_str() {
             "host" => {
                 // Save previous host entry for ALL aliases
-                if let (Some(host_aliases), Some(hostname)) = (current_host.take(), current_hostname.take()) {
+                if let (Some(host_aliases), Some(hostname)) =
+                    (current_host.take(), current_hostname.take())
+                {
                     let user = current_user.take().unwrap_or_else(whoami::username);
                     let config = SshConfig::new(hostname, user, current_port);
-                    
+
                     // Add entry for each alias (e.g., "workstation" and "workstation.home.arpa")
                     for alias in host_aliases.split_whitespace() {
                         hosts.insert(alias.to_string(), config.clone());
                     }
                 }
-                
+
                 // Start new host entry (store all aliases as a single string)
                 current_host = Some(value);
                 current_hostname = None;
@@ -153,18 +154,18 @@ pub fn parse_ssh_config(path: &PathBuf) -> Result<HashMap<String, SshConfig>> {
             _ => {} // Ignore other directives
         }
     }
-    
+
     // Save last host entry for ALL aliases
     if let (Some(host_aliases), Some(hostname)) = (current_host, current_hostname) {
         let user = current_user.unwrap_or_else(whoami::username);
         let config = SshConfig::new(hostname, user, current_port);
-        
+
         // Add entry for each alias
         for alias in host_aliases.split_whitespace() {
             hosts.insert(alias.to_string(), config.clone());
         }
     }
-    
+
     Ok(hosts)
 }
 
@@ -194,14 +195,14 @@ mod tests {
         file.flush().unwrap();
 
         let hosts = parse_ssh_config(&file.path().to_path_buf()).unwrap();
-        
+
         assert_eq!(hosts.len(), 2);
-        
+
         let workstation = hosts.get("workstation").unwrap();
         assert_eq!(workstation.hostname, "192.168.1.100");
         assert_eq!(workstation.user, "vince");
         assert_eq!(workstation.port, 2222);
-        
+
         let server = hosts.get("server").unwrap();
         assert_eq!(server.hostname, "example.com");
         assert_eq!(server.user, "admin");

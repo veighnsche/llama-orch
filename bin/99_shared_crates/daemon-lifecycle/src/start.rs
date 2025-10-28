@@ -57,15 +57,15 @@
 //! # }
 //! ```
 
+use crate::utils::poll::{poll_daemon_health, HealthPollConfig};
+use crate::utils::ssh::ssh_exec;
+use crate::SshConfig;
 use anyhow::{Context, Result};
 use observability_narration_core::n;
 use observability_narration_macros::with_job_id;
 use serde::{Deserialize, Serialize};
 use std::path::PathBuf;
 use timeout_enforcer::with_timeout;
-use crate::SshConfig;
-use crate::utils::ssh::ssh_exec;
-use crate::utils::poll::{poll_daemon_health, HealthPollConfig};
 
 /// Configuration for HTTP-based daemons
 ///
@@ -173,10 +173,10 @@ impl HttpDaemonConfig {
 pub struct StartConfig {
     /// SSH connection configuration
     pub ssh_config: SshConfig,
-    
+
     /// Daemon configuration (name, health_url, args)
     pub daemon_config: HttpDaemonConfig,
-    
+
     /// Optional job ID for SSE narration routing
     /// When set, all narration (including timeout) goes through SSE
     pub job_id: Option<String>,
@@ -216,42 +216,38 @@ pub async fn start_daemon(start_config: StartConfig) -> Result<u32> {
     let ssh_config = &start_config.ssh_config;
     let daemon_config = &start_config.daemon_config;
     let daemon_name = &daemon_config.daemon_name;
-    
-    n!("start_begin", "🚀 Starting {} on {}@{}", 
-        daemon_name, ssh_config.user, ssh_config.hostname);
+
+    n!("start_begin", "🚀 Starting {} on {}@{}", daemon_name, ssh_config.user, ssh_config.hostname);
 
     // Step 1: Find binary on remote machine
     n!("find_binary", "🔍 Locating {} binary on remote...", daemon_name);
-    
+
     let find_cmd = format!(
         "which {} 2>/dev/null || \
          (test -x ~/.local/bin/{} && echo ~/.local/bin/{}) || \
          (test -x target/release/{} && echo target/release/{}) || \
          (test -x target/debug/{} && echo target/debug/{}) || \
          echo 'NOT_FOUND'",
-        daemon_name, daemon_name, daemon_name,
-        daemon_name, daemon_name,
-        daemon_name, daemon_name
+        daemon_name, daemon_name, daemon_name, daemon_name, daemon_name, daemon_name, daemon_name
     );
-    
-    let binary_path = ssh_exec(ssh_config, &find_cmd)
-        .await
-        .context("Failed to find binary on remote")?;
-    
+
+    let binary_path =
+        ssh_exec(ssh_config, &find_cmd).await.context("Failed to find binary on remote")?;
+
     let binary_path = binary_path.trim();
-    
+
     if binary_path == "NOT_FOUND" || binary_path.is_empty() {
         anyhow::bail!(
             "Binary '{}' not found on remote machine. Install it first with install_daemon()",
             daemon_name
         );
     }
-    
+
     n!("found_binary", "✅ Found binary at: {}", binary_path);
 
     // Step 2: Start daemon in background
     n!("starting", "▶️  Starting daemon in background...");
-    
+
     // Build command with args
     let args = daemon_config.args.join(" ");
     let start_cmd = if args.is_empty() {
@@ -259,31 +255,30 @@ pub async fn start_daemon(start_config: StartConfig) -> Result<u32> {
     } else {
         format!("nohup {} {} > /dev/null 2>&1 & echo $!", binary_path, args)
     };
-    
-    let pid_output = ssh_exec(ssh_config, &start_cmd)
-        .await
-        .context("Failed to start daemon")?;
-    
-    let pid: u32 = pid_output.trim()
-        .parse()
-        .context("Failed to parse PID from daemon start")?;
-    
+
+    let pid_output = ssh_exec(ssh_config, &start_cmd).await.context("Failed to start daemon")?;
+
+    let pid: u32 = pid_output.trim().parse().context("Failed to parse PID from daemon start")?;
+
     n!("started", "✅ Daemon started with PID: {}", pid);
 
     // Step 3: Poll health endpoint via HTTP
     n!("health_check", "🏥 Polling health endpoint: {}", daemon_config.health_url);
-    
+
     // Use local health polling
-    let poll_config = HealthPollConfig::new(&daemon_config.health_url)
-        .with_max_attempts(30);
-    
-    poll_daemon_health(poll_config)
-        .await
-        .context("Daemon started but failed health check")?;
-    
+    let poll_config = HealthPollConfig::new(&daemon_config.health_url).with_max_attempts(30);
+
+    poll_daemon_health(poll_config).await.context("Daemon started but failed health check")?;
+
     n!("healthy", "✅ Daemon is healthy and responding");
-    n!("start_complete", "🎉 {} started successfully on {}@{} (PID: {})", 
-        daemon_name, ssh_config.user, ssh_config.hostname, pid);
+    n!(
+        "start_complete",
+        "🎉 {} started successfully on {}@{} (PID: {})",
+        daemon_name,
+        ssh_config.user,
+        ssh_config.hostname,
+        pid
+    );
 
     Ok(pid)
 }

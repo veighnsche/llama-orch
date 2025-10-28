@@ -97,9 +97,7 @@ pub struct HeartbeatRegistry<T: HeartbeatItem> {
 impl<T: HeartbeatItem> HeartbeatRegistry<T> {
     /// Create a new empty registry
     pub fn new() -> Self {
-        Self {
-            items: RwLock::new(HashMap::new()),
-        }
+        Self { items: RwLock::new(HashMap::new()) }
     }
 
     /// Update item from heartbeat
@@ -135,11 +133,7 @@ impl<T: HeartbeatItem> HeartbeatRegistry<T> {
     /// Only returns items that sent heartbeat within timeout window.
     pub fn list_online(&self) -> Vec<T::Info> {
         let items = self.items.read().unwrap();
-        items
-            .values()
-            .filter(|hb| hb.is_recent())
-            .map(|hb| hb.info())
-            .collect()
+        items.values().filter(|hb| hb.is_recent()).map(|hb| hb.info()).collect()
     }
 
     /// List available items (online + ready status)
@@ -165,10 +159,7 @@ impl<T: HeartbeatItem> HeartbeatRegistry<T> {
     /// Get count of available items
     pub fn count_available(&self) -> usize {
         let items = self.items.read().unwrap();
-        items
-            .values()
-            .filter(|hb| hb.is_recent() && hb.is_available())
-            .count()
+        items.values().filter(|hb| hb.is_recent() && hb.is_available()).count()
     }
 
     /// Get total count (including stale items)
@@ -224,11 +215,7 @@ mod tests {
 
     impl TestHeartbeat {
         fn new(id: &str, available: bool) -> Self {
-            Self {
-                id: id.to_string(),
-                timestamp: SystemTime::now(),
-                available,
-            }
+            Self { id: id.to_string(), timestamp: SystemTime::now(), available }
         }
 
         fn with_old_timestamp(id: &str, available: bool) -> Self {
@@ -314,10 +301,10 @@ mod tests {
     #[test]
     fn test_list_online() {
         let registry = HeartbeatRegistry::new();
-        
+
         // Recent heartbeat
         registry.update(TestHeartbeat::new("item-1", true));
-        
+
         // Old heartbeat
         registry.update(TestHeartbeat::with_old_timestamp("item-2", true));
 
@@ -329,13 +316,13 @@ mod tests {
     #[test]
     fn test_list_available() {
         let registry = HeartbeatRegistry::new();
-        
+
         // Recent + available
         registry.update(TestHeartbeat::new("item-1", true));
-        
+
         // Recent + not available
         registry.update(TestHeartbeat::new("item-2", false));
-        
+
         // Old + available
         registry.update(TestHeartbeat::with_old_timestamp("item-3", true));
 

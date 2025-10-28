@@ -20,7 +20,7 @@ impl Rebuilder {
     /// * `Err` - Build failed
     pub fn rebuild(updater: &AutoUpdater) -> Result<()> {
         // TEAM-309: Added narration
-        n!("start", 
+        n!("start",
             human: "🔨 Rebuilding {}...",
             cute: "🐝 Building {} with love!",
             story: "The keeper commanded: 'Build {}'",

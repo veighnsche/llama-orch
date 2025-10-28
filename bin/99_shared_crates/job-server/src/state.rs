@@ -14,5 +14,5 @@ pub enum JobState {
     /// Job failed with error message
     Failed(String),
     /// Job was cancelled by user
-    Cancelled,  // TEAM-305: New state for cancelled jobs
+    Cancelled, // TEAM-305: New state for cancelled jobs
 }

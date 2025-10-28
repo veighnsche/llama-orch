@@ -18,10 +18,10 @@ use specta::Type;
 pub enum SshTargetStatus {
     /// Host is reachable and responding
     Online,
-    
+
     /// Host is unreachable or not responding
     Offline,
-    
+
     /// Status has not been checked yet
     Unknown,
 }
@@ -81,7 +81,7 @@ mod tests {
         let status = SshTargetStatus::Online;
         let json = serde_json::to_string(&status).unwrap();
         assert_eq!(json, "\"online\"");
-        
+
         let deserialized: SshTargetStatus = serde_json::from_str(&json).unwrap();
         assert_eq!(status, deserialized);
     }

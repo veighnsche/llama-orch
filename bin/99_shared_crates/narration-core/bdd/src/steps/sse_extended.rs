@@ -2,8 +2,8 @@
 // Implements steps for sse_streaming.feature
 
 use crate::steps::world::World;
-use cucumber::{given, then, when};
 use cucumber::gherkin::Step;
+use cucumber::{given, then, when};
 use observability_narration_core::{narrate, NarrationFields};
 
 // ============================================================
@@ -109,7 +109,7 @@ async fn when_emit_narration_with_job_id(world: &mut World, job_id: String) {
         job_id: Some(job_id_static.to_string()),
         ..Default::default()
     });
-    
+
     world.sse_events.push(job_id);
 }
 
@@ -138,7 +138,7 @@ async fn when_emit_events_in_order(world: &mut World, step: &Step) {
     if let Some(table) = &step.table {
         if let Some(job_id) = &world.job_id {
             let job_id_static: &'static str = Box::leak(job_id.clone().into_boxed_str());
-            
+
             for row in &table.rows[1..] {
                 if row.len() >= 2 {
                     let action_static: &'static str = Box::leak(row[0].clone().into_boxed_str());
@@ -162,7 +162,7 @@ async fn when_emit_n_events_rapidly(world: &mut World, count: usize) {
     // TEAM-309: Emit many events rapidly
     if let Some(job_id) = &world.job_id {
         let job_id_static: &'static str = Box::leak(job_id.clone().into_boxed_str());
-        
+
         for i in 0..count {
             let action_static: &'static str = Box::leak(format!("event-{}", i).into_boxed_str());
             narrate(NarrationFields {
@@ -198,7 +198,7 @@ async fn when_emit_n_events(world: &mut World, count: usize) {
     // TEAM-309: Emit N events
     if let Some(job_id) = &world.job_id {
         let job_id_static: &'static str = Box::leak(job_id.clone().into_boxed_str());
-        
+
         for i in 0..count {
             let action_static: &'static str = Box::leak(format!("event-{}", i).into_boxed_str());
             narrate(NarrationFields {
@@ -307,11 +307,7 @@ async fn then_received_matches_emitted(_world: &mut World) {
 #[then(regex = r#"^the SSE stream should send "\[DONE\]" signal$"#)]
 async fn then_sse_sends_done_signal(world: &mut World) {
     // TEAM-309: Verify [DONE] signal
-    assert_eq!(
-        world.job_state.as_deref(),
-        Some("Completed"),
-        "Job should be completed"
-    );
+    assert_eq!(world.job_state.as_deref(), Some("Completed"), "Job should be completed");
 }
 
 #[then("the stream should close")]
@@ -334,11 +330,7 @@ async fn then_sse_sends_error_signal(world: &mut World, error_msg: String) {
 #[then(regex = r#"^the SSE stream should send "\[CANCELLED\]" signal$"#)]
 async fn then_sse_sends_cancelled_signal(world: &mut World) {
     // TEAM-309: Verify [CANCELLED] signal
-    assert_eq!(
-        world.job_state.as_deref(),
-        Some("Cancelled"),
-        "Job should be cancelled"
-    );
+    assert_eq!(world.job_state.as_deref(), Some("Cancelled"), "Job should be cancelled");
 }
 
 #[then(regex = r"^the SSE client should receive (\d+) events$")]
@@ -385,7 +377,11 @@ async fn then_no_events_lost(_world: &mut World) {
 }
 
 #[then(regex = r#"^([a-z0-9-]+) client should receive only ([a-z0-9-]+) narration$"#)]
-async fn then_client_receives_only_own_narration(_world: &mut World, _job_id1: String, _job_id2: String) {
+async fn then_client_receives_only_own_narration(
+    _world: &mut World,
+    _job_id1: String,
+    _job_id2: String,
+) {
     // TEAM-309: Verify isolation (backreferences not supported, so we capture twice)
     // No-op - would verify in real SSE implementation
 }

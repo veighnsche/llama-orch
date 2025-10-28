@@ -105,11 +105,9 @@ pub fn create_router(
 
     // TEAM-154: Merge public and protected routes
     // TEAM-285: correlation_middleware removed (narration-core no longer provides axum module)
-    Router::new()
-        .merge(public_routes)
-        .merge(protected_routes)
-        // TODO: Re-implement correlation_middleware if needed for request tracing
-        // .layer(middleware::from_fn(correlation_middleware))
+    Router::new().merge(public_routes).merge(protected_routes)
+    // TODO: Re-implement correlation_middleware if needed for request tracing
+    // .layer(middleware::from_fn(correlation_middleware))
 }
 
 #[cfg(test)]
