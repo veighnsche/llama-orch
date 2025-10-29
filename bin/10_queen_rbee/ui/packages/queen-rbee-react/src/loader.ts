@@ -7,7 +7,7 @@ import { sleep, withTimeout } from './utils'
 /**
  * Core loader with retries and backoff
  */
-async function actuallyLoadSDK(opts: Required<LoadOptions>): Promise<{ sdk: RbeeSDK }> {
+async function loadSDK(opts: Required<LoadOptions>): Promise<{ sdk: RbeeSDK }> {
   // Environment guards
   if (typeof window === 'undefined') {
     throw new Error('rbee SDK can only be initialized in the browser (client component).')
@@ -42,16 +42,17 @@ async function actuallyLoadSDK(opts: Required<LoadOptions>): Promise<{ sdk: Rbee
       }
 
       // Validate exports
-      if (!wasmModule.RbeeClient || !wasmModule.HeartbeatMonitor || !wasmModule.OperationBuilder) {
-        throw new Error('SDK exports missing: expected { RbeeClient, HeartbeatMonitor, OperationBuilder }.')
+      if (!wasmModule.QueenClient || !wasmModule.HeartbeatMonitor || !wasmModule.OperationBuilder || !wasmModule.RhaiClient) {
+        throw new Error('SDK exports missing: expected { QueenClient, HeartbeatMonitor, OperationBuilder, RhaiClient }.')
       }
 
       // Success
       return {
         sdk: {
-          RbeeClient: wasmModule.RbeeClient,
+          QueenClient: wasmModule.QueenClient,
           HeartbeatMonitor: wasmModule.HeartbeatMonitor,
           OperationBuilder: wasmModule.OperationBuilder,
+          RhaiClient: wasmModule.RhaiClient,
         },
       }
     } catch (err) {
@@ -100,7 +101,7 @@ export function loadSDKOnce(options?: LoadOptions): Promise<{ sdk: RbeeSDK }> {
     onReady: options?.onReady ?? (() => {}),
   }
 
-  slot.promise = actuallyLoadSDK(opts)
+  slot.promise = loadSDK(opts)
     .then((result) => {
       slot.value = result
       slot.promise = undefined

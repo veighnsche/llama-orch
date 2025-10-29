@@ -10,7 +10,7 @@ use observability_narration_core::n;
 /// # Arguments
 /// * `job_id` - Job ID for narration routing
 pub async fn execute_rhai_script_list(job_id: &str) -> Result<()> {
-    n!("rhai_list_start", "📋 Listing all RHAI scripts").job_id(job_id);
+    n!("rhai_list_start", "📋 Listing all RHAI scripts");
 
     // TODO: Implement database list
     // 1. Query database for all scripts
@@ -19,10 +19,10 @@ pub async fn execute_rhai_script_list(job_id: &str) -> Result<()> {
     // 4. Optionally: Add sorting (by name, date, etc.)
 
     // Placeholder: Just log the operation
-    n!("rhai_list_query", "Querying database for all scripts").job_id(job_id);
+    n!("rhai_list_query", "Querying database for all scripts");
 
     // Placeholder success
-    n!("rhai_list_success", "✅ Found 0 scripts (placeholder - implement database fetch)").job_id(job_id);
+    n!("rhai_list_success", "✅ Found {} scripts", 0);
 
     Ok(())
 }

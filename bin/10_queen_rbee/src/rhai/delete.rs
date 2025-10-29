@@ -11,7 +11,7 @@ use observability_narration_core::n;
 /// * `job_id` - Job ID for narration routing
 /// * `id` - Script ID to delete
 pub async fn execute_rhai_script_delete(job_id: &str, id: String) -> Result<()> {
-    n!("rhai_delete_start", "🗑️  Deleting RHAI script: {}", id).job_id(job_id);
+    n!("rhai_delete_start", "🗑️  Deleting RHAI script: {}", id);
 
     // TODO: Implement database delete
     // 1. Check if script exists
@@ -20,10 +20,10 @@ pub async fn execute_rhai_script_delete(job_id: &str, id: String) -> Result<()> 
     // 4. Return success confirmation
 
     // Placeholder: Just log the operation
-    n!("rhai_delete_query", "Checking if script exists: {}", id).job_id(job_id);
+    n!("rhai_delete_query", "Checking if script exists: {}", id);
 
     // Placeholder success
-    n!("rhai_delete_success", "✅ Script deleted successfully").job_id(job_id);
+    n!("rhai_delete_success", "✅ Script deleted successfully");
 
     Ok(())
 }

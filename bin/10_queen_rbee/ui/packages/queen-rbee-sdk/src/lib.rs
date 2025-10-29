@@ -17,10 +17,10 @@
 //! # Usage (JavaScript)
 //!
 //! ```javascript
-//! import init, { RbeeClient } from '@rbee/sdk';
+//! import init, { QueenClient } from '@rbee/queen-rbee-sdk';
 //!
 //! await init();
-//! const client = new RbeeClient('http://localhost:8500');
+//! const client = new QueenClient('http://localhost:7833');
 //! await client.submitAndStream(operation, (line) => console.log(line));
 //! ```
 
@@ -28,13 +28,13 @@ use wasm_bindgen::prelude::*;
 
 // TEAM-286: Modules
 mod client;
+mod conversions;
 mod heartbeat;
 mod operations;
 mod rhai;
-mod utils;
 
 // TEAM-286: Re-export main client, operation builder, and heartbeat monitor
-pub use client::RbeeClient;
+pub use client::QueenClient;
 pub use heartbeat::HeartbeatMonitor;
 pub use operations::OperationBuilder;
 pub use rhai::{RhaiClient, RhaiScript, TestResult};

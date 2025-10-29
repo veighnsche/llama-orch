@@ -1,26 +1,26 @@
-// TEAM-286: RbeeClient - thin wrapper around job-client
+// TEAM-286: QueenClient - thin wrapper around job-client for Queen UI
 
 use wasm_bindgen::prelude::*;
 use job_client::JobClient;
 use operations_contract::Operation;
-use crate::types::{js_to_operation, error_to_js};
+use crate::conversions::{js_to_operation, error_to_js};
 
-/// Main client for rbee operations
+/// Main client for Queen UI operations
 ///
 /// TEAM-286: This is a thin wrapper around the existing JobClient
 /// from the job-client shared crate. We just add WASM bindings.
 #[wasm_bindgen]
-pub struct RbeeClient {
+pub struct QueenClient {
     /// TEAM-286: Reuse existing job-client!
     inner: JobClient,
 }
 
 #[wasm_bindgen]
-impl RbeeClient {
-    /// Create a new RbeeClient
+impl QueenClient {
+    /// Create a new QueenClient
     ///
     /// # Arguments
-    /// * `base_url` - Base URL of queen-rbee (e.g., "http://localhost:8500")
+    /// * `base_url` - Base URL of queen-rbee (e.g., "http://localhost:7833")
     #[wasm_bindgen(constructor)]
     pub fn new(base_url: String) -> Self {
         // TEAM-286: Just wrap the existing JobClient
@@ -104,12 +104,8 @@ impl RbeeClient {
     // ═══════════════════════════════════════════════════════════════════════
     // CONVENIENCE METHODS
     // ═══════════════════════════════════════════════════════════════════════
-    // ═══════════════════════════════════════════════════════════════════════
-    // CONVENIENCE METHODS
-    // ═══════════════════════════════════════════════════════════════════════
     // Queen UI only needs Status for heartbeat monitoring.
     // All worker/model/infer operations belong to Hive UI.
-    // ═══════════════════════════════════════════════════════════════════════
 
     /// Convenience: Status (streaming)
     ///

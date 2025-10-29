@@ -24,4 +24,11 @@ export interface WorkerInfo {
 }
 
 // Re-export WASM SDK types
-export type { RbeeClient, HeartbeatMonitor, OperationBuilder } from './pkg/bundler/rbee_sdk'
+export type { 
+  QueenClient, 
+  HeartbeatMonitor, 
+  OperationBuilder,
+  RhaiClient,
+  RhaiScript,
+  TestResult,
+} from './pkg/bundler/rbee_sdk'

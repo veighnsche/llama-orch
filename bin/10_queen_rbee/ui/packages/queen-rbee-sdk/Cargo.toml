@@ -9,6 +9,9 @@ edition = "2021"
 authors = ["rbee Team"]
 license = "GPL-3.0-or-later"
 
+[package.metadata.wasm-pack.profile.release]
+wasm-opt = false
+
 # Not part of workspace - standalone WASM package
 [workspace]
 description = "Rust SDK for rbee that compiles to WASM for browser/Node.js usage"
@@ -62,6 +65,7 @@ web-sys = { version = "0.3", features = [
     "EventTarget",
     "ErrorEvent",
     "ReadableStream",
+    "console", # For logging
 ] }
 
 # TEAM-286: Async runtime (required for WASM)

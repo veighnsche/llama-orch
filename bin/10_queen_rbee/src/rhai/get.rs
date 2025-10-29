@@ -11,7 +11,7 @@ use observability_narration_core::n;
 /// * `job_id` - Job ID for narration routing
 /// * `id` - Script ID to retrieve
 pub async fn execute_rhai_script_get(job_id: &str, id: String) -> Result<()> {
-    n!("rhai_get_start", "📖 Fetching RHAI script: {}", id).job_id(job_id);
+    n!("rhai_get_start", "📖 Fetching RHAI script: {}", id);
 
     // TODO: Implement database fetch
     // 1. Query database for script by ID
@@ -19,11 +19,11 @@ pub async fn execute_rhai_script_get(job_id: &str, id: String) -> Result<()> {
     // 3. If found: Return script with metadata (name, content, created_at, updated_at)
 
     // Placeholder: Just log the operation
-    n!("rhai_get_query", "Querying database for script ID: {}", id).job_id(job_id);
+    n!("rhai_get_query", "Querying database for script: {}", id);
 
     // Placeholder success
-    n!("rhai_get_success", "✅ Script retrieved successfully").job_id(job_id);
-    n!("rhai_get_result", "Script: (placeholder - implement database fetch)").job_id(job_id);
+    n!("rhai_get_success", "✅ Script found successfully");
+    n!("rhai_get_result", "Script: (placeholder - implement database fetch)");
 
     Ok(())
 }

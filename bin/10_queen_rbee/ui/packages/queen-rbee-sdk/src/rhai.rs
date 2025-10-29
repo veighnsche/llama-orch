@@ -1,20 +1,22 @@
 // RHAI Script Management
 // Provides client-side API for RHAI script operations via job-based architecture
 //
-// All operations submit jobs to /v1/jobs endpoint using job-client
+// All operations submit jobs to /v1/jobs endpoint
 
-use serde::{Deserialize, Serialize};
 use wasm_bindgen::prelude::*;
+use serde::{Deserialize, Serialize};
+use job_client::JobClient;
 use operations_contract::Operation;
+use crate::conversions::error_to_js;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[wasm_bindgen]
 pub struct RhaiScript {
-    pub id: Option<String>,
-    pub name: String,
-    pub content: String,
-    pub created_at: Option<String>,
-    pub updated_at: Option<String>,
+    id: Option<String>,
+    name: String,
+    content: String,
+    created_at: Option<String>,
+    updated_at: Option<String>,
 }
 
 #[wasm_bindgen]
@@ -44,14 +46,42 @@ impl RhaiScript {
     pub fn content(&self) -> String {
         self.content.clone()
     }
+
+    #[wasm_bindgen(getter)]
+    pub fn created_at(&self) -> Option<String> {
+        self.created_at.clone()
+    }
+
+    #[wasm_bindgen(getter)]
+    pub fn updated_at(&self) -> Option<String> {
+        self.updated_at.clone()
+    }
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[wasm_bindgen]
 pub struct TestResult {
-    pub success: bool,
-    pub output: Option<String>,
-    pub error: Option<String>,
+    success: bool,
+    output: Option<String>,
+    error: Option<String>,
+}
+
+#[wasm_bindgen]
+impl TestResult {
+    #[wasm_bindgen(getter)]
+    pub fn success(&self) -> bool {
+        self.success
+    }
+
+    #[wasm_bindgen(getter)]
+    pub fn output(&self) -> Option<String> {
+        self.output.clone()
+    }
+
+    #[wasm_bindgen(getter)]
+    pub fn error(&self) -> Option<String> {
+        self.error.clone()
+    }
 }
 
 /// RHAI Script Client
@@ -68,7 +98,7 @@ impl RhaiClient {
         let client = job_client::JobClient::new(&self.base_url);
         
         // Submit the job and get the job_id
-        let job_id = client.submit(&operation)
+        let job_id = client.submit(operation)
             .await
             .map_err(|e| format!("Failed to submit job: {}", e))?;
         

@@ -222,7 +222,7 @@ async fn route_operation(
         // ═══════════════════════════════════════════════════════════════════════
         // All worker/model operations are forwarded to rbee-hive
         op if op.target_server() == operations_contract::TargetServer::Hive => {
-            hive_forwarder::forward_to_hive(&job_id, op, state.config.clone()).await?;
+            hive_forwarder::forward_to_hive(&job_id, op).await?;
         }
 
         op => {

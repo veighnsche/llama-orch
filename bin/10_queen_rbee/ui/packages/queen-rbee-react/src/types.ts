@@ -1,12 +1,13 @@
 // TEAM-291: Type definitions for rbee SDK
 // TEAM-295: Fixed import to use @rbee/queen-rbee-sdk instead of @rbee/sdk
 
-import type { HeartbeatMonitor, OperationBuilder, RbeeClient } from '@rbee/queen-rbee-sdk'
+import type { HeartbeatMonitor, OperationBuilder, QueenClient, RhaiClient } from '@rbee/queen-rbee-sdk'
 
 export interface RbeeSDK {
-  RbeeClient: typeof RbeeClient
+  QueenClient: typeof QueenClient
   HeartbeatMonitor: typeof HeartbeatMonitor
   OperationBuilder: typeof OperationBuilder
+  RhaiClient: typeof RhaiClient
 }
 
 export type LoadOptions = {

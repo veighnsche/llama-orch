@@ -1,4 +1,7 @@
-// TEAM-286: Type conversions between Rust and JavaScript
+// TEAM-286: Conversion helpers between Rust and JavaScript
+//
+// Note: This file contains conversion functions, not type definitions.
+// The actual types are defined in operations-contract and other crates.
 
 use wasm_bindgen::prelude::*;
 use operations_contract::Operation;
