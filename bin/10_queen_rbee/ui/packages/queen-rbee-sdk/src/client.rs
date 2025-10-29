@@ -101,28 +101,29 @@ impl RbeeClient {
             .map_err(error_to_js)
     }
 
-    // ========================================================================
-    // TEAM-286: Convenience Methods for All 17 Operations
-    // ========================================================================
+    // ═══════════════════════════════════════════════════════════════════════
+    // CONVENIENCE METHODS
+    // ═══════════════════════════════════════════════════════════════════════
+    // ═══════════════════════════════════════════════════════════════════════
+    // CONVENIENCE METHODS
+    // ═══════════════════════════════════════════════════════════════════════
+    // Queen UI only needs Status for heartbeat monitoring.
+    // All worker/model/infer operations belong to Hive UI.
+    // ═══════════════════════════════════════════════════════════════════════
 
-    /// Convenience: Infer (streaming)
+    /// Convenience: Status (streaming)
     ///
     /// # JavaScript Example
     /// ```javascript
-    /// await client.infer({
-    ///   model: 'llama-3-8b',
-    ///   prompt: 'Hello!',
-    ///   max_tokens: 100,
-    /// }, (line) => console.log(line));
+    /// await client.status((line) => console.log(line));
     /// ```
     #[wasm_bindgen]
-    pub async fn infer(
+    pub async fn status(
         &self,
-        params: JsValue,
         callback: js_sys::Function,
     ) -> Result<String, JsValue> {
         use crate::operations::OperationBuilder;
-        let op = OperationBuilder::infer(params)?;
+        let op = OperationBuilder::status();
         self.submit_and_stream(op, callback).await
     }
 }

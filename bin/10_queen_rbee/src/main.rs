@@ -21,9 +21,6 @@ mod narration; // TEAM-188: Narration constants
 
 use anyhow::Result; // TEAM-288: Import Result for main function
 use axum::{
-    extract::State,
-    http::StatusCode,
-    response::Json,
     routing::{delete, get, post}, // TEAM-305-FIX: Added delete for cancel endpoint
 };
 use clap::Parser;

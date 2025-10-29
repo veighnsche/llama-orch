@@ -35,6 +35,13 @@ impl Operation {
             Operation::ModelGet { .. } => "model_get",
             Operation::ModelDelete { .. } => "model_delete",
             
+            // RHAI script operations
+            Operation::RhaiScriptSave { .. } => "rhai_script_save",
+            Operation::RhaiScriptTest { .. } => "rhai_script_test",
+            Operation::RhaiScriptGet { .. } => "rhai_script_get",
+            Operation::RhaiScriptList => "rhai_script_list",
+            Operation::RhaiScriptDelete { .. } => "rhai_script_delete",
+            
             // Diagnostic operations
             Operation::QueenCheck => "queen_check",
             Operation::HiveCheck { .. } => "hive_check",
@@ -57,6 +64,13 @@ impl Operation {
             
             // Operations with alias field
             Operation::HiveCheck { alias } => Some(alias),
+            
+            // RHAI operations don't target specific hives
+            Operation::RhaiScriptSave { .. }
+            | Operation::RhaiScriptTest { .. }
+            | Operation::RhaiScriptGet { .. }
+            | Operation::RhaiScriptList
+            | Operation::RhaiScriptDelete { .. } => None,
             
             // Operations without hive_id
             _ => None,
@@ -95,6 +109,13 @@ impl Operation {
                 | Operation::ModelList(_)
                 | Operation::ModelGet(_)
                 | Operation::ModelDelete(_) => TargetServer::Hive,
+            
+            // RHAI operations go to queen (orchestration layer)
+            Operation::RhaiScriptSave { .. }
+                | Operation::RhaiScriptTest { .. }
+                | Operation::RhaiScriptGet { .. }
+                | Operation::RhaiScriptList
+                | Operation::RhaiScriptDelete { .. } => TargetServer::Queen,
             
             // Everything else goes to queen
             _ => TargetServer::Queen,

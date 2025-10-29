@@ -3,7 +3,6 @@
 // Embeds Queen's web UI (localhost:7833) in an iframe
 
 import { Alert, AlertDescription, AlertTitle, Button } from "@rbee/ui/atoms";
-import { PageContainer } from "@rbee/ui/molecules";
 import { AlertCircle, ExternalLink, Loader2, PlayCircle } from "lucide-react";
 import { useQueen, useQueenActions } from "../store/queenQueries";
 
@@ -59,39 +58,21 @@ function QueenIframe() {
     );
   }
 
+  // USER REQUIREMENT: iframe must point to ROOT (/) not /ui
+  // The Queen UI is served at the root of localhost:7833
   return (
-    <div className="relative h-full w-full">
-      <div className="absolute top-2 right-2 z-10">
-        <Button variant="outline" size="sm" asChild>
-          <a
-            href="http://localhost:7833"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <ExternalLink className="h-4 w-4 mr-2" />
-            Open in new tab
-          </a>
-        </Button>
-      </div>
-      <iframe
-        src="http://localhost:7833"
-        className="w-full h-full border-0 rounded-lg"
-        title="Queen Web Interface"
-        sandbox="allow-same-origin allow-scripts allow-forms allow-popups"
-      />
-    </div>
+    <iframe
+      src="http://localhost:7833"
+      className="w-full h-full border-0"
+      title="Queen Web Interface"
+      sandbox="allow-same-origin allow-scripts allow-forms allow-popups allow-modals"
+      allow="cross-origin-isolated"
+    />
   );
 }
 
 export default function QueenPage() {
-  return (
-    <PageContainer
-      title="Queen"
-      description="Web interface for the Queen orchestration service"
-      padding="default"
-      className="h-full"
-    >
-      <QueenIframe />
-    </PageContainer>
-  );
+  // No PageContainer - causes double title and padding issues
+  // Iframe needs full height without extra padding
+  return <QueenIframe />;
 }

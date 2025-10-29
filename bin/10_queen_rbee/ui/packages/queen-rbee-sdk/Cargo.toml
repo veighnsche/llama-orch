@@ -8,6 +8,9 @@ version = "0.1.0"
 edition = "2021"
 authors = ["rbee Team"]
 license = "GPL-3.0-or-later"
+
+# Not part of workspace - standalone WASM package
+[workspace]
 description = "Rust SDK for rbee that compiles to WASM for browser/Node.js usage"
 repository = "https://github.com/veighnsche/rbee"
 homepage = "https://github.com/veighnsche/rbee/tree/main/consumers/rbee-sdk"
@@ -24,14 +27,11 @@ crate-type = ["cdylib", "rlib"]  # cdylib = WASM, rlib = for tests
 # ============================================================================
 
 # TEAM-286: Reuse job-client for all HTTP + SSE logic
-# TEAM-287: Updated path after moving to frontend/packages/
-job-client = { path = "../../../bin/99_shared_crates/job-client" }
+job-client = { path = "../../../../99_shared_crates/job-client" }
 
 # TEAM-286: Reuse operations-contract for all operation types
-# TEAM-287: Updated path after moving to frontend/packages/
-operations-contract = { path = "../../../bin/97_contracts/operations-contract" }
+operations-contract = { path = "../../../../97_contracts/operations-contract" }
 
-# TEAM-290: DELETED rbee-config dependency (file-based config deprecated)
 
 # ============================================================================
 # WASM DEPENDENCIES
@@ -44,25 +44,33 @@ wasm-bindgen-futures = "0.4"
 # TEAM-286: Serde for JS ↔ Rust conversion
 serde = { version = "1.0", features = ["derive"] }
 serde-wasm-bindgen = "0.6"
+serde_json = "1.0"
 
 # TEAM-286: JavaScript types
 js-sys = "0.3"
 
 # TEAM-286: Web APIs
 web-sys = { version = "0.3", features = [
-    "Window",
-    "Headers",
     "Request",
     "RequestInit",
     "RequestMode",
     "Response",
-    "console",
+    "Headers",
+    "Window",
     "EventSource",
     "MessageEvent",
+    "EventTarget",
+    "ErrorEvent",
+    "ReadableStream",
 ] }
 
 # TEAM-286: Async runtime (required for WASM)
 tokio = { version = "1", features = ["sync"], default-features = false }
+
+# TEAM-286: HTTP client (WASM-compatible)
+reqwest = { version = "0.12", default-features = false, features = ["json", "stream"] }
+futures-util = "0.3"
+wasm-streams = "0.4"
 
 # TEAM-286: Error handling
 anyhow = "1.0"

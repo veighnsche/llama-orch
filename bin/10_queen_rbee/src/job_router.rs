@@ -199,11 +199,30 @@ async fn route_operation(
         }
 
         // ═══════════════════════════════════════════════════════════════════════
-        // HIVE OPERATIONS (forwarded to rbee-hive)
+        // RHAI SCRIPT OPERATIONS
         // ═══════════════════════════════════════════════════════════════════════
-        
-        op if matches!(op.target_server(), operations_contract::TargetServer::Hive) => {
-            hive_forwarder::forward_to_hive(&job_id, op).await?
+        Operation::RhaiScriptSave { name, content, id } => {
+            crate::rhai::execute_rhai_script_save(&job_id, name, content, id).await?;
+        }
+        Operation::RhaiScriptTest { content } => {
+            crate::rhai::execute_rhai_script_test(&job_id, content).await?;
+        }
+        Operation::RhaiScriptGet { id } => {
+            crate::rhai::execute_rhai_script_get(&job_id, id).await?;
+        }
+        Operation::RhaiScriptList => {
+            crate::rhai::execute_rhai_script_list(&job_id).await?;
+        }
+        Operation::RhaiScriptDelete { id } => {
+            crate::rhai::execute_rhai_script_delete(&job_id, id).await?;
+        }
+
+        // ═══════════════════════════════════════════════════════════════════════
+        // FORWARDING TO HIVE
+        // ═══════════════════════════════════════════════════════════════════════
+        // All worker/model operations are forwarded to rbee-hive
+        op if op.target_server() == operations_contract::TargetServer::Hive => {
+            hive_forwarder::forward_to_hive(&job_id, op, state.config.clone()).await?;
         }
 
         op => {

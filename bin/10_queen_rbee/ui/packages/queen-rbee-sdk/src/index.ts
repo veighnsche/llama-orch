@@ -1,27 +1,27 @@
-// HTTP client for queen-rbee API
+// Queen-rbee SDK - TypeScript entry point
 // Base URL: http://localhost:7833
+//
+// Queen UI Purpose:
+// 1. Heartbeat Monitor - Real-time worker/hive status
+// 2. RHAI IDE - Scheduling script editor (future)
+//
+// Note: Worker/Model/Infer operations belong to Hive UI
 
-export interface Job {
+export interface HeartbeatSnapshot {
+  workers_online: number
+  hives_online: number
+  timestamp: string
+  workers: WorkerInfo[]
+}
+
+export interface WorkerInfo {
   id: string
-  operation: string
-  status: 'pending' | 'running' | 'completed' | 'failed'
+  model_id: string
+  device: number
+  port: number
+  status: string
+  last_heartbeat: string
 }
 
-export async function listJobs(): Promise<Job[]> {
-  const response = await fetch('http://localhost:7833/api/jobs')
-  return await response.json()
-}
-
-export async function getJob(id: string): Promise<Job> {
-  const response = await fetch(`http://localhost:7833/api/jobs/${id}`)
-  return await response.json()
-}
-
-export async function submitInference(prompt: string): Promise<{ job_id: string }> {
-  const response = await fetch('http://localhost:7833/api/infer', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ prompt }),
-  })
-  return await response.json()
-}
+// Re-export WASM SDK types
+export type { RbeeClient, HeartbeatMonitor, OperationBuilder } from './pkg/bundler/rbee_sdk'

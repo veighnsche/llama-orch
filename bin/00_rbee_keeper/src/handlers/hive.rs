@@ -12,9 +12,7 @@ use daemon_lifecycle::{
     UninstallConfig,
 };
 use observability_narration_core::n;
-use operations_contract::Operation;
 
-use crate::job_client::submit_and_stream_job;
 use crate::ssh_resolver::resolve_ssh_config; // TEAM-332: SSH config middleware
 
 #[derive(Subcommand)]
@@ -39,12 +37,6 @@ pub enum HiveAction {
     },
     /// Check hive status
     Status {
-        /// Host alias (default: localhost, or use SSH config entry)
-        #[arg(short = 'a', long = "host", default_value = "localhost")]
-        alias: String,
-    },
-    /// Refresh device capabilities for a hive
-    RefreshCapabilities {
         /// Host alias (default: localhost, or use SSH config entry)
         #[arg(short = 'a', long = "host", default_value = "localhost")]
         alias: String,
@@ -122,11 +114,6 @@ pub async fn handle_hive(action: HiveAction, queen_url: &str) -> Result<()> {
         }
 
         // TEAM-329: Removed Get and Check handlers (user request)
-        HiveAction::RefreshCapabilities { alias } => {
-            let operation = Operation::HiveRefreshCapabilities { alias };
-            submit_and_stream_job(queen_url, operation).await
-        }
-
         HiveAction::Install { alias } => {
             // TEAM-332: Resolve SSH config from alias (localhost or ~/.ssh/config)
             let ssh = resolve_ssh_config(&alias)?;

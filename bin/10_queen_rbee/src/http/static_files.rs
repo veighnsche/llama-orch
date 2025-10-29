@@ -1,7 +1,9 @@
 //! Static file serving for web UI
 //!
-//! TEAM-293: Serves production build of web-ui at root path
-//! Files are embedded in the binary at compile time for single-executable distribution
+//! Development: Proxies /ui to Vite dev server (port 7834)
+//! Production: Serves embedded static files from ui/app/dist/
+//!
+//! See: PORT_CONFIGURATION.md for port mapping
 
 use axum::{
     body::Body,
@@ -22,13 +24,60 @@ struct Assets;
 
 /// Create static file serving router
 ///
-/// Serves the embedded production build of web-ui
-/// Works with packaged executables (Windows, Mac, Linux, AUR, etc.)
+/// Development: Proxies to Vite dev server at http://localhost:7834
+/// Production: Serves embedded static files
+///
+/// Mode detection: Checks if compiled with --release flag
 pub fn create_static_router() -> Router {
-    Router::new().fallback(static_handler)
+    #[cfg(debug_assertions)]
+    {
+        // Development mode: Proxy to Vite dev server
+        Router::new().nest("/ui", Router::new().fallback(dev_proxy_handler))
+    }
+    
+    #[cfg(not(debug_assertions))]
+    {
+        // Production mode: Serve embedded static files
+        Router::new().nest("/ui", Router::new().fallback(static_handler))
+    }
 }
 
-/// Handler for serving embedded static files
+/// Development mode: Proxy requests to Vite dev server
+#[cfg(debug_assertions)]
+async fn dev_proxy_handler(uri: Uri) -> impl IntoResponse {
+    use reqwest::Client;
+    
+    let path = uri.path().trim_start_matches("/ui");
+    let vite_url = format!("http://localhost:7834{}", path);
+    
+    match Client::new().get(&vite_url).send().await {
+        Ok(response) => {
+            let status = response.status();
+            let headers = response.headers().clone();
+            let body = response.bytes().await.unwrap_or_default();
+            
+            let mut builder = Response::builder().status(status);
+            for (key, value) in headers.iter() {
+                builder = builder.header(key, value);
+            }
+            builder.body(Body::from(body)).unwrap()
+        }
+        Err(e) => {
+            eprintln!("[DEV] Failed to proxy to Vite dev server: {}", e);
+            eprintln!("[DEV] Make sure Vite is running: cd bin/10_queen_rbee/ui/app && npm run dev");
+            Response::builder()
+                .status(StatusCode::BAD_GATEWAY)
+                .body(Body::from(format!(
+                    "Dev server not available. Start it with: cd bin/10_queen_rbee/ui/app && npm run dev\n\nError: {}",
+                    e
+                )))
+                .unwrap()
+        }
+    }
+}
+
+/// Production mode: Handler for serving embedded static files
+#[cfg(not(debug_assertions))]
 async fn static_handler(uri: Uri) -> impl IntoResponse {
     let path = uri.path().trim_start_matches('/');
 

@@ -30,13 +30,14 @@ use wasm_bindgen::prelude::*;
 mod client;
 mod heartbeat;
 mod operations;
-mod types;
+mod rhai;
 mod utils;
 
 // TEAM-286: Re-export main client, operation builder, and heartbeat monitor
 pub use client::RbeeClient;
 pub use heartbeat::HeartbeatMonitor;
 pub use operations::OperationBuilder;
+pub use rhai::{RhaiClient, RhaiScript, TestResult};
 
 /// Initialize the WASM module
 ///

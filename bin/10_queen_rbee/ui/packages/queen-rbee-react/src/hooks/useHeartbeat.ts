@@ -1,0 +1,72 @@
+// Heartbeat hook for Queen UI
+// Connects to HeartbeatMonitor from SDK
+
+'use client'
+
+import { useEffect, useState } from 'react'
+import { useRbeeSDK } from './useRbeeSDK'
+
+export interface HeartbeatData {
+  workers_online: number
+  hives_online: number
+  timestamp: string
+  workers: Array<{
+    id: string
+    model_id: string
+    device: number
+    port: number
+    status: string
+  }>
+}
+
+export interface UseHeartbeatResult {
+  data: HeartbeatData | null
+  connected: boolean
+  loading: boolean
+  error: Error | null
+}
+
+/**
+ * Hook for monitoring Queen heartbeat
+ * 
+ * @param baseUrl - Queen API URL (default: http://localhost:7833)
+ * @returns Heartbeat data and connection status
+ */
+export function useHeartbeat(baseUrl: string = 'http://localhost:7833'): UseHeartbeatResult {
+  const { sdk, loading: sdkLoading, error: sdkError } = useRbeeSDK()
+  const [data, setData] = useState<HeartbeatData | null>(null)
+  const [connected, setConnected] = useState(false)
+  const [error, setError] = useState<Error | null>(null)
+
+  useEffect(() => {
+    if (!sdk) return
+
+    let monitor: any = null
+
+    try {
+      monitor = new sdk.HeartbeatMonitor(baseUrl)
+      
+      monitor.start((snapshot: any) => {
+        setData(snapshot)
+        setConnected(true)
+        setError(null)
+      })
+    } catch (err) {
+      setError(err as Error)
+      setConnected(false)
+    }
+
+    return () => {
+      if (monitor) {
+        monitor.stop()
+      }
+    }
+  }, [sdk, baseUrl])
+
+  return {
+    data,
+    connected,
+    loading: sdkLoading,
+    error: error || sdkError,
+  }
+}

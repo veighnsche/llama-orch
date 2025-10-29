@@ -98,6 +98,29 @@ pub enum Operation {
     /// Schedule inference and route to worker
     Infer(InferRequest),
     
+    // RHAI Script Management
+    // ───────────────────────────────────────────────────────────────────────
+    /// Save a RHAI script
+    RhaiScriptSave {
+        name: String,
+        content: String,
+        id: Option<String>,
+    },
+    /// Test a RHAI script
+    RhaiScriptTest {
+        content: String,
+    },
+    /// Get a RHAI script by ID
+    RhaiScriptGet {
+        id: String,
+    },
+    /// List all RHAI scripts
+    RhaiScriptList,
+    /// Delete a RHAI script
+    RhaiScriptDelete {
+        id: String,
+    },
+    
     // ═══════════════════════════════════════════════════════════════════════
     // HIVE OPERATIONS (http://localhost:7835/v1/jobs)
     // ═══════════════════════════════════════════════════════════════════════
@@ -126,7 +149,7 @@ pub enum Operation {
     
     /// Deep narration test through queen job server
     QueenCheck,
-    
+
     /// Deep narration test through hive job server
     HiveCheck {
         #[serde(default = "default_hive_id")]
