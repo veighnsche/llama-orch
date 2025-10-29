@@ -15,7 +15,7 @@ export function InstalledHiveList() {
   // TEAM-368: Show loading state while fetching
   if (hivesLoading || installedLoading) {
     return (
-      <Card>
+      <Card className="w-80 h-80 max-w-sm flex flex-col">
         <CardHeader>
           <div className="flex items-center gap-2">
             <Loader2 className="h-4 w-4 animate-spin" />

@@ -59,7 +59,7 @@ function QueenCardContent({
       : ("stopped" as const);
 
   return (
-    <Card>
+    <Card className="w-80 h-80 max-w-sm flex flex-col">
       <CardHeader>
         <CardTitle>Queen</CardTitle>
         <CardDescription>Smart API server</CardDescription>

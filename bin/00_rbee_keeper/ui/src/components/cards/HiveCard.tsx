@@ -84,7 +84,7 @@ function HiveCardContent({
       : ("stopped" as const);
 
   return (
-    <Card>
+    <Card className="w-80 h-80 max-w-sm flex flex-col">
       <CardHeader>
         <CardTitle>{title} Hive</CardTitle>
         <CardDescription>{description}</CardDescription>

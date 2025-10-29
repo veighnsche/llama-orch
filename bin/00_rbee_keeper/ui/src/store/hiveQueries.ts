@@ -99,18 +99,12 @@ export function useInstalledHives() {
 
 // Hook: Fetch individual hive status
 export function useHive(hiveId: string) {
-  const queryClient = useQueryClient();
-  
   return useQuery({
     queryKey: hiveKeys.detail(hiveId),
     queryFn: () => fetchHiveStatus(hiveId),
     staleTime: 5 * 1000, // 5 seconds
     gcTime: 60 * 1000, // 1 minute cache
-    // Populate from list query if available
-    initialData: () => {
-      const hives = queryClient.getQueryData<SshHive[]>(hiveKeys.list());
-      return hives?.find(h => h.host === hiveId);
-    },
+    // TEAM-368: Don't use initialData from SSH list - it doesn't have daemon status!
   });
 }
 

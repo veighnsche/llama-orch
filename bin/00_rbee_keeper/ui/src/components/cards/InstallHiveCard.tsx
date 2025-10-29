@@ -3,6 +3,7 @@
 
 import {
   Card,
+  CardAction,
   CardContent,
   CardDescription,
   CardHeader,
@@ -14,12 +15,17 @@ import {
   SelectTrigger,
   SelectValue,
   SplitButton,
+  Button,
 } from "@rbee/ui/atoms";
 import { Download, FileEdit, RefreshCw } from "lucide-react";
 import { useState } from "react";
 import { commands } from "@/generated/bindings";
 import { useCommandStore } from "../../store/commandStore";
-import { useSshHives, useHiveActions, useInstalledHives } from "../../store/hiveQueries";
+import {
+  useSshHives,
+  useHiveActions,
+  useInstalledHives,
+} from "../../store/hiveQueries";
 import type { SshHive } from "../../store/hiveQueries";
 
 // SSH Target Select Item component
@@ -32,13 +38,20 @@ function SshTargetItem({ name, subtitle }: { name: string; subtitle: string }) {
   );
 }
 
-// TEAM-352: Component using new query hooks
+// TEAM-369: Component using new query hooks
 function InstallHiveContent() {
   const [selectedTarget, setSelectedTarget] = useState<string>("");
-  const { data: hives = [], refetch } = useSshHives();
+  const { data: hives = [] } = useSshHives();
   const { install } = useHiveActions();
   const { data: installedHives = [] } = useInstalledHives();
   const { isExecuting } = useCommandStore();
+  const { refetch: refetchHives } = useSshHives();
+  const { refetch: refetchInstalled } = useInstalledHives();
+
+  const handleRefresh = async () => {
+    // TEAM-369: Refresh both SSH list and installed hives list
+    await Promise.all([refetchHives(), refetchInstalled()]);
+  };
 
   const handleOpenSshConfig = async () => {
     try {
@@ -50,7 +63,7 @@ function InstallHiveContent() {
 
   // TEAM-360: Filter out already installed hives (include localhost if not installed)
   const availableHives = hives.filter(
-    (hive: SshHive) => !installedHives.includes(hive.host)
+    (hive: SshHive) => !installedHives.includes(hive.host),
   );
 
   // Set default selection when hives load
@@ -85,7 +98,7 @@ function InstallHiveContent() {
         className="w-full"
         dropdownContent={
           <>
-            <DropdownMenuItem onClick={() => refetch()}>
+            <DropdownMenuItem onClick={handleRefresh}>
               <RefreshCw className="mr-2 h-4 w-4" />
               Refresh
             </DropdownMenuItem>
@@ -103,13 +116,31 @@ function InstallHiveContent() {
 }
 
 export function InstallHiveCard() {
+  const { refetch: refetchHives } = useSshHives();
+  const { refetch: refetchInstalled } = useInstalledHives();
+
+  const handleRefresh = async () => {
+    // TEAM-369: Refresh both SSH list and installed hives list
+    await Promise.all([refetchHives(), refetchInstalled()]);
+  };
+
   return (
-    <Card>
+    <Card className="w-80 h-80 max-w-sm flex flex-col">
       <CardHeader>
         <CardTitle>Install Hive</CardTitle>
         <CardDescription>
           Choose a target to install the Hive worker manager
         </CardDescription>
+        <CardAction>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={handleRefresh}
+            className="h-8 w-8"
+          >
+            <RefreshCw className="h-4 w-4" />
+          </Button>
+        </CardAction>
       </CardHeader>
       <div className="flex-1" />
       <CardContent>
