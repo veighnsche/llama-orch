@@ -14,48 +14,57 @@ import {
   DropdownMenuItem,
   DropdownMenuSeparator,
   SplitButton,
-} from '@rbee/ui/atoms'
-import { Download, Play, RefreshCw, Square, Trash2 } from 'lucide-react'
-import { DaemonContainer } from '../containers/DaemonContainer'
-import { useCommandStore } from '../store/commandStore'
-import { useQueenStore } from '../store/queenStore'
-import { StatusBadge } from './StatusBadge'
+} from "@rbee/ui/atoms";
+import { Download, Play, RefreshCw, Square, Trash2 } from "lucide-react";
+import { DaemonContainer } from "../../containers/DaemonContainer";
+import { useCommandStore } from "../../store/commandStore";
+import { useQueenStore } from "../../store/queenStore";
+import { StatusBadge } from "../StatusBadge";
 
 // TEAM-338: Re-export the status type from store
-export type { QueenStatus } from '../store/queenStore'
+export type { QueenStatus } from "../../store/queenStore";
 
 // TEAM-340: Inner component that renders after data is loaded
 function QueenCardContent() {
-  const { status, isLoading, fetchStatus, start, stop, install, rebuild, uninstall } = useQueenStore()
-  const { isExecuting } = useCommandStore()
+  const {
+    status,
+    isLoading,
+    fetchStatus,
+    start,
+    stop,
+    install,
+    rebuild,
+    uninstall,
+  } = useQueenStore();
+  const { isExecuting } = useCommandStore();
 
   // TEAM-338: Compute UI state based on status (single source of truth)
-  const isRunning = status?.isRunning ?? false
-  const isInstalled = status?.isInstalled ?? false
+  const isRunning = status?.isRunning ?? false;
+  const isInstalled = status?.isInstalled ?? false;
 
   const uiState = !isInstalled
     ? {
         mainAction: install,
         mainIcon: <Download className="h-4 w-4" />,
-        mainLabel: 'Install',
-        mainVariant: 'default' as const,
-        badgeStatus: 'unknown' as const,
+        mainLabel: "Install",
+        mainVariant: "default" as const,
+        badgeStatus: "unknown" as const,
       }
     : isRunning
       ? {
           mainAction: stop,
           mainIcon: <Square className="h-4 w-4" />,
-          mainLabel: 'Stop',
-          mainVariant: 'destructive' as const,
-          badgeStatus: 'running' as const,
+          mainLabel: "Stop",
+          mainVariant: "destructive" as const,
+          badgeStatus: "running" as const,
         }
       : {
           mainAction: start,
           mainIcon: <Play className="h-4 w-4" />,
-          mainLabel: 'Start',
-          mainVariant: 'default' as const,
-          badgeStatus: 'stopped' as const,
-        }
+          mainLabel: "Start",
+          mainVariant: "default" as const,
+          badgeStatus: "stopped" as const,
+        };
 
   return (
     <Card>
@@ -63,13 +72,19 @@ function QueenCardContent() {
         <CardTitle>Queen</CardTitle>
         <CardDescription>Smart API server</CardDescription>
         <CardAction>
-          <StatusBadge status={uiState.badgeStatus} onClick={fetchStatus} isLoading={isLoading} />
+          <StatusBadge
+            status={uiState.badgeStatus}
+            onClick={fetchStatus}
+            isLoading={isLoading}
+          />
         </CardAction>
       </CardHeader>
+      <div className="flex-1" />
       <CardContent>
         <div className="space-y-4">
           <p className="text-sm text-muted-foreground leading-relaxed">
-            Job router that dispatches inference requests to workers in the correct hive
+            Job router that dispatches inference requests to workers in the
+            correct hive
           </p>
           <SplitButton
             variant={uiState.mainVariant}
@@ -136,7 +151,7 @@ function QueenCardContent() {
         </div>
       </CardContent>
     </Card>
-  )
+  );
 }
 
 // TEAM-340: Self-contained component with DaemonContainer wrapper
@@ -145,12 +160,12 @@ export function QueenCard() {
     <DaemonContainer
       cacheKey="queen"
       metadata={{
-        name: 'Queen',
-        description: 'Smart API server',
+        name: "Queen",
+        description: "Smart API server",
       }}
       fetchFn={() => useQueenStore.getState().fetchStatus()}
     >
       <QueenCardContent />
     </DaemonContainer>
-  )
+  );
 }
