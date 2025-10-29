@@ -4,6 +4,10 @@
 
 **Components handle their own data fetching. Pages just compose components.**
 
+## Layout Awareness Pattern
+
+**Pages can access global layout state (like narration panel visibility) from the narration store to adjust their responsive behavior.**
+
 ## The Pattern
 
 ### ✅ CORRECT: Self-Contained Component
@@ -37,6 +41,28 @@ export default function MyPage() {
     <PageContainer title="My Page" description="...">
       <MyCard />
       <AnotherCard />
+    </PageContainer>
+  );
+}
+```
+
+### ✅ CORRECT: Layout-Aware Page
+
+```tsx
+// Page adjusts grid based on narration panel state
+export default function ServicesPage() {
+  const showNarration = useNarrationStore((state) => state.showNarration);
+
+  return (
+    <PageContainer title="Services" description="...">
+      <div
+        className={`grid gap-4 ${
+          showNarration ? "grid-cols-1" : "grid-cols-1 lg:grid-cols-2"
+        }`}
+      >
+        <QueenCard />
+        <HiveCard />
+      </div>
     </PageContainer>
   );
 }

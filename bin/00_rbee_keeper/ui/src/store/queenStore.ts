@@ -17,6 +17,7 @@ interface QueenState {
   status: QueenStatus | null
   isLoading: boolean
   error: string | null
+  _fetchPromise: Promise<void> | null // TEAM-341: Cache in-flight fetch to prevent race conditions
 
   // Actions
   fetchStatus: () => Promise<void>
@@ -34,38 +35,58 @@ export const useQueenStore = create<QueenState>()(
       status: null,
       isLoading: false,
       error: null,
+      _fetchPromise: null,
 
       fetchStatus: async () => {
-        set((state) => {
-          state.isLoading = true
-          state.error = null
-        })
-        try {
-          // TEAM-338: Call Tauri command to get queen status
-          const result = await commands.queenStatus()
+        // TEAM-341: Return existing promise if fetch is already in progress
+        // This prevents race conditions when multiple components mount simultaneously
+        const existing = get()._fetchPromise
+        if (existing) return existing
 
-          if (result.status === 'ok') {
-            // Convert snake_case to camelCase
-            const status: QueenStatus = {
-              isRunning: result.data.is_running,
-              isInstalled: result.data.is_installed,
+        const promise = (async () => {
+          set((state) => {
+            state.isLoading = true
+            state.error = null
+          })
+          try {
+            // TEAM-338: Call Tauri command to get queen status
+            const result = await commands.queenStatus()
+
+            if (result.status === 'ok') {
+              // Convert snake_case to camelCase
+              const status: QueenStatus = {
+                isRunning: result.data.is_running,
+                isInstalled: result.data.is_installed,
+              }
+              set((state) => {
+                state.status = status
+                state.isLoading = false
+              })
+            } else {
+              set((state) => {
+                state.error = result.error
+                state.isLoading = false
+              })
+              throw new Error(result.error || 'Failed to fetch Queen status')
             }
+          } catch (error) {
             set((state) => {
-              state.status = status
+              state.error = error instanceof Error ? error.message : 'Failed to fetch Queen status'
               state.isLoading = false
             })
-          } else {
+            throw error
+          } finally {
+            // TEAM-341: Clear promise cache after completion (success or error)
             set((state) => {
-              state.error = result.error
-              state.isLoading = false
+              state._fetchPromise = null
             })
           }
-        } catch (error) {
-          set((state) => {
-            state.error = error instanceof Error ? error.message : 'Failed to fetch Queen status'
-            state.isLoading = false
-          })
-        }
+        })()
+
+        set((state) => {
+          state._fetchPromise = promise
+        })
+        return promise
       },
 
       start: async () => {
@@ -93,6 +114,7 @@ export const useQueenStore = create<QueenState>()(
           state.status = null
           state.isLoading = false
           state.error = null
+          state._fetchPromise = null
         })
       },
     })),

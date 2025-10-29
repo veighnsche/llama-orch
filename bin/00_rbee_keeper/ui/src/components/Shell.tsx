@@ -7,7 +7,7 @@
 import { listen } from "@tauri-apps/api/event";
 import { MessageSquare } from "lucide-react";
 import type { ReactNode } from "react";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { Panel, PanelGroup, PanelResizeHandle } from "react-resizable-panels";
 import type { NarrationEvent } from "../generated/bindings";
 import { useNarrationStore } from "../store/narrationStore";
@@ -20,8 +20,7 @@ interface ShellProps {
 }
 
 export function Shell({ children }: ShellProps) {
-  const [showNarration, setShowNarration] = useState(true);
-  const addEntry = useNarrationStore((state) => state.addEntry);
+  const { showNarration, setShowNarration, addEntry } = useNarrationStore();
 
   // TEAM-339: Listen to narration events at Shell level (always active)
   // This ensures we don't miss events when panel is closed

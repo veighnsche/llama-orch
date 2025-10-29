@@ -17,8 +17,11 @@ import { PageContainer } from "@rbee/ui/molecules";
 import { InstalledHiveList } from "@/components/InstalledHiveList";
 import { InstallHiveCard } from "@/components/cards/InstallHiveCard";
 import { QueenCard } from "../components/cards/QueenCard";
+import { useNarrationStore } from "../store/narrationStore";
 
 export default function KeeperPage() {
+  const showNarration = useNarrationStore((state) => state.showNarration);
+
   return (
     <PageContainer
       title="Services"
@@ -37,7 +40,11 @@ export default function KeeperPage() {
         },
       ]}
     >
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
+      <div
+        className={`grid gap-4 sm:gap-6 ${
+          showNarration ? "grid-cols-1" : "grid-cols-1 md:grid-cols-2"
+        }`}
+      >
         <QueenCard />
         <InstalledHiveList />
         <InstallHiveCard />
