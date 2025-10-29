@@ -1,9 +1,11 @@
 /**
  * TEAM-351: Service configuration for narration client
  * TEAM-351: Bug fixes - Type safety, validation, deduplication with shared-config
+ * TEAM-351: CORRECTION - Import ports from @rbee/shared-config (single source of truth)
  */
 
 import type { ServiceName } from './types'
+import { PORTS } from '@rbee/shared-config'
 
 export interface ServiceConfig {
   name: string           // Full service name (e.g., 'queen-rbee')
@@ -15,28 +17,28 @@ export interface ServiceConfig {
 
 /**
  * TEAM-351: Type-safe service configurations
- * NOTE: Ports should match @rbee/shared-config PORTS constant
+ * TEAM-351: CORRECTION - Ports imported from @rbee/shared-config (no duplication)
  */
 export const SERVICES: Record<ServiceName, ServiceConfig> = {
   queen: {
     name: 'queen-rbee',
-    devPort: 7834,
-    prodPort: 7833,
-    keeperDevPort: 5173,
+    devPort: PORTS.queen.dev,
+    prodPort: PORTS.queen.prod,
+    keeperDevPort: PORTS.keeper.dev,
     keeperProdOrigin: '*',  // Tauri app
   },
   hive: {
     name: 'rbee-hive',
-    devPort: 7836,
-    prodPort: 7835,
-    keeperDevPort: 5173,
+    devPort: PORTS.hive.dev,
+    prodPort: PORTS.hive.prod,
+    keeperDevPort: PORTS.keeper.dev,
     keeperProdOrigin: '*',
   },
   worker: {
     name: 'llm-worker',
-    devPort: 7837,
-    prodPort: 8080,
-    keeperDevPort: 5173,
+    devPort: PORTS.worker.dev,
+    prodPort: PORTS.worker.prod,
+    keeperDevPort: PORTS.keeper.dev,
     keeperProdOrigin: '*',
   },
 } as const

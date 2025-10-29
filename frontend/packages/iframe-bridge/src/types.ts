@@ -112,7 +112,7 @@ export function isValidIframeMessage(obj: any): obj is IframeMessage {
   
   switch (data.type) {
     case 'NARRATION_EVENT':
-      return (
+      return !!(
         data.payload &&
         typeof data.payload === 'object' &&
         typeof data.payload.actor === 'string' &&

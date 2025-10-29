@@ -13,22 +13,8 @@
  * @packageDocumentation
  */
 
-// TEAM-351: Port validation constants
-const MIN_PORT = 1
-const MAX_PORT = 65535
-
-/**
- * Validate port number is in valid range
- * @internal
- */
-function isValidPort(port: number | null): port is number {
-  return port !== null && Number.isInteger(port) && port >= MIN_PORT && port <= MAX_PORT
-}
-
 /**
  * Port configuration for each service
- * 
- * TEAM-351: Type-safe port configuration with validation
  */
 export const PORTS = {
   keeper: {
@@ -52,44 +38,27 @@ export const PORTS = {
   },
 } as const
 
-// TEAM-351: Validate all ports at module load time
-for (const [serviceName, ports] of Object.entries(PORTS)) {
-  for (const [portType, portValue] of Object.entries(ports)) {
-    if (portValue !== null && !isValidPort(portValue)) {
-      throw new Error(
-        `Invalid port configuration: ${serviceName}.${portType} = ${portValue} (must be 1-65535)`
-      )
-    }
-  }
-}
-
 export type ServiceName = keyof typeof PORTS
 
 /**
  * Generate allowed origins for postMessage listener
- * Automatically includes all dev and prod ports
- * 
- * TEAM-351: Bug fixes - Type safety, deduplication, HTTPS support
  * 
  * @param includeHttps - Include HTTPS variants for production (default: false)
  * @returns Array of unique allowed origins
  */
 export function getAllowedOrigins(includeHttps = false): string[] {
-  const origins = new Set<string>()  // TEAM-351: Use Set to prevent duplicates
+  const origins = new Set<string>()
   
-  // TEAM-351: Type-safe iteration using ServiceName
-  const serviceNames: ServiceName[] = ['queen', 'hive', 'worker']  // Exclude keeper
+  const serviceNames: ServiceName[] = ['queen', 'hive', 'worker']
   
   for (const service of serviceNames) {
     const ports = PORTS[service]
     
-    // Add dev port (always HTTP)
-    if (isValidPort(ports.dev)) {
+    if (ports.dev !== null) {
       origins.add(`http://localhost:${ports.dev}`)
     }
     
-    // Add prod port (HTTP + optional HTTPS)
-    if (isValidPort(ports.prod)) {
+    if (ports.prod !== null) {
       origins.add(`http://localhost:${ports.prod}`)
       if (includeHttps) {
         origins.add(`https://localhost:${ports.prod}`)
@@ -97,19 +66,17 @@ export function getAllowedOrigins(includeHttps = false): string[] {
     }
   }
   
-  return Array.from(origins).sort()  // TEAM-351: Sort for deterministic output
+  return Array.from(origins).sort()
 }
 
 /**
  * Get iframe URL for a service
  * 
- * TEAM-351: Bug fixes - Validation, error messages, HTTPS support
- * 
  * @param service - Service name
  * @param isDev - Development mode flag
  * @param useHttps - Use HTTPS instead of HTTP (default: false)
  * @returns URL string or empty string if service has no HTTP port
- * @throws Error if service doesn't support iframe embedding (e.g., keeper)
+ * @throws Error if service doesn't support iframe embedding
  */
 export function getIframeUrl(
   service: ServiceName,
@@ -119,15 +86,14 @@ export function getIframeUrl(
   const ports = PORTS[service]
   const port = isDev ? ports.dev : ports.prod
   
-  // TEAM-351: Explicit error for keeper (no HTTP port in prod)
   if (service === 'keeper' && !isDev) {
     throw new Error(
       'Keeper service has no production HTTP port (Tauri app). Use dev mode or check service name.'
     )
   }
   
-  if (!isValidPort(port)) {
-    return ''  // TEAM-351: Return empty string for null ports
+  if (port === null) {
+    return ''
   }
   
   const protocol = useHttps ? 'https' : 'http'
@@ -136,21 +102,11 @@ export function getIframeUrl(
 
 /**
  * Get parent origin for postMessage
- * Detects environment based on current port
- * 
- * TEAM-351: Bug fixes - Handle null ports, validation
  * 
  * @param currentPort - Current window port
  * @returns Origin string or '*' for wildcard (Tauri app)
- * @throws Error if currentPort is invalid
  */
 export function getParentOrigin(currentPort: number): string {
-  // TEAM-351: Validate input port
-  if (!isValidPort(currentPort)) {
-    throw new Error(`Invalid port: ${currentPort} (must be 1-65535)`)
-  }
-  
-  // TEAM-351: Type-safe check - only check non-null dev ports
   const isDevPort = (
     currentPort === PORTS.queen.dev ||
     currentPort === PORTS.hive.dev ||
@@ -159,14 +115,12 @@ export function getParentOrigin(currentPort: number): string {
   )
   
   return isDevPort
-    ? `http://localhost:${PORTS.keeper.dev}`  // Dev: Keeper Vite
-    : '*'                                       // Prod: Tauri app
+    ? `http://localhost:${PORTS.keeper.dev}`
+    : '*'
 }
 
 /**
  * Get service URL for HTTP requests
- * 
- * TEAM-351: Bug fixes - Validation, backend port support, HTTPS
  * 
  * @param service - Service name
  * @param mode - 'dev' | 'prod' | 'backend'
@@ -180,7 +134,6 @@ export function getServiceUrl(
 ): string {
   const ports = PORTS[service]
   
-  // TEAM-351: Support backend port mode
   let port: number | null
   if (mode === 'backend') {
     port = 'backend' in ports ? (ports as any).backend : ports.prod
@@ -188,8 +141,8 @@ export function getServiceUrl(
     port = mode === 'dev' ? ports.dev : ports.prod
   }
   
-  if (!isValidPort(port)) {
-    return ''  // TEAM-351: Return empty string for null ports
+  if (port === null) {
+    return ''
   }
   
   const protocol = useHttps ? 'https' : 'http'

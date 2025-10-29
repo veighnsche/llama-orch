@@ -2,13 +2,17 @@
 
 Shared narration client for handling backend SSE narration events and forwarding to parent window.
 
-**TEAM-351:** Bug fixes - Validation, type safety, production logging, monitoring
+**TEAM-351:** Bug fixes - Validation, type safety, production logging, monitoring  
+**TEAM-351 CORRECTION:** Ports imported from `@rbee/shared-config` (no duplication)
 
 ## Installation
 
 ```bash
 pnpm add @rbee/narration-client
 ```
+
+**Dependencies:**
+- `@rbee/shared-config` - Port configuration (single source of truth)
 
 ## Features
 

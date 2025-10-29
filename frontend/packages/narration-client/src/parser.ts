@@ -1,9 +1,21 @@
+/**
+ * TEAM-351: Simplified SSE parser using eventsource-parser library
+ * 
+ * TEAM-356: Replaced ~80 LOC of custom SSE parsing with battle-tested library
+ * - Uses eventsource-parser (3.6M weekly downloads, 0 dependencies, 2.4kb gzipped)
+ * - Handles SSE format (data:, event:, id:, retry:, comments)
+ * - Handles multi-line events
+ * - Streaming parser (no buffering)
+ * 
+ * Kept custom:
+ * - Event validation (project-specific)
+ * - Parse statistics (monitoring)
+ * - [DONE] marker handling
+ */
+
+import { createParser, type EventSourceMessage } from 'eventsource-parser'
 import type { BackendNarrationEvent, ParseStats } from './types'
 import { isValidNarrationEvent } from './types'
-
-/**
- * TEAM-351: Bug fixes - Validation, edge cases, monitoring
- */
 
 // TEAM-351: Parse statistics for monitoring
 let parseStats: ParseStats = {
@@ -37,9 +49,102 @@ export function resetParseStats(): void {
 }
 
 /**
- * Parse SSE line into narration event
+ * Create a streaming SSE parser for narration events
  * 
- * TEAM-351: Bug fixes - Validation, empty strings, SSE format, error handling
+ * TEAM-356: Uses eventsource-parser for robust SSE handling
+ * 
+ * @param onEvent - Callback for valid narration events
+ * @param options - Parser options
+ * @returns Parser with feed() method to process SSE chunks
+ */
+export function createNarrationParser(
+  onEvent: (event: BackendNarrationEvent) => void,
+  options: { 
+    silent?: boolean
+    validate?: boolean
+    onError?: (error: Error, data?: string) => void
+  } = {}
+) {
+  const { silent = false, validate = true, onError } = options
+  
+  const parser = createParser({
+    onEvent: (message: EventSourceMessage) => {
+      parseStats.total++
+      
+      const data = message.data
+      
+      // TEAM-351: Check for [DONE] marker
+      if (data.trim() === '[DONE]') {
+        parseStats.doneMarkers++
+        return
+      }
+      
+      // TEAM-351: Check for empty data
+      if (!data || data.trim().length === 0) {
+        parseStats.emptyLines++
+        return
+      }
+      
+      try {
+        // Parse JSON event
+        const event = JSON.parse(data)
+        
+        // TEAM-351: Validate event structure if requested
+        if (validate && !isValidNarrationEvent(event)) {
+          parseStats.failed++
+          if (!silent) {
+            console.warn('[NarrationClient] Invalid event structure:', {
+              data: data.substring(0, 100),
+              event,
+              missing: {
+                actor: !event?.actor,
+                action: !event?.action,
+                human: !event?.human,
+              },
+            })
+          }
+          return
+        }
+        
+        parseStats.success++
+        onEvent(event as BackendNarrationEvent)
+      } catch (error) {
+        parseStats.failed++
+        const err = error instanceof Error ? error : new Error(String(error))
+        
+        if (!silent) {
+          console.warn('[NarrationClient] Failed to parse event:', {
+            data: data.substring(0, 100),
+            error: err.message,
+          })
+        }
+        
+        if (onError) {
+          onError(err, data)
+        }
+      }
+    },
+  })
+  
+  return {
+    /**
+     * Feed a chunk of SSE data to the parser
+     * Can be a single line or multiple lines
+     */
+    feed: (chunk: string) => parser.feed(chunk),
+    
+    /**
+     * Reset parser state between reconnections
+     */
+    reset: () => parser.reset(),
+  }
+}
+
+/**
+ * Parse a single SSE line (legacy compatibility)
+ * 
+ * TEAM-351: Original line-by-line parser
+ * TEAM-356: For streaming use, prefer createNarrationParser() instead
  * 
  * @param line - Raw SSE line from backend
  * @param options - Parse options
@@ -49,76 +154,16 @@ export function parseNarrationLine(
   line: string,
   options: { silent?: boolean; validate?: boolean } = {}
 ): BackendNarrationEvent | null {
-  const { silent = false, validate = true } = options
+  let result: BackendNarrationEvent | null = null
   
-  parseStats.total++
+  const parser = createNarrationParser(
+    (event) => { result = event },
+    options
+  )
   
-  // TEAM-351: Handle empty strings and whitespace-only lines
-  if (!line || line.trim().length === 0) {
-    parseStats.emptyLines++
-    return null
-  }
+  // Add data: prefix if not present, then add double newline to signal end of SSE event
+  const formatted = line.startsWith('data:') ? line : `data: ${line}`
+  parser.feed(formatted + '\n\n')
   
-  // TEAM-351: Skip [DONE] marker gracefully (not an error)
-  const trimmed = line.trim()
-  if (trimmed === '[DONE]') {
-    parseStats.doneMarkers++
-    return null
-  }
-  
-  // TEAM-351: Skip SSE comment lines (start with ':')
-  if (trimmed.startsWith(':')) {
-    return null
-  }
-  
-  // TEAM-351: Skip SSE event: and id: lines (we only care about data:)
-  if (trimmed.startsWith('event:') || trimmed.startsWith('id:')) {
-    return null
-  }
-  
-  try {
-    // TEAM-351: Remove SSE "data: " prefix if present
-    let jsonStr = trimmed
-    if (jsonStr.startsWith('data:')) {
-      jsonStr = jsonStr.slice(5).trim()
-    }
-    
-    // TEAM-351: Handle empty data after prefix removal
-    if (jsonStr.length === 0) {
-      parseStats.emptyLines++
-      return null
-    }
-    
-    // TEAM-351: Parse JSON with error handling
-    const event = JSON.parse(jsonStr)
-    
-    // TEAM-351: Validate event structure if requested
-    if (validate && !isValidNarrationEvent(event)) {
-      parseStats.failed++
-      if (!silent) {
-        console.warn('[NarrationClient] Invalid event structure:', {
-          line: line.substring(0, 100),
-          event,
-          missing: {
-            actor: !event?.actor,
-            action: !event?.action,
-            human: !event?.human,
-          },
-        })
-      }
-      return null
-    }
-    
-    parseStats.success++
-    return event as BackendNarrationEvent
-  } catch (error) {
-    parseStats.failed++
-    if (!silent) {
-      console.warn('[NarrationClient] Failed to parse line:', {
-        line: line.substring(0, 100),
-        error: error instanceof Error ? error.message : String(error),
-      })
-    }
-    return null
-  }
+  return result
 }
