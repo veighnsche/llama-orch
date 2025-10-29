@@ -11,13 +11,9 @@
 //! "The queen bee wakes up and immediately starts the http server."
 //! Port 7833 (default) - rbee-keeper checks GET /health to see if queen is running
 
-// TEAM-164: Migrated endpoints to dedicated modules/files
-mod hive_forwarder; // TEAM-258: Generic forwarding for hive-managed operations
-mod http;
-mod job_router; // TEAM-186: Job routing and operation dispatch
-mod narration; // TEAM-188: Narration constants
-               // TEAM-188: operations module doesn't exist yet
-               // mod operations;
+// TEAM-164: Use library modules instead of redeclaring them
+// TEAM-XXX: Fixed - main.rs should use the library, not shadow it with mod declarations
+use queen_rbee::http;
 
 use anyhow::Result; // TEAM-288: Import Result for main function
 use axum::{

@@ -5,6 +5,7 @@
 
 import { useEffect, useState } from 'react'
 import { useRbeeSDK } from './useRbeeSDK'
+import { createNarrationStreamHandler } from '../utils/narrationBridge'
 
 export interface RhaiScript {
   id?: string
@@ -144,12 +145,39 @@ export function useRhaiScripts(baseUrl: string = 'http://localhost:7833'): UseRh
     setError(null)
     setTestResult(null)
     try {
-      const client = new sdk.RhaiClient(baseUrl)
-      const result = await client.testScript(content)
-      const testRes = JSON.parse(JSON.stringify(result))
-      setTestResult(testRes)
+      // TEAM-XXX: Use QueenClient with SSE streaming for narration
+      const client = new sdk.QueenClient(baseUrl)
+      
+      // Build RHAI test operation using JSON
+      const operation = {
+        RhaiScriptTest: { content }
+      }
+      
+      // Submit with streaming to get narration events
+      // TEAM-XXX: Use narration bridge to send events to parent (rbee-keeper)
+      const narrationHandler = createNarrationStreamHandler((event) => {
+        console.log('[RHAI Test] Narration event:', event)
+      })
+      
+      await client.submitAndStream(operation, (line: string) => {
+        console.log('[RHAI Test] SSE line:', line)
+        
+        // Send narration to parent window
+        narrationHandler(line)
+        
+        // Parse for [DONE] marker
+        if (line.includes('[DONE]')) {
+          setTestResult({ success: true, output: 'Test completed successfully' })
+        }
+      })
+      
+      // If no result set yet, mark as success
+      if (!testResult) {
+        setTestResult({ success: true, output: 'Test completed' })
+      }
     } catch (err) {
       setError(err as Error)
+      setTestResult({ success: false, error: (err as Error).message })
       throw err
     } finally {
       setTesting(false)

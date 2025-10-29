@@ -2,7 +2,9 @@
 // TEAM-334: Uses Shell component for layout (titlebar + sidebar + content)
 // TEAM-340: Added Queen page with iframe
 // TEAM-342: Added Hive page with dynamic iframe
+// TEAM-XXX: Added narration listener for Queen iframe events
 
+import { useEffect } from 'react'
 import { SidebarProvider } from '@rbee/ui/atoms'
 import { BrowserRouter, Route, Routes } from 'react-router-dom'
 import { Shell } from './components/Shell'
@@ -11,8 +13,15 @@ import HivePage from './pages/HivePage'
 import QueenPage from './pages/QueenPage'
 import KeeperPage from './pages/ServicesPage'
 import SettingsPage from './pages/SettingsPage'
+import { setupNarrationListener } from './utils/narrationListener'
 
 function App() {
+  // TEAM-XXX: Setup listener for narration events from Queen iframe
+  useEffect(() => {
+    const cleanup = setupNarrationListener()
+    return cleanup
+  }, [])
+
   return (
     <BrowserRouter>
       <SidebarProvider>
