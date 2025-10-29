@@ -1,10 +1,6 @@
 // TEAM-294: Keeper page - Status cards and SSH targets table
-// TEAM-295: Added action buttons to Queen and Hive cards (icon-only with tooltips)
-// TEAM-296: Wired up queen lifecycle operations (install, update, uninstall)
-// TEAM-338: Migrated to Zustand store pattern with React 19 Suspense
-// TEAM-339: Use DaemonContainer directly (Rule Zero - deleted wrapper)
-// TEAM-340: Simplified - components are self-contained, pages just compose them
-// Updated: Replaced ServiceCard with dedicated QueenCard and HiveCard components
+// TEAM-353: Migrated to query hooks (deleted DaemonContainer pattern)
+// TEAM-350: Added LocalhostHive component (separate from SSH hives)
 //
 // Queen Lifecycle Operations:
 // - start: Run the queen daemon
@@ -16,6 +12,7 @@
 import { PageContainer } from "@rbee/ui/molecules";
 import { InstalledHiveList } from "@/components/InstalledHiveList";
 import { InstallHiveCard } from "@/components/cards/InstallHiveCard";
+import { LocalhostHive } from "@/components/cards/LocalhostHive";
 import { QueenCard } from "../components/cards/QueenCard";
 import { useNarrationStore } from "../store/narrationStore";
 
@@ -46,6 +43,7 @@ export default function KeeperPage() {
         }`}
       >
         <QueenCard />
+        <LocalhostHive />
         <InstalledHiveList />
         <InstallHiveCard />
       </div>

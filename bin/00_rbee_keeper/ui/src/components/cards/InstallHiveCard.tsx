@@ -18,9 +18,9 @@ import {
 import { Download, FileEdit, RefreshCw } from "lucide-react";
 import { useState } from "react";
 import { commands } from "@/generated/bindings";
-import { SshHivesDataProvider } from "../../containers/SshHivesContainer";
 import { useCommandStore } from "../../store/commandStore";
-import { useSshHivesStore } from "../../store/hiveStore";
+import { useSshHives, useHiveActions, useSshHivesStore } from "../../store/hiveStore";
+import type { SshHive } from "../../store/hiveStore";
 
 // SSH Target Select Item component
 function SshTargetItem({ name, subtitle }: { name: string; subtitle: string }) {
@@ -32,10 +32,13 @@ function SshTargetItem({ name, subtitle }: { name: string; subtitle: string }) {
   );
 }
 
-// Inner component that reads from store
+// TEAM-352: Component using new query hooks
 function InstallHiveContent() {
-  const [selectedTarget, setSelectedTarget] = useState<string>("localhost");
-  const { hives, installedHives, install, refresh } = useSshHivesStore();
+  const [selectedTarget, setSelectedTarget] = useState<string>("");
+  const { hives, refetch } = useSshHives();
+  const { install } = useHiveActions();
+  const installedHivesStore = useSshHivesStore();
+  const installedHives = installedHivesStore.installedHives;
   const { isExecuting } = useCommandStore();
 
   const handleOpenSshConfig = async () => {
@@ -46,11 +49,15 @@ function InstallHiveContent() {
     }
   };
 
-  // Filter out already installed hives
+  // TEAM-350: Filter out already installed hives AND localhost (always available, no install needed)
   const availableHives = hives.filter(
-    (hive) => !installedHives.includes(hive.host),
+    (hive: SshHive) => !installedHives.includes(hive.host) && hive.host !== 'localhost'
   );
-  const isLocalhostInstalled = installedHives.includes("localhost");
+
+  // Set default selection when hives load
+  if (selectedTarget === "" && availableHives.length > 0) {
+    setSelectedTarget(availableHives[0].host);
+  }
 
   return (
     <>
@@ -59,14 +66,9 @@ function InstallHiveContent() {
           <SelectValue placeholder="Select target" />
         </SelectTrigger>
         <SelectContent>
-          {/* Always include localhost if not installed */}
-          {!isLocalhostInstalled && (
-            <SelectItem value="localhost">
-              <SshTargetItem name="localhost" subtitle="This machine" />
-            </SelectItem>
-          )}
+          {/* TEAM-350: No localhost option - always available, no installation needed */}
           {/* Dynamic SSH targets (filtered) */}
-          {availableHives.map((hive) => (
+          {availableHives.map((hive: SshHive) => (
             <SelectItem key={hive.host} value={hive.host}>
               <SshTargetItem
                 name={hive.host}
@@ -85,7 +87,7 @@ function InstallHiveContent() {
         className="w-full"
         dropdownContent={
           <>
-            <DropdownMenuItem onClick={refresh}>
+            <DropdownMenuItem onClick={refetch}>
               <RefreshCw className="mr-2 h-4 w-4" />
               Refresh
             </DropdownMenuItem>
@@ -122,18 +124,7 @@ export function InstallHiveCard() {
             >
               Target
             </label>
-
-            <SshHivesDataProvider
-              fallback={
-                <Select disabled>
-                  <SelectTrigger id="install-target" className="w-full">
-                    <SelectValue placeholder="Loading targets..." />
-                  </SelectTrigger>
-                </Select>
-              }
-            >
-              <InstallHiveContent />
-            </SshHivesDataProvider>
+            <InstallHiveContent />
           </div>
         </div>
       </CardContent>

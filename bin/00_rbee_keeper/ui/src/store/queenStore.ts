@@ -1,11 +1,12 @@
 // TEAM-338: Zustand store for Queen service state and commands
-// TEAM-338: Added persist and immer middleware
+// TEAM-351: Rewritten with query-based pattern (no promise caching)
 
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 import { immer } from 'zustand/middleware/immer'
 import { commands } from '@/generated/bindings'
 import { withCommandExecution } from './commandUtils'
+import { useEffect } from 'react'
 
 // TEAM-338: Define QueenStatus with camelCase (Tauri bindings use snake_case)
 export interface QueenStatus {
@@ -13,14 +14,23 @@ export interface QueenStatus {
   isInstalled: boolean
 }
 
-interface QueenState {
-  status: QueenStatus | null
+// TEAM-351: Query state for Queen
+interface QueenQuery {
+  data: QueenStatus | null
   isLoading: boolean
   error: string | null
-  _fetchPromise: Promise<void> | null // TEAM-341: Cache in-flight fetch to prevent race conditions
+  lastFetch: number
+}
 
-  // Actions
-  fetchStatus: () => Promise<void>
+interface QueenState {
+  // TEAM-351: Query cache
+  query: QueenQuery
+
+  // TEAM-351: Query actions
+  fetchQueen: (force?: boolean) => Promise<void>
+  invalidate: () => Promise<void>
+  
+  // TEAM-351: Mutation actions
   start: () => Promise<void>
   stop: () => Promise<void>
   install: () => Promise<void>
@@ -32,97 +42,142 @@ interface QueenState {
 export const useQueenStore = create<QueenState>()(
   persist(
     immer((set, get) => ({
-      status: null,
-      isLoading: false,
-      error: null,
-      _fetchPromise: null,
+      query: {
+        data: null,
+        isLoading: false,
+        error: null,
+        lastFetch: 0,
+      },
 
-      fetchStatus: async () => {
-        // TEAM-341: Return existing promise if fetch is already in progress
-        // This prevents race conditions when multiple components mount simultaneously
-        const existing = get()._fetchPromise
-        if (existing) return existing
-
-        const promise = (async () => {
-          set((state) => {
-            state.isLoading = true
-            state.error = null
-          })
-          try {
-            // TEAM-338: Call Tauri command to get queen status
-            const result = await commands.queenStatus()
-
-            if (result.status === 'ok') {
-              // Convert snake_case to camelCase
-              const status: QueenStatus = {
-                isRunning: result.data.is_running,
-                isInstalled: result.data.is_installed,
-              }
-              set((state) => {
-                state.status = status
-                state.isLoading = false
-              })
-            } else {
-              set((state) => {
-                state.error = result.error
-                state.isLoading = false
-              })
-              throw new Error(result.error || 'Failed to fetch Queen status')
-            }
-          } catch (error) {
-            set((state) => {
-              state.error = error instanceof Error ? error.message : 'Failed to fetch Queen status'
-              state.isLoading = false
-            })
-            throw error
-          } finally {
-            // TEAM-341: Clear promise cache after completion (success or error)
-            set((state) => {
-              state._fetchPromise = null
-            })
-          }
-        })()
-
+      // TEAM-351: Fetch Queen status with deduplication
+      fetchQueen: async (force = false) => {
+        const now = Date.now()
+        const existing = get().query
+        
+        // Skip if fresh (< 5s old) and not forced
+        if (!force && !existing.isLoading && (now - existing.lastFetch < 5000)) {
+          return
+        }
+        
+        // Skip if already loading
+        if (existing.isLoading) {
+          return
+        }
+        
         set((state) => {
-          state._fetchPromise = promise
+          state.query = {
+            data: existing.data,
+            isLoading: true,
+            error: null,
+            lastFetch: now,
+          }
         })
-        return promise
+        
+        try {
+          const result = await commands.queenStatus()
+          
+          if (result.status === 'ok') {
+            const status: QueenStatus = {
+              isRunning: result.data.is_running,
+              isInstalled: result.data.is_installed,
+            }
+            set((state) => {
+              state.query = {
+                data: status,
+                isLoading: false,
+                error: null,
+                lastFetch: now,
+              }
+            })
+          } else {
+            throw new Error(result.error || 'Failed to fetch Queen status')
+          }
+        } catch (error) {
+          set((state) => {
+            state.query = {
+              data: existing.data,
+              isLoading: false,
+              error: error instanceof Error ? error.message : 'Failed',
+              lastFetch: now,
+            }
+          })
+        }
+      },
+      
+      // TEAM-351: Invalidate query
+      invalidate: async () => {
+        set((state) => {
+          state.query.lastFetch = 0
+        })
+        await get().fetchQueen(true)
       },
 
       start: async () => {
-        await withCommandExecution(() => commands.queenStart(), get().fetchStatus, 'Queen start')
+        await withCommandExecution(() => commands.queenStart(), get().invalidate, 'Queen start')
       },
 
       stop: async () => {
-        await withCommandExecution(() => commands.queenStop(), get().fetchStatus, 'Queen stop')
+        await withCommandExecution(() => commands.queenStop(), get().invalidate, 'Queen stop')
       },
 
       install: async () => {
-        await withCommandExecution(() => commands.queenInstall(null), get().fetchStatus, 'Queen install')
+        await withCommandExecution(() => commands.queenInstall(null), get().invalidate, 'Queen install')
       },
 
       rebuild: async () => {
-        await withCommandExecution(() => commands.queenRebuild(false), get().fetchStatus, 'Queen rebuild')
+        await withCommandExecution(() => commands.queenRebuild(false), get().invalidate, 'Queen rebuild')
       },
 
       uninstall: async () => {
-        await withCommandExecution(() => commands.queenUninstall(), get().fetchStatus, 'Queen uninstall')
+        await withCommandExecution(() => commands.queenUninstall(), get().invalidate, 'Queen uninstall')
       },
 
       reset: () => {
         set((state) => {
-          state.status = null
-          state.isLoading = false
-          state.error = null
-          state._fetchPromise = null
+          state.query = {
+            data: null,
+            isLoading: false,
+            error: null,
+            lastFetch: 0,
+          }
         })
       },
     })),
     {
       name: 'queen-store',
-      partialize: (state) => ({
-        status: state.status,
-      }),
+      partialize: () => ({}), // Don't persist query cache
     },
   ),
 )
+
+// TEAM-351: Query hook for components
+// TEAM-355: Fixed - extract fetchQueen to avoid store in deps (prevents infinite loop)
+export function useQueen() {
+  const store = useQueenStore()
+  const query = store.query
+  const fetchQueen = store.fetchQueen
+  
+  useEffect(() => {
+    fetchQueen()
+  }, [fetchQueen])
+  
+  return {
+    queen: query.data,
+    isLoading: query.isLoading,
+    error: query.error,
+    refetch: () => store.fetchQueen(true),
+  }
+}
+
+// TEAM-351: Action hooks for mutations
+export function useQueenActions() {
+  const store = useQueenStore()
+  
+  return {
+    start: store.start,
+    stop: store.stop,
+    install: store.install,
+    rebuild: store.rebuild,
+    uninstall: store.uninstall,
+  }
+}

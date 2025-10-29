@@ -1,17 +1,12 @@
 // TEAM-338: Zustand store for SSH Hives state
-// Replaces SshHivesContainer with idiomatic Zustand pattern
-// TEAM-338: Added persist and immer middleware
-// TEAM-341: Added enableMapSet for Map support in Immer
+// TEAM-351: Rewritten with query-based pattern (no promise caching)
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import { immer } from "zustand/middleware/immer";
-import { enableMapSet } from "immer";
 import type { SshTarget } from "@/generated/bindings";
 import { commands } from "@/generated/bindings";
 import { withCommandExecution } from "./commandUtils";
-
-// TEAM-341: Enable Map/Set support in Immer (required for _fetchPromises)
-enableMapSet();
+import { useEffect } from "react";
 
 export interface SshHive {
   host: string;
@@ -20,26 +15,44 @@ export interface SshHive {
   user: string;
   port: number;
   status: "online" | "offline" | "unknown";
-  isInstalled?: boolean; // TEAM-338: Track installation status
+  isInstalled?: boolean;
+}
+
+// TEAM-351: Query state for a single hive
+interface HiveQuery {
+  data: SshHive | null;
+  isLoading: boolean;
+  error: string | null;
+  lastFetch: number; // Timestamp for stale detection
+}
+
+// TEAM-351: Query state for SSH hives list
+interface HivesListQuery {
+  data: SshHive[];
+  isLoading: boolean;
+  error: string | null;
+  lastFetch: number;
 }
 
 interface SshHivesState {
-  hives: SshHive[];
-  installedHives: string[]; // List of installed hive aliases
-  isLoading: boolean;
-  error: string | null;
-  _fetchHivesPromise: Promise<void> | null; // TEAM-341: Cache in-flight fetchHives to prevent race conditions
-  _fetchPromises: Map<string, Promise<void>>; // TEAM-341: Cache in-flight fetchHiveStatus per hive
+  // TEAM-355: Query cache - Record instead of Map (no enableMapSet needed)
+  queries: Record<string, HiveQuery>;
+  // TEAM-351: Separate query for SSH hives list
+  hivesListQuery: HivesListQuery;
+  installedHives: string[]; // Persisted list
 
-  // Actions
-  fetchHives: () => Promise<void>;
-  fetchHiveStatus: (hiveId: string) => Promise<void>; // TEAM-338: Fetch individual hive status
+  // TEAM-351: Query actions
+  fetchHive: (hiveId: string, force?: boolean) => Promise<void>;
+  fetchHivesList: (force?: boolean) => Promise<void>;
+  invalidate: (hiveId: string) => Promise<void>;
+  invalidateAll: () => Promise<void>;
+  
+  // TEAM-351: Mutation actions
   install: (targetId: string) => Promise<void>;
   start: (hiveId: string) => Promise<void>;
   stop: (hiveId: string) => Promise<void>;
   uninstall: (hiveId: string) => Promise<void>;
-  refreshCapabilities: (hiveId: string) => Promise<void>;
-  refresh: () => Promise<void>;
+  rebuild: (hiveId: string) => Promise<void>;
   reset: () => void;
 }
 
@@ -58,114 +71,173 @@ function convertToSshHive(target: SshTarget): SshHive {
 export const useSshHivesStore = create<SshHivesState>()(
   persist(
     immer((set, get) => ({
-      hives: [],
+      queries: {},
+      hivesListQuery: {
+        data: [],
+        isLoading: false,
+        error: null,
+        lastFetch: 0,
+      },
       installedHives: [],
-      isLoading: false,
-      error: null,
-      _fetchHivesPromise: null,
-      _fetchPromises: new Map(),
 
-      fetchHives: async () => {
-        // TEAM-341: Return existing promise if fetch is already in progress
-        const existing = get()._fetchHivesPromise;
-        if (existing) return existing;
-
-        const promise = (async () => {
-          set((state) => {
-            state.isLoading = true;
-            state.error = null;
-          });
-          try {
-            const result = await commands.sshList();
-            if (result.status === "ok") {
-              const hives = result.data.map(convertToSshHive);
-              set((state) => {
-                state.hives = hives;
-                state.isLoading = false;
-              });
-            } else {
-              set((state) => {
-                state.isLoading = false;
-              });
-              // Throw error so ErrorBoundary can catch it
-              throw new Error(result.error || "Failed to load SSH hives");
-            }
-          } finally {
-            // TEAM-341: Clear promise cache after completion
-            set((state) => {
-              state._fetchHivesPromise = null;
-            });
-          }
-        })();
-
-        // TEAM-342: Defer promise caching to avoid render-during-render
-        queueMicrotask(() => {
-          set((state) => {
-            state._fetchHivesPromise = promise;
-          });
+      // TEAM-351: Fetch SSH hives list with deduplication
+      fetchHivesList: async (force = false) => {
+        const now = Date.now();
+        const existing = get().hivesListQuery;
+        
+        // Skip if fresh (< 5s old) and not forced
+        if (!force && !existing.isLoading && (now - existing.lastFetch < 5000)) {
+          return;
+        }
+        
+        // Skip if already loading
+        if (existing.isLoading) {
+          return;
+        }
+        
+        set((state) => {
+          state.hivesListQuery = {
+            data: existing.data,
+            isLoading: true,
+            error: null,
+            lastFetch: now,
+          };
         });
-        return promise;
+        
+        try {
+          const result = await commands.sshList();
+          if (result.status === "ok") {
+            const hives = result.data.map(convertToSshHive);
+            set((state) => {
+              state.hivesListQuery = {
+                data: hives,
+                isLoading: false,
+                error: null,
+                lastFetch: now,
+              };
+            });
+          } else {
+            throw new Error(result.error || "Failed to load SSH hives");
+          }
+        } catch (error) {
+          set((state) => {
+            state.hivesListQuery = {
+              data: existing.data,
+              isLoading: false,
+              error: error instanceof Error ? error.message : "Failed to load SSH hives",
+              lastFetch: now,
+            };
+          });
+        }
       },
 
-      // TEAM-338: Fetch individual hive status (running + installed)
-      // TEAM-341: Deduplicated to prevent race conditions when multiple HiveCards mount
-      fetchHiveStatus: async (hiveId: string) => {
-        // TEAM-341: Return existing promise if fetch is already in progress for this hive
-        const existing = get()._fetchPromises.get(hiveId);
-        if (existing) return existing;
-
-        const promise = (async () => {
-          try {
-            const result = await commands.hiveStatus(hiveId);
-            if (result.status === "ok") {
-              const { is_running, is_installed } = result.data;
-              set((state) => {
-                const hive = state.hives.find((h) => h.host === hiveId);
-                if (hive) {
-                  hive.status = is_running ? "online" : "offline";
-                  hive.isInstalled = is_installed;
-                }
-                // Update installedHives list
-                if (is_installed && !state.installedHives.includes(hiveId)) {
-                  state.installedHives.push(hiveId);
-                } else if (!is_installed) {
-                  state.installedHives = state.installedHives.filter(
-                    (id) => id !== hiveId,
-                  );
-                }
-              });
-            } else {
-              throw new Error(
-                result.error || `Failed to fetch status for hive ${hiveId}`,
-              );
-            }
-          } finally {
-            // TEAM-341: Clear promise cache after completion
-            set((state) => {
-              state._fetchPromises.delete(hiveId);
-            });
-          }
-        })();
-
-        // TEAM-342: Defer promise caching to avoid render-during-render
-        queueMicrotask(() => {
-          set((state) => {
-            state._fetchPromises.set(hiveId, promise);
-          });
+      // TEAM-351: Fetch individual hive status with deduplication
+      fetchHive: async (hiveId: string, force = false) => {
+        const now = Date.now();
+        const existing = get().queries[hiveId];
+        
+        // Skip if fresh (< 5s old) and not forced
+        if (!force && existing && !existing.isLoading && (now - existing.lastFetch < 5000)) {
+          return;
+        }
+        
+        // Skip if already loading
+        if (existing?.isLoading) {
+          return;
+        }
+        
+        set((state) => {
+          state.queries[hiveId] = {
+            data: existing?.data ?? null,
+            isLoading: true,
+            error: null,
+            lastFetch: now,
+          };
         });
-        return promise;
+        
+        try {
+          const result = await commands.hiveStatus(hiveId);
+          if (result.status === "ok") {
+            const { is_running, is_installed } = result.data;
+            
+            // Get hive details from list
+            const hiveDetails = get().hivesListQuery.data.find((h) => h.host === hiveId);
+            
+            const hiveData: SshHive = hiveDetails ? {
+              ...hiveDetails,
+              status: is_running ? "online" : "offline",
+              isInstalled: is_installed,
+            } : {
+              host: hiveId,
+              hostname: hiveId,
+              user: "unknown",
+              port: 22,
+              status: is_running ? "online" : "offline",
+              isInstalled: is_installed,
+            };
+            
+            set((state) => {
+              state.queries[hiveId] = {
+                data: hiveData,
+                isLoading: false,
+                error: null,
+                lastFetch: now,
+              };
+              
+              // Update installedHives list
+              if (is_installed && !state.installedHives.includes(hiveId)) {
+                state.installedHives.push(hiveId);
+              } else if (!is_installed) {
+                state.installedHives = state.installedHives.filter(
+                  (id) => id !== hiveId,
+                );
+              }
+            });
+          } else {
+            throw new Error(result.error || `Failed to fetch status for hive ${hiveId}`);
+          }
+        } catch (error) {
+          set((state) => {
+            state.queries[hiveId] = {
+              data: existing?.data ?? null,
+              isLoading: false,
+              error: error instanceof Error ? error.message : "Failed",
+              lastFetch: now,
+            };
+          });
+        }
+      },
+      
+      // TEAM-351: Invalidate single hive query
+      invalidate: (hiveId: string) => {
+        set((state) => {
+          delete state.queries[hiveId];
+        });
+        // Trigger refetch
+        return get().fetchHive(hiveId, true);
+      },
+      
+      // TEAM-351: Invalidate all queries
+      invalidateAll: async () => {
+        set((state) => {
+          state.queries = {};
+          state.hivesListQuery.lastFetch = 0;
+        });
+        // Trigger refetch of list
+        await get().fetchHivesList(true);
       },
 
       install: async (targetId: string) => {
         await withCommandExecution(
           async () => {
             await commands.hiveInstall(targetId);
-            // Add to installed hives list
             set((state) => {
-              state.installedHives.push(targetId);
+              if (!state.installedHives.includes(targetId)) {
+                state.installedHives.push(targetId);
+              }
             });
           },
-          get().fetchHives,
+          () => get().invalidateAll(),
           "Hive install",
         );
       },
@@ -173,7 +245,7 @@ export const useSshHivesStore = create<SshHivesState>()(
       start: async (hiveId: string) => {
         await withCommandExecution(
           () => commands.hiveStart(hiveId),
-          () => get().fetchHiveStatus(hiveId), // TEAM-339: Fetch individual hive status after start
+          () => get().invalidate(hiveId),
           "Hive start",
         );
       },
@@ -181,7 +253,7 @@ export const useSshHivesStore = create<SshHivesState>()(
       stop: async (hiveId: string) => {
         await withCommandExecution(
           () => commands.hiveStop(hiveId),
-          () => get().fetchHiveStatus(hiveId), // TEAM-339: Fetch individual hive status after stop
+          () => get().invalidate(hiveId),
           "Hive stop",
         );
       },
@@ -190,47 +262,92 @@ export const useSshHivesStore = create<SshHivesState>()(
         await withCommandExecution(
           async () => {
             await commands.hiveUninstall(hiveId);
-            // Remove from installed hives list
             set((state) => {
               state.installedHives = state.installedHives.filter(
                 (id) => id !== hiveId,
               );
             });
           },
-          get().fetchHives,
+          () => get().invalidateAll(),
           "Hive uninstall",
         );
       },
 
-      refreshCapabilities: async (hiveId: string) => {
+      rebuild: async (hiveId: string) => {
         await withCommandExecution(
-          () => commands.hiveRefreshCapabilities(hiveId),
-          get().fetchHives,
-          "Hive refresh capabilities",
+          () => commands.hiveRebuild(hiveId),
+          () => get().invalidate(hiveId),
+          "Hive rebuild",
         );
-      },
-
-      refresh: async () => {
-        await get().fetchHives();
       },
 
       reset: () => {
         set((state) => {
-          state.hives = [];
+          state.queries = {};
+          state.hivesListQuery = {
+            data: [],
+            isLoading: false,
+            error: null,
+            lastFetch: 0,
+          };
           state.installedHives = [];
-          state.isLoading = false;
-          state.error = null;
-          state._fetchHivesPromise = null;
-          state._fetchPromises.clear();
         });
       },
     })),
     {
       name: "hive-store",
       partialize: (state) => ({
-        hives: state.hives,
         installedHives: state.installedHives,
       }),
     },
   ),
 );
+
+// TEAM-351: Query hooks for components
+// TEAM-355: Fixed - extract fetchHive to avoid store in deps (prevents infinite loop)
+export function useHive(hiveId: string) {
+  const store = useSshHivesStore();
+  const query = store.queries[hiveId];
+  const fetchHive = store.fetchHive;
+  
+  useEffect(() => {
+    fetchHive(hiveId);
+  }, [hiveId, fetchHive]);
+  
+  return {
+    hive: query?.data ?? null,
+    isLoading: query?.isLoading ?? true,
+    error: query?.error ?? null,
+    refetch: () => store.fetchHive(hiveId, true),
+  };
+}
+
+export function useSshHives() {
+  const store = useSshHivesStore();
+  const query = store.hivesListQuery;
+  const fetchHivesList = store.fetchHivesList;
+  
+  useEffect(() => {
+    fetchHivesList();
+  }, [fetchHivesList]);
+  
+  return {
+    hives: query.data,
+    isLoading: query.isLoading,
+    error: query.error,
+    refetch: () => store.fetchHivesList(true),
+  };
+}
+
+// TEAM-351: Action hooks for mutations
+export function useHiveActions() {
+  const store = useSshHivesStore();
+  
+  return {
+    start: store.start,
+    stop: store.stop,
+    install: store.install,
+    uninstall: store.uninstall,
+    rebuild: store.rebuild,
+  };
+}

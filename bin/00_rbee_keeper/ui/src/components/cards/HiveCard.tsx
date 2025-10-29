@@ -1,7 +1,6 @@
 // TEAM-338: Individual hive card component with lifecycle controls
-// Reusable card for displaying a single hive with start/stop/uninstall actions
-// TEAM-338: Made status-aware like QueenCard (StatusBadge + conditional actions)
-// TEAM-340: Self-contained component with DaemonContainer wrapper (Rule Zero)
+// TEAM-353: Rewritten to use query hooks (deleted DaemonContainer pattern)
+// TEAM-354: Fixed to use QueryContainer per CORRECT_ARCHITECTURE.md Pattern 4
 
 import {
   Card,
@@ -10,15 +9,13 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  SplitButton,
 } from "@rbee/ui/atoms";
-import { Download, Play, RefreshCw, Square, Trash2 } from "lucide-react";
-import { DaemonContainer } from "../../containers/DaemonContainer";
+import { QueryContainer } from "../../containers/QueryContainer";
 import { useCommandStore } from "../../store/commandStore";
-import { useSshHivesStore } from "../../store/hiveStore";
+import { useHive, useHiveActions } from "../../store/hiveStore";
 import { StatusBadge } from "../StatusBadge";
+import { ServiceActionButton } from "./ServiceActionButton";
+import type { SshHive } from "../../store/hiveStore";
 
 interface HiveCardProps {
   hiveId: string;
@@ -26,50 +23,62 @@ interface HiveCardProps {
   description: string;
 }
 
-// TEAM-340: Inner component that renders after data is loaded
-function HiveCardContent({ hiveId, title, description }: HiveCardProps) {
+// TEAM-354: Correct pattern - use QueryContainer per spec Pattern 4
+export function HiveCard({ hiveId, title, description }: HiveCardProps) {
+  const { hive, isLoading, error, refetch } = useHive(hiveId);
+  const { start, stop, install, uninstall, rebuild } = useHiveActions();
   const { isExecuting } = useCommandStore();
-  const {
-    hives,
-    installedHives,
-    isLoading,
-    start,
-    stop,
-    install,
-    uninstall,
-    refreshCapabilities,
-    fetchHiveStatus,
-  } = useSshHivesStore();
 
-  // TEAM-338: Find hive status from store (single source of truth)
-  const hive = hives.find((h) => h.host === hiveId);
-  const isInstalled = hive?.isInstalled ?? installedHives.includes(hiveId);
-  const isRunning = hive?.status === "online";
+  return (
+    <QueryContainer<SshHive>
+      isLoading={isLoading}
+      error={error}
+      data={hive}
+      onRetry={refetch}
+      metadata={{ name: `${title} Hive`, description }}
+    >
+      {(hive) => (
+        <HiveCardContent
+          hiveId={hiveId}
+          title={title}
+          description={description}
+          hive={hive}
+          isExecuting={isExecuting}
+          actions={{ start, stop, install, uninstall, rebuild }}
+          refetch={refetch}
+        />
+      )}
+    </QueryContainer>
+  );
+}
 
-  // TEAM-338: Compute UI state based on status (same pattern as QueenCard)
-  const uiState = !isInstalled
-    ? {
-        mainAction: () => install(hiveId),
-        mainIcon: <Download className="h-4 w-4" />,
-        mainLabel: "Install",
-        mainVariant: "default" as const,
-        badgeStatus: "unknown" as const,
-      }
+// TEAM-354: Inner component receives type-safe hive data
+function HiveCardContent({
+  hiveId,
+  title,
+  description,
+  hive,
+  isExecuting,
+  actions,
+  refetch,
+}: {
+  hiveId: string;
+  title: string;
+  description: string;
+  hive: SshHive;
+  isExecuting: boolean;
+  actions: ReturnType<typeof useHiveActions>;
+  refetch: () => void;
+}) {
+  const isInstalled = hive.isInstalled ?? false;
+  const isRunning = hive.status === "online";
+
+  // Compute badge status
+  const badgeStatus = !isInstalled
+    ? ("unknown" as const)
     : isRunning
-      ? {
-          mainAction: () => stop(hiveId),
-          mainIcon: <Square className="h-4 w-4" />,
-          mainLabel: "Stop",
-          mainVariant: "destructive" as const,
-          badgeStatus: "running" as const,
-        }
-      : {
-          mainAction: () => start(hiveId),
-          mainIcon: <Play className="h-4 w-4" />,
-          mainLabel: "Start",
-          mainVariant: "default" as const,
-          badgeStatus: "stopped" as const,
-        };
+      ? ("running" as const)
+      : ("stopped" as const);
 
   return (
     <Card>
@@ -77,11 +86,7 @@ function HiveCardContent({ hiveId, title, description }: HiveCardProps) {
         <CardTitle>{title} Hive</CardTitle>
         <CardDescription>{description}</CardDescription>
         <CardAction>
-          <StatusBadge
-            status={uiState.badgeStatus}
-            onClick={() => fetchHiveStatus(hiveId)}
-            isLoading={isLoading}
-          />
+          <StatusBadge status={badgeStatus} onClick={refetch} />
         </CardAction>
       </CardHeader>
       <div className="flex-1" />
@@ -90,96 +95,21 @@ function HiveCardContent({ hiveId, title, description }: HiveCardProps) {
           <p className="text-sm text-muted-foreground leading-relaxed">
             {description}
           </p>
-          <SplitButton
-            variant={uiState.mainVariant}
-            size="default"
-            icon={uiState.mainIcon}
-            onClick={uiState.mainAction}
-            disabled={isExecuting}
-            className="w-full"
-            dropdownContent={
-              <>
-                {/* Show Start if installed and not running */}
-                {isInstalled && !isRunning && (
-                  <>
-                    <DropdownMenuItem onClick={() => start(hiveId)}>
-                      <Play className="mr-2 h-4 w-4" />
-                      Start
-                    </DropdownMenuItem>
-                    <DropdownMenuSeparator />
-                  </>
-                )}
-
-                {/* Show Stop if running */}
-                {isRunning && (
-                  <>
-                    <DropdownMenuItem
-                      onClick={() => stop(hiveId)}
-                      variant="destructive"
-                    >
-                      <Square className="mr-2 h-4 w-4" />
-                      Stop
-                    </DropdownMenuItem>
-                    <DropdownMenuSeparator />
-                  </>
-                )}
-
-                {/* Show Install only if not installed */}
-                {!isInstalled && (
-                  <DropdownMenuItem onClick={() => install(hiveId)}>
-                    <Download className="mr-2 h-4 w-4" />
-                    Install
-                  </DropdownMenuItem>
-                )}
-
-                {/* Show Refresh only if installed */}
-                {isInstalled && (
-                  <DropdownMenuItem onClick={() => refreshCapabilities(hiveId)}>
-                    <RefreshCw className="mr-2 h-4 w-4" />
-                    Refresh
-                  </DropdownMenuItem>
-                )}
-
-                {/* Show Uninstall only if installed */}
-                {isInstalled && (
-                  <>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem
-                      onClick={() => uninstall(hiveId)}
-                      variant="destructive"
-                    >
-                      <Trash2 className="mr-2 h-4 w-4" />
-                      Uninstall
-                    </DropdownMenuItem>
-                  </>
-                )}
-              </>
-            }
-          >
-            {uiState.mainLabel}
-          </SplitButton>
+          <ServiceActionButton
+            serviceId={hiveId}
+            isInstalled={isInstalled}
+            isRunning={isRunning}
+            isExecuting={isExecuting}
+            actions={{
+              start: (id) => actions.start(id!),
+              stop: (id) => actions.stop(id!),
+              install: (id) => actions.install(id!),
+              rebuild: (id) => actions.rebuild(id!),
+              uninstall: (id) => actions.uninstall(id!),
+            }}
+          />
         </div>
       </CardContent>
     </Card>
-  );
-}
-
-// TEAM-340: Self-contained component with DaemonContainer wrapper
-export function HiveCard({ hiveId, title, description }: HiveCardProps) {
-  return (
-    <DaemonContainer
-      cacheKey={`hive-${hiveId}`}
-      metadata={{
-        name: title,
-        description: description,
-      }}
-      fetchFn={() => useSshHivesStore.getState().fetchHiveStatus(hiveId)}
-    >
-      <HiveCardContent
-        hiveId={hiveId}
-        title={title}
-        description={description}
-      />
-    </DaemonContainer>
   );
 }

@@ -1,19 +1,42 @@
 // TEAM-340: Queen web interface page
+// TEAM-353: Rewritten to use query hooks (deleted DaemonContainer pattern)
 // Embeds Queen's web UI (localhost:7833) in an iframe
-// Disabled when Queen is not running
-// Self-contained component with DaemonContainer wrapper (Rule Zero)
 
 import { Alert, AlertDescription, AlertTitle, Button } from "@rbee/ui/atoms";
 import { PageContainer } from "@rbee/ui/molecules";
-import { AlertCircle, ExternalLink, PlayCircle } from "lucide-react";
-import { DaemonContainer } from "../containers/DaemonContainer";
-import { useQueenStore } from "../store/queenStore";
+import { AlertCircle, ExternalLink, Loader2, PlayCircle } from "lucide-react";
+import { useQueen, useQueenActions } from "../store/queenStore";
 
-// TEAM-340: Inner component that renders after data is loaded
-function QueenIframeContent() {
-  const { status, start } = useQueenStore();
+// TEAM-353: Rewritten to use query hooks
+function QueenIframe() {
+  const { queen, isLoading, error } = useQueen();
+  const { start } = useQueenActions();
 
-  if (!status?.isRunning) {
+  // Loading state
+  if (isLoading && !queen) {
+    return (
+      <div className="flex items-center justify-center h-full">
+        <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
+
+  // Error state
+  if (error && !queen) {
+    return (
+      <div className="flex items-center justify-center h-full">
+        <Alert variant="destructive" className="max-w-md">
+          <AlertCircle className="h-4 w-4" />
+          <AlertTitle>Failed to load Queen status</AlertTitle>
+          <AlertDescription>
+            <p>{error}</p>
+          </AlertDescription>
+        </Alert>
+      </div>
+    );
+  }
+
+  if (!queen?.isRunning) {
     return (
       <div className="flex items-center justify-center h-full">
         <Alert variant="destructive" className="max-w-md">
@@ -57,22 +80,6 @@ function QueenIframeContent() {
         sandbox="allow-same-origin allow-scripts allow-forms allow-popups"
       />
     </div>
-  );
-}
-
-// TEAM-340: Self-contained component with DaemonContainer wrapper
-function QueenIframe() {
-  return (
-    <DaemonContainer
-      cacheKey="queen-iframe"
-      metadata={{
-        name: "Queen",
-        description: "Smart API server",
-      }}
-      fetchFn={() => useQueenStore.getState().fetchStatus()}
-    >
-      <QueenIframeContent />
-    </DaemonContainer>
   );
 }
 
