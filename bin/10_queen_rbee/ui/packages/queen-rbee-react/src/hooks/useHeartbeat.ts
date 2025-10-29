@@ -42,21 +42,42 @@ export function useHeartbeat(baseUrl: string = 'http://localhost:7833'): UseHear
     if (!sdk) return
 
     let monitor: any = null
+    let mounted = true
 
-    try {
-      monitor = new sdk.HeartbeatMonitor(baseUrl)
-      
-      monitor.start((snapshot: any) => {
-        setData(snapshot)
-        setConnected(true)
-        setError(null)
-      })
-    } catch (err) {
-      setError(err as Error)
-      setConnected(false)
+    // TEAM-XXX: Check health before starting SSE to avoid CORS errors when queen is offline
+    const startMonitoring = async () => {
+      try {
+        monitor = new sdk.HeartbeatMonitor(baseUrl)
+        
+        // Check if queen is reachable
+        const isHealthy = await monitor.checkHealth()
+        
+        if (!mounted) return
+        
+        if (!isHealthy) {
+          setError(new Error('Queen is offline'))
+          setConnected(false)
+          return
+        }
+        
+        // Queen is healthy, start SSE
+        monitor.start((snapshot: any) => {
+          if (!mounted) return
+          setData(snapshot)
+          setConnected(true)
+          setError(null)
+        })
+      } catch (err) {
+        if (!mounted) return
+        setError(err as Error)
+        setConnected(false)
+      }
     }
 
+    startMonitoring()
+
     return () => {
+      mounted = false
       if (monitor) {
         monitor.stop()
       }

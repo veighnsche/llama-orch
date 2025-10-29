@@ -96,7 +96,7 @@ async fn dev_proxy_handler(uri: Uri, req: axum::extract::Request) -> impl IntoRe
         Ok(response) => {
             let status = response.status();
             let headers = response.headers().clone();
-            let body = response.bytes().await.unwrap_or_default();
+            let mut body = response.bytes().await.unwrap_or_default();
             
             let mut builder = Response::builder().status(status);
             for (key, value) in headers.iter() {
@@ -107,6 +107,20 @@ async fn dev_proxy_handler(uri: Uri, req: axum::extract::Request) -> impl IntoRe
             // Browser requires application/wasm for WASM module imports
             if path.ends_with(".wasm") {
                 builder = builder.header(header::CONTENT_TYPE, "application/wasm");
+            }
+            
+            // TEAM-XXX: Fix Vite HMR WebSocket URL when proxying HTML
+            // When serving HTML through proxy, Vite's HMR client tries to connect to the proxied
+            // port (7833) instead of the actual Vite dev server (7834). Rewrite the HTML to point
+            // HMR WebSocket to the correct port.
+            if (path == "/" || path.ends_with(".html")) && headers.get(header::CONTENT_TYPE).and_then(|v| v.to_str().ok()).map(|v| v.contains("text/html")).unwrap_or(false) {
+                if let Ok(html) = String::from_utf8(body.to_vec()) {
+                    // Rewrite Vite HMR WebSocket URL from ws://localhost:7833 to ws://localhost:7834
+                    let fixed_html = html.replace("ws://localhost:7833", "ws://localhost:7834")
+                                        .replace("ws://127.0.0.1:7833", "ws://localhost:7834");
+                    body = fixed_html.into_bytes().into();
+                    eprintln!("[DEV PROXY] Rewrote Vite HMR WebSocket URLs in HTML to port 7834");
+                }
             }
             
             builder.body(Body::from(body)).unwrap()

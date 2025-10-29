@@ -77,6 +77,15 @@ export function RhaiIDE() {
     }
   };
 
+  // TEAM-XXX: Handle script selection, including sentinel for new script
+  const handleSelectScript = (scriptId: string) => {
+    if (scriptId === "__new__") {
+      createNewScript();
+    } else {
+      selectScript(scriptId);
+    }
+  };
+
   const handleTest = async () => {
     try {
       await testScript(editedContent);
@@ -119,23 +128,24 @@ export function RhaiIDE() {
       <CardContent>
         <div className="space-y-4">
           {/* Script Selector */}
+          {/* TEAM-XXX: Fixed Radix Select crash - no empty string values allowed */}
           <Select
-            value={currentScript?.id || ""}
-            onValueChange={selectScript}
+            value={currentScript?.id || "__new__"}
+            onValueChange={handleSelectScript}
             disabled={loading}
           >
             <SelectTrigger className="w-full">
               <SelectValue placeholder="Select a script" />
             </SelectTrigger>
             <SelectContent>
-              {scripts.map((script) => (
-                <SelectItem key={script.id} value={script.id || ""}>
+              {/* Only render scripts with valid IDs */}
+              {scripts.filter(s => s.id && s.id.trim() !== "").map((script) => (
+                <SelectItem key={script.id} value={script.id!}>
                   {script.name}
                 </SelectItem>
               ))}
-              {!currentScript?.id && (
-                <SelectItem value="">New Script</SelectItem>
-              )}
+              {/* Sentinel value for new script instead of empty string */}
+              <SelectItem value="__new__">+ New Script</SelectItem>
             </SelectContent>
           </Select>
 

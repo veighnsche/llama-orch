@@ -128,6 +128,14 @@ pub async fn build_daemon(build_config: BuildConfig) -> Result<PathBuf> {
     
     command.arg("--bin").arg(daemon_name);
 
+    // TEAM-XXX: Skip UI build for queen-rbee to prevent Turbo dev crashes
+    // When building queen during dev (e.g., from Keeper install), skip the Vite build
+    // in queen's build.rs to avoid competing with active dev servers
+    if daemon_name == "queen-rbee" {
+        command.env("RBEE_SKIP_UI_BUILD", "1");
+        n!("skip_ui_build", "⏭️  Setting RBEE_SKIP_UI_BUILD=1 for queen-rbee (prevents Turbo conflicts)");
+    }
+
     // Add target if specified (for cross-compilation)
     if let Some(target_triple) = target {
         command.arg("--target").arg(target_triple);

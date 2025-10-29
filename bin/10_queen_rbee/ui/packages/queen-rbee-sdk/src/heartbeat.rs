@@ -174,6 +174,41 @@ impl HeartbeatMonitor {
             2 // CLOSED
         }
     }
+
+    /// Check if queen-rbee is reachable before starting SSE
+    ///
+    /// TEAM-XXX: Prevents noisy CORS errors when queen is offline.
+    /// Returns a Promise that resolves to true if /health returns 200.
+    ///
+    /// # JavaScript Example
+    /// ```javascript
+    /// const monitor = new HeartbeatMonitor('http://localhost:7833');
+    /// const isHealthy = await monitor.checkHealth();
+    /// if (isHealthy) {
+    ///   monitor.start(callback);
+    /// } else {
+    ///   console.log('Queen is offline');
+    /// }
+    /// ```
+    #[wasm_bindgen(js_name = checkHealth)]
+    pub async fn check_health(&self) -> Result<bool, JsValue> {
+        use wasm_bindgen_futures::JsFuture;
+        use web_sys::{Request, RequestInit, Response};
+
+        let health_url = format!("{}/health", self.base_url);
+        
+        let mut opts = RequestInit::new();
+        opts.method("GET");
+        
+        let request = Request::new_with_str_and_init(&health_url, &opts)
+            .map_err(|e| JsValue::from_str(&format!("Failed to create request: {:?}", e)))?;
+
+        let window = web_sys::window().ok_or_else(|| JsValue::from_str("No window object"))?;
+        let resp_value = JsFuture::from(window.fetch_with_request(&request)).await?;
+        let resp: Response = resp_value.dyn_into()?;
+
+        Ok(resp.ok())
+    }
 }
 
 // TEAM-286: Implement Drop to ensure cleanup
