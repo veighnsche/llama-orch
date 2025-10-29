@@ -3,6 +3,7 @@
 // TEAM-296: Wired up queen lifecycle operations (install, update, uninstall)
 // TEAM-338: Migrated to Zustand store pattern with React 19 Suspense
 // TEAM-339: Use DaemonContainer directly (Rule Zero - deleted wrapper)
+// TEAM-340: Simplified - components are self-contained, pages just compose them
 // Updated: Replaced ServiceCard with dedicated QueenCard and HiveCard components
 //
 // Queen Lifecycle Operations:
@@ -12,46 +13,35 @@
 // - update: Rebuild from source (cargo build --release)
 // - uninstall: Remove binary from ~/.local/bin (errors if not installed)
 
-import { PageContainer } from '@rbee/ui/molecules'
-import { InstalledHiveList } from '@/components/InstalledHiveList'
-import { InstallHiveCard } from '@/components/InstallHiveCard'
-import { QueenCard } from '../components/QueenCard'
-import { DaemonContainer } from '../containers/DaemonContainer'
-import { useQueenStore } from '../store/queenStore'
+import { PageContainer } from "@rbee/ui/molecules";
+import { InstalledHiveList } from "@/components/InstalledHiveList";
+import { InstallHiveCard } from "@/components/InstallHiveCard";
+import { QueenCard } from "../components/QueenCard";
 
 export default function KeeperPage() {
   return (
     <PageContainer
       title="Services"
       description="Manage Queen and Hive services"
-      padding="lg"
+      padding="default"
       helperText={[
         {
-          title: 'Queen',
+          title: "Queen",
           description:
-            'routes inference jobs to the right worker in the right hive. Start Queen first to enable job routing.',
+            "routes inference jobs to the right worker in the right hive. Start Queen first to enable job routing.",
         },
         {
-          title: 'Hive',
+          title: "Hive",
           description:
-            'manages worker lifecycle and catalogs (models from HuggingFace, worker binaries). Start localhost hive to see local models and workers. Use SSH targets to start remote hives and access their catalogs.',
+            "manages worker lifecycle and catalogs (models from HuggingFace, worker binaries). Start localhost hive to see local models and workers. Use SSH targets to start remote hives and access their catalogs.",
         },
       ]}
     >
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
-        <DaemonContainer
-          cacheKey="queen"
-          metadata={{
-            name: 'Queen',
-            description: 'Smart API server',
-          }}
-          fetchFn={() => useQueenStore.getState().fetchStatus()}
-        >
-          <QueenCard />
-        </DaemonContainer>
+        <QueenCard />
         <InstalledHiveList />
         <InstallHiveCard />
       </div>
     </PageContainer>
-  )
+  );
 }

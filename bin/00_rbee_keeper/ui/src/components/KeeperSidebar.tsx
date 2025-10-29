@@ -1,9 +1,10 @@
 // TEAM-295: Navigation sidebar for Bee Keeper app
 // Based on AppSidebar from queen-rbee UI
 // TEAM-339: Simplified to work with react-resizable-panels (removed fixed-width Sidebar wrapper)
+// TEAM-340: Added Queen navigation item with iframe page
 
 import { ThemeToggle } from '@rbee/ui/molecules'
-import { HelpCircleIcon, HomeIcon, SettingsIcon } from 'lucide-react'
+import { CrownIcon, HelpCircleIcon, HomeIcon, SettingsIcon } from 'lucide-react'
 import { Link, useLocation } from 'react-router-dom'
 
 export function KeeperSidebar() {
@@ -15,6 +16,12 @@ export function KeeperSidebar() {
       href: '/',
       icon: HomeIcon,
       tooltip: 'Manage services',
+    },
+    {
+      title: 'Queen',
+      href: '/queen',
+      icon: CrownIcon,
+      tooltip: 'Queen web interface',
     },
   ]
 

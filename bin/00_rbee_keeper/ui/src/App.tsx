@@ -1,10 +1,12 @@
 // TEAM-295: rbee-keeper GUI - Main application component with routing
 // TEAM-334: Uses Shell component for layout (titlebar + sidebar + content)
+// TEAM-340: Added Queen page with iframe
 
 import { SidebarProvider } from '@rbee/ui/atoms'
 import { BrowserRouter, Route, Routes } from 'react-router-dom'
 import { Shell } from './components/Shell'
 import HelpPage from './pages/HelpPage'
+import QueenPage from './pages/QueenPage'
 import KeeperPage from './pages/ServicesPage'
 import SettingsPage from './pages/SettingsPage'
 
@@ -15,6 +17,7 @@ function App() {
         <Shell>
           <Routes>
             <Route path="/" element={<KeeperPage />} />
+            <Route path="/queen" element={<QueenPage />} />
             <Route path="/settings" element={<SettingsPage />} />
             <Route path="/help" element={<HelpPage />} />
           </Routes>

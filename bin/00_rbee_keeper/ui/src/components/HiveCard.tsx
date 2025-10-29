@@ -1,6 +1,7 @@
 // TEAM-338: Individual hive card component with lifecycle controls
 // Reusable card for displaying a single hive with start/stop/uninstall actions
 // TEAM-338: Made status-aware like QueenCard (StatusBadge + conditional actions)
+// TEAM-340: Self-contained component with DaemonContainer wrapper (Rule Zero)
 
 import {
   Card,
@@ -14,6 +15,7 @@ import {
   SplitButton,
 } from '@rbee/ui/atoms'
 import { Download, Play, RefreshCw, Square, Trash2 } from 'lucide-react'
+import { DaemonContainer } from '../containers/DaemonContainer'
 import { useCommandStore } from '../store/commandStore'
 import { useSshHivesStore } from '../store/hiveStore'
 import { StatusBadge } from './StatusBadge'
@@ -24,7 +26,8 @@ interface HiveCardProps {
   description: string
 }
 
-export function HiveCard({ hiveId, title, description }: HiveCardProps) {
+// TEAM-340: Inner component that renders after data is loaded
+function HiveCardContent({ hiveId, title, description }: HiveCardProps) {
   const { isExecuting } = useCommandStore()
   const { hives, installedHives, isLoading, start, stop, install, uninstall, refreshCapabilities, fetchHiveStatus } =
     useSshHivesStore()
@@ -136,5 +139,21 @@ export function HiveCard({ hiveId, title, description }: HiveCardProps) {
         </div>
       </CardContent>
     </Card>
+  )
+}
+
+// TEAM-340: Self-contained component with DaemonContainer wrapper
+export function HiveCard({ hiveId, title, description }: HiveCardProps) {
+  return (
+    <DaemonContainer
+      cacheKey={`hive-${hiveId}`}
+      metadata={{
+        name: title,
+        description: description,
+      }}
+      fetchFn={() => useSshHivesStore.getState().fetchHiveStatus(hiveId)}
+    >
+      <HiveCardContent hiveId={hiveId} title={title} description={description} />
+    </DaemonContainer>
   )
 }

@@ -1,13 +1,13 @@
 // TEAM-338: Installed hives list - shows all installed hives with lifecycle controls
 // TEAM-339: Uses DaemonContainer with React 19 use() hook (no useEffect)
-// Fully self-contained component connected to hiveStore
+// TEAM-340: Simplified - HiveCard is now self-contained with its own DaemonContainer
 // Displays installed hives with start/stop/uninstall actions
 
 import { DaemonContainer } from '../containers/DaemonContainer'
 import { useSshHivesStore } from '../store/hiveStore'
 import { HiveCard } from './HiveCard'
 
-// Inner component that renders after data is loaded
+// TEAM-340: Inner component that renders after hives list is loaded
 function InstalledHiveCards() {
   const { hives, installedHives } = useSshHivesStore()
 
@@ -26,10 +26,10 @@ function InstalledHiveCards() {
 
   return (
     <>
-      {/* Localhost hive (if installed) */}
+      {/* Localhost hive (if installed) - HiveCard handles its own data fetching */}
       {showLocalhost && <HiveCard hiveId="localhost" title="localhost" description="This machine" />}
 
-      {/* SSH hives - each gets its own Card */}
+      {/* SSH hives - each HiveCard handles its own data fetching */}
       {installedHiveDetails.map((hive) => (
         <HiveCard
           key={hive.host}
@@ -43,8 +43,7 @@ function InstalledHiveCards() {
 }
 
 export function InstalledHiveList() {
-  // TEAM-339: DaemonContainer handles loading/error states via Suspense
-  // Component only renders after successful fetch
+  // TEAM-340: Only fetch the hives list here, individual HiveCards fetch their own status
   return (
     <DaemonContainer
       cacheKey="hives-list"
@@ -52,12 +51,7 @@ export function InstalledHiveList() {
         name: 'Hives',
         description: 'SSH hive targets',
       }}
-      fetchFn={async () => {
-        // TEAM-339: Fetch hives list, then fetch individual status for each
-        await useSshHivesStore.getState().fetchHives()
-        const { installedHives, fetchHiveStatus } = useSshHivesStore.getState()
-        await Promise.all(installedHives.map((hiveId) => fetchHiveStatus(hiveId)))
-      }}
+      fetchFn={() => useSshHivesStore.getState().fetchHives()}
     >
       <InstalledHiveCards />
     </DaemonContainer>

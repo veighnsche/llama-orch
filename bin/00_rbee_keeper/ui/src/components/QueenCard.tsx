@@ -2,6 +2,7 @@
 // Follows idiomatic Zustand pattern with useQueenStore hook
 // Store handles command execution and global isExecuting internally
 // TEAM-338: Loading/error states moved to QueenContainer (React 19 Suspense pattern)
+// TEAM-340: Self-contained component with DaemonContainer wrapper (Rule Zero)
 
 import {
   Card,
@@ -15,6 +16,7 @@ import {
   SplitButton,
 } from '@rbee/ui/atoms'
 import { Download, Play, RefreshCw, Square, Trash2 } from 'lucide-react'
+import { DaemonContainer } from '../containers/DaemonContainer'
 import { useCommandStore } from '../store/commandStore'
 import { useQueenStore } from '../store/queenStore'
 import { StatusBadge } from './StatusBadge'
@@ -22,7 +24,8 @@ import { StatusBadge } from './StatusBadge'
 // TEAM-338: Re-export the status type from store
 export type { QueenStatus } from '../store/queenStore'
 
-export function QueenCard() {
+// TEAM-340: Inner component that renders after data is loaded
+function QueenCardContent() {
   const { status, isLoading, fetchStatus, start, stop, install, rebuild, uninstall } = useQueenStore()
   const { isExecuting } = useCommandStore()
 
@@ -133,5 +136,21 @@ export function QueenCard() {
         </div>
       </CardContent>
     </Card>
+  )
+}
+
+// TEAM-340: Self-contained component with DaemonContainer wrapper
+export function QueenCard() {
+  return (
+    <DaemonContainer
+      cacheKey="queen"
+      metadata={{
+        name: 'Queen',
+        description: 'Smart API server',
+      }}
+      fetchFn={() => useQueenStore.getState().fetchStatus()}
+    >
+      <QueenCardContent />
+    </DaemonContainer>
   )
 }
