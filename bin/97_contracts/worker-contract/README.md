@@ -139,7 +139,7 @@ let worker = WorkerInfo {
 
 // Send heartbeat to queen
 let heartbeat = WorkerHeartbeat::new(worker);
-// POST to http://queen:8500/v1/worker-heartbeat
+// POST to http://queen:7833/v1/worker-heartbeat
 ```
 
 ## Implementation Checklist

@@ -49,7 +49,7 @@ use shared_contract::{OperationalStatus, HealthStatus};
 let hive = HiveInfo {
     id: "localhost".to_string(),
     hostname: "127.0.0.1".to_string(),
-    port: 9200,
+    port: 7835,
     operational_status: OperationalStatus::Ready,
     health_status: HealthStatus::Healthy,
     version: "0.1.0".to_string(),
@@ -59,7 +59,7 @@ let hive = HiveInfo {
 let heartbeat = HiveHeartbeat::new(hive);
 
 // Send to queen
-// POST http://queen:8500/v1/hive-heartbeat
+// POST http://queen:7833/v1/hive-heartbeat
 ```
 
 ## Relationship to worker-contract

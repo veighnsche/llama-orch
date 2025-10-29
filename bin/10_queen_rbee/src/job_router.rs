@@ -321,10 +321,11 @@ async fn route_operation(
             //     .emit();
         }
 
-        // TEAM-258: All worker/model operations are forwarded to hive
-        // This allows new operations to be added to rbee-hive without modifying queen-rbee
-        // TEAM-290: No config needed (localhost-only)
-        op if op.should_forward_to_hive() => hive_forwarder::forward_to_hive(&job_id, op).await?,
+        // TEAM-258/CLEANUP: All worker/model operations are forwarded to hive
+        // TEAM-CLEANUP: Updated to use target_server() instead of should_forward_to_hive()
+        op if matches!(op.target_server(), operations_contract::TargetServer::Hive) => {
+            hive_forwarder::forward_to_hive(&job_id, op).await?
+        }
 
         // Catch-all for any unhandled operations
         op => {

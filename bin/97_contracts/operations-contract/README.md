@@ -1,50 +1,56 @@
-# rbee-operations
+# operations-contract
 
-**TEAM-186:** Shared operation types for rbee-keeper ↔ queen-rbee contract
+**TEAM-186:** Shared operation types for job submissions  
+**TEAM-CLEANUP:** Updated to reflect NO PROXYING architecture
 
 ## Purpose
 
 This crate provides a **single source of truth** for all operation types in the rbee system, ensuring type safety between:
 - **rbee-keeper** (CLI client) - Creates operation payloads
-- **queen-rbee** (HTTP server) - Parses and routes operations
+- **queen-rbee** (HTTP server) - Handles orchestration operations
+- **rbee-hive** (HTTP server) - Handles worker/model lifecycle operations
 
 ## Architecture
 
+**CRITICAL:** rbee-keeper talks directly to BOTH queen AND hive (NO proxying)
+
 ```
-rbee-keeper                    queen-rbee
-    ↓                              ↓
-Operation enum              Operation enum
-    ↓                              ↓
-serde_json::to_value()      serde_json::from_value()
-    ↓                              ↓
-POST /v1/jobs  ────────────→  Pattern match & route
+rbee-keeper
+    ↓
+Operation enum
+    ↓
+    ├─→ Queen Operations (Status, Infer)
+    │   POST http://localhost:7833/v1/jobs
+    │   ├─ Status - Query registries
+    │   └─ Infer - Schedule and route to workers
+    │
+    └─→ Hive Operations (Worker/Model lifecycle)
+        POST http://localhost:7835/v1/jobs
+        ├─ WorkerSpawn, WorkerProcessList, etc.
+        └─ ModelDownload, ModelList, etc.
 ```
 
 ## Operation Types
 
-### Hive Operations
-- `HiveStart { hive_id }`
-- `HiveStop { hive_id }`
-- `HiveList`
-- `HiveGet { id }`
-- `HiveCreate { host, port }`
-- `HiveUpdate { id }`
-- `HiveDelete { id }`
+### Queen Operations (http://localhost:7833/v1/jobs)
 
-### Worker Operations
-- `WorkerSpawn { hive_id, model, worker, device }`
-- `WorkerList { hive_id }`
-- `WorkerGet { hive_id, id }`
-- `WorkerDelete { hive_id, id }`
+**Orchestration operations:**
+- `Status` - Query hive and worker registries
+- `Infer { ... }` - Schedule inference and route to worker
 
-### Model Operations
-- `ModelDownload { hive_id, model }`
-- `ModelList { hive_id }`
-- `ModelGet { hive_id, id }`
-- `ModelDelete { hive_id, id }`
+### Hive Operations (http://localhost:7835/v1/jobs)
 
-### Inference
-- `Infer { hive_id, model, prompt, max_tokens, temperature, top_p?, top_k?, device?, worker_id?, stream }`
+**Worker process operations:**
+- `WorkerSpawn(WorkerSpawnRequest)` - Spawn worker process
+- `WorkerProcessList(WorkerProcessListRequest)` - List worker processes
+- `WorkerProcessGet(WorkerProcessGetRequest)` - Get worker process details
+- `WorkerProcessDelete(WorkerProcessDeleteRequest)` - Kill worker process
+
+**Model operations:**
+- `ModelDownload(ModelDownloadRequest)` - Download model
+- `ModelList(ModelListRequest)` - List models
+- `ModelGet(ModelGetRequest)` - Get model details
+- `ModelDelete(ModelDeleteRequest)` - Delete model
 
 ## Usage
 
@@ -66,22 +72,36 @@ client.post("/v1/jobs").json(&payload).send().await?;
 ### Server (queen-rbee)
 
 ```rust
-use rbee_operations::Operation;
+use operations_contract::{Operation, TargetServer};
 
 // Receive JSON payload
 async fn handle_create_job(Json(payload): Json<serde_json::Value>) {
     // Deserialize to Operation enum
     let operation: Operation = serde_json::from_value(payload)?;
     
-    // Pattern match and route
+    // Pattern match and route (queen only handles Status and Infer)
     match operation {
-        Operation::HiveList => handle_hive_list().await,
-        Operation::WorkerSpawn { hive_id, model, worker, device } => {
-            handle_worker_spawn(hive_id, model, worker, device).await
-        }
-        Operation::Infer { hive_id, model, prompt, .. } => {
-            handle_infer(hive_id, model, prompt).await
-        }
+        Operation::Status => handle_status().await,
+        Operation::Infer(req) => handle_infer(req).await,
+        _ => Err("Operation not supported by queen"),
+    }
+}
+```
+
+### Server (rbee-hive)
+
+```rust
+use operations_contract::Operation;
+
+// Receive JSON payload
+async fn handle_create_job(Json(payload): Json<serde_json::Value>) {
+    // Deserialize to Operation enum
+    let operation: Operation = serde_json::from_value(payload)?;
+    
+    // Pattern match and route (hive handles worker/model operations)
+    match operation {
+        Operation::WorkerSpawn(req) => handle_worker_spawn(req).await,
+        Operation::ModelDownload(req) => handle_model_download(req).await,
         // ... etc
     }
 }
@@ -123,16 +143,22 @@ All operations use tagged enum serialization with `"operation"` field:
 }
 ```
 
-## Backward Compatibility
+## Routing Helper
 
-For code that still uses string constants, we provide:
+Use `target_server()` to determine which server to send an operation to:
 
 ```rust
-use rbee_operations::constants::*;
+use operations_contract::{Operation, TargetServer};
 
-const OP_HIVE_LIST: &str = "hive_list";
-const OP_WORKER_SPAWN: &str = "worker_spawn";
-// ... etc
+let op = Operation::Status;
+match op.target_server() {
+    TargetServer::Queen => {
+        // Send to http://localhost:7833/v1/jobs
+    }
+    TargetServer::Hive => {
+        // Send to http://localhost:7835/v1/jobs
+    }
+}
 ```
 
 ## Migration Path

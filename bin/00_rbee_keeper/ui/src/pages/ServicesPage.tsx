@@ -24,12 +24,12 @@ export default function KeeperPage() {
         {
           title: "Queen",
           description:
-            "routes inference jobs to the right worker in the right hive. Start Queen first to enable job routing.",
+            "The orchestrator brain. Tracks all workers and hives via heartbeats, schedules inference jobs, and routes requests directly to workers. Provides unified API and OpenAI compatibility. Start Queen first to enable orchestration.",
         },
         {
           title: "Hive",
           description:
-            "manages worker lifecycle and catalogs (models from HuggingFace, worker binaries). Start localhost hive to see local models and workers. Use SSH targets to start remote hives and access their catalogs.",
+            "Manages worker lifecycle (spawn/stop workers) and model downloads. Each hive runs on a machine with GPUs/CPUs. Queen sends jobs to hives to provision workers, then routes inference directly to workers (bypassing hive). Start localhost hive for local GPU/CPU, or connect to remote hives via their URLs.",
         },
       ]}
     >

@@ -21,7 +21,7 @@
 //! - `build_info` - Build information endpoint (TEAM-262)
 //! - `shutdown` - Graceful shutdown endpoint (TEAM-339)
 
-pub mod build_info;
+// TEAM-CLEANUP: Deleted build_info module - consolidated into info.rs (Rule Zero)
 pub mod health;
 pub mod heartbeat;
 pub mod heartbeat_stream; // TEAM-285: Live heartbeat streaming
@@ -31,7 +31,7 @@ pub mod shutdown; // TEAM-339: Graceful shutdown endpoint
 pub mod static_files; // TEAM-293: Static file serving for web UI
 
 // Re-export commonly used types
-pub use build_info::handle_build_info;
+// TEAM-CLEANUP: Deleted build_info - consolidated into info.rs (Rule Zero)
 pub use health::handle_health;
 pub use heartbeat::{
     handle_hive_heartbeat, // TEAM-284/285: Hive heartbeat handler

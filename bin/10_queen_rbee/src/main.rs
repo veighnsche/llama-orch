@@ -133,8 +133,7 @@ fn create_router(
         .route("/health", get(http::handle_health))
         // TEAM-186: V1 API endpoints (matches API_REFERENCE.md)
         .route("/v1/shutdown", post(http::handle_shutdown)) // TEAM-339: Graceful shutdown endpoint
-        .route("/v1/build-info", get(http::handle_build_info)) // TEAM-262: Build information
-        .route("/v1/info", get(http::handle_info)) // TEAM-292: Queen info for service discovery
+        .route("/v1/info", get(http::handle_info)) // TEAM-292/CLEANUP: Queen info (service discovery + build info)
         // TEAM-275: Removed /v1/heartbeat endpoint (deprecated, use /v1/worker-heartbeat instead)
         .route("/v1/worker-heartbeat", post(http::handle_worker_heartbeat)) // TEAM-261: Workers send heartbeats directly to queen
         .route("/v1/hive-heartbeat", post(http::handle_hive_heartbeat)) // TEAM-284/285: Hives send heartbeats directly to queen
