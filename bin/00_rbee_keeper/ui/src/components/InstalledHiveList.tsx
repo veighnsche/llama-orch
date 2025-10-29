@@ -1,29 +1,39 @@
 // TEAM-338: Installed hives list - shows all installed hives with lifecycle controls
 // TEAM-353: Rewritten to use query hooks (deleted DaemonContainer pattern)
 
-import { useSshHives, useSshHivesStore } from "../store/hiveStore";
+import { useSshHives, useInstalledHives } from "../store/hiveQueries";
 import { HiveCard } from "./cards/HiveCard";
-import type { SshHive } from "../store/hiveStore";
+import { Card, CardHeader } from "@rbee/ui/atoms";
+import { Loader2 } from "lucide-react";
+import type { SshHive } from "../store/hiveQueries";
 
-// TEAM-352: Rewritten to use query hooks
-// TEAM-350: Removed localhost logic - localhost now handled by separate LocalhostHive component
+// TEAM-368: Get actual install status from backend (no more Zustand!)
 export function InstalledHiveList() {
-  const { hives, isLoading } = useSshHives();
-  const installedHivesStore = useSshHivesStore();
-  const installedHives = installedHivesStore.installedHives;
+  const { data: hives = [], isLoading: hivesLoading } = useSshHives();
+  const { data: installedHives = [], isLoading: installedLoading } = useInstalledHives();
 
-  // TEAM-350: Filter OUT localhost - shown separately on Services page
+  // TEAM-368: Show loading state while fetching
+  if (hivesLoading || installedLoading) {
+    return (
+      <Card>
+        <CardHeader>
+          <div className="flex items-center gap-2">
+            <Loader2 className="h-4 w-4 animate-spin" />
+            <span className="text-sm text-muted-foreground">Loading installed hives...</span>
+          </div>
+        </CardHeader>
+      </Card>
+    );
+  }
+
+  // TEAM-368: Filter hives by actual install status from backend
   const installedSshHives = hives.filter(
-    (hive: SshHive) => installedHives.includes(hive.host) && hive.host !== 'localhost'
+    (hive: SshHive) => installedHives.includes(hive.host)
   );
+
 
   // Empty state - return null, no cards needed
   if (installedSshHives.length === 0) {
-    return null;
-  }
-
-  // Show loading or empty state
-  if (isLoading && installedSshHives.length === 0) {
     return null;
   }
 

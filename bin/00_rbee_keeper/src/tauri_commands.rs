@@ -33,6 +33,7 @@ mod tests {
             .commands(collect_commands![
                 test_narration,
                 ssh_list,
+                get_installed_hives,
                 ssh_open_config,
                 queen_status,
                 queen_start,
@@ -46,7 +47,6 @@ mod tests {
                 hive_install,
                 hive_uninstall,
                 hive_rebuild,
-                hive_refresh_capabilities,
             ])
             .typ::<NarrationEvent>()
             .typ::<daemon_lifecycle::DaemonStatus>();
@@ -355,24 +355,6 @@ pub async fn hive_rebuild(alias: String) -> Result<String, String> {
         .map_err(|e| format!("{}", e))
 }
 
-/// Refresh device capabilities for a hive
-/// TEAM-338: Thin wrapper around handle_hive()
-#[tauri::command]
-#[specta::specta]
-pub async fn hive_refresh_capabilities(alias: String) -> Result<String, String> {
-    use crate::cli::HiveAction;
-    use crate::handlers::handle_hive;
-    use crate::Config;
-
-    let config = Config::load().map_err(|e| format!("Config error: {}", e))?;
-    let queen_url = config.queen_url();
-
-    handle_hive(HiveAction::RefreshCapabilities { alias }, &queen_url)
-        .await
-        .map(|_| "Hive capabilities refreshed".to_string())
-        .map_err(|e| format!("{}", e))
-}
-
 // ============================================================================
 // SSH COMMANDS
 // ============================================================================
@@ -483,10 +465,72 @@ pub async fn ssh_list() -> Result<Vec<SshTarget>, String> {
     // Sort by host name
     targets.sort_by(|a, b| a.host.cmp(&b.host));
 
-    // TEAM-333: NO localhost injection - only show what's in SSH config
-    // If user wants localhost, they can add it to ~/.ssh/config
+    // TEAM-360: Add localhost as an available target
+    // Localhost is always available for installation
+    targets.insert(0, SshTarget {
+        host: "localhost".to_string(),
+        host_subtitle: Some("This machine".to_string()),
+        hostname: "localhost".to_string(),
+        user: std::env::var("USER").unwrap_or_else(|_| "user".to_string()),
+        port: 22,
+        status: SshTargetStatus::Unknown,
+    });
 
-    n!("ssh_list", "Found {} unique SSH targets", targets.len());
+    n!("ssh_list", "Found {} unique SSH targets (including localhost)", targets.len());
 
     Ok(targets)
+}
+
+/// TEAM-367: Get list of all installed hives (checks actual status from backend)
+/// Returns list of hive IDs that are actually installed
+#[tauri::command]
+#[specta::specta]
+pub async fn get_installed_hives() -> Result<Vec<String>, String> {
+    use observability_narration_core::n;
+    
+    n!("get_installed_hives", "Checking which hives are installed");
+    
+    let mut installed = Vec::new();
+    
+    // Check localhost
+    match hive_status("localhost".to_string()).await {
+        Ok(status) => {
+            if status.is_installed {
+                installed.push("localhost".to_string());
+                n!("get_installed_hives", "localhost is installed");
+            }
+        }
+        Err(e) => {
+            n!("get_installed_hives", "Failed to check localhost: {}", e);
+        }
+    }
+    
+    // Check all SSH targets
+    match ssh_list().await {
+        Ok(targets) => {
+            for target in targets {
+                if target.host == "localhost" {
+                    continue; // Already checked
+                }
+                
+                match hive_status(target.host.clone()).await {
+                    Ok(status) => {
+                        if status.is_installed {
+                            installed.push(target.host.clone());
+                            n!("get_installed_hives", "{} is installed", target.host);
+                        }
+                    }
+                    Err(e) => {
+                        n!("get_installed_hives", "Failed to check {}: {}", target.host, e);
+                    }
+                }
+            }
+        }
+        Err(e) => {
+            n!("get_installed_hives", "Failed to get SSH targets: {}", e);
+        }
+    }
+    
+    n!("get_installed_hives", "Found {} installed hives", installed.len());
+    Ok(installed)
 }

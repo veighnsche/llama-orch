@@ -12,23 +12,23 @@ import {
 } from "@rbee/ui/atoms";
 import { QueryContainer } from "../../containers/QueryContainer";
 import { useCommandStore } from "../../store/commandStore";
-import { useQueen, useQueenActions } from "../../store/queenStore";
+import { useQueen, useQueenActions } from "../../store/queenQueries";
 import { StatusBadge } from "../StatusBadge";
 import { ServiceActionButton } from "./ServiceActionButton";
-import type { QueenStatus } from "../../store/queenStore";
+import type { QueenStatus } from "../../store/queenQueries";
 
-// TEAM-354: Correct pattern - use QueryContainer per spec Pattern 4
+// TEAM-363: React Query - no useEffect
 export function QueenCard() {
-  const { queen, isLoading, error, refetch } = useQueen();
+  const { data: queen, isLoading, error, refetch } = useQueen();
   const { start, stop, install, rebuild, uninstall } = useQueenActions();
   const { isExecuting } = useCommandStore();
 
   return (
     <QueryContainer<QueenStatus>
       isLoading={isLoading}
-      error={error}
-      data={queen}
-      onRetry={refetch}
+      error={error?.message ?? null}
+      data={queen ?? null}
+      onRetry={() => refetch()}
       metadata={{ name: "Queen", description: "Smart API server" }}
     >
       {(queen) => <QueenCardContent queen={queen} isExecuting={isExecuting} actions={{ start, stop, install, rebuild, uninstall }} refetch={refetch} />}

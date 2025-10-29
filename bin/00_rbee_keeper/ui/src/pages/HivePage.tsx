@@ -5,21 +5,38 @@
 
 import { Alert, AlertDescription, AlertTitle, Button } from "@rbee/ui/atoms";
 import { PageContainer } from "@rbee/ui/molecules";
-import { AlertCircle, ExternalLink, PlayCircle } from "lucide-react";
+import { AlertCircle, ExternalLink, PlayCircle, Loader2 } from "lucide-react";
 import { useParams } from "react-router-dom";
-import { useSshHivesStore } from "../store/hiveStore";
-import { useEffect } from "react";
+import { useHive, useHiveActions } from "../store/hiveQueries";
 
-// TEAM-342: Inner component that renders the iframe
+// TEAM-367: Rewritten to use React Query
 function HiveIframeContent({ hiveId }: { hiveId: string }) {
-  const { hives, start, fetchHiveStatus } = useSshHivesStore();
+  const { data: hive, isLoading, error } = useHive(hiveId);
+  const { start } = useHiveActions();
 
-  // TEAM-342: Fetch hive status on mount
-  useEffect(() => {
-    fetchHiveStatus(hiveId);
-  }, [hiveId, fetchHiveStatus]);
+  // Loading state
+  if (isLoading && !hive) {
+    return (
+      <div className="flex items-center justify-center h-full">
+        <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
 
-  const hive = hives.find((h) => h.host === hiveId);
+  // Error state
+  if (error && !hive) {
+    return (
+      <div className="flex items-center justify-center h-full">
+        <Alert variant="destructive" className="max-w-md">
+          <AlertCircle className="h-4 w-4" />
+          <AlertTitle>Failed to load hive</AlertTitle>
+          <AlertDescription>
+            <p>{error.message}</p>
+          </AlertDescription>
+        </Alert>
+      </div>
+    );
+  }
 
   if (!hive) {
     return (

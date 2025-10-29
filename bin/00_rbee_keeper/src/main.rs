@@ -87,6 +87,8 @@ fn launch_gui() {
             test_narration,
             // TEAM-333: SSH list command
             ssh_list,
+            // TEAM-367: Get installed hives
+            get_installed_hives,
             // TEAM-338: SSH config editor
             ssh_open_config,
             // TEAM-335: Queen lifecycle commands (thin wrappers)
@@ -103,7 +105,6 @@ fn launch_gui() {
             hive_install,
             hive_uninstall,
             hive_rebuild,
-            hive_refresh_capabilities,
         ])
         .setup(|app| {
             // TEAM-336: Initialize tracing with Tauri event streaming

@@ -12,7 +12,6 @@
 import { PageContainer } from "@rbee/ui/molecules";
 import { InstalledHiveList } from "@/components/InstalledHiveList";
 import { InstallHiveCard } from "@/components/cards/InstallHiveCard";
-import { LocalhostHive } from "@/components/cards/LocalhostHive";
 import { QueenCard } from "../components/cards/QueenCard";
 import { useNarrationStore } from "../store/narrationStore";
 
@@ -43,7 +42,6 @@ export default function KeeperPage() {
         }`}
       >
         <QueenCard />
-        <LocalhostHive />
         <InstalledHiveList />
         <InstallHiveCard />
       </div>

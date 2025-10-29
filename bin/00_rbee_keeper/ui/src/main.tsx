@@ -5,16 +5,19 @@ import { ThemeProvider } from '@rbee/ui/providers'
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import { TauriProvider } from './contexts/TauriContext'
+import { QueryProvider } from './providers/QueryProvider'
 import './globals.css'
 import '@rbee/ui/styles.css'
 import App from './App.tsx'
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <TauriProvider>
-      <ThemeProvider>
-        <App />
-      </ThemeProvider>
-    </TauriProvider>
+    <QueryProvider>
+      <TauriProvider>
+        <ThemeProvider>
+          <App />
+        </ThemeProvider>
+      </TauriProvider>
+    </QueryProvider>
   </StrictMode>,
 )

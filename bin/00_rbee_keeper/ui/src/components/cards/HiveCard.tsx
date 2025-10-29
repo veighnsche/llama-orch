@@ -12,10 +12,10 @@ import {
 } from "@rbee/ui/atoms";
 import { QueryContainer } from "../../containers/QueryContainer";
 import { useCommandStore } from "../../store/commandStore";
-import { useHive, useHiveActions } from "../../store/hiveStore";
+import { useHive, useHiveActions } from "../../store/hiveQueries";
 import { StatusBadge } from "../StatusBadge";
 import { ServiceActionButton } from "./ServiceActionButton";
-import type { SshHive } from "../../store/hiveStore";
+import type { SshHive } from "../../store/hiveQueries";
 
 interface HiveCardProps {
   hiveId: string;
@@ -23,18 +23,19 @@ interface HiveCardProps {
   description: string;
 }
 
-// TEAM-354: Correct pattern - use QueryContainer per spec Pattern 4
+// TEAM-368: HiveCard is ONLY rendered for installed hives (filtered by InstalledHiveList)
 export function HiveCard({ hiveId, title, description }: HiveCardProps) {
-  const { hive, isLoading, error, refetch } = useHive(hiveId);
-  const { start, stop, install, uninstall, rebuild } = useHiveActions();
+  const { data: hive, isLoading, error, refetch } = useHive(hiveId);
+  const { start, stop, uninstall, rebuild } = useHiveActions();
   const { isExecuting } = useCommandStore();
 
+  // TEAM-368: No need to check isInstalled - InstalledHiveList already filters!
   return (
     <QueryContainer<SshHive>
       isLoading={isLoading}
-      error={error}
-      data={hive}
-      onRetry={refetch}
+      error={error?.message ?? null}
+      data={hive ?? null}
+      onRetry={() => refetch()}
       metadata={{ name: `${title} Hive`, description }}
     >
       {(hive) => (
@@ -44,13 +45,16 @@ export function HiveCard({ hiveId, title, description }: HiveCardProps) {
           description={description}
           hive={hive}
           isExecuting={isExecuting}
-          actions={{ start, stop, install, uninstall, rebuild }}
+          actions={{ start, stop, uninstall, rebuild }}
           refetch={refetch}
         />
       )}
     </QueryContainer>
   );
 }
+
+// TEAM-368: HiveCard actions - NO INSTALL (use InstallHiveCard for that!)
+type HiveCardActions = Omit<ReturnType<typeof useHiveActions>, 'install'>;
 
 // TEAM-354: Inner component receives type-safe hive data
 function HiveCardContent({
@@ -67,17 +71,16 @@ function HiveCardContent({
   description: string;
   hive: SshHive;
   isExecuting: boolean;
-  actions: ReturnType<typeof useHiveActions>;
+  actions: HiveCardActions;
   refetch: () => void;
 }) {
-  const isInstalled = hive.isInstalled ?? false;
+  // TEAM-368: HiveCard only shows INSTALLED hives
+  const isInstalled = true; // Always true - card doesn't show if not installed
   const isRunning = hive.status === "online";
 
   // Compute badge status
-  const badgeStatus = !isInstalled
-    ? ("unknown" as const)
-    : isRunning
-      ? ("running" as const)
+  const badgeStatus = isRunning
+    ? ("running" as const)
       : ("stopped" as const);
 
   return (
@@ -103,7 +106,7 @@ function HiveCardContent({
             actions={{
               start: (id) => actions.start(id!),
               stop: (id) => actions.stop(id!),
-              install: (id) => actions.install(id!),
+              // NO INSTALL - HiveCard only shows installed hives!
               rebuild: (id) => actions.rebuild(id!),
               uninstall: (id) => actions.uninstall(id!),
             }}

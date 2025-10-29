@@ -5,11 +5,11 @@
 import { Alert, AlertDescription, AlertTitle, Button } from "@rbee/ui/atoms";
 import { PageContainer } from "@rbee/ui/molecules";
 import { AlertCircle, ExternalLink, Loader2, PlayCircle } from "lucide-react";
-import { useQueen, useQueenActions } from "../store/queenStore";
+import { useQueen, useQueenActions } from "../store/queenQueries";
 
 // TEAM-353: Rewritten to use query hooks
 function QueenIframe() {
-  const { queen, isLoading, error } = useQueen();
+  const { data: queen, isLoading, error } = useQueen();
   const { start } = useQueenActions();
 
   // Loading state
@@ -29,7 +29,7 @@ function QueenIframe() {
           <AlertCircle className="h-4 w-4" />
           <AlertTitle>Failed to load Queen status</AlertTitle>
           <AlertDescription>
-            <p>{error}</p>
+            <p>{error.message}</p>
           </AlertDescription>
         </Alert>
       </div>

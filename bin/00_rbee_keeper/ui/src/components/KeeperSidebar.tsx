@@ -13,16 +13,15 @@ import {
   SettingsIcon,
 } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
-import { useSshHives, useSshHivesStore } from "@/store/hiveStore";
-import type { SshHive } from "@/store/hiveStore";
+import { useSshHives, useInstalledHives } from "@/store/hiveQueries";
+import type { SshHive } from "@/store/hiveQueries";
 
 export function KeeperSidebar() {
   const location = useLocation();
-  const { hives } = useSshHives();
-  const installedHivesStore = useSshHivesStore();
-  const installedHives = installedHivesStore.installedHives;
+  const { data: hives = [] } = useSshHives();
+  const { data: installedHives = [] } = useInstalledHives();
 
-  // TEAM-342: Filter hives to only show installed ones
+  // TEAM-367: Filter hives by actual install status from backend
   const installedHivesList = hives.filter((hive: SshHive) =>
     installedHives.includes(hive.host),
   );
