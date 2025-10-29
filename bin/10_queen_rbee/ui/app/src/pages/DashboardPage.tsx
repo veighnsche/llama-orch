@@ -40,16 +40,14 @@ export default function DashboardPage() {
   return (
     <div className="p-6 space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-4">
-          <div>
-            <h1 className="text-3xl font-bold">Queen Dashboard</h1>
-            <p className="text-muted-foreground">
-              Heartbeat Monitor & RHAI Scheduler
-            </p>
-          </div>
-          <ConnectionStatus connected={connected} />
+      <div className="flex items-start gap-4">
+        <div>
+          <h1 className="text-3xl font-bold">Queen Dashboard</h1>
+          <p className="text-muted-foreground">
+            Heartbeat Monitor & RHAI Scheduler
+          </p>
         </div>
+        <ConnectionStatus connected={connected} />
       </div>
 
       {/* Components Grid */}
