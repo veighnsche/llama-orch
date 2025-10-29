@@ -98,8 +98,11 @@ export const useSshHivesStore = create<SshHivesState>()(
           }
         })();
 
-        set((state) => {
-          state._fetchHivesPromise = promise;
+        // TEAM-342: Defer promise caching to avoid render-during-render
+        queueMicrotask(() => {
+          set((state) => {
+            state._fetchHivesPromise = promise;
+          });
         });
         return promise;
       },
@@ -144,8 +147,11 @@ export const useSshHivesStore = create<SshHivesState>()(
           }
         })();
 
-        set((state) => {
-          state._fetchPromises.set(hiveId, promise);
+        // TEAM-342: Defer promise caching to avoid render-during-render
+        queueMicrotask(() => {
+          set((state) => {
+            state._fetchPromises.set(hiveId, promise);
+          });
         });
         return promise;
       },

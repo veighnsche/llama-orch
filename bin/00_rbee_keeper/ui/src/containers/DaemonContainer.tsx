@@ -41,7 +41,12 @@ interface DaemonContainerProps {
 
 function fetchDaemonStatus(key: string, fetchFn: () => Promise<void>): Promise<void> {
   if (!promiseCache.has(key)) {
-    const promise = fetchFn()
+    // TEAM-342: Wrap fetchFn to clear cache on error
+    const promise = fetchFn().catch((error) => {
+      // Clear failed promise from cache so it can be retried
+      promiseCache.delete(key)
+      throw error // Re-throw for ErrorBoundary
+    })
     promiseCache.set(key, promise)
   }
   return promiseCache.get(key)!
@@ -137,9 +142,10 @@ export function DaemonContainer({ cacheKey, metadata, fetchFn, children, fallbac
 
   const handleRefresh = useCallback(() => {
     const newKey = refreshKey + 1
-    setRefreshKey(newKey)
-    // Clear the old promise from cache
+    // TEAM-342: Clear CURRENT promise from cache (not old one)
+    // This allows failed fetches to be retried
     promiseCache.delete(`${cacheKey}-${refreshKey}`)
+    setRefreshKey(newKey)
   }, [cacheKey, refreshKey])
 
   return (

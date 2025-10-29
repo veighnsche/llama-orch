@@ -269,11 +269,16 @@ pub async fn hive_stop(alias: String) -> Result<String, String> {
 /// Check rbee-hive status
 /// TEAM-338: Returns structured status (isRunning, isInstalled)
 /// TEAM-338: RULE ZERO FIX - Use DaemonStatus directly (deleted HiveStatus duplicate)
+/// TEAM-342: Added narration for visibility in UI
 #[tauri::command]
 #[specta::specta]
 pub async fn hive_status(alias: String) -> Result<daemon_lifecycle::DaemonStatus, String> {
     use crate::ssh_resolver::resolve_ssh_config;
     use daemon_lifecycle::check_daemon_health;
+    use observability_narration_core::n;
+
+    // TEAM-342: Narrate status check start
+    n!("hive_status_check", "🔍 Checking status for hive '{}'", alias);
 
     // Resolve SSH config for this hive (localhost or ~/.ssh/config)
     let ssh = resolve_ssh_config(&alias)
@@ -282,7 +287,18 @@ pub async fn hive_status(alias: String) -> Result<daemon_lifecycle::DaemonStatus
     // Check status (running + installed)
     let health_url = format!("http://{}:7835/health", ssh.hostname);
 
-    Ok(check_daemon_health(&health_url, "rbee-hive", &ssh).await)
+    let status = check_daemon_health(&health_url, "rbee-hive", &ssh).await;
+
+    // TEAM-342: Narrate status result
+    if status.is_running {
+        n!("hive_status_running", "✅ Hive '{}' is running", alias);
+    } else if status.is_installed {
+        n!("hive_status_stopped", "⏸️  Hive '{}' is installed but not running", alias);
+    } else {
+        n!("hive_status_not_installed", "❌ Hive '{}' is not installed", alias);
+    }
+
+    Ok(status)
 }
 
 /// Install rbee-hive binary

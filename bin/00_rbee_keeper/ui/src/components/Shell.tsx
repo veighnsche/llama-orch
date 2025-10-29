@@ -35,7 +35,7 @@ export function Shell({ children }: ShellProps) {
   }, [addEntry]);
 
   return (
-    <div className="h-screen w-screen flex flex-col overflow-hidden bg-background">
+    <div className="h-screen w-screen flex flex-col overflow-hidden bg-background font-sans">
       {/* Titlebar - fixed height */}
       <CustomTitlebar />
 
