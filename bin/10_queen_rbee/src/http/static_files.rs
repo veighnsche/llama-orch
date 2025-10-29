@@ -1,7 +1,19 @@
 //! Static file serving for web UI
 //!
-//! Development: Proxies /ui to Vite dev server (port 7834)
-//! Production: Serves embedded static files from ui/app/dist/
+//! ============================================================================
+//! CRITICAL REQUIREMENT: UI MUST BE SERVED AT ROOT PATH (/)
+//! ============================================================================
+//! The UI is served at http://localhost:7833/ NOT http://localhost:7833/ui
+//! 
+//! This is a HARD REQUIREMENT. DO NOT CHANGE THIS.
+//! DO NOT nest under /ui. DO NOT add prefixes.
+//! 
+//! Development: Proxies ROOT (/) to Vite dev server (port 7834)
+//! Production: Serves embedded static files from ui/app/dist/ at ROOT (/)
+//!
+//! API routes (/health, /v1/*) take priority via router merge order.
+//! Everything else falls through to UI (SPA routing).
+//! ============================================================================
 //!
 //! See: PORT_CONFIGURATION.md for port mapping
 
@@ -24,6 +36,11 @@ struct Assets;
 
 /// Create static file serving router
 ///
+/// TEAM-341: CRITICAL FIX - UI is served at ROOT (/), not /ui
+/// 
+/// The UI MUST be accessible at http://localhost:7833/ (root path).
+/// This is a fallback router that catches all non-API routes.
+/// 
 /// Development: Proxies to Vite dev server at http://localhost:7834
 /// Production: Serves embedded static files
 ///
@@ -31,24 +48,31 @@ struct Assets;
 pub fn create_static_router() -> Router {
     #[cfg(debug_assertions)]
     {
-        // Development mode: Proxy to Vite dev server
-        Router::new().nest("/ui", Router::new().fallback(dev_proxy_handler))
+        // TEAM-341: Development mode - Proxy ROOT to Vite dev server
+        // NO /ui prefix! UI is at root path.
+        Router::new().fallback(dev_proxy_handler)
     }
     
     #[cfg(not(debug_assertions))]
     {
-        // Production mode: Serve embedded static files
-        Router::new().nest("/ui", Router::new().fallback(static_handler))
+        // TEAM-341: Production mode - Serve embedded static files at ROOT
+        // NO /ui prefix! UI is at root path.
+        Router::new().fallback(static_handler)
     }
 }
 
 /// Development mode: Proxy requests to Vite dev server
+///
+/// TEAM-341: Proxies ROOT path to Vite (no /ui prefix stripping needed)
 #[cfg(debug_assertions)]
 async fn dev_proxy_handler(uri: Uri) -> impl IntoResponse {
     use reqwest::Client;
     
-    let path = uri.path().trim_start_matches("/ui");
+    // TEAM-341: UI is at root, so pass path as-is to Vite
+    let path = uri.path();
     let vite_url = format!("http://localhost:7834{}", path);
+    
+    eprintln!("[DEV PROXY] Request: {} -> {}", path, vite_url);
     
     match Client::new().get(&vite_url).send().await {
         Ok(response) => {
@@ -77,13 +101,18 @@ async fn dev_proxy_handler(uri: Uri) -> impl IntoResponse {
 }
 
 /// Production mode: Handler for serving embedded static files
+///
+/// TEAM-341: This should NEVER be called in debug mode!
+/// Debug mode uses dev_proxy_handler instead.
 #[cfg(not(debug_assertions))]
 async fn static_handler(uri: Uri) -> impl IntoResponse {
+    eprintln!("[STATIC] Serving: {}", uri.path());
     let path = uri.path().trim_start_matches('/');
 
     // Try to serve the requested file
     if let Some(content) = Assets::get(path) {
         let mime = mime_guess::from_path(path).first_or_octet_stream();
+        eprintln!("[STATIC] Found file: {} (mime: {})", path, mime);
 
         return Response::builder()
             .status(StatusCode::OK)
@@ -93,6 +122,7 @@ async fn static_handler(uri: Uri) -> impl IntoResponse {
     }
 
     // Fallback to index.html for SPA routing (all non-asset paths)
+    eprintln!("[STATIC] File not found, serving index.html for SPA routing");
     if let Some(content) = Assets::get("index.html") {
         return Response::builder()
             .status(StatusCode::OK)
@@ -102,5 +132,6 @@ async fn static_handler(uri: Uri) -> impl IntoResponse {
     }
 
     // If even index.html is missing, return 404
+    eprintln!("[STATIC] ERROR: index.html not found in embedded assets!");
     Response::builder().status(StatusCode::NOT_FOUND).body(Body::from("404 - Not Found")).unwrap()
 }

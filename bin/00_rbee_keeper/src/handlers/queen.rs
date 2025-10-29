@@ -51,9 +51,11 @@ pub async fn handle_queen(action: QueenAction, queen_url: &str) -> Result<()> {
     match action {
         QueenAction::Start => {
             // TEAM-333: Queen is always localhost - use SshConfig::localhost() directly
+            // TEAM-341: BUG FIX - Must pass health_url with /health path, not base_url
             let base_url = format!("http://localhost:{}", port);
+            let health_url = format!("{}/health", base_url);
             let args = vec!["--port".to_string(), port.to_string()];
-            let daemon_config = HttpDaemonConfig::new("queen-rbee", &base_url).with_args(args);
+            let daemon_config = HttpDaemonConfig::new("queen-rbee", &health_url).with_args(args);
             let config =
                 StartConfig { ssh_config: SshConfig::localhost(), daemon_config, job_id: None };
             let _pid = start_daemon(config).await?;

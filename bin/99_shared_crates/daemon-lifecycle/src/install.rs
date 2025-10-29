@@ -15,7 +15,7 @@
 //! ## Process
 //! 1. Build or locate binary locally
 //!    - If `local_binary_path` provided: use it
-//!    - Else: call `build_daemon(daemon_name)`
+//!    - Else: call `build_daemon(daemon_name)` (environment-aware: debug or release)
 //!
 //! 2. Copy binary to remote machine (ONE scp call)
 //!    - Use: `scp -P {port} {local_path} {user}@{hostname}:~/.local/bin/{daemon_name}`
@@ -44,7 +44,8 @@
 //! install_daemon("rbee-hive", ssh.clone(), None).await?;
 //!
 //! // Option 2: Install pre-built binary
-//! let binary = PathBuf::from("target/release/rbee-hive");
+//! // TEAM-341: Path depends on build mode (debug or release)
+//! let binary = PathBuf::from("target/release/rbee-hive");  // or target/debug/rbee-hive
 //! install_daemon("rbee-hive", ssh, Some(binary)).await?;
 //! # Ok(())
 //! # }
@@ -97,11 +98,16 @@ pub struct InstallConfig {
 /// TEAM-330: Enforces 5-minute timeout for entire installation process
 ///
 /// # Implementation
-/// 1. Build or locate binary locally (daemon-lifecycle)
+/// 1. Build or locate binary locally (daemon-lifecycle, environment-aware)
 /// 2. Create remote directory via SSH
 /// 3. Copy binary via SCP
 /// 4. Make executable via SSH
 /// 5. Verify installation
+///
+/// # Build Mode (TEAM-341)
+/// - Debug parent binary → builds child daemons in debug mode (target/debug/)
+/// - Release parent binary → builds child daemons in release mode (target/release/)
+/// - This ensures dev builds can proxy to Vite dev servers
 ///
 /// # Timeout Strategy
 /// - Total timeout: 5 minutes (covers build + transfer + setup)

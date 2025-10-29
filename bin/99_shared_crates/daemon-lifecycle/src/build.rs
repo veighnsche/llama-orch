@@ -107,8 +107,26 @@ pub async fn build_daemon(build_config: BuildConfig) -> Result<PathBuf> {
     let capture = ProcessNarrationCapture::new(job_id);
 
     // Build cargo command
+    // TEAM-341: Environment-aware build mode
+    // Debug builds (cargo build) → build child daemons in debug mode
+    // Release builds (cargo build --release) → build child daemons in release mode
+    // This ensures dev builds can proxy to Vite dev servers
     let mut command = Command::new("cargo");
-    command.arg("build").arg("--release").arg("--bin").arg(daemon_name);
+    command.arg("build");
+    
+    #[cfg(debug_assertions)]
+    {
+        n!("build_mode", "🔧 Building in DEBUG mode (dev environment)");
+        // No --release flag in debug mode
+    }
+    
+    #[cfg(not(debug_assertions))]
+    {
+        n!("build_mode", "🚀 Building in RELEASE mode (production)");
+        command.arg("--release");
+    }
+    
+    command.arg("--bin").arg(daemon_name);
 
     // Add target if specified (for cross-compilation)
     if let Some(target_triple) = target {
@@ -130,11 +148,17 @@ pub async fn build_daemon(build_config: BuildConfig) -> Result<PathBuf> {
         anyhow::bail!("Cargo build failed for {}", daemon_name);
     }
 
-    // Determine binary path
+    // Determine binary path based on build mode
+    // TEAM-341: Match build mode (debug vs release)
+    #[cfg(debug_assertions)]
+    let build_mode = "debug";
+    #[cfg(not(debug_assertions))]
+    let build_mode = "release";
+    
     let binary_path = if let Some(target_triple) = target {
-        PathBuf::from(format!("target/{}/release/{}", target_triple, daemon_name))
+        PathBuf::from(format!("target/{}/{}/{}", target_triple, build_mode, daemon_name))
     } else {
-        PathBuf::from(format!("target/release/{}", daemon_name))
+        PathBuf::from(format!("target/{}/{}", build_mode, daemon_name))
     };
 
     // Verify binary exists

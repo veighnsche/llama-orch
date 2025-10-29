@@ -267,8 +267,19 @@ pub async fn start_daemon(start_config: StartConfig) -> Result<u32> {
     // Step 3: Poll health endpoint via HTTP
     n!("health_check", "🏥 Polling health endpoint: {}", daemon_config.health_url);
 
-    // Use local health polling
-    let poll_config = HealthPollConfig::new(&daemon_config.health_url).with_max_attempts(30);
+    // TEAM-341: INVESTIGATING - Health check keeps retrying
+    // Pass daemon_name and ssh_config for proper health checking
+    let poll_config = HealthPollConfig {
+        base_url: daemon_config.health_url.clone(),
+        health_endpoint: None,
+        max_attempts: 30,
+        initial_delay_ms: 200,
+        backoff_multiplier: 1.5,
+        job_id: daemon_config.job_id.clone(),
+        daemon_name: Some(daemon_name.to_string()),
+        daemon_binary_name: daemon_name.to_string(),
+        ssh_config: ssh_config.clone(),
+    };
 
     poll_daemon_health(poll_config).await.context("Daemon started but failed health check")?;
 

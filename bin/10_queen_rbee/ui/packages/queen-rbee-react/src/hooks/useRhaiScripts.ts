@@ -80,14 +80,24 @@ export function useRhaiScripts(baseUrl: string = 'http://localhost:7833'): UseRh
       const client = new sdk.RhaiClient(baseUrl)
       const result = await client.listScripts()
       const scriptList = JSON.parse(JSON.stringify(result))
-      setScripts(scriptList)
       
-      // Select first script if none selected
-      if (!currentScript && scriptList.length > 0) {
-        setCurrentScript(scriptList[0])
+      // TEAM-XXX: Backend returns stub object, not array yet
+      // For now, set empty array until backend is implemented
+      if (Array.isArray(scriptList)) {
+        setScripts(scriptList)
+        
+        // Select first script if none selected
+        if (!currentScript && scriptList.length > 0) {
+          setCurrentScript(scriptList[0])
+        }
+      } else {
+        // Backend not implemented yet, use empty array
+        console.warn('[RHAI] Backend returned non-array:', scriptList)
+        setScripts([])
       }
     } catch (err) {
       setError(err as Error)
+      setScripts([]) // Ensure scripts is always an array
     } finally {
       setLoading(false)
     }
@@ -102,7 +112,13 @@ export function useRhaiScripts(baseUrl: string = 'http://localhost:7833'): UseRh
       const client = new sdk.RhaiClient(baseUrl)
       const result = await client.getScript(id)
       const script = JSON.parse(JSON.stringify(result))
-      setCurrentScript(script)
+      
+      // TEAM-XXX: Validate response structure
+      if (script && typeof script === 'object' && script.name && script.content) {
+        setCurrentScript(script)
+      } else {
+        console.warn('[RHAI] Backend returned invalid script:', script)
+      }
     } catch (err) {
       setError(err as Error)
     } finally {
@@ -120,16 +136,21 @@ export function useRhaiScripts(baseUrl: string = 'http://localhost:7833'): UseRh
       const result = await client.saveScript(script)
       const savedScript = JSON.parse(JSON.stringify(result))
       
-      // Update scripts list
-      setScripts(prev => {
-        const existing = prev.find(s => s.id === savedScript.id)
-        if (existing) {
-          return prev.map(s => s.id === savedScript.id ? savedScript : s)
-        }
-        return [...prev, savedScript]
-      })
-      
-      setCurrentScript(savedScript)
+      // TEAM-XXX: Backend returns stub, don't update scripts list yet
+      if (savedScript && typeof savedScript === 'object' && savedScript.name) {
+        // Update scripts list
+        setScripts(prev => {
+          const existing = prev.find(s => s.id === savedScript.id)
+          if (existing) {
+            return prev.map(s => s.id === savedScript.id ? savedScript : s)
+          }
+          return [...prev, savedScript]
+        })
+        
+        setCurrentScript(savedScript)
+      } else {
+        console.warn('[RHAI] Backend returned invalid save result:', savedScript)
+      }
     } catch (err) {
       setError(err as Error)
       throw err
