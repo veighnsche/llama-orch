@@ -4,12 +4,17 @@
 
 use anyhow::Result;
 use observability_narration_core::n;
+use observability_narration_macros::with_job_id;
+use super::RhaiListConfig;
 
 /// Execute RHAI script list operation
 ///
 /// # Arguments
-/// * `job_id` - Job ID for narration routing
-pub async fn execute_rhai_script_list(job_id: &str) -> Result<()> {
+/// * `list_config` - Config containing job_id
+///
+/// TEAM-350: Uses #[with_job_id] macro for automatic context wrapping
+#[with_job_id(config_param = "list_config")]
+pub async fn execute_rhai_script_list(list_config: RhaiListConfig) -> Result<()> {
     n!("rhai_list_start", "📋 Listing all RHAI scripts");
 
     // TODO: Implement database list

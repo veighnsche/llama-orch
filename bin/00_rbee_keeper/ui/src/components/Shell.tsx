@@ -14,6 +14,7 @@ import { useNarrationStore } from "../store/narrationStore";
 import { CustomTitlebar } from "./CustomTitlebar";
 import { KeeperSidebar } from "./KeeperSidebar";
 import { NarrationPanel } from "./NarrationPanel";
+import { ErrorBoundary } from "./ErrorBoundary";
 
 interface ShellProps {
   children: ReactNode;
@@ -88,7 +89,9 @@ export function Shell({ children }: ShellProps) {
               maxSize={40}
               order={3}
             >
-              <NarrationPanel onClose={() => setShowNarration(false)} />
+              <ErrorBoundary fallbackMessage="Failed to load narration panel. Check console for details.">
+                <NarrationPanel onClose={() => setShowNarration(false)} />
+              </ErrorBoundary>
             </Panel>
           </>
         )}

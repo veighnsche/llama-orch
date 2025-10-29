@@ -4,14 +4,18 @@
 
 use anyhow::Result;
 use observability_narration_core::n;
+use observability_narration_macros::with_job_id;
+use super::RhaiDeleteConfig;
 
 /// Execute RHAI script delete operation
 ///
 /// # Arguments
-/// * `job_id` - Job ID for narration routing
-/// * `id` - Script ID to delete
-pub async fn execute_rhai_script_delete(job_id: &str, id: String) -> Result<()> {
-    n!("rhai_delete_start", "🗑️  Deleting RHAI script: {}", id);
+/// * `delete_config` - Config containing job_id and script id
+///
+/// TEAM-350: Uses #[with_job_id] macro for automatic context wrapping
+#[with_job_id(config_param = "delete_config")]
+pub async fn execute_rhai_script_delete(delete_config: RhaiDeleteConfig) -> Result<()> {
+    n!("rhai_delete_start", "🗑️  Deleting RHAI script: {}", delete_config.id);
 
     // TODO: Implement database delete
     // 1. Check if script exists
@@ -20,7 +24,7 @@ pub async fn execute_rhai_script_delete(job_id: &str, id: String) -> Result<()> 
     // 4. Return success confirmation
 
     // Placeholder: Just log the operation
-    n!("rhai_delete_query", "Checking if script exists: {}", id);
+    n!("rhai_delete_query", "Checking if script exists: {}", delete_config.id);
 
     // Placeholder success
     n!("rhai_delete_success", "✅ Script deleted successfully");

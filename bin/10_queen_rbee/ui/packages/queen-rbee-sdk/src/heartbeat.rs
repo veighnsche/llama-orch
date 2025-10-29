@@ -58,16 +58,14 @@ impl HeartbeatMonitor {
 
         // TEAM-286: Connect to heartbeat stream
         let url = format!("{}/v1/heartbeats/stream", self.base_url);
-        web_sys::console::log_1(&JsValue::from_str(&format!("🐝 [SDK] Connecting to SSE: {}", url)));
+        // TEAM-350: Reduced logging - only log on errors
         
         let event_source = EventSource::new(&url)
             .map_err(|e| JsValue::from_str(&format!("Failed to create EventSource: {:?}", e)))?;
 
-        web_sys::console::log_1(&JsValue::from_str(&format!("🐝 [SDK] EventSource created, ready_state: {}", event_source.ready_state())));
-
-        // TEAM-288: Add open event listener
+        // TEAM-288: Add open event listener (silent)
         let open_closure = Closure::wrap(Box::new(move |_event: web_sys::Event| {
-            web_sys::console::log_1(&JsValue::from_str("🐝 [SDK] SSE connection OPENED"));
+            // Connection opened - no log needed
         }) as Box<dyn FnMut(web_sys::Event)>);
         event_source.add_event_listener_with_callback("open", open_closure.as_ref().unchecked_ref())?;
         open_closure.forget();
@@ -96,20 +94,15 @@ impl HeartbeatMonitor {
         error_closure.forget();
 
         // TEAM-286: Set up event listener for 'heartbeat' events
-        // Port from: heartbeat_monitor.html lines 290-302
+        // TEAM-350: Silent - no logging (too noisy)
         let callback = on_update.clone();
         let closure = Closure::wrap(Box::new(move |event: MessageEvent| {
-            web_sys::console::log_1(&JsValue::from_str("🐝 [SDK] Received 'heartbeat' event"));
-            
-            // Parse the event data
+            // Parse the event data (no logging)
             if let Some(data) = event.data().as_string() {
-                web_sys::console::log_1(&JsValue::from_str(&format!("🐝 [SDK] Event data: {}", data)));
-                
                 // Try to parse as JSON
                 match js_sys::JSON::parse(&data) {
                     Ok(json_value) => {
-                        web_sys::console::log_1(&JsValue::from_str("🐝 [SDK] JSON parsed successfully, calling callback"));
-                        // Call the JavaScript callback with the parsed data
+                        // TEAM-350: Silent - call callback without logging
                         let _ = callback.call1(&JsValue::null(), &json_value);
                     }
                     Err(e) => {

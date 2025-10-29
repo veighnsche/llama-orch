@@ -160,48 +160,67 @@ export function useRhaiScripts(baseUrl: string = 'http://localhost:7833'): UseRh
   }
 
   const testScript = async (content: string) => {
-    if (!sdk) return
+    if (!sdk) {
+      console.error('[RHAI Test] SDK not loaded')
+      return
+    }
 
+    console.log('[RHAI Test] Starting test...')
     setTesting(true)
     setError(null)
     setTestResult(null)
+    
     try {
-      // TEAM-XXX: Use QueenClient with SSE streaming for narration
       const client = new sdk.QueenClient(baseUrl)
+      console.log('[RHAI Test] Client created, baseUrl:', baseUrl)
       
-      // Build RHAI test operation using JSON
+      // TEAM-350: Operation uses #[serde(tag = "operation")] format
       const operation = {
-        RhaiScriptTest: { content }
+        operation: 'rhai_script_test',
+        content
       }
+      console.log('[RHAI Test] Operation:', operation)
       
-      // Submit with streaming to get narration events
-      // TEAM-XXX: Use narration bridge to send events to parent (rbee-keeper)
       const narrationHandler = createNarrationStreamHandler((event) => {
         console.log('[RHAI Test] Narration event:', event)
       })
       
+      let receivedDone = false
+      
+      console.log('[RHAI Test] Submitting and streaming...')
       await client.submitAndStream(operation, (line: string) => {
         console.log('[RHAI Test] SSE line:', line)
         
-        // Send narration to parent window
         narrationHandler(line)
         
-        // Parse for [DONE] marker
         if (line.includes('[DONE]')) {
+          receivedDone = true
           setTestResult({ success: true, output: 'Test completed successfully' })
         }
       })
       
-      // If no result set yet, mark as success
-      if (!testResult) {
-        setTestResult({ success: true, output: 'Test completed' })
+      console.log('[RHAI Test] Stream complete, receivedDone:', receivedDone)
+      
+      if (!receivedDone) {
+        console.warn('[RHAI Test] No [DONE] marker received')
+        setTestResult({ success: true, output: 'Test completed (no DONE marker)' })
       }
     } catch (err) {
+      console.error('[RHAI Test] Error caught:', err)
+      console.error('[RHAI Test] Error type:', typeof err)
+      console.error('[RHAI Test] Error details:', {
+        message: (err as Error).message,
+        stack: (err as Error).stack,
+        name: (err as Error).name,
+      })
+      
+      const errorMsg = (err as Error).message || String(err)
       setError(err as Error)
-      setTestResult({ success: false, error: (err as Error).message })
+      setTestResult({ success: false, error: errorMsg })
       throw err
     } finally {
       setTesting(false)
+      console.log('[RHAI Test] Finished')
     }
   }
 

@@ -58,11 +58,17 @@ function QueenIframe() {
     );
   }
 
-  // USER REQUIREMENT: iframe must point to ROOT (/) not /ui
-  // The Queen UI is served at the root of localhost:7833
+  // TEAM-350: Environment-aware iframe URL
+  // Dev: http://localhost:7834 → Direct to Vite dev server (no proxy needed)
+  // Prod: http://localhost:7833/ → Serves embedded static files from queen backend
+  const isDev = import.meta.env.DEV
+  const queenUrl = isDev 
+    ? "http://localhost:7834"  // Dev: Direct to Vite dev server
+    : "http://localhost:7833"   // Prod: Embedded files from queen backend
+  
   return (
     <iframe
-      src="http://localhost:7833"
+      src={queenUrl}
       className="w-full h-full border-0"
       title="Queen Web Interface"
       sandbox="allow-same-origin allow-scripts allow-forms allow-popups allow-modals"

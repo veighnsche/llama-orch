@@ -37,8 +37,24 @@ export function sendNarrationToParent(event: NarrationEvent): void {
   }
 
   try {
-    // Send to parent (rbee-keeper at localhost:7834)
-    window.parent.postMessage(message, 'http://localhost:7834')
+    // TEAM-350: Environment-aware parent origin
+    // Dev: Queen UI at :7834, Keeper at :5173 → Send to :5173
+    // Prod: Queen UI at :7833 (embedded), Keeper is Tauri → Send to :7834 or '*'
+    // Detect by checking current window location
+    const isQueenOnVite = window.location.port === '7834'
+    const parentOrigin = isQueenOnVite
+      ? 'http://localhost:5173'  // Dev: Keeper Vite dev server
+      : '*'                       // Prod: Tauri app (use wildcard)
+    
+    console.log('[Queen] Sending narration to parent:', {
+      isQueenOnVite,
+      currentPort: window.location.port,
+      parentOrigin,
+      hasParent: window.parent !== window,
+      event: event.action
+    })
+    
+    window.parent.postMessage(message, parentOrigin)
   } catch (error) {
     console.warn('[Queen] Failed to send narration to parent:', error)
   }
@@ -48,8 +64,14 @@ export function sendNarrationToParent(event: NarrationEvent): void {
  * Parse SSE narration line into NarrationEvent
  * 
  * Expected format: "data: {json}\n\n"
+ * TEAM-350: Gracefully handle [DONE] marker
  */
 export function parseNarrationLine(line: string): NarrationEvent | null {
+  // TEAM-350: Skip [DONE] marker gracefully (not an error)
+  if (line === '[DONE]' || line.trim() === '[DONE]') {
+    return null
+  }
+  
   try {
     // Remove "data: " prefix if present
     const jsonStr = line.startsWith('data: ') ? line.slice(6) : line

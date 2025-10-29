@@ -4,13 +4,17 @@
 
 use anyhow::Result;
 use observability_narration_core::n;
+use observability_narration_macros::with_job_id;
+use super::RhaiTestConfig;
 
 /// Execute RHAI script test operation
 ///
 /// # Arguments
-/// * `job_id` - Job ID for narration routing
-/// * `content` - Script content to test
-pub async fn execute_rhai_script_test(job_id: &str, content: String) -> Result<()> {
+/// * `test_config` - Config containing job_id and script content
+///
+/// TEAM-350: Uses #[with_job_id] macro for automatic context wrapping
+#[with_job_id(config_param = "test_config")]
+pub async fn execute_rhai_script_test(test_config: RhaiTestConfig) -> Result<()> {
     n!("rhai_test_start", "🧪 Testing RHAI script");
 
     // TODO: Implement RHAI script execution
@@ -20,10 +24,10 @@ pub async fn execute_rhai_script_test(job_id: &str, content: String) -> Result<(
     // 4. Capture output/result
     // 5. Return success/failure with output or error message
 
-    n!("rhai_test_content", "Script length: {} bytes", content.len());
+    n!("rhai_test_content", "Script length: {} bytes", test_config.content.len());
 
     // Placeholder: Just validate it's not empty
-    if content.trim().is_empty() {
+    if test_config.content.trim().is_empty() {
         n!("rhai_test_error", "❌ Script is empty");
         anyhow::bail!("Script content cannot be empty");
     }

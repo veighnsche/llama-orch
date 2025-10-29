@@ -141,8 +141,11 @@ pub async fn handle_stream_job(
                         Some(event) => {
                             received_first_event = true;
                             last_event_time = std::time::Instant::now();
-                            // TEAM-201: Use pre-formatted text from narration-core
-                            yield Ok(Event::default().data(&event.formatted));
+                            // TEAM-350: Send JSON for frontend parsing (not formatted text)
+                            // Frontend needs structured data to display in UI
+                            let json = serde_json::to_string(&event)
+                                .unwrap_or_else(|_| event.formatted.clone());
+                            yield Ok(Event::default().data(&json));
                         }
                         None => {
                             // Sender dropped (job completed)

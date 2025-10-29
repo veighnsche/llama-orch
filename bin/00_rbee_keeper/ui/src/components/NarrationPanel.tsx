@@ -51,9 +51,11 @@ export function NarrationPanel({ onClose }: NarrationPanelProps) {
   // };
 
   // Get level badge style
-  const getLevelBadge = (level: string) => {
+  // TEAM-350: Handle optional level field (narration events may not have it)
+  const getLevelBadge = (level?: string) => {
     const baseClasses = 'px-1.5 py-0.5 rounded text-xs font-mono font-semibold'
-    switch (level.toLowerCase()) {
+    const normalizedLevel = level?.toLowerCase() || 'info'
+    switch (normalizedLevel) {
       case 'error':
         return `${baseClasses} bg-red-500/10 text-red-500`
       case 'warn':
@@ -126,7 +128,10 @@ export function NarrationPanel({ onClose }: NarrationPanelProps) {
                           {/* TEAM-339: Always show action */}
                           {entry.action || '—'}
                         </span>
-                        <span className={`${getLevelBadge(entry.level)} shrink-0`}>{entry.level.toUpperCase()}</span>
+                        {/* TEAM-350: Handle optional level field with default */}
+                        <span className={`${getLevelBadge(entry.level)} shrink-0`}>
+                          {(entry.level || 'INFO').toUpperCase()}
+                        </span>
                       </div>
 
                       {/* Message */}

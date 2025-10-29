@@ -6,6 +6,18 @@
 import { ThemeProvider } from 'next-themes'
 import DashboardPage from './pages/DashboardPage'
 
+// TEAM-350: Log build mode on startup
+const isDev = import.meta.env.DEV
+if (isDev) {
+  console.log('🔧 [QUEEN UI] Running in DEVELOPMENT mode')
+  console.log('   - Vite dev server active (hot reload enabled)')
+  console.log('   - Loaded via: http://localhost:7833/dev (proxied from :7834)')
+} else {
+  console.log('🚀 [QUEEN UI] Running in PRODUCTION mode')
+  console.log('   - Serving embedded static files')
+  console.log('   - Loaded via: http://localhost:7833/')
+}
+
 function App() {
   return (
     <ThemeProvider attribute="class" defaultTheme="dark" enableSystem>

@@ -29,6 +29,7 @@ pub mod info; // TEAM-292: Queen info endpoint for service discovery
 pub mod jobs; // TEAM-262
 pub mod shutdown; // TEAM-339: Graceful shutdown endpoint
 pub mod static_files; // TEAM-293: Static file serving for web UI
+pub mod dev_proxy; // TEAM-350: Development proxy to Vite dev server
 
 // Re-export commonly used types
 // TEAM-CLEANUP: Deleted build_info - consolidated into info.rs (Rule Zero)
@@ -44,3 +45,4 @@ pub use info::handle_info; // TEAM-292: Queen info handler
 pub use jobs::{handle_cancel_job, handle_create_job, handle_stream_job, SchedulerState}; // TEAM-262, TEAM-305-FIX: Added handle_cancel_job
 pub use shutdown::handle_shutdown; // TEAM-339: Graceful shutdown handler
 pub use static_files::create_static_router; // TEAM-293: Static file serving for web UI
+pub use dev_proxy::dev_proxy_handler; // TEAM-350: Development proxy handler

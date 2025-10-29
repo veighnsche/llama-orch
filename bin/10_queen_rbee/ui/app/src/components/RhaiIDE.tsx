@@ -139,11 +139,13 @@ export function RhaiIDE() {
             </SelectTrigger>
             <SelectContent>
               {/* Only render scripts with valid IDs */}
-              {scripts.filter(s => s.id && s.id.trim() !== "").map((script) => (
-                <SelectItem key={script.id} value={script.id!}>
-                  {script.name}
-                </SelectItem>
-              ))}
+              {scripts
+                .filter((s) => s.id && s.id.trim() !== "")
+                .map((script) => (
+                  <SelectItem key={script.id} value={script.id!}>
+                    {script.name}
+                  </SelectItem>
+                ))}
               {/* Sentinel value for new script instead of empty string */}
               <SelectItem value="__new__">+ New Script</SelectItem>
             </SelectContent>

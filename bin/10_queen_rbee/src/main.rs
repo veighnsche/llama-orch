@@ -120,6 +120,21 @@ fn create_router(
         .allow_methods(Any) // Allow any HTTP method
         .allow_headers(Any); // Allow any headers
 
+    // TEAM-350: Log build mode for debugging
+    #[cfg(debug_assertions)]
+    {
+        eprintln!("🔧 [QUEEN] Running in DEBUG mode");
+        eprintln!("   - /dev/{{*path}} → Proxy to Vite dev server (port 7834)");
+        eprintln!("   - / → Embedded static files (may be stale, rebuild to update)");
+    }
+    
+    #[cfg(not(debug_assertions))]
+    {
+        eprintln!("🚀 [QUEEN] Running in RELEASE mode");
+        eprintln!("   - / → Embedded static files (production)");
+        eprintln!("   - /dev/{{*path}} → Proxy to Vite (for development only)");
+    }
+
     // TEAM-293: Create API router first (takes priority over static files)
     let api_router = axum::Router::new()
         // Health check (no /v1 prefix for compatibility)
@@ -138,6 +153,16 @@ fn create_router(
         .with_state(job_state.clone())
         .route("/v1/jobs/{job_id}", delete(http::handle_cancel_job)) // TEAM-305-FIX: Cancel job endpoint
         .with_state(job_state);
+
+    // TEAM-350: Development proxy - forwards /dev/* to Vite dev server (port 7834)
+    // CRITICAL: Axum requires {*path} syntax for wildcard capture, NOT *path
+    // Using *path will panic: "Path segments must not start with `*`"
+    // CRITICAL: Must be added BEFORE static router merge, otherwise static fallback catches it!
+    // CRITICAL: Need both /dev and /dev/{*path} to handle root and subpaths
+    let api_router = api_router
+        .route("/dev", get(http::dev_proxy_handler))
+        .route("/dev/", get(http::dev_proxy_handler))
+        .route("/dev/{*path}", get(http::dev_proxy_handler));
 
     // TEAM-293: Merge API routes with static file serving
     // API routes take priority - static files are fallback

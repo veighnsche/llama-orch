@@ -201,20 +201,42 @@ async fn route_operation(
         // ═══════════════════════════════════════════════════════════════════════
         // RHAI SCRIPT OPERATIONS
         // ═══════════════════════════════════════════════════════════════════════
+        // TEAM-350: RHAI operations now use config structs for #[with_job_id] macro
         Operation::RhaiScriptSave { name, content, id } => {
-            crate::rhai::execute_rhai_script_save(&job_id, name, content, id).await?;
+            let config = crate::rhai::RhaiSaveConfig {
+                job_id: Some(job_id.clone()),
+                name,
+                content,
+                id,
+            };
+            crate::rhai::execute_rhai_script_save(config).await?;
         }
         Operation::RhaiScriptTest { content } => {
-            crate::rhai::execute_rhai_script_test(&job_id, content).await?;
+            let config = crate::rhai::RhaiTestConfig {
+                job_id: Some(job_id.clone()),
+                content,
+            };
+            crate::rhai::execute_rhai_script_test(config).await?;
         }
         Operation::RhaiScriptGet { id } => {
-            crate::rhai::execute_rhai_script_get(&job_id, id).await?;
+            let config = crate::rhai::RhaiGetConfig {
+                job_id: Some(job_id.clone()),
+                id,
+            };
+            crate::rhai::execute_rhai_script_get(config).await?;
         }
         Operation::RhaiScriptList => {
-            crate::rhai::execute_rhai_script_list(&job_id).await?;
+            let config = crate::rhai::RhaiListConfig {
+                job_id: Some(job_id.clone()),
+            };
+            crate::rhai::execute_rhai_script_list(config).await?;
         }
         Operation::RhaiScriptDelete { id } => {
-            crate::rhai::execute_rhai_script_delete(&job_id, id).await?;
+            let config = crate::rhai::RhaiDeleteConfig {
+                job_id: Some(job_id.clone()),
+                id,
+            };
+            crate::rhai::execute_rhai_script_delete(config).await?;
         }
 
         // ═══════════════════════════════════════════════════════════════════════

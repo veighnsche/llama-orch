@@ -40,6 +40,7 @@ anyhow = "1.0"
 daemon-lifecycle = { path = "../99_shared_crates/daemon-lifecycle" }  # TEAM-189: For spawning hive daemons (hive start)
 job-server = { path = "../99_shared_crates/job-server" }
 observability-narration-core = { path = "../99_shared_crates/narration-core" }
+observability-narration-macros = { path = "../99_shared_crates/narration-macros" }  # TEAM-350: For #[with_job_id] macro
 stdext = "0.3"  # TEAM-312: Required for n!() macro (function_name!())
 once_cell = "1.19"
 # TEAM-290: DELETED rbee-config dependency (file-based config deprecated)
