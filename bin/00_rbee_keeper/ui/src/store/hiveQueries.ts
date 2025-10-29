@@ -81,7 +81,7 @@ export function useSshHives() {
   });
 }
 
-// Hook: Get list of installed hives from backend (TEAM-367)
+// Hook: Get list of installed hives from backend (TEAM-370)
 export function useInstalledHives() {
   return useQuery({
     queryKey: [...hiveKeys.all, 'installed'] as const,
@@ -92,8 +92,8 @@ export function useInstalledHives() {
       }
       throw new Error(result.error || 'Failed to get installed hives');
     },
-    staleTime: 5 * 1000, // 5 seconds
-    gcTime: 60 * 1000, // 1 minute cache
+    staleTime: 30 * 1000, // 30 seconds - don't check too often
+    gcTime: 5 * 60 * 1000, // 5 minutes cache
   });
 }
 
@@ -102,8 +102,8 @@ export function useHive(hiveId: string) {
   return useQuery({
     queryKey: hiveKeys.detail(hiveId),
     queryFn: () => fetchHiveStatus(hiveId),
-    staleTime: 5 * 1000, // 5 seconds
-    gcTime: 60 * 1000, // 1 minute cache
+    staleTime: 10 * 1000, // 10 seconds
+    gcTime: 2 * 60 * 1000, // 2 minutes cache
     // TEAM-368: Don't use initialData from SSH list - it doesn't have daemon status!
   });
 }

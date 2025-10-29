@@ -18,7 +18,7 @@ import {
   Button,
 } from "@rbee/ui/atoms";
 import { Download, FileEdit, RefreshCw } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { commands } from "@/generated/bindings";
 import { useCommandStore } from "../../store/commandStore";
 import {
@@ -38,15 +38,21 @@ function SshTargetItem({ name, subtitle }: { name: string; subtitle: string }) {
   );
 }
 
-// TEAM-369: Component using new query hooks
-function InstallHiveContent() {
+// TEAM-370: CRITICAL PERFORMANCE FIX - Don't call hooks twice!
+function InstallHiveContent({
+  hives,
+  installedHives,
+  refetchHives,
+  refetchInstalled,
+}: {
+  hives: SshHive[];
+  installedHives: string[];
+  refetchHives: () => void;
+  refetchInstalled: () => void;
+}) {
   const [selectedTarget, setSelectedTarget] = useState<string>("");
-  const { data: hives = [] } = useSshHives();
   const { install } = useHiveActions();
-  const { data: installedHives = [] } = useInstalledHives();
   const { isExecuting } = useCommandStore();
-  const { refetch: refetchHives } = useSshHives();
-  const { refetch: refetchInstalled } = useInstalledHives();
 
   const handleRefresh = async () => {
     // TEAM-369: Refresh both SSH list and installed hives list
@@ -66,10 +72,12 @@ function InstallHiveContent() {
     (hive: SshHive) => !installedHives.includes(hive.host),
   );
 
-  // Set default selection when hives load
-  if (selectedTarget === "" && availableHives.length > 0) {
-    setSelectedTarget(availableHives[0].host);
-  }
+  // TEAM-370: CRITICAL BUG FIX - Set default selection in useEffect, not during render!
+  useEffect(() => {
+    if (selectedTarget === "" && availableHives.length > 0) {
+      setSelectedTarget(availableHives[0].host);
+    }
+  }, [selectedTarget, availableHives]);
 
   return (
     <>
@@ -116,11 +124,11 @@ function InstallHiveContent() {
 }
 
 export function InstallHiveCard() {
-  const { refetch: refetchHives } = useSshHives();
-  const { refetch: refetchInstalled } = useInstalledHives();
+  const { data: hives = [], refetch: refetchHives } = useSshHives();
+  const { data: installedHives = [], refetch: refetchInstalled } = useInstalledHives();
 
   const handleRefresh = async () => {
-    // TEAM-369: Refresh both SSH list and installed hives list
+    // TEAM-370: Refresh both SSH list and installed hives list
     await Promise.all([refetchHives(), refetchInstalled()]);
   };
 
@@ -153,7 +161,12 @@ export function InstallHiveCard() {
             >
               Target
             </label>
-            <InstallHiveContent />
+            <InstallHiveContent
+              hives={hives}
+              installedHives={installedHives}
+              refetchHives={refetchHives}
+              refetchInstalled={refetchInstalled}
+            />
           </div>
         </div>
       </CardContent>

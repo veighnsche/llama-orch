@@ -33,8 +33,8 @@ export function useQueen() {
   return useQuery({
     queryKey: queenKeys.status(),
     queryFn: fetchQueenStatus,
-    staleTime: 5 * 1000, // 5 seconds
-    gcTime: 60 * 1000, // 1 minute cache
+    staleTime: 10 * 1000, // 10 seconds
+    gcTime: 2 * 60 * 1000, // 2 minutes cache
   });
 }
 
