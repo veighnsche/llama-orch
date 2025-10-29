@@ -639,7 +639,8 @@ cd bin/00_rbee_keeper/ui && pnpm dev
 
 **Worker uses ALL shared packages:**
 - [ ] `@rbee/sdk-loader` - WASM/SDK loading with retry logic (TEAM-356)
-- [ ] `@rbee/react-hooks` - useAsyncState, useSSEWithHealthCheck (TEAM-356)
+- [ ] `@rbee/react-hooks` - useSSEWithHealthCheck (TEAM-356)
+- [ ] `@tanstack/react-query` - useQuery, useMutation (data fetching)
 - [ ] `@rbee/shared-config` - Port configuration
 - [ ] `@rbee/narration-client` - Narration handling
 - [ ] `@rbee/dev-utils` - Environment detection
@@ -685,7 +686,8 @@ Implemented Worker UI using proven pattern from Queen and Hive.
 
 ✅ ALL shared packages used:
 - @rbee/sdk-loader - WASM/SDK loading with retry logic (TEAM-356)
-- @rbee/react-hooks - useAsyncState, useSSEWithHealthCheck (TEAM-356)
+- @rbee/react-hooks - useSSEWithHealthCheck (TEAM-356)
+- @tanstack/react-query - useQuery, useMutation (data fetching)
 - @rbee/shared-config - Port configuration
 - @rbee/narration-client - Narration handling
 - @rbee/dev-utils - Environment detection

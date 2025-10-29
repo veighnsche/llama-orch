@@ -13,7 +13,7 @@ Replace custom async state management in Queen hooks with @rbee/react-hooks pack
 
 **Hooks to migrate:**
 1. `useHeartbeat.ts` - Replace SSE connection logic with `useSSEWithHealthCheck`
-2. `useRhaiScripts.ts` - Replace async state management with `useAsyncState`
+2. `useRhaiScripts.ts` - Replace async state management with TanStack Query `useQuery`
 
 **Why This Matters:**
 - Removes ~150-200 LOC of duplicate async logic
@@ -28,8 +28,10 @@ Replace custom async state management in Queen hooks with @rbee/react-hooks pack
 ## Deliverables Checklist
 
 - [ ] Added @rbee/react-hooks dependency
+- [ ] Added @tanstack/react-query dependency
+- [ ] Setup QueryClientProvider in App.tsx
 - [ ] Migrated useHeartbeat to use useSSEWithHealthCheck
-- [ ] Migrated useRhaiScripts to use useAsyncState
+- [ ] Migrated useRhaiScripts to use TanStack Query useQuery
 - [ ] Removed hardcoded URLs (use @rbee/shared-config)
 - [ ] All imports updated
 - [ ] Package builds successfully
@@ -54,7 +56,11 @@ Edit `package.json`, add to `dependencies`:
     "@rbee/queen-rbee-sdk": "workspace:*",
     "@rbee/sdk-loader": "workspace:*",
     "@rbee/react-hooks": "workspace:*",
-    "@rbee/shared-config": "workspace:*"
+    "@rbee/shared-config": "workspace:*",
+    "@tanstack/react-query": "^5.0.0"
+  },
+  "devDependencies": {
+    "@tanstack/react-query-devtools": "^5.0.0"
   }
 }
 ```
@@ -75,7 +81,49 @@ ls -la node_modules/@rbee/shared-config  # Should exist
 
 ---
 
-## Step 2: Analyze Current useHeartbeat Hook
+## Step 2: Setup TanStack Query Provider
+
+Navigate to Queen App:
+
+```bash
+cd bin/10_queen_rbee/ui/app
+```
+
+Edit `src/main.tsx` or `src/App.tsx` (whichever is the entry point), wrap with QueryClientProvider:
+
+```typescript
+// TEAM-352: Setup TanStack Query
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import { ReactQueryDevtools } from '@tanstack/react-query-devtools'
+
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 5000, // 5 seconds
+      retry: 1,
+    },
+  },
+})
+
+function App() {
+  return (
+    <QueryClientProvider client={queryClient}>
+      {/* Your existing app */}
+      <ReactQueryDevtools initialIsOpen={false} />
+    </QueryClientProvider>
+  )
+}
+```
+
+**Verification:**
+```bash
+pnpm dev
+# Open browser, check for React Query DevTools in bottom-right corner
+```
+
+---
+
+## Step 3: Analyze Current useHeartbeat Hook
 
 Read the current implementation:
 
@@ -197,7 +245,7 @@ cat src/hooks/useRhaiScripts.ts
 - CRUD operations (keep these - business logic)
 - Hardcoded URL: `'http://localhost:7833'`
 
-**Target:** Use `useAsyncState` for list/load, keep CRUD operations.
+**Target:** Use TanStack Query `useQuery` for list/load, keep CRUD operations.
 
 ---
 
@@ -212,16 +260,16 @@ cp src/hooks/useRhaiScripts.ts src/hooks/useRhaiScripts.ts.backup
 Replace entire contents of `src/hooks/useRhaiScripts.ts`:
 
 ```typescript
-// TEAM-352: Migrated to use @rbee/react-hooks and @rbee/shared-config
+// TEAM-352: Migrated to use TanStack Query and @rbee/shared-config
 // Old implementation: ~274 LOC with manual async state management
-// New implementation: ~180 LOC using shared hooks
+// New implementation: ~180 LOC using TanStack Query
 // Reduction: 94 LOC (34%)
 // Note: Kept CRUD operations (save/delete/test) - business logic specific to RHAI
 
 'use client'
 
 import { useState } from 'react'
-import { useAsyncState } from '@rbee/react-hooks'
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { getServiceUrl } from '@rbee/shared-config'
 import { createStreamHandler, SERVICES } from '@rbee/narration-client'
 import { useRbeeSDK } from './useRbeeSDK'
@@ -284,14 +332,15 @@ export function useRhaiScripts(
   const [testing, setTesting] = useState(false)
   const [testResult, setTestResult] = useState<TestResult | null>(null)
 
-  // TEAM-352: Use useAsyncState for loading scripts
+  // TEAM-352: Use TanStack Query for loading scripts
   const {
     data: scripts,
-    loading,
+    isLoading: loading,
     error,
     refetch: loadScripts,
-  } = useAsyncState<RhaiScript[]>(
-    async () => {
+  } = useQuery({
+    queryKey: ['rhai-scripts', baseUrl],
+    queryFn: async () => {
       if (!sdk) return []
       const client = new sdk.RhaiClient(baseUrl)
       const result = await client.listScripts()
@@ -299,23 +348,18 @@ export function useRhaiScripts(
 
       // Backend returns stub, handle gracefully
       if (Array.isArray(scriptList)) {
+        // Select first script if none selected
+        if (!currentScript && scriptList.length > 0) {
+          setCurrentScript(scriptList[0])
+        }
         return scriptList
       } else {
         console.warn('[RHAI] Backend returned non-array:', scriptList)
         return []
       }
     },
-    [sdk, baseUrl],
-    {
-      skip: !sdk,
-      onSuccess: (scriptList) => {
-        // Select first script if none selected
-        if (!currentScript && scriptList.length > 0) {
-          setCurrentScript(scriptList[0])
-        }
-      },
-    }
-  )
+    enabled: !!sdk,
+  })
 
   // TEAM-352: Keep business logic functions (CRUD operations)
   const selectScript = async (id: string) => {

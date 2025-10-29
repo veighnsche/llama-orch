@@ -885,6 +885,10 @@ importers:
         version: 2.1.9(@types/node@24.7.2)(@vitest/ui@2.1.9)(esbuild@0.25.11)(jiti@2.6.1)(jsdom@25.0.1)(terser@5.44.0)(tsx@4.20.6)(yaml@2.8.1)
 
   frontend/packages/react-hooks:
+    dependencies:
+      '@tanstack/react-query':
+        specifier: ^5.0.0
+        version: 5.90.5(react@19.2.0)
     devDependencies:
       '@testing-library/react':
         specifier: ^16.0.0

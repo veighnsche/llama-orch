@@ -256,14 +256,15 @@ cd bin/25_rbee_hive/ui/packages/rbee-hive-react
 
 ```typescript
 // TEAM-353: Hive operations hook using TEAM-356 shared packages
-import { useAsyncState } from '@rbee/react-hooks'
+import { useQuery } from '@tanstack/react-query'
 import { HiveClient } from '@rbee/rbee-hive-sdk'
 import { createStreamHandler, SERVICES } from '@rbee/narration-client'
 
 export function useHiveOperations(baseUrl: string) {
-  // TEAM-356: Use shared useAsyncState hook instead of custom state management
-  const { data, loading, error, refetch } = useAsyncState(
-    async () => {
+  // TEAM-356: Use TanStack Query for data fetching
+  const { data, isLoading, error, refetch } = useQuery({
+    queryKey: ['hive-operations', baseUrl],
+    queryFn: async () => {
       const client = new HiveClient(baseUrl)
       
       // TEAM-356: Use shared narration client (no duplicate code!)
@@ -278,10 +279,9 @@ export function useHiveOperations(baseUrl: string) {
       
       return data
     },
-    [baseUrl]
-  )
+  })
 
-  return { data, isLoading: loading, error, refetch }
+  return { data, isLoading, error, refetch }
 }
 ```
 
@@ -703,7 +703,8 @@ cargo build --release --bin rbee-hive
 
 **Verify using all packages:**
 - [ ] `@rbee/sdk-loader` - ✅ Used for WASM SDK loading
-- [ ] `@rbee/react-hooks` - ✅ Used for useAsyncState, useSSEWithHealthCheck
+- [ ] `@rbee/react-hooks` - ✅ Used for useSSEWithHealthCheck
+- [ ] `@tanstack/react-query` - ✅ Used for useQuery, useMutation
 - [ ] `@rbee/shared-config` - ✅ Used for ports
 - [ ] `@rbee/narration-client` - ✅ Used for narration
 - [ ] `@rbee/dev-utils` - ✅ Used for logging
@@ -767,7 +768,8 @@ cat > bin/.plan/TEAM_353_HIVE_IMPLEMENTATION_SUMMARY.md << 'EOF'
 
 ✅ ALL shared packages used (zero duplication):
 - @rbee/sdk-loader - WASM/SDK loading with retry logic (TEAM-356)
-- @rbee/react-hooks - useAsyncState, useSSEWithHealthCheck (TEAM-356)
+- @rbee/react-hooks - useSSEWithHealthCheck (TEAM-356)
+- @tanstack/react-query - useQuery, useMutation (data fetching)
 - @rbee/shared-config - Port configuration
 - @rbee/narration-client - Narration handling
 - @rbee/dev-utils - Environment detection

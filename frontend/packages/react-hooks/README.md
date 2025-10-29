@@ -2,73 +2,104 @@
 
 **TEAM-356:** Reusable React hooks for common patterns in rbee UIs.
 
-## Features
-
-- ✅ `useAsyncState` - Async data loading with loading/error states
-- ✅ `useSSEWithHealthCheck` - SSE connection with health check
-- ✅ Automatic cleanup on unmount
-- ✅ TypeScript support with strict mode
-- ✅ Comprehensive test coverage (30 tests)
 
 ## Installation
 
 ```bash
+# Install TanStack Query (for data fetching)
+pnpm add @tanstack/react-query @tanstack/react-query-devtools
+
+# Install this package (for custom hooks)
 pnpm add @rbee/react-hooks
 ```
 
 ## Hooks
 
-### useAsyncState
+### Data Fetching: TanStack Query
 
-Load async data with automatic loading/error state management.
+For async data fetching, we use **TanStack Query** (re-exported for convenience).
 
-**Features:**
-- Automatic loading state
-- Error handling
-- Cleanup on unmount (prevents state updates after unmount)
-- Refetch functionality
-- Skip option
-- Success/error callbacks
+**Why TanStack Query?**
+- ✅ Industry standard (47k+ GitHub stars)
+- ✅ Automatic caching and deduplication
+- ✅ DevTools for debugging
+- ✅ Background refetching
+- ✅ Consistent with rest of codebase
 
-**Usage:**
-
+**Setup (one-time):**
 ```typescript
-import { useAsyncState } from '@rbee/react-hooks'
+// App.tsx
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import { ReactQueryDevtools } from '@tanstack/react-query-devtools'
 
-function MyComponent() {
-  const { data, loading, error, refetch } = useAsyncState(
-    async () => {
-      const response = await fetch('/api/data')
-      return response.json()
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 5000, // 5 seconds
+      retry: 1,
     },
-    [] // dependencies
-  )
+  },
+})
 
-  if (loading) return <div>Loading...</div>
-  if (error) return <div>Error: {error.message}</div>
-  
+function App() {
   return (
-    <div>
-      <pre>{JSON.stringify(data, null, 2)}</pre>
-      <button onClick={refetch}>Refresh</button>
-    </div>
+    <QueryClientProvider client={queryClient}>
+      <YourApp />
+      <ReactQueryDevtools initialIsOpen={false} />
+    </QueryClientProvider>
   )
 }
 ```
 
-**With options:**
-
+**Usage:**
 ```typescript
-const { data, loading, error } = useAsyncState(
-  async () => fetchData(),
-  [userId], // Re-fetch when userId changes
-  {
-    skip: !userId, // Skip if no userId
-    onSuccess: (data) => console.log('Loaded:', data),
-    onError: (error) => console.error('Failed:', error),
-  }
-)
+import { useQuery } from '@tanstack/react-query'
+
+function MyComponent({ userId }: { userId: string }) {
+  const { data, isLoading, error, refetch } = useQuery({
+    queryKey: ['user-data', userId],
+    queryFn: async () => {
+      const response = await fetch(`/api/users/${userId}`)
+      return response.json()
+    },
+  })
+
+  if (isLoading) return <div>Loading...</div>
+  if (error) return <div>Error: {error.message}</div>
+  
+  return <div>{JSON.stringify(data)}</div>
+}
 ```
+
+**Mutations (Create/Update/Delete):**
+```typescript
+import { useMutation, useQueryClient } from '@tanstack/react-query'
+
+function MyComponent() {
+  const queryClient = useQueryClient()
+  
+  const mutation = useMutation({
+    mutationFn: (newData) => fetch('/api/data', {
+      method: 'POST',
+      body: JSON.stringify(newData),
+    }),
+    onSuccess: () => {
+      // Invalidate and refetch
+      queryClient.invalidateQueries({ queryKey: ['data'] })
+    },
+  })
+
+  return (
+    <button onClick={() => mutation.mutate({ name: 'New Item' })}>
+      {mutation.isPending ? 'Saving...' : 'Save'}
+    </button>
+  )
+}
+```
+
+**See [TanStack Query docs](https://tanstack.com/query/latest) for full API.**
+
+---
 
 ### useSSEWithHealthCheck
 

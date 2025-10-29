@@ -1,10 +1,13 @@
 /**
- * TEAM-356: React Hooks - Reusable hooks for common patterns
+ * TEAM-356: React Hooks - Custom hooks for rbee UIs
  * 
- * Collection of React hooks for async state management and SSE connections.
+ * For async data fetching, use TanStack Query directly:
+ * import { useQuery, useMutation } from '@tanstack/react-query'
+ * 
+ * This package only exports custom hooks with unique requirements.
  * 
  * @packageDocumentation
  */
 
-export * from './useAsyncState'
+// Custom hooks
 export * from './useSSEWithHealthCheck'

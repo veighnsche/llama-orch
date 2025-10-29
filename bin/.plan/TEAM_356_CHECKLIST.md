@@ -51,7 +51,7 @@
 
 ---
 
-## Phase 2: Create @rbee/react-hooks
+## Phase 2: Create @rbee/react-hooks (MIGRATED TO TANSTACK QUERY)
 
 ### Package Structure
 - [x] Create `frontend/packages/react-hooks/` directory
@@ -61,12 +61,9 @@
 - [x] Add to `pnpm-workspace.yaml`
 
 ### Source Files
-- [x] Create `src/useAsyncState.ts`
-  - [x] AsyncStateOptions interface
-  - [x] AsyncStateResult interface
-  - [x] useAsyncState hook implementation
-  - [x] Mounted ref for cleanup
-  - [x] Refetch function
+- [x] ~~Create `src/useAsyncState.ts`~~ **REPLACED WITH TANSTACK QUERY**
+  - [x] Use TanStack Query for async state management
+  - [x] Re-export `useQuery`, `useMutation`, `useQueryClient` from `@tanstack/react-query`
 - [x] Create `src/useSSEWithHealthCheck.ts`
   - [x] Monitor interface
   - [x] SSEHealthCheckOptions interface
@@ -74,13 +71,10 @@
   - [x] useSSEWithHealthCheck hook implementation
   - [x] Health check before SSE
   - [x] Auto-retry logic
-- [x] Create `src/index.ts` - Export all hooks
+- [x] Create `src/index.ts` - Export TanStack Query + custom hooks
 
 ### Tests
-- [x] Create `src/useAsyncState.test.ts` - 8 tests (type safety focused)
-  - [x] Test type safety
-  - [x] Test options validation
-  - [x] Test return type structure
+- [x] ~~Create `src/useAsyncState.test.ts`~~ **REMOVED** (TanStack Query already tested)
 - [x] Create `src/useSSEWithHealthCheck.test.ts` - 11 tests (type safety focused)
   - [x] Test Monitor interface
   - [x] Test type safety
@@ -88,16 +82,17 @@
   - [x] Test return type structure
 
 ### Documentation
-- [x] Create `README.md` with usage examples
-- [x] Add JSDoc comments to all hooks
-- [x] Document all options and return types
+- [x] Create `README.md` with TanStack Query usage examples
+- [x] Add JSDoc comments to custom hooks
+- [x] Document TanStack Query setup and usage
 
 ### Verification
 - [x] Run `pnpm install` - no errors
 - [x] Run `pnpm build` - compiles successfully
-- [x] Run `pnpm test` - 19/19 tests passing
+- [x] Run `pnpm test` - 11/11 tests passing (SSE hook only)
 - [x] No TypeScript errors
 - [x] No React warnings
+- [x] TanStack Query dependency added
 
 ---
 

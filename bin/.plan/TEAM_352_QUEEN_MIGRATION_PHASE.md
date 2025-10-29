@@ -83,7 +83,8 @@ Create test file to verify:
 ```typescript
 // test-imports.ts
 import { createSDKLoader } from '@rbee/sdk-loader'
-import { useAsyncState, useSSEWithHealthCheck } from '@rbee/react-hooks'
+import { useSSEWithHealthCheck } from '@rbee/react-hooks'
+import { useQuery } from '@tanstack/react-query'
 import { getIframeUrl, getServiceUrl } from '@rbee/shared-config'
 import { SERVICES } from '@rbee/narration-client'
 import { logStartupMode } from '@rbee/dev-utils'
@@ -180,8 +181,8 @@ export function useRhaiScripts(baseUrl = 'http://localhost:7833') {
 
 **NEW CODE (~40 lines):**
 ```typescript
-// TEAM-356: Use shared @rbee/react-hooks package
-import { useAsyncState } from '@rbee/react-hooks'
+// TEAM-356: Use TanStack Query for data fetching
+import { useQuery } from '@tanstack/react-query'
 import { getServiceUrl } from '@rbee/shared-config'
 
 export function useRhaiScripts(
@@ -189,21 +190,29 @@ export function useRhaiScripts(
 ) {
   const { data: sdk } = useSDK()
   
-  const { data: scripts, loading, error, refetch } = useAsyncState(
-    async () => {
+  const { data: scripts, isLoading, error, refetch } = useQuery({
+    queryKey: ['rhai-scripts', baseUrl],
+    queryFn: async () => {
       if (!sdk) return []
       const client = new sdk.RhaiClient(baseUrl)
       const result = await client.listScripts()
       return JSON.parse(JSON.stringify(result))
     },
-    [sdk, baseUrl]
-  )
+    enabled: !!sdk,
+  })
   
   // Keep save/delete/select functions (business logic)
   const save = async (script) => { /* ... */ }
   const deleteScript = async (id) => { /* ... */ }
   
-  return { scripts, loading, error, refetch, save, delete: deleteScript }
+  return { 
+    scripts: scripts ?? [], 
+    loading: isLoading, 
+    error, 
+    refetch, 
+    save, 
+    delete: deleteScript 
+  }
 }
 ```
 
@@ -578,7 +587,8 @@ cat > bin/.plan/TEAM_352_MIGRATION_SUMMARY.md << 'EOF'
 
 ### Packages Used
 - @rbee/sdk-loader - WASM/SDK loading with retry logic
-- @rbee/react-hooks - useAsyncState, useSSEWithHealthCheck
+- @rbee/react-hooks - useSSEWithHealthCheck (custom SSE hook)
+- @tanstack/react-query - useQuery, useMutation (data fetching)
 - @rbee/shared-config - Port configuration
 - @rbee/narration-client - Narration handling
 - @rbee/dev-utils - Environment detection
