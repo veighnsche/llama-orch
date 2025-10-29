@@ -77,3 +77,4 @@ tauri-build = { version = "2", features = [] }
 
 [dev-dependencies]
 tempfile = "3.8" # TEAM-332: For SSH config parser tests
+wiremock = "0.6" # TEAM-375: For HTTP mocking in job_client tests

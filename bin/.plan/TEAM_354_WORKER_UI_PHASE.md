@@ -4,7 +4,7 @@
 **Assigned To:** TEAM-354  
 **Estimated Time:** 2-3 days  
 **Priority:** MEDIUM  
-**Dependencies:** TEAM-351, TEAM-352, TEAM-353 must be complete
+**Dependencies:** TEAM-356, TEAM-352, TEAM-353 must be complete
 
 ---
 
@@ -33,10 +33,16 @@ Worker Narration Panel
 
 ## Prerequisites
 
-- [ ] TEAM-351 complete (shared packages)
+- [ ] TEAM-356 complete (shared packages)
+  - [ ] `@rbee/sdk-loader` (34 tests passing)
+  - [ ] `@rbee/react-hooks` (19 tests passing)
+  - [ ] `@rbee/shared-config`
+  - [ ] `@rbee/narration-client`
+  - [ ] `@rbee/dev-utils`
 - [ ] TEAM-352 complete (Queen migration)
 - [ ] TEAM-353 complete (Hive implementation)
 - [ ] Study Hive UI as reference (most recent example)
+- [ ] Read `TEAM_356_EXTRACTION_EXTRAVAGANZA.md`
 - [ ] Read TEAM_353 documentation
 
 **CRITICAL:** This is a copy-paste-modify exercise. Don't reinvent anything!
@@ -226,11 +232,13 @@ pnpm build
   },
   "dependencies": {
     "@rbee/llm-worker-sdk": "workspace:*",
+    "@rbee/sdk-loader": "workspace:*",
+    "@rbee/react-hooks": "workspace:*",
     "@rbee/narration-client": "workspace:*",
-    "react": "^18.2.0"
+    "react": "^19.0.0"
   },
   "devDependencies": {
-    "@types/react": "^18.2.0",
+    "@types/react": "^19.0.0",
     "typescript": "^5.0.0"
   }
 }
@@ -303,14 +311,17 @@ pnpm build
   },
   "dependencies": {
     "@rbee/llm-worker-react": "workspace:*",
+    "@rbee/sdk-loader": "workspace:*",
+    "@rbee/react-hooks": "workspace:*",
     "@rbee/shared-config": "workspace:*",
+    "@rbee/narration-client": "workspace:*",
     "@rbee/dev-utils": "workspace:*",
-    "react": "^18.2.0",
-    "react-dom": "^18.2.0"
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0"
   },
   "devDependencies": {
-    "@types/react": "^18.2.0",
-    "@types/react-dom": "^18.2.0",
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
     "@vitejs/plugin-react": "^4.0.0",
     "typescript": "^5.0.0",
     "vite": "^5.0.0"
@@ -627,6 +638,8 @@ cd bin/00_rbee_keeper/ui && pnpm dev
 ### Shared Package Usage Verification
 
 **Worker uses ALL shared packages:**
+- [ ] `@rbee/sdk-loader` - WASM/SDK loading with retry logic (TEAM-356)
+- [ ] `@rbee/react-hooks` - useAsyncState, useSSEWithHealthCheck (TEAM-356)
 - [ ] `@rbee/shared-config` - Port configuration
 - [ ] `@rbee/narration-client` - Narration handling
 - [ ] `@rbee/dev-utils` - Environment detection
@@ -671,9 +684,11 @@ Implemented Worker UI using proven pattern from Queen and Hive.
 ## Shared Package Usage
 
 ✅ ALL shared packages used:
-- @rbee/shared-config
-- @rbee/narration-client  
-- @rbee/dev-utils
+- @rbee/sdk-loader - WASM/SDK loading with retry logic (TEAM-356)
+- @rbee/react-hooks - useAsyncState, useSSEWithHealthCheck (TEAM-356)
+- @rbee/shared-config - Port configuration
+- @rbee/narration-client - Narration handling
+- @rbee/dev-utils - Environment detection
 
 ## Code Reduction
 

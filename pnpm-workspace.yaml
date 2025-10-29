@@ -10,6 +10,8 @@ packages:
   - frontend/packages/narration-client
   - frontend/packages/iframe-bridge
   - frontend/packages/dev-utils
+  - frontend/packages/sdk-loader
+  - frontend/packages/react-hooks
   - bin/00_rbee_keeper/ui
   - bin/10_queen_rbee/ui/app
   - bin/10_queen_rbee/ui/packages/queen-rbee-sdk

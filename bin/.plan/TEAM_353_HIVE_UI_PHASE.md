@@ -4,7 +4,7 @@
 **Assigned To:** TEAM-353  
 **Estimated Time:** 2-3 days  
 **Priority:** HIGH  
-**Dependencies:** TEAM-351 and TEAM-352 must be complete
+**Dependencies:** TEAM-356 and TEAM-352 must be complete
 
 ---
 
@@ -33,10 +33,14 @@ Hive Narration Panel
 
 ## Prerequisites
 
-- [ ] TEAM-351 complete (shared packages exist)
+- [ ] TEAM-356 complete (shared packages exist)
+  - [ ] `@rbee/sdk-loader` (34 tests passing)
+  - [ ] `@rbee/react-hooks` (19 tests passing)
+  - [ ] `@rbee/shared-config`
+  - [ ] `@rbee/narration-client`
+  - [ ] `@rbee/dev-utils`
 - [ ] TEAM-352 complete (Queen migration validates pattern)
-- [ ] Read `TEAM_350_COMPLETE_IMPLEMENTATION_GUIDE.md`
-- [ ] Read `TEAM_351_SHARED_PACKAGES_PHASE.md`
+- [ ] Read `TEAM_356_EXTRACTION_EXTRAVAGANZA.md`
 - [ ] Read `TEAM_352_QUEEN_MIGRATION_PHASE.md`
 - [ ] Study Queen UI structure as reference
 
@@ -215,11 +219,13 @@ cd bin/25_rbee_hive/ui/packages/rbee-hive-react
   },
   "dependencies": {
     "@rbee/rbee-hive-sdk": "workspace:*",
+    "@rbee/sdk-loader": "workspace:*",
+    "@rbee/react-hooks": "workspace:*",
     "@rbee/narration-client": "workspace:*",
-    "react": "^18.2.0"
+    "react": "^19.0.0"
   },
   "devDependencies": {
-    "@types/react": "^18.2.0",
+    "@types/react": "^19.0.0",
     "typescript": "^5.0.0"
   }
 }
@@ -249,23 +255,18 @@ cd bin/25_rbee_hive/ui/packages/rbee-hive-react
 ### Step 3: Create src/hooks/useHiveOperations.ts
 
 ```typescript
-// TEAM-353: Hive operations hook using shared narration client
-import { useState, useCallback } from 'react'
+// TEAM-353: Hive operations hook using TEAM-356 shared packages
+import { useAsyncState } from '@rbee/react-hooks'
 import { HiveClient } from '@rbee/rbee-hive-sdk'
 import { createStreamHandler, SERVICES } from '@rbee/narration-client'
 
 export function useHiveOperations(baseUrl: string) {
-  const [isLoading, setIsLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-
-  const executeOperation = useCallback(async (operation: any) => {
-    setIsLoading(true)
-    setError(null)
-
-    try {
+  // TEAM-356: Use shared useAsyncState hook instead of custom state management
+  const { data, loading, error, refetch } = useAsyncState(
+    async () => {
       const client = new HiveClient(baseUrl)
       
-      // TEAM-353: Use shared narration client (no duplicate code!)
+      // TEAM-356: Use shared narration client (no duplicate code!)
       const handleNarration = createStreamHandler(SERVICES.hive)
       
       await client.submitAndStream(
@@ -274,14 +275,13 @@ export function useHiveOperations(baseUrl: string) {
           handleNarration(line)
         }
       )
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Unknown error')
-    } finally {
-      setIsLoading(false)
-    }
-  }, [baseUrl])
+      
+      return data
+    },
+    [baseUrl]
+  )
 
-  return { executeOperation, isLoading, error }
+  return { data, isLoading: loading, error, refetch }
 }
 ```
 
@@ -324,14 +324,17 @@ cd bin/25_rbee_hive/ui/app
   },
   "dependencies": {
     "@rbee/rbee-hive-react": "workspace:*",
+    "@rbee/sdk-loader": "workspace:*",
+    "@rbee/react-hooks": "workspace:*",
     "@rbee/shared-config": "workspace:*",
+    "@rbee/narration-client": "workspace:*",
     "@rbee/dev-utils": "workspace:*",
-    "react": "^18.2.0",
-    "react-dom": "^18.2.0"
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0"
   },
   "devDependencies": {
-    "@types/react": "^18.2.0",
-    "@types/react-dom": "^18.2.0",
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
     "@vitejs/plugin-react": "^4.0.0",
     "typescript": "^5.0.0",
     "vite": "^5.0.0"
@@ -699,6 +702,8 @@ cargo build --release --bin rbee-hive
 ### Shared Package Usage
 
 **Verify using all packages:**
+- [ ] `@rbee/sdk-loader` - ✅ Used for WASM SDK loading
+- [ ] `@rbee/react-hooks` - ✅ Used for useAsyncState, useSSEWithHealthCheck
 - [ ] `@rbee/shared-config` - ✅ Used for ports
 - [ ] `@rbee/narration-client` - ✅ Used for narration
 - [ ] `@rbee/dev-utils` - ✅ Used for logging
@@ -761,6 +766,8 @@ cat > bin/.plan/TEAM_353_HIVE_IMPLEMENTATION_SUMMARY.md << 'EOF'
 ## Shared Package Usage
 
 ✅ ALL shared packages used (zero duplication):
+- @rbee/sdk-loader - WASM/SDK loading with retry logic (TEAM-356)
+- @rbee/react-hooks - useAsyncState, useSSEWithHealthCheck (TEAM-356)
 - @rbee/shared-config - Port configuration
 - @rbee/narration-client - Narration handling
 - @rbee/dev-utils - Environment detection

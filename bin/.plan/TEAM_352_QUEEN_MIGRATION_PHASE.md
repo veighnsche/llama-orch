@@ -4,13 +4,13 @@
 **Assigned To:** TEAM-352  
 **Estimated Time:** 1 day  
 **Priority:** HIGH (Validates shared packages)  
-**Dependencies:** TEAM-351 must be complete
+**Dependencies:** TEAM-356 must be complete
 
 ---
 
 ## Mission
 
-Migrate Queen UI from duplicate code to shared packages created by TEAM-351.
+Migrate Queen UI from duplicate code to shared packages created by TEAM-356.
 
 **Why This Matters:**
 - Validates shared packages work correctly
@@ -22,23 +22,29 @@ Migrate Queen UI from duplicate code to shared packages created by TEAM-351.
 
 ## Prerequisites
 
-- [ ] TEAM-351 complete (all packages built)
-- [ ] Read `TEAM_351_SHARED_PACKAGES_PHASE.md`
+- [ ] TEAM-356 complete (all packages built)
+- [ ] Read `TEAM_356_EXTRACTION_EXTRAVAGANZA.md`
+- [ ] Verify `@rbee/sdk-loader` builds (34 tests passing)
+- [ ] Verify `@rbee/react-hooks` builds (19 tests passing)
 - [ ] Verify `@rbee/shared-config` builds
 - [ ] Verify `@rbee/narration-client` builds
-- [ ] Verify Rust constants generated
 
 ---
 
 ## Deliverables Checklist
 
+### Phase 3: Migrate Queen UI (from TEAM-356)
+
+- [ ] Queen SDK loader replaced with `@rbee/sdk-loader`
+- [ ] Queen hooks replaced with `@rbee/react-hooks`
 - [ ] Queen narrationBridge replaced with `@rbee/narration-client`
 - [ ] Queen iframe URL uses `@rbee/shared-config`
 - [ ] Keeper message listener uses `@rbee/shared-config`
 - [ ] Environment detection uses `@rbee/dev-utils`
-- [ ] Old duplicate code removed
+- [ ] Old duplicate code removed (~300-400 LOC)
 - [ ] Narration flow still works (tested)
 - [ ] Both dev and prod modes tested
+- [ ] All hardcoded URLs replaced with `getServiceUrl()`
 
 ---
 
@@ -55,6 +61,8 @@ Edit `package.json`, add dependencies:
 ```json
 {
   "dependencies": {
+    "@rbee/sdk-loader": "workspace:*",
+    "@rbee/react-hooks": "workspace:*",
     "@rbee/shared-config": "workspace:*",
     "@rbee/narration-client": "workspace:*",
     "@rbee/dev-utils": "workspace:*"
@@ -74,7 +82,9 @@ Create test file to verify:
 
 ```typescript
 // test-imports.ts
-import { getIframeUrl } from '@rbee/shared-config'
+import { createSDKLoader } from '@rbee/sdk-loader'
+import { useAsyncState, useSSEWithHealthCheck } from '@rbee/react-hooks'
+import { getIframeUrl, getServiceUrl } from '@rbee/shared-config'
 import { SERVICES } from '@rbee/narration-client'
 import { logStartupMode } from '@rbee/dev-utils'
 
@@ -85,7 +95,139 @@ Run: `npx tsx test-imports.ts`
 
 ---
 
-## Phase 2: Replace narrationBridge.ts
+## Phase 2: Migrate SDK Loader
+
+### Step 1: Replace Custom Loader
+
+**File:** `bin/10_queen_rbee/ui/packages/queen-rbee-react/src/loader.ts`
+
+**OLD CODE (~120 lines):**
+```typescript
+// Custom loader with retry logic, exponential backoff, singleflight, etc.
+export async function loadSDK() { ... }
+```
+
+**NEW CODE (~10 lines):**
+```typescript
+// TEAM-356: Use shared @rbee/sdk-loader package
+import { createSDKLoader } from '@rbee/sdk-loader'
+
+export const queenSDKLoader = createSDKLoader({
+  packageName: '@rbee/queen-rbee-sdk',
+  requiredExports: ['QueenClient', 'HeartbeatMonitor', 'RhaiClient'],
+  timeout: 15000,
+  maxAttempts: 3,
+})
+
+export const loadSDK = queenSDKLoader.loadOnce
+```
+
+**Lines saved:** ~110 lines
+
+### Step 2: Delete globalSlot.ts
+
+**File:** `bin/10_queen_rbee/ui/packages/queen-rbee-react/src/globalSlot.ts`
+
+Delete this file (no longer needed - singleflight pattern in @rbee/sdk-loader).
+
+---
+
+## Phase 3: Migrate React Hooks
+
+### Step 1: Replace useHeartbeat Hook
+
+**File:** `bin/10_queen_rbee/ui/packages/queen-rbee-react/src/hooks/useHeartbeat.ts`
+
+**OLD CODE (~90 lines):**
+```typescript
+export function useHeartbeat(baseUrl = 'http://localhost:7833') {
+  const [data, setData] = useState(null)
+  const [connected, setConnected] = useState(false)
+  // ... 60+ lines of health check + SSE logic
+}
+```
+
+**NEW CODE (~15 lines):**
+```typescript
+// TEAM-356: Use shared @rbee/react-hooks package
+import { useSSEWithHealthCheck } from '@rbee/react-hooks'
+import { getServiceUrl } from '@rbee/shared-config'
+
+export function useHeartbeat(
+  baseUrl = getServiceUrl('queen', 'prod')  // Use shared config!
+) {
+  return useSSEWithHealthCheck(
+    (url) => new sdk.HeartbeatMonitor(url),
+    baseUrl
+  )
+}
+```
+
+**Lines saved:** ~75 lines
+
+### Step 2: Replace useRhaiScripts Hook
+
+**File:** `bin/10_queen_rbee/ui/packages/queen-rbee-react/src/hooks/useRhaiScripts.ts`
+
+**OLD CODE (~250 lines):**
+```typescript
+export function useRhaiScripts(baseUrl = 'http://localhost:7833') {
+  const [scripts, setScripts] = useState([])
+  const [loading, setLoading] = useState(true)
+  // ... 150+ lines of async state management
+}
+```
+
+**NEW CODE (~40 lines):**
+```typescript
+// TEAM-356: Use shared @rbee/react-hooks package
+import { useAsyncState } from '@rbee/react-hooks'
+import { getServiceUrl } from '@rbee/shared-config'
+
+export function useRhaiScripts(
+  baseUrl = getServiceUrl('queen', 'prod')
+) {
+  const { data: sdk } = useSDK()
+  
+  const { data: scripts, loading, error, refetch } = useAsyncState(
+    async () => {
+      if (!sdk) return []
+      const client = new sdk.RhaiClient(baseUrl)
+      const result = await client.listScripts()
+      return JSON.parse(JSON.stringify(result))
+    },
+    [sdk, baseUrl]
+  )
+  
+  // Keep save/delete/select functions (business logic)
+  const save = async (script) => { /* ... */ }
+  const deleteScript = async (id) => { /* ... */ }
+  
+  return { scripts, loading, error, refetch, save, delete: deleteScript }
+}
+```
+
+**Lines saved:** ~210 lines
+
+### Step 3: Fix All Hardcoded URLs
+
+Search for `'http://localhost:7833'` and `'http://localhost:7834'` in Queen UI:
+
+```bash
+cd bin/10_queen_rbee/ui
+grep -r "localhost:783" .
+```
+
+Replace with:
+```typescript
+import { getServiceUrl } from '@rbee/shared-config'
+
+const baseUrl = getServiceUrl('queen', 'prod')  // or 'dev'
+```
+
+---
+
+## Phase 4: Replace narrationBridge.ts
 
 ### Step 1: Locate Current Implementation
 
@@ -146,7 +288,7 @@ for await (const line of stream) {
 
 ---
 
-## Phase 3: Update Keeper UI Dependencies
+## Phase 5: Update Keeper UI Dependencies
 
 ### Step 1: Add Dependencies to Keeper
 
@@ -173,7 +315,7 @@ pnpm install
 
 ---
 
-## Phase 4: Update Keeper QueenPage.tsx
+## Phase 6: Update Keeper QueenPage.tsx
 
 ### Step 1: Replace Hardcoded URL
 
@@ -209,7 +351,7 @@ Open http://localhost:5173, navigate to Queen page.
 
 ---
 
-## Phase 5: Update Keeper Message Listener
+## Phase 7: Update Keeper Message Listener
 
 ### Step 1: Replace Hardcoded Origins
 
@@ -249,7 +391,7 @@ Test narration flow:
 
 ---
 
-## Phase 6: Update App.tsx Startup Logs
+## Phase 8: Update App.tsx Startup Logs
 
 ### Step 1: Update Queen App.tsx
 
@@ -283,7 +425,7 @@ Same replacement as Queen.
 
 ---
 
-## Phase 7: Remove Old Code
+## Phase 9: Remove Old Code
 
 ### Step 1: Identify Code to Remove
 
@@ -310,7 +452,7 @@ pnpm exec eslint --fix src/
 
 ---
 
-## Phase 8: Build and Test
+## Phase 10: Build and Test
 
 ### Step 1: Build Queen UI
 
@@ -386,23 +528,29 @@ cargo run --release --bin queen-rbee
 
 ---
 
-## Phase 9: Verify Code Reduction
+## Phase 11: Verify Code Reduction
 
 ### Step 1: Count Lines Removed
 
 **Before migration:**
+- Custom SDK loader: ~120 LOC
+- Custom useHeartbeat: ~90 LOC
+- Custom useRhaiScripts: ~250 LOC
 - `narrationBridge.ts`: ~100 LOC
 - Hardcoded ports: ~10 LOC
 - Hardcoded origins: ~5 LOC
 - Manual environment detection: ~15 LOC
-- **Total:** ~130 LOC
+- **Total:** ~590 LOC
 
 **After migration:**
+- SDK loader import: ~10 LOC
+- useHeartbeat wrapper: ~15 LOC
+- useRhaiScripts wrapper: ~40 LOC
 - `narrationBridge.ts`: ~15 LOC
 - Shared config imports: ~3 LOC
-- **Total:** ~18 LOC
+- **Total:** ~83 LOC
 
-**Reduction:** ~110 LOC removed (85% reduction in duplicate code)
+**Reduction:** ~507 LOC removed (86% reduction in duplicate code)
 
 ### Step 2: Document Changes
 
@@ -424,9 +572,16 @@ cat > bin/.plan/TEAM_352_MIGRATION_SUMMARY.md << 'EOF'
 7. `bin/00_rbee_keeper/ui/src/App.tsx` - Use logStartupMode()
 
 ### Code Reduction
-- Removed: ~110 LOC duplicate code
-- Added: ~18 LOC using shared packages
-- Net reduction: ~92 LOC (85%)
+- Removed: ~507 LOC duplicate code
+- Added: ~83 LOC using shared packages
+- Net reduction: ~424 LOC (86%)
+
+### Packages Used
+- @rbee/sdk-loader - WASM/SDK loading with retry logic
+- @rbee/react-hooks - useAsyncState, useSSEWithHealthCheck
+- @rbee/shared-config - Port configuration
+- @rbee/narration-client - Narration handling
+- @rbee/dev-utils - Environment detection
 
 ### Functionality Preserved
 ✅ Hot reload works
