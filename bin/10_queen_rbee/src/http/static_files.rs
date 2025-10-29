@@ -8,8 +8,8 @@
 //! This is a HARD REQUIREMENT. DO NOT CHANGE THIS.
 //! DO NOT nest under /ui. DO NOT add prefixes.
 //! 
-//! Development: Proxies ROOT (/) to Vite dev server (port 7834)
-//! Production: Serves embedded static files from ui/app/dist/ at ROOT (/)
+//! TEAM-XXX: Always serves embedded static files from ui/app/dist/ at ROOT (/)
+//! No dev proxy - UI changes require queen rebuild (cargo build -p queen-rbee)
 //!
 //! API routes (/health, /v1/*) take priority via router merge order.
 //! Everything else falls through to UI (SPA routing).
@@ -34,116 +34,20 @@ use rust_embed::RustEmbed;
 #[folder = "ui/app/dist/"]
 struct Assets;
 
-/// Create static file serving router
+/// Create router for static file serving
 ///
-/// TEAM-341: CRITICAL FIX - UI is served at ROOT (/), not /ui
-/// 
-/// The UI MUST be accessible at http://localhost:7833/ (root path).
-/// This is a fallback router that catches all non-API routes.
-/// 
-/// Development: Proxies to Vite dev server at http://localhost:7834
-/// Production: Serves embedded static files
-///
-/// Mode detection: Checks if compiled with --release flag
+/// TEAM-XXX: Always serve embedded static files from dist/
+/// No dev proxy - UI changes require queen rebuild
+/// Simpler workflow, no port confusion
 pub fn create_static_router() -> Router {
-    #[cfg(debug_assertions)]
-    {
-        // TEAM-341: Development mode - Proxy ROOT to Vite dev server
-        // NO /ui prefix! UI is at root path.
-        // NOTE: Vite HMR WebSockets won't work through proxy - connect directly to :7834
-        Router::new().fallback(dev_proxy_handler)
-    }
-    
-    #[cfg(not(debug_assertions))]
-    {
-        // TEAM-341: Production mode - Serve embedded static files at ROOT
-        // NO /ui prefix! UI is at root path.
-        Router::new().fallback(static_handler)
-    }
+    // Always serve embedded static files, even in debug mode
+    Router::new().fallback(static_handler)
 }
 
-/// Development mode: Proxy requests to Vite dev server
+/// Handler for serving embedded static files
 ///
-/// TEAM-341: Proxies ROOT path to Vite (no /ui prefix stripping needed)
-#[cfg(debug_assertions)]
-async fn dev_proxy_handler(uri: Uri, req: axum::extract::Request) -> impl IntoResponse {
-    use reqwest::Client;
-    
-    // TEAM-341: UI is at root, so pass path as-is to Vite
-    let path = uri.path();
-    let query = uri.query().unwrap_or("");
-    let vite_url = if query.is_empty() {
-        format!("http://localhost:7834{}", path)
-    } else {
-        format!("http://localhost:7834{}?{}", path, query)
-    };
-    
-    // TEAM-341: Check if this is a WebSocket upgrade (Vite HMR)
-    if req.headers().get("upgrade").and_then(|v| v.to_str().ok()) == Some("websocket") {
-        // Return 404 for WebSocket - Vite HMR won't work through proxy
-        // User should connect directly to Vite on port 7834
-        eprintln!("[DEV PROXY] WebSocket request blocked: {}", vite_url);
-        eprintln!("[DEV PROXY] Vite HMR: Use http://localhost:7834 directly for hot reload");
-        return Response::builder()
-            .status(StatusCode::NOT_FOUND)
-            .body(Body::from("WebSocket not supported through proxy. Use Vite dev server directly on port 7834."))
-            .unwrap();
-    }
-    
-    eprintln!("[DEV PROXY] Request: {} -> {}", path, vite_url);
-    
-    match Client::new().get(&vite_url).send().await {
-        Ok(response) => {
-            let status = response.status();
-            let headers = response.headers().clone();
-            let mut body = response.bytes().await.unwrap_or_default();
-            
-            let mut builder = Response::builder().status(status);
-            for (key, value) in headers.iter() {
-                builder = builder.header(key, value);
-            }
-            
-            // TEAM-341: Fix WASM MIME type for ES module imports
-            // Browser requires application/wasm for WASM module imports
-            if path.ends_with(".wasm") {
-                builder = builder.header(header::CONTENT_TYPE, "application/wasm");
-            }
-            
-            // TEAM-XXX: Fix Vite HMR WebSocket URL when proxying HTML
-            // When serving HTML through proxy, Vite's HMR client tries to connect to the proxied
-            // port (7833) instead of the actual Vite dev server (7834). Rewrite the HTML to point
-            // HMR WebSocket to the correct port.
-            if (path == "/" || path.ends_with(".html")) && headers.get(header::CONTENT_TYPE).and_then(|v| v.to_str().ok()).map(|v| v.contains("text/html")).unwrap_or(false) {
-                if let Ok(html) = String::from_utf8(body.to_vec()) {
-                    // Rewrite Vite HMR WebSocket URL from ws://localhost:7833 to ws://localhost:7834
-                    let fixed_html = html.replace("ws://localhost:7833", "ws://localhost:7834")
-                                        .replace("ws://127.0.0.1:7833", "ws://localhost:7834");
-                    body = fixed_html.into_bytes().into();
-                    eprintln!("[DEV PROXY] Rewrote Vite HMR WebSocket URLs in HTML to port 7834");
-                }
-            }
-            
-            builder.body(Body::from(body)).unwrap()
-        }
-        Err(e) => {
-            eprintln!("[DEV] Failed to proxy to Vite dev server: {}", e);
-            eprintln!("[DEV] Make sure Vite is running: cd bin/10_queen_rbee/ui/app && npm run dev");
-            Response::builder()
-                .status(StatusCode::BAD_GATEWAY)
-                .body(Body::from(format!(
-                    "Dev server not available. Start it with: cd bin/10_queen_rbee/ui/app && npm run dev\n\nError: {}",
-                    e
-                )))
-                .unwrap()
-        }
-    }
-}
-
-/// Production mode: Handler for serving embedded static files
-///
-/// TEAM-341: This should NEVER be called in debug mode!
-/// Debug mode uses dev_proxy_handler instead.
-#[cfg(not(debug_assertions))]
+/// TEAM-XXX: Used in both debug and release modes
+/// UI changes require queen rebuild
 async fn static_handler(uri: Uri) -> impl IntoResponse {
     eprintln!("[STATIC] Serving: {}", uri.path());
     let path = uri.path().trim_start_matches('/');
