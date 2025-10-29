@@ -308,9 +308,9 @@ rbee-keeper CLI
 
 ```
 rbee-keeper GUI
-  ├─→ Queen Web UI (iframe: http://localhost:7833/ui)
-  ├─→ Hive Web UI (iframe: http://localhost:7835/ui)
-  └─→ Worker Web UI (iframe: http://localhost:8080/ui)
+  ├─→ Queen Web UI (iframe: http://localhost:7833/)
+  ├─→ Hive Web UI (iframe: http://localhost:7835/)
+  └─→ Worker Web UI (iframe: http://localhost:8080/)
 ```
 
 **Direct SDK access** - GUI opens web UIs in iframes, uses SDK directly.

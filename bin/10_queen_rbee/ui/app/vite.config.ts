@@ -2,6 +2,7 @@ import tailwindcss from '@tailwindcss/vite'
 import react from '@vitejs/plugin-react'
 import { defineConfig } from 'vite'
 import wasm from 'vite-plugin-wasm'
+import topLevelAwait from 'vite-plugin-top-level-await'
 
 // https://vite.dev/config/
 export default defineConfig({
@@ -12,6 +13,7 @@ export default defineConfig({
   plugins: [
     tailwindcss(), // Official Tailwind v4 Vite plugin (must be first)
     wasm(),
+    topLevelAwait(),
     react({
       babel: {
         plugins: [['babel-plugin-react-compiler']],

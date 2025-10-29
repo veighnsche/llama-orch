@@ -9,9 +9,6 @@ edition = "2021"
 authors = ["rbee Team"]
 license = "GPL-3.0-or-later"
 
-[package.metadata.wasm-pack.profile.release]
-wasm-opt = false
-
 # Not part of workspace - standalone WASM package
 [workspace]
 description = "Rust SDK for rbee that compiles to WASM for browser/Node.js usage"
@@ -95,4 +92,4 @@ strip = true              # Strip symbols
 opt-level = "z"
 
 [package.metadata.wasm-pack.profile.release]
-wasm-opt = ["-Oz", "--enable-mutable-globals"]
+wasm-opt = false

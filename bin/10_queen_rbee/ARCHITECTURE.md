@@ -419,7 +419,7 @@ GET  /openai/v1/models                # List models (OpenAI format)
 GET  /openai/v1/models/{model}        # Get model details
 
 # Web UI
-GET  /ui/*                            # Queen's web UI
+GET  /*                               # Queen's web UI (served at root, fallback after API routes)
 ```
 
 **Key Points:**
@@ -609,9 +609,9 @@ Workers send heartbeats DIRECTLY to queen, not through hive.
 
 ```
 rbee-keeper GUI
-  ├─→ Queen Web UI (iframe: http://localhost:7833/ui)
-  ├─→ Hive Web UI (iframe: http://localhost:7835/ui)
-  └─→ Worker Web UI (iframe: http://localhost:8080/ui)
+  ├─→ Queen Web UI (iframe: http://localhost:7833/)
+  ├─→ Hive Web UI (iframe: http://localhost:7835/)
+  └─→ Worker Web UI (iframe: http://localhost:8080/)
 ```
 
 - User manages workers/models through hive's UI

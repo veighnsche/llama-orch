@@ -50,6 +50,7 @@ pub fn create_static_router() -> Router {
     {
         // TEAM-341: Development mode - Proxy ROOT to Vite dev server
         // NO /ui prefix! UI is at root path.
+        // NOTE: Vite HMR WebSockets won't work through proxy - connect directly to :7834
         Router::new().fallback(dev_proxy_handler)
     }
     
@@ -65,12 +66,29 @@ pub fn create_static_router() -> Router {
 ///
 /// TEAM-341: Proxies ROOT path to Vite (no /ui prefix stripping needed)
 #[cfg(debug_assertions)]
-async fn dev_proxy_handler(uri: Uri) -> impl IntoResponse {
+async fn dev_proxy_handler(uri: Uri, req: axum::extract::Request) -> impl IntoResponse {
     use reqwest::Client;
     
     // TEAM-341: UI is at root, so pass path as-is to Vite
     let path = uri.path();
-    let vite_url = format!("http://localhost:7834{}", path);
+    let query = uri.query().unwrap_or("");
+    let vite_url = if query.is_empty() {
+        format!("http://localhost:7834{}", path)
+    } else {
+        format!("http://localhost:7834{}?{}", path, query)
+    };
+    
+    // TEAM-341: Check if this is a WebSocket upgrade (Vite HMR)
+    if req.headers().get("upgrade").and_then(|v| v.to_str().ok()) == Some("websocket") {
+        // Return 404 for WebSocket - Vite HMR won't work through proxy
+        // User should connect directly to Vite on port 7834
+        eprintln!("[DEV PROXY] WebSocket request blocked: {}", vite_url);
+        eprintln!("[DEV PROXY] Vite HMR: Use http://localhost:7834 directly for hot reload");
+        return Response::builder()
+            .status(StatusCode::NOT_FOUND)
+            .body(Body::from("WebSocket not supported through proxy. Use Vite dev server directly on port 7834."))
+            .unwrap();
+    }
     
     eprintln!("[DEV PROXY] Request: {} -> {}", path, vite_url);
     
@@ -84,6 +102,13 @@ async fn dev_proxy_handler(uri: Uri) -> impl IntoResponse {
             for (key, value) in headers.iter() {
                 builder = builder.header(key, value);
             }
+            
+            // TEAM-341: Fix WASM MIME type for ES module imports
+            // Browser requires application/wasm for WASM module imports
+            if path.ends_with(".wasm") {
+                builder = builder.header(header::CONTENT_TYPE, "application/wasm");
+            }
+            
             builder.body(Body::from(body)).unwrap()
         }
         Err(e) => {

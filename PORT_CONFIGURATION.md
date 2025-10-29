@@ -21,11 +21,11 @@ Frontend (Development):
 6006 ← Storybook
 7811 ← user-docs
 7822 ← commercial
-7834 ← queen UI (dev) → 7833/ui (prod)
-7836 ← hive UI (dev) → 7835/ui (prod)
-7837 ← llm-worker UI (dev) → 8080/ui (prod)
-7838 ← comfy-worker UI (dev) → 8188/ui (prod)
-7839 ← vllm-worker UI (dev) → 8000/ui (prod)
+7834 ← queen UI (dev) → 7833/ (prod)
+7836 ← hive UI (dev) → 7835/ (prod)
+7837 ← llm-worker UI (dev) → 8080/ (prod)
+7838 ← comfy-worker UI (dev) → 8188/ (prod)
+7839 ← vllm-worker UI (dev) → 8000/ (prod)
 ```
 
 ---
@@ -47,11 +47,11 @@ Frontend (Development):
 | Service | Port | Description | Production |
 |---------|------|-------------|------------|
 | **rbee-keeper GUI** | `5173` | Keeper Tauri GUI (dev server) | Tauri app |
-| **queen-rbee UI** | `7834` | Queen UI (dev server) | Hosted at `7833/ui` |
-| **rbee-hive UI** | `7836` | Hive UI (dev server) | Hosted at `7835/ui` |
-| **llm-worker UI** | `7837` | LLM worker UI (dev server) | Hosted at `8080/ui` |
-| **comfy-worker UI** | `7838` | ComfyUI worker UI (dev server) | Hosted at `8188/ui` |
-| **vllm-worker UI** | `7839` | vLLM worker UI (dev server) | Hosted at `8000/ui` |
+| **queen-rbee UI** | `7834` | Queen UI (dev server) | Hosted at `7833/` |
+| **rbee-hive UI** | `7836` | Hive UI (dev server) | Hosted at `7835/` |
+| **llm-worker UI** | `7837` | LLM worker UI (dev server) | Hosted at `8080/` |
+| **comfy-worker UI** | `7838` | ComfyUI worker UI (dev server) | Hosted at `8188/` |
+| **vllm-worker UI** | `7839` | vLLM worker UI (dev server) | Hosted at `8000/` |
 | **rbee-ui Storybook** | `6006` | Component library | N/A |
 | **commercial** | `7822` | Marketing site (Next.js) | Deployed |
 | **user-docs** | `7811` | Documentation (Next.js + Nextra) | Deployed |
@@ -83,9 +83,9 @@ The rbee system uses a **hierarchical, distributed UI architecture**:
 ┌─────────────────────────────────────┐
 │ rbee-keeper (Tauri GUI)             │  Port 5173 (dev)
 │ ├─ Sidebar (dynamic)                │
-│ ├─ iframe: queen-rbee UI            │  → http://localhost:7833/ui (prod)
-│ ├─ iframe: hive UI (per hive)       │  → http://localhost:7835/ui (prod)
-│ └─ iframe: worker UI (per worker)   │  → http://localhost:8080/ui (prod)
+│ ├─ iframe: queen-rbee UI            │  → http://localhost:7833/ (prod)
+│ ├─ iframe: hive UI (per hive)       │  → http://localhost:7835/ (prod)
+│ └─ iframe: worker UI (per worker)   │  → http://localhost:8080/ (prod)
 └─────────────────────────────────────┘
 ```
 
@@ -94,16 +94,16 @@ The rbee system uses a **hierarchical, distributed UI architecture**:
 | Component | Vite Dev Port | Backend URL | Dev Behavior | Prod Behavior |
 |-----------|---------------|-------------|--------------|---------------|
 | **Keeper GUI** | 5173 | Tauri app | Vite dev server | Tauri bundle |
-| **Queen UI** | 7834 | `7833/ui` | Backend proxies to 7834 | Backend serves dist/ |
-| **Hive UI** | 7836 | `7835/ui` | Backend proxies to 7836 | Backend serves dist/ |
-| **LLM Worker UI** | 7837 | `8080/ui` | Backend proxies to 7837 | Backend serves dist/ |
-| **ComfyUI Worker UI** | 7838 | `8188/ui` | Backend proxies to 7838 | Backend serves dist/ |
-| **vLLM Worker UI** | 7839 | `8000/ui` | Backend proxies to 7839 | Backend serves dist/ |
+| **Queen UI** | 7834 | `7833/` | Backend proxies to 7834 | Backend serves dist/ |
+| **Hive UI** | 7836 | `7835/` | Backend proxies to 7836 | Backend serves dist/ |
+| **LLM Worker UI** | 7837 | `8080/` | Backend proxies to 7837 | Backend serves dist/ |
+| **ComfyUI Worker UI** | 7838 | `8188/` | Backend proxies to 7838 | Backend serves dist/ |
+| **vLLM Worker UI** | 7839 | `8000/` | Backend proxies to 7839 | Backend serves dist/ |
 
 **Key Principles:**
-- **Development:** Backend proxies `/ui` to Vite dev server (hot-reload works)
+- **Development:** Backend proxies ROOT to Vite dev server (hot-reload works)
 - **Production:** Backend serves static files from `dist/` (no Vite needed)
-- **Same URL:** `http://localhost:7833/ui` works in both modes
+- **Same URL:** `http://localhost:7833/` works in both modes
 
 ### Development Workflow
 
@@ -134,32 +134,31 @@ pnpm dev  # Runs on port 7837
 ### Development vs Production
 
 **Development Mode:**
-Backend proxies `/ui` requests to Vite dev servers (enables hot-reload):
+Backend proxies ROOT requests to Vite dev servers (enables hot-reload):
 
 ```rust
 // Example: queen-rbee proxies to Vite dev server
 if dev_mode {
-    // Proxy /ui to http://localhost:7834 (Vite dev server)
-    proxy_to_vite("http://localhost:7834")
+    // Proxy ROOT to http://localhost:7834 (Vite dev server)
+    Router::new().fallback(proxy_to_vite)
 } else {
-    // Serve static files from dist/
-    ServeDir::new("../../../frontend/apps/10_queen_rbee/dist")
+    // Serve static files from dist/ at ROOT
+    Router::new().fallback(serve_static_files)
 }
 ```
 
 **Production Mode:**
-Backend serves static files from `dist/`:
+Backend serves static files from `dist/` at ROOT:
 
 ```rust
-let app = Router::new()
-    .route("/api/*", /* API routes */)
-    .nest_service("/ui", ServeDir::new("../../../frontend/apps/10_queen_rbee/dist"));
+// API routes have priority, static files are fallback
+let app = api_router.merge(static_router);
 ```
 
 **URLs (same in both modes):**
-- Queen: `http://localhost:7833/ui`
-- Hive: `http://localhost:7835/ui`
-- Worker: `http://localhost:8080/ui`
+- Queen: `http://localhost:7833/`
+- Hive: `http://localhost:7835/`
+- Worker: `http://localhost:8080/`
 
 **See:** `.docs/ui/DEVELOPMENT_PROXY_STRATEGY.md` for implementation details
 
@@ -664,9 +663,9 @@ curl http://localhost:7811         # user-docs
 
 **Frontend (Production):**
 ```bash
-curl http://localhost:7833/ui      # queen-rbee UI (served by binary)
-curl http://localhost:7835/ui      # rbee-hive UI (served by binary)
-curl http://localhost:8080/ui      # llm-worker UI (served by binary)
+curl http://localhost:7833/        # queen-rbee UI (served by binary)
+curl http://localhost:7835/        # rbee-hive UI (served by binary)
+curl http://localhost:8080/        # llm-worker UI (served by binary)
 ```
 
 ---
@@ -702,4 +701,4 @@ curl http://localhost:8080/ui      # llm-worker UI (served by binary)
 **Frontend Dev:** 9 (keeper, queen, hive, 3 workers, storybook, commercial, user-docs)  
 **Deprecated:** 1 (web-ui)
 
-**Key Principle:** Each binary hosts its own UI at `/ui` endpoint in production.
+**Key Principle:** Each binary hosts its own UI at ROOT (/) in production. API routes take priority via router merge order.

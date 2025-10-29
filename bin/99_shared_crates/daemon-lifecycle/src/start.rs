@@ -222,11 +222,14 @@ pub async fn start_daemon(start_config: StartConfig) -> Result<u32> {
     // Step 1: Find binary on remote machine
     n!("find_binary", "🔍 Locating {} binary on remote...", daemon_name);
 
+    // TEAM-341: CRITICAL FIX - Prioritize target/ over ~/.local/bin for development
+    // Dev builds (cargo run rbee-keeper) should use freshly built binaries from target/
+    // Production builds should use ~/.local/bin (installed binaries)
     let find_cmd = format!(
-        "which {} 2>/dev/null || \
-         (test -x ~/.local/bin/{} && echo ~/.local/bin/{}) || \
+        "(test -x target/debug/{} && echo target/debug/{}) || \
          (test -x target/release/{} && echo target/release/{}) || \
-         (test -x target/debug/{} && echo target/debug/{}) || \
+         (test -x ~/.local/bin/{} && echo ~/.local/bin/{}) || \
+         which {} 2>/dev/null || \
          echo 'NOT_FOUND'",
         daemon_name, daemon_name, daemon_name, daemon_name, daemon_name, daemon_name, daemon_name
     );
