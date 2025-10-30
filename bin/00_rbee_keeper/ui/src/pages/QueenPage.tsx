@@ -1,9 +1,10 @@
 // TEAM-340: Queen web interface page
 // TEAM-353: Rewritten to use query hooks (deleted DaemonContainer pattern)
-// Embeds Queen's web UI (localhost:7833) in an iframe
+// TEAM-352: Uses @rbee/shared-config for iframe URL (no hardcoded URLs)
 
 import { Alert, AlertDescription, AlertTitle, Button } from "@rbee/ui/atoms";
-import { AlertCircle, ExternalLink, Loader2, PlayCircle } from "lucide-react";
+import { AlertCircle, Loader2, PlayCircle } from "lucide-react";
+import { getIframeUrl } from "@rbee/shared-config";
 import { useQueen, useQueenActions } from "../store/queenQueries";
 
 // TEAM-353: Rewritten to use query hooks
@@ -58,13 +59,9 @@ function QueenIframe() {
     );
   }
 
-  // TEAM-350: Environment-aware iframe URL
-  // Dev: http://localhost:7834 → Direct to Vite dev server (no proxy needed)
-  // Prod: http://localhost:7833/ → Serves embedded static files from queen backend
+  // TEAM-352: Use shared-config for iframe URL (no hardcoded URLs)
   const isDev = import.meta.env.DEV
-  const queenUrl = isDev 
-    ? "http://localhost:7834"  // Dev: Direct to Vite dev server
-    : "http://localhost:7833"   // Prod: Embedded files from queen backend
+  const queenUrl = getIframeUrl('queen', isDev)
   
   return (
     <iframe

@@ -1,5 +1,5 @@
 // TEAM-342: Hive web interface page
-// Embeds Hive's web UI (localhost:7835) in an iframe
+// TEAM-352: Uses @rbee/shared-config for iframe URL (no hardcoded URLs)
 // Disabled when Hive is not running
 // Uses dynamic hiveId from URL params
 
@@ -7,6 +7,7 @@ import { Alert, AlertDescription, AlertTitle, Button } from "@rbee/ui/atoms";
 import { PageContainer } from "@rbee/ui/molecules";
 import { AlertCircle, ExternalLink, PlayCircle, Loader2 } from "lucide-react";
 import { useParams } from "react-router-dom";
+import { getIframeUrl } from "@rbee/shared-config";
 import { useHive, useHiveActions } from "../store/hiveQueries";
 
 // TEAM-367: Rewritten to use React Query
@@ -95,8 +96,9 @@ function HiveIframeContent({ hiveId }: { hiveId: string }) {
     );
   }
 
-  // TEAM-342: Hive port is 7835
-  const hiveUrl = "http://localhost:7835";
+  // TEAM-352: Use shared-config for iframe URL (no hardcoded URLs)
+  const isDev = import.meta.env.DEV
+  const hiveUrl = getIframeUrl('hive', isDev);
 
   return (
     <div className="relative h-full w-full">

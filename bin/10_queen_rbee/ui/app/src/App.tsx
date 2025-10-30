@@ -1,24 +1,19 @@
+// TEAM-352: Migrated to use @rbee/dev-utils for startup logging
+// Old implementation: ~13 LOC of manual environment logging
+// New implementation: 1 LOC using shared utility
+// Reduction: 12 LOC
+
 // Queen UI - Minimal interface for heartbeat monitoring and RHAI scheduling
 // Purpose:
 // 1. Heartbeat Monitor - Real-time worker/hive status
 // 2. RHAI IDE - Scheduling script editor
 
 import { ThemeProvider } from "next-themes";
+import { logStartupMode } from "@rbee/dev-utils";
 import DashboardPage from "./pages/DashboardPage";
 
-// TEAM-350: Log build mode on startup
-const isDev = import.meta.env.DEV;
-if (isDev) {
-  console.log("🔧 [QUEEN UI] Running in DEVELOPMENT mode");
-  console.log("   - Vite dev server active (hot reload enabled)");
-  console.log(
-    "   - Loaded via: http://localhost:7833/dev (proxied from :7834)",
-  );
-} else {
-  console.log("🚀 [QUEEN UI] Running in PRODUCTION mode");
-  console.log("   - Serving embedded static files");
-  console.log("   - Loaded via: http://localhost:7833/");
-}
+// TEAM-352: Use shared startup logging
+logStartupMode("QUEEN UI", import.meta.env.DEV, 7834);
 
 function App() {
   return (

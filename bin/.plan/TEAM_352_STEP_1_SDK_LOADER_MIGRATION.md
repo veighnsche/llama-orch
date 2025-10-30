@@ -23,14 +23,16 @@ Replace Queen's custom SDK loader (~140 LOC) with @rbee/sdk-loader package.
 
 ## Deliverables Checklist
 
-- [ ] Added @rbee/sdk-loader dependency
-- [ ] Replaced loader.ts implementation
-- [ ] Deleted globalSlot.ts (no longer needed)
-- [ ] Updated useRbeeSDK hook to use new loader
-- [ ] All imports updated
-- [ ] Package builds successfully
-- [ ] Tests pass (if any exist)
-- [ ] TEAM-352 signatures added
+- [x] Added @rbee/sdk-loader dependency
+- [x] Replaced loader.ts implementation
+- [x] Deleted globalSlot.ts (no longer needed)
+- [x] Updated useRbeeSDK hook to use new loader
+- [x] All imports updated
+- [x] Package builds successfully
+- [x] Tests pass (if any exist)
+- [x] TEAM-352 signatures added
+
+**STATUS: ✅ COMPLETE - See TEAM_352_STEP_1_COMPLETE.md for details**
 
 ---
 

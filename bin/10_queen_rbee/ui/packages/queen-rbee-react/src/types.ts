@@ -10,16 +10,4 @@ export interface RbeeSDK {
   RhaiClient: typeof RhaiClient
 }
 
-export type LoadOptions = {
-  timeoutMs?: number
-  maxAttempts?: number
-  baseBackoffMs?: number
-  initArg?: unknown
-  onReady?: (sdk: RbeeSDK) => void
-}
-
-export type GlobalSlot = {
-  promise?: Promise<{ sdk: RbeeSDK }>
-  value?: { sdk: RbeeSDK }
-  error?: Error
-}
+// TEAM-352: LoadOptions and GlobalSlot removed - now in @rbee/sdk-loader

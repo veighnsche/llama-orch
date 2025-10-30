@@ -7,9 +7,8 @@ import { RhaiIDE } from "../components/RhaiIDE";
 import { ConnectionStatus } from "../components/ConnectionStatus";
 
 export default function DashboardPage() {
-  const { data, connected, loading, error } = useHeartbeat(
-    "http://localhost:7833",
-  );
+  // TEAM-352: Use default URL from hook (no hardcoded URL)
+  const { data, connected, loading, error } = useHeartbeat();
   const hives: any[] = []; // TODO: Parse hives from heartbeat data
   const workersOnline = data?.workers_online || 0;
 

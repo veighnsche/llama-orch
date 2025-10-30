@@ -1,26 +1,34 @@
 // TEAM-291: Standard React hook for rbee SDK
+// TEAM-352: Migrated to use @rbee/sdk-loader directly (no wrapper)
 
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
-import { loadSDKOnce } from '../loader'
-import type { LoadOptions, RbeeSDK } from '../types'
+import { createSDKLoader } from '@rbee/sdk-loader'
+import type { RbeeSDK } from '../types'
+
+// TEAM-352: Create loader instance for Queen SDK
+const queenSDKLoader = createSDKLoader<RbeeSDK>({
+  packageName: '@rbee/queen-rbee-sdk',
+  requiredExports: ['QueenClient', 'HeartbeatMonitor', 'OperationBuilder', 'RhaiClient'],
+  timeout: 15000,
+  maxAttempts: 3,
+})
 
 /**
  * React hook for loading the rbee WASM SDK (client-only, retries with backoff)
  *
- * @param options - Load configuration (timeoutMs, maxAttempts, baseBackoffMs, initArg, onReady)
  * @returns Object with sdk (RbeeSDK | null), loading (boolean), error (Error | null)
  *
  * @example
  * ```tsx
- * const { sdk, loading, error } = useRbeeSDK({ onReady: (s) => console.log('Ready!') });
+ * const { sdk, loading, error } = useRbeeSDK();
  * if (loading) return <div>Loading...</div>;
  * if (error) return <div>Error: {error.message}</div>;
- * const client = new sdk.RbeeClient('http://localhost:7833');
+ * const client = new sdk.QueenClient('http://localhost:7833');
  * ```
  */
-export function useRbeeSDK(options?: LoadOptions) {
+export function useRbeeSDK() {
   const [sdk, setSDK] = useState<RbeeSDK | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<Error | null>(null)
@@ -29,8 +37,9 @@ export function useRbeeSDK(options?: LoadOptions) {
   useEffect(() => {
     mountedRef.current = true
 
-    // Options not in deps: we load once per mount, not on option changes
-    loadSDKOnce(options)
+    // TEAM-352: Use shared loader with singleflight pattern
+    queenSDKLoader
+      .loadOnce()
       .then((result) => {
         if (mountedRef.current) {
           setSDK(result.sdk)
@@ -47,7 +56,6 @@ export function useRbeeSDK(options?: LoadOptions) {
     return () => {
       mountedRef.current = false
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   return { sdk, loading, error }

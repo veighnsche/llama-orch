@@ -11,6 +11,9 @@
   },
   "dependencies": {
     "@rbee/ui": "workspace:*",
+    "@rbee/iframe-bridge": "workspace:*",
+    "@rbee/narration-client": "workspace:*",
+    "@rbee/shared-config": "workspace:*",
     "@tanstack/react-query": "^5.90.5",
     "@tauri-apps/api": "^2.9.0",
     "class-variance-authority": "^0.7.1",
