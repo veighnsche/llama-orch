@@ -209,6 +209,9 @@ worker-contract = { path = "../97_contracts/worker-contract" }
 # TEAM-154: Job registry shared crate (dual-call pattern)
 job-server = { path = "../99_shared_crates/job-server" }
 
+# TEAM-353: Operations contract for job-based architecture
+operations-contract = { path = "../97_contracts/operations-contract" }
+
 [dev-dependencies]
 # Testing utilities
 approx = "0.5"

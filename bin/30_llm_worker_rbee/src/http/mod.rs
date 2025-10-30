@@ -21,7 +21,7 @@
 //! Modified by: TEAM-154 (added stream endpoint for dual-call pattern)
 
 pub mod backend;
-pub mod execute;
+pub mod jobs; // TEAM-353: Renamed from execute.rs
 pub mod health;
 pub mod loading;
 pub mod middleware; // TEAM-102: Authentication middleware

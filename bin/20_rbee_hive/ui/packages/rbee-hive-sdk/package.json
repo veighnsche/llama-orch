@@ -2,16 +2,17 @@
   "name": "@rbee/rbee-hive-sdk",
   "version": "0.1.0",
   "type": "module",
-  "main": "./dist/index.js",
-  "types": "./dist/index.d.ts",
+  "main": "./pkg/bundler/rbee_hive_sdk.js",
+  "types": "./pkg/bundler/rbee_hive_sdk.d.ts",
   "exports": {
-    ".": "./dist/index.js"
+    ".": "./pkg/bundler/rbee_hive_sdk.js"
   },
   "scripts": {
-    "build": "tsc",
-    "dev": "tsc --watch"
+    "build": "wasm-pack build --target bundler --out-dir pkg/bundler",
+    "build:web": "wasm-pack build --target web --out-dir pkg/web",
+    "build:nodejs": "wasm-pack build --target nodejs --out-dir pkg/nodejs"
   },
-  "devDependencies": {
-    "typescript": "^5.2.2"
-  }
+  "files": [
+    "pkg"
+  ]
 }

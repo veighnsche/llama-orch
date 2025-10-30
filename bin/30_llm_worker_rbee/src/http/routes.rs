@@ -24,7 +24,7 @@
 //! - `STREAMING_REFACTOR_PLAN.md`: Real-time token streaming
 
 use crate::backend::request_queue::{RequestQueue, TokenResponse};
-use crate::http::{execute, middleware::auth_middleware, stream};
+use crate::http::{jobs, middleware::auth_middleware, stream}; // TEAM-353: Renamed execute → jobs
 use axum::{
     extract::State,
     middleware::{self, Next},
@@ -88,9 +88,14 @@ pub fn create_router(
     let worker_state = WorkerState { queue, registry };
 
     // Worker routes (protected)
-    // TEAM-154: Dual-call pattern - POST creates job, GET streams results
+    // TEAM-353: Job-based architecture - POST /v1/jobs creates job, GET streams results
+    // TEAM-154: Dual-call pattern preserved
     let worker_routes = Router::new()
-        .route("/v1/inference", post(execute::handle_create_job))
+        // TEAM-353: New job-based endpoints
+        .route("/v1/jobs", post(jobs::handle_create_job))
+        .route("/v1/jobs/{job_id}/stream", get(stream::handle_stream_job))
+        // TEAM-353: Keep old endpoints for backwards compatibility (deprecated)
+        .route("/v1/inference", post(jobs::handle_create_job))
         .route("/v1/inference/{job_id}/stream", get(stream::handle_stream_job))
         .with_state(worker_state);
 

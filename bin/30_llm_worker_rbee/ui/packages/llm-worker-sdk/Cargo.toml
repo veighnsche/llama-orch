@@ -1,0 +1,33 @@
+# TEAM-353: Worker WASM SDK - Rust wrapper around job-client
+# Pattern: Same as hive-sdk and queen-sdk
+
+[package]
+name = "llm-worker-sdk"
+version = "0.1.0"
+edition = "2021"
+authors = ["rbee Team"]
+license = "GPL-3.0-or-later"
+
+# Not part of workspace - standalone WASM package
+[workspace]
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+# TEAM-353: Reuse existing shared crates
+job-client = { path = "../../../../99_shared_crates/job-client" }
+operations-contract = { path = "../../../../97_contracts/operations-contract" }
+
+# TEAM-353: WASM bindings
+wasm-bindgen = "0.2"
+wasm-bindgen-futures = "0.4"
+js-sys = "0.3"
+serde = { version = "1.0", features = ["derive"] }
+serde-wasm-bindgen = "0.6"
+
+[dev-dependencies]
+wasm-bindgen-test = "0.3"
+
+[package.metadata.wasm-pack.profile.release]
+wasm-opt = ["-O3"]

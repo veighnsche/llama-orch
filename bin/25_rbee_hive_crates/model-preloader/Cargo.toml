@@ -1,0 +1,25 @@
+# TEAM-TBD: Model pre-loading for faster VRAM transfer
+# Status: STUB - Awaiting implementation
+# Purpose: Pre-load GGUF models into RAM for faster worker startup
+
+[package]
+name = "rbee-hive-model-preloader"
+version = "0.1.0"
+edition = "2021"
+license = "GPL-3.0-or-later"
+
+[lib]
+name = "rbee_hive_model_preloader"
+path = "src/lib.rs"
+
+[dependencies]
+anyhow = "1.0"
+tokio = { workspace = true, features = ["full"] }
+tracing = "0.1"
+serde = { version = "1.0", features = ["derive"] }
+
+# Model catalog integration
+rbee-hive-model-catalog = { path = "../model-catalog" }
+
+[dev-dependencies]
+tempfile = "3.8"

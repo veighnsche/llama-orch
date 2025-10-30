@@ -23,7 +23,9 @@ pub mod backend;
 pub mod common;
 pub mod device;
 pub mod error;
+pub mod heartbeat;
 pub mod http;
+pub mod job_router; // TEAM-353: Job-based architecture
 pub mod narration;
 pub mod token_output_stream;
 

@@ -3,7 +3,7 @@
 # TEAM-286: Rust SDK that compiles to WASM for browser/Node.js usage
 
 [package]
-name = "rbee-sdk"
+name = "queen-rbee-sdk"
 version = "0.1.0"
 edition = "2021"
 authors = ["rbee Team"]

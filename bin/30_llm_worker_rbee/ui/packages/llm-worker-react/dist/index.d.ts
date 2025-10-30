@@ -1,7 +1,12 @@
-import { InferenceRequest } from '@rbee/llm-worker-sdk';
+export interface InferenceRequest {
+    model: string;
+    prompt: string;
+    max_tokens?: number;
+    temperature?: number;
+}
 export declare function useInference(): {
-    response: string;
+    response: any;
     loading: boolean;
     error: Error | null;
-    runInference: (request: InferenceRequest) => Promise<void>;
+    runInference: import("@tanstack/react-query").UseMutateFunction<any, Error, InferenceRequest, unknown>;
 };

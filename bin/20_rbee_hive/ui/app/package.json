@@ -10,6 +10,12 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@rbee/rbee-hive-react": "workspace:*",
+    "@rbee/rbee-hive-sdk": "workspace:*",
+    "@rbee/ui": "workspace:*",
+    "@rbee/dev-utils": "workspace:*",
+    "@rbee/shared-config": "workspace:*",
+    "@tanstack/react-query": "^5.0.0",
     "react": "^19.1.1",
     "react-dom": "^19.1.1"
   },

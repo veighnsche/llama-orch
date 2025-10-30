@@ -133,3 +133,5 @@ __pycache__
 
 # BDD progress tracking (TEAM-124)
 .bdd-progress.json
+
+/dist/
