@@ -17,7 +17,7 @@
 //! let ssh = resolve_ssh_config("workstation")?;
 //! ```
 
-use anyhow::{Context, Result};
+use anyhow::Result;
 use lifecycle_ssh::SshConfig;
 use ssh_config_parser; // TEAM-365: Use shared crate
 

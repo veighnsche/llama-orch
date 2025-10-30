@@ -9,12 +9,9 @@ members = [
     # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
     
     "bin/00_rbee_keeper",         # CLI tool for managing rbee infrastructure
-    "bin/00_rbee_keeper/bdd",     # BDD integration tests
     "bin/10_queen_rbee",          # Daemon for managing rbee-hive instances (job-based arch, no BDD)
     "bin/20_rbee_hive",           # Daemon for managing LLM worker instances
-    "bin/20_rbee_hive/bdd",       # BDD integration tests
-    "bin/30_llm_worker_rbee",     # LLM inference worker daemon
-    "bin/30_llm_worker_rbee/bdd", # BDD integration tests
+    # "bin/30_llm_worker_rbee",     # LLM inference worker daemon - DISABLED: ancient narration API
 
     # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
     # RBEE-KEEPER CRATES — CLI tool crates
@@ -22,7 +19,6 @@ members = [
     # TEAM-323: DELETED queen-lifecycle and hive-lifecycle - use daemon-lifecycle directly (RULE ZERO)
     
     "bin/15_queen_rbee_crates/worker-registry",  # TEAM-262: Renamed from hive-registry
-    "bin/15_queen_rbee_crates/worker-registry/bdd",
     "bin/15_queen_rbee_crates/hive-registry",    # TEAM-284: New hive registry
     
     # rbee-hive crates (NO CLI!)
@@ -41,14 +37,11 @@ members = [
     # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
     
     "bin/98_security_crates/audit-logging",
-    "bin/98_security_crates/audit-logging/bdd",
     "bin/98_security_crates/auth-min",
     "bin/98_security_crates/deadline-propagation",
     "bin/98_security_crates/input-validation",
-    "bin/98_security_crates/input-validation/bdd",
     "bin/98_security_crates/jwt-guardian",
     "bin/98_security_crates/secrets-management",
-    "bin/98_security_crates/secrets-management/bdd",
 
     # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
     # LIFECYCLE CRATES — Daemon Lifecycle Management (96_lifecycle)
@@ -63,7 +56,6 @@ members = [
     # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
     
     "bin/99_shared_crates/narration-core",
-    "bin/99_shared_crates/narration-core/bdd",
     "bin/99_shared_crates/narration-macros",
     # TEAM-135: New shared crates for consolidation
     # TEAM-330: daemon-lifecycle split into 96_lifecycle category (RULE ZERO - focused crates)

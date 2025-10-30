@@ -7,7 +7,6 @@
 //! Currently only exposes SSH config parsing. Other commands will be added
 //! as the architecture stabilizes.
 
-use crate::ssh_resolver;
 use serde::{Deserialize, Serialize};
 
 #[cfg(test)]
@@ -102,16 +101,15 @@ pub enum SshTargetStatus {
 #[specta::specta]
 pub async fn queen_status() -> Result<lifecycle_local::DaemonStatus, String> {
     use crate::Config;
-    use lifecycle_local::{check_daemon_health, SshConfig};
+    use lifecycle_local::check_daemon_health;
 
     let config = Config::load().map_err(|e| format!("Config error: {}", e))?;
     let queen_url = config.queen_url();
 
     // Check status (running + installed)
     let health_url = format!("{}/health", queen_url);
-    let ssh_config = SshConfig::localhost(); // Queen is always localhost
 
-    Ok(check_daemon_health(&health_url, "queen-rbee", &ssh_config).await)
+    Ok(check_daemon_health(&health_url, "queen-rbee").await)
 }
 
 /// Start queen-rbee daemon on localhost
