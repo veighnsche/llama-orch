@@ -1,5 +1,6 @@
 // Heartbeat Monitor Component
 // Displays real-time worker and hive status
+// TEAM-364: Updated to display ProcessStats telemetry
 
 import {
   Card,
@@ -12,15 +13,36 @@ import {
   Badge,
 } from "@rbee/ui/atoms";
 import { StatusKPI, PulseBadge, IconPlate } from "@rbee/ui/molecules";
-import { Activity, Server, Cpu, ChevronDown } from "lucide-react";
+import { Activity, Server, Cpu, ChevronDown, Gauge, HardDrive } from "lucide-react";
+
+interface ProcessStats {
+  pid: number;
+  group: string;
+  instance: string;
+  cpu_pct: number;
+  rss_mb: number;
+  gpu_util_pct: number;
+  vram_mb: number;
+  total_vram_mb: number;
+  model: string | null;
+  uptime_s: number;
+}
+
+interface HiveData {
+  hive_id: string;
+  workers: ProcessStats[];
+  last_update: string;
+}
 
 interface HeartbeatMonitorProps {
   workersOnline: number;
-  hives: any[];
+  hivesOnline: number;
+  hives: HiveData[];
 }
 
 export function HeartbeatMonitor({
   workersOnline,
+  hivesOnline,
   hives,
 }: HeartbeatMonitorProps) {
   return (
@@ -44,7 +66,7 @@ export function HeartbeatMonitor({
             icon={<Server />}
             color="primary"
             label="Active Hives"
-            value={hives.length}
+            value={hivesOnline}
           />
         </div>
 
@@ -56,7 +78,7 @@ export function HeartbeatMonitor({
           ) : (
             <div className="space-y-2">
               {hives.map((hive) => (
-                <Collapsible key={hive.id}>
+                <Collapsible key={hive.hive_id}>
                   <div className="border rounded-lg overflow-hidden">
                     {/* Hive Header */}
                     <CollapsibleTrigger className="w-full flex items-center gap-3 p-3 hover:bg-accent transition-colors group">
@@ -67,7 +89,7 @@ export function HeartbeatMonitor({
                         size="sm"
                         animated
                       />
-                      <span className="font-medium">{hive.id}</span>
+                      <span className="font-medium">{hive.hive_id}</span>
                       <Badge variant="secondary" className="ml-auto">
                         {hive.workers?.length || 0} workers
                       </Badge>
@@ -77,24 +99,36 @@ export function HeartbeatMonitor({
                     <CollapsibleContent>
                       {hive.workers && hive.workers.length > 0 && (
                         <div className="px-3 pb-3 pl-10 space-y-1 bg-muted/30">
-                          {hive.workers.map((worker: any) => (
+                          {hive.workers.map((worker) => (
                             <div
-                              key={worker.id}
-                              className="flex items-center gap-3 p-2 text-sm bg-card rounded border"
+                              key={worker.pid}
+                              className="flex items-center gap-2 p-2 text-sm bg-card rounded border"
                             >
                               <PulseBadge
                                 text=""
-                                variant="success"
+                                variant={worker.gpu_util_pct > 0 ? "success" : "info"}
                                 size="sm"
-                                animated
+                                animated={worker.gpu_util_pct > 0}
                                 className="px-0"
                               />
                               <span className="font-mono text-xs">
-                                {worker.id}
+                                {worker.group}/{worker.instance}
                               </span>
-                              <Badge variant="outline" className="ml-auto text-xs">
-                                {worker.model_id}
-                              </Badge>
+                              {worker.model && (
+                                <Badge variant="outline" className="text-xs">
+                                  {worker.model}
+                                </Badge>
+                              )}
+                              <div className="ml-auto flex items-center gap-3 text-xs text-muted-foreground">
+                                <span className="flex items-center gap-1">
+                                  <Gauge className="h-3 w-3" />
+                                  GPU: {worker.gpu_util_pct.toFixed(1)}%
+                                </span>
+                                <span className="flex items-center gap-1">
+                                  <HardDrive className="h-3 w-3" />
+                                  VRAM: {worker.vram_mb}MB / {worker.total_vram_mb}MB
+                                </span>
+                              </div>
                             </div>
                           ))}
                         </div>

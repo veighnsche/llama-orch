@@ -81,25 +81,40 @@ mod tests {
     use queen_rbee_hive_registry::HiveRegistry;
     use queen_rbee_worker_registry::WorkerRegistry;
     use shared_contract::{HealthStatus, OperationalStatus};
+    use std::sync::Arc;
+    use tokio::sync::broadcast;
     use worker_contract::{WorkerHeartbeat, WorkerInfo, WorkerStatus};
 
     #[test]
-    fn test_create_snapshot_empty() {
+    fn test_create_queen_heartbeat_empty() {
+        let (event_tx, _) = broadcast::channel(100);
         let state = HeartbeatState {
             worker_registry: Arc::new(WorkerRegistry::new()),
             hive_registry: Arc::new(HiveRegistry::new()),
+            event_tx,
         };
 
-        let snapshot = create_snapshot(&state);
+        let event = create_queen_heartbeat(&state);
 
-        assert_eq!(snapshot.workers_online, 0);
-        assert_eq!(snapshot.hives_online, 0);
-        assert!(snapshot.worker_ids.is_empty());
-        assert!(snapshot.hive_ids.is_empty());
+        match event {
+            HeartbeatEvent::Queen {
+                workers_online,
+                hives_online,
+                worker_ids,
+                hive_ids,
+                ..
+            } => {
+                assert_eq!(workers_online, 0);
+                assert_eq!(hives_online, 0);
+                assert!(worker_ids.is_empty());
+                assert!(hive_ids.is_empty());
+            }
+            _ => panic!("Expected Queen heartbeat event"),
+        }
     }
 
     #[test]
-    fn test_create_snapshot_with_data() {
+    fn test_create_queen_heartbeat_with_data() {
         let worker_registry = Arc::new(WorkerRegistry::new());
         let hive_registry = Arc::new(HiveRegistry::new());
 
@@ -126,13 +141,29 @@ mod tests {
         };
         hive_registry.update_hive(HiveHeartbeat::new(hive));
 
-        let state = HeartbeatState { worker_registry, hive_registry };
+        let (event_tx, _) = broadcast::channel(100);
+        let state = HeartbeatState {
+            worker_registry,
+            hive_registry,
+            event_tx,
+        };
 
-        let snapshot = create_snapshot(&state);
+        let event = create_queen_heartbeat(&state);
 
-        assert_eq!(snapshot.workers_online, 1);
-        assert_eq!(snapshot.hives_online, 1);
-        assert_eq!(snapshot.worker_ids, vec!["worker-1"]);
-        assert_eq!(snapshot.hive_ids, vec!["hive-1"]);
+        match event {
+            HeartbeatEvent::Queen {
+                workers_online,
+                hives_online,
+                worker_ids,
+                hive_ids,
+                ..
+            } => {
+                assert_eq!(workers_online, 1);
+                assert_eq!(hives_online, 1);
+                assert_eq!(worker_ids, vec!["worker-1"]);
+                assert_eq!(hive_ids, vec!["hive-1"]);
+            }
+            _ => panic!("Expected Queen heartbeat event"),
+        }
     }
 }

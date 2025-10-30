@@ -5,15 +5,16 @@
 //! TEAM-322: Consolidated status/info - both use check_queen_status with verbose flag
 //! TEAM-324: Moved QueenAction enum here to eliminate duplication
 //! TEAM-332: Use ssh_resolver middleware (queen is always localhost)
+//! TEAM-365: Updated to use lifecycle-local (no SshConfig, localhost only)
 //!
 //! This module is now a thin wrapper that delegates all queen lifecycle
-//! operations to the queen-lifecycle crate. All business logic lives there.
+//! operations to the lifecycle-local crate. All business logic lives there.
 
 use anyhow::Result;
 use clap::Subcommand;
 use lifecycle_local::{
     check_daemon_health, install_daemon, rebuild_daemon, start_daemon, stop_daemon,
-    uninstall_daemon, HttpDaemonConfig, InstallConfig, RebuildConfig, SshConfig, StartConfig,
+    uninstall_daemon, HttpDaemonConfig, InstallConfig, RebuildConfig, StartConfig,
     StopConfig, UninstallConfig,
 };
 use observability_narration_core::n;
@@ -50,35 +51,33 @@ pub async fn handle_queen(action: QueenAction, queen_url: &str) -> Result<()> {
 
     match action {
         QueenAction::Start => {
-            // TEAM-333: Queen is always localhost - use SshConfig::localhost() directly
+            // TEAM-365: Queen is always localhost - lifecycle-local has no SSH
             // TEAM-341: BUG FIX - Must pass health_url with /health path, not base_url
             let base_url = format!("http://localhost:{}", port);
             let health_url = format!("{}/health", base_url);
             let args = vec!["--port".to_string(), port.to_string()];
             let daemon_config = HttpDaemonConfig::new("queen-rbee", &health_url).with_args(args);
-            let config =
-                StartConfig { ssh_config: SshConfig::localhost(), daemon_config, job_id: None };
+            let config = StartConfig { daemon_config, job_id: None };
             let _pid = start_daemon(config).await?;
             Ok(())
         }
         QueenAction::Stop => {
-            // TEAM-333: Queen is always localhost - use SshConfig::localhost() directly
+            // TEAM-365: Queen is always localhost - lifecycle-local has no SSH
             let shutdown_url = format!("{}/v1/shutdown", queen_url);
             let health_url = format!("{}/health", queen_url);
             let config = StopConfig {
                 daemon_name: "queen-rbee".to_string(),
                 shutdown_url,
                 health_url,
-                ssh_config: SshConfig::localhost(),
                 job_id: None,
             };
             stop_daemon(config).await
         }
         // TEAM-338: RULE ZERO - Updated to new check_daemon_health signature
+        // TEAM-365: lifecycle-local has no SSH (localhost only)
         QueenAction::Status => {
             let health_url = format!("{}/health", queen_url);
-            let ssh_config = SshConfig::localhost(); // Queen is always localhost
-            let status = check_daemon_health(&health_url, "queen-rbee", &ssh_config).await;
+            let status = check_daemon_health(&health_url, "queen-rbee").await;
 
             if status.is_running {
                 n!("queen_status", "✅ queen 'localhost' is running on {}", queen_url);
@@ -88,32 +87,29 @@ pub async fn handle_queen(action: QueenAction, queen_url: &str) -> Result<()> {
             Ok(())
         }
         QueenAction::Rebuild => {
-            // TEAM-333: Queen is always localhost - use SshConfig::localhost() directly
+            // TEAM-365: Queen is always localhost - lifecycle-local has no SSH
             let daemon_config = HttpDaemonConfig::new("queen-rbee", queen_url.to_string())
                 .with_args(vec!["--port".to_string(), port.to_string()]);
             let config = RebuildConfig {
                 daemon_name: "queen-rbee".to_string(),
-                ssh_config: SshConfig::localhost(),
                 daemon_config,
                 job_id: None,
             };
             rebuild_daemon(config).await
         }
         QueenAction::Install { binary } => {
-            // TEAM-333: Queen is always localhost - use SshConfig::localhost() directly
+            // TEAM-365: Queen is always localhost - lifecycle-local has no SSH
             let config = InstallConfig {
                 daemon_name: "queen-rbee".to_string(),
-                ssh_config: SshConfig::localhost(),
                 local_binary_path: binary.map(std::path::PathBuf::from),
                 job_id: None,
             };
             install_daemon(config).await
         }
         QueenAction::Uninstall => {
-            // TEAM-333: Queen is always localhost - use SshConfig::localhost() directly
+            // TEAM-365: Queen is always localhost - lifecycle-local has no SSH
             let config = UninstallConfig {
                 daemon_name: "queen-rbee".to_string(),
-                ssh_config: SshConfig::localhost(),
                 health_url: Some(queen_url.to_string()),
                 health_timeout_secs: Some(2),
                 job_id: None,

@@ -1,0 +1,12 @@
+# TEAM-365: Created by TEAM-365
+[package]
+name = "ssh-config-parser"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+anyhow = "1.0"
+whoami = "1.5"
+
+[dev-dependencies]
+tempfile = "3.8"

@@ -1200,6 +1200,46 @@ See [`AGENTS.md`](AGENTS.md) for complete repository guidelines.
 
 ---
 
+## Testing
+
+### Telemetry Pipeline Tests
+
+The telemetry pipeline has comprehensive unit tests covering worker monitoring, storage, and scheduling:
+
+```bash
+# Run all telemetry tests
+cargo test -p rbee-hive-monitor
+cargo test -p queen-rbee-hive-registry
+
+# Run specific test suite (12 tests)
+cargo test -p queen-rbee-hive-registry --test worker_telemetry_tests
+
+# Run with output
+cargo test -p queen-rbee-hive-registry -- --nocapture
+```
+
+**Test Coverage:**
+- ✅ Worker telemetry storage (4 tests)
+- ✅ Scheduling queries (3 tests)
+- ✅ Thread safety (2 tests)
+- ✅ Edge cases (3 tests)
+
+**Critical Issues Fixed:**
+- ✅ nvidia-smi timeout protection
+- ✅ HTTP timeout protection
+- ✅ Auto stale worker cleanup
+- ✅ Dynamic VRAM detection
+- ✅ Continue on errors
+
+See `bin/.plan/TEAM_364_ALL_CRITICAL_ISSUES_FIXED.md` for details.
+
+### CI/CD
+
+Tests run automatically on every push via GitHub Actions:
+- `.github/workflows/telemetry-tests.yml`
+
+---
+
 ## Quick Reference
 
 **Pronunciation:** rbee (pronounced "are-bee")  

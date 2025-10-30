@@ -35,6 +35,7 @@ async-stream = "0.3" # TEAM-288: For async stream! macro in heartbeat_stream
 
 # Error handling
 anyhow = "1.0"
+tracing = "0.1"  # TEAM-364: For logging in cleanup task
 
 # Internal dependencies
 # TEAM-XXX: DELETED lifecycle-ssh - Queen doesn't manage daemons (Keeper does that)
@@ -48,12 +49,15 @@ queen-rbee-worker-registry = { path = "../15_queen_rbee_crates/worker-registry" 
 queen-rbee-hive-registry = { path = "../15_queen_rbee_crates/hive-registry" }  # TEAM-284: Runtime hive state (RAM)
 # TEAM-290: DELETED hive-lifecycle dependency (queen no longer manages hives, rbee-keeper does via SSH)
 hive-contract = { path = "../97_contracts/hive-contract" }  # TEAM-284: Hive contract types
+rbee-hive-monitor = { path = "../25_rbee_hive_crates/monitor" }  # TEAM-364: Worker telemetry types
 worker-contract = { path = "../97_contracts/worker-contract" }  # TEAM-270/284: Worker contract types
 queen-rbee-scheduler = { path = "../15_queen_rbee_crates/scheduler" }  # TEAM-275: Job scheduler (stub for M2 Rhai)
 # TEAM-284: DELETED daemon-sync, ssh-client, and rbee-heartbeat (replaced by contracts)
 operations-contract = { path = "../97_contracts/operations-contract" }  # TEAM-186/284: Operations contract
 job-client = { path = "../99_shared_crates/job-client" }  # TEAM-259: Shared job submission client
 timeout-enforcer = { path = "../99_shared_crates/timeout-enforcer" }  # TEAM-207: Timeout enforcement
+ssh-config-parser = { path = "../99_shared_crates/ssh-config-parser" }  # TEAM-365: SSH config parser for hive discovery
+urlencoding = "2.1"  # TEAM-365: URL encoding for queen_url parameter
 
 # TODO: Add when registries are migrated
 # beehive_registry (for http/routes.rs, http/beehives.rs, etc.)

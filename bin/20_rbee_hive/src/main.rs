@@ -17,6 +17,7 @@ mod job_router;
 use observability_narration_core::n;
 
 use axum::{
+    extract::{Query, State}, // TEAM-365: Query for queen_url parameter, State for HiveState
     routing::{delete, get, post}, // TEAM-305-FIX: Added delete for cancel endpoint
     Json,
     Router,
@@ -26,9 +27,11 @@ use job_server::JobRegistry;
 use rbee_hive_artifact_catalog::ArtifactCatalog; // TEAM-273: Trait for catalog methods
 use rbee_hive_model_catalog::ModelCatalog; // TEAM-268: Model catalog
 use rbee_hive_worker_catalog::WorkerCatalog; // TEAM-274: Worker catalog
-use serde::Serialize;
+use serde::{Deserialize, Serialize}; // TEAM-365: Deserialize for CapabilitiesQuery
 use std::net::SocketAddr;
+use std::sync::atomic::{AtomicBool, Ordering}; // TEAM-365: Atomic for heartbeat control
 use std::sync::Arc;
+use tokio::sync::RwLock; // TEAM-365: RwLock for dynamic queen_url
 
 #[derive(Parser, Debug)]
 #[command(name = "rbee-hive")]
@@ -79,7 +82,27 @@ async fn main() -> anyhow::Result<()> {
 
     // TODO: TEAM-269 will add model provisioner initialization here
 
-    // TEAM-261: Create HTTP state for job endpoints
+    // TEAM-365: Create HiveInfo for heartbeat
+    let hive_info = hive_contract::HiveInfo {
+        id: args.hive_id.clone(),
+        hostname: "127.0.0.1".to_string(),
+        port: args.port,
+        operational_status: hive_contract::OperationalStatus::Ready,
+        health_status: hive_contract::HealthStatus::Healthy,
+        version: env!("CARGO_PKG_VERSION").to_string(),
+    };
+
+    // TEAM-365: Create shared HiveState for dynamic queen_url and heartbeat control
+    let hive_state = Arc::new(HiveState {
+        job_registry: job_registry.clone(),
+        model_catalog: model_catalog.clone(),
+        worker_catalog: worker_catalog.clone(),
+        queen_url: Arc::new(RwLock::new(Some(args.queen_url.clone()))), // TEAM-365: Dynamic queen URL
+        heartbeat_running: Arc::new(AtomicBool::new(false)), // TEAM-365: Heartbeat control
+        hive_info: hive_info.clone(),
+    });
+
+    // TEAM-261: Create HTTP state for job endpoints (for backwards compatibility)
     // TEAM-268: Added model_catalog to state
     // TEAM-274: Added worker_catalog to state
     let job_state = http::jobs::HiveState { registry: job_registry, model_catalog, worker_catalog };
@@ -111,10 +134,13 @@ async fn main() -> anyhow::Result<()> {
     // - curl http://localhost:9000/health - SUCCESS (returns "ok")
     // ============================================================
 
-    // Create router with health, capabilities, and job endpoints
+    // TEAM-365: Create router with two different states
+    // - HiveState for capabilities endpoint (needs queen_url)
+    // - JobState for job endpoints (existing pattern)
     let app = Router::new()
         .route("/health", get(health_check))
         .route("/capabilities", get(get_capabilities))
+        .with_state(hive_state.clone()) // TEAM-365: HiveState for capabilities
         .route("/v1/shutdown", post(http::handle_shutdown)) // TEAM-339: Graceful shutdown endpoint
         .route("/v1/jobs", post(http::jobs::handle_create_job))
         .route("/v1/jobs/{job_id}/stream", get(http::jobs::handle_stream_job)) // TEAM-291: Fixed :job_id → {job_id}
@@ -135,18 +161,8 @@ async fn main() -> anyhow::Result<()> {
     // TEAM-340: Migrated to n!() macro
     n!("ready", "✅ Hive ready");
 
-    // TEAM-292: Start heartbeat task to send status to queen
-    // Create HiveInfo with this hive's details
-    let hive_info = hive_contract::HiveInfo {
-        id: args.hive_id.clone(),
-        hostname: "127.0.0.1".to_string(),
-        port: args.port,
-        operational_status: hive_contract::OperationalStatus::Ready,
-        health_status: hive_contract::HealthStatus::Healthy,
-        version: env!("CARGO_PKG_VERSION").to_string(),
-    };
-
-    // Start heartbeat task (runs in background)
+    // TEAM-365: Start heartbeat task with discovery (exponential backoff)
+    // This will be implemented in Phase 4
     let _heartbeat_handle = heartbeat::start_heartbeat_task(hive_info, args.queen_url.clone());
 
     // TEAM-340: Migrated to n!() macro
@@ -179,12 +195,61 @@ struct CapabilitiesResponse {
     devices: Vec<HiveDevice>,
 }
 
+/// TEAM-365: Query parameters for capabilities endpoint
+#[derive(Debug, Deserialize)]
+struct CapabilitiesQuery {
+    /// Queen URL for bidirectional discovery
+    queen_url: Option<String>,
+}
+
+/// TEAM-365: Shared state for dynamic Queen URL and heartbeat control
+#[derive(Clone)]
+pub struct HiveState {
+    pub job_registry: Arc<JobRegistry<String>>,
+    pub model_catalog: Arc<ModelCatalog>,
+    pub worker_catalog: Arc<WorkerCatalog>,
+    pub queen_url: Arc<RwLock<Option<String>>>,  // TEAM-365: Dynamic queen URL
+    pub heartbeat_running: Arc<AtomicBool>,      // TEAM-365: Prevent duplicate tasks
+    pub hive_info: hive_contract::HiveInfo,      // TEAM-365: For heartbeat
+}
+
+impl HiveState {
+    /// TEAM-365: Store queen URL dynamically
+    pub async fn set_queen_url(&self, url: String) {
+        *self.queen_url.write().await = Some(url);
+    }
+    
+    /// TEAM-365: Start heartbeat task (idempotent - only starts once)
+    pub async fn start_heartbeat_task(&self, queen_url: String) {
+        // Only start if not already running
+        if self.heartbeat_running.swap(true, Ordering::SeqCst) {
+            n!("heartbeat_skip", "💓 Heartbeat already running, skipping");
+            return;
+        }
+        
+        n!("heartbeat_start", "💓 Starting heartbeat task to {}", queen_url);
+        let hive_info = self.hive_info.clone();
+        heartbeat::start_heartbeat_task(hive_info, queen_url);
+    }
+}
+
 /// TEAM-205: Capabilities endpoint - returns detected GPU/CPU devices
 /// TEAM-206: Added comprehensive narration for device detection visibility
-async fn get_capabilities() -> Json<CapabilitiesResponse> {
+/// TEAM-365: Enhanced with queen_url parameter for bidirectional discovery
+async fn get_capabilities(
+    Query(params): Query<CapabilitiesQuery>,
+    State(state): State<Arc<HiveState>>,
+) -> Json<CapabilitiesResponse> {
     // TEAM-206: Narrate incoming request
     // TEAM-340: Migrated to n!() macro
     n!("caps_request", "📡 Received capabilities request from queen");
+    
+    // TEAM-365: Handle queen_url parameter for discovery
+    if let Some(queen_url) = params.queen_url {
+        n!("caps_queen_url", "🔗 Queen URL received: {}", queen_url);
+        state.set_queen_url(queen_url.clone()).await;
+        state.start_heartbeat_task(queen_url).await;
+    }
 
     // TEAM-206: Narrate GPU detection attempt
     // TEAM-340: Migrated to n!() macro

@@ -15,6 +15,8 @@
 // TEAM-XXX: Fixed - main.rs should use the library, not shadow it with mod declarations
 use queen_rbee::http;
 
+mod discovery; // TEAM-365: Hive discovery module
+
 use anyhow::Result; // TEAM-288: Import Result for main function
 use axum::{
     routing::{delete, get, post}, // TEAM-305-FIX: Added delete for cancel endpoint
@@ -73,6 +75,14 @@ async fn main() -> Result<()> {
     n!("listen", "Listening on http://{}", addr);
 
     n!("ready", "Ready to accept connections");
+
+    // TEAM-365: Start hive discovery task
+    let queen_url = format!("http://127.0.0.1:{}", args.port);
+    tokio::spawn(async move {
+        if let Err(e) = discovery::discover_hives_on_startup(&queen_url).await {
+            n!("discovery_error", "❌ Hive discovery failed: {}", e);
+        }
+    });
 
     let listener = tokio::net::TcpListener::bind(addr).await?;
     axum::serve(listener, app).await.map_err(|e| {

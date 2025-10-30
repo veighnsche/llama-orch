@@ -65,6 +65,7 @@ operations-contract = { path = "../97_contracts/operations-contract" }  # TEAM-1
 job-client = { path = "../99_shared_crates/job-client" }  # TEAM-259: Shared job submission client
 # TEAM-323: DELETED queen-lifecycle and hive-lifecycle - use daemon-lifecycle directly (RULE ZERO)
 keeper-config-contract = { path = "../97_contracts/keeper-config-contract" }  # TEAM-315: Keeper configuration contract
+ssh-config-parser = { path = "../99_shared_crates/ssh-config-parser" }  # TEAM-365: Shared SSH config parser
 
 # TEAM-293/294: Tauri v2 dependencies for GUI
 # TEAM-297: Using tauri-specta v2.0.0-rc.21 for Tauri v2 support

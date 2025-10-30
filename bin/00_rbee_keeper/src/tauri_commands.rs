@@ -417,19 +417,27 @@ pub async fn ssh_open_config() -> Result<String, String> {
 pub async fn ssh_list() -> Result<Vec<SshTarget>, String> {
     // TEAM-333: Parse ~/.ssh/config and return list of SSH targets
     // TEAM-333: Deduplicate by hostname, keep shortest host alias
+    // TEAM-365: Now uses shared ssh-config-parser crate
     use observability_narration_core::n;
     use std::collections::HashMap;
 
     n!("ssh_list", "Reading SSH config");
 
-    // Get SSH config path
-    let home =
-        std::env::var("HOME").map_err(|_| "HOME environment variable not set".to_string())?;
-    let ssh_config_path = std::path::PathBuf::from(home).join(".ssh/config");
-
-    // Parse SSH config
-    let hosts = ssh_resolver::parse_ssh_config(&ssh_config_path)
+    // TEAM-365: Use shared SSH config parser
+    let ssh_config_path = ssh_config_parser::get_default_ssh_config_path();
+    
+    // Parse SSH config using shared crate
+    let parsed_targets = ssh_config_parser::parse_ssh_config(&ssh_config_path)
         .map_err(|e| format!("Failed to parse SSH config: {}", e))?;
+    
+    // TEAM-365: Convert ssh_config_parser::SshTarget to our SshTarget type
+    let mut hosts: std::collections::HashMap<String, lifecycle_ssh::SshConfig> = HashMap::new();
+    for target in parsed_targets {
+        hosts.insert(
+            target.host.clone(),
+            lifecycle_ssh::SshConfig::new(target.hostname, target.user, target.port),
+        );
+    }
 
     // TEAM-333: Deduplicate by hostname - collect all aliases first, then pick shortest
     let mut by_hostname: HashMap<String, Vec<String>> = HashMap::new();

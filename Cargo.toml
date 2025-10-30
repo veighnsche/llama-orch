@@ -74,6 +74,7 @@ members = [
     # TEAM-290: DELETED rbee-config (file-based config deprecated)
     # TEAM-284: DELETED daemon-sync and ssh-client (SSH/remote operations removed)
     "bin/99_shared_crates/job-client",          # Workspace automation (cargo xtask)
+    "bin/99_shared_crates/ssh-config-parser",   # TEAM-365: SSH config parser for Queen discovery
 
     # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
     # CONTRACT CRATES — Type-safe contracts (TEAM-285: Moved from 99 to 97)
