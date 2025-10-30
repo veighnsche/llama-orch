@@ -10,21 +10,14 @@
 
 use crate::narration::{ACTION_DEVICE_INIT, ACTOR_DEVICE_MANAGER};
 use candle_core::{Device, Result as CandleResult};
-use observability_narration_core::{narrate, NarrationFields};
+use observability_narration_core::n;
 
 /// Initialize CPU device
 #[cfg(feature = "cpu")]
 pub fn init_cpu_device() -> CandleResult<Device> {
     tracing::info!("Initializing CPU device");
 
-    narrate(NarrationFields {
-        actor: ACTOR_DEVICE_MANAGER,
-        action: ACTION_DEVICE_INIT,
-        target: "cpu".to_string(),
-        human: "Initialized CPU device".to_string(),
-        cute: Some("CPU device ready to crunch numbers! 💻".to_string()),
-        ..Default::default()
-    });
+    n!(ACTION_DEVICE_INIT, "Initialized CPU device");
 
     Ok(Device::Cpu)
 }
@@ -36,15 +29,7 @@ pub fn init_cuda_device(gpu_id: usize) -> CandleResult<Device> {
 
     let device = Device::new_cuda(gpu_id)?;
 
-    narrate(NarrationFields {
-        actor: ACTOR_DEVICE_MANAGER,
-        action: ACTION_DEVICE_INIT,
-        target: format!("cuda-{}", gpu_id),
-        human: format!("Initialized CUDA device {}", gpu_id),
-        cute: Some(format!("GPU{} warmed up and ready to zoom! ⚡", gpu_id)),
-        device: Some(format!("cuda-{}", gpu_id)),
-        ..Default::default()
-    });
+    n!(ACTION_DEVICE_INIT, "Initialized CUDA device {}", gpu_id);
 
     Ok(device)
 }
@@ -57,15 +42,7 @@ pub fn init_metal_device(gpu_id: usize) -> CandleResult<Device> {
 
     let device = Device::new_metal(gpu_id)?;
 
-    narrate(NarrationFields {
-        actor: ACTOR_DEVICE_MANAGER,
-        action: ACTION_DEVICE_INIT,
-        target: format!("metal-{}", gpu_id),
-        human: format!("Initialized Apple Metal device {}", gpu_id),
-        cute: Some(format!("Apple GPU{} polished and ready to shine! ✨", gpu_id)),
-        device: Some(format!("metal-{}", gpu_id)),
-        ..Default::default()
-    });
+    n!(ACTION_DEVICE_INIT, "Initialized Apple Metal device {}", gpu_id);
 
     Ok(device)
 }

@@ -13,7 +13,7 @@
 
 use anyhow::{Context, Result};
 use candle_core::quantized::gguf_file::{Content, Value};
-use observability_narration_core::{narrate, NarrationFields};
+use observability_narration_core::n;
 use std::collections::HashMap;
 use std::path::Path;
 use tokenizers::models::bpe::BpeBuilder;
@@ -25,14 +25,7 @@ use tokenizers::{AddedToken, Tokenizer};
 /// This builds a proper `HuggingFace` Tokenizer from GGUF metadata.
 pub fn extract_tokenizer_from_gguf(gguf_path: &Path) -> Result<Tokenizer> {
     // TEAM-090: Narrate tokenizer extraction start
-    narrate(NarrationFields {
-        actor: "model-loader",
-        action: "gguf_tokenizer_extract_start",
-        target: gguf_path.display().to_string(),
-        human: format!("Extracting embedded tokenizer from GGUF: {}", gguf_path.display()),
-        cute: Some("Looking for the tokenizer hidden inside the GGUF! 🔍📝".to_string()),
-        ..Default::default()
-    });
+    n!("gguf_tokenizer_extract_start", "Extracting embedded tokenizer from GGUF: {}", gguf_path.display());
 
     // 1. Read GGUF file
     let mut file = std::fs::File::open(gguf_path)
@@ -46,18 +39,7 @@ pub fn extract_tokenizer_from_gguf(gguf_path: &Path) -> Result<Tokenizer> {
     let merges = extract_merges(&content)?;
 
     // TEAM-090: Narrate successful metadata extraction
-    narrate(NarrationFields {
-        actor: "model-loader",
-        action: "gguf_tokenizer_metadata_extracted",
-        target: gguf_path.display().to_string(),
-        human: format!(
-            "Extracted tokenizer metadata: {} tokens, {} merges",
-            tokens.len(),
-            merges.as_ref().map_or(0, std::vec::Vec::len)
-        ),
-        cute: Some(format!("Found {} tokens in the GGUF! Building tokenizer... 🔧", tokens.len())),
-        ..Default::default()
-    });
+    n!("gguf_tokenizer_metadata_extracted", "Extracted tokenizer metadata: {} tokens, {} merges", tokens.len(), merges.as_ref().map_or(0, std::vec::Vec::len));
 
     tracing::info!(
         tokens = tokens.len(),
@@ -70,20 +52,7 @@ pub fn extract_tokenizer_from_gguf(gguf_path: &Path) -> Result<Tokenizer> {
     let tokenizer = build_tokenizer(tokens, scores, merges)?;
 
     // TEAM-090: Narrate successful tokenizer construction
-    narrate(NarrationFields {
-        actor: "model-loader",
-        action: "gguf_tokenizer_extracted",
-        target: gguf_path.display().to_string(),
-        human: format!(
-            "Extracted tokenizer from GGUF ({} tokens)",
-            tokenizer.get_vocab_size(false)
-        ),
-        cute: Some(format!(
-            "Found the tokenizer inside the GGUF! 📝✨ ({} tokens)",
-            tokenizer.get_vocab_size(false)
-        )),
-        ..Default::default()
-    });
+    n!("gguf_tokenizer_extracted", "Extracted tokenizer from GGUF ({} tokens)", tokenizer.get_vocab_size(false));
 
     tracing::info!(
         vocab_size = tokenizer.get_vocab_size(false),

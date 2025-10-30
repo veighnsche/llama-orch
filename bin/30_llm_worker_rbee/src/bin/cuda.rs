@@ -11,11 +11,8 @@
 
 use anyhow::Result;
 use clap::Parser;
-use llm_worker_rbee::device::{init_cuda_device, verify_device};
-use llm_worker_rbee::{backend::CandleInferenceBackend, create_router, HttpServer};
+use llm_worker_rbee::{backend::CandleInferenceBackend, setup_worker_with_backend, HttpServer};
 use std::net::SocketAddr;
-use std::sync::Arc;
-use tokio::sync::Mutex;
 
 /// CLI arguments for CUDA worker daemon
 #[derive(Parser, Debug)]
@@ -60,21 +57,13 @@ async fn main() -> Result<()> {
     );
 
     // ============================================================
-    // STEP 1: Initialize CUDA device
+    // STEP 1: Load model to GPU
     // ============================================================
-    tracing::info!(cuda_device = args.cuda_device, "Initializing CUDA device");
-    let device = init_cuda_device(args.cuda_device)?;
-    verify_device(&device)?;
-    tracing::info!("CUDA device {} initialized and verified", args.cuda_device);
-
-    // ============================================================
-    // STEP 2: Load model to memory (on CUDA device)
-    // ============================================================
-    // TEAM-009: Pass device to backend
-    // TEAM-017: Load model with auto-detected architecture
-    tracing::info!(model = %args.model, "Loading model to GPU...");
-    let mut backend = CandleInferenceBackend::load(&args.model, device)?;
-    tracing::info!("Model loaded successfully on GPU");
+    // TEAM-018: Load model with auto-detected architecture
+    // TEAM-NARRATION-FIX: Device is compile-time (CUDA), GPU ID passed at runtime
+    tracing::info!(model = %args.model, cuda_device = args.cuda_device, "Loading model to GPU...");
+    let mut backend = CandleInferenceBackend::load(&args.model, args.cuda_device)?;
+    tracing::info!("Model loaded successfully on GPU {}", args.cuda_device);
 
     // ============================================================
     // STEP 2.5: GPU Warmup
@@ -86,13 +75,21 @@ async fn main() -> Result<()> {
     // ============================================================
     // STEP 3: Start heartbeat task
     // ============================================================
+    // TEAM-285: Updated to use WorkerInfo (TEAM-284 contract changes)
     tracing::info!("Starting heartbeat task");
 
-    let heartbeat_config = llm_worker_rbee::heartbeat::HeartbeatConfig::new(
-        args.worker_id.clone(),
-        args.hive_url.clone(),
-    );
-    let _heartbeat_handle = llm_worker_rbee::heartbeat::start_heartbeat_task(heartbeat_config);
+    let worker_info = worker_contract::WorkerInfo {
+        id: args.worker_id.clone(),
+        model_id: args.model_ref.clone(),
+        device: format!("cuda:{}", args.cuda_device),
+        port: args.port,
+        status: worker_contract::WorkerStatus::Ready,
+        implementation: "llm-worker-rbee-cuda".to_string(),
+        version: env!("CARGO_PKG_VERSION").to_string(),
+    };
+
+    let _heartbeat_handle =
+        llm_worker_rbee::heartbeat::start_heartbeat_task(worker_info, args.hive_url.clone());
     tracing::info!("Heartbeat task started (30s interval)");
 
     // ============================================================
@@ -101,8 +98,6 @@ async fn main() -> Result<()> {
     tracing::info!("Worker ready, starting HTTP server");
 
     let addr = SocketAddr::from(([0, 0, 0, 0], args.port));
-    // TEAM-017: Wrap backend in Mutex for stateful inference
-    let backend = Arc::new(Mutex::new(backend));
 
     // TEAM-102: Load API token for authentication
     let expected_token = std::env::var("LLORCH_API_TOKEN").unwrap_or_else(|_| {
@@ -114,7 +109,8 @@ async fn main() -> Result<()> {
         tracing::info!("✅ API token loaded (authentication enabled)");
     }
 
-    let router = create_router(backend, expected_token);
+    // TEAM-NARRATION-FIX: Use helper to setup job-based architecture
+    let router = setup_worker_with_backend(backend, expected_token);
     let server = HttpServer::new(addr, router).await?;
 
     tracing::info!("llorch-cuda-candled ready on port {} (GPU {})", args.port, args.cuda_device);

@@ -8,7 +8,7 @@
 use anyhow::{Context, Result};
 use candle_core::{Device, Tensor};
 use candle_transformers::models::quantized_qwen2::ModelWeights;
-use observability_narration_core::{narrate, NarrationFields};
+use observability_narration_core::n;
 use std::path::Path;
 
 /// Quantized Qwen model wrapper for GGUF files
@@ -27,14 +27,7 @@ impl QuantizedQwenModel {
     pub fn load(path: &Path, device: &Device) -> Result<Self> {
         tracing::info!(path = ?path, "Loading GGUF Qwen model");
 
-        narrate(NarrationFields {
-            actor: "model-loader",
-            action: "gguf_load_start",
-            target: path.display().to_string(),
-            human: format!("Loading GGUF Qwen model from {}", path.display()),
-            cute: Some("Opening the GGUF Qwen treasure chest! 📦🔍".to_string()),
-            ..Default::default()
-        });
+        n!("gguf_load_start", "Loading GGUF Qwen model from {}", path.display());
 
         let mut file = std::fs::File::open(path)
             .with_context(|| format!("Failed to open GGUF file at {path:?}"))?;
@@ -74,14 +67,7 @@ impl QuantizedQwenModel {
         let model = ModelWeights::from_gguf(content, &mut file, device)
             .with_context(|| "Failed to load Qwen model weights from GGUF")?;
 
-        narrate(NarrationFields {
-            actor: "model-loader",
-            action: "gguf_load_complete",
-            target: path.display().to_string(),
-            human: format!("GGUF Qwen model loaded (vocab={vocab_size}, eos={eos_token_id})"),
-            cute: Some("GGUF Qwen model loaded successfully! Ready to generate! 🎉✨".to_string()),
-            ..Default::default()
-        });
+        n!("gguf_load_complete", "GGUF Qwen model loaded (vocab={}, eos={})", vocab_size, eos_token_id);
 
         Ok(Self { model, eos_token_id, vocab_size })
     }

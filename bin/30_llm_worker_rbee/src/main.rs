@@ -21,10 +21,10 @@ use llm_worker_rbee::{
         CandleInferenceBackend,
     },
     create_router,
-    narration::{ACTION_MODEL_LOAD, ACTION_STARTUP, ACTOR_LLM_WORKER_RBEE, ACTOR_MODEL_LOADER},
+    narration::{ACTION_MODEL_LOAD, ACTION_STARTUP},
     HttpServer,
 };
-use observability_narration_core::{narrate, NarrationFields};
+use observability_narration_core::n;
 use std::net::SocketAddr;
 use std::sync::{Arc, Mutex};
 
@@ -113,49 +113,22 @@ async fn main() -> anyhow::Result<()> {
         "Candle worker starting"
     );
 
-    narrate(NarrationFields {
-        actor: ACTOR_LLM_WORKER_RBEE,
-        action: ACTION_STARTUP,
-        target: args.worker_id.clone(),
-        human: format!("Starting Candle worker on port {}", args.port),
-        cute: Some(format!("Worker {} waking up to help with inference! 🌅", args.worker_id)),
-        worker_id: Some(args.worker_id.clone()),
-        ..Default::default()
-    });
+    n!(ACTION_STARTUP, "Starting Candle worker on port {}", args.port);
 
     // ============================================================
     // STEP 1: Load model to memory
     // ============================================================
-    // TEAM-009: Initialize device and pass to backend
-    use llm_worker_rbee::device::init_cpu_device;
-    let device = init_cpu_device()?;
-
+    // TEAM-NARRATION-FIX: Device is compile-time (CPU), no runtime selection
     tracing::info!(model = %args.model, "Loading Llama model...");
 
-    narrate(NarrationFields {
-        actor: ACTOR_MODEL_LOADER,
-        action: ACTION_MODEL_LOAD,
-        target: args.model.clone(),
-        human: format!("Loading Llama model from {}", args.model),
-        cute: Some("Fetching the sleepy Llama model from its cozy home! 📦".to_string()),
-        worker_id: Some(args.worker_id.clone()),
-        ..Default::default()
-    });
+    n!(ACTION_MODEL_LOAD, "Loading Llama model from {}", args.model);
 
     // TEAM-088: Wrap model loading with error narration
-    let backend = match CandleInferenceBackend::load(&args.model, device) {
+    let backend = match CandleInferenceBackend::load(&args.model) {
         Ok(backend) => {
             tracing::info!("Model loaded successfully");
 
-            narrate(NarrationFields {
-                actor: ACTOR_MODEL_LOADER,
-                action: "model_load_success",
-                target: args.model.clone(),
-                human: "Model loaded successfully".to_string(),
-                cute: Some("Model loaded and ready to help! ✅🎉".to_string()),
-                worker_id: Some(args.worker_id.clone()),
-                ..Default::default()
-            });
+            n!("model_load_success", "Model loaded successfully");
 
             backend
         }
@@ -163,19 +136,7 @@ async fn main() -> anyhow::Result<()> {
             // TEAM-088: Narrate model loading failure with detailed error
             let error_msg = format!("{e:#}");
 
-            narrate(NarrationFields {
-                actor: ACTOR_MODEL_LOADER,
-                action: "model_load_failed",
-                target: args.model.clone(),
-                human: format!(
-                    "Model load failed: {}",
-                    error_msg.lines().next().unwrap_or("unknown error")
-                ),
-                cute: Some("Oh no! Couldn't load the model! 😟💔".to_string()),
-                worker_id: Some(args.worker_id.clone()),
-                error_kind: Some("model_load_error".to_string()),
-                ..Default::default()
-            });
+            n!("model_load_failed", "Model load failed: {}", error_msg.lines().next().unwrap_or("unknown error"));
 
             tracing::error!(
                 model = %args.model,

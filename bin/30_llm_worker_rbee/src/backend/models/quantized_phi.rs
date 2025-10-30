@@ -8,7 +8,7 @@
 use anyhow::{Context, Result};
 use candle_core::{Device, Tensor};
 use candle_transformers::models::quantized_phi3::ModelWeights;
-use observability_narration_core::{narrate, NarrationFields};
+use observability_narration_core::n;
 use std::path::Path;
 
 /// Quantized Phi model wrapper for GGUF files
@@ -27,14 +27,7 @@ impl QuantizedPhiModel {
     pub fn load(path: &Path, device: &Device) -> Result<Self> {
         tracing::info!(path = ?path, "Loading GGUF Phi model");
 
-        narrate(NarrationFields {
-            actor: "model-loader",
-            action: "gguf_load_start",
-            target: path.display().to_string(),
-            human: format!("Loading GGUF Phi model from {}", path.display()),
-            cute: Some("Opening the GGUF Phi treasure chest! 📦🔍".to_string()),
-            ..Default::default()
-        });
+        n!("gguf_load_start", "Loading GGUF Phi model from {}", path.display());
 
         let mut file = std::fs::File::open(path)
             .with_context(|| format!("Failed to open GGUF file at {path:?}"))?;
@@ -73,14 +66,7 @@ impl QuantizedPhiModel {
         let model = ModelWeights::from_gguf(false, content, &mut file, device)
             .with_context(|| "Failed to load Phi model weights from GGUF")?;
 
-        narrate(NarrationFields {
-            actor: "model-loader",
-            action: "gguf_load_complete",
-            target: path.display().to_string(),
-            human: format!("GGUF Phi model loaded (vocab={vocab_size}, eos={eos_token_id})"),
-            cute: Some("GGUF Phi model loaded successfully! Ready to generate! 🎉✨".to_string()),
-            ..Default::default()
-        });
+        n!("gguf_load_complete", "GGUF Phi model loaded (vocab={}, eos={})", vocab_size, eos_token_id);
 
         Ok(Self { model, eos_token_id, vocab_size })
     }

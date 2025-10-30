@@ -116,7 +116,7 @@ use observability_narration_core::NarrationFields;
 /// TEAM-039: This enables real-time visibility in rbee-keeper shell
 pub fn narrate_dual(fields: NarrationFields) {
     // 1. ALWAYS emit to tracing (for operators/developers)
-    observability_narration_core::narrate(fields.clone());
+    observability_narration_core::narrate(fields.clone(), observability_narration_core::NarrationLevel::Info);
 
     // 2. IF in HTTP request context, ALSO emit to SSE (for users)
     let sse_event = InferenceEvent::Narration {

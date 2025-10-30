@@ -18,7 +18,7 @@
 use crate::http::backend::InferenceBackend;
 use crate::narration::{ACTION_HEALTH_CHECK, ACTOR_HTTP_SERVER};
 use axum::{extract::State, Json};
-use observability_narration_core::{narrate, NarrationFields};
+use observability_narration_core::n;
 use serde::Serialize;
 use std::sync::Arc;
 use tokio::sync::Mutex;
@@ -67,18 +67,7 @@ pub async fn handle_ready<B: InferenceBackend>(
 
     let model_loaded = if ready { Some(true) } else { None };
 
-    narrate(NarrationFields {
-        actor: ACTOR_HTTP_SERVER,
-        action: ACTION_HEALTH_CHECK,
-        target: state.clone(),
-        human: format!("Readiness check: ready={ready}, state={state}"),
-        cute: if ready {
-            Some("Ready to serve! 🚀".to_string())
-        } else {
-            Some("Still loading... ⏳".to_string())
-        },
-        ..Default::default()
-    });
+    n!(ACTION_HEALTH_CHECK, "Readiness check: ready={}, state={}", ready, state);
 
     Json(ReadyResponse { ready, state, progress_url, model_loaded })
 }

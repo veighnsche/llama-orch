@@ -66,7 +66,7 @@ async fn execute_infer(
         top_p: req.top_p.unwrap_or(0.9),
         top_k: req.top_k.unwrap_or(50),
         repetition_penalty: 1.1, // Not in InferRequest, use default
-        min_p: None,             // Not in InferRequest
+        min_p: 0.0,              // Not in InferRequest, use default (disabled)
         stop_sequences: vec![],
         stop_strings: vec![],    // Not in InferRequest
         seed: 42,                // Not in InferRequest, use default

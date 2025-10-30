@@ -12,7 +12,7 @@
 use crate::http::backend::InferenceBackend;
 use crate::narration::{ACTION_HEALTH_CHECK, ACTOR_HTTP_SERVER};
 use axum::{extract::State, Json};
-use observability_narration_core::{narrate, NarrationFields};
+use observability_narration_core::n;
 use serde::Serialize;
 use std::sync::Arc;
 use tokio::sync::Mutex;
@@ -42,14 +42,7 @@ pub async fn handle_health<B: InferenceBackend>(
     let status = if backend.is_healthy() { "healthy" } else { "unhealthy" };
     let vram_bytes = backend.vram_usage();
 
-    narrate(NarrationFields {
-        actor: ACTOR_HTTP_SERVER,
-        action: ACTION_HEALTH_CHECK,
-        target: status.to_string(),
-        human: format!("Health check: {} (VRAM: {} MB)", status, vram_bytes / 1_000_000),
-        cute: Some(format!("Feeling {status}! 💪")),
-        ..Default::default()
-    });
+    n!(ACTION_HEALTH_CHECK, "Health check: {} (VRAM: {} MB)", status, vram_bytes / 1_000_000);
 
     Json(HealthResponse { status: status.to_string(), vram_bytes })
 }

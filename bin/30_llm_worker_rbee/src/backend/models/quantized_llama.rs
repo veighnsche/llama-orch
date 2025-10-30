@@ -9,7 +9,7 @@
 use anyhow::{Context, Result};
 use candle_core::{Device, Tensor};
 use candle_transformers::models::quantized_llama::ModelWeights;
-use observability_narration_core::{narrate, NarrationFields};
+use observability_narration_core::n;
 use std::path::Path;
 
 /// Quantized Llama model wrapper for GGUF files
@@ -31,82 +31,33 @@ impl QuantizedLlamaModel {
         tracing::info!(path = ?path, "Loading GGUF model");
 
         // TEAM-088: Narrate GGUF loading start
-        narrate(NarrationFields {
-            actor: "model-loader",
-            action: "gguf_load_start",
-            target: path.display().to_string(),
-            human: format!("Loading GGUF model from {}", path.display()),
-            cute: Some("Opening the GGUF treasure chest! 📦🔍".to_string()),
-            ..Default::default()
-        });
+        n!("gguf_load_start", "Loading GGUF model from {}", path.display());
 
         // Open GGUF file
         let mut file = std::fs::File::open(path).with_context(|| {
             // TEAM-088: Narrate file open failure
-            narrate(NarrationFields {
-                actor: "model-loader",
-                action: "gguf_open_failed",
-                target: path.display().to_string(),
-                human: format!("Failed to open GGUF file: {}", path.display()),
-                cute: Some("Oh no! Can't find the GGUF file! 😟🔍".to_string()),
-                error_kind: Some("file_not_found".to_string()),
-                ..Default::default()
-            });
+            n!("gguf_open_failed", "Failed to open GGUF file: {}", path.display());
             format!("Failed to open GGUF file at {path:?}")
         })?;
 
         // TEAM-088: Narrate file opened successfully
-        narrate(NarrationFields {
-            actor: "model-loader",
-            action: "gguf_file_opened",
-            target: path.display().to_string(),
-            human: "GGUF file opened, reading content".to_string(),
-            cute: Some("File opened! Now reading the magic inside! ✨".to_string()),
-            ..Default::default()
-        });
+        n!("gguf_file_opened", "GGUF file opened, reading content");
 
         // Read GGUF content
         let content =
             candle_core::quantized::gguf_file::Content::read(&mut file).with_context(|| {
                 // TEAM-088: Narrate GGUF parse failure
-                narrate(NarrationFields {
-                    actor: "model-loader",
-                    action: "gguf_parse_failed",
-                    target: path.display().to_string(),
-                    human: format!("Failed to parse GGUF content from {}", path.display()),
-                    cute: Some("Uh oh! The GGUF file format looks wrong! 😟📄".to_string()),
-                    error_kind: Some("gguf_parse_error".to_string()),
-                    ..Default::default()
-                });
+                n!("gguf_parse_failed", "Failed to parse GGUF content from {}", path.display());
                 format!("Failed to read GGUF content from {path:?}")
             })?;
 
         // TEAM-088: Narrate metadata inspection
-        narrate(NarrationFields {
-            actor: "model-loader",
-            action: "gguf_inspect_metadata",
-            target: path.display().to_string(),
-            human: format!("Inspecting GGUF metadata ({} keys found)", content.metadata.len()),
-            cute: Some(format!(
-                "Found {} metadata keys! Let's see what's inside! 🔍",
-                content.metadata.len()
-            )),
-            ..Default::default()
-        });
+        n!("gguf_inspect_metadata", "Inspecting GGUF metadata ({} keys found)", content.metadata.len());
 
         // TEAM-088: List all available metadata keys for debugging
         let available_keys: Vec<String> =
             content.metadata.keys().map(std::string::ToString::to_string).collect();
         tracing::debug!(keys = ?available_keys, "Available GGUF metadata keys");
-
-        narrate(NarrationFields {
-            actor: "model-loader",
-            action: "gguf_metadata_keys",
-            target: path.display().to_string(),
-            human: format!("GGUF has {} metadata keys", available_keys.len()),
-            cute: Some(format!("Metadata keys: {}", available_keys.join(", "))),
-            ..Default::default()
-        });
 
         // Extract metadata
         // TEAM-089: Make vocab_size optional - derive from tokenizer if missing
@@ -125,14 +76,7 @@ impl QuantizedLlamaModel {
 
                 if let Some(size) = derived_size {
                     // TEAM-089: Narrate successful vocab_size derivation
-                    narrate(NarrationFields {
-                        actor: "model-loader",
-                        action: "gguf_vocab_size_derived",
-                        target: path.display().to_string(),
-                        human: format!("Derived vocab_size={size} from tokenizer.ggml.tokens array"),
-                        cute: Some(format!("Found vocab_size by counting {size} tokens! 🔢✨")),
-                        ..Default::default()
-                    });
+                    n!("gguf_vocab_size_derived", "Derived vocab_size={} from tokenizer.ggml.tokens array", size);
 
                     tracing::info!(
                         vocab_size = size,
@@ -146,15 +90,7 @@ impl QuantizedLlamaModel {
             .with_context(|| {
                 // TEAM-088: Narrate missing vocab_size with helpful context
                 let available_keys: Vec<String> = content.metadata.keys().map(std::string::ToString::to_string).collect();
-                narrate(NarrationFields {
-                    actor: "model-loader",
-                    action: "gguf_metadata_missing",
-                    target: "llama.vocab_size".to_string(),
-                    human: "Cannot determine vocab_size from GGUF metadata".to_string(),
-                    cute: Some("Oh no! Can't find vocab_size anywhere! 😟🔍".to_string()),
-                    error_kind: Some("missing_metadata_field".to_string()),
-                    ..Default::default()
-                });
+                n!("gguf_metadata_missing", "Cannot determine vocab_size from GGUF metadata");
 
                 tracing::error!(
                     required_key = "llama.vocab_size or tokenizer.ggml.tokens",
@@ -178,19 +114,7 @@ impl QuantizedLlamaModel {
             .unwrap_or(2); // Default EOS token for Llama
 
         // TEAM-088: Narrate successful metadata extraction
-        narrate(NarrationFields {
-            actor: "model-loader",
-            action: "gguf_metadata_loaded",
-            target: path.display().to_string(),
-            human: format!(
-                "GGUF metadata: vocab={}, eos={}, tensors={}",
-                vocab_size,
-                eos_token_id,
-                content.tensor_infos.len()
-            ),
-            cute: Some(format!("Found vocab_size={vocab_size}! Metadata looks good! ✅")),
-            ..Default::default()
-        });
+        n!("gguf_metadata_loaded", "GGUF metadata: vocab={}, eos={}, tensors={}", vocab_size, eos_token_id, content.tensor_infos.len());
 
         tracing::info!(
             vocab_size = vocab_size,
@@ -200,39 +124,17 @@ impl QuantizedLlamaModel {
         );
 
         // TEAM-088: Narrate model weight loading
-        narrate(NarrationFields {
-            actor: "model-loader",
-            action: "gguf_load_weights",
-            target: path.display().to_string(),
-            human: format!("Loading {} tensors from GGUF", content.tensor_infos.len()),
-            cute: Some("Loading all the model weights! This might take a moment... ⏳".to_string()),
-            ..Default::default()
-        });
+        n!("gguf_load_weights", "Loading {} tensors from GGUF", content.tensor_infos.len());
 
         // Load model weights from GGUF
         let model = ModelWeights::from_gguf(content, &mut file, device).with_context(|| {
             // TEAM-088: Narrate weight loading failure
-            narrate(NarrationFields {
-                actor: "model-loader",
-                action: "gguf_weights_failed",
-                target: path.display().to_string(),
-                human: "Failed to load model weights from GGUF".to_string(),
-                cute: Some("Oh no! Couldn't load the model weights! 😟⚠️".to_string()),
-                error_kind: Some("weight_load_error".to_string()),
-                ..Default::default()
-            });
+            n!("gguf_weights_failed", "Failed to load model weights from GGUF");
             "Failed to load model weights from GGUF"
         })?;
 
         // TEAM-088: Narrate successful load
-        narrate(NarrationFields {
-            actor: "model-loader",
-            action: "gguf_load_complete",
-            target: path.display().to_string(),
-            human: format!("GGUF model loaded (vocab={vocab_size}, eos={eos_token_id})"),
-            cute: Some("GGUF model loaded successfully! Ready to generate! 🎉✨".to_string()),
-            ..Default::default()
-        });
+        n!("gguf_load_complete", "GGUF model loaded (vocab={}, eos={})", vocab_size, eos_token_id);
 
         tracing::info!("GGUF model loaded successfully");
 

@@ -181,6 +181,7 @@ async-trait = "0.1"
 # Narration Core Team: Triple-narration observability (human, cute, story)
 
 observability-narration-core = { path = "../99_shared_crates/narration-core", features = ["axum"] }
+stdext = "0.3"  # Required for n!() macro (function_name!())
 
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 # UTILITIES

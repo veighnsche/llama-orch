@@ -18,7 +18,7 @@ use crate::narration::{
     ACTOR_HTTP_SERVER,
 };
 use axum::Router;
-use observability_narration_core::{narrate, NarrationFields};
+use observability_narration_core::n;
 use std::net::SocketAddr;
 use thiserror::Error;
 use tokio::sync::broadcast;
@@ -85,14 +85,7 @@ impl HttpServer {
             "HTTP server initialized"
         );
 
-        narrate(NarrationFields {
-            actor: ACTOR_HTTP_SERVER,
-            action: ACTION_SERVER_START,
-            target: addr.to_string(),
-            human: format!("HTTP server initialized on {addr}"),
-            cute: Some(format!("HTTP server ready to greet requests at {addr}! 🚺")),
-            ..Default::default()
-        });
+        n!(ACTION_SERVER_START, "HTTP server initialized on {}", addr);
 
         Ok(Self { addr, router, shutdown_tx })
     }
@@ -110,18 +103,7 @@ impl HttpServer {
     /// * `Err(ServerError)` - Server encountered an error
     pub async fn run(self) -> Result<(), ServerError> {
         let listener = tokio::net::TcpListener::bind(self.addr).await.map_err(|source| {
-            narrate(NarrationFields {
-                actor: ACTOR_HTTP_SERVER,
-                action: ACTION_ERROR,
-                target: self.addr.to_string(),
-                human: format!("Failed to bind to {}: {}", self.addr, source),
-                cute: Some(format!(
-                    "Oh dear! Can't bind to {} — address already in use? 😟",
-                    self.addr
-                )),
-                error_kind: Some("bind_failed".to_string()),
-                ..Default::default()
-            });
+            n!(ACTION_ERROR, "Failed to bind to {}: {}", self.addr, source);
 
             ServerError::BindFailed { addr: self.addr, source }
         })?;
@@ -131,14 +113,7 @@ impl HttpServer {
             "HTTP server listening"
         );
 
-        narrate(NarrationFields {
-            actor: ACTOR_HTTP_SERVER,
-            action: ACTION_SERVER_BIND,
-            target: self.addr.to_string(),
-            human: format!("HTTP server listening on {}", self.addr),
-            cute: Some(format!("Server ears perked up, listening at {}! 👂", self.addr)),
-            ..Default::default()
-        });
+        n!(ACTION_SERVER_BIND, "HTTP server listening on {}", self.addr);
 
         // Clone shutdown receiver for signal handler
         let mut shutdown_rx = self.shutdown_tx.subscribe();
@@ -165,16 +140,7 @@ impl HttpServer {
                 let _ = shutdown_rx.recv().await;
                 warn!("HTTP server shutting down gracefully");
 
-                narrate(NarrationFields {
-                    actor: ACTOR_HTTP_SERVER,
-                    action: ACTION_SERVER_SHUTDOWN,
-                    target: "graceful".to_string(),
-                    human: "HTTP server shutting down gracefully".to_string(),
-                    cute: Some(
-                        "Server saying goodnight and tucking in connections! 🌙".to_string(),
-                    ),
-                    ..Default::default()
-                });
+                n!(ACTION_SERVER_SHUTDOWN, "HTTP server shutting down gracefully");
             })
             .await
             .map_err(|e| ServerError::Runtime(e.to_string()))?;

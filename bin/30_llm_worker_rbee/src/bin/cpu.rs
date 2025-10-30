@@ -10,11 +10,8 @@
 
 use anyhow::Result;
 use clap::Parser;
-use llm_worker_rbee::device::{init_cpu_device, verify_device};
-use llm_worker_rbee::{backend::CandleInferenceBackend, create_router, HttpServer};
+use llm_worker_rbee::{backend::CandleInferenceBackend, setup_worker_with_backend, HttpServer};
 use std::net::SocketAddr;
-use std::sync::Arc;
-use tokio::sync::Mutex;
 
 /// CLI arguments for CPU worker daemon
 #[derive(Parser, Debug)]
@@ -58,20 +55,12 @@ async fn main() -> Result<()> {
     );
 
     // ============================================================
-    // STEP 1: Initialize CPU device
+    // STEP 1: Load model to memory
     // ============================================================
-    tracing::info!("Initializing CPU device");
-    let device = init_cpu_device()?;
-    verify_device(&device)?;
-    tracing::info!("CPU device initialized and verified");
-
-    // ============================================================
-    // STEP 2: Load model to memory
-    // ============================================================
-    // TEAM-009: Pass device to backend
     // TEAM-017: Load model with auto-detected architecture
+    // TEAM-NARRATION-FIX: Device is compile-time (CPU), no runtime selection
     tracing::info!(model = %args.model, "Loading model...");
-    let backend = CandleInferenceBackend::load(&args.model, device)?;
+    let backend = CandleInferenceBackend::load(&args.model)?;
     tracing::info!("Model loaded successfully");
 
     // ============================================================
@@ -100,8 +89,6 @@ async fn main() -> Result<()> {
     tracing::info!("Worker ready, starting HTTP server");
 
     let addr = SocketAddr::from(([0, 0, 0, 0], args.port));
-    // TEAM-017: Wrap backend in Mutex for stateful inference
-    let backend = Arc::new(Mutex::new(backend));
 
     // TEAM-102: Load API token for authentication
     let expected_token = std::env::var("LLORCH_API_TOKEN").unwrap_or_else(|_| {
@@ -113,7 +100,8 @@ async fn main() -> Result<()> {
         tracing::info!("✅ API token loaded (authentication enabled)");
     }
 
-    let router = create_router(backend, expected_token);
+    // TEAM-NARRATION-FIX: Use helper to setup job-based architecture
+    let router = setup_worker_with_backend(backend, expected_token);
     let server = HttpServer::new(addr, router).await?;
 
     tracing::info!("llorch-cpu-candled ready on port {}", args.port);
