@@ -58,6 +58,7 @@ job-client = { path = "../99_shared_crates/job-client" }  # TEAM-259: Shared job
 timeout-enforcer = { path = "../99_shared_crates/timeout-enforcer" }  # TEAM-207: Timeout enforcement
 ssh-config-parser = { path = "../99_shared_crates/ssh-config-parser" }  # TEAM-365: SSH config parser for hive discovery
 urlencoding = "2.1"  # TEAM-365: URL encoding for queen_url parameter
+url = "2.5"  # TEAM-366: URL validation for discovery edge cases
 
 # TODO: Add when registries are migrated
 # beehive_registry (for http/routes.rs, http/beehives.rs, etc.)

@@ -36,21 +36,10 @@
 //! # }
 //! ```
 
-use std::time::Duration;
+use crate::utils::binary::check_binary_installed;
 
-/// Daemon status information
-///
-/// TEAM-338: RULE ZERO - Updated existing function to return struct
-/// TEAM-338: RULE ZERO FIX - Added Serialize, Deserialize, specta::Type for Tauri bindings
-///           This is the SINGLE SOURCE OF TRUTH for daemon status (no QueenStatus/HiveStatus duplicates)
-#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
-#[cfg_attr(feature = "tauri", derive(specta::Type))]
-pub struct DaemonStatus {
-    /// Is the daemon currently running?
-    pub is_running: bool,
-    /// Is the daemon binary installed?
-    pub is_installed: bool,
-}
+// TEAM-367: Import shared types and utilities
+pub use lifecycle_shared::{check_health_http, DaemonStatus};
 
 /// Check daemon health and installation status
 ///
@@ -72,91 +61,15 @@ pub async fn check_daemon_health(
     health_url: &str,
     daemon_name: &str,
 ) -> DaemonStatus {
-    // Step 1: Check if running (HTTP, no SSH)
-    let client = match reqwest::Client::builder().timeout(Duration::from_secs(2)).build() {
-        Ok(c) => c,
-        Err(_) => {
-            return DaemonStatus {
-                is_running: false,
-                is_installed: false, // Can't check, assume not installed
-            };
-        }
-    };
-
-    // ============================================================
-    // INVESTIGATION: TEAM-341 | Health check behavior during startup
-    // ============================================================
-    // SUSPICION:
-    // - Thought HTTP request was failing silently
-    // - Suspected wrong URL or missing /health endpoint
-    // - Suspected outdated binary being installed
-    //
-    // INVESTIGATION:
-    // - Added narration to expose actual HTTP errors
-    // - Found daemon returns 404 Not Found during first ~8-10 attempts
-    // - After ~15-20 seconds, daemon returns 200 OK
-    // - Verified: curl http://localhost:7833/health → 200 OK (after waiting)
-    // - Verified: curl http://localhost:7833/v1/info → 200 OK (works immediately)
-    // - Binary timestamps match: install copied correct binary
-    //
-    // ROOT CAUSE:
-    // - Debug builds (unoptimized) take 15-20 seconds to fully initialize
-    // - Daemon process starts, binds port, accepts connections
-    // - But routes aren't fully registered yet during initialization
-    // - Initial HTTP requests get 404 Not Found
-    // - After initialization completes, requests get 200 OK
-    // - This is NORMAL behavior for debug builds
-    //
-    // CONCLUSION:
-    // - NO BUG - health polling is working correctly!
-    // - Exponential backoff handles slow startup gracefully
-    // - 404 is treated as "not healthy yet", polling continues
-    // - Eventually daemon becomes healthy and returns 200 OK
-    // - User was canceling (^C) before polling completed
-    //
-    // RECOMMENDATION:
-    // - Keep narration for visibility (helps debug real issues)
-    // - Consider increasing initial delay for debug builds
-    // - Release builds should be much faster (~2-3 seconds)
-    // ============================================================
-    // TEAM-341: Show the actual URL being called
-    observability_narration_core::n!(
-        "health_check_url",
-        "🔗 Checking URL: {}",
-        health_url
-    );
-    
-    let is_running = match client.get(health_url).send().await {
-        Ok(response) => {
-            let status = response.status();
-            let is_success = status.is_success();
-            observability_narration_core::n!(
-                "health_check_response",
-                "🏥 Health check response: {} (success: {})",
-                status,
-                is_success
-            );
-            is_success
-        }
-        Err(e) => {
-            observability_narration_core::n!(
-                "health_check_error",
-                "❌ Health check failed: {}",
-                e
-            );
-            false
-        }
-    };
+    // Step 1: Check if running via HTTP (TEAM-367: Use shared function)
+    let is_running = check_health_http(health_url).await;
 
     // Step 2: Check if installed (only if not running - optimization)
     let is_installed = if is_running {
         true // If running, must be installed
     } else {
-        // TEAM-358: Check local binary installation
-        use std::path::Path;
-        Path::new(&format!("target/debug/{}", daemon_name)).exists()
-            || Path::new(&format!("target/release/{}", daemon_name)).exists()
-            || Path::new(&format!("{}/.local/bin/{}", std::env::var("HOME").unwrap_or_default(), daemon_name)).exists()
+        // TEAM-367: Use utils::binary::check_binary_installed
+        check_binary_installed(daemon_name).await
     };
 
     DaemonStatus { is_running, is_installed }

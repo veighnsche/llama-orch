@@ -12,13 +12,17 @@
 //!
 //! TEAM-358: RULE ZERO FIX - Removed poll.rs:
 //! - poll.rs: Duplicated code, use health-poll crate instead
+//!
+//! TEAM-367: Removed serde.rs - now in lifecycle-shared
 
 pub mod binary;
 pub mod local; // TEAM-358: Local helpers (NOT for localhost bypass - kept for potential future use)
-pub mod serde; // TEAM-329: Serde helpers (used by types/install.rs for timestamps)
 pub mod ssh; // TEAM-330: SSH/SCP operations (core remote functionality)
 
 // Re-export main functions
 pub use binary::check_binary_installed;
 // TEAM-358: local_copy and local_exec are NOT exported - use lifecycle-local for local operations
 pub use ssh::{scp_upload, ssh_exec}; // TEAM-330: SSH helpers
+
+// TEAM-367: Re-export serde utilities from shared crate
+pub use lifecycle_shared::utils::{deserialize_systemtime, serialize_systemtime};

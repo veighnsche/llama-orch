@@ -48,6 +48,7 @@
 //! ```
 
 use anyhow::{Context, Result};
+use lifecycle_shared::normalize_health_url;
 use observability_narration_core::n;
 use observability_narration_macros::with_job_id;
 use timeout_enforcer::with_timeout;
@@ -128,12 +129,8 @@ pub async fn uninstall_daemon(uninstall_config: UninstallConfig) -> Result<()> {
     if let Some(health_url) = &uninstall_config.health_url {
         n!("health_check", "🔍 Checking if daemon is running");
 
-        // Build full health URL (append /health if not already present)
-        let full_health_url = if health_url.ends_with("/health") {
-            health_url.clone()
-        } else {
-            format!("{}/health", health_url)
-        };
+        // TEAM-367: Use shared normalize_health_url function
+        let full_health_url = normalize_health_url(health_url);
         n!("health_url", "📡 Checking health at: {}", full_health_url);
 
         // TEAM-358: Updated to LOCAL-only signature (no ssh_config)

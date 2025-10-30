@@ -1,4 +1,5 @@
 // TEAM-365: Created by TEAM-365
+// TEAM-366: Added edge case guards for discovery reliability
 //! Queen hive discovery module
 //!
 //! Implements pull-based discovery: Queen reads SSH config and sends
@@ -13,6 +14,7 @@
 use anyhow::Result;
 use observability_narration_core::n;
 use ssh_config_parser::{get_default_ssh_config_path, parse_ssh_config, SshTarget};
+use std::collections::HashSet; // TEAM-366: Deduplicate targets
 use std::time::Duration;
 
 /// Discover all hives on Queen startup
@@ -28,6 +30,17 @@ use std::time::Duration;
 /// # Arguments
 /// * `queen_url` - URL of this Queen instance (e.g., "http://localhost:7833")
 pub async fn discover_hives_on_startup(queen_url: &str) -> Result<()> {
+    // TEAM-366: EDGE CASE #6 - Validate queen_url before discovery
+    if queen_url.is_empty() {
+        n!("discovery_invalid_url", "❌ Cannot start discovery: empty queen_url");
+        anyhow::bail!("Cannot start discovery with empty queen_url");
+    }
+    
+    if let Err(e) = url::Url::parse(queen_url) {
+        n!("discovery_invalid_url", "❌ Cannot start discovery: invalid queen_url '{}': {}", queen_url, e);
+        anyhow::bail!("Invalid queen_url '{}': {}", queen_url, e);
+    }
+    
     n!("discovery_start", "🔍 Starting hive discovery (waiting 5s for services to stabilize)");
     
     // TEAM-365: Wait for services to stabilize
@@ -43,11 +56,32 @@ pub async fn discover_hives_on_startup(queen_url: &str) -> Result<()> {
         }
     };
     
-    n!("discovery_targets", "📋 Found {} SSH targets to discover", targets.len());
+    // TEAM-366: EDGE CASE #7 - Deduplicate targets by hostname
+    let mut seen = HashSet::new();
+    let unique_targets: Vec<_> = targets
+        .into_iter()
+        .filter(|t| {
+            // TEAM-366: EDGE CASE #8 - Skip invalid hostnames
+            if t.hostname.is_empty() {
+                n!("discovery_skip_invalid", "⚠️  Skipping target '{}': empty hostname", t.host);
+                return false;
+            }
+            
+            // TEAM-366: EDGE CASE #7 - Skip duplicates
+            if !seen.insert(t.hostname.clone()) {
+                n!("discovery_skip_duplicate", "⚠️  Skipping duplicate target: {} ({})", t.host, t.hostname);
+                return false;
+            }
+            
+            true
+        })
+        .collect();
+    
+    n!("discovery_targets", "📋 Found {} unique SSH targets to discover", unique_targets.len());
     
     // TEAM-365: Discover all hives in parallel
     let mut tasks = vec![];
-    for target in targets {
+    for target in unique_targets {
         let queen_url = queen_url.to_string();
         
         tasks.push(tokio::spawn(async move {

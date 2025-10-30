@@ -1,49 +1,6 @@
-//! Build daemon binary locally for remote deployment
+//! Build configuration and function shared between lifecycle-local and lifecycle-ssh
 //!
-//! # Types/Utils Used (from daemon-lifecycle)
-//! - None (self-contained, uses ProcessNarrationCapture directly)
-//!
-//! # Requirements
-//!
-//! ## Input
-//! - `daemon_name`: Name of daemon binary to build
-//! - `target`: Optional build target (default: current architecture)
-//!
-//! ## Process
-//! 1. Run cargo build (LOCAL, NO SSH)
-//!    - Use: `cargo build --release --bin {daemon_name}`
-//!    - If target specified: `cargo build --release --bin {daemon_name} --target {target}`
-//!    - Wait for build to complete
-//!
-//! 2. Return path to built binary
-//!    - Default: `target/release/{daemon_name}`
-//!    - With target: `target/{target}/release/{daemon_name}`
-//!
-//! ## SSH Calls
-//! - Total: 0 SSH calls (local build only)
-//!
-//! ## Error Handling
-//! - Cargo build failed (compilation errors)
-//! - Binary not found after build
-//! - Invalid target specified
-//!
-//! ## Example
-//! ```rust,no_run
-//! use remote_daemon_lifecycle::build_daemon;
-//!
-//! # async fn example() -> anyhow::Result<()> {
-//! // Build for current architecture
-//! let binary_path = build_daemon("rbee-hive", None).await?;
-//! println!("Built at: {}", binary_path.display());
-//!
-//! // Build for specific target
-//! let binary_path = build_daemon(
-//!     "rbee-hive",
-//!     Some("x86_64-unknown-linux-gnu")
-//! ).await?;
-//! # Ok(())
-//! # }
-//! ```
+//! TEAM-367: Extracted from lifecycle-local/src/build.rs and lifecycle-ssh/src/build.rs
 
 use anyhow::{Context, Result};
 use observability_narration_core::{n, process_capture::ProcessNarrationCapture};
@@ -54,6 +11,7 @@ use tokio::process::Command;
 /// Configuration for building daemon binary
 ///
 /// TEAM-330: Includes optional job_id for SSE streaming of cargo output
+/// TEAM-NARRATION-FIX: Added features support for worker binaries
 #[derive(Debug, Clone)]
 pub struct BuildConfig {
     /// Name of the daemon binary
@@ -65,17 +23,53 @@ pub struct BuildConfig {
     /// Optional job ID for SSE narration routing
     /// When set, cargo build output streams through SSE!
     pub job_id: Option<String>,
+
+    /// Optional features to enable (e.g., "cpu", "cuda", "metal")
+    /// TEAM-NARRATION-FIX: For worker binaries with feature-gated backends
+    pub features: Option<String>,
 }
 
-/// Build daemon binary locally for remote deployment
+impl BuildConfig {
+    /// Create new BuildConfig with daemon name
+    pub fn new(daemon_name: impl Into<String>) -> Self {
+        Self {
+            daemon_name: daemon_name.into(),
+            target: None,
+            job_id: None,
+            features: None,
+        }
+    }
+
+    /// Set cross-compilation target
+    pub fn with_target(mut self, target: impl Into<String>) -> Self {
+        self.target = Some(target.into());
+        self
+    }
+
+    /// Set job ID for SSE streaming
+    pub fn with_job_id(mut self, job_id: impl Into<String>) -> Self {
+        self.job_id = Some(job_id.into());
+        self
+    }
+
+    /// Set features to enable
+    pub fn with_features(mut self, features: impl Into<String>) -> Self {
+        self.features = Some(features.into());
+        self
+    }
+}
+
+/// Build daemon binary locally
 ///
+/// TEAM-367: Shared implementation used by both lifecycle-local and lifecycle-ssh
 /// TEAM-330: Streams cargo build output through SSE when job_id is set
 ///
 /// # Implementation
-/// 1. Runs `cargo build --release --bin {daemon_name}`
+/// 1. Runs `cargo build --release --bin {daemon_name}` (or debug in dev mode)
 /// 2. Optionally supports cross-compilation via `--target`
-/// 3. Captures stdout/stderr and streams through SSE (via ProcessNarrationCapture)
-/// 4. Returns path to built binary
+/// 3. Optionally supports features via `--features`
+/// 4. Captures stdout/stderr and streams through SSE (via ProcessNarrationCapture)
+/// 5. Returns path to built binary
 ///
 /// # SSE Streaming
 /// When called with a job_id in BuildConfig, cargo build output
@@ -83,14 +77,13 @@ pub struct BuildConfig {
 ///
 /// # Example
 /// ```rust,ignore
-/// use remote_daemon_lifecycle::{BuildConfig, build_daemon};
+/// use lifecycle_shared::{BuildConfig, build_daemon};
 ///
-/// let config = BuildConfig {
-///     daemon_name: "llm-worker-rbee".to_string(),
-///     target: None,
-///     job_id: Some("job-123".to_string()),  // ← Cargo output streams through SSE!
-/// };
-/// build_daemon(config).await?;
+/// let config = BuildConfig::new("llm-worker-rbee")
+///     .with_job_id("job-123")  // ← Cargo output streams through SSE!
+///     .with_features("cuda");
+/// 
+/// let binary_path = build_daemon(config).await?;
 /// ```
 #[with_job_id(config_param = "build_config")]
 pub async fn build_daemon(build_config: BuildConfig) -> Result<PathBuf> {
@@ -132,6 +125,12 @@ pub async fn build_daemon(build_config: BuildConfig) -> Result<PathBuf> {
     if let Some(target_triple) = target {
         command.arg("--target").arg(target_triple);
         n!("build_target", "📦 Cross-compiling for target: {}", target_triple);
+    }
+
+    // TEAM-NARRATION-FIX: Add features if specified (for worker binaries)
+    if let Some(features) = &build_config.features {
+        command.arg("--features").arg(features);
+        n!("build_features", "🎯 Building with features: {}", features);
     }
 
     n!("build_running", "⚙️  Running cargo build (output streaming via SSE)...");

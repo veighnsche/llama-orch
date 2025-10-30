@@ -64,7 +64,6 @@
 #![warn(missing_docs)]
 #![warn(clippy::all)]
 
-pub mod build;
 pub mod install;
 pub mod rebuild;
 pub mod shutdown;
@@ -72,18 +71,16 @@ pub mod start;
 pub mod status;
 pub mod stop;
 pub mod uninstall;
-pub mod utils; // TEAM-330: Utils folder (includes SSH)
-               // TEAM-330: types/ folder deleted (RULE ZERO - moved inline to operation files)
+pub mod utils;
+
+// TEAM-367: Re-export build types and function from shared crate
+pub use lifecycle_shared::{build_daemon, BuildConfig};
 
 // Re-export main functions
-// TEAM-330: Removed "_remote" suffix - all operations are remote via SSH (RULE ZERO)
-pub use build::{build_daemon, BuildConfig};
 pub use install::{install_daemon, InstallConfig};
 pub use rebuild::{rebuild_daemon, RebuildConfig};
 pub use shutdown::{shutdown_daemon, ShutdownConfig};
-pub use start::{start_daemon, HttpDaemonConfig, StartConfig}; // TEAM-330: HttpDaemonConfig moved inline
-pub use status::{check_daemon_health, DaemonStatus}; // TEAM-338: RULE ZERO - Updated function signature
+pub use start::{start_daemon, HttpDaemonConfig, StartConfig};
+pub use status::{check_daemon_health, DaemonStatus};
 pub use stop::{stop_daemon, StopConfig};
 pub use uninstall::{uninstall_daemon, UninstallConfig};
-// TEAM-358: Removed HealthPollConfig export (use health-poll crate instead)
-// TEAM-358: Removed SshConfig (lifecycle-local = LOCAL only, no SSH needed)

@@ -61,108 +61,11 @@ use crate::SshConfig;
 use anyhow::{Context, Result};
 use observability_narration_core::n;
 use observability_narration_macros::with_job_id;
-use serde::{Deserialize, Serialize};
 use std::path::PathBuf;
 use timeout_enforcer::with_timeout;
 
-/// Configuration for HTTP-based daemons
-///
-/// TEAM-330: Moved from types/start.rs (RULE ZERO - inline it)
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct HttpDaemonConfig {
-    /// Daemon name for narration (e.g., "queen-rbee", "rbee-hive")
-    pub daemon_name: String,
-
-    /// Health check URL (e.g., "http://localhost:7833/health")
-    pub health_url: String,
-
-    /// Optional job ID for narration routing
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub job_id: Option<String>,
-
-    /// Path to daemon binary (optional - auto-resolved from daemon_name if not provided)
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub binary_path: Option<PathBuf>,
-
-    /// Command-line arguments for daemon
-    #[serde(default)]
-    pub args: Vec<String>,
-
-    /// Maximum health check attempts (default: 10)
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub max_health_attempts: Option<usize>,
-
-    /// Initial health check delay in ms (default: 200)
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub health_initial_delay_ms: Option<u64>,
-
-    /// Process ID (required for signal-based shutdown)
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub pid: Option<u32>,
-
-    /// Graceful shutdown timeout in seconds (default: 5)
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub graceful_timeout_secs: Option<u64>,
-}
-
-impl HttpDaemonConfig {
-    /// Create a new HTTP daemon config
-    pub fn new(daemon_name: impl Into<String>, health_url: impl Into<String>) -> Self {
-        Self {
-            daemon_name: daemon_name.into(),
-            health_url: health_url.into(),
-            job_id: None,
-            binary_path: None,
-            args: Vec::new(),
-            max_health_attempts: None,
-            health_initial_delay_ms: None,
-            pid: None,
-            graceful_timeout_secs: None,
-        }
-    }
-
-    /// Set explicit binary path (optional - auto-resolved if not set)
-    pub fn with_binary_path(mut self, path: PathBuf) -> Self {
-        self.binary_path = Some(path);
-        self
-    }
-
-    /// Set command-line arguments
-    pub fn with_args(mut self, args: Vec<String>) -> Self {
-        self.args = args;
-        self
-    }
-
-    /// Set job_id for narration
-    pub fn with_job_id(mut self, job_id: impl Into<String>) -> Self {
-        self.job_id = Some(job_id.into());
-        self
-    }
-
-    /// Set process ID (required for signal-based shutdown)
-    pub fn with_pid(mut self, pid: u32) -> Self {
-        self.pid = Some(pid);
-        self
-    }
-
-    /// Set graceful shutdown timeout
-    pub fn with_graceful_timeout_secs(mut self, secs: u64) -> Self {
-        self.graceful_timeout_secs = Some(secs);
-        self
-    }
-
-    /// Set max health check attempts
-    pub fn with_max_health_attempts(mut self, attempts: usize) -> Self {
-        self.max_health_attempts = Some(attempts);
-        self
-    }
-
-    /// Set initial health check delay
-    pub fn with_health_initial_delay_ms(mut self, delay_ms: u64) -> Self {
-        self.health_initial_delay_ms = Some(delay_ms);
-        self
-    }
-}
+// TEAM-367: Import shared types and utilities
+pub use lifecycle_shared::{build_start_command, find_binary_command, HttpDaemonConfig};
 
 /// Configuration for starting daemon on remote machine
 ///
@@ -220,18 +123,8 @@ pub async fn start_daemon(start_config: StartConfig) -> Result<u32> {
     // Step 1: Find binary on remote machine
     n!("find_binary", "🔍 Locating {} binary on remote...", daemon_name);
 
-    // TEAM-341: CRITICAL FIX - Prioritize target/ over ~/.local/bin for development
-    // Dev builds (cargo run rbee-keeper) should use freshly built binaries from target/
-    // Production builds should use ~/.local/bin (installed binaries)
-    let find_cmd = format!(
-        "(test -x target/debug/{} && echo target/debug/{}) || \
-         (test -x target/release/{} && echo target/release/{}) || \
-         (test -x ~/.local/bin/{} && echo ~/.local/bin/{}) || \
-         which {} 2>/dev/null || \
-         echo 'NOT_FOUND'",
-        daemon_name, daemon_name, daemon_name, daemon_name, daemon_name, daemon_name, daemon_name
-    );
-
+    // TEAM-367: Use shared find_binary_command function
+    let find_cmd = find_binary_command(daemon_name);
     let binary_path =
         ssh_exec(ssh_config, &find_cmd).await.context("Failed to find binary on remote")?;
 
@@ -250,15 +143,12 @@ pub async fn start_daemon(start_config: StartConfig) -> Result<u32> {
     // Step 2: Start daemon in background
     n!("starting", "▶️  Starting daemon in background...");
 
-    // Build command with args
-    let args = daemon_config.args.join(" ");
-    let start_cmd = if args.is_empty() {
-        format!("nohup {} > /dev/null 2>&1 & echo $!", binary_path)
-    } else {
-        n!("start_with_args", "⚙️  Starting with args: {}", args);
-        format!("nohup {} {} > /dev/null 2>&1 & echo $!", binary_path, args)
-    };
+    if !daemon_config.args.is_empty() {
+        n!("start_with_args", "⚙️  Starting with args: {}", daemon_config.args.join(" "));
+    }
 
+    // TEAM-367: Use shared build_start_command function
+    let start_cmd = build_start_command(binary_path, &daemon_config.args);
     let pid_output = ssh_exec(ssh_config, &start_cmd).await.context("Failed to start daemon")?;
 
     let pid: u32 = pid_output.trim().parse().context("Failed to parse PID from daemon start")?;

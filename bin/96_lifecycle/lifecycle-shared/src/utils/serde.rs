@@ -1,6 +1,7 @@
 //! Serde utilities for custom serialization
 //!
 //! TEAM-329: Extracted from types/install.rs (serialization helpers are utilities, not types)
+//! TEAM-367: Moved to lifecycle-shared (used by both lifecycle-local and lifecycle-ssh)
 
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
 use std::time::{SystemTime, UNIX_EPOCH};

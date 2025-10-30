@@ -68,6 +68,22 @@ impl WorkerCatalog {
             .into_iter()
             .find(|w| w.worker_type() == &worker_type && w.platform() == &platform)
     }
+
+    /// Get hardcoded worker definitions for the 3 worker binaries
+    ///
+    /// TEAM-NARRATION-FIX: Hardcoded worker catalog entries for:
+    /// - llm-worker-rbee-cpu
+    /// - llm-worker-rbee-cuda  
+    /// - llm-worker-rbee-metal
+    ///
+    /// These are the binaries that can be built and installed by lifecycle-local.
+    pub fn hardcoded_workers() -> Vec<(WorkerType, &'static str, &'static str)> {
+        vec![
+            (WorkerType::CpuLlm, "llm-worker-rbee-cpu", "llm-worker-rbee"),
+            (WorkerType::CudaLlm, "llm-worker-rbee-cuda", "llm-worker-rbee"),
+            (WorkerType::MetalLlm, "llm-worker-rbee-metal", "llm-worker-rbee"),
+        ]
+    }
 }
 
 // Delegate to FilesystemCatalog

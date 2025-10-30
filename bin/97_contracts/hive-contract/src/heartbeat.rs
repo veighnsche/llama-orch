@@ -1,6 +1,7 @@
 //! Hive heartbeat protocol
 //!
 //! TEAM-284: Heartbeat types for hive → queen communication
+//! TEAM-367: Added capabilities support for Queen restart detection
 
 use crate::types::HiveInfo;
 use serde::{Deserialize, Serialize};
@@ -8,6 +9,16 @@ use shared_contract::{HeartbeatPayload, HeartbeatTimestamp, HEARTBEAT_TIMEOUT_SE
 
 // TEAM-361: Worker telemetry from cgroup + GPU monitoring
 use rbee_hive_monitor::ProcessStats;
+
+/// TEAM-367: Device information for capabilities
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct HiveDevice {
+    pub id: String,
+    pub name: String,
+    pub device_type: String,
+    pub vram_gb: Option<u32>,
+    pub compute_capability: Option<String>,
+}
 
 /// Hive heartbeat message
 ///
@@ -63,17 +74,28 @@ pub struct HiveHeartbeat {
     /// Collected from cgroup + nvidia-smi + /proc/pid/cmdline
     #[serde(default)]
     pub workers: Vec<ProcessStats>,
+
+    /// TEAM-367: Capabilities (devices) - sent during discovery/rediscovery
+    /// When Queen restarts, Hive detects 400/404 and resends capabilities
+    /// Queen must handle receiving capabilities via heartbeat endpoint
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub capabilities: Option<Vec<HiveDevice>>,
 }
 
 impl HiveHeartbeat {
     /// Create a new heartbeat with current timestamp
     pub fn new(hive: HiveInfo) -> Self {
-        Self { hive, timestamp: HeartbeatTimestamp::now(), workers: Vec::new() }
+        Self { hive, timestamp: HeartbeatTimestamp::now(), workers: Vec::new(), capabilities: None }
     }
 
     /// TEAM-361: Create heartbeat with worker telemetry
     pub fn with_workers(hive: HiveInfo, workers: Vec<ProcessStats>) -> Self {
-        Self { hive, timestamp: HeartbeatTimestamp::now(), workers }
+        Self { hive, timestamp: HeartbeatTimestamp::now(), workers, capabilities: None }
+    }
+
+    /// TEAM-367: Create heartbeat with capabilities (for discovery/rediscovery)
+    pub fn with_capabilities(hive: HiveInfo, workers: Vec<ProcessStats>, capabilities: Vec<HiveDevice>) -> Self {
+        Self { hive, timestamp: HeartbeatTimestamp::now(), workers, capabilities: Some(capabilities) }
     }
 
     /// Check if heartbeat is recent (within timeout window)
@@ -149,7 +171,12 @@ mod tests {
 
         // Old heartbeat (91 seconds ago)
         let old_timestamp = HeartbeatTimestamp::from_datetime(Utc::now() - Duration::seconds(91));
-        let old_heartbeat = HiveHeartbeat { hive, timestamp: old_timestamp };
+        let old_heartbeat = HiveHeartbeat { 
+            hive, 
+            timestamp: old_timestamp, 
+            workers: Vec::new(), 
+            capabilities: None 
+        };
         assert!(!old_heartbeat.is_recent());
     }
 
@@ -160,7 +187,7 @@ mod tests {
 
         // Test HeartbeatPayload trait methods
         assert_eq!(heartbeat.component_id(), "test-hive");
-        assert!(heartbeat.is_recent(90));
+        assert!(HeartbeatPayload::is_recent(&heartbeat, 90));
     }
 
     #[test]

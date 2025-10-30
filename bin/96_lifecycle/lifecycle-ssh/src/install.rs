@@ -51,7 +51,7 @@
 //! # }
 //! ```
 
-use crate::build::{build_daemon, BuildConfig};
+use lifecycle_shared::resolve_binary_path;
 use crate::utils::binary::check_binary_installed;
 use crate::utils::ssh::{scp_upload, ssh_exec};
 use crate::SshConfig;
@@ -158,24 +158,13 @@ pub async fn install_daemon(install_config: InstallConfig) -> Result<()> {
     }
 
     // Step 1: Build or locate binary locally
-    let binary_path = if let Some(path) = install_config.local_binary_path {
-        n!("verify_binary", "🔍 Verifying pre-built binary at: {}", path.display());
-        if !path.exists() {
-            n!("binary_not_found", "❌ Binary not found at: {}", path.display());
-            anyhow::bail!("Binary not found at: {}", path.display());
-        }
-        n!("using_binary", "📦 Using pre-built binary: {}", path.display());
-        path
-    } else {
-        // Use build_daemon() instead of duplicating build code
-        let build_config = BuildConfig {
-            daemon_name: daemon_name.to_string(),
-            target: None,
-            job_id: install_config.job_id.clone(),
-        };
-
-        build_daemon(build_config).await?
-    };
+    // TEAM-367: Use shared resolve_binary_path function
+    let binary_path = resolve_binary_path(
+        daemon_name,
+        install_config.local_binary_path,
+        install_config.job_id.clone(),
+    )
+    .await?;
 
     // Step 2: Create remote directory
     n!("create_dir", "📁 Creating ~/.local/bin on remote");

@@ -43,6 +43,9 @@ anyhow = "1.0"
 # TEAM-330: Username detection for SSH to localhost
 whoami = "1.5"
 
+# TEAM-368: Local IP detection for remote hive queen_url
+local-ip-address = "0.6"
+
 # TEAM-155: Narration for observability
 observability-narration-core = { path = "../99_shared_crates/narration-core" }
 observability-narration-macros = { path = "../99_shared_crates/narration-macros" } # TEAM-309: Proc macros

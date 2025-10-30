@@ -59,127 +59,11 @@ use crate::utils::local::local_exec;
 use anyhow::{Context, Result};
 use observability_narration_core::n;
 use observability_narration_macros::with_job_id;
-use serde::{Deserialize, Serialize};
 use std::path::PathBuf;
 use timeout_enforcer::with_timeout;
 
-/// Configuration for HTTP-based daemons
-///
-/// TEAM-330: Moved from types/start.rs (RULE ZERO - inline it)
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct HttpDaemonConfig {
-    /// Daemon name for narration (e.g., "queen-rbee", "rbee-hive")
-    pub daemon_name: String,
-
-    /// Health check URL (e.g., "http://localhost:7833/health")
-    pub health_url: String,
-
-    /// Optional job ID for narration routing
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub job_id: Option<String>,
-
-    /// Path to daemon binary (optional - auto-resolved from daemon_name if not provided)
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub binary_path: Option<PathBuf>,
-
-    /// Command-line arguments for daemon
-    #[serde(default)]
-    pub args: Vec<String>,
-
-    /// Maximum health check attempts (default: 10)
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub max_health_attempts: Option<usize>,
-
-    /// Initial health check delay in ms (default: 200)
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub health_initial_delay_ms: Option<u64>,
-
-    /// Process ID (required for signal-based shutdown)
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub pid: Option<u32>,
-
-    /// Graceful shutdown timeout in seconds (default: 5)
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub graceful_timeout_secs: Option<u64>,
-
-    /// TEAM-359: Monitoring group (e.g., "llm", "queen", "hive")
-    /// Used for cgroup organization on Linux
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub monitor_group: Option<String>,
-
-    /// TEAM-359: Monitoring instance (e.g., port number)
-    /// Used for cgroup organization on Linux
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub monitor_instance: Option<String>,
-}
-
-impl HttpDaemonConfig {
-    /// Create a new HTTP daemon config
-    pub fn new(daemon_name: impl Into<String>, health_url: impl Into<String>) -> Self {
-        Self {
-            daemon_name: daemon_name.into(),
-            health_url: health_url.into(),
-            job_id: None,
-            binary_path: None,
-            args: Vec::new(),
-            max_health_attempts: None,
-            health_initial_delay_ms: None,
-            pid: None,
-            graceful_timeout_secs: None,
-            monitor_group: None,  // TEAM-359: Monitoring fields
-            monitor_instance: None,
-        }
-    }
-
-    /// Set explicit binary path (optional - auto-resolved if not set)
-    pub fn with_binary_path(mut self, path: PathBuf) -> Self {
-        self.binary_path = Some(path);
-        self
-    }
-
-    /// Set command-line arguments
-    pub fn with_args(mut self, args: Vec<String>) -> Self {
-        self.args = args;
-        self
-    }
-
-    /// Set job_id for narration
-    pub fn with_job_id(mut self, job_id: impl Into<String>) -> Self {
-        self.job_id = Some(job_id.into());
-        self
-    }
-
-    /// Set process ID (required for signal-based shutdown)
-    pub fn with_pid(mut self, pid: u32) -> Self {
-        self.pid = Some(pid);
-        self
-    }
-
-    /// Set graceful shutdown timeout
-    pub fn with_graceful_timeout_secs(mut self, secs: u64) -> Self {
-        self.graceful_timeout_secs = Some(secs);
-        self
-    }
-
-    /// Set max health check attempts
-    pub fn with_max_health_attempts(mut self, attempts: usize) -> Self {
-        self.max_health_attempts = Some(attempts);
-        self
-    }
-
-    /// Set initial health check delay
-    pub fn with_health_initial_delay_ms(mut self, delay_ms: u64) -> Self {
-        self.health_initial_delay_ms = Some(delay_ms);
-        self
-    }
-
-    /// TEAM-359: Set monitoring group and instance for cgroup organization
-    pub fn with_monitoring(mut self, group: impl Into<String>, instance: impl Into<String>) -> Self {
-        self.monitor_group = Some(group.into());
-        self.monitor_instance = Some(instance.into());
-        self
-    }
-}
+// TEAM-367: Import shared types and utilities
+pub use lifecycle_shared::{build_start_command, find_binary_command, HttpDaemonConfig};
 
 /// Configuration for starting daemon on LOCAL machine
 ///
@@ -231,16 +115,8 @@ pub async fn start_daemon(start_config: StartConfig) -> Result<u32> {
     // Step 1: Find binary on local machine
     n!("find_binary", "🔍 Locating {} binary locally...", daemon_name);
 
-    // TEAM-358: Prioritize target/ over ~/.local/bin for development
-    let find_cmd = format!(
-        "(test -x target/debug/{} && echo target/debug/{}) || \
-         (test -x target/release/{} && echo target/release/{}) || \
-         (test -x ~/.local/bin/{} && echo ~/.local/bin/{}) || \
-         which {} 2>/dev/null || \
-         echo 'NOT_FOUND'",
-        daemon_name, daemon_name, daemon_name, daemon_name, daemon_name, daemon_name, daemon_name
-    );
-
+    // TEAM-367: Use shared find_binary_command function
+    let find_cmd = find_binary_command(daemon_name);
     let binary_path = local_exec(&find_cmd).await.context("Failed to find binary locally")?;
 
     let binary_path = binary_path.trim();
@@ -259,14 +135,21 @@ pub async fn start_daemon(start_config: StartConfig) -> Result<u32> {
     n!("starting", "▶️  Starting daemon in background...");
 
     // TEAM-359: Use ProcessMonitor for cgroup-based spawning
-    let pid = if let (Some(group), Some(instance)) = (&daemon_config.monitor_group, &daemon_config.monitor_instance) {
-        n!("monitored_spawn", "📊 Spawning with monitoring: group={}, instance={}", group, instance);
-        
+    let pid = if let (Some(group), Some(instance)) =
+        (&daemon_config.monitor_group, &daemon_config.monitor_instance)
+    {
+        n!(
+            "monitored_spawn",
+            "📊 Spawning with monitoring: group={}, instance={}",
+            group,
+            instance
+        );
+
         let monitor_config = rbee_hive_monitor::MonitorConfig {
             group: group.clone(),
             instance: instance.clone(),
-            cpu_limit: None,  // TODO: Make configurable
-            memory_limit: None,  // TODO: Make configurable
+            cpu_limit: None,    // TODO: Make configurable
+            memory_limit: None, // TODO: Make configurable
         };
 
         if !daemon_config.args.is_empty() {
@@ -283,15 +166,13 @@ pub async fn start_daemon(start_config: StartConfig) -> Result<u32> {
     } else {
         // Fallback: Plain spawn without monitoring (for backwards compatibility)
         n!("unmonitored_spawn", "⚠️  Spawning WITHOUT monitoring (no group/instance specified)");
-        
-        let args = daemon_config.args.join(" ");
-        let start_cmd = if args.is_empty() {
-            format!("nohup {} > /dev/null 2>&1 & echo $!", binary_path)
-        } else {
-            n!("start_with_args", "⚙️  Starting with args: {}", args);
-            format!("nohup {} {} > /dev/null 2>&1 & echo $!", binary_path, args)
-        };
 
+        if !daemon_config.args.is_empty() {
+            n!("start_with_args", "⚙️  Starting with args: {}", daemon_config.args.join(" "));
+        }
+
+        // TEAM-367: Use shared build_start_command function
+        let start_cmd = build_start_command(binary_path, &daemon_config.args);
         let pid_output = local_exec(&start_cmd).await.context("Failed to start daemon")?;
         pid_output.trim().parse().context("Failed to parse PID from daemon start")?
     };

@@ -56,7 +56,7 @@
 //! # }
 //! ```
 
-use crate::build::{build_daemon, BuildConfig};
+use lifecycle_shared::{build_daemon, BuildConfig};
 use crate::install::{install_daemon, InstallConfig};
 use crate::start::HttpDaemonConfig; // TEAM-330: Moved from types/
 use crate::start::{start_daemon, StartConfig};
@@ -146,6 +146,7 @@ pub async fn rebuild_daemon(rebuild_config: RebuildConfig) -> Result<()> {
         daemon_name: daemon_name.clone(),
         target: None,
         job_id: rebuild_config.job_id.clone(),
+        features: None,
     };
 
     let binary_path = build_daemon(build_config).await.context("Failed to build daemon")?;

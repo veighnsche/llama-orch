@@ -19,11 +19,31 @@ pub enum WorkerType {
 
 impl WorkerType {
     /// Get the binary name for this worker type
+    ///
+    /// TEAM-NARRATION-FIX: Updated to match actual binary names in Cargo.toml
     pub fn binary_name(&self) -> &str {
         match self {
-            WorkerType::CpuLlm => "cpu-llm-worker-rbee",
-            WorkerType::CudaLlm => "cuda-llm-worker-rbee",
-            WorkerType::MetalLlm => "metal-llm-worker-rbee",
+            WorkerType::CpuLlm => "llm-worker-rbee-cpu",
+            WorkerType::CudaLlm => "llm-worker-rbee-cuda",
+            WorkerType::MetalLlm => "llm-worker-rbee-metal",
+        }
+    }
+
+    /// Get the crate name (for building)
+    ///
+    /// TEAM-NARRATION-FIX: All workers are in the same crate
+    pub fn crate_name(&self) -> &str {
+        "llm-worker-rbee"
+    }
+
+    /// Get the features needed to build this worker type
+    ///
+    /// TEAM-NARRATION-FIX: Feature flags for compile-time backend selection
+    pub fn build_features(&self) -> Option<&str> {
+        match self {
+            WorkerType::CpuLlm => Some("cpu"),
+            WorkerType::CudaLlm => Some("cuda"),
+            WorkerType::MetalLlm => Some("metal"),
         }
     }
 }

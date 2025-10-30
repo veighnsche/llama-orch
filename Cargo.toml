@@ -48,6 +48,7 @@ members = [
     # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
     
     "bin/96_lifecycle/health-poll",              # HTTP health polling utility
+    "bin/96_lifecycle/lifecycle-shared",         # TEAM-367: Shared types and utilities
     "bin/96_lifecycle/lifecycle-local",          # Local daemon management (ALWAYS monitored)
     "bin/96_lifecycle/lifecycle-ssh",            # SSH daemon management (remote only)
 

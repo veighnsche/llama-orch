@@ -15,6 +15,9 @@ use crate::ssh_resolver::resolve_ssh_config; // TEAM-332: SSH config middleware
 use lifecycle_local;
 use lifecycle_ssh;
 
+// TEAM-368: Get local IP for remote hive queen_url
+use local_ip_address::local_ip;
+
 #[derive(Subcommand)]
 pub enum HiveAction {
     /// Start rbee-hive
@@ -84,14 +87,25 @@ pub async fn handle_hive(action: HiveAction, queen_url: &str) -> Result<()> {
                 let _pid = lifecycle_local::start_daemon(config).await?;
             } else {
                 // TEAM-365: Remote - use lifecycle-ssh
+                // TEAM-368: Remote hive needs Queen's network address, not localhost
                 let ssh = resolve_ssh_config(&alias)?;
                 let base_url = format!("http://{}:{}", ssh.hostname, port);
                 let health_url = format!("{}/health", base_url);
+                
+                // TEAM-368: Get keeper's local IP (Queen is on same machine)
+                let local_ip = local_ip().map_err(|e| anyhow::anyhow!("Failed to get local IP: {}", e))?;
+                let queen_port = queen_url.split(':').last()
+                    .and_then(|p| p.parse::<u16>().ok())
+                    .unwrap_or(7833);
+                let network_queen_url = format!("http://{}:{}", local_ip, queen_port);
+                
+                n!("remote_hive_queen_url", "🌐 Remote hive will use Queen at: {}", network_queen_url);
+                
                 let args = vec![
                     "--port".to_string(),
                     port.to_string(),
                     "--queen-url".to_string(),
-                    queen_url.to_string(),
+                    network_queen_url,  // TEAM-368: Use network address, not localhost
                     "--hive-id".to_string(),
                     alias.clone(),
                 ];

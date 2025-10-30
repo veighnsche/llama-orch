@@ -13,11 +13,15 @@
 //! TEAM-358: RULE ZERO FIX - Removed poll.rs and ssh.rs:
 //! - poll.rs: Duplicated code, use health-poll crate instead
 //! - ssh.rs: lifecycle-local manages LOCAL daemons only, no SSH needed
+//!
+//! TEAM-367: Removed serde.rs - now in lifecycle-shared
 
 pub mod binary;
 pub mod local; // TEAM-331: Local process execution (bypasses SSH for localhost)
-pub mod serde; // TEAM-329: Serde helpers (used by types/install.rs for timestamps)
 
 // Re-export main functions
 pub use binary::check_binary_installed;
 pub use local::{local_copy, local_exec}; // TEAM-331: Local execution helpers
+
+// TEAM-367: Re-export serde utilities from shared crate
+pub use lifecycle_shared::utils::{deserialize_systemtime, serialize_systemtime};

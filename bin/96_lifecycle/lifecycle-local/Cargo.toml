@@ -8,6 +8,9 @@ edition = "2021"
 tauri = ["dep:specta"]
 
 [dependencies]
+# TEAM-367: Shared types and utilities
+lifecycle-shared = { path = "../lifecycle-shared" }
+
 # TEAM-338: RULE ZERO FIX - Optional specta dependency for Tauri bindings (use RC version)
 specta = { version = "2.0.0-rc", optional = true }
 anyhow = "1.0"

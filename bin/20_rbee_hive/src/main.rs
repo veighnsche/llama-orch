@@ -162,8 +162,13 @@ async fn main() -> anyhow::Result<()> {
     n!("ready", "✅ Hive ready");
 
     // TEAM-365: Start heartbeat task with discovery (exponential backoff)
-    // This will be implemented in Phase 4
-    let _heartbeat_handle = heartbeat::start_heartbeat_task(hive_info, args.queen_url.clone());
+    // TEAM-366: EDGE CASE #1 - Pass running_flag to prevent duplicate tasks
+    // TEAM-367: EDGE CASE #2 FIX - queen_url is optional (standalone mode)
+    let _heartbeat_handle = heartbeat::start_heartbeat_task(
+        hive_info.clone(),
+        Some(args.queen_url.clone()),
+        hive_state.heartbeat_running.clone(),
+    );
 
     // TEAM-340: Migrated to n!() macro
     n!("heartbeat_start", "💓 Heartbeat task started (sending to {})", args.queen_url);
@@ -215,21 +220,57 @@ pub struct HiveState {
 
 impl HiveState {
     /// TEAM-365: Store queen URL dynamically
-    pub async fn set_queen_url(&self, url: String) {
+    /// TEAM-366: EDGE CASE #2 - Validate URL before storing
+    pub async fn set_queen_url(&self, url: String) -> Result<(), String> {
+        // TEAM-366: Validate URL
+        if url.is_empty() {
+            return Err("Cannot set empty queen_url".to_string());
+        }
+        
+        if let Err(e) = url::Url::parse(&url) {
+            return Err(format!("Invalid queen_url '{}': {}", url, e));
+        }
+        
         *self.queen_url.write().await = Some(url);
+        Ok(())
     }
     
     /// TEAM-365: Start heartbeat task (idempotent - only starts once)
-    pub async fn start_heartbeat_task(&self, queen_url: String) {
+    /// TEAM-366: EDGE CASE #3 - Handle Queen URL changes
+    /// TEAM-367: EDGE CASE #2 FIX - queen_url is optional
+    pub async fn start_heartbeat_task(&self, queen_url: Option<String>) {
+        // TEAM-367: Handle None case (standalone mode)
+        let url = match queen_url {
+            None => {
+                n!("heartbeat_skip", "ℹ️  No queen_url provided, skipping heartbeat (standalone mode)");
+                return;
+            }
+            Some(u) => u,
+        };
+        
+        // TEAM-366: EDGE CASE #3 - Check if URL changed
+        let current_url = self.queen_url.read().await.clone();
+        if let Some(existing) = current_url {
+            if existing != url {
+                n!("heartbeat_url_changed", "⚠️  Queen URL changed: {} → {}. Heartbeat will continue to old URL.", existing, url);
+                // TODO: In future, implement graceful task restart for URL changes
+                // For now, keep sending to original Queen (prevents thrashing)
+            }
+        }
+        
         // Only start if not already running
         if self.heartbeat_running.swap(true, Ordering::SeqCst) {
             n!("heartbeat_skip", "💓 Heartbeat already running, skipping");
             return;
         }
         
-        n!("heartbeat_start", "💓 Starting heartbeat task to {}", queen_url);
+        n!("heartbeat_start", "💓 Starting heartbeat task to {}", url);
         let hive_info = self.hive_info.clone();
-        heartbeat::start_heartbeat_task(hive_info, queen_url);
+        heartbeat::start_heartbeat_task(
+            hive_info,
+            Some(url),
+            self.heartbeat_running.clone(),
+        );
     }
 }
 
@@ -245,10 +286,20 @@ async fn get_capabilities(
     n!("caps_request", "📡 Received capabilities request from queen");
     
     // TEAM-365: Handle queen_url parameter for discovery
+    // TEAM-366: EDGE CASE #2 - Validate queen_url before using
     if let Some(queen_url) = params.queen_url {
         n!("caps_queen_url", "🔗 Queen URL received: {}", queen_url);
-        state.set_queen_url(queen_url.clone()).await;
-        state.start_heartbeat_task(queen_url).await;
+        
+        // TEAM-366: Validate and store URL
+        // TEAM-367: Pass Some(url) for optional parameter
+        match state.set_queen_url(queen_url.clone()).await {
+            Ok(_) => {
+                state.start_heartbeat_task(Some(queen_url)).await;
+            }
+            Err(e) => {
+                n!("caps_invalid_url", "❌ Invalid queen_url rejected: {}", e);
+            }
+        }
     }
 
     // TEAM-206: Narrate GPU detection attempt
