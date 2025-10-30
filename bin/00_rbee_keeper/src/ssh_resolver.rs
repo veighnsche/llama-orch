@@ -17,7 +17,7 @@
 //! ```
 
 use anyhow::{Context, Result};
-use daemon_lifecycle::SshConfig;
+use lifecycle_ssh::SshConfig;
 use std::collections::HashMap;
 use std::fs;
 use std::path::PathBuf;

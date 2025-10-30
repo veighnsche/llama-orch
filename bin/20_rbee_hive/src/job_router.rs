@@ -145,7 +145,7 @@ async fn route_operation(
         // - WorkerProcessList/Get/Delete: Manage running processes (ps/kill)
         //
         Operation::WorkerSpawn(request) => {
-            use daemon_lifecycle::{start_daemon, HttpDaemonConfig, SshConfig, StartConfig};
+            use lifecycle_local::{start_daemon, HttpDaemonConfig, StartConfig};
             use rbee_hive_worker_catalog::{Platform, WorkerType};
 
             n!(
@@ -199,11 +199,13 @@ async fn route_operation(
                 queen_url.clone(),
             ];
 
-            // Start worker using daemon-lifecycle
+            // TEAM-359: Start worker with monitoring (cgroup on Linux)
             let base_url = format!("http://localhost:{}", port);
-            let daemon_config = HttpDaemonConfig::new(&worker_id, &base_url).with_args(args);
+            let daemon_config = HttpDaemonConfig::new(&worker_id, &base_url)
+                .with_args(args)
+                .with_monitoring("llm", port.to_string());  // TEAM-359: group=llm, instance=port
+            
             let config = StartConfig {
-                ssh_config: SshConfig::localhost(),
                 daemon_config,
                 job_id: Some(job_id.clone()),
             };

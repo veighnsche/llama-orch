@@ -51,6 +51,14 @@ members = [
     "bin/98_security_crates/secrets-management/bdd",
 
     # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    # LIFECYCLE CRATES — Daemon Lifecycle Management (96_lifecycle)
+    # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    
+    "bin/96_lifecycle/health-poll",              # HTTP health polling utility
+    "bin/96_lifecycle/lifecycle-local",          # Local daemon management (ALWAYS monitored)
+    "bin/96_lifecycle/lifecycle-ssh",            # SSH daemon management (remote only)
+
+    # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
     # SHARED CRATES — Cross-Service Utilities (TEAM-135: Added new shared crates)
     # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
     
@@ -58,8 +66,7 @@ members = [
     "bin/99_shared_crates/narration-core/bdd",
     "bin/99_shared_crates/narration-macros",
     # TEAM-135: New shared crates for consolidation
-    # TEAM-330: daemon-lifecycle now handles remote execution via SSH (RULE ZERO - one crate, not two)
-    "bin/99_shared_crates/daemon-lifecycle",
+    # TEAM-330: daemon-lifecycle split into 96_lifecycle category (RULE ZERO - focused crates)
     "bin/99_shared_crates/heartbeat-registry",  # TEAM-285: Generic heartbeat registry
     "bin/99_shared_crates/job-server",        # TEAM-154: Dual-call pattern job tracking (worker/queen/hive)
     "bin/99_shared_crates/timeout-enforcer",    # TEAM-163: Hard timeout enforcement with visual countdown
@@ -104,8 +111,7 @@ members = [
     "xtask", 
     "bin/97_contracts/keeper-config-contract", # TEAM-329: Removed daemon-contract (inlined into daemon-lifecycle)
     
-    # TEAM-330: Test stub binary for build.rs tests (compiles in <1s)
-    "bin/99_shared_crates/daemon-lifecycle/tests/stub-binary",
+    # TEAM-358: Removed stub-binary (directory doesn't exist)
 ]
 
 resolver = "2"

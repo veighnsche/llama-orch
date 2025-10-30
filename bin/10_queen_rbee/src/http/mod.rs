@@ -35,10 +35,9 @@ pub mod dev_proxy; // TEAM-350: Development proxy to Vite dev server
 // TEAM-CLEANUP: Deleted build_info - consolidated into info.rs (Rule Zero)
 pub use health::handle_health;
 pub use heartbeat::{
-    handle_hive_heartbeat, // TEAM-284/285: Hive heartbeat handler
-    handle_worker_heartbeat,
+    handle_hive_heartbeat, // TEAM-362: Hive telemetry with workers
     HeartbeatState,
-    HttpHeartbeatAcknowledgement, // TEAM-275: Removed handle_heartbeat (deprecated)
+    HttpHeartbeatAcknowledgement,
 };
 pub use heartbeat_stream::handle_heartbeat_stream; // TEAM-285: Live heartbeat streaming
 pub use info::handle_info; // TEAM-292: Queen info handler

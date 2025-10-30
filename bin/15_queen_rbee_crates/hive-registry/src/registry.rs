@@ -5,6 +5,11 @@
 
 use heartbeat_registry::HeartbeatRegistry;
 use hive_contract::{HiveHeartbeat, HiveInfo};
+use std::collections::HashMap;
+use std::sync::RwLock;
+
+// TEAM-362: Worker telemetry storage
+use rbee_hive_monitor::ProcessStats;
 
 /// Hive registry
 ///
@@ -37,12 +42,18 @@ use hive_contract::{HiveHeartbeat, HiveInfo};
 /// ```
 pub struct HiveRegistry {
     inner: HeartbeatRegistry<HiveHeartbeat>,
+    
+    // TEAM-362: Worker telemetry storage (hive_id -> workers)
+    workers: RwLock<HashMap<String, Vec<ProcessStats>>>,
 }
 
 impl HiveRegistry {
     /// Create a new empty registry
     pub fn new() -> Self {
-        Self { inner: HeartbeatRegistry::new() }
+        Self {
+            inner: HeartbeatRegistry::new(),
+            workers: RwLock::new(HashMap::new()),  // TEAM-362: Worker storage
+        }
     }
 
     /// Update hive from heartbeat
@@ -93,6 +104,56 @@ impl HiveRegistry {
     /// Get count of available hives
     pub fn count_available(&self) -> usize {
         self.inner.count_available()
+    }
+
+    // TEAM-362: Worker telemetry methods
+    
+    /// Store workers for a hive
+    pub fn update_workers(&self, hive_id: &str, workers: Vec<ProcessStats>) {
+        let mut map = self.workers.write().unwrap();
+        map.insert(hive_id.to_string(), workers);
+    }
+    
+    /// Get workers for a hive
+    pub fn get_workers(&self, hive_id: &str) -> Option<Vec<ProcessStats>> {
+        let map = self.workers.read().unwrap();
+        map.get(hive_id).cloned()
+    }
+    
+    /// Get all workers across all hives
+    pub fn get_all_workers(&self) -> Vec<ProcessStats> {
+        let map = self.workers.read().unwrap();
+        map.values().flatten().cloned().collect()
+    }
+    
+    /// Find idle workers (gpu_util_pct == 0.0)
+    pub fn find_idle_workers(&self) -> Vec<ProcessStats> {
+        self.get_all_workers()
+            .into_iter()
+            .filter(|w| w.gpu_util_pct == 0.0)
+            .collect()
+    }
+    
+    /// Find workers with specific model loaded
+    pub fn find_workers_with_model(&self, model: &str) -> Vec<ProcessStats> {
+        self.get_all_workers()
+            .into_iter()
+            .filter(|w| w.model.as_deref() == Some(model))
+            .collect()
+    }
+    
+    /// Find workers with available VRAM capacity
+    /// TEAM-364: Now uses worker's actual total_vram_mb instead of hardcoded limit (Critical Issue #5)
+    pub fn find_workers_with_capacity(&self, required_vram_mb: u64) -> Vec<ProcessStats> {
+        self.get_all_workers()
+            .into_iter()
+            .filter(|w| {
+                // TEAM-364: Use worker's actual total VRAM (queried from nvidia-smi)
+                // Falls back to 24GB if not available
+                let total_vram = if w.total_vram_mb > 0 { w.total_vram_mb } else { 24576 };
+                w.vram_mb + required_vram_mb < total_vram
+            })
+            .collect()
     }
 
     /// Cleanup stale hives
@@ -178,7 +239,7 @@ mod tests {
         // Add old hive
         let hive2 = create_hive("hive-2", OperationalStatus::Ready);
         let old_timestamp = HeartbeatTimestamp::from_datetime(Utc::now() - Duration::seconds(120));
-        let old_heartbeat = HiveHeartbeat { hive: hive2, timestamp: old_timestamp };
+        let old_heartbeat = HiveHeartbeat { hive: hive2, timestamp: old_timestamp, workers: Vec::new() };
         registry.update_hive(old_heartbeat);
 
         let online = registry.list_online_hives();
@@ -230,7 +291,7 @@ mod tests {
         // Add old hive
         let hive2 = create_hive("hive-2", OperationalStatus::Ready);
         let old_timestamp = HeartbeatTimestamp::from_datetime(Utc::now() - Duration::seconds(120));
-        let old_heartbeat = HiveHeartbeat { hive: hive2, timestamp: old_timestamp };
+        let old_heartbeat = HiveHeartbeat { hive: hive2, timestamp: old_timestamp, workers: Vec::new() };
         registry.update_hive(old_heartbeat);
 
         let removed = registry.cleanup_stale();

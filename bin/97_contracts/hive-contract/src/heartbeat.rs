@@ -6,6 +6,9 @@ use crate::types::HiveInfo;
 use serde::{Deserialize, Serialize};
 use shared_contract::{HeartbeatPayload, HeartbeatTimestamp, HEARTBEAT_TIMEOUT_SECS};
 
+// TEAM-361: Worker telemetry from cgroup + GPU monitoring
+use rbee_hive_monitor::ProcessStats;
+
 /// Hive heartbeat message
 ///
 /// Sent from hive to queen every 30 seconds to report status.
@@ -55,12 +58,22 @@ pub struct HiveHeartbeat {
 
     /// Timestamp when heartbeat was sent
     pub timestamp: HeartbeatTimestamp,
+
+    /// TEAM-361: Worker telemetry (GPU, model, CPU, RAM, etc.)
+    /// Collected from cgroup + nvidia-smi + /proc/pid/cmdline
+    #[serde(default)]
+    pub workers: Vec<ProcessStats>,
 }
 
 impl HiveHeartbeat {
     /// Create a new heartbeat with current timestamp
     pub fn new(hive: HiveInfo) -> Self {
-        Self { hive, timestamp: HeartbeatTimestamp::now() }
+        Self { hive, timestamp: HeartbeatTimestamp::now(), workers: Vec::new() }
+    }
+
+    /// TEAM-361: Create heartbeat with worker telemetry
+    pub fn with_workers(hive: HiveInfo, workers: Vec<ProcessStats>) -> Self {
+        Self { hive, timestamp: HeartbeatTimestamp::now(), workers }
     }
 
     /// Check if heartbeat is recent (within timeout window)

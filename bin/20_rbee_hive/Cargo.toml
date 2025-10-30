@@ -48,8 +48,13 @@ async-stream = "0.3"
 # TEAM-268: Model catalog for model management
 rbee-hive-model-catalog = { path = "../25_rbee_hive_crates/model-catalog" }
 
+# TEAM-361: Worker telemetry (GPU, model detection, cgroup monitoring)
+rbee-hive-monitor = { path = "../25_rbee_hive_crates/monitor" }
+
 # TEAM-334: Use daemon-lifecycle directly (worker-lifecycle removed)
-daemon-lifecycle = { path = "../99_shared_crates/daemon-lifecycle" }
+# TEAM-358: RULE ZERO - lifecycle-local ALWAYS monitors (platform-specific)
+#   - lifecycle-local: For installing/building/running workers (with monitoring)
+lifecycle-local = { path = "../96_lifecycle/lifecycle-local" }
 
 # TEAM-272: Random port allocation
 rand = "0.8"
@@ -65,4 +70,7 @@ rbee-hive-worker-catalog = { path = "../25_rbee_hive_crates/worker-catalog" }
 nix = { version = "0.27", features = ["signal"] }
 
 [dev-dependencies]
-# Add dev dependencies as needed
+# TEAM-364: Telemetry testing infrastructure
+tokio = { workspace = true, features = ["full", "test-util"] }
+hive-contract = { path = "../97_contracts/hive-contract" }
+serde_json = "1.0"

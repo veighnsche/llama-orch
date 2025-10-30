@@ -2,66 +2,80 @@
 
 **Date:** Oct 30, 2025  
 **Status:** CANONICAL SPECIFICATION  
-**Purpose:** Define heartbeat protocol for Queen ↔ Hive ↔ Worker communication
+**Purpose:** Define telemetry and discovery protocol for Queen ↔ Hive communication
 
 ---
 
 ## Table of Contents
 
 1. [Core Principle](#core-principle)
-2. [Heartbeat Discovery Protocol](#heartbeat-discovery-protocol)
-3. [Hive Heartbeat Flow](#hive-heartbeat-flow)
-4. [Worker Heartbeat Flow](#worker-heartbeat-flow)
-5. [Heartbeat Payload Specification](#heartbeat-payload-specification)
+2. [Discovery Protocol](#discovery-protocol)
+3. [Hive Telemetry Flow](#hive-telemetry-flow)
+4. [Worker Monitoring (No Worker Heartbeats)](#worker-monitoring-no-worker-heartbeats)
+5. [Telemetry Payload Specification](#telemetry-payload-specification)
 6. [State Machine](#state-machine)
-7. [Implementation Details](#implementation-details)
+7. [Health Determination](#health-determination)
+8. [Implementation Details](#implementation-details)
 
 ---
 
 ## Core Principle
 
-**Bidirectional startup discovery with exponential backoff.**
+**Bidirectional discovery with Hive-side monitoring. Workers never heartbeat.**
 
-- **Both Queen and Hive can start independently** - No dependency order required
-- **Queen discovers hives on startup** - Fetches capabilities from SSH config
-- **Hive discovers Queen on startup** - Sends heartbeats with exponential backoff
-- **Resilient to race conditions** - Handles simultaneous startup gracefully
+### **Key Design Points:**
 
-**Startup Scenarios:**
+1. **Discovery Plane** (Handshake)
+   - Queen discovers hives via SSH config → GET /capabilities
+   - Hive discovers Queen via exponential backoff (5 tries: 0s, 2s, 4s, 8s, 16s)
+   - Both mechanisms work independently (no dependency order)
 
-1. **Hive starts before Queen** - Hive sends 5 exponential backoff heartbeats with capabilities until Queen responds
-2. **Queen starts before Hive** - Queen fetches capabilities, triggering Hive to send heartbeats
-3. **Both start simultaneously** - Both mechanisms work in parallel, first success wins
+2. **Telemetry Plane** (Live Stats)
+   - **Hive → Queen:** Periodic telemetry heartbeats (~1s, EMA-smoothed)
+   - **Workers → NO ONE:** Workers never send heartbeats
+   - **Hive monitors workers:** Via cgroup v2 tree (rbee.slice/<service>/<instance>)
 
-**Why this design?**
+3. **Health Determination**
+   - Queen derives health from telemetry freshness
+   - Healthy: < 3× interval
+   - Down: After 10 missed intervals
 
-1. **No dependency order** - Queen and Hive can start in any order
-2. **Resilient** - Handles network delays, race conditions, restarts
-3. **Efficient** - Exponential backoff prevents flooding
-4. **Simple** - Clear state transitions, easy to debug
+### **Why This Design?**
+
+1. **No worker cooperation** - Hive monitors via OS (cgroups), workers can't lie
+2. **Single telemetry path** - All metrics flow Hive → Queen (no fan-out)
+3. **No dependency order** - Queen and Hive start independently
+4. **Efficient** - 1 heartbeat per node (not per worker)
+5. **Resilient** - Exponential backoff handles startup races
 
 ---
 
-## Heartbeat Discovery Protocol
+## Discovery Protocol
 
-### Scenario 1: Queen Starts First (Pull-based Discovery)
+**Two independent discovery paths. Both work; neither requires the other.**
+
+---
+
+### Scenario 1: Queen Starts First (Pull-based Discovery via SSH)
 
 **When Queen starts:**
 
 1. Queen waits 5 seconds (allow services to stabilize)
 2. Queen reads SSH config (list of hive hostnames/IPs)
-   - **Note:** SSH config parsing logic needs to be moved to shared crate
+   - **Note:** SSH config parsing logic needs shared crate extraction
    - Currently in: `bin/00_rbee_keeper/src/tauri_commands.rs::ssh_list()`
 3. Queen sends parallel GET requests to all configured hives:
    ```
    GET http://{hive_hostname}:7835/capabilities?queen_url=http://queen-host:7833
    ```
-4. Hive receives request, extracts `queen_url`, stores it
-5. Hive responds with capabilities (devices, models, workers)
+4. Hive receives request:
+   - Extracts `queen_url` from query parameter
+   - Stores `queen_url` in memory
+   - Responds with capabilities (devices, models)
+5. **Trigger:** Hive immediately starts normal telemetry heartbeats to `queen_url` (~1s interval)
 6. Queen stores capabilities in HiveRegistry
-7. **Trigger:** Hive starts sending heartbeats every 30s
 
-**Result:** All online hives discovered and monitored.
+**Result:** All online hives discovered and begin sending telemetry.
 
 ---
 
@@ -70,46 +84,51 @@
 **When Hive starts:**
 
 1. Hive has Queen URL configured (via CLI arg or config file)
-2. Hive sends heartbeat with **full capabilities** (not just monitor data)
+2. Hive sends **discovery telemetry heartbeat** to Queen
 3. Hive uses **exponential backoff** for first 5 attempts:
-   - Attempt 1: Immediate (0s)
-   - Attempt 2: 2s delay
-   - Attempt 3: 4s delay
-   - Attempt 4: 8s delay
-   - Attempt 5: 16s delay
-4. If Queen responds with `200 OK`:
-   - Hive transitions to normal heartbeat mode (monitor data every 30s)
-   - Capabilities only sent when changed
-5. If all 5 attempts fail:
-   - Hive stops sending heartbeats
-   - Waits for Queen to fetch capabilities (Scenario 1)
+   - **Attempt 1:** Immediate (0s)
+   - **Attempt 2:** 2s delay
+   - **Attempt 3:** 4s delay
+   - **Attempt 4:** 8s delay
+   - **Attempt 5:** 16s delay
 
-**Heartbeat payload during discovery:**
+4. **On first `200 OK` response:**
+   - Hive transitions to **normal telemetry mode** (~1s interval)
+   - Discovery phase complete
+
+5. **If all 5 attempts fail:**
+   - Hive stops discovery heartbeats
+   - Waits for Queen to initiate via `/capabilities` (Scenario 1)
+
+**Discovery telemetry payload (same format as normal telemetry):**
 ```json
 {
-  "hive_id": "localhost",
-  "timestamp": "2025-10-30T15:13:00Z",
-  "capabilities": {
-    "devices": [...],
-    "models": [...],
-    "workers": [...]
+  "hive_id": "hive:550e8400-e29b-41d4-a716-446655440000",
+  "ts": "2025-10-30T15:13:00Z",
+  "node": {
+    "cpu_pct": 45.2,
+    "ram_used_mb": 12800,
+    "ram_total_mb": 65536,
+    "gpus": [
+      {
+        "id": "GPU-0",
+        "util_pct": 0,
+        "vram_used_mb": 0,
+        "vram_total_mb": 24564,
+        "temp_c": 42
+      }
+    ]
   },
-  "monitor_data": {
-    "cpu_usage_percent": 45.2,
-    "ram_used_gb": 12.5,
-    "ram_total_gb": 64.0,
-    "uptime_seconds": 10,
-    "devices": [...]
-  }
+  "workers": []
 }
 ```
 
-**Queen response:**
-- `200 OK` - Capabilities received, start normal heartbeats
-- `404 Not Found` - Queen not ready, retry with backoff
-- `503 Service Unavailable` - Queen overloaded, retry with backoff
+**Queen responses:**
+- `200 OK` → Telemetry received, Hive enters normal mode
+- `404 Not Found` → Queen not ready, retry with backoff
+- `503 Service Unavailable` → Queen overloaded, retry with backoff
 
-**Result:** Hive discovered by Queen, starts normal monitoring.
+**Result:** Hive discovered by Queen, enters normal telemetry mode.
 
 ---
 
@@ -118,124 +137,164 @@
 **When both start at the same time:**
 
 1. **Hive side:**
-   - Starts exponential backoff heartbeats (Scenario 2)
-   - Attempt 1 (0s): Queen not ready yet → 404
-   - Attempt 2 (2s): Queen not ready yet → 404
-   - Attempt 3 (4s): Queen not ready yet → 404
+   - Starts exponential backoff discovery telemetry (Scenario 2)
+   - Attempt 1 (0s): Queen not ready → 404
+   - Attempt 2 (2s): Queen not ready → 404
+   - Attempt 3 (4s): Queen not ready → 404
 
 2. **Queen side (after 5s wait):**
-   - Fetches capabilities from all hives (Scenario 1)
+   - Reads SSH config
+   - Sends `GET /capabilities?queen_url=...` to all hives (Scenario 1)
    - Hive responds with capabilities
-   - Queen stores in registry
+   - **Trigger:** Hive starts normal telemetry immediately
 
 3. **Hive side (attempt 4 at 8s):**
-   - Sends heartbeat → Queen responds 200 OK
-   - Hive transitions to normal heartbeat mode
+   - Already in normal telemetry mode (triggered by capabilities request)
+   - Discovery backoff stops
 
-**Result:** Both mechanisms work in parallel, first success wins. No duplicate work.
+**Result:** Both mechanisms work in parallel. First success wins. No duplicate work.
 
 ---
 
-### Phase 2: Hive Heartbeat (Monitoring)
+## Hive Telemetry Flow
 
-**After discovery, hive sends heartbeats every 30 seconds:**
+**After discovery, Hive sends telemetry heartbeats to Queen (~1s interval, EMA-smoothed):**
 
-```
-POST http://{queen_url}/v1/hive-heartbeat
+**Endpoint:** `POST http://{queen_url}/v1/hive-heartbeat`
+
+**Payload:** Node stats + all workers (monitored via cgroup v2)
+
+```json
 {
-  "hive_id": "localhost",
-  "timestamp": "2025-10-30T14:52:00Z",
-  "monitor_data": {
-    "cpu_usage_percent": 45.2,
-    "ram_used_gb": 12.5,
-    "ram_total_gb": 64.0,
-    "uptime_seconds": 86400,
-    "devices": [
+  "hive_id": "hive:550e8400-e29b-41d4-a716-446655440000",
+  "ts": "2025-10-30T14:59:12Z",
+  "node": {
+    "cpu_pct": 37.2,
+    "ram_used_mb": 12345,
+    "ram_total_mb": 65536,
+    "gpus": [
       {
-        "device_id": "GPU-0",
-        "vram_used_gb": 8.2,
-        "vram_total_gb": 24.0,
-        "temperature_celsius": 65.0
+        "id": "GPU-0",
+        "util_pct": 64,
+        "vram_used_mb": 8123,
+        "vram_total_mb": 24564,
+        "temp_c": 66
       }
     ]
   },
-  "capability_changes": null  // Only set when capabilities change
+  "workers": [
+    {
+      "worker_id": "worker:a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+      "service": "llm",
+      "instance": "8080",
+      "cgroup": "rbee.slice/llm/8080",
+      "pids": [23145],
+      "port": 8080,
+      "model": "llama-3.2-1b",
+      "gpu": "GPU-0",
+      "cpu_pct": 122.0,
+      "rss_mb": 9821,
+      "vram_mb": 7900,
+      "io_r_mb_s": 12.3,
+      "io_w_mb_s": 0.1,
+      "uptime_s": 432,
+      "state": "ready"
+    }
+  ]
 }
 ```
 
-**Queen responds:**
-- `204 No Content` - Heartbeat acknowledged
+**Queen responses:**
+- `200 OK` - Telemetry acknowledged
 - `400 Bad Request` - Invalid payload
-- `503 Service Unavailable` - Queen overloaded (hive should retry)
+- `503 Service Unavailable` - Queen overloaded (Hive retries)
 
 ---
 
-### Phase 3: Capability Changes
+## Worker Monitoring (No Worker Heartbeats)
 
-**When hive capabilities change (model downloaded, worker installed):**
+**CRITICAL: Workers never send heartbeats. Hive monitors workers via OS.**
 
+### **How Hive Monitors Workers**
+
+**Method:** cgroup v2 tree inspection
+
+**cgroup Structure:**
 ```
-POST http://{queen_url}/v1/hive-heartbeat
-{
-  "hive_id": "localhost",
-  "timestamp": "2025-10-30T14:52:00Z",
-  "monitor_data": { ... },
-  "capability_changes": {
-    "models": [
-      {
-        "action": "added",
-        "model_id": "llama-3.2-1b",
-        "size_gb": 2.5
-      }
-    ],
-    "workers": [
-      {
-        "action": "removed",
-        "worker_type": "cuda",
-        "version": "0.1.0"
-      }
-    ]
-  }
+/sys/fs/cgroup/rbee.slice/
+├── llm/
+│   ├── 8080/
+│   │   ├── cgroup.procs      # PIDs
+│   │   ├── cpu.stat          # CPU usage
+│   │   ├── memory.current    # RSS
+│   │   └── io.stat           # I/O rates
+│   └── 8081/
+│       └── ...
+├── vllm/
+│   └── 8000/
+│       └── ...
+└── comfy/
+    └── 8188/
+        └── ...
+```
+
+### **Monitor Loop (Hive)**
+
+```rust
+// Hive monitor (runs every ~1s)
+async fn collect_worker_telemetry() -> Vec<WorkerTelemetry> {
+    let mut workers = vec![];
+    
+    // Enumerate cgroup tree
+    for service in ["llm", "vllm", "comfy"] {
+        for instance in enumerate_instances(&format!("rbee.slice/{}", service)) {
+            let cgroup_path = format!("rbee.slice/{}/{}", service, instance);
+            
+            // Read OS stats (no worker cooperation)
+            let pids = read_pids(&cgroup_path)?;
+            let cpu_pct = read_cpu_stat(&cgroup_path)?;
+            let rss_mb = read_memory_current(&cgroup_path)?;
+            let (io_r, io_w) = read_io_stat(&cgroup_path)?;
+            
+            // Query GPU driver for VRAM (if worker uses GPU)
+            let vram_mb = query_nvidia_smi_for_pids(&pids)?;
+            
+            workers.push(WorkerTelemetry {
+                worker_id: generate_worker_id(service, instance),
+                service,
+                instance,
+                cgroup: cgroup_path,
+                pids,
+                port: instance.parse()?,
+                cpu_pct,
+                rss_mb,
+                vram_mb,
+                io_r_mb_s: io_r,
+                io_w_mb_s: io_w,
+                uptime_s: calculate_uptime(&pids[0]),
+                state: infer_state(cpu_pct, rss_mb),
+                ...
+            });
+        }
+    }
+    
+    workers
 }
 ```
 
-**Queen responds:**
-- `204 No Content` - Changes acknowledged, registry updated
+### **Why No Worker Heartbeats?**
+
+1. **Workers can't lie** - OS reports ground truth
+2. **Single telemetry path** - Hive → Queen (not worker → Queen)
+3. **No worker cooperation** - Works even if worker crashes/hangs
+4. **Efficient** - 1 heartbeat per node (not per worker)
+5. **Consistent** - Same monitoring for all worker types
 
 ---
 
-### Phase 4: Worker Discovery
+## State Machine
 
-**Workers follow the same protocol:**
-
-1. Hive spawns worker process
-2. Hive passes Queen URL to worker via CLI arg:
-   ```bash
-   ./llm-worker-rbee --queen-url http://queen-host:7833 ...
-   ```
-3. Worker starts, sends initial registration:
-   ```
-   POST http://{queen_url}/v1/worker-heartbeat
-   {
-     "worker_id": "worker-cuda-9001",
-     "hive_id": "localhost",
-     "timestamp": "2025-10-30T14:52:00Z",
-     "status": "starting",
-     "model": "llama-3.2-1b",
-     "device": "GPU-0",
-     "port": 9001
-   }
-   ```
-4. Queen stores worker in WorkerRegistry
-5. Worker continues sending heartbeats every 30 seconds
-
-**Note:** Workers receive Queen URL from hive at spawn time, not via discovery.
-
----
-
-## Hive Heartbeat Flow
-
-### State Machine
+### Hive States
 
 ```
 ┌─────────────────┐
@@ -251,225 +310,95 @@ POST http://{queen_url}/v1/hive-heartbeat
 │ DISCOVERY_PUSH  │                        │ DISCOVERY_WAIT  │
 │ (Exponential    │                        │ (Waiting for    │
 │  backoff: 5     │                        │  GET /caps)     │
-│  attempts)      │                        │                 │
+│  tries)         │                        │                 │
 └────────┬────────┘                        └────────┬────────┘
          │                                          │
          │ Attempt 1: 0s  → 404                     │
          │ Attempt 2: 2s  → 404                     │ Queen sends GET /capabilities?queen_url=...
          │ Attempt 3: 4s  → 404                     │
          │ Attempt 4: 8s  → 200 OK!                 │
-         │ Attempt 5: 16s                           │
+         │ Attempt 5: 16s → STOP                    │
          │                                          │
          └──────────────┬───────────────────────────┘
                         │
+                        │ First 200 OK received
+                        │
                         ▼
                 ┌─────────────────┐
-                │   DISCOVERED    │ (Has Queen URL, Queen has capabilities)
-                └────────┬────────┘
+                │   TELEMETRY     │ (Sending telemetry every ~1s)
+                └─────────────────┘
                          │
-                         │ Send heartbeat every 30s
+                         │ Monitor loop runs continuously:
+                         │ - Poll cgroups for worker stats
+                         │ - Read node stats (CPU, RAM, GPU)
+                         │ - Send telemetry to Queen
                          │
-                         ▼
-                ┌─────────────────┐
-                │   HEARTBEATING  │ (Sending monitor data)
-                └────────┬────────┘
-                         │
-                         │ Capabilities change (model added/removed)
-                         │
-                         ▼
-                ┌─────────────────┐
-                │ CAPABILITY_SYNC │ (Send capability_changes in next heartbeat)
-                └────────┬────────┘
-                         │
-                         │ Queen responds 200 OK
-                         │
-                         └──────► Back to HEARTBEATING
+                         └──────► Loop forever
 ```
 
 **State Descriptions:**
 
-- **STARTUP** - Hive just started, decides which discovery path to take
-- **DISCOVERY_PUSH** - Hive actively pushes heartbeats with exponential backoff (5 attempts)
-- **DISCOVERY_WAIT** - Hive waits for Queen to fetch capabilities via GET request
-- **DISCOVERED** - Queen knows about Hive, Hive knows about Queen
-- **HEARTBEATING** - Normal operation, sending monitor data every 30s
-- **CAPABILITY_SYNC** - Temporary state when capabilities changed, next heartbeat includes changes
+- **STARTUP** - Hive just started, decides which discovery path
+- **DISCOVERY_PUSH** - Hive sends telemetry with exponential backoff (5 tries: 0s, 2s, 4s, 8s, 16s)
+- **DISCOVERY_WAIT** - Hive waits for Queen to send GET /capabilities?queen_url=...
+- **TELEMETRY** - Normal operation, sending telemetry every ~1s (EMA-smoothed)
 
 ---
 
-### Heartbeat Payload Types
+## Telemetry Payload Specification
 
-**Type 1: Monitor Data (Normal)**
-```json
-{
-  "hive_id": "localhost",
-  "timestamp": "2025-10-30T14:52:00Z",
-  "monitor_data": {
-    "cpu_usage_percent": 45.2,
-    "ram_used_gb": 12.5,
-    "ram_total_gb": 64.0,
-    "uptime_seconds": 86400,
-    "devices": [...]
-  },
-  "capability_changes": null
-}
-```
-
-**Type 2: Capability Changes**
-```json
-{
-  "hive_id": "localhost",
-  "timestamp": "2025-10-30T14:52:00Z",
-  "monitor_data": { ... },
-  "capability_changes": {
-    "models": [
-      { "action": "added", "model_id": "...", "size_gb": 2.5 }
-    ],
-    "workers": []
-  }
-}
-```
-
----
-
-## Worker Heartbeat Flow
-
-### State Machine
-
-```
-┌─────────────────┐
-│    SPAWNED      │ (Worker process started by hive)
-└────────┬────────┘
-         │
-         │ Hive passes --queen-url flag
-         │
-         ▼
-┌─────────────────┐
-│   REGISTERED    │ (Send initial heartbeat with status=starting)
-└────────┬────────┘
-         │
-         │ Model loaded, ready to serve
-         │
-         ▼
-┌─────────────────┐
-│     READY       │ (Send heartbeat every 30s with status=ready)
-└────────┬────────┘
-         │
-         │ Receive inference request
-         │
-         ▼
-┌─────────────────┐
-│      BUSY       │ (Send heartbeat with status=busy)
-└────────┬────────┘
-         │
-         │ Inference complete
-         │
-         └──────► Back to READY
-```
-
----
-
-### Worker Heartbeat Payload
-
-```json
-{
-  "worker_id": "worker-cuda-9001",
-  "hive_id": "localhost",
-  "timestamp": "2025-10-30T14:52:00Z",
-  "status": "ready",  // "starting", "ready", "busy", "error"
-  "model": "llama-3.2-1b",
-  "device": "GPU-0",
-  "port": 9001,
-  "requests_served": 42,
-  "uptime_seconds": 3600
-}
-```
-
----
-
-## Heartbeat Payload Specification
-
-### HiveHeartbeat Contract
+### Contract (Authoritative)
 
 ```rust
-// bin/97_contracts/hive-contract/src/heartbeat.rs
+// bin/97_contracts/hive-contract/src/telemetry.rs
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct HiveHeartbeat {
-    pub hive_id: String,
-    pub timestamp: DateTime<Utc>,
-    pub monitor_data: MonitorData,
-    pub capability_changes: Option<CapabilityChanges>,
+pub struct HiveTelemetry {
+    pub hive_id: String,              // "hive:UUID"
+    pub ts: DateTime<Utc>,            // ISO 8601
+    pub node: NodeStats,
+    pub workers: Vec<WorkerTelemetry>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct MonitorData {
-    pub cpu_usage_percent: f32,
-    pub ram_used_gb: f32,
-    pub ram_total_gb: f32,
-    pub uptime_seconds: u64,
-    pub devices: Vec<DeviceMonitorData>,
+pub struct NodeStats {
+    pub cpu_pct: f32,                 // 0-100 per core (can exceed 100)
+    pub ram_used_mb: u64,
+    pub ram_total_mb: u64,
+    pub gpus: Vec<GpuStats>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct DeviceMonitorData {
-    pub device_id: String,
-    pub vram_used_gb: f32,
-    pub vram_total_gb: f32,
-    pub temperature_celsius: Option<f32>,
+pub struct GpuStats {
+    pub id: String,                   // "GPU-0", "GPU-1", etc.
+    pub util_pct: f32,                // 0-100
+    pub vram_used_mb: u64,
+    pub vram_total_mb: u64,
+    pub temp_c: f32,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct CapabilityChanges {
-    pub models: Vec<ModelChange>,
-    pub workers: Vec<WorkerChange>,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct ModelChange {
-    pub action: ChangeAction,  // "added", "removed"
-    pub model_id: String,
-    pub size_gb: f32,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct WorkerChange {
-    pub action: ChangeAction,
-    pub worker_type: String,  // "cpu", "cuda", "metal"
-    pub version: String,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-#[serde(rename_all = "lowercase")]
-pub enum ChangeAction {
-    Added,
-    Removed,
-}
-```
-
----
-
-### WorkerHeartbeat Contract
-
-```rust
-// bin/97_contracts/worker-contract/src/heartbeat.rs
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct WorkerHeartbeat {
-    pub worker_id: String,
-    pub hive_id: String,
-    pub timestamp: DateTime<Utc>,
-    pub status: WorkerStatus,
-    pub model: String,
-    pub device: String,
+pub struct WorkerTelemetry {
+    pub worker_id: String,            // "worker:UUID"
+    pub service: String,              // "llm", "vllm", "comfy"
+    pub instance: String,             // "8080", "8081", etc. (port)
+    pub cgroup: String,               // "rbee.slice/llm/8080"
+    pub pids: Vec<u32>,
     pub port: u16,
-    pub requests_served: u64,
-    pub uptime_seconds: u64,
+    pub model: Option<String>,        // "llama-3.2-1b"
+    pub gpu: Option<String>,          // "GPU-0" or null for CPU
+    pub cpu_pct: f32,                 // 0-100 per core
+    pub rss_mb: u64,                  // Resident set size
+    pub vram_mb: u64,                 // 0 if CPU worker
+    pub io_r_mb_s: f32,               // Read MB/s
+    pub io_w_mb_s: f32,               // Write MB/s
+    pub uptime_s: u64,
+    pub state: WorkerState,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "lowercase")]
-pub enum WorkerStatus {
+pub enum WorkerState {
     Starting,
     Ready,
     Busy,
@@ -479,123 +408,106 @@ pub enum WorkerStatus {
 
 ---
 
-## State Machine
+## Health Determination
 
-### Hive State Transitions
+**Queen derives health from telemetry freshness. No explicit health endpoints.**
 
-| Current State | Event | Next State | Action |
-|--------------|-------|------------|--------|
-| NOT_DISCOVERED | Queen sends GET /capabilities?queen_url=X | DISCOVERED | Store queen_url, start heartbeat task |
-| DISCOVERED | Heartbeat task starts | HEARTBEATING | Send first heartbeat with monitor data |
-| HEARTBEATING | Model downloaded | CAPABILITY_SYNC | Set capability_changes in next heartbeat |
-| CAPABILITY_SYNC | Queen responds 204 | HEARTBEATING | Clear capability_changes |
-| HEARTBEATING | Queen unreachable (5 failures) | DISCOVERED | Stop heartbeat task, wait for rediscovery |
+### **Health States**
 
----
+| State | Condition | Action |
+|-------|-----------|--------|
+| **Healthy** | Last telemetry < 3× interval (< 3s) | Normal operation |
+| **Degraded** | Last telemetry 3-10× interval (3-10s) | Warning |
+| **Down** | No telemetry for 10× interval (> 10s) | Mark as offline |
 
-### Worker State Transitions
+### **Calculation**
 
-| Current State | Event | Next State | Action |
-|--------------|-------|------------|--------|
-| SPAWNED | Hive passes --queen-url | REGISTERED | Send initial heartbeat (status=starting) |
-| REGISTERED | Model loaded | READY | Send heartbeat (status=ready) |
-| READY | Inference request received | BUSY | Send heartbeat (status=busy) |
-| BUSY | Inference complete | READY | Send heartbeat (status=ready) |
-| READY | Shutdown signal | STOPPED | Send final heartbeat, exit |
+```rust
+// Queen health checker (runs every 1s)
+async fn check_hive_health(hive: &HiveEntry) -> HealthStatus {
+    let now = Utc::now();
+    let last_seen = hive.last_telemetry_ts;
+    let elapsed = now - last_seen;
+    
+    const INTERVAL: Duration = Duration::from_secs(1);  // ~1s telemetry
+    
+    if elapsed < INTERVAL * 3 {
+        HealthStatus::Healthy
+    } else if elapsed < INTERVAL * 10 {
+        HealthStatus::Degraded
+    } else {
+        HealthStatus::Down
+    }
+}
+```
+
+### **Worker Health**
+
+Workers are monitored via **Hive telemetry only**. No separate worker health checks.
+
+```rust
+// Worker health derived from telemetry presence
+fn check_worker_health(worker: &WorkerTelemetry, now: DateTime<Utc>) -> HealthStatus {
+    // If worker appears in telemetry, it's alive
+    // If worker disappears from telemetry (Hive removes it), it's down
+    
+    match worker.state {
+        WorkerState::Ready | WorkerState::Busy => HealthStatus::Healthy,
+        WorkerState::Starting => HealthStatus::Degraded,
+        WorkerState::Error => HealthStatus::Down,
+    }
+}
+```
 
 ---
 
 ## Implementation Details
 
-### Hive Implementation
+### Hive Telemetry Manager
 
-**File:** `bin/20_rbee_hive/src/heartbeat.rs`
+**File:** `bin/20_rbee_hive/src/telemetry.rs`
 
 ```rust
-use std::sync::Arc;
-use tokio::sync::RwLock;
-
-pub struct HeartbeatManager {
+pub struct TelemetryManager {
     queen_url: Arc<RwLock<Option<String>>>,
     hive_id: String,
-    monitor: Arc<dyn SystemMonitor>,
-    capability_tracker: Arc<CapabilityTracker>,
+    cgroup_monitor: Arc<CgroupMonitor>,
 }
 
-impl HeartbeatManager {
-    pub fn new(hive_id: String) -> Self {
-        Self {
-            queen_url: Arc::new(RwLock::new(None)),
-            hive_id,
-            monitor: Arc::new(SystemMonitorImpl::new()),
-            capability_tracker: Arc::new(CapabilityTracker::new()),
-        }
-    }
-    
+impl TelemetryManager {
     /// Called when Queen sends GET /capabilities?queen_url=...
     pub async fn discover(&self, queen_url: String) {
-        let mut url = self.queen_url.write().await;
-        *url = Some(queen_url.clone());
-        
-        // Start heartbeat task
-        self.start_heartbeat_task(queen_url).await;
+        *self.queen_url.write().await = Some(queen_url.clone());
+        self.start_telemetry_task(queen_url).await;
     }
     
-    async fn start_heartbeat_task(&self, queen_url: String) {
-        let hive_id = self.hive_id.clone();
-        let monitor = self.monitor.clone();
-        let capability_tracker = self.capability_tracker.clone();
-        
+    async fn start_telemetry_task(&self, queen_url: String) {
         tokio::spawn(async move {
-            let mut interval = tokio::time::interval(Duration::from_secs(30));
+            let mut interval = tokio::time::interval(Duration::from_secs(1));
             
             loop {
                 interval.tick().await;
                 
-                // Collect monitor data
-                let monitor_data = monitor.collect().await;
+                // Collect node stats
+                let node = collect_node_stats().await;
                 
-                // Check for capability changes
-                let capability_changes = capability_tracker.get_changes().await;
+                // Enumerate cgroup tree for workers
+                let workers = self.cgroup_monitor.collect_workers().await;
                 
-                // Build heartbeat
-                let heartbeat = HiveHeartbeat {
-                    hive_id: hive_id.clone(),
-                    timestamp: Utc::now(),
-                    monitor_data,
-                    capability_changes,
+                // Build telemetry
+                let telemetry = HiveTelemetry {
+                    hive_id: self.hive_id.clone(),
+                    ts: Utc::now(),
+                    node,
+                    workers,
                 };
                 
                 // Send to Queen
-                match send_heartbeat(&queen_url, &heartbeat).await {
-                    Ok(_) => {
-                        // Clear capability changes after successful send
-                        if heartbeat.capability_changes.is_some() {
-                            capability_tracker.clear_changes().await;
-                        }
-                    }
-                    Err(e) => {
-                        tracing::warn!("Failed to send heartbeat: {}", e);
-                        // TODO: Implement retry logic with backoff
-                    }
+                if let Err(e) = send_telemetry(&queen_url, &telemetry).await {
+                    tracing::warn!("Failed to send telemetry: {}", e);
                 }
             }
         });
-    }
-}
-
-async fn send_heartbeat(queen_url: &str, heartbeat: &HiveHeartbeat) -> Result<()> {
-    let client = reqwest::Client::new();
-    let response = client
-        .post(format!("{}/v1/hive-heartbeat", queen_url))
-        .json(heartbeat)
-        .send()
-        .await?;
-    
-    if response.status() == StatusCode::NO_CONTENT {
-        Ok(())
-    } else {
-        Err(anyhow::anyhow!("Unexpected response: {}", response.status()))
     }
 }
 ```

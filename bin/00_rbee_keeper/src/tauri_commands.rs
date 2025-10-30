@@ -49,7 +49,7 @@ mod tests {
                 hive_rebuild,
             ])
             .typ::<NarrationEvent>()
-            .typ::<daemon_lifecycle::DaemonStatus>();
+            .typ::<lifecycle_local::DaemonStatus>();
 
         builder
             .export(Typescript::default(), "ui/src/generated/bindings.ts")
@@ -100,9 +100,9 @@ pub enum SshTargetStatus {
 /// TEAM-338: RULE ZERO FIX - Use DaemonStatus directly (deleted QueenStatus duplicate)
 #[tauri::command]
 #[specta::specta]
-pub async fn queen_status() -> Result<daemon_lifecycle::DaemonStatus, String> {
+pub async fn queen_status() -> Result<lifecycle_local::DaemonStatus, String> {
     use crate::Config;
-    use daemon_lifecycle::{check_daemon_health, SshConfig};
+    use lifecycle_local::{check_daemon_health, SshConfig};
 
     let config = Config::load().map_err(|e| format!("Config error: {}", e))?;
     let queen_url = config.queen_url();
@@ -272,9 +272,9 @@ pub async fn hive_stop(alias: String) -> Result<String, String> {
 /// TEAM-342: Added narration for visibility in UI
 #[tauri::command]
 #[specta::specta]
-pub async fn hive_status(alias: String) -> Result<daemon_lifecycle::DaemonStatus, String> {
+pub async fn hive_status(alias: String) -> Result<lifecycle_ssh::DaemonStatus, String> {
     use crate::ssh_resolver::resolve_ssh_config;
-    use daemon_lifecycle::check_daemon_health;
+    use lifecycle_ssh::check_daemon_health;
     use observability_narration_core::n;
 
     // TEAM-342: Narrate status check start
@@ -433,7 +433,7 @@ pub async fn ssh_list() -> Result<Vec<SshTarget>, String> {
 
     // TEAM-333: Deduplicate by hostname - collect all aliases first, then pick shortest
     let mut by_hostname: HashMap<String, Vec<String>> = HashMap::new();
-    let mut configs_map: HashMap<String, daemon_lifecycle::SshConfig> = HashMap::new();
+    let mut configs_map: HashMap<String, lifecycle_ssh::SshConfig> = HashMap::new();
 
     // First pass: collect all aliases for each unique hostname
     for (host, config) in hosts {

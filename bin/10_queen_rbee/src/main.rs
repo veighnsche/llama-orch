@@ -110,9 +110,21 @@ fn create_router(
 
     let heartbeat_state = http::HeartbeatState {
         worker_registry: worker_registry.clone(),
-        hive_registry,
+        hive_registry: hive_registry.clone(),
         event_tx, // TEAM-288: Broadcast channel for real-time events
     };
+
+    // TEAM-364: Spawn background task for automatic stale worker cleanup (Critical Issue #4)
+    // Removes workers that haven't sent heartbeat in 90 seconds
+    let hive_registry_cleanup = Arc::clone(&hive_registry);
+    tokio::spawn(async move {
+        let mut interval = tokio::time::interval(std::time::Duration::from_secs(60));
+        loop {
+            interval.tick().await;
+            hive_registry_cleanup.cleanup_stale();
+            tracing::debug!("Cleaned up stale workers from hive registry");
+        }
+    });
 
     // TEAM-288: Add CORS layer to allow web UI access
     let cors = CorsLayer::new()
@@ -142,9 +154,8 @@ fn create_router(
         // TEAM-186: V1 API endpoints (matches API_REFERENCE.md)
         .route("/v1/shutdown", post(http::handle_shutdown)) // TEAM-339: Graceful shutdown endpoint
         .route("/v1/info", get(http::handle_info)) // TEAM-292/CLEANUP: Queen info (service discovery + build info)
-        // TEAM-275: Removed /v1/heartbeat endpoint (deprecated, use /v1/worker-heartbeat instead)
-        .route("/v1/worker-heartbeat", post(http::handle_worker_heartbeat)) // TEAM-261: Workers send heartbeats directly to queen
-        .route("/v1/hive-heartbeat", post(http::handle_hive_heartbeat)) // TEAM-284/285: Hives send heartbeats directly to queen
+        // TEAM-363: Only hive heartbeat (workers monitored via hive telemetry)
+        .route("/v1/hive-heartbeat", post(http::handle_hive_heartbeat)) // TEAM-362: Hive telemetry with workers
         .route("/v1/heartbeats/stream", get(http::handle_heartbeat_stream)) // TEAM-285: Live heartbeat streaming for web UI
         .with_state(heartbeat_state)
         .route("/v1/jobs", post(http::handle_create_job))

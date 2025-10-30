@@ -21,8 +21,13 @@ shared-contract = { path = "../../97_contracts/shared-contract" }
 # TEAM-285: Generic heartbeat registry
 heartbeat-registry = { path = "../../99_shared_crates/heartbeat-registry" }
 
+# TEAM-362: Worker telemetry storage
+rbee-hive-monitor = { path = "../../25_rbee_hive_crates/monitor" }
+
 # Time handling
 chrono = "0.4"
 
 [dev-dependencies]
-# Testing
+# TEAM-364: Telemetry testing infrastructure
+tokio = { workspace = true, features = ["full"] }
+chrono = "0.4"

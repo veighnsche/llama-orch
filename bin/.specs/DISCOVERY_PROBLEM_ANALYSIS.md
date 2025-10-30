@@ -1,12 +1,30 @@
 # Discovery Problem Analysis
 
 **Date:** Oct 30, 2025  
-**Status:** CRITICAL ARCHITECTURAL GAP  
-**Purpose:** Analyze the worker/hive discovery problem and evaluate solutions
+**Status:** ✅ SOLVED  
+**Purpose:** Document the discovery problem and final solution
+
+**Canonical Solution:** See [`HEARTBEAT_ARCHITECTURE.md`](./HEARTBEAT_ARCHITECTURE.md)
 
 ---
 
-## 🚨 The Problem
+## 🎯 Final Architecture (Post-Refinement)
+
+### **Key Constraints:**
+
+1. **Workers do not send heartbeats** - Workers never communicate directly with Queen
+2. **Hive performs system-level monitoring** - Via cgroup v2 tree (`rbee.slice/<service>/<instance>`)
+3. **Registry provides discovery only** - No metric fields, only existence/liveness
+4. **Telemetry flows Hive → Queen** - Single authoritative path for live stats
+
+### **Discovery Solution:**
+
+**Hives:** Static port (7835), discovered via SSH config  
+**Workers:** Monitored by Hive via cgroup v2, reported in Hive telemetry
+
+---
+
+## 🚨 The Original Problem
 
 ### **Core Issue: Variable Ports Break Discovery**
 
@@ -20,75 +38,66 @@
 - Variable ports: `8000` (vllm), `8080` (llm), `8188` (comfy)
 - Dynamic spawning
 - No static hostname/port mapping
-- ❌ **Discovery broken**
+- ❌ **Discovery was broken** (now solved via Hive telemetry)
 
 ---
 
 ## 🔍 Discovery Scenarios
 
-### **Scenario 1: Queen → Hive → Worker (REJECTED)**
+### **Scenario 1: Hive Monitors Workers (FINAL SOLUTION)**
 
 ```
+Worker starts on Hive (any port: 8080, 8081, etc.)
+    ↓
+Hive spawns worker in cgroup: rbee.slice/llm/8080
+    ↓
+Hive Monitor polls cgroup tree every ~1s
+    ↓
+Hive collects: CPU%, RSS, VRAM, I/O, PIDs, state
+    ↓
+Hive sends telemetry to Queen (includes all workers)
+    ↓
+Queen discovers worker via Hive telemetry
+```
+
+**Why this works:**
+- ✅ Workers never send heartbeats (no cooperation needed)
+- ✅ Hive monitors via OS (cgroups) - workers can't lie
+- ✅ Single telemetry path: Hive → Queen
+- ✅ Works for any port (dynamic ports solved)
+- ✅ Works Queenless (Hive still monitors, just doesn't send telemetry)
+
+---
+
+### **Scenario 2: Worker Dynamic Ports (SOLVED)**
+
+```
+Worker 1: llm-worker on port 8080 → cgroup: rbee.slice/llm/8080
+Worker 2: llm-worker on port 8081 → cgroup: rbee.slice/llm/8081
+Worker 3: llm-worker on port 8082 → cgroup: rbee.slice/llm/8082
+```
+
+**Solution:** Hive enumerates cgroup tree, discovers all workers regardless of port.
+
+---
+
+### **Scenario 3: Queen Starts After Workers (SOLVED)**
+
+```
+Workers running (8000, 8080, 8188) - monitored by Hive
+    ↓
 Queen starts
     ↓
-Queen discovers Hive via SSH config
+Queen sends GET /capabilities?queen_url=... to Hive
     ↓
-Worker starts on Hive
+Hive starts telemetry to Queen
     ↓
-Worker sends heartbeat to Hive ❌ (User doesn't want this)
+First telemetry includes all existing workers
     ↓
-Hive has worker registry ❌ (User doesn't want this)
-    ↓
-Queen fetches capabilities from Hive (includes workers)
+Queen discovers all workers immediately
 ```
 
-**Why rejected:** User explicitly does NOT want Hive to have worker registry or receive worker heartbeats.
-
----
-
-### **Scenario 2: Queenless Workers (GUI-spawned)**
-
-```
-GUI (rbee-keeper) starts
-    ↓
-User spawns worker via GUI
-    ↓
-Worker starts on port 8080
-    ↓
-Worker tries to send heartbeat to Queen... but Queen doesn't exist yet
-    ↓
-Worker can't blindly send heartbeats to nowhere ❌
-```
-
-**Problem:** How does Queen discover workers that started before Queen?
-
----
-
-### **Scenario 3: Queen Starts After Workers**
-
-```
-Workers running (8000, 8080, 8188)
-    ↓
-Queen starts
-    ↓
-Queen needs to discover all existing workers
-    ↓
-How??? ❌
-```
-
-**Problem:** Queen doesn't know what ports to check.
-
----
-
-### **Scenario 4: Worker Dynamic Ports**
-
-```
-Worker 1: llm-worker on port 8080
-Worker 2: llm-worker on port 8081 (port 8080 was taken)
-Worker 3: llm-worker on port 8082 (port 8081 was taken)
-```
-
-**Problem:** Ports are not fixed. Queen can't assume "llm-worker is always on 8080".
+**Solution:** Hive telemetry includes snapshot of all running workers.
 
 ---
 
@@ -97,7 +106,7 @@ Worker 3: llm-worker on port 8082 (port 8081 was taken)
 ### **Must Have:**
 
 1. ✅ Queen discovers all hives (SOLVED: SSH config)
-2. ✅ Queen discovers all workers (UNSOLVED)
+2. ✅ Queen discovers all workers (SOLVED: Hive telemetry)
 3. ✅ Works if Queen starts first
 4. ✅ Works if Workers start first (Queenless scenario)
 5. ✅ Works with dynamic worker ports
@@ -195,78 +204,104 @@ Worker 3: llm-worker on port 8082 (port 8081 was taken)
 
 ---
 
-## 🔥 Edge Cases
+## 🔥 Edge Cases (All Solved)
 
-### **Edge Case 1: Port Collision**
+### **Edge Case 1: Port Collision** ✅
 
 ```
-Worker 1 tries to bind 8080 → Success
-Worker 2 tries to bind 8080 → Fail, retry 8081
-Worker 3 tries to bind 8080 → Fail, retry 8081 → Fail, retry 8082
+Worker 1 tries to bind 8080 → Success → cgroup: rbee.slice/llm/8080
+Worker 2 tries to bind 8080 → Fail, retry 8081 → cgroup: rbee.slice/llm/8081
+Worker 3 tries to bind 8080 → Fail, retry 8081 → Fail, retry 8082 → cgroup: rbee.slice/llm/8082
 ```
 
-**Problem:** Can't assume fixed ports.
+**Solution:** Hive enumerates cgroup tree, discovers all workers regardless of port.
 
 ---
 
-### **Edge Case 2: Multiple Hives, Multiple Workers**
+### **Edge Case 2: Multiple Hives, Multiple Workers** ✅
 
 ```
-Hive 1 (machine-a:7835) spawns:
-  - Worker 1 (machine-a:8080)
-  - Worker 2 (machine-a:8081)
+Hive 1 (machine-a:7835) monitors:
+  - Worker 1 (machine-a:8080) → Hive 1 telemetry
+  - Worker 2 (machine-a:8081) → Hive 1 telemetry
 
-Hive 2 (machine-b:7835) spawns:
-  - Worker 3 (machine-b:8080)
-  - Worker 4 (machine-b:8081)
+Hive 2 (machine-b:7835) monitors:
+  - Worker 3 (machine-b:8080) → Hive 2 telemetry
+  - Worker 4 (machine-b:8081) → Hive 2 telemetry
 
 GUI (machine-c) spawns:
-  - Worker 5 (machine-c:8080)
+  - Worker 5 (machine-c:8080) → No telemetry (Queenless)
 ```
 
-**Problem:** Queen needs to discover workers across multiple machines.
+**Solution:** Each Hive sends telemetry for its own workers. Queen aggregates.
 
 ---
 
-### **Edge Case 3: Worker Crash and Restart**
+### **Edge Case 3: Worker Crash and Restart** ✅
 
 ```
-Worker 1 (8080) crashes
-Worker 1 restarts on 8080
+Worker 1 (8080) crashes → disappears from cgroup
+Hive telemetry: workers[] no longer includes Worker 1
+Queen marks Worker 1 as down
+
+Worker 1 restarts on 8080 → new cgroup entry
+Hive telemetry: workers[] includes new Worker 1
+Queen discovers new worker instance
 ```
 
-**Problem:** Queen needs to know it's the same worker (or a new one).
+**Solution:** Hive telemetry reflects current cgroup state. Workers auto-discovered/removed.
 
 ---
 
-### **Edge Case 4: Queenless Operation**
+### **Edge Case 4: Queenless Operation** ✅
 
 ```
 GUI spawns Worker 1 (8080)
+Hive monitors Worker 1 via cgroup (no telemetry sent - no Queen)
 User does inference via GUI → Worker 1
 Queen starts later
-Queen needs to discover Worker 1
+Queen sends GET /capabilities?queen_url=... to Hive
+Hive starts telemetry (includes Worker 1)
+Queen discovers Worker 1 immediately
 ```
 
-**Problem:** Worker didn't know Queen URL at startup.
+**Solution:** Hive always monitors workers. Telemetry starts when Queen discovered.
 
 ---
 
-## 💡 Solution Criteria
+## ✅ Final Solution Summary
 
-### **Good Solution Must:**
+**Implemented:** Hive monitors workers via cgroup v2, reports in telemetry to Queen.
 
-1. **Systematic** - Not ad-hoc, follows clear pattern
-2. **Scalable** - Works with 1 worker or 100 workers
-3. **Resilient** - Handles startup order variations
-4. **Simple** - Easy to understand and maintain
-5. **No persistent data** - In-memory only for lifecycles
-6. **No Hive worker registry** - Respects user constraint
-7. **Works Queenless** - GUI can operate without Queen
+**Key Benefits:**
+1. ✅ **Systematic** - Clear cgroup enumeration pattern
+2. ✅ **Scalable** - Works with 1 worker or 100 workers
+3. ✅ **Resilient** - Handles all startup order variations
+4. ✅ **Simple** - OS-level monitoring, no worker cooperation
+5. ✅ **No persistent data** - In-memory cgroup polling
+6. ✅ **No Hive worker registry** - Just telemetry reporting
+7. ✅ **Works Queenless** - Hive monitors regardless of Queen
+
+**See:** [`HEARTBEAT_ARCHITECTURE.md`](./HEARTBEAT_ARCHITECTURE.md) for full implementation details.
 
 ---
 
-## 🎯 Solution Categories
+## 🗑️ Deprecated Solution Documents (Rule Zero)
+
+The following solution documents are **DEPRECATED** and should be deleted:
+
+- ❌ `SOLUTION_1_REGISTRY_SERVICE.md` - Registry not needed for worker discovery
+- ❌ `SOLUTION_2_PARENT_CHILD_REGISTRATION.md` - Workers don't register
+- ❌ `SOLUTION_3_HYBRID.md` - Hybrid approach not needed
+- ❌ `SOLUTION_COMPARISON.md` - No alternatives to compare
+- ❌ `HEARTBEAT_CONSOLIDATION_ANALYSIS.md` - Superseded by HEARTBEAT_ARCHITECTURE.md
+- ❌ `HEARTBEAT_IMPLEMENTATION_SUMMARY.md` - Superseded by HEARTBEAT_ARCHITECTURE.md
+
+**Reason:** Problem solved via Hive telemetry monitoring. No alternative solutions needed.
+
+---
+
+## 🗂️ Historical Context (Deprecated Solution Categories)
 
 ### **Category A: Central Registry (New Daemon)**
 

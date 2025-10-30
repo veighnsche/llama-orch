@@ -37,7 +37,7 @@ async-stream = "0.3" # TEAM-288: For async stream! macro in heartbeat_stream
 anyhow = "1.0"
 
 # Internal dependencies
-daemon-lifecycle = { path = "../99_shared_crates/daemon-lifecycle" }  # TEAM-189: For spawning hive daemons (hive start)
+# TEAM-XXX: DELETED lifecycle-ssh - Queen doesn't manage daemons (Keeper does that)
 job-server = { path = "../99_shared_crates/job-server" }
 observability-narration-core = { path = "../99_shared_crates/narration-core" }
 observability-narration-macros = { path = "../99_shared_crates/narration-macros" }  # TEAM-350: For #[with_job_id] macro
@@ -64,3 +64,6 @@ timeout-enforcer = { path = "../99_shared_crates/timeout-enforcer" }  # TEAM-207
 [dev-dependencies]
 # TEAM-158: Test dependencies
 tempfile = "3.8"
+# TEAM-364: Telemetry testing infrastructure
+tokio = { workspace = true, features = ["full", "test-util"] }
+serde_json = "1.0"

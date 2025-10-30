@@ -1,16 +1,7 @@
 //! SSE endpoint for live heartbeat updates
 //!
-//! TEAM-285: Real-time heartbeat streaming for web UI
-//!
-//! **Purpose:**
-//! Stream live updates of all heartbeats (workers + hives) to connected clients.
-//! This allows web UIs to show real-time status without polling.
-//!
-//! **Flow:**
-//! 1. Client connects to GET /v1/heartbeats/stream
-//! 2. Server sends initial snapshot of all heartbeats
-//! 3. Server sends updates as new heartbeats arrive
-//! 4. Client receives SSE events with JSON payloads
+//! TEAM-362: Streams hive telemetry with worker details
+//! TEAM-363: Cleaned up per RULE ZERO
 
 use axum::{
     extract::State,
@@ -23,25 +14,9 @@ use tokio::time::interval;
 
 use super::heartbeat::{HeartbeatEvent, HeartbeatState};
 
-// TEAM-288: Removed HeartbeatSnapshot - now using HeartbeatEvent from heartbeat.rs
-
 /// GET /v1/heartbeats/stream - SSE endpoint for live heartbeat updates
 ///
-/// TEAM-288: Event-driven architecture with real-time forwarding
-///
-/// **Flow:**
-/// 1. Subscribe to broadcast channel for real-time events
-/// 2. Queen sends her own heartbeat every 2.5 seconds
-/// 3. Worker/Hive heartbeats are forwarded immediately when received
-/// 4. All events sent as SSE to connected clients
-///
-/// **SSE Format:**
-/// ```text
-/// event: heartbeat
-/// data: {"type":"queen","workers_online":3,"hives_online":1,...}
-/// data: {"type":"worker","worker_id":"w1","status":"ready",...}
-/// data: {"type":"hive","hive_id":"h1","status":"online",...}
-/// ```
+/// TEAM-362: Streams Queen heartbeats (2.5s) and Hive telemetry (1s)
 pub async fn handle_heartbeat_stream(
     State(state): State<HeartbeatState>,
 ) -> Sse<impl Stream<Item = Result<Event, Infallible>>> {
@@ -52,18 +27,18 @@ pub async fn handle_heartbeat_stream(
     let mut queen_interval = interval(Duration::from_millis(2500));
     queen_interval.set_missed_tick_behavior(tokio::time::MissedTickBehavior::Skip);
 
-    // TEAM-288: Create stream that merges queen heartbeats and broadcast events
+    // TEAM-362: Stream Queen heartbeats and Hive telemetry events
     let stream = async_stream::stream! {
         loop {
             tokio::select! {
-                // TEAM-288: Queen's own heartbeat every 2.5 seconds
+                // Queen's own heartbeat every 2.5 seconds
                 _ = queen_interval.tick() => {
                     let event = create_queen_heartbeat(&state);
                     let json = serde_json::to_string(&event).unwrap_or_else(|_| "{}".to_string());
                     yield Ok(Event::default().event("heartbeat").data(json));
                 }
 
-                // TEAM-288: Forward worker/hive heartbeats immediately
+                // Forward all events (HiveTelemetry from hives)
                 Ok(event) = event_rx.recv() => {
                     let json = serde_json::to_string(&event).unwrap_or_else(|_| "{}".to_string());
                     yield Ok(Event::default().event("heartbeat").data(json));
@@ -75,7 +50,7 @@ pub async fn handle_heartbeat_stream(
     Sse::new(stream).keep_alive(KeepAlive::default())
 }
 
-/// TEAM-288: Create queen's own heartbeat with current system status
+/// Create queen's own heartbeat with current system status
 fn create_queen_heartbeat(state: &HeartbeatState) -> HeartbeatEvent {
     let workers_online = state.worker_registry.count_online();
     let workers_available = state.worker_registry.count_available();

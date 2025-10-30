@@ -6,7 +6,7 @@
 
 use anyhow::Result;
 use clap::Subcommand;
-use daemon_lifecycle::{
+use lifecycle_ssh::{
     check_daemon_health, install_daemon, rebuild_daemon, start_daemon, stop_daemon,
     uninstall_daemon, HttpDaemonConfig, InstallConfig, RebuildConfig, StartConfig, StopConfig,
     UninstallConfig,

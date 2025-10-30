@@ -56,7 +56,9 @@ chrono = { version = "0.4", features = ["serde"] }  # TEAM-336: Timestamps for G
 # TEAM-152: Queen lifecycle management (consolidated)
 # TEAM-185: Consolidated queen-lifecycle crate dependencies directly into rbee-keeper
 # TEAM-338: RULE ZERO FIX - Enable tauri feature for DaemonStatus specta::Type
-daemon-lifecycle = { path = "../99_shared_crates/daemon-lifecycle", features = ["tauri"] }
+# TEAM-XXX: Split daemon-lifecycle into lifecycle-local (local queen) and lifecycle-ssh (remote hive)
+lifecycle-local = { path = "../96_lifecycle/lifecycle-local", features = ["tauri"] }
+lifecycle-ssh = { path = "../96_lifecycle/lifecycle-ssh", features = ["tauri"] }
 timeout-enforcer = { path = "../99_shared_crates/timeout-enforcer" }
 operations-contract = { path = "../97_contracts/operations-contract" }  # TEAM-186/284: Operations contract
 # TEAM-290: DELETED rbee-config dependency (file-based config deprecated)
