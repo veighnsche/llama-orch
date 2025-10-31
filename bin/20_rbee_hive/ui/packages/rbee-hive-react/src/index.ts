@@ -67,9 +67,14 @@ export function useModels() {
         }
       })
       
-      // Parse JSON response from last line
-      const lastLine = lines[lines.length - 1]
-      return lastLine ? JSON.parse(lastLine) : []
+      // Find the JSON line (starts with '[' or '{')
+      // Backend emits narration lines first, then JSON on last line
+      const jsonLine = lines.reverse().find(line => {
+        const trimmed = line.trim()
+        return trimmed.startsWith('[') || trimmed.startsWith('{')
+      })
+      
+      return jsonLine ? JSON.parse(jsonLine) : []
     },
     staleTime: 30000, // Models change less frequently (30 seconds)
     retry: 3,
@@ -139,3 +144,11 @@ export type {
   WorkerTypeOption,
   SpawnWorkerParams 
 } from './hooks/useHiveOperations'
+
+export { useModelOperations } from './hooks/useModelOperations'
+export type {
+  UseModelOperationsResult,
+  LoadModelParams,
+  UnloadModelParams,
+  DeleteModelParams
+} from './hooks/useModelOperations'

@@ -13,7 +13,8 @@
 export type { HeartbeatMonitor, OperationBuilder, QueenClient } from '@rbee/queen-rbee-sdk'
 
 // Export hooks
-export { useQueenSDK, useRbeeSDK } from './hooks/useRbeeSDK' // TEAM-377: useRbeeSDK is deprecated alias
+// TEAM-377: RULE ZERO - Deleted useRbeeSDK alias, only export useQueenSDK
+export { useQueenSDK } from './hooks/useQueenSDK'
 export { useHeartbeat } from './hooks/useHeartbeat'
 export type { HeartbeatData, UseHeartbeatResult } from './hooks/useHeartbeat'
 export { useRhaiScripts } from './hooks/useRhaiScripts'

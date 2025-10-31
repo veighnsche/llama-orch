@@ -43,7 +43,18 @@ pub async fn subscribe_to_hive(
     loop {
         let mut event_source = EventSource::get(&stream_url);
         
-        n!("hive_subscribe_connected", "✅ Connected to hive {} SSE stream", hive_id);
+        // TEAM-377: Register hive when connection opens
+        use hive_contract::{HiveInfo, OperationalStatus, HealthStatus};
+        let hive_info = HiveInfo {
+            id: hive_id.clone(),
+            hostname: hive_url.clone(),
+            port: 7835,
+            operational_status: OperationalStatus::Ready,
+            health_status: HealthStatus::Healthy,
+            version: "0.1.0".to_string(),
+        };
+        hive_registry.register_hive(hive_info);
+        n!("hive_connected", "✅ Hive {} connected and registered", hive_id);
         
         while let Some(event) = event_source.next().await {
             match event {
@@ -60,51 +71,8 @@ pub async fn subscribe_to_hive(
                                     .filter_map(|w| serde_json::from_value(w).ok())
                                     .collect();
                                 
-                                // ============================================================
-                                // BUG FIX: TEAM-377 | Hive count always 0
-                                // ============================================================
-                                // SUSPICION:
-                                // - Thought backend wasn't sending hive_online count
-                                // - Thought frontend was using wrong field
-                                //
-                                // INVESTIGATION:
-                                // - Frontend correctly uses data?.hives_online from backend ✓
-                                // - Backend calls hive_registry.count_online() ✓
-                                // - TelemetryRegistry.count_online() checks HeartbeatRegistry ✓
-                                // - Found: update_workers() called but update_hive() NEVER called!
-                                //
-                                // ROOT CAUSE:
-                                // - Line 64 only called update_workers() to store telemetry
-                                // - Never called update_hive() to register hive as "online"
-                                // - count_online() checks hive heartbeats, not worker data
-                                // - Result: Hives have workers but aren't counted as "online"
-                                //
-                                // FIX:
-                                // - Call update_hive() to register hive heartbeat
-                                // - This marks hive as "online" in HeartbeatRegistry
-                                // - count_online() will now return correct count
-                                //
-                                // TESTING:
-                                // - Restart queen-rbee
-                                // - Connect 2 hives
-                                // - Check Queen UI: Active Hives should show 2
-                                // ============================================================
-                                
-                                // Register hive as online (creates heartbeat entry)
-                                use hive_contract::{HiveInfo, HiveHeartbeat, OperationalStatus, HealthStatus};
-                                
-                                let hive_info = HiveInfo {
-                                    id: hive_id.clone(),
-                                    hostname: hive_url.clone(),
-                                    port: 7835, // TODO: Parse from hive_url
-                                    operational_status: OperationalStatus::Ready,
-                                    health_status: HealthStatus::Healthy,
-                                    version: "0.1.0".to_string(),
-                                };
-                                
-                                hive_registry.update_hive(HiveHeartbeat::new(hive_info));
-                                
-                                // Store worker telemetry
+                                // TEAM-377: Just store worker telemetry
+                                // Hive is already registered when connection opened
                                 hive_registry.update_workers(&hive_id, parsed_workers.clone());
                                 
                                 // Forward to Queen's SSE stream
@@ -124,13 +92,17 @@ pub async fn subscribe_to_hive(
                 }
                 Err(e) => {
                     n!("hive_subscribe_error", "❌ Hive {} SSE error: {}", hive_id, e);
-                    break; // Reconnect
+                    break;
                 }
             }
         }
         
-        // Connection closed, retry after delay
-        n!("hive_subscribe_reconnect", "🔄 Reconnecting to hive {} in 5s...", hive_id);
+        // TEAM-377: Remove hive immediately when connection closes
+        hive_registry.remove_hive(&hive_id);
+        n!("hive_disconnected", "🔌 Hive {} disconnected and removed", hive_id);
+        
+        // Retry connection after delay
+        n!("hive_reconnect", "🔄 Reconnecting to hive {} in 5s...", hive_id);
         tokio::time::sleep(Duration::from_secs(5)).await;
     }
 }

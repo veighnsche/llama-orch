@@ -50,6 +50,9 @@ pub enum HiveLifecycleAction {
         /// Host alias (default: localhost, or use SSH config entry)
         #[arg(short = 'a', long = "host", default_value = "localhost")]
         alias: String,
+        /// Binary type (release for production, dev/debug for development)
+        #[arg(short = 'b', long = "binary")]
+        binary: Option<String>,
     },
     /// Uninstall rbee-hive binary
     Uninstall {
@@ -174,13 +177,13 @@ pub async fn handle_hive_lifecycle(action: HiveLifecycleAction, queen_url: &str)
             Ok(())
         }
 
-        HiveLifecycleAction::Install { alias } => {
+        HiveLifecycleAction::Install { alias, binary } => {
             // TEAM-365: Conditional dispatch - localhost uses lifecycle-local, remote uses lifecycle-ssh
             if alias == "localhost" {
                 // TEAM-365: Localhost - use lifecycle-local (no SSH)
                 let config = lifecycle_local::InstallConfig {
                     daemon_name: "rbee-hive".to_string(),
-                    local_binary_path: None,
+                    local_binary_path: binary.clone().map(|b| b.into()),
                     job_id: None,
                 };
                 lifecycle_local::install_daemon(config).await
@@ -190,7 +193,7 @@ pub async fn handle_hive_lifecycle(action: HiveLifecycleAction, queen_url: &str)
                 let config = lifecycle_ssh::InstallConfig {
                     daemon_name: "rbee-hive".to_string(),
                     ssh_config: ssh,
-                    local_binary_path: None,
+                    local_binary_path: binary.map(|b| b.into()),
                     job_id: None,
                 };
                 lifecycle_ssh::install_daemon(config).await

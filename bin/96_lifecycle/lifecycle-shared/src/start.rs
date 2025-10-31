@@ -140,13 +140,19 @@ impl HttpDaemonConfig {
 ///
 /// Returns "NOT_FOUND" if binary not found
 pub fn find_binary_command(daemon_name: &str) -> String {
+    // TEAM-377: RULE ZERO - Use constant for install directory
+    use crate::BINARY_INSTALL_DIR;
+    
     format!(
         "(test -x target/debug/{} && echo target/debug/{}) || \
          (test -x target/release/{} && echo target/release/{}) || \
-         (test -x ~/.local/bin/{} && echo ~/.local/bin/{}) || \
+         (test -x ~/{}/{} && echo ~/{}/{}) || \
          which {} 2>/dev/null || \
          echo 'NOT_FOUND'",
-        daemon_name, daemon_name, daemon_name, daemon_name, daemon_name, daemon_name, daemon_name
+        daemon_name, daemon_name, 
+        daemon_name, daemon_name, 
+        BINARY_INSTALL_DIR, daemon_name, BINARY_INSTALL_DIR, daemon_name,
+        daemon_name
     )
 }
 

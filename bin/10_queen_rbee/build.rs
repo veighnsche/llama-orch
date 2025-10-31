@@ -7,6 +7,9 @@ use std::path::Path;
 use std::process::Command;
 
 fn main() {
+    // TEAM-XXX: Generate build metadata using shadow-rs
+    shadow_rs::new().expect("Failed to generate shadow-rs build metadata");
+
     println!("cargo:rerun-if-changed=ui/app/src");
     println!("cargo:rerun-if-changed=ui/app/package.json");
     println!("cargo:rerun-if-changed=ui/packages/queen-rbee-sdk/src");
@@ -18,22 +21,22 @@ fn main() {
 
     // TEAM-350: REAL FIX - Build packages FIRST, then app
     // This allows cargo watch to rebuild everything without needing turbo dev server
-    
+
     let ui_base_dir = Path::new(&manifest_dir).join("ui");
     let ui_app_dir = ui_base_dir.join("app");
     let ui_dist = ui_app_dir.join("dist");
-    
+
     // TEAM-350: Skip ALL UI builds if Vite dev server is running (port 7834)
     // This avoids conflicts with the dev server and speeds up cargo builds during development
     let vite_dev_running = std::net::TcpStream::connect("127.0.0.1:7834").is_ok();
-    
+
     if vite_dev_running {
         println!("cargo:warning=⚡ Vite dev server detected on port 7834 - SKIPPING ALL UI builds");
         println!("cargo:warning=   (Dev server provides fresh packages via hot reload)");
         println!("cargo:warning=   SDK, React, and App builds skipped");
         return; // Skip all UI builds
     }
-    
+
     println!("cargo:warning=🔨 Building queen-rbee UI packages and app...");
 
     // Step 1: Build the WASM SDK package (queen-rbee-sdk)
@@ -71,7 +74,9 @@ fn main() {
         .expect("Failed to run vite build for queen-rbee UI");
 
     if !app_status.success() {
-        panic!("UI build failed! Run 'cd bin/10_queen_rbee/ui/app && pnpm exec vite build' to debug.");
+        panic!(
+            "UI build failed! Run 'cd bin/10_queen_rbee/ui/app && pnpm exec vite build' to debug."
+        );
     }
 
     // Verify dist exists

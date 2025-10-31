@@ -1,8 +1,9 @@
 //! lifecycle-shared
 //!
-//! Shared types and utilities for lifecycle-local and lifecycle-ssh
+//! Shared utilities for lifecycle management (local and remote)
 //!
-//! TEAM-367: Created to eliminate code duplication between lifecycle-local and lifecycle-ssh
+//! TEAM-367: Created to eliminate duplication between lifecycle-local and lifecycle-remote
+//! TEAM-377: Added BINARY_INSTALL_DIR constant to eliminate path duplication
 //!
 //! # Shared Components
 //!
@@ -30,6 +31,13 @@
 
 #![warn(missing_docs)]
 #![warn(clippy::all)]
+
+// TEAM-377: RULE ZERO - Single source of truth for binary installation directory
+/// Directory where daemon binaries are installed (relative to $HOME)
+///
+/// Used by install, uninstall, start, and status operations.
+/// MUST be consistent across all lifecycle operations.
+pub const BINARY_INSTALL_DIR: &str = ".local/bin";
 
 pub mod build;
 pub mod install;

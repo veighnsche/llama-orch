@@ -17,6 +17,7 @@ import {
   MetricCard
 } from '@rbee/ui/molecules'
 import { Activity, Cpu, HardDrive } from 'lucide-react'
+import { ModelManagement } from './components/ModelManagement'
 
 // TEAM-374: Use shared startup logging
 logStartupMode("HIVE UI", import.meta.env.DEV, 7836)
@@ -162,28 +163,7 @@ function App() {
           {/* Management Grid */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {/* Model Management */}
-            <Card>
-              <CardHeader>
-                <div className="flex items-center justify-between">
-                  <CardTitle className="flex items-center gap-2">
-                    <HardDrive className="h-5 w-5" />
-                    Model Management
-                  </CardTitle>
-                  <Badge variant="secondary">0 Models</Badge>
-                </div>
-                <CardDescription>Download and manage LLM models</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="text-sm text-muted-foreground text-center py-8">
-                  No models downloaded yet
-                </div>
-                <div className="flex gap-2">
-                  <button className="flex-1 px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors">
-                    Download Model
-                  </button>
-                </div>
-              </CardContent>
-            </Card>
+            <ModelManagement />
 
             {/* Worker Management */}
             <Card>

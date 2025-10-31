@@ -5,7 +5,17 @@
 // Queen is localhost, Hives are on the network (192.168.x.x, etc.)
 
 use wasm_bindgen::prelude::*;
-use operations_contract::{Operation, WorkerSpawnRequest, WorkerProcessListRequest, WorkerProcessDeleteRequest, ModelListRequest, ModelDownloadRequest, ModelDeleteRequest};
+use operations_contract::{
+    Operation, 
+    WorkerSpawnRequest, 
+    WorkerProcessListRequest, 
+    WorkerProcessDeleteRequest, 
+    ModelListRequest, 
+    ModelDownloadRequest, 
+    ModelDeleteRequest,
+    ModelLoadRequest,
+    ModelUnloadRequest,
+};
 use serde_wasm_bindgen::to_value;
 
 /// Builder for creating Operation objects
@@ -101,6 +111,37 @@ impl OperationBuilder {
     #[wasm_bindgen(js_name = modelDelete)]
     pub fn model_delete(hive_id: String, id: String) -> JsValue {
         let op = Operation::ModelDelete(ModelDeleteRequest {
+            hive_id, // TEAM-353: Network address of the Hive
+            id,
+        });
+        to_value(&op).unwrap()
+    }
+
+    /// Create ModelLoad operation
+    ///
+    /// # JavaScript Example
+    /// ```javascript
+    /// const op = OperationBuilder.modelLoad('192.168.1.100', 'model-id-123', 'cuda:0');
+    /// ```
+    #[wasm_bindgen(js_name = modelLoad)]
+    pub fn model_load(hive_id: String, id: String, device: String) -> JsValue {
+        let op = Operation::ModelLoad(ModelLoadRequest {
+            hive_id, // TEAM-353: Network address of the Hive
+            id,
+            device,
+        });
+        to_value(&op).unwrap()
+    }
+
+    /// Create ModelUnload operation
+    ///
+    /// # JavaScript Example
+    /// ```javascript
+    /// const op = OperationBuilder.modelUnload('192.168.1.100', 'model-id-123');
+    /// ```
+    #[wasm_bindgen(js_name = modelUnload)]
+    pub fn model_unload(hive_id: String, id: String) -> JsValue {
+        let op = Operation::ModelUnload(ModelUnloadRequest {
             hive_id, // TEAM-353: Network address of the Hive
             id,
         });

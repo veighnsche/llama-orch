@@ -5,6 +5,7 @@ edition = "2021"
 authors = ["TEAM-000 Foundation"]
 description = "Candle-based LLM inference worker daemon with CUDA/Metal/CPU acceleration"
 license = "GPL-3.0-or-later"
+build = "build.rs"
 
 # LLM Worker daemon (HTTP server)
 # Binary name: `llm-worker-rbee` (and backend-specific variants)
@@ -121,6 +122,9 @@ wildcard_imports = "allow"
 enum_glob_use = "allow"
 
 [dependencies]
+# Build metadata
+shadow-rs = { version = "0.35", default-features = false }
+
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 # HTTP SERVER DEPENDENCIES (integrated from worker-http)
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -271,3 +275,6 @@ strip = true
 [profile.dev]
 opt-level = 0
 debug = true
+
+[build-dependencies]
+shadow-rs = "0.35"

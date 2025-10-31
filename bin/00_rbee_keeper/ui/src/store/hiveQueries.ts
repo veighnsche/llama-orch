@@ -113,11 +113,11 @@ export function useHiveActions() {
   const queryClient = useQueryClient();
   
   const install = useMutation({
-    mutationFn: async (targetId: string) => {
+    mutationFn: async ({ targetId, buildMode = "dev" }: { targetId: string; buildMode?: "dev" | "prod" }) => {
       await withCommandExecution(
-        () => commands.hiveInstall(targetId),
+        () => commands.hiveInstall(targetId, buildMode === "prod" ? "release" : null),
         async () => {},
-        'Hive install',
+        `Hive install (${buildMode})`,
       );
       return targetId;
     },
@@ -184,7 +184,9 @@ export function useHiveActions() {
   });
   
   return {
-    install: async (id: string) => { await install.mutateAsync(id); },
+    install: async (targetId: string, buildMode: "dev" | "prod" = "dev") => { 
+      await install.mutateAsync({ targetId, buildMode }); 
+    },
     start: async (id: string) => { await start.mutateAsync(id); },
     stop: async (id: string) => { await stop.mutateAsync(id); },
     rebuild: async (id: string) => { await rebuild.mutateAsync(id); },

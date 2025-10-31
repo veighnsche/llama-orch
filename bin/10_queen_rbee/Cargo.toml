@@ -6,6 +6,7 @@ name = "queen-rbee"
 version = "0.1.0"
 edition = "2021"
 license = "GPL-3.0-or-later"
+build = "build.rs"
 
 [[bin]]
 name = "queen-rbee"
@@ -27,6 +28,9 @@ clap = { version = "4", features = ["derive"] }
 # Serialization
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
+
+# Build metadata
+shadow-rs = { version = "0.35", default-features = false }
 
 # Time and streaming
 chrono = { version = "0.4", features = ["serde"] }
@@ -65,6 +69,9 @@ url = "2.5"  # TEAM-366: URL validation for discovery edge cases
 # worker_registry (for http/routes.rs, http/workers.rs, etc.)
 # audit_logging (for http/routes.rs AppState)
 # input_validation (for http/beehives.rs, http/inference.rs)
+
+[build-dependencies]
+shadow-rs = "0.35"
 
 [dev-dependencies]
 # TEAM-158: Test dependencies

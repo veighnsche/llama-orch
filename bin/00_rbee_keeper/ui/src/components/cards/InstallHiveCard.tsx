@@ -100,12 +100,16 @@ function InstallHiveContent({
 
       {/* Install Button with Actions */}
       <SplitButton
-        onClick={() => install(selectedTarget)}
+        onClick={() => install(selectedTarget, "dev")}
         icon={<Download className="h-4 w-4" />}
         disabled={isExecuting}
         className="w-full"
         dropdownContent={
           <>
+            <DropdownMenuItem onClick={() => install(selectedTarget, "prod")}>
+              <Download className="mr-2 h-4 w-4" />
+              Install (Production)
+            </DropdownMenuItem>
             <DropdownMenuItem onClick={handleRefresh}>
               <RefreshCw className="mr-2 h-4 w-4" />
               Refresh

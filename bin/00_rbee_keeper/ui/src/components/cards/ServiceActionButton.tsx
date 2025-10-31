@@ -17,6 +17,7 @@ interface ServiceActionButtonProps {
     start: (id?: string) => Promise<void>;
     stop: (id?: string) => Promise<void>;
     install?: (id?: string) => Promise<void>;
+    installProd?: (id?: string) => Promise<void>; // Production install
     rebuild?: (id?: string) => Promise<void>;
     uninstall?: (id?: string) => Promise<void>;
   };
@@ -31,7 +32,7 @@ export function ServiceActionButton({
   actions,
   className = "w-full",
 }: ServiceActionButtonProps) {
-  const { start, stop, install, rebuild, uninstall } = actions;
+  const { start, stop, install, installProd, rebuild, uninstall } = actions;
 
   // Compute main action based on status
   const mainAction = !isInstalled
@@ -68,6 +69,17 @@ export function ServiceActionButton({
       className={className}
       dropdownContent={
         <>
+          {/* Install (Production) - only when not installed */}
+          {!isInstalled && installProd && (
+            <>
+              <DropdownMenuItem onClick={() => installProd(serviceId)}>
+                <Download className="mr-2 h-4 w-4" />
+                Install (Production)
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+            </>
+          )}
+
           {/* Rebuild - available when installed (works even when running) */}
           {isInstalled && rebuild && (
             <>

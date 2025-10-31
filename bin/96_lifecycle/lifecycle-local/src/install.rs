@@ -56,7 +56,8 @@
 //! ```
 
 use lifecycle_shared::resolve_binary_path;
-use crate::utils::binary::check_binary_installed;
+// TEAM-377: Use check_binary_actually_installed to only check ~/.local/bin/
+use crate::utils::binary::check_binary_actually_installed;
 use crate::utils::local::local_copy;
 use anyhow::{Context, Result};
 use observability_narration_core::n;
@@ -111,10 +112,10 @@ pub async fn install_daemon(install_config: InstallConfig) -> Result<()> {
 
     n!("install_start", "📦 Installing {} locally", daemon_name);
 
-    // Step 0: Check if already installed
-    if check_binary_installed(daemon_name).await {
-        n!("already_installed", "⚠️  {} is already installed locally", daemon_name);
-        anyhow::bail!("{} is already installed. Use rebuild to update.", daemon_name);
+    // Step 0: Check if already installed (only check ~/.local/bin/, not dev builds)
+    if check_binary_actually_installed(daemon_name).await {
+        n!("already_installed", "⚠️  {} is already installed in ~/.local/bin/", daemon_name);
+        anyhow::bail!("{} is already installed in ~/.local/bin/. Use rebuild to update.", daemon_name);
     }
 
     // Step 1: Build or locate binary locally
@@ -127,11 +128,15 @@ pub async fn install_daemon(install_config: InstallConfig) -> Result<()> {
     .await?;
 
     // Step 2: Create ~/.local/bin directory
+    // TEAM-377: RULE ZERO - Use constant for install directory
+    use lifecycle_shared::BINARY_INSTALL_DIR;
+    
     let home = std::env::var("HOME").context("HOME env var not set")?;
-    let local_bin_dir = std::path::PathBuf::from(&home).join(".local/bin");
+    let local_bin_dir = std::path::PathBuf::from(&home).join(BINARY_INSTALL_DIR);
     
     n!("create_dir", "📁 Creating {}", local_bin_dir.display());
-    std::fs::create_dir_all(&local_bin_dir).context("Failed to create ~/.local/bin")?;
+    std::fs::create_dir_all(&local_bin_dir)
+        .with_context(|| format!("Failed to create ~/{}", BINARY_INSTALL_DIR))?;
 
     // Step 3: Copy binary locally
     let dest_path = local_bin_dir.join(daemon_name);

@@ -86,6 +86,26 @@ pub struct ModelDeleteRequest {
     pub id: String,
 }
 
+/// Request to load a model into RAM
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+pub struct ModelLoadRequest {
+    /// Hive ID where model should be loaded
+    pub hive_id: String,
+    /// Model ID to load
+    pub id: String,
+    /// Device to load on (e.g., "cuda:0", "cpu")
+    pub device: String,
+}
+
+/// Request to unload a model from RAM
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+pub struct ModelUnloadRequest {
+    /// Hive ID where model is loaded
+    pub hive_id: String,
+    /// Model ID to unload
+    pub id: String,
+}
+
 // ============================================================================
 // Inference Request
 // ============================================================================

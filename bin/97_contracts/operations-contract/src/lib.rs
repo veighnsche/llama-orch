@@ -142,6 +142,8 @@ pub enum Operation {
     ModelList(ModelListRequest),
     ModelGet(ModelGetRequest),
     ModelDelete(ModelDeleteRequest),
+    ModelLoad(ModelLoadRequest),
+    ModelUnload(ModelUnloadRequest),
     
     // ═══════════════════════════════════════════════════════════════════════
     // DIAGNOSTIC OPERATIONS

@@ -312,9 +312,10 @@ pub async fn hive_status(alias: String) -> Result<lifecycle_ssh::DaemonStatus, S
 
 /// Install rbee-hive binary
 /// TEAM-338: Thin wrapper around handle_hive()
+/// binary: Optional binary type ("release" for production, null/None for dev)
 #[tauri::command]
 #[specta::specta]
-pub async fn hive_install(alias: String) -> Result<String, String> {
+pub async fn hive_install(alias: String, binary: Option<String>) -> Result<String, String> {
     use crate::cli::HiveLifecycleAction;
     use crate::handlers::handle_hive_lifecycle;
     use crate::Config;
@@ -322,7 +323,7 @@ pub async fn hive_install(alias: String) -> Result<String, String> {
     let config = Config::load().map_err(|e| format!("Config error: {}", e))?;
     let queen_url = config.queen_url();
 
-    handle_hive_lifecycle(HiveLifecycleAction::Install { alias }, &queen_url)
+    handle_hive_lifecycle(HiveLifecycleAction::Install { alias, binary }, &queen_url)
         .await
         .map(|_| "Hive installed successfully".to_string())
         .map_err(|e| format!("{}", e))

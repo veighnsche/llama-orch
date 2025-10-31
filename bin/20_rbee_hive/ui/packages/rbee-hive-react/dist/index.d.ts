@@ -40,3 +40,5 @@ export declare function useWorkers(): {
 };
 export { useHiveOperations, WORKER_TYPE_OPTIONS, WORKER_TYPES } from './hooks/useHiveOperations';
 export type { UseHiveOperationsResult, WorkerType, WorkerTypeOption, SpawnWorkerParams } from './hooks/useHiveOperations';
+export { useModelOperations } from './hooks/useModelOperations';
+export type { UseModelOperationsResult, LoadModelParams, UnloadModelParams, DeleteModelParams } from './hooks/useModelOperations';

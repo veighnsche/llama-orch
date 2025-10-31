@@ -52,12 +52,17 @@ export async function loadSDK<T>(options: LoadOptions): Promise<SDKLoadResult<T>
 
   for (let attempt = 1; attempt <= maxAttempts; attempt++) {
     try {
+      // TEAM-377: Debug logging for SDK loading
+      console.log(`[sdk-loader] Attempt ${attempt}/${maxAttempts}: Importing ${packageName}`)
+      
       // Dynamic import with timeout
       const mod = await withTimeout(
         import(/* @vite-ignore */ packageName),
         timeout,
         `SDK import (attempt ${attempt}/${maxAttempts})`
       )
+      
+      console.log(`[sdk-loader] ✅ Import successful for ${packageName}`, mod)
 
       // Handle ESM/CJS shims (default export vs named exports)
       const wasmModule = (mod as any).default ?? mod

@@ -1,10 +1,10 @@
 //! Hive registry implementation
 //!
 //! TEAM-284: Thread-safe registry for tracking hive state
-//! TEAM-285: Migrated to use generic HeartbeatRegistry
+//! TEAM-377: RULE ZERO - Removed heartbeat-based tracking
+//!           Connection state is source of truth, not timestamps
 
-use heartbeat_registry::HeartbeatRegistry;
-use hive_contract::{HiveHeartbeat, HiveInfo};
+use hive_contract::HiveInfo;
 use std::collections::HashMap;
 use std::sync::RwLock;
 
@@ -13,22 +13,23 @@ use rbee_hive_monitor::ProcessStats;
 
 /// Telemetry registry
 ///
-/// TEAM-374: Renamed from HiveRegistry to TelemetryRegistry for clarity.
-/// Stores both hive heartbeats AND worker telemetry (sent by hives).
+/// TEAM-377: BREAKING CHANGE - Connection-based tracking
+/// 
+/// Stores hives that have active SSE connections.
+/// No timestamps, no timeouts - connection state IS the source of truth.
 ///
 /// Thread-safe registry using RwLock for concurrent access.
-/// Hives send telemetry via POST /v1/hive-heartbeat or SSE streams.
 ///
 /// # Example
 ///
 /// ```
 /// use queen_rbee_telemetry_registry::TelemetryRegistry;
-/// use hive_contract::{HiveInfo, HiveHeartbeat};
+/// use hive_contract::HiveInfo;
 /// use shared_contract::{OperationalStatus, HealthStatus};
 ///
 /// let registry = TelemetryRegistry::new();
 ///
-/// // Hive sends heartbeat
+/// // Register hive when SSE connection opens
 /// let hive = HiveInfo {
 ///     id: "localhost".to_string(),
 ///     hostname: "127.0.0.1".to_string(),
@@ -38,13 +39,15 @@ use rbee_hive_monitor::ProcessStats;
 ///     version: "0.1.0".to_string(),
 /// };
 ///
-/// registry.update_hive(HiveHeartbeat::new(hive));
+/// registry.register_hive(hive);
 ///
-/// // Query hives
-/// let available = registry.list_available_hives();
+/// // Remove hive when SSE connection closes
+/// registry.remove_hive("localhost");
 /// ```
 pub struct TelemetryRegistry {
-    inner: HeartbeatRegistry<HiveHeartbeat>,
+    // TEAM-377: Just store HiveInfo, not HiveHeartbeat
+    // If it's in the map, it's online (has active connection)
+    hives: RwLock<HashMap<String, HiveInfo>>,
     
     // TEAM-362: Worker telemetry storage (hive_id -> workers)
     workers: RwLock<HashMap<String, Vec<ProcessStats>>>,
@@ -54,59 +57,58 @@ impl TelemetryRegistry {
     /// Create a new empty registry
     pub fn new() -> Self {
         Self {
-            inner: HeartbeatRegistry::new(),
-            workers: RwLock::new(HashMap::new()),  // TEAM-362: Worker storage
+            hives: RwLock::new(HashMap::new()),
+            workers: RwLock::new(HashMap::new()),
         }
     }
 
-    /// Update hive from heartbeat
+    /// TEAM-377: Register hive when SSE connection opens
     ///
-    /// Upserts hive info - creates if new, updates if exists.
-    pub fn update_hive(&self, heartbeat: HiveHeartbeat) {
-        self.inner.update(heartbeat);
+    /// Call this when Queen establishes SSE connection to hive.
+    /// Replaces update_hive() - no timestamps needed.
+    pub fn register_hive(&self, hive_info: HiveInfo) {
+        let mut hives = self.hives.write().unwrap();
+        hives.insert(hive_info.id.clone(), hive_info);
     }
 
     /// Get hive by ID
     pub fn get_hive(&self, hive_id: &str) -> Option<HiveInfo> {
-        self.inner.get(hive_id)
+        let hives = self.hives.read().unwrap();
+        hives.get(hive_id).cloned()
     }
 
-    /// Remove hive from registry
+    /// TEAM-377: Remove hive when SSE connection closes
+    ///
+    /// Call this immediately when connection fails/closes.
+    /// No timeout needed - connection state is the source of truth.
     ///
     /// Returns true if hive was removed, false if not found.
     pub fn remove_hive(&self, hive_id: &str) -> bool {
-        self.inner.remove(hive_id)
+        let mut hives = self.hives.write().unwrap();
+        hives.remove(hive_id).is_some()
     }
 
-    /// List all hives (including stale ones)
-    pub fn list_all_hives(&self) -> Vec<HiveInfo> {
-        self.inner.list_all()
-    }
-
-    /// List hives with recent heartbeats
+    /// TEAM-377: List all online hives
     ///
-    /// Only returns hives that sent heartbeat within timeout window.
+    /// Returns all hives with active SSE connections.
+    /// If it's in the map, it's online.
     pub fn list_online_hives(&self) -> Vec<HiveInfo> {
-        self.inner.list_online()
+        let hives = self.hives.read().unwrap();
+        hives.values().cloned().collect()
     }
 
-    /// List available hives (online + ready status)
+    /// TEAM-377: Get count of online hives
     ///
-    /// Returns hives that are:
-    /// 1. Online (recent heartbeat)
-    /// 2. Ready status (not busy/starting/stopped)
-    pub fn list_available_hives(&self) -> Vec<HiveInfo> {
-        self.inner.list_available()
-    }
-
-    /// Get count of online hives
+    /// Returns number of hives with active SSE connections.
+    /// No filtering needed - if it's in the map, it's online.
     pub fn count_online(&self) -> usize {
-        self.inner.count_online()
+        let hives = self.hives.read().unwrap();
+        hives.len()
     }
 
-    /// Get count of available hives
+    /// Get count of available hives (same as online for SSE connections)
     pub fn count_available(&self) -> usize {
-        self.inner.count_available()
+        self.count_online()
     }
 
     // TEAM-362: Worker telemetry methods
@@ -179,14 +181,8 @@ impl TelemetryRegistry {
     pub fn list_online_workers(&self) -> Vec<ProcessStats> {
         self.get_all_workers()
     }
-
-    /// Cleanup stale hives
-    ///
-    /// Removes hives that haven't sent heartbeat within timeout window.
-    /// Returns number of hives removed.
-    pub fn cleanup_stale(&self) -> usize {
-        self.inner.cleanup_stale()
-    }
+    
+    // TEAM-377: DELETED cleanup_stale() - not needed with connection-based tracking
 }
 
 impl Default for TelemetryRegistry {

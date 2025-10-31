@@ -40,8 +40,10 @@ pub use heartbeat::HeartbeatMonitor; // TEAM-374: Heartbeat monitoring
 
 /// Initialize the WASM module
 ///
-/// TEAM-353: This is called automatically when the WASM module is loaded
+/// TEAM-286: This is called automatically when the WASM module is loaded
+/// TEAM-377: Added console logging to verify WASM loads
 #[wasm_bindgen(start)]
 pub fn init() {
-    // TEAM-353: Panic hook can be added later if needed
+    // TEAM-377: Log to console so we know WASM loaded
+    web_sys::console::log_1(&"🎉 [Hive SDK] WASM module initialized successfully!".into());
 }

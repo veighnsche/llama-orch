@@ -8,6 +8,9 @@ use std::path::Path;
 use std::process::Command;
 
 fn main() {
+    // TEAM-XXX: Generate build metadata using shadow-rs
+    shadow_rs::new().expect("Failed to generate shadow-rs build metadata");
+
     println!("cargo:rerun-if-changed=ui/app/src");
     println!("cargo:rerun-if-changed=ui/app/package.json");
     println!("cargo:rerun-if-changed=ui/packages/rbee-hive-sdk/src");
@@ -17,22 +20,22 @@ fn main() {
     let _workspace_root = Path::new(&manifest_dir).parent().unwrap().parent().unwrap();
 
     // TEAM-374: Build packages FIRST, then app
-    
+
     let ui_base_dir = Path::new(&manifest_dir).join("ui");
     let ui_app_dir = ui_base_dir.join("app");
     let ui_dist = ui_app_dir.join("dist");
-    
+
     // TEAM-374: Skip ALL UI builds if Vite dev server is running (port 7836)
     // This avoids conflicts with the dev server and speeds up cargo builds during development
     let vite_dev_running = std::net::TcpStream::connect("127.0.0.1:7836").is_ok();
-    
+
     if vite_dev_running {
         println!("cargo:warning=⚡ Vite dev server detected on port 7836 - SKIPPING ALL UI builds");
         println!("cargo:warning=   (Dev server provides fresh packages via hot reload)");
         println!("cargo:warning=   SDK and App builds skipped");
         return; // Skip all UI builds
     }
-    
+
     println!("cargo:warning=🔨 Building rbee-hive UI packages and app...");
 
     // Step 1: Build the WASM SDK package (rbee-hive-sdk)

@@ -14,6 +14,7 @@ use futures::stream::Stream;
 use job_server::JobRegistry;
 use observability_narration_core::sse_sink;
 use rbee_hive_model_catalog::ModelCatalog; // TEAM-268: Model catalog
+use rbee_hive_model_provisioner::ModelProvisioner; // Model provisioner for downloads
 use rbee_hive_worker_catalog::WorkerCatalog; // TEAM-274: Worker catalog
 use std::{convert::Infallible, sync::Arc};
 
@@ -24,10 +25,10 @@ pub struct HiveState {
     pub registry: Arc<JobRegistry<String>>,
     /// Model catalog for model management
     pub model_catalog: Arc<ModelCatalog>, // TEAM-268: Added
+    /// Model provisioner for downloading models
+    pub model_provisioner: Arc<ModelProvisioner>,
     /// Worker catalog for worker binary management
     pub worker_catalog: Arc<WorkerCatalog>, // TEAM-274: Added
-                                            // TODO: Add model_provisioner when TEAM-269 implements it
-                                            // TODO: Add worker_registry when implemented
 }
 
 /// Convert HTTP state to router state
@@ -36,6 +37,7 @@ impl From<HiveState> for crate::job_router::JobState {
         Self {
             registry: state.registry,
             model_catalog: state.model_catalog, // TEAM-268: Added
+            model_provisioner: state.model_provisioner,
             worker_catalog: state.worker_catalog, // TEAM-274: Added
         }
     }

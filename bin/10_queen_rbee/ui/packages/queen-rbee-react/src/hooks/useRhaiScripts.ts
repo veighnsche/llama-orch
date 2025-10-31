@@ -8,7 +8,7 @@
 
 import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
-import { useRbeeSDK } from './useRbeeSDK'
+import { useQueenSDK } from './useQueenSDK'
 // TEAM-352: Import directly from @rbee/narration-client (no wrapper)
 import { createStreamHandler, SERVICES } from '@rbee/narration-client'
 
@@ -62,7 +62,7 @@ fn schedule_worker(job) {
  * @returns RHAI script management functions and state
  */
 export function useRhaiScripts(baseUrl: string = 'http://localhost:7833'): UseRhaiScriptsResult {
-  const { sdk } = useRbeeSDK()
+  const { sdk } = useQueenSDK()
   const [currentScript, setCurrentScript] = useState<RhaiScript | null>(null)
   const [saving, setSaving] = useState(false)
   const [testing, setTesting] = useState(false)

@@ -43,7 +43,7 @@ export default function DashboardPage() {
   const workersOnline = data?.workers_online || 0;
   const hivesOnline = data?.hives_online || 0; // TEAM-377: Use backend count, not array length
 
-  console.log({ hives, workersOnline, hivesOnline })
+  // console.log({ hives, workersOnline, hivesOnline })
 
   // Loading state
   if (loading) {

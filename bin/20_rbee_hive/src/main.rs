@@ -14,6 +14,10 @@ mod heartbeat; // TEAM-292: Re-enabled hive heartbeat
 mod http;
 mod job_router;
 
+// TEAM-XXX: Build metadata via shadow-rs
+use shadow_rs::shadow;
+shadow!(build);
+
 use observability_narration_core::n;
 use tower_http::cors::{Any, CorsLayer}; // TEAM-374: CORS support for web UI
 
@@ -27,6 +31,7 @@ use clap::Parser;
 use job_server::JobRegistry;
 use rbee_hive_artifact_catalog::ArtifactCatalog; // TEAM-273: Trait for catalog methods
 use rbee_hive_model_catalog::ModelCatalog; // TEAM-268: Model catalog
+use rbee_hive_model_provisioner::ModelProvisioner; // Model provisioner for downloads
 use rbee_hive_worker_catalog::WorkerCatalog; // TEAM-274: Worker catalog
 use serde::{Deserialize, Serialize}; // TEAM-365: Deserialize for CapabilitiesQuery
 use std::net::SocketAddr;
@@ -53,11 +58,21 @@ struct Args {
     /// TEAM-292: Added to identify this hive
     #[arg(long, default_value = "localhost")]
     hive_id: String,
+
+    /// Print build information and exit
+    #[arg(long, hide = true)]
+    build_info: bool,
 }
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
     let args = Args::parse();
+
+    // Handle --build-info flag
+    if args.build_info {
+        println!("{}", build::BUILD_RUST_CHANNEL);
+        std::process::exit(0);
+    }
 
     // TEAM-202: Use narration instead of println!()
     // This automatically goes through job-scoped SSE (if in job context)
@@ -82,7 +97,11 @@ async fn main() -> anyhow::Result<()> {
     // TEAM-340: Migrated to n!() macro
     n!("worker_cat_init", "🔧 Worker catalog initialized ({} binaries)", worker_catalog.len());
 
-    // TODO: TEAM-269 will add model provisioner initialization here
+    // Initialize model provisioner
+    let model_provisioner = Arc::new(
+        ModelProvisioner::new().expect("Failed to initialize model provisioner")
+    );
+    n!("provisioner_init", "📥 Model provisioner initialized (HuggingFace)");
 
     // TEAM-365: Create HiveInfo for heartbeat
     let hive_info = hive_contract::HiveInfo {
@@ -124,7 +143,12 @@ async fn main() -> anyhow::Result<()> {
     // TEAM-261: Create HTTP state for job endpoints (for backwards compatibility)
     // TEAM-268: Added model_catalog to state
     // TEAM-274: Added worker_catalog to state
-    let job_state = http::jobs::HiveState { registry: job_registry, model_catalog, worker_catalog };
+    let job_state = http::jobs::HiveState {
+        registry: job_registry,
+        model_catalog,
+        model_provisioner,
+        worker_catalog,
+    };
 
     // ============================================================
     // BUG FIX: TEAM-291 | Fixed Axum routing panic on startup

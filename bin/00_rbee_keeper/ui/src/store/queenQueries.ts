@@ -111,6 +111,14 @@ export function useQueenActions() {
     start: async () => { await start.mutateAsync(); },
     stop: async () => { await stop.mutateAsync(); },
     install: async () => { await install.mutateAsync(); },
+    installProd: async () => { 
+      await withCommandExecution(
+        () => commands.queenInstall("release"),
+        async () => {},
+        'Queen install (production)',
+      );
+      queryClient.invalidateQueries({ queryKey: queenKeys.all });
+    },
     rebuild: async () => { await rebuild.mutateAsync(); },
     uninstall: async () => { await uninstall.mutateAsync(); },
   };

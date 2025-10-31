@@ -1,0 +1,30 @@
+[package]
+name = "rbee-hive-model-provisioner"
+version = "0.1.0"
+edition = "2021"
+license = "GPL-3.0-or-later"
+
+[dependencies]
+# Core dependencies
+anyhow = "1.0"
+async-trait = "0.1"
+tokio = { version = "1.0", features = ["fs", "io-util"] }
+
+# HuggingFace Hub client (official Rust crate)
+hf-hub = { version = "0.3", features = ["tokio"] }
+
+# Shared crates
+rbee-hive-artifact-catalog = { path = "../artifact-catalog" }
+rbee-hive-model-catalog = { path = "../model-catalog" }
+observability-narration-core = { path = "../../99_shared_crates/narration-core" }
+stdext = "0.3"  # Required for n!() macro (function_name!())
+
+# Utilities
+chrono = "0.4"
+dirs = "5.0"
+
+[dev-dependencies]
+tempfile = "3.0"
+
+[lints]
+workspace = true

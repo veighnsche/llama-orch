@@ -12,6 +12,10 @@
 //! Created by: TEAM-000 (Foundation)
 //! Modified by: TEAM-088 (added comprehensive error narration)
 
+// TEAM-XXX: Build metadata via shadow-rs
+use shadow_rs::shadow;
+shadow!(build);
+
 use clap::Parser;
 use job_server::JobRegistry;
 use llm_worker_rbee::{
@@ -67,6 +71,10 @@ struct Args {
     /// Local development mode (no auth, binds to 127.0.0.1 only)
     #[arg(long, default_value = "false")]
     local_mode: bool,
+
+    /// Print build information and exit
+    #[arg(long, hide = true)]
+    build_info: bool,
 }
 
 /// Main entry point
@@ -85,6 +93,14 @@ struct Args {
 /// 5. Run forever (until killed by pool-managerd)
 #[tokio::main(flavor = "current_thread")] // CRITICAL: Single-threaded!
 async fn main() -> anyhow::Result<()> {
+    let args = Args::parse();
+
+    // Handle --build-info flag
+    if args.build_info {
+        println!("{}", build::BUILD_RUST_CHANNEL);
+        std::process::exit(0);
+    }
+
     // TEAM-088: Initialize tracing with human-friendly format for development
     // Use LLORCH_LOG_FORMAT=json for machine-readable output (production/SSH)
     let log_format = std::env::var("LLORCH_LOG_FORMAT").unwrap_or_else(|_| "pretty".to_string());

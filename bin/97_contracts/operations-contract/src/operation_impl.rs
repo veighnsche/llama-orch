@@ -34,6 +34,8 @@ impl Operation {
             Operation::ModelList { .. } => "model_list",
             Operation::ModelGet { .. } => "model_get",
             Operation::ModelDelete { .. } => "model_delete",
+            Operation::ModelLoad { .. } => "model_load",
+            Operation::ModelUnload { .. } => "model_unload",
             
             // RHAI script operations
             Operation::RhaiScriptSave { .. } => "rhai_script_save",
@@ -60,6 +62,8 @@ impl Operation {
             Operation::ModelList(req) => Some(&req.hive_id),
             Operation::ModelGet(req) => Some(&req.hive_id),
             Operation::ModelDelete(req) => Some(&req.hive_id),
+            Operation::ModelLoad(req) => Some(&req.hive_id),
+            Operation::ModelUnload(req) => Some(&req.hive_id),
             Operation::Infer(req) => Some(&req.hive_id),
             
             // Operations with alias field
@@ -108,7 +112,9 @@ impl Operation {
                 | Operation::ModelDownload(_)
                 | Operation::ModelList(_)
                 | Operation::ModelGet(_)
-                | Operation::ModelDelete(_) => TargetServer::Hive,
+                | Operation::ModelDelete(_)
+                | Operation::ModelLoad(_)
+                | Operation::ModelUnload(_) => TargetServer::Hive,
             
             // RHAI operations go to queen (orchestration layer)
             Operation::RhaiScriptSave { .. }

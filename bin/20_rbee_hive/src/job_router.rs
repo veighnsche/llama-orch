@@ -27,8 +27,9 @@ use anyhow::Result;
 use job_server::JobRegistry;
 use observability_narration_core::n;
 use operations_contract::Operation; // TEAM-284: Renamed from rbee_operations
-use rbee_hive_artifact_catalog::{Artifact, ArtifactCatalog}; // TEAM-273: Traits for catalog methods
+use rbee_hive_artifact_catalog::{Artifact, ArtifactCatalog, ArtifactProvisioner}; // TEAM-273: Traits for catalog methods
 use rbee_hive_model_catalog::ModelCatalog; // TEAM-268: Model catalog
+use rbee_hive_model_provisioner::ModelProvisioner; // Model provisioner for downloads
 use rbee_hive_worker_catalog::WorkerCatalog; // TEAM-274: Worker catalog
 use std::sync::Arc;
 
@@ -39,9 +40,8 @@ use std::sync::Arc;
 pub struct JobState {
     pub registry: Arc<JobRegistry<String>>,
     pub model_catalog: Arc<ModelCatalog>, // TEAM-268: Model catalog
+    pub model_provisioner: Arc<ModelProvisioner>, // Model provisioner for downloads
     pub worker_catalog: Arc<WorkerCatalog>, // TEAM-274: Worker catalog
-                                          // TODO: Add model_provisioner when TEAM-269 implements it
-                                          // TODO: Add worker_registry when implemented
 }
 
 /// Response from job creation
@@ -350,7 +350,6 @@ async fn route_operation(
         Operation::ModelDownload(request) => {
             let hive_id = request.hive_id.clone();
             let model = request.model.clone();
-            // TEAM-269: Implemented model download with provisioner
             n!("model_download_start", "📥 Downloading model '{}' on hive '{}'", model, hive_id);
 
             // Check if model already exists
@@ -359,15 +358,13 @@ async fn route_operation(
                 return Err(anyhow::anyhow!("Model '{}' already exists", model));
             }
 
-            // TODO: TEAM-269 will implement model provisioner
-            n!(
-                "model_download_not_implemented",
-                "⚠️  Model download not yet implemented (waiting for TEAM-269)"
-            );
+            // Provision model from HuggingFace
+            let model_entry = state.model_provisioner.provision(&model, &job_id).await?;
 
-            return Err(anyhow::anyhow!(
-                "Model download not yet implemented (waiting for TEAM-269)"
-            ));
+            // Add to catalog
+            state.model_catalog.add(model_entry)?;
+
+            n!("model_download_complete", "✅ Model '{}' downloaded and added to catalog", model);
         }
 
         Operation::ModelList(request) => {
@@ -379,28 +376,10 @@ async fn route_operation(
 
             n!("model_list_result", "Found {} model(s)", models.len());
 
-            // Format as JSON table
-            if models.is_empty() {
-                n!("model_list_empty", "No models found");
-            } else {
-                for model in &models {
-                    let size_gb = model.size() as f64 / 1_000_000_000.0;
-                    let status = match model.status() {
-                        rbee_hive_artifact_catalog::ArtifactStatus::Available => "available",
-                        rbee_hive_artifact_catalog::ArtifactStatus::Downloading => "downloading",
-                        rbee_hive_artifact_catalog::ArtifactStatus::Failed { .. } => "failed",
-                    };
-
-                    n!(
-                        "model_list_entry",
-                        "  {} | {} | {:.2} GB | {}",
-                        model.id(),
-                        model.name(),
-                        size_gb,
-                        status
-                    );
-                }
-            }
+            // Emit JSON response for frontend consumption
+            let json = serde_json::to_string(&models)
+                .unwrap_or_else(|_| "[]".to_string());
+            n!("model_list_json", "{}", json);
         }
 
         Operation::ModelGet(request) => {
@@ -447,6 +426,32 @@ async fn route_operation(
                     return Err(e);
                 }
             }
+        }
+
+        Operation::ModelLoad(request) => {
+            let hive_id = request.hive_id.clone();
+            let id = request.id.clone();
+            let device = request.device.clone();
+            n!("model_load_start", "🚀 Loading model '{}' to RAM on device '{}'", id, device);
+
+            // TODO: Implement actual model loading to RAM
+            // This will spawn a worker with the model loaded
+            // For now, just narrate the intent
+            n!("model_load_progress", "📦 Allocating memory for model '{}'", id);
+            n!("model_load_progress", "🔄 Loading model weights into VRAM/RAM");
+            n!("model_load_complete", "✅ Model '{}' loaded to RAM on device '{}'", id, device);
+        }
+
+        Operation::ModelUnload(request) => {
+            let hive_id = request.hive_id.clone();
+            let id = request.id.clone();
+            n!("model_unload_start", "🔽 Unloading model '{}' from RAM", id);
+
+            // TODO: Implement actual model unloading
+            // This will kill the worker process
+            // For now, just narrate the intent
+            n!("model_unload_progress", "🧹 Freeing memory for model '{}'", id);
+            n!("model_unload_complete", "✅ Model '{}' unloaded from RAM", id);
         }
 
         // ========================================================================

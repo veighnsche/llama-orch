@@ -17,6 +17,10 @@ use queen_rbee::http;
 
 mod discovery; // TEAM-365: Hive discovery module
 
+// TEAM-XXX: Build metadata via shadow-rs
+use shadow_rs::shadow;
+shadow!(build);
+
 use anyhow::Result; // TEAM-288: Import Result for main function
 use axum::{
     routing::{delete, get, post}, // TEAM-305-FIX: Added delete for cancel endpoint
@@ -42,12 +46,22 @@ struct Args {
     /// HTTP server port
     #[arg(short, long, default_value = "7833")]
     port: u16,
+
+    /// Print build information and exit
+    #[arg(long, hide = true)]
+    build_info: bool,
     // TEAM-290: DELETED config and config_dir args (file-based config deprecated)
 }
 
 #[tokio::main]
 async fn main() -> Result<()> {
     let args = Args::parse();
+
+    // Handle --build-info flag
+    if args.build_info {
+        println!("{}", build::BUILD_RUST_CHANNEL);
+        std::process::exit(0);
+    }
 
     // TEAM-164: Initialize SSE sink for distributed narration
     // TEAM-204: Removed init() - no global channel, job channels created on-demand
@@ -123,17 +137,9 @@ fn create_router(
         event_tx, // TEAM-288: Broadcast channel for real-time events
     };
 
-    // TEAM-364: Spawn background task for automatic stale worker cleanup (Critical Issue #4)
-    // Removes workers that haven't sent heartbeat in 90 seconds
-    let telemetry_cleanup = Arc::clone(&telemetry);
-    tokio::spawn(async move {
-        let mut interval = tokio::time::interval(std::time::Duration::from_secs(60));
-        loop {
-            interval.tick().await;
-            telemetry_cleanup.cleanup_stale();
-            tracing::debug!("Cleaned up stale workers from telemetry registry");
-        }
-    });
+    // TEAM-377: DELETED cleanup task - not needed
+    // Hives are removed immediately when SSE connection closes
+    // No stale entries exist in connection-based tracking
 
     // TEAM-288: Add CORS layer to allow web UI access
     let cors = CorsLayer::new()

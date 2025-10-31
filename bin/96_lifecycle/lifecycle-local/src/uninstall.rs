@@ -150,8 +150,11 @@ pub async fn uninstall_daemon(uninstall_config: UninstallConfig) -> Result<()> {
     }
 
     // Step 2: Remove binary locally
+    // TEAM-377: RULE ZERO - Use constant for install directory
+    use lifecycle_shared::BINARY_INSTALL_DIR;
+    
     let home = std::env::var("HOME").context("HOME env var not set")?;
-    let binary_path = std::path::PathBuf::from(&home).join(".local/bin").join(daemon_name);
+    let binary_path = std::path::PathBuf::from(&home).join(BINARY_INSTALL_DIR).join(daemon_name);
     
     n!("removing", "🗑️  Removing {} from {}", daemon_name, binary_path.display());
 

@@ -83,6 +83,7 @@ function QueenCardContent({
               start: () => actions.start(),
               stop: () => actions.stop(),
               install: () => actions.install(),
+              installProd: () => actions.installProd(),
               rebuild: () => actions.rebuild(),
               uninstall: () => actions.uninstall(),
             }}

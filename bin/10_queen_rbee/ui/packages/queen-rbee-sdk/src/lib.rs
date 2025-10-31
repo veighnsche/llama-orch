@@ -42,7 +42,9 @@ pub use rhai::{RhaiClient, RhaiScript, TestResult};
 /// Initialize the WASM module
 ///
 /// TEAM-286: This is called automatically when the WASM module is loaded
+/// TEAM-377: Added console logging to verify WASM loads
 #[wasm_bindgen(start)]
 pub fn init() {
-    // TEAM-286: Panic hook will be added in Phase 2 if needed
+    // TEAM-377: Log to console so we know WASM loaded
+    web_sys::console::log_1(&"🎉 [Queen SDK] WASM module initialized successfully!".into());
 }
