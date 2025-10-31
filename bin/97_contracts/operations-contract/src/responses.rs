@@ -1,8 +1,28 @@
 //! Response types for operations
 //!
 //! TEAM-284: Typed response structures for all operations
+//! TEAM-380: Added documentation about narration-based output
 //!
 //! These types provide compile-time guarantees that responses are well-formed.
+//!
+//! # Important Note on Hive Implementation
+//!
+//! **rbee-hive currently returns narration events via SSE, not structured JSON responses.**
+//!
+//! These response types are defined for:
+//! 1. **Type safety** - Documenting expected response structure
+//! 2. **Future use** - When structured responses are needed
+//! 3. **API clients** - Programmatic access (future)
+//!
+//! Current behavior:
+//! - Hive operations return human-readable narration events
+//! - Events are streamed via SSE as text lines
+//! - Clients parse narration text (e.g., "✅ Worker 'worker-cpu-9301' spawned (PID: 12345, port: 9301)")
+//!
+//! To use structured responses in the future, hive would need to:
+//! - Serialize these types to JSON
+//! - Send as SSE data events
+//! - Maintain backward compatibility with narration
 
 use serde::{Deserialize, Serialize};
 

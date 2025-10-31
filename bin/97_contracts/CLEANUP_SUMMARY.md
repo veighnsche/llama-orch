@@ -1,8 +1,8 @@
 # Contract Cleanup Summary
 
-**Date:** Oct 29, 2025  
+**Date:** Oct 29, 2025 (Initial) | Oct 31, 2025 (TEAM-380 Update)  
 **Status:** ✅ COMPLETE  
-**Duration:** ~30 minutes
+**Duration:** ~30 minutes (initial) + 20 minutes (TEAM-380)
 
 ---
 
@@ -195,4 +195,40 @@ match operation.target_server() {
 
 ---
 
+## TEAM-380 Additional Updates (Oct 31, 2025)
+
+### 4. ✅ Added Response Type Documentation
+**Reason:** Response types were defined but usage was unclear
+
+**Changes to `src/responses.rs`:**
+- Added 20 lines of documentation explaining narration-based output
+- Clarified that hive returns SSE narration events, not structured JSON
+- Documented that response types are for documentation and future use
+
+### 5. ✅ Completed README Documentation
+**Reason:** Missing operations and response format explanation
+
+**Changes to `README.md`:**
+- Added HiveCheck diagnostic operation
+- Added all 5 RHAI script operations (RhaiScriptSave, Test, Get, List, Delete)
+- Added QueenCheck diagnostic operation
+- Added "Response Format" section with examples
+- Explained narration-based output vs structured responses
+
+### 6. ✅ Updated CONTRACT_AUDIT.md
+**Reason:** Audit document still showed operations-contract as needing fixes
+
+**Changes:**
+- Updated date to Oct 31, 2025
+- Changed status from "REVIEW REQUIRED" to "UPDATED"
+- Changed operations-contract from ⚠️ to ✅
+- Added TEAM-380 changes summary
+- Documented all fixes applied
+
+**Verification:** ✅ `cargo check -p operations-contract` passes
+
+---
+
 **Cleanup Complete:** All action items from audit implemented and verified.
+
+**TEAM-380 Summary:** All contract alignment gaps fixed. Keeper/queen job clients now have complete, accurate documentation for interacting with hive job server.

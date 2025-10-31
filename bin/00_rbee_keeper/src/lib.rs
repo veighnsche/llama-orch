@@ -15,8 +15,9 @@ pub mod tracing_init; // TEAM-336: Consolidated tracing setup for CLI and GUI
 
 // Re-export commonly used types
 pub use config::Config;
+// TEAM-380: Updated to use handle_hive_lifecycle
 pub use handlers::{
-    handle_hive, handle_infer, handle_model, handle_queen, handle_status, handle_worker,
+    handle_hive_lifecycle, handle_infer, handle_model, handle_queen, handle_status, handle_worker,
 };
 
 // TEAM-293: Tauri-specific module (always available for GUI binary)

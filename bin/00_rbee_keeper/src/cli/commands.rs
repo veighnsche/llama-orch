@@ -4,7 +4,8 @@
 
 use clap::{Parser, Subcommand};
 
-use super::{HiveAction, ModelAction, QueenAction, WorkerAction};
+// TEAM-380: Updated to use HiveLifecycleAction and HiveJobsAction
+use super::{HiveJobsAction, HiveLifecycleAction, ModelAction, QueenAction, WorkerAction};
 
 #[derive(Parser)]
 #[command(name = "rbee")]
@@ -40,10 +41,19 @@ pub enum Commands {
         action: QueenAction,
     },
 
-    /// Hive management
+    /// Hive lifecycle management (start, stop, install, etc.)
     Hive {
         #[command(subcommand)]
-        action: HiveAction,
+        action: HiveLifecycleAction,
+    },
+
+    /// Hive job operations (worker/model management)
+    HiveJobs {
+        /// Hive alias to operate on (defaults to localhost)
+        #[arg(long = "hive", default_value = "localhost")]
+        hive_id: String,
+        #[command(subcommand)]
+        action: HiveJobsAction,
     },
 
     /// Worker management

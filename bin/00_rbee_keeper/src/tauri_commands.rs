@@ -233,14 +233,14 @@ pub async fn test_narration() -> Result<String, String> {
 #[tauri::command]
 #[specta::specta]
 pub async fn hive_start(alias: String) -> Result<String, String> {
-    use crate::cli::HiveAction;
-    use crate::handlers::handle_hive;
+    use crate::cli::HiveLifecycleAction;
+    use crate::handlers::handle_hive_lifecycle;
     use crate::Config;
 
     let config = Config::load().map_err(|e| format!("Config error: {}", e))?;
     let queen_url = config.queen_url();
 
-    handle_hive(HiveAction::Start { alias, port: None }, &queen_url)
+    handle_hive_lifecycle(HiveLifecycleAction::Start { alias, port: None }, &queen_url)
         .await
         .map(|_| "Hive started successfully".to_string())
         .map_err(|e| format!("{}", e))
@@ -251,14 +251,14 @@ pub async fn hive_start(alias: String) -> Result<String, String> {
 #[tauri::command]
 #[specta::specta]
 pub async fn hive_stop(alias: String) -> Result<String, String> {
-    use crate::cli::HiveAction;
-    use crate::handlers::handle_hive;
+    use crate::cli::HiveLifecycleAction;
+    use crate::handlers::handle_hive_lifecycle;
     use crate::Config;
 
     let config = Config::load().map_err(|e| format!("Config error: {}", e))?;
     let queen_url = config.queen_url();
 
-    handle_hive(HiveAction::Stop { alias, port: None }, &queen_url)
+    handle_hive_lifecycle(HiveLifecycleAction::Stop { alias, port: None }, &queen_url)
         .await
         .map(|_| "Hive stopped successfully".to_string())
         .map_err(|e| format!("{}", e))
@@ -304,14 +304,14 @@ pub async fn hive_status(alias: String) -> Result<lifecycle_ssh::DaemonStatus, S
 #[tauri::command]
 #[specta::specta]
 pub async fn hive_install(alias: String) -> Result<String, String> {
-    use crate::cli::HiveAction;
-    use crate::handlers::handle_hive;
+    use crate::cli::HiveLifecycleAction;
+    use crate::handlers::handle_hive_lifecycle;
     use crate::Config;
 
     let config = Config::load().map_err(|e| format!("Config error: {}", e))?;
     let queen_url = config.queen_url();
 
-    handle_hive(HiveAction::Install { alias }, &queen_url)
+    handle_hive_lifecycle(HiveLifecycleAction::Install { alias }, &queen_url)
         .await
         .map(|_| "Hive installed successfully".to_string())
         .map_err(|e| format!("{}", e))
@@ -322,14 +322,14 @@ pub async fn hive_install(alias: String) -> Result<String, String> {
 #[tauri::command]
 #[specta::specta]
 pub async fn hive_uninstall(alias: String) -> Result<String, String> {
-    use crate::cli::HiveAction;
-    use crate::handlers::handle_hive;
+    use crate::cli::HiveLifecycleAction;
+    use crate::handlers::handle_hive_lifecycle;
     use crate::Config;
 
     let config = Config::load().map_err(|e| format!("Config error: {}", e))?;
     let queen_url = config.queen_url();
 
-    handle_hive(HiveAction::Uninstall { alias }, &queen_url)
+    handle_hive_lifecycle(HiveLifecycleAction::Uninstall { alias }, &queen_url)
         .await
         .map(|_| "Hive uninstalled successfully".to_string())
         .map_err(|e| format!("{}", e))
@@ -340,14 +340,14 @@ pub async fn hive_uninstall(alias: String) -> Result<String, String> {
 #[tauri::command]
 #[specta::specta]
 pub async fn hive_rebuild(alias: String) -> Result<String, String> {
-    use crate::cli::HiveAction;
-    use crate::handlers::handle_hive;
+    use crate::cli::HiveLifecycleAction;
+    use crate::handlers::handle_hive_lifecycle;
     use crate::Config;
 
     let config = Config::load().map_err(|e| format!("Config error: {}", e))?;
     let queen_url = config.queen_url();
 
-    handle_hive(HiveAction::Rebuild { alias }, &queen_url)
+    handle_hive_lifecycle(HiveLifecycleAction::Rebuild { alias }, &queen_url)
         .await
         .map(|_| "Hive rebuilt successfully".to_string())
         .map_err(|e| format!("{}", e))

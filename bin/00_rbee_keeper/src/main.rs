@@ -48,10 +48,11 @@ use clap::Parser;
 
 use cli::{Cli, Commands};
 use handlers::{
-    handle_hive, handle_infer, handle_model, handle_queen, handle_self_check, handle_status,
-    handle_worker,
+    handle_hive_jobs, handle_hive_lifecycle, handle_infer, handle_model, handle_queen,
+    handle_self_check, handle_status, handle_worker,
 };
 // TEAM-284: DELETED handle_migrate, handle_package_status, handle_sync, handle_validate
+// TEAM-380: Updated to use handle_hive_lifecycle and handle_hive_jobs
 
 #[tokio::main]
 async fn main() -> Result<()> {
@@ -152,7 +153,8 @@ async fn handle_command(cli: Cli) -> Result<()> {
             submit_and_stream_job(&queen_url, Operation::QueenCheck).await
         }
         Commands::Queen { action } => handle_queen(action, &queen_url).await,
-        Commands::Hive { action } => handle_hive(action, &queen_url).await,
+        Commands::Hive { action } => handle_hive_lifecycle(action, &queen_url).await,
+        Commands::HiveJobs { hive_id, action } => handle_hive_jobs(hive_id, action).await,
         Commands::Worker { hive_id, action } => handle_worker(hive_id, action, &queen_url).await,
         Commands::Model { hive_id, action } => handle_model(hive_id, action, &queen_url).await,
         Commands::Infer {

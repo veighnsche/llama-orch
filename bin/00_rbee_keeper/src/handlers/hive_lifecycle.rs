@@ -1,9 +1,10 @@
-//! Hive command handlers (localhost + remote SSH)
+//! Hive lifecycle command handlers (start, stop, status, install, etc.)
 //!
 //! TEAM-322: Removed all SSH/remote functionality (RULE ZERO - delete complexity)
 //! TEAM-324: Moved HiveAction enum here to eliminate duplication
 //! TEAM-332: Added SSH config resolver middleware (eliminates repeated SshConfig::localhost())
 //! TEAM-365: Use lifecycle-local for localhost, lifecycle-ssh for remote (conditional dispatch)
+//! TEAM-380: Split from hive.rs - this file handles lifecycle operations only
 
 use anyhow::Result;
 use clap::Subcommand;
@@ -19,7 +20,7 @@ use lifecycle_ssh;
 use local_ip_address::local_ip;
 
 #[derive(Subcommand)]
-pub enum HiveAction {
+pub enum HiveLifecycleAction {
     /// Start rbee-hive
     Start {
         /// Host alias (default: localhost, or use SSH config entry)
@@ -64,9 +65,9 @@ pub enum HiveAction {
     },
 }
 
-pub async fn handle_hive(action: HiveAction, queen_url: &str) -> Result<()> {
+pub async fn handle_hive_lifecycle(action: HiveLifecycleAction, queen_url: &str) -> Result<()> {
     match action {
-        HiveAction::Start { alias, port } => {
+        HiveLifecycleAction::Start { alias, port } => {
             let port = port.unwrap_or(7835);
             
             // TEAM-365: Conditional dispatch - localhost uses lifecycle-local, remote uses lifecycle-ssh
@@ -115,7 +116,7 @@ pub async fn handle_hive(action: HiveAction, queen_url: &str) -> Result<()> {
             }
             Ok(())
         }
-        HiveAction::Stop { alias, port } => {
+        HiveLifecycleAction::Stop { alias, port } => {
             let port = port.unwrap_or(7835);
             
             // TEAM-365: Conditional dispatch - localhost uses lifecycle-local, remote uses lifecycle-ssh
@@ -146,7 +147,7 @@ pub async fn handle_hive(action: HiveAction, queen_url: &str) -> Result<()> {
             }
         }
 
-        HiveAction::Status { alias } => {
+        HiveLifecycleAction::Status { alias } => {
             // TEAM-365: Conditional dispatch - localhost uses lifecycle-local, remote uses lifecycle-ssh
             if alias == "localhost" {
                 // TEAM-365: Localhost - use lifecycle-local (no SSH)
@@ -173,8 +174,7 @@ pub async fn handle_hive(action: HiveAction, queen_url: &str) -> Result<()> {
             Ok(())
         }
 
-        // TEAM-329: Removed Get and Check handlers (user request)
-        HiveAction::Install { alias } => {
+        HiveLifecycleAction::Install { alias } => {
             // TEAM-365: Conditional dispatch - localhost uses lifecycle-local, remote uses lifecycle-ssh
             if alias == "localhost" {
                 // TEAM-365: Localhost - use lifecycle-local (no SSH)
@@ -196,7 +196,7 @@ pub async fn handle_hive(action: HiveAction, queen_url: &str) -> Result<()> {
                 lifecycle_ssh::install_daemon(config).await
             }
         }
-        HiveAction::Uninstall { alias } => {
+        HiveLifecycleAction::Uninstall { alias } => {
             // TEAM-365: Conditional dispatch - localhost uses lifecycle-local, remote uses lifecycle-ssh
             if alias == "localhost" {
                 // TEAM-365: Localhost - use lifecycle-local (no SSH)
@@ -221,7 +221,7 @@ pub async fn handle_hive(action: HiveAction, queen_url: &str) -> Result<()> {
                 lifecycle_ssh::uninstall_daemon(config).await
             }
         }
-        HiveAction::Rebuild { alias } => {
+        HiveLifecycleAction::Rebuild { alias } => {
             // TEAM-365: Conditional dispatch - localhost uses lifecycle-local, remote uses lifecycle-ssh
             if alias == "localhost" {
                 // TEAM-365: Localhost - use lifecycle-local (no SSH)

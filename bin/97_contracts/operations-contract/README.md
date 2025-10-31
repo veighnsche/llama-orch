@@ -38,6 +38,16 @@ Operation enum
 - `Status` - Query hive and worker registries
 - `Infer { ... }` - Schedule inference and route to worker
 
+**RHAI script operations:**
+- `RhaiScriptSave { name, content, id }` - Save RHAI script
+- `RhaiScriptTest { content }` - Test RHAI script
+- `RhaiScriptGet { id }` - Get RHAI script by ID
+- `RhaiScriptList` - List all RHAI scripts
+- `RhaiScriptDelete { id }` - Delete RHAI script
+
+**Diagnostic operations:**
+- `QueenCheck` - Test queen SSE streaming
+
 ### Hive Operations (http://localhost:7835/v1/jobs)
 
 **Worker process operations:**
@@ -51,6 +61,27 @@ Operation enum
 - `ModelList(ModelListRequest)` - List models
 - `ModelGet(ModelGetRequest)` - Get model details
 - `ModelDelete(ModelDeleteRequest)` - Delete model
+
+**Diagnostic operations:**
+- `HiveCheck { alias }` - Test hive SSE streaming
+
+## Response Format
+
+**Important:** rbee-hive currently returns **narration events** via SSE, not structured JSON responses.
+
+**Example narration output:**
+```
+data: 🚀 Spawning worker 'cpu' with model 'llama-3.2-1b' on device 0
+data: ✅ Worker 'worker-cpu-9301' spawned (PID: 12345, port: 9301)
+data: [DONE]
+```
+
+Response types (WorkerSpawnResponse, ModelListResponse, etc.) are defined for:
+- Type safety and documentation
+- Future structured API support
+- Programmatic client integration (future)
+
+See `src/responses.rs` for full documentation on response types.
 
 ## Usage
 

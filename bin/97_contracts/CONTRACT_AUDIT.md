@@ -1,8 +1,8 @@
 # Contract Audit Report - COMPREHENSIVE
 
-**Date:** Oct 29, 2025  
-**Auditor:** Cascade AI  
-**Status:** 🔍 REVIEW REQUIRED  
+**Date:** Oct 31, 2025  
+**Auditor:** Cascade AI (TEAM-380)  
+**Status:** ✅ UPDATED  
 **Scope:** All contracts in `/bin/97_contracts` + `/contracts`
 
 ---
@@ -10,17 +10,22 @@
 ## Executive Summary
 
 Audited all contracts against current architecture:
-- **Queen's job API:** ONLY handles `Status` and `Infer` operations
+- **Queen's job API:** Handles `Status`, `Infer`, and `RhaiScript*` operations
 - **Hive's job API:** Handles worker/model lifecycle operations  
 - **NO PROXYING:** rbee-keeper talks directly to queen AND hive
 - **Heartbeat-based registries:** No SQLite, RAM-only
 
-**Findings:**
+**Findings (TEAM-380 Update):**
 - ✅ 5 contracts are correct and actively used
-- ❌ 1 contract should be DELETED (ssh-contract)
-- ⚠️ 1 contract needs review (keeper-config-contract)
-- ⚠️ 1 contract needs MAJOR updates (operations-contract)
+- ❌ 1 contract should be DELETED (ssh-contract) - **STILL PENDING**
+- ⚠️ 1 contract needs review (keeper-config-contract) - **STILL PENDING**
+- ✅ operations-contract - **FIXED** (was ⚠️, now ✅)
 - ✅ 2 external contracts are correct (api-types, config-schema)
+
+**TEAM-380 Changes:**
+- ✅ Updated operations-contract README with HiveCheck, RHAI operations
+- ✅ Added narration-based response documentation
+- ✅ Clarified response types usage in responses.rs
 
 ---
 
@@ -69,31 +74,34 @@ Audited all contracts against current architecture:
 
 ---
 
-#### 4. **operations-contract** ⚠️
-**Status:** KEEP - But needs major updates  
+#### 4. **operations-contract** ✅
+**Status:** KEEP - **FIXED by TEAM-380**  
 **Purpose:** Operation types for job submissions  
 **Used by:** rbee-keeper, queen-rbee, rbee-hive  
 
-**CRITICAL ISSUES:**
+**TEAM-380 FIXES:**
 
-1. **`should_forward_to_hive()` is DEPRECATED**
-   - Queen does NOT forward operations anymore
-   - rbee-keeper talks directly to hive
-   - This method should be DELETED or marked deprecated
+1. ✅ **`should_forward_to_hive()` replaced with `target_server()`**
+   - Now correctly indicates which server to send operation to
+   - No longer implies queen forwards operations
+   - rbee-keeper uses this to route directly to queen OR hive
 
-2. **README is outdated**
-   - Shows operations that don't exist (HiveStart, HiveStop, HiveCreate, etc.)
-   - Doesn't reflect current architecture
+2. ✅ **README updated**
+   - Added HiveCheck diagnostic operation
+   - Added RHAI script operations (RhaiScriptSave, Test, Get, List, Delete)
+   - Added "Response Format" section explaining narration-based output
+   - Removed references to deleted operations
 
-3. **Documentation says "forwarded to hive"**
-   - This is wrong - queen doesn't forward
-   - Operations are sent directly to hive by rbee-keeper
+3. ✅ **Response types documented**
+   - Added comprehensive documentation in responses.rs
+   - Clarified that hive returns narration events, not structured JSON
+   - Explained response types are for documentation and future use
 
-**Actions needed:**
-- [ ] DELETE `should_forward_to_hive()` method (or mark deprecated)
-- [ ] Update README to reflect current architecture
-- [ ] Add section explaining queen vs hive operations
-- [ ] Remove references to "forwarding"
+**Actions completed:**
+- ✅ `target_server()` method exists (replaces should_forward_to_hive)
+- ✅ README updated with all current operations
+- ✅ Added section explaining queen vs hive operations
+- ✅ Documented narration-based response format
 
 ---
 
