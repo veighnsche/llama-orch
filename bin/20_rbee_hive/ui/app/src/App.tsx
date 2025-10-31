@@ -1,14 +1,26 @@
-// TEAM-353: Hive UI - Worker & Model Management
-// TEAM-374: Added HeartbeatMonitor for real-time worker updates
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+// TEAM-374: Hive UI - Rebuilt with shared components
+// Uses @rbee/ui for consistent styling across all rbee applications
+import { QueryClient, QueryClientProvider } from '@rbee/rbee-hive-react'
 import { logStartupMode } from '@rbee/dev-utils'
 import { useState, useEffect } from 'react'
-import './App.css'
+import { 
+  Card, 
+  CardContent, 
+  CardDescription, 
+  CardHeader, 
+  CardTitle,
+  Badge
+} from '@rbee/ui/atoms'
+import { 
+  StatusKPI,
+  MetricCard
+} from '@rbee/ui/molecules'
+import { Activity, Cpu, HardDrive } from 'lucide-react'
 
-// TEAM-353: Use shared startup logging
+// TEAM-374: Use shared startup logging
 logStartupMode("HIVE UI", import.meta.env.DEV, 7836)
 
-// TEAM-353: Create QueryClient for TanStack Query
+// TEAM-374: Create QueryClient for TanStack Query
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
@@ -18,7 +30,44 @@ const queryClient = new QueryClient({
   },
 })
 
-// TEAM-374: Heartbeat status component
+// TEAM-374: Device type from capabilities endpoint
+interface HiveDevice {
+  id: string
+  device_type: 'GPU' | 'CPU'
+  name: string
+  memory_mb?: number
+  compute_capability?: string
+}
+
+// TEAM-374: Fetch device capabilities
+function useDevices() {
+  const [devices, setDevices] = useState<HiveDevice[]>([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    const fetchDevices = async () => {
+      try {
+        const baseUrl = import.meta.env.DEV 
+          ? 'http://localhost:7835'
+          : window.location.origin
+        
+        const response = await fetch(`${baseUrl}/capabilities`)
+        const data = await response.json()
+        setDevices(data.devices || [])
+      } catch (err) {
+        console.error('Failed to fetch devices:', err)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchDevices()
+  }, [])
+
+  return { devices, loading }
+}
+
+// TEAM-374: Heartbeat status component with shared UI components
 function HeartbeatStatus() {
   const [connected, setConnected] = useState(false)
   const [workerCount, setWorkerCount] = useState(0)
@@ -29,12 +78,11 @@ function HeartbeatStatus() {
 
     const initMonitor = async () => {
       try {
-        // TEAM-374: Import WASM SDK
         const { HeartbeatMonitor } = await import('@rbee/rbee-hive-sdk')
         
         const baseUrl = import.meta.env.DEV 
-          ? 'http://localhost:7835'  // Dev: direct to hive
-          : window.location.origin    // Prod: same origin
+          ? 'http://localhost:7835'
+          : window.location.origin
 
         monitor = new HeartbeatMonitor(baseUrl)
         
@@ -58,43 +106,192 @@ function HeartbeatStatus() {
   }, [])
 
   return (
-    <div style={{ 
-      padding: '1rem', 
-      border: '1px solid #646cff', 
-      borderRadius: '8px',
-      marginBottom: '2rem'
-    }}>
-      <h2>🐝 Hive Heartbeat</h2>
-      <div style={{ display: 'flex', gap: '2rem', marginTop: '1rem' }}>
-        <div>
-          <strong>Status:</strong>{' '}
-          <span style={{ color: connected ? '#4ade80' : '#f87171' }}>
-            {connected ? '🟢 Connected' : '🔴 Disconnected'}
-          </span>
-        </div>
-        <div>
-          <strong>Workers:</strong> {workerCount}
-        </div>
-        {lastUpdate && (
+    <Card>
+      <CardHeader>
+        <div className="flex items-center justify-between">
           <div>
-            <strong>Last Update:</strong> {lastUpdate}
+            <CardTitle className="flex items-center gap-2">
+              <Activity className="h-5 w-5" />
+              Hive Status
+            </CardTitle>
+            <CardDescription>Real-time worker telemetry</CardDescription>
           </div>
-        )}
-      </div>
-    </div>
+          <Badge variant={connected ? "default" : "destructive"}>
+            {connected ? 'Connected' : 'Disconnected'}
+          </Badge>
+        </div>
+      </CardHeader>
+      <CardContent>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <StatusKPI
+            label="Connection"
+            value={connected ? 'Online' : 'Offline'}
+            color={connected ? 'success' : 'warning'}
+            icon={<Activity className="h-4 w-4" />}
+          />
+          <StatusKPI
+            label="Active Workers"
+            value={workerCount.toString()}
+            color="primary"
+            icon={<Cpu className="h-4 w-4" />}
+          />
+          <StatusKPI
+            label="Last Update"
+            value={lastUpdate || 'Never'}
+            color="muted"
+            icon={<HardDrive className="h-4 w-4" />}
+          />
+        </div>
+      </CardContent>
+    </Card>
   )
 }
 
 function App() {
+  const { devices, loading: devicesLoading } = useDevices()
+
   return (
     <QueryClientProvider client={queryClient}>
-      <div>
-        <h1>🐝 Hive UI</h1>
-        <HeartbeatStatus />
-        <p className="read-the-docs">
-          Worker & Model Management Dashboard
-        </p>
-      </div>
+      <div className="min-h-screen bg-background font-sans p-6 space-y-6">
+          {/* Header */}
+          <div>
+            <h1 className="text-3xl font-bold text-foreground">Hive</h1>
+            <p className="text-muted-foreground">Worker & Model Management Dashboard</p>
+          </div>
+
+          {/* Status Row */}
+          <HeartbeatStatus />
+
+          {/* Management Grid */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* Model Management */}
+            <Card>
+              <CardHeader>
+                <div className="flex items-center justify-between">
+                  <CardTitle className="flex items-center gap-2">
+                    <HardDrive className="h-5 w-5" />
+                    Model Management
+                  </CardTitle>
+                  <Badge variant="secondary">0 Models</Badge>
+                </div>
+                <CardDescription>Download and manage LLM models</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="text-sm text-muted-foreground text-center py-8">
+                  No models downloaded yet
+                </div>
+                <div className="flex gap-2">
+                  <button className="flex-1 px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors">
+                    Download Model
+                  </button>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Worker Management */}
+            <Card>
+              <CardHeader>
+                <div className="flex items-center justify-between">
+                  <CardTitle className="flex items-center gap-2">
+                    <Cpu className="h-5 w-5" />
+                    Worker Management
+                  </CardTitle>
+                  <Badge variant="secondary">0 Workers</Badge>
+                </div>
+                <CardDescription>Build and manage worker processes</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="text-sm text-muted-foreground text-center py-8">
+                  No workers available
+                </div>
+                <div className="flex gap-2">
+                  <button className="flex-1 px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors">
+                    Build Worker
+                  </button>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Spawn Worker */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Activity className="h-5 w-5" />
+                Spawn Worker
+              </CardTitle>
+              <CardDescription>Start a worker on an available device</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {devicesLoading ? (
+                <div className="text-sm text-muted-foreground text-center py-4">
+                  Loading devices...
+                </div>
+              ) : devices.length === 0 ? (
+                <div className="text-sm text-muted-foreground text-center py-4">
+                  No devices detected
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  <div className="text-sm font-medium text-foreground mb-3">Available Devices:</div>
+                  {devices.map((device) => (
+                    <div
+                      key={device.id}
+                      className="flex items-center justify-between p-3 border border-border rounded-md hover:bg-accent/50 transition-colors"
+                    >
+                      <div className="flex items-center gap-3">
+                        {device.device_type === 'GPU' ? (
+                          <Cpu className="h-5 w-5 text-primary" />
+                        ) : (
+                          <Cpu className="h-5 w-5 text-muted-foreground" />
+                        )}
+                        <div>
+                          <div className="text-sm font-medium text-foreground">{device.name}</div>
+                          <div className="text-xs text-muted-foreground">
+                            {device.device_type} • {device.id}
+                            {device.memory_mb && ` • ${Math.round(device.memory_mb / 1024)} GB`}
+                          </div>
+                        </div>
+                      </div>
+                      <button className="px-3 py-1 text-sm bg-primary text-primary-foreground rounded hover:bg-primary/90 transition-colors">
+                        Spawn
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* GPU Utilization */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Activity className="h-5 w-5" />
+                GPU Utilization
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <MetricCard
+                  label="Average Usage"
+                  value="0%"
+                  description="Across all GPUs"
+                />
+                <MetricCard
+                  label="VRAM Used"
+                  value="0 MB"
+                  description="Total allocated"
+                />
+                <MetricCard
+                  label="Active GPUs"
+                  value="0"
+                  description="Currently in use"
+                />
+              </div>
+            </CardContent>
+          </Card>
+        </div>
     </QueryClientProvider>
   )
 }

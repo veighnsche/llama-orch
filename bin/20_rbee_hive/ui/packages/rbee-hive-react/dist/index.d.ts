@@ -1,3 +1,5 @@
+export { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+export type { QueryClientConfig } from '@tanstack/react-query';
 export interface Model {
     id: string;
     name: string;

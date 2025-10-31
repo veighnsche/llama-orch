@@ -4,7 +4,6 @@
 // Uses dynamic hiveId from URL params
 
 import { Alert, AlertDescription, AlertTitle, Button } from "@rbee/ui/atoms";
-import { PageContainer } from "@rbee/ui/molecules";
 import { AlertCircle, ExternalLink, PlayCircle, Loader2 } from "lucide-react";
 import { useParams } from "react-router-dom";
 import { getIframeUrl } from "@rbee/shared-config";
@@ -101,22 +100,12 @@ function HiveIframeContent({ hiveId }: { hiveId: string }) {
   const hiveUrl = getIframeUrl('hive', isDev);
 
   return (
-    <div className="relative h-full w-full">
-      <div className="absolute top-2 right-2 z-10">
-        <Button variant="outline" size="sm" asChild>
-          <a href={hiveUrl} target="_blank" rel="noopener noreferrer">
-            <ExternalLink className="h-4 w-4 mr-2" />
-            Open in new tab
-          </a>
-        </Button>
-      </div>
-      <iframe
-        src={hiveUrl}
-        className="w-full h-full border-0 rounded-lg"
-        title={`${hive.host} Web Interface`}
-        sandbox="allow-same-origin allow-scripts allow-forms allow-popups"
-      />
-    </div>
+    <iframe
+      src={hiveUrl}
+      className="w-full h-full border-0"
+      title={`${hive.host} Web Interface`}
+      sandbox="allow-same-origin allow-scripts allow-forms allow-popups"
+    />
   );
 }
 
@@ -125,33 +114,19 @@ export default function HivePage() {
 
   if (!hiveId) {
     return (
-      <PageContainer
-        title="Hive"
-        description="Hive web interface"
-        padding="default"
-        className="h-full"
-      >
-        <div className="flex items-center justify-center h-full">
-          <Alert variant="destructive" className="max-w-md">
-            <AlertCircle className="h-4 w-4" />
-            <AlertTitle>Invalid URL</AlertTitle>
-            <AlertDescription>
-              <p>No hive ID specified in the URL.</p>
-            </AlertDescription>
-          </Alert>
-        </div>
-      </PageContainer>
+      <div className="flex items-center justify-center h-full">
+        <Alert variant="destructive" className="max-w-md">
+          <AlertCircle className="h-4 w-4" />
+          <AlertTitle>Invalid URL</AlertTitle>
+          <AlertDescription>
+            <p>No hive ID specified in the URL.</p>
+          </AlertDescription>
+        </Alert>
+      </div>
     );
   }
 
-  return (
-    <PageContainer
-      title={hiveId}
-      description={`Web interface for hive ${hiveId}`}
-      padding="default"
-      className="h-full"
-    >
-      <HiveIframeContent hiveId={hiveId} />
-    </PageContainer>
-  );
+  // TEAM-374: No PageContainer - causes double title and padding issues
+  // Iframe needs full height without extra padding (matching QueenPage pattern)
+  return <HiveIframeContent hiveId={hiveId} />;
 }

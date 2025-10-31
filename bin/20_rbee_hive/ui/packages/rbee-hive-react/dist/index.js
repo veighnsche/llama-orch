@@ -1,5 +1,7 @@
 // TEAM-353: Migrated to use TanStack Query (no manual state management)
 // TEAM-353: Uses WASM SDK (job-based architecture)
+// TEAM-374: Re-export React Query for apps (single source of truth)
+export { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { useQuery } from '@tanstack/react-query';
 import { init, HiveClient, OperationBuilder } from '@rbee/rbee-hive-sdk';
 // TEAM-353: Initialize WASM module once

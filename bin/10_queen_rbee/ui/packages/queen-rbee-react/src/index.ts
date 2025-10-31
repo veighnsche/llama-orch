@@ -2,6 +2,10 @@
 // TEAM-352: SDK loader migrated to @rbee/sdk-loader package
 // TEAM-352: Hooks now import directly from @rbee/sdk-loader - NO WRAPPERS
 
+// TEAM-374: Re-export React Query for apps (single source of truth)
+export { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+export type { QueryClientConfig } from '@tanstack/react-query'
+
 // TEAM-291: Re-export types from @rbee/queen-rbee-sdk for convenience
 // TEAM-295: Fixed import to use @rbee/queen-rbee-sdk instead of @rbee/sdk
 export type { HeartbeatMonitor, OperationBuilder, QueenClient } from '@rbee/queen-rbee-sdk'

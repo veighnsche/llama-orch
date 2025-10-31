@@ -261,31 +261,42 @@ pub async fn hive_stop(alias: String) -> Result<String, String> {
     handle_hive_lifecycle(HiveLifecycleAction::Stop { alias, port: None }, &queen_url)
         .await
         .map(|_| "Hive stopped successfully".to_string())
-        .map_err(|e| format!("{}", e))
+        .map_err(|e| e.to_string())
 }
 
-/// Check rbee-hive status
-/// TEAM-338: Returns structured status (isRunning, isInstalled)
-/// TEAM-338: RULE ZERO FIX - Use DaemonStatus directly (deleted HiveStatus duplicate)
+/// Get hive status (running + installed)
+///
 /// TEAM-342: Added narration for visibility in UI
+/// TEAM-374: Fixed to use lifecycle-local for localhost (no SSH)
 #[tauri::command]
 #[specta::specta]
 pub async fn hive_status(alias: String) -> Result<lifecycle_ssh::DaemonStatus, String> {
-    use crate::ssh_resolver::resolve_ssh_config;
-    use lifecycle_ssh::check_daemon_health;
     use observability_narration_core::n;
 
     // TEAM-342: Narrate status check start
     n!("hive_status_check", "🔍 Checking status for hive '{}'", alias);
 
-    // Resolve SSH config for this hive (localhost or ~/.ssh/config)
-    let ssh = resolve_ssh_config(&alias)
-        .map_err(|e| format!("Failed to resolve SSH config for '{}': {}", alias, e))?;
-
-    // Check status (running + installed)
-    let health_url = format!("http://{}:7835/health", ssh.hostname);
-
-    let status = check_daemon_health(&health_url, "rbee-hive", &ssh).await;
+    // TEAM-374: RULE ZERO - Use lifecycle-local for localhost, lifecycle-ssh for remote
+    let status = if alias == "localhost" {
+        // Localhost - use lifecycle-local (no SSH, fast)
+        let health_url = "http://localhost:7835/health";
+        let local_status = lifecycle_local::check_daemon_health(health_url, "rbee-hive").await;
+        
+        // Convert to lifecycle_ssh::DaemonStatus for return type compatibility
+        lifecycle_ssh::DaemonStatus {
+            is_running: local_status.is_running,
+            is_installed: local_status.is_installed,
+        }
+    } else {
+        // Remote - use lifecycle-ssh
+        use crate::ssh_resolver::resolve_ssh_config;
+        
+        let ssh = resolve_ssh_config(&alias)
+            .map_err(|e| format!("Failed to resolve SSH config for '{}': {}", alias, e))?;
+        
+        let health_url = format!("http://{}:7835/health", ssh.hostname);
+        lifecycle_ssh::check_daemon_health(&health_url, "rbee-hive", &ssh).await
+    };
 
     // TEAM-342: Narrate status result
     if status.is_running {

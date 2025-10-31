@@ -15,6 +15,7 @@ mod http;
 mod job_router;
 
 use observability_narration_core::n;
+use tower_http::cors::{Any, CorsLayer}; // TEAM-374: CORS support for web UI
 
 use axum::{
     extract::{Query, State}, // TEAM-365: Query for queen_url parameter, State for HiveState
@@ -190,6 +191,14 @@ async fn main() -> anyhow::Result<()> {
         .route("/dev", get(http::dev_proxy_handler))
         .route("/dev/", get(http::dev_proxy_handler))
         .route("/dev/{*path}", get(http::dev_proxy_handler));
+
+    // TEAM-374: Add CORS layer to allow web UI access
+    let cors = CorsLayer::new()
+        .allow_origin(Any) // Allow any origin for development
+        .allow_methods(Any) // Allow any HTTP method
+        .allow_headers(Any); // Allow any headers
+
+    app = app.layer(cors); // TEAM-374: Apply CORS to all routes
 
     // TEAM-374: TODO - Add static file serving for production
     // For now, UI is accessed via /dev in development mode

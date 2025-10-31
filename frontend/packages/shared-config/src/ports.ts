@@ -69,12 +69,41 @@ export function getAllowedOrigins(includeHttps = false): string[] {
   return Array.from(origins).sort()
 }
 
+// ============================================================
+// BUG FIX: TEAM-374 | Iframe not loading - reverted /dev proxy
+// ============================================================
+// SUSPICION:
+// - Thought using /dev proxy would avoid CORS issues
+// - Expected proxy to correctly forward all Vite requests
+//
+// INVESTIGATION:
+// - Changed getIframeUrl to use /dev proxy (http://localhost:7833/dev)
+// - Observed: HTML loads but JS modules get 404 errors
+// - Found: Browser tries to load /@react-refresh from backend, not through proxy
+// - Root cause: Vite's module resolution doesn't work through the proxy
+//
+// ROOT CAUSE:
+// - When iframe loads /dev, HTML comes through correctly
+// - But HTML contains <script src="/@react-refresh"> etc
+// - Browser resolves these as absolute paths from backend
+// - Backend has no /@react-refresh route - only /dev/@react-refresh would work
+// - Vite needs to run on its own origin for HMR and module resolution
+//
+// FIX:
+// - Reverted to direct Vite dev server URLs (ports 7834/7836)
+// - Dev mode: http://localhost:7834 (Queen) / http://localhost:7836 (Hive)
+// - Prod mode: Still uses backend URLs (7833/7835)
+// - CORS is not an issue because iframes are same-origin (localhost)
+//
+// TESTING:
+// - Verified Queen iframe loads at http://localhost:7834
+// - Verified Hive iframe loads at http://localhost:7836
+// - Checked browser console - no 404 errors for JS modules
+// - Confirmed HMR (hot module reload) works
+// ============================================================
+
 /**
  * Get iframe URL for embedding services
- * 
- * TEAM-374: In dev mode, use /dev proxy for hive and queen
- * This allows Keeper to load the UI from the backend's /dev proxy,
- * which forwards to the Vite dev server. This avoids CORS issues.
  * 
  * @param service - Service name
  * @param isDev - Whether in development mode
@@ -102,14 +131,8 @@ export function getIframeUrl(
   
   const protocol = useHttps ? 'https' : 'http'
   
-  // TEAM-374: In dev mode, use /dev proxy for hive and queen
-  // This loads the UI from the backend's /dev proxy instead of directly from Vite
-  // Backend proxies /dev → Vite dev server, avoiding CORS issues
-  if (isDev && (service === 'hive' || service === 'queen')) {
-    const prodPort = ports.prod
-    return `${protocol}://localhost:${prodPort}/dev`
-  }
-  
+  // TEAM-374: In dev mode, load directly from Vite dev server
+  // Do NOT use /dev proxy - breaks Vite's module resolution
   return `${protocol}://localhost:${port}`
 }
 

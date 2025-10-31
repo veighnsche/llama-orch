@@ -19,6 +19,7 @@ path = "src/lib.rs"
 # TEAM-189: Added HTTP server with /health endpoint
 axum = { workspace = true }
 tokio = { workspace = true, features = ["full"] }
+tower-http = { version = "0.6", features = ["cors"] } # TEAM-374: CORS support for web UI
 
 # CLI
 clap = { version = "4", features = ["derive"] }

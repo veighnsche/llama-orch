@@ -21,7 +21,7 @@ export default defineConfig({
     }),
   ],
   optimizeDeps: {
-    exclude: ['@rbee/sdk'],
+    exclude: ['@rbee/queen-rbee-sdk'], // TEAM-375: Exclude WASM package from pre-bundling
   },
   build: {
     cssMinify: false, // Disable CSS minification to avoid lightningcss issues with Tailwind

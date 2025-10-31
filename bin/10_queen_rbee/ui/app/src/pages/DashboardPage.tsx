@@ -11,6 +11,7 @@ export default function DashboardPage() {
   const { data, connected, loading, error } = useHeartbeat();
   const hives: any[] = []; // TODO: Parse hives from heartbeat data
   const workersOnline = data?.workers_online || 0;
+  const hivesOnline = hives.length; // TEAM-375: Count of online hives
 
   // Loading state
   if (loading) {
@@ -51,7 +52,11 @@ export default function DashboardPage() {
 
       {/* Components Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <HeartbeatMonitor workersOnline={workersOnline} hives={hives} />
+        <HeartbeatMonitor 
+          workersOnline={workersOnline} 
+          hivesOnline={hivesOnline}
+          hives={hives} 
+        />
         <RhaiIDE />
       </div>
     </div>
