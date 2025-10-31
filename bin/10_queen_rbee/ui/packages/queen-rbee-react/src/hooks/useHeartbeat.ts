@@ -72,11 +72,14 @@ export function useHeartbeat(
     timestamp: string;
   } | null>(null);
 
+  // TEAM-375: Track if we've received any data (not just SSE connection open)
+  const hasReceivedDataRef = React.useRef(false);
+
   React.useEffect(() => {
     const eventSource = new EventSource(`${baseUrl}/v1/heartbeats/stream`);
 
     eventSource.onopen = () => {
-      setConnected(true);
+      // TEAM-375: Don't set connected=true until we receive actual data
       setLoading(false);
       setError(null);
     };
@@ -84,6 +87,12 @@ export function useHeartbeat(
     eventSource.addEventListener('heartbeat', (event) => {
       try {
         const heartbeatEvent = JSON.parse(event.data);
+
+        // TEAM-375: Mark that we've received data (Queen is actually working)
+        if (!hasReceivedDataRef.current) {
+          hasReceivedDataRef.current = true;
+          setConnected(true);
+        }
 
         if (heartbeatEvent.type === 'hive_telemetry') {
           // TEAM-364: Update hive telemetry

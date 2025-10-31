@@ -9,9 +9,41 @@ import { ConnectionStatus } from "../components/ConnectionStatus";
 export default function DashboardPage() {
   // TEAM-352: Use default URL from hook (no hardcoded URL)
   const { data, connected, loading, error } = useHeartbeat();
-  const hives: any[] = []; // TODO: Parse hives from heartbeat data
+  
+  // ============================================================
+  // BUG FIX: TEAM-377 | Hive count always showing 0
+  // ============================================================
+  // SUSPICION:
+  // - Thought backend wasn't sending hive data
+  // - Suspected useHeartbeat hook was broken
+  //
+  // INVESTIGATION:
+  // - Checked useHeartbeat hook - correctly aggregates hives_online from backend ✓
+  // - Checked backend heartbeat stream - sending correct hive counts ✓
+  // - Found line 12: `const hives: any[] = []` - hardcoded empty array!
+  // - Found line 14: `const hivesOnline = hives.length` - always 0 because hives is empty
+  //
+  // ROOT CAUSE:
+  // - Line 12 had TODO comment: "TODO: Parse hives from heartbeat data"
+  // - This was never implemented, left as empty array in production
+  // - Line 14 calculated count from empty array instead of using data from hook
+  // - Hook was receiving correct data, but UI was ignoring it
+  //
+  // FIX:
+  // - Use data?.hives from hook instead of empty array
+  // - Use data?.hives_online from hook instead of calculating from array length
+  // - Backend already aggregates hive count correctly, just use it
+  //
+  // TESTING:
+  // - Verified useHeartbeat returns data.hives_online correctly
+  // - Verified useHeartbeat returns data.hives array correctly
+  // - Will test in browser: Active Hives count should match running hives
+  // ============================================================
+  const hives = data?.hives || [];
   const workersOnline = data?.workers_online || 0;
-  const hivesOnline = hives.length; // TEAM-375: Count of online hives
+  const hivesOnline = data?.hives_online || 0; // TEAM-377: Use backend count, not array length
+
+  console.log({ hives, workersOnline, hivesOnline })
 
   // Loading state
   if (loading) {

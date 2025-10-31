@@ -40,6 +40,16 @@ bin/20_rbee_hive/
 **IMPORTANT:** HTTP server entry point is implemented DIRECTLY in the binary,
 not as a separate crate.
 
+## 🎯 Three Client Architecture
+
+The hive job server (`POST /v1/jobs` + SSE streaming) is consumed by **three distinct clients**:
+
+1. **📦 The SDK** (`@rbee/rbee-hive-sdk`) - Hive UI for direct user interaction
+2. **👑 The Queen** (`queen-rbee`) - Automated scheduling and multi-hive orchestration  
+3. **🐝 The Keeper** (`rbee-keeper`) - CLI for manual operations and system management
+
+**See:** [HIVE_JOB_SERVER_CLIENTS.md](./HIVE_JOB_SERVER_CLIENTS.md) for complete architecture documentation
+
 ## Dependencies
 
 - rbee-hive-crates/worker-lifecycle

@@ -1,10 +1,16 @@
 {
   "name": "@rbee/queen-rbee-sdk",
   "version": "0.1.0",
+  "type": "module",
   "description": "Rust SDK for queen-rbee that compiles to WASM for browser/Node.js usage",
   "main": "./pkg/bundler/queen_rbee_sdk.js",
   "types": "./pkg/bundler/queen_rbee_sdk.d.ts",
-  "files": ["pkg/bundler"],
+  "exports": {
+    ".": "./pkg/bundler/queen_rbee_sdk.js"
+  },
+  "files": [
+    "pkg"
+  ],
   "scripts": {
     "build": "wasm-pack build --target bundler --out-dir pkg/bundler",
     "build:web": "wasm-pack build --target web --out-dir pkg/web",

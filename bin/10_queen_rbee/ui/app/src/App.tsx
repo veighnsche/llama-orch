@@ -36,23 +36,13 @@
 // ============================================================
 
 import { useEffect } from 'react'
-import { QueryClient, QueryClientProvider } from '@rbee/queen-rbee-react'
+import { QueryProvider } from '@rbee/ui/providers'
 import { logStartupMode } from "@rbee/dev-utils";
 import DashboardPage from "./pages/DashboardPage";
 import { receiveThemeChanges } from "@rbee/iframe-bridge";
 
 // TEAM-352: Use shared startup logging
 logStartupMode("QUEEN UI", import.meta.env.DEV, 7834);
-
-// TEAM-374: Create QueryClient (imported from react package, not directly from @tanstack)
-const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: {
-      retry: 3,
-      retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
-    },
-  },
-})
 
 function App() {
   // TEAM-375: Listen for theme changes from parent (Keeper)
@@ -62,11 +52,12 @@ function App() {
   }, [])
 
   return (
-    <QueryClientProvider client={queryClient}>
+    // TEAM-377: Use shared QueryProvider (retry: 3 with exponential backoff is default)
+    <QueryProvider>
       <div className="min-h-screen bg-background text-foreground font-sans">
         <DashboardPage />
       </div>
-    </QueryClientProvider>
+    </QueryProvider>
   );
 }
 

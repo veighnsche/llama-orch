@@ -1,6 +1,6 @@
 // TEAM-374: Hive UI - Rebuilt with shared components
 // Uses @rbee/ui for consistent styling across all rbee applications
-import { QueryClient, QueryClientProvider } from '@rbee/rbee-hive-react'
+import { QueryProvider } from '@rbee/ui/providers'
 import { logStartupMode } from '@rbee/dev-utils'
 import { receiveThemeChanges } from '@rbee/iframe-bridge'
 import { useState, useEffect } from 'react'
@@ -20,16 +20,6 @@ import { Activity, Cpu, HardDrive } from 'lucide-react'
 
 // TEAM-374: Use shared startup logging
 logStartupMode("HIVE UI", import.meta.env.DEV, 7836)
-
-// TEAM-374: Create QueryClient for TanStack Query
-const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: {
-      retry: 3,
-      retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
-    },
-  },
-})
 
 // TEAM-374: Device type from capabilities endpoint
 interface HiveDevice {
@@ -158,7 +148,7 @@ function App() {
   }, [])
 
   return (
-    <QueryClientProvider client={queryClient}>
+    <QueryProvider>
       <div className="min-h-screen bg-background text-foreground font-sans p-6 space-y-6">
           {/* Header */}
           <div>
@@ -299,7 +289,7 @@ function App() {
             </CardContent>
           </Card>
         </div>
-    </QueryClientProvider>
+    </QueryProvider>
   )
 }
 

@@ -1,17 +1,19 @@
 // TEAM-291: React hooks for rbee WASM SDK
 // TEAM-352: SDK loader migrated to @rbee/sdk-loader package
 // TEAM-352: Hooks now import directly from @rbee/sdk-loader - NO WRAPPERS
+// TEAM-377: React Query removed - use @rbee/ui/providers instead
 
-// TEAM-374: Re-export React Query for apps (single source of truth)
-export { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-export type { QueryClientConfig } from '@tanstack/react-query'
+// TEAM-377: React Query REMOVED
+// DO NOT re-export React Query - import from @rbee/ui/providers:
+//   import { QueryProvider } from '@rbee/ui/providers'
+// This ensures consistent configuration across all apps
 
 // TEAM-291: Re-export types from @rbee/queen-rbee-sdk for convenience
 // TEAM-295: Fixed import to use @rbee/queen-rbee-sdk instead of @rbee/sdk
 export type { HeartbeatMonitor, OperationBuilder, QueenClient } from '@rbee/queen-rbee-sdk'
 
 // Export hooks
-export { useRbeeSDK } from './hooks/useRbeeSDK'
+export { useQueenSDK, useRbeeSDK } from './hooks/useRbeeSDK' // TEAM-377: useRbeeSDK is deprecated alias
 export { useHeartbeat } from './hooks/useHeartbeat'
 export type { HeartbeatData, UseHeartbeatResult } from './hooks/useHeartbeat'
 export { useRhaiScripts } from './hooks/useRhaiScripts'

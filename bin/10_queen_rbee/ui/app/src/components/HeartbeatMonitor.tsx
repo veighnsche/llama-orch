@@ -79,7 +79,7 @@ export function HeartbeatMonitor({
             <div className="space-y-2">
               {hives.map((hive) => (
                 <Collapsible key={hive.hive_id}>
-                  <div className="border rounded-lg overflow-hidden">
+                  <div className="border border-border rounded-lg overflow-hidden">
                     {/* Hive Header */}
                     <CollapsibleTrigger className="w-full flex items-center gap-3 p-3 hover:bg-accent transition-colors group">
                       <ChevronDown className="h-4 w-4 transition-transform group-data-[state=closed]:-rotate-90" />

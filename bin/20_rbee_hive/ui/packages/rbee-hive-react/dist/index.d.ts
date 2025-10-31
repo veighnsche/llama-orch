@@ -1,5 +1,3 @@
-export { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-export type { QueryClientConfig } from '@tanstack/react-query';
 export interface Model {
     id: string;
     name: string;
@@ -40,5 +38,5 @@ export declare function useWorkers(): {
     error: Error | null;
     refetch: (options?: import("@tanstack/react-query").RefetchOptions) => Promise<import("@tanstack/react-query").QueryObserverResult<any, Error>>;
 };
-export { useHiveOperations } from './hooks/useHiveOperations';
-export type { UseHiveOperationsResult } from './hooks/useHiveOperations';
+export { useHiveOperations, WORKER_TYPE_OPTIONS, WORKER_TYPES } from './hooks/useHiveOperations';
+export type { UseHiveOperationsResult, WorkerType, WorkerTypeOption, SpawnWorkerParams } from './hooks/useHiveOperations';

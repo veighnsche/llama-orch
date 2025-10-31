@@ -5,14 +5,14 @@ import { ThemeProvider } from '@rbee/ui/providers'
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import { TauriProvider } from './contexts/TauriContext'
-import { QueryProvider } from './providers/QueryProvider'
+import { QueryProvider } from '@rbee/ui/providers'
 import './globals.css'
 import '@rbee/ui/styles.css'
 import App from './App.tsx'
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <QueryProvider>
+    <QueryProvider retry={1}>
       <TauriProvider>
         <ThemeProvider>
           <App />
