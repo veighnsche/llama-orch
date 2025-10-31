@@ -31,10 +31,12 @@ use wasm_bindgen::prelude::*;
 mod client;
 mod conversions;
 mod operations;
+mod heartbeat; // TEAM-374: Heartbeat monitoring
 
 // TEAM-353: Re-export main client and operation builder
 pub use client::HiveClient;
 pub use operations::OperationBuilder;
+pub use heartbeat::HeartbeatMonitor; // TEAM-374: Heartbeat monitoring
 
 /// Initialize the WASM module
 ///

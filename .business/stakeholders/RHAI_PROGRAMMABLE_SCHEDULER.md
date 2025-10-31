@@ -1,26 +1,137 @@
 # 🎭 Rhai Programmable Scheduler: The Smart Brain
 
 **Pronunciation:** rbee (pronounced "are-bee")  
-**Date:** 2025-10-10  
-**Status:** M2 Feature (Planned)  
+**Date:** 2025-10-31 (Updated)  
+**Status:** M2 Feature (Planned) | M0/M1: SimpleScheduler (Active)  
 **Spec:** `bin/.specs/00_llama-orch.md` [SYS-6.1.5]
-
-**🎯 PRIMARY TARGET AUDIENCE:** Developers who build with AI but don't want to depend on big AI providers.
-
-**THE FEAR:** Building complex codebases with AI assistance. What if the provider changes, shuts down, or changes pricing? Your codebase becomes unmaintainable.
-
-**THE SOLUTION:** Build your own AI infrastructure using ALL your home network hardware. Never depend on external providers again.
 
 ---
 
 ## What is the Rhai Programmable Scheduler?
 
-**Rhai** is an embedded Rust scripting language that powers rbee's intelligent scheduling decisions.
+**Rhai** is an embedded Rust scripting language that will power rbee's intelligent scheduling decisions in M2+.
 
 **Think of it as:**
 - The "brain" of queen-rbee
 - A policy execution engine
 - User-programmable orchestration logic
+
+---
+
+## Current Implementation (M0/M1): SimpleScheduler
+
+**Status:** ✅ ACTIVE (TEAM-275, TEAM-374)
+
+**Location:** `bin/15_queen_rbee_crates/scheduler/`
+
+### Architecture
+
+```rust
+// Current scheduler trait
+#[async_trait]
+pub trait JobScheduler: Send + Sync {
+    async fn schedule(&self, request: JobRequest) 
+        -> Result<ScheduleResult, SchedulerError>;
+}
+
+// M0/M1 implementation
+pub struct SimpleScheduler {
+    worker_registry: Arc<TelemetryRegistry>, // TEAM-374
+}
+```
+
+### How It Works (Real-Time Telemetry)
+
+**Data Flow:**
+```
+Worker Process (llama-cli)
+    ↓ cgroup stats (CPU, RAM, uptime)
+    ↓ nvidia-smi (GPU util, VRAM)
+    ↓ /proc/pid/cmdline (model name)
+Hive Monitor (rbee_hive_monitor::collect_all_workers)
+    ↓ ProcessStats every 1s
+Hive Heartbeat (POST /v1/hive-heartbeat)
+    ↓ HiveHeartbeatEvent
+Queen TelemetryRegistry (TEAM-374)
+    ↓ stores workers by hive_id
+SimpleScheduler.schedule()
+    ↓ finds best worker
+Worker Selection (first idle worker with model)
+```
+
+### ProcessStats Structure (Real-Time Telemetry)
+
+```rust
+pub struct ProcessStats {
+    // Process info
+    pub pid: u32,
+    pub group: String,        // e.g., "llm"
+    pub instance: String,     // e.g., "8080" (port)
+    
+    // CPU & Memory
+    pub cpu_pct: f64,        // CPU usage %
+    pub rss_mb: u64,         // RAM in MB
+    pub uptime_s: u64,       // Uptime in seconds
+    
+    // GPU telemetry (TEAM-360)
+    pub gpu_util_pct: f64,   // 0.0 = idle, >0 = busy
+    pub vram_mb: u64,        // VRAM used
+    pub total_vram_mb: u64,  // Total VRAM (TEAM-364)
+    
+    // Model detection (TEAM-360)
+    pub model: Option<String>, // From --model arg
+}
+```
+
+### TelemetryRegistry API (TEAM-374)
+
+**Available NOW for scheduling:**
+
+```rust
+// Worker queries (used by SimpleScheduler)
+registry.find_best_worker_for_model(model)  // First idle worker with model
+registry.find_idle_workers()                 // gpu_util_pct == 0.0
+registry.find_workers_with_model(model)      // All workers with model
+registry.find_workers_with_capacity(vram_mb) // VRAM capacity check
+registry.list_online_workers()               // All workers
+
+// Hive queries
+registry.list_online_hives()                 // Recent heartbeats
+registry.list_available_hives()              // Online + Ready status
+registry.get_hive(hive_id)                   // Single hive info
+```
+
+### Current Scheduling Algorithm
+
+**SimpleScheduler (M0/M1):**
+
+1. Find workers serving requested model
+2. Filter by idle status (`gpu_util_pct == 0.0`)
+3. Return **first match** (no load balancing)
+
+**Code:**
+```rust
+let worker = self.worker_registry
+    .find_best_worker_for_model(model)
+    .ok_or(SchedulerError::NoWorkersAvailable)?;
+```
+
+**Limitations:**
+- ❌ No load balancing
+- ❌ No cost optimization
+- ❌ No latency optimization
+- ❌ No custom policies
+- ❌ No multi-modal routing
+
+**These will be solved by RhaiScheduler in M2+**
+
+---
+
+## Future Implementation (M2+): RhaiScheduler
+
+**Status:** 📋 PLANNED
+
+**The Rhai scheduler will have access to the SAME TelemetryRegistry data, but with programmable logic.**
 
 ---
 
@@ -101,48 +212,58 @@ fn schedule_job(job, pools, workers) {
 
 ---
 
-## The Rhai Scheduler API
+## The Rhai Scheduler API (M2+)
 
 ### Complete System State Access
 
-**Available to Rhai scripts:**
-- `queue` - Current job queue state
-- `pools` - All registered pool managers
-- `workers` - All active workers
-- `gpus` - GPU/VRAM state
-- `models` - Model catalog
+**Available to Rhai scripts (will use TelemetryRegistry):**
+- `registry` - TelemetryRegistry with real-time worker telemetry
+- `workers` - All active workers (ProcessStats)
+- `hives` - All online hives
+- `job` - Current job request
 - `tenants` - Tenant quotas (platform mode)
 
-### 40+ Built-in Helper Functions
+### Built-in Helper Functions (Planned M2+)
 
-**Worker Selection:**
-- `workers.least_loaded()` - Pick worker with lowest load
-- `workers.most_vram_free()` - Pick worker with most free VRAM
+**These will wrap the existing TelemetryRegistry API:**
+
+**Worker Selection (wraps TelemetryRegistry):**
+- `workers.idle()` - Wraps `registry.find_idle_workers()`
+- `workers.with_model(model)` - Wraps `registry.find_workers_with_model()`
+- `workers.with_capacity(vram_mb)` - Wraps `registry.find_workers_with_capacity()`
+- `workers.least_loaded()` - Sort by `cpu_pct` ascending
+- `workers.most_vram_free()` - Sort by `(total_vram_mb - vram_mb)` descending
 - `workers.round_robin()` - Distribute evenly
 - `workers.filter(predicate)` - Filter by condition
 - `workers.min_by(key)` - Pick minimum by key
 - `workers.max_by(key)` - Pick maximum by key
 
-**GPU Queries:**
-- `gpu_vram_total(gpu_id)` - Total VRAM
-- `gpu_vram_free(gpu_id)` - Free VRAM
-- `gpu_vram_allocated(gpu_id)` - Allocated VRAM
-- `gpu_device_name(gpu_id)` - Device name
+**ProcessStats Fields (available in Rhai):**
+- `worker.pid` - Process ID
+- `worker.group` - Service group (e.g., "llm")
+- `worker.instance` - Port number
+- `worker.cpu_pct` - CPU usage %
+- `worker.rss_mb` - RAM in MB
+- `worker.gpu_util_pct` - GPU utilization (0.0 = idle)
+- `worker.vram_mb` - VRAM used
+- `worker.total_vram_mb` - Total VRAM available
+- `worker.model` - Model name (from --model arg)
+- `worker.uptime_s` - Uptime in seconds
 
-**Quota Checks (Platform Mode):**
+**Hive Queries (wraps TelemetryRegistry):**
+- `hives.online()` - Wraps `registry.list_online_hives()`
+- `hives.available()` - Wraps `registry.list_available_hives()`
+- `hives.get(hive_id)` - Wraps `registry.get_hive()`
+
+**Quota Checks (Platform Mode - M3+):**
 - `tenant_over_quota(tenant_id)` - Check quota exceeded
 - `tenant_remaining_quota(tenant_id)` - Remaining quota
 - `tenant_usage(tenant_id)` - Current usage
 
-**Model Queries:**
+**Model Queries (Future):**
 - `model_size_bytes(model_ref)` - Model file size
 - `model_vram_required(model_ref)` - Estimated VRAM needed
 - `model_exists(model_ref)` - Check if model available
-
-**Eviction Helpers:**
-- `evict_least_recently_used()` - LRU eviction
-- `evict_lowest_priority()` - Priority-based eviction
-- `evict_idle_workers()` - Evict idle workers
 
 ---
 
@@ -186,24 +307,33 @@ fn schedule_job(job, pools, workers) {
 ### Example 3: Multi-Modal Smart Router (Home Mode)
 
 ```rhai
-// Route different AI tasks to specialized workers
-fn schedule_job(job, pools, workers) {
-    if job.type == "image-gen" && job.priority == "high" {
-        // Route Stable Diffusion to CUDA GPUs
-        return workers
-            .filter(|w| w.capability == "image-gen" && w.backend == "cuda")
-            .least_loaded();
-    } else if job.type == "text-gen" && job.model.contains("70b") {
-        // Route large LLMs to multi-GPU setups
-        return workers.filter(|w| w.gpus > 1).first();
-    } else {
-        // Route everything else to cheapest available
-        return workers.min_by(|w| w.cost_per_token);
+// Route different AI tasks using real telemetry
+fn schedule_job(job, registry, workers) {
+    // Route large models to workers with high VRAM
+    if job.model.contains("70b") {
+        let high_vram = workers.filter(|w| w.total_vram_mb > 40000);
+        if !high_vram.is_empty() {
+            return high_vram.idle().first();
+        }
     }
+    
+    // Route to idle workers with the model loaded
+    let with_model = workers.with_model(job.model).idle();
+    if !with_model.is_empty() {
+        return with_model.least_loaded();
+    }
+    
+    // Fallback: any idle worker with capacity
+    let with_capacity = workers.with_capacity(8192).idle();
+    if !with_capacity.is_empty() {
+        return with_capacity.first();
+    }
+    
+    return reject("no_available_workers");
 }
 ```
 
-**Value:** Optimizes both cost and performance based on task type
+**Value:** Uses real GPU telemetry for intelligent routing
 
 ### Example 4: EU-Only Compliance Router (Home Mode)
 
@@ -315,11 +445,37 @@ rules:
 
 ## Implementation Timeline
 
-**M0 (Current):** ❌ Not implemented  
-**M1:** ❌ Not implemented (worker lifecycle focus)  
-**M2 (Q2 2026):** ✅ Rhai scheduler engine  
-**M3 (Q3 2026):** ✅ Platform mode with immutable scheduler  
-**M4 (Q4 2026):** ✅ Web UI policy builder
+**M0 (Oct 2025):** ✅ **SimpleScheduler ACTIVE** (TEAM-275)
+- First-available worker selection
+- TelemetryRegistry integration (TEAM-374)
+- Real-time worker telemetry (GPU, CPU, RAM, model)
+- ProcessStats from cgroup + nvidia-smi
+- Idle worker detection (gpu_util_pct == 0.0)
+
+**M1 (Current):** ✅ **Production-ready SimpleScheduler**
+- Worker lifecycle management
+- Hive discovery and heartbeats
+- SSE-based telemetry streaming
+- Automatic stale worker cleanup
+
+**M2 (Q2 2026):** 📋 **Rhai scheduler engine**
+- Rhai script execution
+- Access to TelemetryRegistry via Rhai API
+- Custom scheduling logic
+- YAML config support
+- Hot-reload scripts without restart
+
+**M3 (Q3 2026):** 📋 **Platform mode**
+- Immutable platform scheduler
+- Multi-tenant fairness
+- Quota enforcement
+- SLA compliance
+
+**M4 (Q4 2026):** 📋 **Web UI policy builder**
+- Visual policy editor
+- Drag-and-drop conditions
+- Live preview with sample jobs
+- Export to Rhai/YAML
 
 ---
 
@@ -353,10 +509,10 @@ rules:
 
 ## The Vision
 
-**Today:** Fixed routing algorithms  
-**M2:** Programmable Rhai scheduler  
-**M3:** Platform mode for marketplace  
-**M4:** Visual policy builder  
+**M0/M1 (Today):** ✅ SimpleScheduler with real-time telemetry  
+**M2 (Q2 2026):** Programmable Rhai scheduler  
+**M3 (Q3 2026):** Platform mode for marketplace  
+**M4 (Q4 2026):** Visual policy builder  
 **Future:** Community-shared scheduler templates
 
 **The result:** Maximum flexibility without sacrificing security. 🐝🎭
@@ -365,15 +521,16 @@ rules:
 
 ## Key Takeaways
 
-1. **Two modes:** Platform (immutable) vs Home/Lab (customizable)
-2. **Platform mode:** Multi-tenant marketplace with built-in scheduler
-3. **Home/Lab mode:** Write custom Rhai scripts or YAML configs
-4. **40+ helpers:** Worker selection, GPU queries, quota checks
-5. **Sandboxed:** 50ms timeout, memory limits, type-safe
-6. **Web UI:** Visual policy builder for non-programmers
-7. **No marketplace:** Users don't sell scripts, they write for themselves
+1. **Current (M0/M1):** SimpleScheduler is ACTIVE with real-time GPU telemetry
+2. **TelemetryRegistry:** Stores ProcessStats from all workers (CPU, GPU, RAM, model)
+3. **Real-time data:** Hives send telemetry every 1s via heartbeats
+4. **Idle detection:** Uses `gpu_util_pct == 0.0` to find available workers
+5. **Future (M2+):** Rhai will wrap TelemetryRegistry with programmable logic
+6. **Two modes:** Platform (immutable) vs Home/Lab (customizable)
+7. **Sandboxed:** 50ms timeout, memory limits, type-safe
+8. **Web UI (M4):** Visual policy builder for non-programmers
 
-**This is the REAL Rhai implementation.** 🎭🐝
+**The foundation is READY. Rhai will add programmability on top.** 🎭🐝
 
 ---
 

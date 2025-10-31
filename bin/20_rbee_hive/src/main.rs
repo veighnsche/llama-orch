@@ -152,10 +152,23 @@ async fn main() -> anyhow::Result<()> {
     // - curl http://localhost:9000/health - SUCCESS (returns "ok")
     // ============================================================
 
+    // TEAM-374: Log debug mode status
+    #[cfg(debug_assertions)]
+    {
+        eprintln!("🔧 [HIVE] Running in DEBUG mode");
+        eprintln!("   - /dev/{{*path}} → Proxy to Vite dev server (port 7836)");
+        eprintln!("   - / → Static files (if built)");
+    }
+    #[cfg(not(debug_assertions))]
+    {
+        eprintln!("🚀 [HIVE] Running in RELEASE mode");
+        eprintln!("   - / → Embedded static files (production)");
+    }
+
     // TEAM-365: Create router with two different states
     // - HiveState for capabilities endpoint (needs queen_url)
     // - JobState for job endpoints (existing pattern)
-    let app = Router::new()
+    let mut app = Router::new()
         .route("/health", get(health_check))
         .route("/capabilities", get(get_capabilities))
         .with_state(hive_state.clone()) // TEAM-365: HiveState for capabilities
@@ -167,6 +180,20 @@ async fn main() -> anyhow::Result<()> {
         .route("/v1/jobs/{job_id}/stream", get(http::jobs::handle_stream_job)) // TEAM-291: Fixed :job_id → {job_id}
         .route("/v1/jobs/{job_id}", delete(http::jobs::handle_cancel_job)) // TEAM-305-FIX: Cancel job endpoint
         .with_state(job_state);
+
+    // TEAM-374: Development proxy - forwards /dev/* to Vite dev server (port 7836)
+    // CRITICAL: Axum requires {*path} syntax for wildcard capture, NOT *path
+    // Using *path will panic: "Path segments must not start with `*`"
+    // CRITICAL: Must be added BEFORE static router merge, otherwise static fallback catches it!
+    // CRITICAL: Need both /dev and /dev/{*path} to handle root and subpaths
+    app = app
+        .route("/dev", get(http::dev_proxy_handler))
+        .route("/dev/", get(http::dev_proxy_handler))
+        .route("/dev/{*path}", get(http::dev_proxy_handler));
+
+    // TEAM-374: TODO - Add static file serving for production
+    // For now, UI is accessed via /dev in development mode
+    // In production, we'll need to embed static files like Queen does
 
     // TEAM-335: Bind to 0.0.0.0 to allow remote access (needed for remote hives)
     // Localhost-only binding (127.0.0.1) would prevent health checks from remote machines

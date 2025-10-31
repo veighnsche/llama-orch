@@ -70,11 +70,15 @@ export function getAllowedOrigins(includeHttps = false): string[] {
 }
 
 /**
- * Get iframe URL for a service
+ * Get iframe URL for embedding services
+ * 
+ * TEAM-374: In dev mode, use /dev proxy for hive and queen
+ * This allows Keeper to load the UI from the backend's /dev proxy,
+ * which forwards to the Vite dev server. This avoids CORS issues.
  * 
  * @param service - Service name
- * @param isDev - Development mode flag
- * @param useHttps - Use HTTPS instead of HTTP (default: false)
+ * @param isDev - Whether in development mode
+ * @param useHttps - Whether to use HTTPS (default: false)
  * @returns URL string or empty string if service has no HTTP port
  * @throws Error if service doesn't support iframe embedding
  */
@@ -97,6 +101,15 @@ export function getIframeUrl(
   }
   
   const protocol = useHttps ? 'https' : 'http'
+  
+  // TEAM-374: In dev mode, use /dev proxy for hive and queen
+  // This loads the UI from the backend's /dev proxy instead of directly from Vite
+  // Backend proxies /dev → Vite dev server, avoiding CORS issues
+  if (isDev && (service === 'hive' || service === 'queen')) {
+    const prodPort = ports.prod
+    return `${protocol}://localhost:${prodPort}/dev`
+  }
+  
   return `${protocol}://localhost:${port}`
 }
 

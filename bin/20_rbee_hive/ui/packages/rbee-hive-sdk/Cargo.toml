@@ -26,8 +26,22 @@ js-sys = "0.3"
 serde = { version = "1.0", features = ["derive"] }
 serde-wasm-bindgen = "0.6"
 
+# TEAM-374: web-sys for SSE (EventSource)
+[dependencies.web-sys]
+version = "0.3"
+features = [
+  "EventSource",
+  "MessageEvent",
+  "Event",
+  "Request",
+  "RequestInit",
+  "Response",
+  "Window",
+  "console",
+]
+
 [dev-dependencies]
 wasm-bindgen-test = "0.3"
 
 [package.metadata.wasm-pack.profile.release]
-wasm-opt = ["-O3"]
+wasm-opt = false

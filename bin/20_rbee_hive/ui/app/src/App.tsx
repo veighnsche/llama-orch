@@ -1,9 +1,8 @@
 // TEAM-353: Hive UI - Worker & Model Management
+// TEAM-374: Added HeartbeatMonitor for real-time worker updates
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { logStartupMode } from '@rbee/dev-utils'
-import { useState } from 'react'
-import viteLogo from '/vite.svg'
-import reactLogo from './assets/react.svg'
+import { useState, useEffect } from 'react'
 import './App.css'
 
 // TEAM-353: Use shared startup logging
@@ -19,27 +18,83 @@ const queryClient = new QueryClient({
   },
 })
 
-function App() {
-  const [count, setCount] = useState(0)
+// TEAM-374: Heartbeat status component
+function HeartbeatStatus() {
+  const [connected, setConnected] = useState(false)
+  const [workerCount, setWorkerCount] = useState(0)
+  const [lastUpdate, setLastUpdate] = useState<string>('')
 
+  useEffect(() => {
+    let monitor: any = null
+
+    const initMonitor = async () => {
+      try {
+        // TEAM-374: Import WASM SDK
+        const { HeartbeatMonitor } = await import('@rbee/rbee-hive-sdk')
+        
+        const baseUrl = import.meta.env.DEV 
+          ? 'http://localhost:7835'  // Dev: direct to hive
+          : window.location.origin    // Prod: same origin
+
+        monitor = new HeartbeatMonitor(baseUrl)
+        
+        monitor.start((event: any) => {
+          setConnected(true)
+          setWorkerCount(event.workers?.length || 0)
+          setLastUpdate(new Date().toLocaleTimeString())
+        })
+      } catch (err) {
+        console.error('Failed to start heartbeat monitor:', err)
+      }
+    }
+
+    initMonitor()
+
+    return () => {
+      if (monitor) {
+        monitor.stop()
+      }
+    }
+  }, [])
+
+  return (
+    <div style={{ 
+      padding: '1rem', 
+      border: '1px solid #646cff', 
+      borderRadius: '8px',
+      marginBottom: '2rem'
+    }}>
+      <h2>🐝 Hive Heartbeat</h2>
+      <div style={{ display: 'flex', gap: '2rem', marginTop: '1rem' }}>
+        <div>
+          <strong>Status:</strong>{' '}
+          <span style={{ color: connected ? '#4ade80' : '#f87171' }}>
+            {connected ? '🟢 Connected' : '🔴 Disconnected'}
+          </span>
+        </div>
+        <div>
+          <strong>Workers:</strong> {workerCount}
+        </div>
+        {lastUpdate && (
+          <div>
+            <strong>Last Update:</strong> {lastUpdate}
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}
+
+function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <div>
-        <a href="https://vite.dev" target="_blank" rel="noopener">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank" rel="noopener">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>count is {count}</button>
-        <p>
-          Edit <code>src/App.tsx</code> and save to test HMR
+        <h1>🐝 Hive UI</h1>
+        <HeartbeatStatus />
+        <p className="read-the-docs">
+          Worker & Model Management Dashboard
         </p>
       </div>
-      <p className="read-the-docs">Click on the Vite and React logos to learn more</p>
     </QueryClientProvider>
   )
 }
