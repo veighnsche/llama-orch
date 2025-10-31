@@ -29,8 +29,8 @@ pub struct SchedulerState {
     pub registry: Arc<JobRegistry<String>>,
     // TEAM-290: DELETED config field (file-based config deprecated)
     /// TEAM-190: Runtime registry for live hive/worker state
-    /// TEAM-262: Renamed to WorkerRegistry (field name kept for compatibility)
-    pub hive_registry: Arc<queen_rbee_worker_registry::WorkerRegistry>,
+    /// TEAM-374: Updated to use TelemetryRegistry
+    pub hive_registry: Arc<queen_rbee_telemetry_registry::TelemetryRegistry>,
 }
 
 /// Convert HTTP state to router state

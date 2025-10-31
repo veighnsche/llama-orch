@@ -79,11 +79,11 @@ pub use types::{JobRequest, ScheduleResult, SchedulerError};
 ///
 /// ```rust,no_run
 /// use queen_rbee_scheduler::{SimpleScheduler, JobRequest};
-/// use queen_rbee_worker_registry::WorkerRegistry;
+/// use queen_rbee_telemetry_registry::TelemetryRegistry; // TEAM-374
 /// use std::sync::Arc;
 ///
 /// # async fn example() -> anyhow::Result<()> {
-/// let registry = Arc::new(WorkerRegistry::new());
+/// let registry = Arc::new(TelemetryRegistry::new()); // TEAM-374
 /// let scheduler = SimpleScheduler::new(registry);
 ///
 /// let request = JobRequest {

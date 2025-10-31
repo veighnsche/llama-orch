@@ -60,32 +60,32 @@ async fn main() -> Result<()> {
     // Generic over String for now (will stream text tokens)
     let job_server: Arc<JobRegistry<String>> = Arc::new(JobRegistry::new());
 
-    // TEAM-188: Initialize worker registry (RAM) for runtime state
-    // TEAM-262: Renamed from hive_registry to worker_registry
-    let worker_registry = Arc::new(queen_rbee_worker_registry::WorkerRegistry::new());
+    // TEAM-188: Initialize telemetry registry (RAM) for runtime state
+    // TEAM-374: Renamed from worker_registry to telemetry (stores hives + workers)
+    let telemetry = Arc::new(queen_rbee_telemetry_registry::TelemetryRegistry::new());
 
     // TODO: Initialize other registries when migrated
     // - beehive_registry (SQLite catalog + RAM registry)
-    // - worker_registry (RAM)
-    // TEAM-290: No config loading (file-based config deprecated)
+    // - model_registry (SQLite catalog + RAM registry)
 
-    let app = create_router(job_server, worker_registry);
-    let addr = SocketAddr::from(([127, 0, 0, 1], args.port));
-
-    n!("listen", "Listening on http://{}", addr);
-
-    n!("ready", "Ready to accept connections");
-
-    // TEAM-365: Start hive discovery task
-    let queen_url = format!("http://127.0.0.1:{}", args.port);
+    // TEAM-365: Start hive discovery after 5s delay
+    let queen_url = format!("http://localhost:{}", args.port);
     tokio::spawn(async move {
         if let Err(e) = discovery::discover_hives_on_startup(&queen_url).await {
             n!("discovery_error", "❌ Hive discovery failed: {}", e);
         }
     });
 
+    // TEAM-152: Start HTTP server
+    let addr = SocketAddr::from(([0, 0, 0, 0], args.port));
+    let router = create_router(job_server, telemetry);
+
+    n!("listen", "Listening on http://{}", addr);
+
+    n!("ready", "Ready to accept connections");
+
     let listener = tokio::net::TcpListener::bind(addr).await?;
-    axum::serve(listener, app).await.map_err(|e| {
+    axum::serve(listener, router).await.map_err(|e| {
         n!("error", "Server error: {}", e);
         anyhow::anyhow!("Server failed: {}", e)
     })
@@ -97,42 +97,41 @@ async fn main() -> Result<()> {
 /// TEAM-156: Added hive catalog to state
 /// TEAM-158: Added heartbeat endpoint for hive health monitoring
 /// TEAM-290: Removed config parameter (file-based config deprecated)
+/// TEAM-374: Updated to use TelemetryRegistry
 /// Currently health, shutdown, job, and heartbeat endpoints are active.
 /// TODO: Uncomment http::routes::create_router() when registries are migrated
 fn create_router(
     job_server: Arc<JobRegistry<String>>,
-    worker_registry: Arc<queen_rbee_worker_registry::WorkerRegistry>, // TEAM-262: Renamed
+    telemetry: Arc<queen_rbee_telemetry_registry::TelemetryRegistry>, // TEAM-374: Renamed
 ) -> axum::Router {
     // TEAM-164: Create states for HTTP endpoints
     // TEAM-190: Added hive_registry to job_state for Status operation
     // TEAM-290: Removed config from job_state (file-based config deprecated)
+    // TEAM-374: Updated to use telemetry registry
     let job_state = http::SchedulerState {
         registry: job_server,
-        hive_registry: worker_registry.clone(), // TEAM-262: Still named hive_registry in struct
+        hive_registry: telemetry.clone(), // TEAM-374: Now uses TelemetryRegistry
     };
-
-    // TEAM-284: Initialize both worker and hive registries
-    let hive_registry = Arc::new(queen_rbee_hive_registry::HiveRegistry::new());
 
     // TEAM-288: Create broadcast channel for real-time heartbeat events
     // Capacity of 100 events - if clients are slow, old events are dropped
     let (event_tx, _) = tokio::sync::broadcast::channel(100);
 
     let heartbeat_state = http::HeartbeatState {
-        worker_registry: worker_registry.clone(),
-        hive_registry: hive_registry.clone(),
+        worker_registry: telemetry.clone(), // TEAM-374: Now uses TelemetryRegistry
+        hive_registry: telemetry.clone(), // TEAM-374: Now uses TelemetryRegistry
         event_tx, // TEAM-288: Broadcast channel for real-time events
     };
 
     // TEAM-364: Spawn background task for automatic stale worker cleanup (Critical Issue #4)
     // Removes workers that haven't sent heartbeat in 90 seconds
-    let hive_registry_cleanup = Arc::clone(&hive_registry);
+    let telemetry_cleanup = Arc::clone(&telemetry);
     tokio::spawn(async move {
         let mut interval = tokio::time::interval(std::time::Duration::from_secs(60));
         loop {
             interval.tick().await;
-            hive_registry_cleanup.cleanup_stale();
-            tracing::debug!("Cleaned up stale workers from hive registry");
+            telemetry_cleanup.cleanup_stale();
+            tracing::debug!("Cleaned up stale workers from telemetry registry");
         }
     });
 
@@ -164,8 +163,9 @@ fn create_router(
         // TEAM-186: V1 API endpoints (matches API_REFERENCE.md)
         .route("/v1/shutdown", post(http::handle_shutdown)) // TEAM-339: Graceful shutdown endpoint
         .route("/v1/info", get(http::handle_info)) // TEAM-292/CLEANUP: Queen info (service discovery + build info)
-        // TEAM-363: Only hive heartbeat (workers monitored via hive telemetry)
-        .route("/v1/hive-heartbeat", post(http::handle_hive_heartbeat)) // TEAM-362: Hive telemetry with workers
+        // TEAM-374: DELETED /v1/hive-heartbeat route - replaced by SSE subscription
+        // TEAM-373: Hive ready callback (discovery) - triggers SSE subscription
+        .route("/v1/hive/ready", post(http::handle_hive_ready)) // TEAM-373: One-time discovery callback
         .route("/v1/heartbeats/stream", get(http::handle_heartbeat_stream)) // TEAM-285: Live heartbeat streaming for web UI
         .with_state(heartbeat_state)
         .route("/v1/jobs", post(http::handle_create_job))

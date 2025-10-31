@@ -23,8 +23,8 @@ futures = "0.3"
 # Narration
 observability-narration-core = { path = "../../99_shared_crates/narration-core" }
 
-# Worker registry for finding workers
-queen-rbee-worker-registry = { path = "../worker-registry" }
+# TEAM-374: Telemetry registry for finding workers
+queen-rbee-telemetry-registry = { path = "../telemetry-registry" }
 
 # TODO M2: Add Rhai for programmable scheduler
 # rhai = "1.16"

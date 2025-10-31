@@ -40,7 +40,7 @@ mod queen_check;
 #[derive(Clone)]
 pub struct JobState {
     pub registry: Arc<JobRegistry<String>>,
-    pub hive_registry: Arc<queen_rbee_worker_registry::WorkerRegistry>,
+    pub hive_registry: Arc<queen_rbee_telemetry_registry::TelemetryRegistry>, // TEAM-374
 }
 
 /// Response from job creation
@@ -95,7 +95,7 @@ async fn route_operation(
     job_id: String,
     payload: serde_json::Value,
     registry: Arc<JobRegistry<String>>,
-    hive_registry: Arc<queen_rbee_worker_registry::WorkerRegistry>,
+    hive_registry: Arc<queen_rbee_telemetry_registry::TelemetryRegistry>, // TEAM-374
 ) -> Result<()> {
     let state = JobState { registry, hive_registry };
     // Parse payload into typed Operation enum
@@ -129,14 +129,17 @@ async fn route_operation(
             }
 
             // Display workers
+            // TEAM-374: ProcessStats has different fields than WorkerInfo
             let mut all_rows = Vec::new();
             for worker in &online_workers {
                 all_rows.push(serde_json::json!({
-                    "worker_id": worker.id,
-                    "model": worker.model_id,
-                    "device": worker.device,
-                    "port": worker.port,
-                    "status": format!("{:?}", worker.status),
+                    "worker_id": format!("{}-{}", worker.group, worker.instance),
+                    "model": worker.model.as_deref().unwrap_or("unknown"),
+                    "device": &worker.group,
+                    "port": worker.instance.parse::<u16>().unwrap_or(0),
+                    "status": if worker.gpu_util_pct == 0.0 { "idle" } else { "busy" },
+                    "gpu_util": format!("{:.1}%", worker.gpu_util_pct),
+                    "vram_mb": worker.vram_mb,
                 }));
             }
 

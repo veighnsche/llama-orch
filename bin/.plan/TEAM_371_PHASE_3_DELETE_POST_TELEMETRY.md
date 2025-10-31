@@ -1,7 +1,6 @@
-# TEAM-371 Phase 3: DELETE Old POST Telemetry Logic
+# TEAM-371 Phase 3: DELETE Old POST Telemetry Logic + Registry Consolidation
 
 **Status:** 📋 READY FOR IMPLEMENTATION  
-**Duration:** 0.5 day  
 **Team:** TEAM-374 (or whoever implements this)  
 **Depends on:** Phase 2 complete (Queen subscribes to SSE)
 
@@ -9,9 +8,107 @@
 
 ## Mission
 
-DELETE old POST-based continuous telemetry logic now that SSE is working.
+1. **DELETE** old POST-based continuous telemetry logic now that SSE is working
+2. **CONSOLIDATE** registries: Rename `hive-registry` → `telemetry-registry`, DELETE `worker-registry`
 
 **RULE ZERO:** Break cleanly. Let compiler find all call sites. No backwards compatibility.
+
+---
+
+## Part A: Registry Consolidation (Do First)
+
+### Step 1: Rename Crate Directory
+
+```bash
+mv bin/15_queen_rbee_crates/hive-registry \
+   bin/15_queen_rbee_crates/telemetry-registry
+```
+
+### Step 2: Update Cargo.toml
+
+**File:** `bin/15_queen_rbee_crates/telemetry-registry/Cargo.toml`
+
+```toml
+[package]
+name = "queen-rbee-telemetry-registry"
+```
+
+### Step 3: Rename Struct in Code
+
+**File:** `bin/15_queen_rbee_crates/telemetry-registry/src/registry.rs`
+
+```rust
+// Rename HiveRegistry → TelemetryRegistry
+pub struct TelemetryRegistry {
+    hives: HeartbeatRegistry<HiveHeartbeat>,
+    workers: RwLock<HashMap<String, Vec<ProcessStats>>>,
+}
+```
+
+### Step 4: Update lib.rs
+
+**File:** `bin/15_queen_rbee_crates/telemetry-registry/src/lib.rs`
+
+```rust
+pub use registry::TelemetryRegistry;
+```
+
+### Step 5: Delete worker-registry
+
+```bash
+rm -rf bin/15_queen_rbee_crates/worker-registry
+```
+
+### Step 6: Update Queen Dependencies
+
+**File:** `bin/10_queen_rbee/Cargo.toml`
+
+```toml
+# DELETE:
+# queen-rbee-hive-registry = { path = "../15_queen_rbee_crates/hive-registry" }
+# queen-rbee-worker-registry = { path = "../15_queen_rbee_crates/worker-registry" }
+
+# ADD:
+queen-rbee-telemetry-registry = { path = "../15_queen_rbee_crates/telemetry-registry" }
+```
+
+### Step 7: Update All Imports in Queen
+
+**Files to update:**
+- `bin/10_queen_rbee/src/main.rs`
+- `bin/10_queen_rbee/src/http/heartbeat.rs`
+- `bin/10_queen_rbee/src/http/heartbeat_stream.rs`
+- `bin/10_queen_rbee/src/hive_subscriber.rs`
+- `bin/10_queen_rbee/src/job_router.rs`
+
+```rust
+// BEFORE:
+use queen_rbee_hive_registry::HiveRegistry;
+use queen_rbee_worker_registry::WorkerRegistry;
+
+// AFTER:
+use queen_rbee_telemetry_registry::TelemetryRegistry;
+```
+
+### Step 8: Fix Field Names
+
+**File:** `bin/10_queen_rbee/src/job_router.rs`
+
+```rust
+// BEFORE (confusing):
+pub struct JobState {
+    pub hive_registry: Arc<queen_rbee_worker_registry::WorkerRegistry>,
+}
+
+// AFTER (clear):
+pub struct JobState {
+    pub telemetry: Arc<TelemetryRegistry>,
+}
+```
+
+---
+
+## Part B: DELETE Old POST Telemetry Logic
 
 ---
 

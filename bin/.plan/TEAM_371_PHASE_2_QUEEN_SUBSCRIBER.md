@@ -259,29 +259,99 @@ mod hive_subscriber; // TEAM-373: Subscribe to hive SSE streams
 
 **MODIFY:** `bin/10_queen_rbee/src/discovery.rs`
 
-**In `discover_single_hive()` function (around line 132):**
+**Update function signature to accept state:**
 
 ```rust
-if response.status().is_success() {
-    n!("discovery_success", "✅ Discovered hive: {}", target.host);
+async fn discover_single_hive(
+    target: &SshTarget, 
+    queen_url: &str,
+    hive_registry: Arc<queen_rbee_hive_registry::HiveRegistry>,
+    event_tx: broadcast::Sender<crate::http::HeartbeatEvent>,
+) -> Result<()> {
+    let url = format!(
+        "http://{}:7835/capabilities?queen_url={}",
+        target.hostname,
+        urlencoding::encode(queen_url)
+    );
     
-    // TEAM-373: Start SSE subscription immediately
-    let hive_url = format!("http://{}:7835", target.hostname);
-    let hive_id = target.host.clone(); // TODO: Get from response
+    n!("discovery_hive", "🔍 Discovering hive: {} ({})", target.host, target.hostname);
     
-    // TODO: Pass hive_registry and event_tx from main
-    // crate::hive_subscriber::start_hive_subscription(
-    //     hive_url,
-    //     hive_id,
-    //     hive_registry,
-    //     event_tx,
-    // );
-} else {
-    // ...
+    let client = reqwest::Client::new();
+    let response = client
+        .get(&url)
+        .timeout(Duration::from_secs(10))
+        .send()
+        .await?;
+    
+    if response.status().is_success() {
+        // Parse capabilities response to get hive_id
+        let capabilities: CapabilitiesResponse = response.json().await?;
+        let hive_id = target.host.clone(); // Use SSH config name as hive_id
+        let hive_url = format!("http://{}:7835", target.hostname);
+        
+        n!("discovery_success", "✅ Discovered hive: {} ({})", target.host, hive_id);
+        
+        // TEAM-373: Start SSE subscription immediately after discovery
+        crate::hive_subscriber::start_hive_subscription(
+            hive_url,
+            hive_id,
+            hive_registry,
+            event_tx,
+        );
+        
+        n!("discovery_subscribed", "📡 Subscribed to hive {} SSE stream", target.host);
+    } else {
+        n!("discovery_failed", "❌ Failed to discover hive {}: {}", target.host, response.status());
+        anyhow::bail!("Failed to discover hive {}: {}", target.host, response.status());
+    }
+    
+    Ok(())
 }
 ```
 
-**Note:** Full discovery integration requires passing state, defer to Phase 3 cleanup.
+**Update `discover_hives_on_startup()` to pass state:**
+
+```rust
+pub async fn discover_hives_on_startup(
+    queen_url: &str,
+    hive_registry: Arc<queen_rbee_hive_registry::HiveRegistry>,
+    event_tx: broadcast::Sender<crate::http::HeartbeatEvent>,
+) -> Result<()> {
+    // ... existing validation and SSH config reading ...
+    
+    // TEAM-373: Discover all hives in parallel with state
+    let mut tasks = vec![];
+    for target in unique_targets {
+        let queen_url = queen_url.to_string();
+        let registry = Arc::clone(&hive_registry);
+        let tx = event_tx.clone();
+        
+        tasks.push(tokio::spawn(async move {
+            discover_single_hive(&target, &queen_url, registry, tx).await
+        }));
+    }
+    
+    // ... existing result collection ...
+}
+```
+
+**Update main.rs to pass state to discovery:**
+
+```rust
+// In main.rs, after creating heartbeat_state
+let discovery_registry = Arc::clone(&hive_registry);
+let discovery_tx = event_tx.clone();
+
+tokio::spawn(async move {
+    if let Err(e) = discovery::discover_hives_on_startup(
+        &queen_url,
+        discovery_registry,
+        discovery_tx,
+    ).await {
+        n!("discovery_error", "❌ Hive discovery failed: {}", e);
+    }
+});
+```
 
 ---
 

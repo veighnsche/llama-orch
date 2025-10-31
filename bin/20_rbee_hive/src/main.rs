@@ -32,6 +32,7 @@ use std::net::SocketAddr;
 use std::sync::atomic::{AtomicBool, Ordering}; // TEAM-365: Atomic for heartbeat control
 use std::sync::Arc;
 use tokio::sync::RwLock; // TEAM-365: RwLock for dynamic queen_url
+use tokio::sync::broadcast; // TEAM-372: For SSE broadcast channel
 
 #[derive(Parser, Debug)]
 #[command(name = "rbee-hive")]
@@ -102,6 +103,23 @@ async fn main() -> anyhow::Result<()> {
         hive_info: hive_info.clone(),
     });
 
+    // TEAM-372: Create broadcast channel for SSE heartbeat stream
+    // Capacity of 100 events - if clients are slow, old events are dropped
+    let (heartbeat_tx, _) = broadcast::channel::<http::heartbeat_stream::HiveHeartbeatEvent>(100);
+
+    let heartbeat_stream_state = Arc::new(http::heartbeat_stream::HeartbeatStreamState {
+        hive_info: hive_info.clone(),
+        event_tx: heartbeat_tx.clone(),
+    });
+
+    // TEAM-372: Start telemetry broadcaster (replaces POST loop)
+    let _broadcaster_handle = http::heartbeat_stream::start_telemetry_broadcaster(
+        hive_info.clone(),
+        heartbeat_tx,
+    );
+
+    tracing::info!("SSE telemetry broadcaster started");
+
     // TEAM-261: Create HTTP state for job endpoints (for backwards compatibility)
     // TEAM-268: Added model_catalog to state
     // TEAM-274: Added worker_catalog to state
@@ -141,6 +159,9 @@ async fn main() -> anyhow::Result<()> {
         .route("/health", get(health_check))
         .route("/capabilities", get(get_capabilities))
         .with_state(hive_state.clone()) // TEAM-365: HiveState for capabilities
+        // TEAM-372: SSE heartbeat stream (for Queen and Hive SDK)
+        .route("/v1/heartbeats/stream", get(http::handle_heartbeat_stream))
+        .with_state(heartbeat_stream_state)
         .route("/v1/shutdown", post(http::handle_shutdown)) // TEAM-339: Graceful shutdown endpoint
         .route("/v1/jobs", post(http::jobs::handle_create_job))
         .route("/v1/jobs/{job_id}/stream", get(http::jobs::handle_stream_job)) // TEAM-291: Fixed :job_id → {job_id}

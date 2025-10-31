@@ -14,6 +14,7 @@
 //! TEAM-217: Investigated Oct 22, 2025 - Behavior inventory complete
 
 pub mod hive_forwarder;
+pub mod hive_subscriber; // TEAM-373: Subscribe to hive SSE streams
 pub mod http; // TEAM-186: Reorganized into http/ folder with mod.rs (includes health, heartbeat)
               // TEAM-275: Removed inference_scheduler module - moved to queen-rbee-inference-scheduler crate
 pub mod job_router; // TEAM-186: Job routing and operation dispatch

@@ -4,7 +4,7 @@ use crate::types::{
 };
 use crate::JobScheduler;
 use observability_narration_core::NarrationFactory;
-use queen_rbee_worker_registry::WorkerRegistry;
+use queen_rbee_telemetry_registry::TelemetryRegistry; // TEAM-374
 use std::sync::Arc;
 
 const NARRATE: NarrationFactory = NarrationFactory::new("scheduler");
@@ -30,12 +30,12 @@ const NARRATE: NarrationFactory = NarrationFactory::new("scheduler");
 ///
 /// See: `.business/stakeholders/RHAI_PROGRAMMABLE_SCHEDULER.md`
 pub struct SimpleScheduler {
-    worker_registry: Arc<WorkerRegistry>,
+    worker_registry: Arc<TelemetryRegistry>, // TEAM-374
 }
 
 impl SimpleScheduler {
     /// Create a new simple scheduler
-    pub fn new(worker_registry: Arc<WorkerRegistry>) -> Self {
+    pub fn new(worker_registry: Arc<TelemetryRegistry>) -> Self { // TEAM-374
         Self { worker_registry }
     }
 
@@ -233,21 +233,26 @@ impl JobScheduler for SimpleScheduler {
             SchedulerError::NoWorkersAvailable { model: model.clone() }
         })?;
 
+        // TEAM-374: ProcessStats uses different fields than WorkerInfo
+        let worker_id = format!("{}-{}", worker.group, worker.instance);
+        let worker_port: u16 = worker.instance.parse().unwrap_or(8080);
+        let model_name = worker.model.clone().unwrap_or_else(|| model.to_string());
+        
         NARRATE
             .action("infer_worker_sel")
             .job_id(job_id)
-            .context(&worker.id)
+            .context(&worker_id)
             .context(model)
-            .context(&format!("localhost:{}", worker.port))
+            .context(&format!("localhost:{}", worker_port))
             .human("✅ Selected worker '{}' for model '{}' at {}")
             .emit();
 
         Ok(ScheduleResult {
-            worker_id: worker.id.clone(),
-            worker_url: format!("http://localhost:{}", worker.port),
-            worker_port: worker.port,
-            model: worker.model_id.clone(),
-            device: worker.device.clone(),
+            worker_id,
+            worker_url: format!("http://localhost:{}", worker_port),
+            worker_port,
+            model: model_name,
+            device: worker.group.clone(), // TEAM-374: Use group as device
         })
     }
 }

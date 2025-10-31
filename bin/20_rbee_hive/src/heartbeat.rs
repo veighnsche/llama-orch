@@ -7,7 +7,8 @@
 //! TEAM-367: Added capabilities support for Queen restart detection
 
 use anyhow::Result;
-use hive_contract::{HiveDevice, HiveHeartbeat, HiveInfo};
+use hive_contract::heartbeat::HiveDevice; // TEAM-372: Import from heartbeat module
+use hive_contract::{HiveHeartbeat, HiveInfo};
 use observability_narration_core::n; // TEAM-365: Narration for discovery
 use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering}; // TEAM-366: Circuit breaker
 use std::sync::Arc; // TEAM-366: Shared state
@@ -47,47 +48,50 @@ fn detect_capabilities() -> Vec<HiveDevice> {
     devices
 }
 
-/// Send telemetry to queen
+// TEAM-374: DELETED send_heartbeat_to_queen() - replaced by SSE stream
+// Old POST-based continuous telemetry is deprecated.
+// Hive now broadcasts via SSE GET /v1/heartbeats/stream
+
+/// Send ready callback to queen (one-time discovery)
 ///
-/// TEAM-361: Sends HiveHeartbeat with worker telemetry every 1s
-/// TEAM-367: Optionally includes capabilities during discovery/rediscovery
-pub async fn send_heartbeat_to_queen(
-    hive_info: &HiveInfo, 
+/// TEAM-374: Replaces send_heartbeat_to_queen() for discovery.
+/// This is a ONE-TIME callback that tells Queen "I'm ready, subscribe to my SSE stream".
+/// After this, Queen subscribes to GET /v1/heartbeats/stream for continuous telemetry.
+async fn send_ready_callback_to_queen(
+    hive_info: &HiveInfo,
     queen_url: &str,
-    capabilities: Option<Vec<HiveDevice>>,
 ) -> Result<()> {
-    tracing::debug!("Sending hive telemetry to queen at {}", queen_url);
+    tracing::debug!("Sending ready callback to queen at {}", queen_url);
 
-    // TEAM-361: Collect worker telemetry from cgroup + GPU
-    let workers = rbee_hive_monitor::collect_all_workers().await.unwrap_or_else(|e| {
-        tracing::warn!("Failed to collect worker telemetry: {}", e);
-        Vec::new()
-    });
+    #[derive(serde::Serialize)]
+    struct HiveReadyCallback {
+        hive_id: String,
+        hive_url: String,
+    }
 
-    tracing::trace!("Collected telemetry for {} workers", workers.len());
-
-    // TEAM-367: Build heartbeat with optional capabilities
-    let heartbeat = if let Some(caps) = capabilities {
-        tracing::debug!("Including {} devices in heartbeat (discovery mode)", caps.len());
-        HiveHeartbeat::with_capabilities(hive_info.clone(), workers, caps)
-    } else {
-        HiveHeartbeat::with_workers(hive_info.clone(), workers)
+    let callback = HiveReadyCallback {
+        hive_id: hive_info.id.clone(),
+        hive_url: format!("http://{}:{}", hive_info.hostname, hive_info.port),
     };
 
-    // TEAM-364: Add 5-second timeout to prevent hangs (Critical Issue #6)
+    // TEAM-374: 5-second timeout
     let client = reqwest::Client::builder()
         .timeout(std::time::Duration::from_secs(5))
         .build()?;
-    let response =
-        client.post(format!("{}/v1/hive-heartbeat", queen_url)).json(&heartbeat).send().await?;
+    
+    let response = client
+        .post(format!("{}/v1/hive/ready", queen_url))
+        .json(&callback)
+        .send()
+        .await?;
 
     if !response.status().is_success() {
         let status = response.status();
         let body = response.text().await.unwrap_or_else(|_| "unknown error".to_string());
-        anyhow::bail!("Telemetry failed with status {}: {}", status, body);
+        anyhow::bail!("Ready callback failed with status {}: {}", status, body);
     }
 
-    tracing::trace!("Hive telemetry sent successfully");
+    tracing::debug!("Ready callback sent successfully");
     Ok(())
 }
 
@@ -167,15 +171,12 @@ async fn start_discovery_with_backoff(hive_info: HiveInfo, queen_url: String) {
         
         n!("discovery_attempt", "🔍 Discovery attempt {} (delay: {}s)", attempt + 1, delay);
         
-        // TEAM-367: Send discovery heartbeat WITH capabilities
-        let capabilities = detect_capabilities();
-        n!("discovery_capabilities", "🔍 Detected {} device(s) to send", capabilities.len());
-        
-        match send_heartbeat_to_queen(&hive_info, &queen_url, Some(capabilities)).await {
+        // TEAM-374: Send ready callback (one-time, no capabilities needed)
+        // Queen will subscribe to our SSE stream after receiving this
+        match send_ready_callback_to_queen(&hive_info, &queen_url).await {
             Ok(_) => {
-                n!("discovery_success", "✅ Discovery successful! Starting normal telemetry");
-                // TEAM-365: Start normal telemetry task
-                start_normal_telemetry_task(hive_info, queen_url).await;
+                n!("discovery_success", "✅ Discovery successful! Queen will subscribe to our SSE stream");
+                // TEAM-374: No telemetry task needed - SSE broadcaster handles it
                 return;
             }
             Err(e) => {
@@ -188,67 +189,7 @@ async fn start_discovery_with_backoff(hive_info: HiveInfo, queen_url: String) {
     n!("discovery_stopped", "⏸️  All discovery attempts failed. Waiting for Queen to discover us via /capabilities");
 }
 
-/// TEAM-365: Normal telemetry task (runs after discovery)
-/// TEAM-366: Added circuit breaker for edge case #5
-/// TEAM-367: Added Queen restart detection - triggers rediscovery on 400/404
-///
-/// Sends worker telemetry to Queen every 1s for real-time scheduling
-async fn start_normal_telemetry_task(hive_info: HiveInfo, queen_url: String) {
-    tokio::spawn(async move {
-        // TEAM-361: Send telemetry every 1s for real-time scheduling
-        let mut interval = tokio::time::interval(tokio::time::Duration::from_secs(1));
-        
-        // TEAM-366: EDGE CASE #5 - Circuit breaker to prevent log flooding
-        let consecutive_failures = Arc::new(AtomicUsize::new(0));
-        let max_failures = 10; // Stop logging after 10 consecutive failures
-
-        loop {
-            interval.tick().await;
-
-            // TEAM-361: Collect and send worker telemetry (no capabilities)
-            match send_heartbeat_to_queen(&hive_info, &queen_url, None).await {
-                Ok(_) => {
-                    // TEAM-366: Reset circuit breaker on success
-                    let prev = consecutive_failures.swap(0, Ordering::SeqCst);
-                    if prev >= max_failures {
-                        n!("heartbeat_recovered", "✅ Heartbeat recovered after {} failures", prev);
-                    }
-                }
-                Err(e) => {
-                    let failures = consecutive_failures.fetch_add(1, Ordering::SeqCst) + 1;
-                    
-                    // TEAM-367: EDGE CASE #4 - Detect Queen restart (400/404/connection refused)
-                    // Queen restart means it lost all hive state, needs rediscovery
-                    let error_str = e.to_string();
-                    let is_queen_restart = error_str.contains("status 400") 
-                        || error_str.contains("status 404")
-                        || error_str.contains("connection refused")
-                        || error_str.contains("Connection refused");
-                    
-                    if failures == 1 && is_queen_restart {
-                        n!("queen_restart_detected", "⚠️  Queen restart detected! Starting rediscovery with capabilities...");
-                        
-                        // TEAM-367: Restart discovery - this task will exit, new one starts
-                        start_discovery_with_backoff(hive_info.clone(), queen_url.clone()).await;
-                        return; // Exit this task, discovery will spawn new telemetry task
-                    }
-                    
-                    // TEAM-366: Only log first failure and every 60th failure after threshold
-                    if failures == 1 {
-                        tracing::warn!("Failed to send hive telemetry: {}", e);
-                    } else if failures == max_failures {
-                        tracing::error!(
-                            "Heartbeat failing consistently ({} consecutive failures). \
-                            Suppressing further logs. Queen may be down.",
-                            failures
-                        );
-                    } else if failures > max_failures && failures % 60 == 0 {
-                        tracing::warn!("Still failing: {} consecutive heartbeat failures", failures);
-                    }
-                }
-            }
-        }
-    });
-}
-
+// TEAM-374: DELETED start_normal_telemetry_task() - replaced by SSE broadcaster
+// Old POST-based continuous telemetry (1s interval) is deprecated.
+// Hive now broadcasts telemetry via SSE stream (heartbeat_stream.rs)
 // TEAM-361: Worker telemetry collection implemented in rbee-hive-monitor crate

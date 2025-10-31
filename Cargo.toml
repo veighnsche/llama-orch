@@ -17,9 +17,9 @@ members = [
     # RBEE-KEEPER CRATES — CLI tool crates
     # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
     # TEAM-323: DELETED queen-lifecycle and hive-lifecycle - use daemon-lifecycle directly (RULE ZERO)
+    # TEAM-374: DELETED worker-registry and hive-registry - consolidated into telemetry-registry
     
-    "bin/15_queen_rbee_crates/worker-registry",  # TEAM-262: Renamed from hive-registry
-    "bin/15_queen_rbee_crates/hive-registry",    # TEAM-284: New hive registry
+    "bin/15_queen_rbee_crates/telemetry-registry",  # TEAM-374: Telemetry registry (hives + workers)
     
     # rbee-hive crates (NO CLI!)
     "bin/25_rbee_hive_crates/artifact-catalog",  # TEAM-273: Shared catalog abstraction

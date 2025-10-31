@@ -200,10 +200,12 @@ async fn route_operation(
             ];
 
             // TEAM-359: Start worker with monitoring (cgroup on Linux)
+            // TEAM-372: Fixed API - use with_monitor_group + with_monitor_instance
             let base_url = format!("http://localhost:{}", port);
             let daemon_config = HttpDaemonConfig::new(&worker_id, &base_url)
                 .with_args(args)
-                .with_monitoring("llm", port.to_string());  // TEAM-359: group=llm, instance=port
+                .with_monitor_group("llm")
+                .with_monitor_instance(port.to_string());
             
             let config = StartConfig {
                 daemon_config,

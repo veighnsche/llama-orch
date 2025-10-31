@@ -57,8 +57,11 @@ fn create_queen_heartbeat(state: &HeartbeatState) -> HeartbeatEvent {
     let hives_online = state.hive_registry.count_online();
     let hives_available = state.hive_registry.count_available();
 
+    // TEAM-374: ProcessStats doesn't have id field, use group-instance format
     let worker_ids: Vec<String> =
-        state.worker_registry.list_online_workers().into_iter().map(|w| w.id).collect();
+        state.worker_registry.list_online_workers().into_iter()
+            .map(|w| format!("{}-{}", w.group, w.instance))
+            .collect();
 
     let hive_ids: Vec<String> =
         state.hive_registry.list_online_hives().into_iter().map(|h| h.id).collect();

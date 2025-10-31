@@ -5,8 +5,8 @@
 
 use axum::{extract::State, http::StatusCode, Json};
 use hive_contract::HiveHeartbeat; // TEAM-284: Hive heartbeat types
-use queen_rbee_hive_registry::HiveRegistry; // TEAM-284: Hive registry
-use queen_rbee_worker_registry::WorkerRegistry; // TEAM-262: Renamed
+use observability_narration_core::n; // TEAM-373: Narration for hive ready callback
+use queen_rbee_telemetry_registry::TelemetryRegistry; // TEAM-374: Telemetry registry
 use serde::{Deserialize, Serialize}; // TEAM-288: Added Deserialize for HeartbeatEvent
 use std::sync::Arc;
 use tokio::sync::broadcast; // TEAM-288: Broadcast channel for real-time events
@@ -41,13 +41,16 @@ pub enum HeartbeatEvent {
 /// State for the heartbeat endpoint
 ///
 /// TEAM-362: WorkerRegistry populated from Hive telemetry
+/// TEAM-374: Updated to use TelemetryRegistry
 #[derive(Clone)]
 pub struct HeartbeatState {
     /// Worker registry (populated from Hive telemetry)
-    pub worker_registry: Arc<WorkerRegistry>,
+    /// TEAM-374: Now uses TelemetryRegistry
+    pub worker_registry: Arc<TelemetryRegistry>,
 
     /// Hive registry (stores hive info + workers)
-    pub hive_registry: Arc<HiveRegistry>,
+    /// TEAM-374: Now uses TelemetryRegistry
+    pub hive_registry: Arc<TelemetryRegistry>,
 
     /// Broadcast channel for real-time events
     pub event_tx: broadcast::Sender<HeartbeatEvent>,
@@ -62,34 +65,53 @@ pub struct HttpHeartbeatAcknowledgement {
     pub message: String,
 }
 
-/// POST /v1/hive-heartbeat - Handle hive telemetry
+// TEAM-374: DELETED handle_hive_heartbeat() - replaced by SSE subscription
+// Old POST-based continuous telemetry receiver is deprecated.
+// Queen now subscribes to hive SSE streams (hive_subscriber.rs)
+
+/// Hive ready callback payload
+/// TEAM-373: Discovery callback from hive
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct HiveReadyCallback {
+    pub hive_id: String,
+    pub hive_url: String, // e.g., "http://192.168.1.100:7835"
+}
+
+/// POST /v1/hive/ready - Discovery callback from hive
 ///
-/// TEAM-362: Receives hive telemetry with worker details every 1s
-pub async fn handle_hive_heartbeat(
+/// TEAM-373: Changed from continuous telemetry to one-time callback.
+/// When hive sends this, Queen subscribes to its SSE stream.
+///
+/// Discovery flow:
+/// 1. Hive detects Queen (via GET /capabilities or startup)
+/// 2. Hive sends POST /v1/hive/ready (one-time callback)
+/// 3. Queen subscribes to GET /v1/heartbeats/stream on hive
+/// 4. Continuous telemetry flows via SSE
+pub async fn handle_hive_ready(
     State(state): State<HeartbeatState>,
-    Json(heartbeat): Json<HiveHeartbeat>,
+    Json(callback): Json<HiveReadyCallback>,
 ) -> Result<Json<HttpHeartbeatAcknowledgement>, (StatusCode, String)> {
     eprintln!(
-        "🐝 Hive telemetry: hive_id={}, workers={}",
-        heartbeat.hive.id, heartbeat.workers.len()
+        "🐝 Hive ready callback: hive_id={}, url={}",
+        callback.hive_id, callback.hive_url
     );
-
-    // TEAM-362: Store hive info
-    state.hive_registry.update_hive(heartbeat.clone());
     
-    // TEAM-362: Store worker telemetry for scheduling
-    state.hive_registry.update_workers(&heartbeat.hive.id, heartbeat.workers.clone());
-
-    // TEAM-362: Broadcast telemetry event to SSE stream
-    let event = HeartbeatEvent::HiveTelemetry {
-        hive_id: heartbeat.hive.id.clone(),
-        timestamp: chrono::Utc::now().to_rfc3339(),
-        workers: heartbeat.workers,
-    };
-    let _ = state.event_tx.send(event);
-
+    // TEAM-373: Store initial hive info (register URL)
+    // Note: HiveRegistry doesn't have register_hive_url yet, will be added
+    // For now, the SSE subscription will populate the registry
+    
+    // TEAM-373: Start SSE subscription to this hive
+    let _subscription_handle = crate::hive_subscriber::start_hive_subscription(
+        callback.hive_url.clone(),
+        callback.hive_id.clone(),
+        state.hive_registry.clone(),
+        state.event_tx.clone(),
+    );
+    
+    n!("hive_ready", "✅ Hive {} ready, subscription started", callback.hive_id);
+    
     Ok(Json(HttpHeartbeatAcknowledgement {
         status: "ok".to_string(),
-        message: format!("Telemetry received from hive {}", heartbeat.hive.id),
+        message: format!("Subscribed to hive {} SSE stream", callback.hive_id),
     }))
 }

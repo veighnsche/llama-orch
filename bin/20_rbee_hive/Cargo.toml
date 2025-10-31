@@ -26,6 +26,7 @@ clap = { version = "4", features = ["derive"] }
 # Error handling
 anyhow = "1.0"
 tracing = "0.1"  # TEAM-284: For heartbeat logging
+chrono = "0.4"  # TEAM-372: For RFC3339 timestamps in SSE events
 
 # TEAM-284: Hive contract types (includes heartbeat)
 hive-contract = { path = "../97_contracts/hive-contract" }

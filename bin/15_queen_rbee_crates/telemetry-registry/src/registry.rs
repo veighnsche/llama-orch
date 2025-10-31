@@ -11,19 +11,22 @@ use std::sync::RwLock;
 // TEAM-362: Worker telemetry storage
 use rbee_hive_monitor::ProcessStats;
 
-/// Hive registry
+/// Telemetry registry
+///
+/// TEAM-374: Renamed from HiveRegistry to TelemetryRegistry for clarity.
+/// Stores both hive heartbeats AND worker telemetry (sent by hives).
 ///
 /// Thread-safe registry using RwLock for concurrent access.
-/// Hives send heartbeats directly to queen via POST /v1/hive-heartbeat.
+/// Hives send telemetry via POST /v1/hive-heartbeat or SSE streams.
 ///
 /// # Example
 ///
 /// ```
-/// use queen_rbee_hive_registry::HiveRegistry;
+/// use queen_rbee_telemetry_registry::TelemetryRegistry;
 /// use hive_contract::{HiveInfo, HiveHeartbeat};
 /// use shared_contract::{OperationalStatus, HealthStatus};
 ///
-/// let registry = HiveRegistry::new();
+/// let registry = TelemetryRegistry::new();
 ///
 /// // Hive sends heartbeat
 /// let hive = HiveInfo {
@@ -40,14 +43,14 @@ use rbee_hive_monitor::ProcessStats;
 /// // Query hives
 /// let available = registry.list_available_hives();
 /// ```
-pub struct HiveRegistry {
+pub struct TelemetryRegistry {
     inner: HeartbeatRegistry<HiveHeartbeat>,
     
     // TEAM-362: Worker telemetry storage (hive_id -> workers)
     workers: RwLock<HashMap<String, Vec<ProcessStats>>>,
 }
 
-impl HiveRegistry {
+impl TelemetryRegistry {
     /// Create a new empty registry
     pub fn new() -> Self {
         Self {
@@ -155,6 +158,27 @@ impl HiveRegistry {
             })
             .collect()
     }
+    
+    /// Find best worker for model
+    ///
+    /// TEAM-374: Added for scheduler compatibility (was in WorkerRegistry)
+    /// Finds the best idle worker for a given model:
+    /// 1. Must have the model loaded
+    /// 2. Must be idle (gpu_util_pct == 0.0)
+    /// 3. Prefers worker with lowest load
+    pub fn find_best_worker_for_model(&self, model: &str) -> Option<ProcessStats> {
+        self.find_idle_workers()
+            .into_iter()
+            .find(|w| w.model.as_deref() == Some(model))
+    }
+    
+    /// List online workers (compatibility method)
+    ///
+    /// TEAM-374: Added for compatibility with old WorkerRegistry API
+    /// Returns ProcessStats for all workers (not WorkerInfo)
+    pub fn list_online_workers(&self) -> Vec<ProcessStats> {
+        self.get_all_workers()
+    }
 
     /// Cleanup stale hives
     ///
@@ -165,7 +189,7 @@ impl HiveRegistry {
     }
 }
 
-impl Default for HiveRegistry {
+impl Default for TelemetryRegistry {
     fn default() -> Self {
         Self::new()
     }
@@ -190,13 +214,13 @@ mod tests {
 
     #[test]
     fn registry_new() {
-        let registry = HiveRegistry::new();
+        let registry = TelemetryRegistry::new();
         assert_eq!(registry.list_all_hives().len(), 0);
     }
 
     #[test]
     fn registry_update_hive() {
-        let registry = HiveRegistry::new();
+        let registry = TelemetryRegistry::new();
         let hive = create_hive("hive-1", OperationalStatus::Ready);
         let heartbeat = HiveHeartbeat::new(hive);
 
@@ -208,7 +232,7 @@ mod tests {
 
     #[test]
     fn registry_get_hive() {
-        let registry = HiveRegistry::new();
+        let registry = TelemetryRegistry::new();
         let hive = create_hive("hive-1", OperationalStatus::Ready);
         registry.update_hive(HiveHeartbeat::new(hive));
 
@@ -219,7 +243,7 @@ mod tests {
 
     #[test]
     fn registry_remove_hive() {
-        let registry = HiveRegistry::new();
+        let registry = TelemetryRegistry::new();
         let hive = create_hive("hive-1", OperationalStatus::Ready);
         registry.update_hive(HiveHeartbeat::new(hive));
 
@@ -230,7 +254,7 @@ mod tests {
 
     #[test]
     fn registry_list_online_hives() {
-        let registry = HiveRegistry::new();
+        let registry = TelemetryRegistry::new();
 
         // Add recent hive
         let hive1 = create_hive("hive-1", OperationalStatus::Ready);
@@ -249,7 +273,7 @@ mod tests {
 
     #[test]
     fn registry_list_available_hives() {
-        let registry = HiveRegistry::new();
+        let registry = TelemetryRegistry::new();
 
         // Ready hive
         let hive1 = create_hive("hive-1", OperationalStatus::Ready);
@@ -269,7 +293,7 @@ mod tests {
 
     #[test]
     fn registry_count_online() {
-        let registry = HiveRegistry::new();
+        let registry = TelemetryRegistry::new();
 
         let hive1 = create_hive("hive-1", OperationalStatus::Ready);
         let hive2 = create_hive("hive-2", OperationalStatus::Ready);
@@ -282,7 +306,7 @@ mod tests {
 
     #[test]
     fn registry_cleanup_stale() {
-        let registry = HiveRegistry::new();
+        let registry = TelemetryRegistry::new();
 
         // Add recent hive
         let hive1 = create_hive("hive-1", OperationalStatus::Ready);
