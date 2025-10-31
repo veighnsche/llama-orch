@@ -1,20 +1,16 @@
 <!doctype html>
-<html lang="en" class="dark">
+<html lang="en">
   <head>
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/vite.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Queen Dashboard</title>
+    <!-- TEAM-375: Apply theme immediately to prevent flash -->
     <script>
-      // Apply theme from localStorage (same logic as ThemeToggle)
-      try {
+      (function() {
         const theme = localStorage.getItem('theme') || 'dark';
-        if (theme === 'dark') {
-          document.documentElement.classList.add('dark');
-        } else {
-          document.documentElement.classList.remove('dark');
-        }
-      } catch (e) {}
+        document.documentElement.classList.add(theme);
+      })();
     </script>
   </head>
   <body>

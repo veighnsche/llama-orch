@@ -2,6 +2,7 @@
 // Uses @rbee/ui for consistent styling across all rbee applications
 import { QueryClient, QueryClientProvider } from '@rbee/rbee-hive-react'
 import { logStartupMode } from '@rbee/dev-utils'
+import { receiveThemeChanges } from '@rbee/iframe-bridge'
 import { useState, useEffect } from 'react'
 import { 
   Card, 
@@ -150,12 +151,18 @@ function HeartbeatStatus() {
 function App() {
   const { devices, loading: devicesLoading } = useDevices()
 
+  // TEAM-375: Listen for theme changes from parent (Keeper)
+  useEffect(() => {
+    const cleanup = receiveThemeChanges()
+    return cleanup
+  }, [])
+
   return (
     <QueryClientProvider client={queryClient}>
-      <div className="min-h-screen bg-background font-sans p-6 space-y-6">
+      <div className="min-h-screen bg-background text-foreground font-sans p-6 space-y-6">
           {/* Header */}
           <div>
-            <h1 className="text-3xl font-bold text-foreground">Hive</h1>
+            <h1 className="text-3xl font-bold">Hive</h1>
             <p className="text-muted-foreground">Worker & Model Management Dashboard</p>
           </div>
 

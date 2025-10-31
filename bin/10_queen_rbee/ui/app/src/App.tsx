@@ -35,9 +35,11 @@
 // - Checked browser console - no QueryClient errors
 // ============================================================
 
+import { useEffect } from 'react'
 import { QueryClient, QueryClientProvider } from '@rbee/queen-rbee-react'
 import { logStartupMode } from "@rbee/dev-utils";
 import DashboardPage from "./pages/DashboardPage";
+import { receiveThemeChanges } from "@rbee/iframe-bridge";
 
 // TEAM-352: Use shared startup logging
 logStartupMode("QUEEN UI", import.meta.env.DEV, 7834);
@@ -53,9 +55,15 @@ const queryClient = new QueryClient({
 })
 
 function App() {
+  // TEAM-375: Listen for theme changes from parent (Keeper)
+  useEffect(() => {
+    const cleanup = receiveThemeChanges()
+    return cleanup
+  }, [])
+
   return (
     <QueryClientProvider client={queryClient}>
-      <div className="min-h-screen bg-background font-sans">
+      <div className="min-h-screen bg-background text-foreground font-sans">
         <DashboardPage />
       </div>
     </QueryClientProvider>

@@ -1,7 +1,11 @@
 /**
- * TEAM-374: Hive UI - Tailwind v4 + @rbee/ui styles
- * Matches Queen UI styling
+ * TEAM-374: Hive UI - Global Styles
+ * Official Tailwind v4 + Vite setup (matches Keeper UI)
  */
 
 @import "tailwindcss";
-@import "@rbee/ui/styles.css";
+@import "@repo/tailwind-config";
+@import "@rbee/ui/tokens/theme-tokens.css";
+
+/* Scan this app's source files for Tailwind classes */
+@source "../src/**/*.{ts,tsx}";

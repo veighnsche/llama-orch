@@ -15,6 +15,7 @@ import QueenPage from './pages/QueenPage'
 import KeeperPage from './pages/ServicesPage'
 import SettingsPage from './pages/SettingsPage'
 import { setupNarrationListener } from './utils/narrationListener'
+import { broadcastThemeChanges } from '@rbee/iframe-bridge'
 
 // TEAM-350: Log build mode on startup
 const isDev = import.meta.env.DEV
@@ -30,8 +31,14 @@ if (isDev) {
 function App() {
   // TEAM-XXX: Setup listener for narration events from Queen iframe
   useEffect(() => {
-    const cleanup = setupNarrationListener()
-    return cleanup
+    const cleanupNarration = setupNarrationListener()
+    return cleanupNarration
+  }, [])
+
+  // TEAM-375: Broadcast theme changes to iframes (Queen, Hive)
+  useEffect(() => {
+    const cleanupTheme = broadcastThemeChanges()
+    return cleanupTheme
   }, [])
 
   return (

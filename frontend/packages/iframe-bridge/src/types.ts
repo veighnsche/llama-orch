@@ -6,8 +6,9 @@
 /**
  * Valid message types
  * TEAM-351: Type-safe message types
+ * TEAM-375: Added THEME_CHANGE for parent → iframe theme sync
  */
-export type MessageType = 'NARRATION_EVENT' | 'COMMAND' | 'RESPONSE' | 'ERROR'
+export type MessageType = 'NARRATION_EVENT' | 'COMMAND' | 'RESPONSE' | 'ERROR' | 'THEME_CHANGE'
 
 /**
  * Base message interface
@@ -69,10 +70,20 @@ export interface ErrorMessage extends BaseMessage {
 }
 
 /**
+ * Theme change message
+ * TEAM-375: For parent → iframe theme synchronization
+ */
+export interface ThemeChangeMessage extends BaseMessage {
+  type: 'THEME_CHANGE'
+  theme: 'light' | 'dark'
+}
+
+/**
  * Union of all message types
  * TEAM-351: Type-safe message union
+ * TEAM-375: Added ThemeChangeMessage
  */
-export type IframeMessage = NarrationMessage | CommandMessage | ResponseMessage | ErrorMessage
+export type IframeMessage = NarrationMessage | CommandMessage | ResponseMessage | ErrorMessage | ThemeChangeMessage
 
 /**
  * Message validation result
@@ -131,6 +142,12 @@ export function isValidIframeMessage(obj: any): obj is IframeMessage {
     
     case 'ERROR':
       return typeof data.error === 'string'
+    
+    case 'THEME_CHANGE':
+      return (
+        typeof data.theme === 'string' &&
+        (data.theme === 'light' || data.theme === 'dark')
+      )
     
     default:
       return false
