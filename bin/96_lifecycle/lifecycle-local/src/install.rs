@@ -56,8 +56,8 @@
 //! ```
 
 use lifecycle_shared::resolve_binary_path;
-// TEAM-377: Use check_binary_actually_installed to only check ~/.local/bin/
-use crate::utils::binary::check_binary_actually_installed;
+// TEAM-378: RULE ZERO - Use check_binary_exists with CheckMode::InstalledOnly
+use crate::utils::{check_binary_exists, CheckMode};
 use crate::utils::local::local_copy;
 use anyhow::{Context, Result};
 use observability_narration_core::n;
@@ -112,8 +112,9 @@ pub async fn install_daemon(install_config: InstallConfig) -> Result<()> {
 
     n!("install_start", "📦 Installing {} locally", daemon_name);
 
-    // Step 0: Check if already installed (only check ~/.local/bin/, not dev builds)
-    if check_binary_actually_installed(daemon_name).await {
+    // Step 0: Check if already installed
+    // TEAM-378: RULE ZERO - Use CheckMode::InstalledOnly
+    if check_binary_exists(daemon_name, CheckMode::InstalledOnly).await {
         n!("already_installed", "⚠️  {} is already installed in ~/.local/bin/", daemon_name);
         anyhow::bail!("{} is already installed in ~/.local/bin/. Use rebuild to update.", daemon_name);
     }
@@ -138,7 +139,7 @@ pub async fn install_daemon(install_config: InstallConfig) -> Result<()> {
     std::fs::create_dir_all(&local_bin_dir)
         .with_context(|| format!("Failed to create ~/{}", BINARY_INSTALL_DIR))?;
 
-    // Step 3: Copy binary locally
+    // Step 3: Copy binary to ~/.local/bin (ALWAYS - both debug and release)
     let dest_path = local_bin_dir.join(daemon_name);
     n!("copying", "📤 Copying {} to {}", daemon_name, dest_path.display());
 

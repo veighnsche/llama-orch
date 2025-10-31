@@ -128,34 +128,6 @@ impl HttpDaemonConfig {
     }
 }
 
-/// Generate shell command to find daemon binary
-///
-/// TEAM-367: Shared logic extracted from lifecycle-local and lifecycle-ssh
-///
-/// Searches in order:
-/// 1. target/debug/{daemon} (development builds)
-/// 2. target/release/{daemon} (release builds)
-/// 3. ~/.local/bin/{daemon} (installed binaries)
-/// 4. which {daemon} (system PATH)
-///
-/// Returns "NOT_FOUND" if binary not found
-pub fn find_binary_command(daemon_name: &str) -> String {
-    // TEAM-377: RULE ZERO - Use constant for install directory
-    use crate::BINARY_INSTALL_DIR;
-    
-    format!(
-        "(test -x target/debug/{} && echo target/debug/{}) || \
-         (test -x target/release/{} && echo target/release/{}) || \
-         (test -x ~/{}/{} && echo ~/{}/{}) || \
-         which {} 2>/dev/null || \
-         echo 'NOT_FOUND'",
-        daemon_name, daemon_name, 
-        daemon_name, daemon_name, 
-        BINARY_INSTALL_DIR, daemon_name, BINARY_INSTALL_DIR, daemon_name,
-        daemon_name
-    )
-}
-
 /// Generate shell command to start daemon in background
 ///
 /// TEAM-367: Shared logic extracted from lifecycle-local and lifecycle-ssh

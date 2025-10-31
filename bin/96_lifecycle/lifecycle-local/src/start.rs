@@ -63,7 +63,8 @@ use std::path::PathBuf;
 use timeout_enforcer::with_timeout;
 
 // TEAM-367: Import shared types and utilities
-pub use lifecycle_shared::{build_start_command, find_binary_command, HttpDaemonConfig};
+// TEAM-378: Removed find_binary_command (moved to lifecycle-ssh)
+pub use lifecycle_shared::{build_start_command, HttpDaemonConfig};
 
 /// Configuration for starting daemon on LOCAL machine
 ///
@@ -112,24 +113,29 @@ pub async fn start_daemon(start_config: StartConfig) -> Result<u32> {
 
     n!("start_begin", "🚀 Starting {} locally", daemon_name);
 
-    // Step 1: Find binary on local machine
+    // Step 1: Find binary on local machine (smart mode-aware selection)
     n!("find_binary", "🔍 Locating {} binary locally...", daemon_name);
 
-    // TEAM-367: Use shared find_binary_command function
-    let find_cmd = find_binary_command(daemon_name);
-    let binary_path = local_exec(&find_cmd).await.context("Failed to find binary locally")?;
-
-    let binary_path = binary_path.trim();
-
-    if binary_path == "NOT_FOUND" || binary_path.is_empty() {
-        n!("binary_not_found", "❌ Binary '{}' not found locally", daemon_name);
-        anyhow::bail!(
-            "Binary '{}' not found locally. Install it first with install_daemon()",
-            daemon_name
-        );
+    // TEAM-378: Phase 3 - Use smart check_binary_exists (prefers production, falls back to dev)
+    use crate::utils::{check_binary_exists, CheckMode};
+    if !check_binary_exists(daemon_name, CheckMode::Any).await {
+        anyhow::bail!("Binary '{}' not found locally. Install it first with install_daemon()", daemon_name);
     }
 
-    n!("found_binary", "✅ Found binary at: {}", binary_path);
+    // Binary exists, now resolve its path
+    use lifecycle_shared::BINARY_INSTALL_DIR;
+    use std::path::PathBuf;
+    
+    let binary_path = if let Ok(home) = std::env::var("HOME") {
+        let installed_path = PathBuf::from(&home).join(BINARY_INSTALL_DIR).join(daemon_name);
+        if installed_path.exists() {
+            installed_path
+        } else {
+            PathBuf::from(format!("target/debug/{}", daemon_name))
+        }
+    } else {
+        PathBuf::from(format!("target/debug/{}", daemon_name))
+    };
 
     // Step 2: Start daemon in background (with monitoring)
     n!("starting", "▶️  Starting daemon in background...");
@@ -156,9 +162,13 @@ pub async fn start_daemon(start_config: StartConfig) -> Result<u32> {
             n!("start_with_args", "⚙️  Starting with args: {}", daemon_config.args.join(" "));
         }
 
+        // TEAM-378: Convert PathBuf to &str for spawn_monitored
+        let binary_path_str = binary_path.to_str()
+            .context("Binary path contains invalid UTF-8")?;
+
         rbee_hive_monitor::ProcessMonitor::spawn_monitored(
             monitor_config,
-            binary_path,
+            binary_path_str,
             daemon_config.args.clone(),
         )
         .await
@@ -171,8 +181,12 @@ pub async fn start_daemon(start_config: StartConfig) -> Result<u32> {
             n!("start_with_args", "⚙️  Starting with args: {}", daemon_config.args.join(" "));
         }
 
+        // TEAM-378: Convert PathBuf to str for shell command
+        let binary_path_str = binary_path.to_str()
+            .context("Binary path contains invalid UTF-8")?;
+        
         // TEAM-367: Use shared build_start_command function
-        let start_cmd = build_start_command(binary_path, &daemon_config.args);
+        let start_cmd = build_start_command(binary_path_str, &daemon_config.args);
         let pid_output = local_exec(&start_cmd).await.context("Failed to start daemon")?;
         pid_output.trim().parse().context("Failed to parse PID from daemon start")?
     };

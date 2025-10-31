@@ -48,5 +48,5 @@ pub mod utils;
 // Re-export main types
 pub use build::{build_daemon, BuildConfig};
 pub use install::resolve_binary_path;
-pub use start::{build_start_command, find_binary_command, HttpDaemonConfig};
+pub use start::{build_start_command, HttpDaemonConfig}; // TEAM-378: Removed find_binary_command (moved to SSH)
 pub use status::{check_health_http, normalize_health_url, DaemonStatus};

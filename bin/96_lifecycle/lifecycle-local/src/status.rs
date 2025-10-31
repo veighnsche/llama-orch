@@ -36,8 +36,8 @@
 //! # }
 //! ```
 
-// TEAM-377: Use check_binary_actually_installed to only check ~/.local/bin/
-use crate::utils::binary::check_binary_actually_installed;
+// TEAM-378: RULE ZERO - Use check_binary_exists with CheckMode::InstalledOnly
+use crate::utils::{check_binary_exists, CheckMode};
 
 // TEAM-367: Import shared types and utilities
 pub use lifecycle_shared::{check_health_http, DaemonStatus};
@@ -66,13 +66,13 @@ pub async fn check_daemon_health(
     let is_running = check_health_http(health_url).await;
 
     // Step 2: Check if installed (only if not running - optimization)
-    // TEAM-377: Check if ACTUALLY installed (only ~/.local/bin/, not dev builds)
+    // TEAM-378: RULE ZERO - Use CheckMode::InstalledOnly (only ~/.local/bin/, not dev builds)
     // This determines if "Uninstall" button should be enabled
     let is_installed = if is_running {
         true // If running, must be installed (or dev build, but still "exists")
     } else {
         // Only check ~/.local/bin/, NOT target/debug/ or target/release/
-        check_binary_actually_installed(daemon_name).await
+        check_binary_exists(daemon_name, CheckMode::InstalledOnly).await
     };
 
     DaemonStatus { is_running, is_installed }

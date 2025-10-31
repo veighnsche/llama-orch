@@ -20,13 +20,9 @@ pub mod binary;
 pub mod local; // TEAM-331: Local process execution (bypasses SSH for localhost)
 
 // Re-export main functions
-// TEAM-377: Export both functions - exists (any location) vs actually_installed (only ~/.local/bin)
-pub use binary::{check_binary_actually_installed, check_binary_exists};
+// TEAM-378: RULE ZERO - Export CheckMode enum and single check_binary_exists() function
+pub use binary::{check_binary_exists, CheckMode};
 pub use local::{local_copy, local_exec}; // TEAM-331: Local execution helpers
-
-// TEAM-377: Deprecated alias for backwards compatibility
-#[deprecated(note = "Use check_binary_exists() instead - this checks ALL locations, not just installed")]
-pub use binary::check_binary_exists as check_binary_installed;
 
 // TEAM-367: Re-export serde utilities from shared crate
 pub use lifecycle_shared::utils::{deserialize_systemtime, serialize_systemtime};

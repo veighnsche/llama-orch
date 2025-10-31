@@ -93,13 +93,13 @@ struct Args {
 /// 5. Run forever (until killed by pool-managerd)
 #[tokio::main(flavor = "current_thread")] // CRITICAL: Single-threaded!
 async fn main() -> anyhow::Result<()> {
-    let args = Args::parse();
-
-    // Handle --build-info flag
-    if args.build_info {
+    // TEAM-XXX: Check for --build-info BEFORE parsing (to avoid required args check)
+    if std::env::args().any(|arg| arg == "--build-info") {
         println!("{}", build::BUILD_RUST_CHANNEL);
         std::process::exit(0);
     }
+
+    let args = Args::parse();
 
     // TEAM-088: Initialize tracing with human-friendly format for development
     // Use LLORCH_LOG_FORMAT=json for machine-readable output (production/SSH)
