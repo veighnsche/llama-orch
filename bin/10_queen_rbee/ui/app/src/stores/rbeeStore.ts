@@ -2,9 +2,8 @@
 // Ported from web-ui.old - Connected directly to rbee SDK
 // TEAM-294: Updated to use @rbee/queen-rbee-react
 
-import type { HeartbeatMonitor } from '@rbee/queen-rbee-react'
-// TEAM-381: Import from SDK (single source of truth) - Rule Zero compliance
-import type { HeartbeatSnapshot } from '@rbee/queen-rbee-sdk'
+// TEAM-381: Import all types from @rbee/queen-rbee-react (re-exports from SDK)
+import type { HeartbeatMonitor, QueenHeartbeat } from '@rbee/queen-rbee-react'
 import { create } from 'zustand'
 
 export interface QueenStatus {
@@ -35,7 +34,7 @@ interface RbeeState {
   workerIds: string[]
 
   // Raw heartbeat
-  lastHeartbeat: HeartbeatSnapshot | null
+  lastHeartbeat: QueenHeartbeat | null
 
   // SDK connection
   monitor: HeartbeatMonitor | null
@@ -88,7 +87,7 @@ export const useRbeeStore = create<RbeeState>((set) => ({
       }
 
       // Start new monitor - callback fires on EVERY heartbeat from queen
-      monitorInstance.start((snapshot: HeartbeatSnapshot) => {
+      monitorInstance.start((snapshot: QueenHeartbeat) => {
         // REAL-TIME UPDATE: This runs every time queen sends a heartbeat
         const hives: HiveInfo[] = snapshot.hive_ids.map((id) => ({
           id,

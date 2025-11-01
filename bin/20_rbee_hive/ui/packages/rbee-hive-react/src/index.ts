@@ -8,26 +8,57 @@
 // This ensures consistent configuration across all apps
 
 import { useQuery, useMutation } from '@tanstack/react-query'
-import { init, HiveClient, OperationBuilder, type ModelInfo, type HFModel } from '@rbee/rbee-hive-sdk'
+// TEAM-381: Import WASM SDK dynamically to avoid module load issues
+import type { HiveClient, OperationBuilder, HeartbeatMonitor, ModelInfo } from '@rbee/rbee-hive-sdk'
 
-// TEAM-381: Re-export types from SDK (single source of truth)
-// ModelInfo is auto-generated from Rust via tsify
-export type { ModelInfo, HFModel } from '@rbee/rbee-hive-sdk'
+// TEAM-381: Re-export types only (NOT classes - they must be imported directly from SDK)
+export type { 
+  // WASM classes (import these from @rbee/rbee-hive-sdk when needed)
+  HiveClient,
+  HeartbeatMonitor,
+  OperationBuilder,
+  // TEAM-381: Auto-generated types from Rust contract crates
+  ProcessStats,
+  HiveInfo,
+  HiveHeartbeatEvent,
+  ModelInfo,
+} from '@rbee/rbee-hive-sdk'
 
-// TEAM-353: Initialize WASM module once
-let wasmInitialized = false
-async function ensureWasmInit() {
-  if (!wasmInitialized) {
-    init() // TEAM-353: init() is synchronous in WASM
-    wasmInitialized = true
-  }
+// TEAM-381: HuggingFace model types (for search - UI only, not from backend)
+// Defined here since it's not part of the Rust backend contract
+export interface HFModel {
+  id: string
+  modelId: string
+  author: string
+  downloads: number
+  likes: number
+  tags: string[]
+  private: boolean
+  gated: boolean | string
 }
 
-// TEAM-353: Create client instance
-// Get hive address from window.location (Hive UI is served BY the Hive)
-const hiveAddress = window.location.hostname
-const hivePort = '7835' // TODO: Get from config
-const client = new HiveClient(`http://${hiveAddress}:${hivePort}`, hiveAddress)
+// TEAM-381: Lazy WASM SDK initialization (avoid module load issues)
+let sdkModule: typeof import('@rbee/rbee-hive-sdk') | null = null
+async function ensureWasmInit() {
+  if (!sdkModule) {
+    sdkModule = await import('@rbee/rbee-hive-sdk')
+    sdkModule.init() // Initialize WASM module
+  }
+  return sdkModule
+}
+
+// TEAM-381: Lazy client initialization (avoid window access at module load time)
+let client: HiveClient | null = null
+async function getClient(): Promise<HiveClient> {
+  if (!client) {
+    const sdk = await ensureWasmInit()
+    // Get hive address from window.location (Hive UI is served BY the Hive)
+    const hiveAddress = window.location.hostname
+    const hivePort = '7835' // TODO: Get from config
+    client = new sdk.HiveClient(`http://${hiveAddress}:${hivePort}`, hiveAddress)
+  }
+  return client
+}
 
 // TEAM-353: Worker type (local to this package)
 export interface Worker {
@@ -54,9 +85,10 @@ export function useModels() {
   } = useQuery({
     queryKey: ['hive-models'],
     queryFn: async () => {
-      await ensureWasmInit()
+      const sdk = await ensureWasmInit()
+      const client = await getClient() // TEAM-381: Lazy client initialization
       const hiveId = client.hiveId // TEAM-353: Get hive_id from client
-      const op = OperationBuilder.modelList(hiveId)
+      const op = sdk.OperationBuilder.modelList(hiveId)
       const lines: string[] = []
       
       // TEAM-381: Add timeout to prevent infinite hanging if backend doesn't respond
@@ -112,9 +144,10 @@ export function useWorkers() {
   } = useQuery({
     queryKey: ['hive-workers'],
     queryFn: async () => {
-      await ensureWasmInit()
+      const sdk = await ensureWasmInit()
+      const client = await getClient() // TEAM-381: Lazy client initialization
       const hiveId = client.hiveId // TEAM-353: Get hive_id from client
-      const op = OperationBuilder.workerList(hiveId)
+      const op = sdk.OperationBuilder.workerList(hiveId)
       const lines: string[] = []
       
       await client.submitAndStream(op, (line: string) => {

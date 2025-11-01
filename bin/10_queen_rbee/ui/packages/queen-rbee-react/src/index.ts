@@ -10,7 +10,20 @@
 
 // TEAM-291: Re-export types from @rbee/queen-rbee-sdk for convenience
 // TEAM-295: Fixed import to use @rbee/queen-rbee-sdk instead of @rbee/sdk
-export type { HeartbeatMonitor, OperationBuilder, QueenClient } from '@rbee/queen-rbee-sdk'
+// TEAM-381: Re-export ALL types so UI apps only need @rbee/queen-rbee-react dependency
+export type { 
+  HeartbeatMonitor, 
+  OperationBuilder, 
+  QueenClient,
+  RhaiClient,
+  // TEAM-381: Auto-generated types from Rust contract crates
+  ProcessStats,
+  HiveInfo,
+  HiveDevice,
+  HiveTelemetry,
+  QueenHeartbeat,
+  HeartbeatSnapshot,
+} from '@rbee/queen-rbee-sdk'
 
 // Export hooks
 // TEAM-377: RULE ZERO - Deleted useRbeeSDK alias, only export useQueenSDK

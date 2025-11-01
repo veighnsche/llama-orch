@@ -33,6 +33,9 @@ mod heartbeat;
 mod operations;
 mod rhai;
 
+// TEAM-381: Type exports for TypeScript generation
+mod types;
+
 // TEAM-286: Re-export main client, operation builder, and heartbeat monitor
 pub use client::QueenClient;
 pub use heartbeat::HeartbeatMonitor;
@@ -40,8 +43,10 @@ pub use operations::OperationBuilder;
 pub use rhai::{RhaiClient, RhaiScript, TestResult};
 
 // TEAM-381: Re-export Rust types for TypeScript generation
-pub use rbee_hive_monitor::ProcessStats;
-pub use hive_contract::{HiveDevice, HiveInfo};
+// hive-contract is a pure contract crate (types only, WASM-compatible)
+pub use hive_contract::{
+    HeartbeatSnapshot, HiveDevice, HiveInfo, HiveTelemetry, ProcessStats, QueenHeartbeat,
+};
 
 /// Initialize the WASM module
 ///

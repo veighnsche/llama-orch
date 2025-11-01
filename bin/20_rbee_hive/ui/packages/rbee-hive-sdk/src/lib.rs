@@ -33,6 +33,9 @@ mod conversions;
 mod operations;
 mod heartbeat; // TEAM-374: Heartbeat monitoring
 
+// TEAM-381: Type exports for TypeScript generation
+mod types;
+
 // TEAM-353: Re-export main client and operation builder
 pub use client::HiveClient;
 pub use operations::OperationBuilder;
@@ -40,6 +43,10 @@ pub use heartbeat::HeartbeatMonitor; // TEAM-374: Heartbeat monitoring
 
 // TEAM-381: Re-export types from operations-contract (with TypeScript generation)
 pub use operations_contract::ModelInfo;
+
+// TEAM-381: Re-export types from hive-contract (with TypeScript generation)
+// hive-contract is a pure contract crate (types only, WASM-compatible)
+pub use hive_contract::{HiveHeartbeatEvent, HiveInfo, ProcessStats};
 
 /// Initialize the WASM module
 ///

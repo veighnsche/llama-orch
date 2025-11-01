@@ -130,9 +130,6 @@ importers:
       '@rbee/queen-rbee-react':
         specifier: workspace:*
         version: link:../packages/queen-rbee-react
-      '@rbee/queen-rbee-sdk':
-        specifier: workspace:*
-        version: link:../packages/queen-rbee-sdk
       '@rbee/ui':
         specifier: workspace:*
         version: link:../../../../frontend/packages/rbee-ui

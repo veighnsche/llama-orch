@@ -177,4 +177,4 @@ export function ModelManagement() {
 }
 
 // Re-export types for convenience
-export type { ViewMode, Model, HFModel, FilterState } from './types'
+export type { ViewMode, ModelInfo, HFModel, FilterState } from './types'

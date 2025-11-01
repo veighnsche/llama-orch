@@ -19,6 +19,8 @@ crate-type = ["cdylib", "rlib"]
 job-client = { path = "../../../../99_shared_crates/job-client" }
 # TEAM-381: Enable wasm feature for TypeScript type generation
 operations-contract = { path = "../../../../97_contracts/operations-contract", features = ["wasm"] }
+# TEAM-381: hive-contract is a pure contract crate (types only, no runtime deps)
+hive-contract = { path = "../../../../97_contracts/hive-contract", features = ["wasm"] }
 
 # TEAM-353: WASM bindings
 wasm-bindgen = "0.2"

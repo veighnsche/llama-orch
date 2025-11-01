@@ -4,14 +4,9 @@
 //! TEAM-367: Added capabilities support for Queen restart detection
 
 use crate::types::HiveInfo;
+use crate::telemetry::ProcessStats;
 use serde::{Deserialize, Serialize};
 use shared_contract::{HeartbeatPayload, HeartbeatTimestamp, HEARTBEAT_TIMEOUT_SECS};
-
-// TEAM-361: Worker telemetry from cgroup + GPU monitoring
-#[cfg(not(feature = "wasm"))]
-use rbee_hive_monitor::ProcessStats;
-#[cfg(feature = "wasm")]
-pub use rbee_hive_monitor::ProcessStats;
 
 // TEAM-381: Optional WASM support for TypeScript type generation
 #[cfg(feature = "wasm")]
@@ -134,6 +129,8 @@ impl HeartbeatPayload for HiveHeartbeat {
 }
 
 // TEAM-285: Implement HeartbeatItem for generic registry
+// TEAM-381: Only available when heartbeat-registry feature is enabled (not for WASM)
+#[cfg(feature = "heartbeat-registry")]
 impl heartbeat_registry::HeartbeatItem for HiveHeartbeat {
     type Info = HiveInfo;
 

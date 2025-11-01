@@ -6,20 +6,27 @@
 //   import { QueryProvider } from '@rbee/ui/providers'
 // This ensures consistent configuration across all apps
 import { useQuery } from '@tanstack/react-query';
-import { init, HiveClient, OperationBuilder } from '@rbee/rbee-hive-sdk';
-// TEAM-353: Initialize WASM module once
-let wasmInitialized = false;
+// TEAM-381: Lazy WASM SDK initialization (avoid module load issues)
+let sdkModule = null;
 async function ensureWasmInit() {
-    if (!wasmInitialized) {
-        init(); // TEAM-353: init() is synchronous in WASM
-        wasmInitialized = true;
+    if (!sdkModule) {
+        sdkModule = await import('@rbee/rbee-hive-sdk');
+        sdkModule.init(); // Initialize WASM module
     }
+    return sdkModule;
 }
-// TEAM-353: Create client instance
-// Get hive address from window.location (Hive UI is served BY the Hive)
-const hiveAddress = window.location.hostname;
-const hivePort = '7835'; // TODO: Get from config
-const client = new HiveClient(`http://${hiveAddress}:${hivePort}`, hiveAddress);
+// TEAM-381: Lazy client initialization (avoid window access at module load time)
+let client = null;
+async function getClient() {
+    if (!client) {
+        const sdk = await ensureWasmInit();
+        // Get hive address from window.location (Hive UI is served BY the Hive)
+        const hiveAddress = window.location.hostname;
+        const hivePort = '7835'; // TODO: Get from config
+        client = new sdk.HiveClient(`http://${hiveAddress}:${hivePort}`, hiveAddress);
+    }
+    return client;
+}
 /**
  * Hook for fetching model list from Hive
  *
@@ -33,9 +40,10 @@ export function useModels() {
     const { data: models, isLoading: loading, error, refetch } = useQuery({
         queryKey: ['hive-models'],
         queryFn: async () => {
-            await ensureWasmInit();
+            const sdk = await ensureWasmInit();
+            const client = await getClient(); // TEAM-381: Lazy client initialization
             const hiveId = client.hiveId; // TEAM-353: Get hive_id from client
-            const op = OperationBuilder.modelList(hiveId);
+            const op = sdk.OperationBuilder.modelList(hiveId);
             const lines = [];
             // TEAM-381: Add timeout to prevent infinite hanging if backend doesn't respond
             const timeoutPromise = new Promise((_, reject) => {
@@ -79,9 +87,10 @@ export function useWorkers() {
     const { data: workers, isLoading: loading, error, refetch } = useQuery({
         queryKey: ['hive-workers'],
         queryFn: async () => {
-            await ensureWasmInit();
+            const sdk = await ensureWasmInit();
+            const client = await getClient(); // TEAM-381: Lazy client initialization
             const hiveId = client.hiveId; // TEAM-353: Get hive_id from client
-            const op = OperationBuilder.workerList(hiveId);
+            const op = sdk.OperationBuilder.workerList(hiveId);
             const lines = [];
             await client.submitAndStream(op, (line) => {
                 if (line !== '[DONE]') {

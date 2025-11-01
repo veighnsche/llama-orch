@@ -58,8 +58,12 @@ pub mod heartbeat;
 /// Hive HTTP API specification
 pub mod api;
 
+/// Telemetry types (TEAM-381: moved from rbee-hive-monitor)
+pub mod telemetry;
+
 // Re-export main types for convenience
-pub use heartbeat::HiveHeartbeat;
+pub use heartbeat::{HiveDevice, HiveHeartbeat};
+pub use telemetry::{HeartbeatSnapshot, HiveHeartbeatEvent, HiveTelemetry, ProcessStats, QueenHeartbeat};
 pub use types::HiveInfo;
 
 // Re-export shared types

@@ -1,4 +1,14 @@
-export type { ModelInfo, HFModel } from '@rbee/rbee-hive-sdk';
+export type { HiveClient, HeartbeatMonitor, OperationBuilder, ProcessStats, HiveInfo, HiveHeartbeatEvent, ModelInfo, } from '@rbee/rbee-hive-sdk';
+export interface HFModel {
+    id: string;
+    modelId: string;
+    author: string;
+    downloads: number;
+    likes: number;
+    tags: string[];
+    private: boolean;
+    gated: boolean | string;
+}
 export interface Worker {
     pid: number;
     model: string;

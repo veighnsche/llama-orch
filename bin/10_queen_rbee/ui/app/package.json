@@ -11,7 +11,6 @@
   },
   "dependencies": {
     "@rbee/queen-rbee-react": "workspace:*",
-    "@rbee/queen-rbee-sdk": "workspace:*",
     "@rbee/ui": "workspace:*",
     "@rbee/dev-utils": "workspace:*",
     "@rbee/iframe-bridge": "workspace:*",
