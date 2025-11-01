@@ -9,6 +9,7 @@ export default defineConfig({
   server: {
     port: 7836, // rbee-hive UI dev server
     strictPort: true,
+    host: '0.0.0.0', // TEAM-378: Bind to all interfaces for remote access
   },
   plugins: [
     tailwindcss(), // TEAM-374: Official Tailwind v4 Vite plugin (must be first)

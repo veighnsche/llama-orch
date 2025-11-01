@@ -10,6 +10,7 @@ use std::time::Duration;
 /// TEAM-338: RULE ZERO - Updated existing function to return struct
 /// TEAM-338: RULE ZERO FIX - Added Serialize, Deserialize, specta::Type for Tauri bindings
 ///           This is the SINGLE SOURCE OF TRUTH for daemon status (no QueenStatus/HiveStatus duplicates)
+/// TEAM-378: RULE ZERO - Added SSH config fields (hostname, user, port) for iframe URL construction
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[cfg_attr(feature = "tauri", derive(specta::Type))]
 pub struct DaemonStatus {
@@ -18,27 +19,86 @@ pub struct DaemonStatus {
 
     /// Whether daemon binary is installed
     pub is_installed: bool,
+
+    /// Build mode of installed binary ("debug", "release", or None if not installed/unknown)
+    /// TEAM-379: Added for UI display
+    pub build_mode: Option<String>,
+
+    /// TEAM-378: SSH hostname (IP address or domain) - needed for iframe URL
+    /// For localhost, this will be "localhost" or "127.0.0.1"
+    /// For remote hives, this is the actual IP/domain from SSH config
+    pub hostname: String,
+
+    /// TEAM-378: SSH username - needed for remote operations
+    pub user: String,
+
+    /// TEAM-378: SSH port - needed for remote operations
+    pub port: u16,
 }
 
 impl DaemonStatus {
     /// Create new DaemonStatus
-    pub fn new(is_running: bool, is_installed: bool) -> Self {
-        Self { is_running, is_installed }
+    /// TEAM-378: RULE ZERO - Added hostname, user, port parameters
+    pub fn new(
+        is_running: bool,
+        is_installed: bool,
+        build_mode: Option<String>,
+        hostname: String,
+        user: String,
+        port: u16,
+    ) -> Self {
+        Self {
+            is_running,
+            is_installed,
+            build_mode,
+            hostname,
+            user,
+            port,
+        }
     }
 
     /// Create status for running daemon (must be installed to run)
-    pub fn running() -> Self {
-        Self { is_running: true, is_installed: true }
+    /// TEAM-378: RULE ZERO - Added hostname, user, port parameters
+    pub fn running(build_mode: Option<String>, hostname: String, user: String, port: u16) -> Self {
+        Self {
+            is_running: true,
+            is_installed: true,
+            build_mode,
+            hostname,
+            user,
+            port,
+        }
     }
 
     /// Create status for stopped daemon (installed but not running)
-    pub fn stopped_installed() -> Self {
-        Self { is_running: false, is_installed: true }
+    /// TEAM-378: RULE ZERO - Added hostname, user, port parameters
+    pub fn stopped_installed(
+        build_mode: Option<String>,
+        hostname: String,
+        user: String,
+        port: u16,
+    ) -> Self {
+        Self {
+            is_running: false,
+            is_installed: true,
+            build_mode,
+            hostname,
+            user,
+            port,
+        }
     }
 
     /// Create status for not installed daemon
-    pub fn not_installed() -> Self {
-        Self { is_running: false, is_installed: false }
+    /// TEAM-378: RULE ZERO - Added hostname, user, port parameters
+    pub fn not_installed(hostname: String, user: String, port: u16) -> Self {
+        Self {
+            is_running: false,
+            is_installed: false,
+            build_mode: None,
+            hostname,
+            user,
+            port,
+        }
     }
 }
 

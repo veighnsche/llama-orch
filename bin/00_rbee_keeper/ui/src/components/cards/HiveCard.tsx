@@ -98,6 +98,9 @@ function HiveCardContent({
           <p className="text-sm text-muted-foreground leading-relaxed">
             {description}
           </p>
+          <p className="text-xs text-muted-foreground">
+            Build: <span className="font-mono">{hive.buildMode || 'unknown'}</span>
+          </p>
           <ServiceActionButton
             serviceId={hiveId}
             isInstalled={isInstalled}

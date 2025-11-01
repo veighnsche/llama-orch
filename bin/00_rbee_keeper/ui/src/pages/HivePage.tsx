@@ -4,7 +4,7 @@
 // Uses dynamic hiveId from URL params
 
 import { Alert, AlertDescription, AlertTitle, Button } from "@rbee/ui/atoms";
-import { AlertCircle, ExternalLink, PlayCircle, Loader2 } from "lucide-react";
+import { AlertCircle, PlayCircle, Loader2 } from "lucide-react";
 import { useParams } from "react-router-dom";
 import { getIframeUrl } from "@rbee/shared-config";
 import { useHive, useHiveActions } from "../store/hiveQueries";
@@ -95,9 +95,15 @@ function HiveIframeContent({ hiveId }: { hiveId: string }) {
     );
   }
 
-  // TEAM-352: Use shared-config for iframe URL (no hardcoded URLs)
+  // TEAM-378: Build iframe URL from actual hive address (not localhost!)
+  // For remote hives, use their hostname:port
+  // For localhost, use getIframeUrl for dev/prod port detection
   const isDev = import.meta.env.DEV
-  const hiveUrl = getIframeUrl('hive', isDev);
+  const isLocalhost = hive.hostname === 'localhost' || hive.hostname === '127.0.0.1'
+  
+  const hiveUrl = isLocalhost
+    ? getIframeUrl('hive', isDev)  // localhost: use dev (7836) or prod (7835)
+    : `http://${hive.hostname}:7835`  // remote: always use prod port 7835
 
   return (
     <iframe

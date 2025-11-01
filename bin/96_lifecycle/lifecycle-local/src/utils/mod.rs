@@ -21,7 +21,8 @@ pub mod local; // TEAM-331: Local process execution (bypasses SSH for localhost)
 
 // Re-export main functions
 // TEAM-378: RULE ZERO - Export CheckMode enum and single check_binary_exists() function
-pub use binary::{check_binary_exists, CheckMode};
+// TEAM-379: Export get_binary_mode and is_release_binary for build mode detection
+pub use binary::{check_binary_exists, get_binary_mode, is_release_binary, CheckMode};
 pub use local::{local_copy, local_exec}; // TEAM-331: Local execution helpers
 
 // TEAM-367: Re-export serde utilities from shared crate

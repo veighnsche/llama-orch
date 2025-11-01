@@ -39,8 +39,10 @@ function useDevices() {
   useEffect(() => {
     const fetchDevices = async () => {
       try {
+        // TEAM-378: In dev mode, derive backend URL from current origin
+        // If loaded from http://192.168.178.241:7836, backend is at http://192.168.178.241:7835
         const baseUrl = import.meta.env.DEV 
-          ? 'http://localhost:7835'
+          ? `${window.location.protocol}//${window.location.hostname}:7835`
           : window.location.origin
         
         const response = await fetch(`${baseUrl}/capabilities`)
@@ -60,10 +62,12 @@ function useDevices() {
 }
 
 // TEAM-374: Heartbeat status component with shared UI components
+// TEAM-378: Added hive metadata extraction for self-awareness
 function HeartbeatStatus() {
   const [connected, setConnected] = useState(false)
   const [workerCount, setWorkerCount] = useState(0)
   const [lastUpdate, setLastUpdate] = useState<string>('')
+  const [hiveInfo, setHiveInfo] = useState<any>(null)
 
   useEffect(() => {
     let monitor: any = null
@@ -72,8 +76,9 @@ function HeartbeatStatus() {
       try {
         const { HeartbeatMonitor } = await import('@rbee/rbee-hive-sdk')
         
+        // TEAM-378: In dev mode, derive backend URL from current origin
         const baseUrl = import.meta.env.DEV 
-          ? 'http://localhost:7835'
+          ? `${window.location.protocol}//${window.location.hostname}:7835`
           : window.location.origin
 
         monitor = new HeartbeatMonitor(baseUrl)
@@ -82,6 +87,10 @@ function HeartbeatStatus() {
           setConnected(true)
           setWorkerCount(event.workers?.length || 0)
           setLastUpdate(new Date().toLocaleTimeString())
+          // TEAM-378: Extract hive metadata for self-awareness
+          if (event.hive_info) {
+            setHiveInfo(event.hive_info)
+          }
         })
       } catch (err) {
         console.error('Failed to start heartbeat monitor:', err)
@@ -106,11 +115,28 @@ function HeartbeatStatus() {
               <Activity className="h-5 w-5" />
               Hive Status
             </CardTitle>
-            <CardDescription>Real-time worker telemetry</CardDescription>
+            <CardDescription>
+              {/* TEAM-378: Display hive metadata for self-awareness */}
+              {hiveInfo ? (
+                <span>
+                  {hiveInfo.id} • {hiveInfo.hostname}:{hiveInfo.port} • v{hiveInfo.version}
+                </span>
+              ) : (
+                'Real-time worker telemetry'
+              )}
+            </CardDescription>
           </div>
-          <Badge variant={connected ? "default" : "destructive"}>
-            {connected ? 'Connected' : 'Disconnected'}
-          </Badge>
+          <div className="flex gap-2">
+            {/* TEAM-378: Show operational status */}
+            {hiveInfo && (
+              <Badge variant="outline">
+                {hiveInfo.operational_status}
+              </Badge>
+            )}
+            <Badge variant={connected ? "default" : "destructive"}>
+              {connected ? 'Connected' : 'Disconnected'}
+            </Badge>
+          </div>
         </div>
       </CardHeader>
       <CardContent>
@@ -141,6 +167,7 @@ function HeartbeatStatus() {
 
 function App() {
   const { devices, loading: devicesLoading } = useDevices()
+  const [hiveInfo, setHiveInfo] = useState<any>(null)
 
   // TEAM-375: Listen for theme changes from parent (Keeper)
   useEffect(() => {
@@ -148,13 +175,57 @@ function App() {
     return cleanup
   }, [])
 
+  // TEAM-378: Subscribe to heartbeat for hive metadata
+  useEffect(() => {
+    let monitor: any = null
+
+    const initMonitor = async () => {
+      try {
+        const { HeartbeatMonitor } = await import('@rbee/rbee-hive-sdk')
+        
+        // TEAM-378: In dev mode, derive backend URL from current origin
+        const baseUrl = import.meta.env.DEV 
+          ? `${window.location.protocol}//${window.location.hostname}:7835`
+          : window.location.origin
+
+        monitor = new HeartbeatMonitor(baseUrl)
+        
+        monitor.start((event: any) => {
+          if (event.hive_info) {
+            setHiveInfo(event.hive_info)
+          }
+        })
+      } catch (err) {
+        console.error('Failed to start heartbeat monitor for header:', err)
+      }
+    }
+
+    initMonitor()
+
+    return () => {
+      if (monitor) {
+        monitor.stop()
+      }
+    }
+  }, [])
+
   return (
     <QueryProvider>
       <div className="min-h-screen bg-background text-foreground font-sans p-6 space-y-6">
-          {/* Header */}
+          {/* Header - TEAM-378: Self-aware with hive metadata */}
           <div>
-            <h1 className="text-3xl font-bold">Hive</h1>
-            <p className="text-muted-foreground">Worker & Model Management Dashboard</p>
+            <h1 className="text-3xl font-bold">
+              {hiveInfo ? `Hive: ${hiveInfo.id}` : 'Hive'}
+            </h1>
+            <p className="text-muted-foreground">
+              {hiveInfo ? (
+                <span>
+                  {hiveInfo.hostname}:{hiveInfo.port} • Version {hiveInfo.version} • {hiveInfo.operational_status}
+                </span>
+              ) : (
+                'Worker & Model Management Dashboard'
+              )}
+            </p>
           </div>
 
           {/* Status Row */}

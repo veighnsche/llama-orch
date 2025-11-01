@@ -37,7 +37,9 @@
 //! ```
 
 // TEAM-378: RULE ZERO - Use check_binary_exists with CheckMode::InstalledOnly
-use crate::utils::{check_binary_exists, CheckMode};
+// TEAM-379: Import get_binary_mode for build mode detection
+use crate::utils::{check_binary_exists, get_binary_mode, CheckMode};
+use lifecycle_shared::BINARY_INSTALL_DIR;
 
 // TEAM-367: Import shared types and utilities
 pub use lifecycle_shared::{check_health_http, DaemonStatus};
@@ -75,5 +77,30 @@ pub async fn check_daemon_health(
         check_binary_exists(daemon_name, CheckMode::InstalledOnly).await
     };
 
-    DaemonStatus { is_running, is_installed }
+    // TEAM-379: Step 3: Detect build mode if installed
+    let build_mode = if is_installed {
+        // Try to detect build mode from installed binary
+        if let Ok(home) = std::env::var("HOME") {
+            let installed_path = std::path::PathBuf::from(&home)
+                .join(BINARY_INSTALL_DIR)
+                .join(daemon_name);
+            
+            // Try to get build mode (may fail if binary doesn't support --build-info)
+            get_binary_mode(&installed_path).ok()
+        } else {
+            None
+        }
+    } else {
+        None
+    };
+
+    // TEAM-378: RULE ZERO - Added localhost SSH config fields
+    DaemonStatus {
+        is_running,
+        is_installed,
+        build_mode,
+        hostname: "localhost".to_string(),
+        user: whoami::username(),
+        port: 22,
+    }
 }

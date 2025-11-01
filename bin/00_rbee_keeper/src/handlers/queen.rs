@@ -103,6 +103,7 @@ pub async fn handle_queen(action: QueenAction, queen_url: &str) -> Result<()> {
                 daemon_name: "queen-rbee".to_string(),
                 local_binary_path: binary.map(std::path::PathBuf::from),
                 job_id: None,
+                force_reinstall: false, // TEAM-373: Normal install should check if already exists
             };
             install_daemon(config).await
         }

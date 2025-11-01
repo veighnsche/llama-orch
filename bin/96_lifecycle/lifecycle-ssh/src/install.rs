@@ -91,6 +91,10 @@ pub struct InstallConfig {
     /// Optional job ID for SSE narration routing
     /// When set, all narration (including timeout countdown) goes through SSE
     pub job_id: Option<String>,
+
+    /// Force reinstall even if binary already exists (used by rebuild)
+    /// TEAM-373: Allows rebuild_daemon to overwrite existing binaries
+    pub force_reinstall: bool,
 }
 
 /// Install daemon binary on remote machine
@@ -144,9 +148,10 @@ pub async fn install_daemon(install_config: InstallConfig) -> Result<()> {
         ssh_config.hostname
     );
 
-    // Step 0: Check if already installed
+    // Step 0: Check if already installed (skip if force_reinstall)
     // TEAM-338: Use check_binary_installed utility
-    if check_binary_installed(daemon_name, ssh_config).await {
+    // TEAM-373: Skip check when force_reinstall=true (called from rebuild)
+    if !install_config.force_reinstall && check_binary_installed(daemon_name, ssh_config).await {
         n!(
             "already_installed",
             "⚠️  {} is already installed on {}@{}",

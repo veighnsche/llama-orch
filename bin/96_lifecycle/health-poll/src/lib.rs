@@ -4,8 +4,11 @@
 //!
 //! Provides HTTP health check polling with exponential backoff.
 //! Used by all lifecycle crates to verify daemon startup.
+//!
+//! TEAM-373: Added narration for user-visible progress updates
 
 use anyhow::{Context, Result};
+use observability_narration_core::n;
 use std::time::Duration;
 
 /// Poll a health endpoint until it responds successfully
@@ -54,14 +57,18 @@ pub async fn poll_health(
             delay_ms = (delay_ms as f64 * backoff_multiplier) as u64;
         }
 
+        // TEAM-373: Add narration for user visibility
+        n!("health_attempt", "⏳ Health check attempt {}/{}", attempt, max_attempts);
         tracing::debug!("Health check attempt {}/{}: {}", attempt, max_attempts, url);
 
         match client.get(url).send().await {
             Ok(response) if response.status().is_success() => {
+                n!("health_success", "✅ Health check passed");
                 tracing::info!("✅ Health check passed: {}", url);
                 return Ok(());
             }
             Ok(response) => {
+                n!("health_retry", "⏳ HTTP {} - retrying...", response.status());
                 tracing::debug!(
                     "⏳ Health check failed (attempt {}/{}): HTTP {}",
                     attempt,
@@ -70,6 +77,7 @@ pub async fn poll_health(
                 );
             }
             Err(e) => {
+                n!("health_retry", "⏳ Connection failed - retrying...");
                 tracing::debug!(
                     "⏳ Health check failed (attempt {}/{}): {}",
                     attempt,

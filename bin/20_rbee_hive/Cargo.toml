@@ -21,6 +21,8 @@ path = "src/lib.rs"
 axum = { workspace = true }
 tokio = { workspace = true, features = ["full"] }
 tower-http = { version = "0.6", features = ["cors"] } # TEAM-374: CORS support for web UI
+rust-embed = "8.5" # TEAM-378: Embed static files in binary for distribution
+mime_guess = "2.0" # TEAM-378: MIME type detection for embedded assets
 
 # CLI
 clap = { version = "4", features = ["derive"] }

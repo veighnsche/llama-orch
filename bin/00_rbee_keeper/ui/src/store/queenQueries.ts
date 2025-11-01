@@ -8,6 +8,7 @@ import { withCommandExecution } from './commandUtils';
 export interface QueenStatus {
   isRunning: boolean;
   isInstalled: boolean;
+  buildMode: string | null; // TEAM-379: "debug", "release", or null
 }
 
 // Query keys for React Query
@@ -23,6 +24,7 @@ async function fetchQueenStatus(): Promise<QueenStatus> {
     return {
       isRunning: result.data.is_running,
       isInstalled: result.data.is_installed,
+      buildMode: result.data.build_mode, // TEAM-379: "debug", "release", or null
     };
   }
   throw new Error(result.error || 'Failed to fetch Queen status');
@@ -33,8 +35,8 @@ export function useQueen() {
   return useQuery({
     queryKey: queenKeys.status(),
     queryFn: fetchQueenStatus,
-    staleTime: 10 * 1000, // 10 seconds
-    gcTime: 2 * 60 * 1000, // 2 minutes cache
+    staleTime: 0, // TEAM-379: Always fetch fresh - show current build mode immediately
+    gcTime: 30 * 1000, // 30 seconds - keep in memory briefly
   });
 }
 

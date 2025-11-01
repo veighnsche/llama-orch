@@ -38,7 +38,6 @@ async getInstalledHives() : Promise<Result<string[], string>> {
 }
 },
 /**
- * Refresh device capabilities for a hive
  * Open SSH config file in default text editor
  * TEAM-338: Opens ~/.ssh/config with system default editor
  */
@@ -148,10 +147,10 @@ async hiveStop(alias: string) : Promise<Result<string, string>> {
 }
 },
 /**
- * Check rbee-hive status
- * TEAM-338: Returns structured status (isRunning, isInstalled)
- * TEAM-338: RULE ZERO FIX - Use DaemonStatus directly (deleted HiveStatus duplicate)
+ * Get hive status (running + installed)
+ * 
  * TEAM-342: Added narration for visibility in UI
+ * TEAM-374: Fixed to use lifecycle-local for localhost (no SSH)
  */
 async hiveStatus(alias: string) : Promise<Result<DaemonStatus, string>> {
     try {
@@ -164,10 +163,11 @@ async hiveStatus(alias: string) : Promise<Result<DaemonStatus, string>> {
 /**
  * Install rbee-hive binary
  * TEAM-338: Thin wrapper around handle_hive()
+ * binary: Optional binary type ("release" for production, null/None for dev)
  */
-async hiveInstall(alias: string) : Promise<Result<string, string>> {
+async hiveInstall(alias: string, binary: string | null) : Promise<Result<string, string>> {
     try {
-    return { status: "ok", data: await TAURI_INVOKE("hive_install", { alias }) };
+    return { status: "ok", data: await TAURI_INVOKE("hive_install", { alias, binary }) };
 } catch (e) {
     if(e instanceof Error) throw e;
     else return { status: "error", error: e  as any };
@@ -215,16 +215,36 @@ async hiveRebuild(alias: string) : Promise<Result<string, string>> {
  * TEAM-338: RULE ZERO - Updated existing function to return struct
  * TEAM-338: RULE ZERO FIX - Added Serialize, Deserialize, specta::Type for Tauri bindings
  * This is the SINGLE SOURCE OF TRUTH for daemon status (no QueenStatus/HiveStatus duplicates)
+ * TEAM-378: RULE ZERO - Added SSH config fields (hostname, user, port) for iframe URL construction
  */
 export type DaemonStatus = { 
 /**
- * Is the daemon currently running?
+ * Whether daemon is currently running
  */
 is_running: boolean; 
 /**
- * Is the daemon binary installed?
+ * Whether daemon binary is installed
  */
-is_installed: boolean }
+is_installed: boolean; 
+/**
+ * Build mode of installed binary ("debug", "release", or None if not installed/unknown)
+ * TEAM-379: Added for UI display
+ */
+build_mode: string | null; 
+/**
+ * TEAM-378: SSH hostname (IP address or domain) - needed for iframe URL
+ * For localhost, this will be "localhost" or "127.0.0.1"
+ * For remote hives, this is the actual IP/domain from SSH config
+ */
+hostname: string; 
+/**
+ * TEAM-378: SSH username - needed for remote operations
+ */
+user: string; 
+/**
+ * TEAM-378: SSH port - needed for remote operations
+ */
+port: number }
 /**
  * Narration event payload for Tauri frontend
  * TEAM-339: Include ALL narration fields for rich UI display

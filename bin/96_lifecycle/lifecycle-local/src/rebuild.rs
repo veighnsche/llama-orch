@@ -181,6 +181,7 @@ pub async fn rebuild_daemon(rebuild_config: RebuildConfig) -> Result<()> {
         daemon_name: daemon_name.clone(),
         local_binary_path: Some(binary_path),
         job_id: rebuild_config.job_id.clone(),
+        force_reinstall: true, // TEAM-373: Allow overwriting existing binary
     };
 
     install_daemon(install_config).await.context("Failed to install new binary")?;

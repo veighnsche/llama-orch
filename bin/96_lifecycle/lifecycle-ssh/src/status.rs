@@ -38,7 +38,8 @@
 //! # }
 //! ```
 
-use crate::utils::binary::check_binary_installed;
+// TEAM-379: Import get_remote_binary_mode for build mode detection
+use crate::utils::binary::{check_binary_installed, get_remote_binary_mode};
 use crate::SshConfig;
 
 // TEAM-367: Import shared types and utilities
@@ -77,5 +78,21 @@ pub async fn check_daemon_health(
         check_binary_installed(daemon_name, ssh_config).await
     };
 
-    DaemonStatus { is_running, is_installed }
+    // TEAM-379: Step 3: Detect build mode if installed (via SSH)
+    let build_mode = if is_installed {
+        // Try to detect build mode from remote binary
+        get_remote_binary_mode(daemon_name, ssh_config).await.ok()
+    } else {
+        None
+    };
+
+    // TEAM-378: RULE ZERO - Added SSH config fields from ssh_config parameter
+    DaemonStatus {
+        is_running,
+        is_installed,
+        build_mode,
+        hostname: ssh_config.hostname.clone(),
+        user: ssh_config.user.clone(),
+        port: ssh_config.port,
+    }
 }

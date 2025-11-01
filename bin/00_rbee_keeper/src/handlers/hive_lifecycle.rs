@@ -96,14 +96,20 @@ pub async fn handle_hive_lifecycle(action: HiveLifecycleAction, queen_url: &str)
                 let base_url = format!("http://{}:{}", ssh.hostname, port);
                 let health_url = format!("{}/health", base_url);
                 
-                // TEAM-368: Get keeper's local IP (Queen is on same machine)
+                // TEAM-378: Get keeper's local IP (Queen is on same machine)
+                // Use SSH hostname as hint - if we can SSH to the remote, it can reach us back
                 let local_ip = local_ip().map_err(|e| anyhow::anyhow!("Failed to get local IP: {}", e))?;
+                
+                n!("detected_local_ip", "🔍 Detected local IP: {}", local_ip);
+                n!("ssh_target", "🎯 SSH target: {}@{}", ssh.user, ssh.hostname);
+                
                 let queen_port = queen_url.split(':').last()
                     .and_then(|p| p.parse::<u16>().ok())
                     .unwrap_or(7833);
                 let network_queen_url = format!("http://{}:{}", local_ip, queen_port);
                 
                 n!("remote_hive_queen_url", "🌐 Remote hive will use Queen at: {}", network_queen_url);
+                n!("vite_dev_server", "🎨 Vite dev server will be at: http://{}:7836", local_ip);
                 
                 let args = vec![
                     "--port".to_string(),
@@ -185,6 +191,7 @@ pub async fn handle_hive_lifecycle(action: HiveLifecycleAction, queen_url: &str)
                     daemon_name: "rbee-hive".to_string(),
                     local_binary_path: binary.clone().map(|b| b.into()),
                     job_id: None,
+                    force_reinstall: false, // TEAM-373: Normal install should check if already exists
                 };
                 lifecycle_local::install_daemon(config).await
             } else {
@@ -195,6 +202,7 @@ pub async fn handle_hive_lifecycle(action: HiveLifecycleAction, queen_url: &str)
                     ssh_config: ssh,
                     local_binary_path: binary.map(|b| b.into()),
                     job_id: None,
+                    force_reinstall: false, // TEAM-373: Normal install should check if already exists
                 };
                 lifecycle_ssh::install_daemon(config).await
             }

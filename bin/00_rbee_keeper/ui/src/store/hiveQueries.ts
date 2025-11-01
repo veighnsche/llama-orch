@@ -15,6 +15,7 @@ export interface SshHive {
   user: string;
   port: number;
   status: "online" | "offline" | "unknown";
+  buildMode: string | null; // TEAM-379: "debug", "release", or null
   isInstalled?: boolean;
 }
 
@@ -28,6 +29,7 @@ function convertToSshHive(target: SshTarget): SshHive {
     user: target.user,
     port: target.port,
     status: target.status,
+    buildMode: null, // TEAM-379: Not available from SSH list, only from status check
   };
 }
 
@@ -51,21 +53,26 @@ async function fetchSshHivesList(): Promise<SshHive[]> {
 }
 
 // Fetch individual hive status
-async function fetchHiveStatus(hiveId: string): Promise<SshHive> {
+// TEAM-378: RULE ZERO - Backend now returns complete info (hostname, user, port)
+async function fetchHiveStatus(hiveId: string, sshHives?: SshHive[]): Promise<SshHive> {
   const result = await commands.hiveStatus(hiveId);
   if (result.status === 'ok') {
-    const { is_running, is_installed } = result.data;
+    const { is_running, is_installed, build_mode, hostname, user, port } = result.data;
     
-    // Try to get hive details from the list query cache
+    // TEAM-378: Get host_subtitle from SSH list (only field not in DaemonStatus)
+    const sshConfig = sshHives?.find(h => h.host === hiveId);
+    
     const status = is_running ? 'online' : 'offline';
     
     return {
       host: hiveId,
-      hostname: hiveId,
-      user: 'unknown',
-      port: 22,
+      hostname, // TEAM-378: Now comes directly from backend!
+      user,     // TEAM-378: Now comes directly from backend!
+      port,     // TEAM-378: Now comes directly from backend!
       status: status as 'online' | 'offline',
       isInstalled: is_installed,
+      buildMode: build_mode,
+      host_subtitle: sshConfig?.host_subtitle,
     };
   }
   throw new Error(result.error || `Failed to fetch status for hive ${hiveId}`);
@@ -98,12 +105,19 @@ export function useInstalledHives() {
 }
 
 // Hook: Fetch individual hive status
+// TEAM-378: Merges SSH config (hostname/IP) with daemon status (running/installed)
 export function useHive(hiveId: string) {
+  const queryClient = useQueryClient();
+  
   return useQuery({
     queryKey: hiveKeys.detail(hiveId),
-    queryFn: () => fetchHiveStatus(hiveId),
-    staleTime: 10 * 1000, // 10 seconds
-    gcTime: 2 * 60 * 1000, // 2 minutes cache
+    queryFn: () => {
+      // TEAM-378: Get SSH config from cache to merge hostname/IP
+      const sshHives = queryClient.getQueryData<SshHive[]>(hiveKeys.list());
+      return fetchHiveStatus(hiveId, sshHives);
+    },
+    staleTime: 0, // TEAM-379: Always fetch fresh - cards only show for installed hives
+    gcTime: 30 * 1000, // 30 seconds - keep in memory briefly for quick navigation
     // TEAM-368: Don't use initialData from SSH list - it doesn't have daemon status!
   });
 }

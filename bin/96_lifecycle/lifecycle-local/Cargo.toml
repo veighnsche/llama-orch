@@ -5,7 +5,8 @@ edition = "2021"
 
 [features]
 # TEAM-338: RULE ZERO FIX - Optional tauri feature for specta::Type on DaemonStatus
-tauri = ["dep:specta"]
+# TEAM-379: Enable tauri feature on lifecycle-shared for DaemonStatus specta::Type
+tauri = ["dep:specta", "lifecycle-shared/tauri"]
 
 [dependencies]
 # TEAM-367: Shared types and utilities

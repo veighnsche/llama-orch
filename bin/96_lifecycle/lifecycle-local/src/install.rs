@@ -79,6 +79,10 @@ pub struct InstallConfig {
     /// Optional job ID for SSE narration routing
     /// When set, all narration (including timeout countdown) goes through SSE
     pub job_id: Option<String>,
+
+    /// Force reinstall even if binary already exists (used by rebuild)
+    /// TEAM-373: Allows rebuild_daemon to overwrite existing binaries
+    pub force_reinstall: bool,
 }
 
 /// Install daemon binary LOCALLY
@@ -112,9 +116,10 @@ pub async fn install_daemon(install_config: InstallConfig) -> Result<()> {
 
     n!("install_start", "📦 Installing {} locally", daemon_name);
 
-    // Step 0: Check if already installed
+    // Step 0: Check if already installed (skip if force_reinstall)
     // TEAM-378: RULE ZERO - Use CheckMode::InstalledOnly
-    if check_binary_exists(daemon_name, CheckMode::InstalledOnly).await {
+    // TEAM-373: Skip check when force_reinstall=true (called from rebuild)
+    if !install_config.force_reinstall && check_binary_exists(daemon_name, CheckMode::InstalledOnly).await {
         n!("already_installed", "⚠️  {} is already installed in ~/.local/bin/", daemon_name);
         anyhow::bail!("{} is already installed in ~/.local/bin/. Use rebuild to update.", daemon_name);
     }

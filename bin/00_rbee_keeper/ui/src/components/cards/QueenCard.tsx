@@ -74,6 +74,9 @@ function QueenCardContent({
             Job router that dispatches inference requests to workers in the
             correct hive
           </p>
+          <p className="text-xs text-muted-foreground">
+            Build: <span className="font-mono">{queen.buildMode || 'unknown'}</span>
+          </p>
           <ServiceActionButton
             serviceId="queen"
             isInstalled={isInstalled}

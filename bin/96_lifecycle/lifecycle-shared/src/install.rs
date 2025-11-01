@@ -33,13 +33,34 @@ pub async fn resolve_binary_path(
     job_id: Option<String>,
 ) -> Result<PathBuf> {
     if let Some(path) = local_binary_path {
-        n!("verify_binary", "🔍 Verifying pre-built binary at: {}", path.display());
-        if !path.exists() {
-            n!("binary_not_found", "❌ Binary not found at: {}", path.display());
-            anyhow::bail!("Binary not found at: {}", path.display());
+        // TEAM-379: Handle special keywords "release" and "debug"
+        let (resolved_path, build_target) = if path.to_str() == Some("release") {
+            (PathBuf::from(format!("target/release/{}", daemon_name)), Some("release"))
+        } else if path.to_str() == Some("debug") {
+            (PathBuf::from(format!("target/debug/{}", daemon_name)), Some("debug"))
+        } else {
+            (path, None)
+        };
+        
+        n!("verify_binary", "🔍 Verifying pre-built binary at: {}", resolved_path.display());
+        if !resolved_path.exists() {
+            // TEAM-379: If using keyword and binary doesn't exist, build it!
+            if let Some(target) = build_target {
+                n!("building_missing", "🔨 Binary not found, building {} version...", target);
+                let build_config = BuildConfig {
+                    daemon_name: daemon_name.to_string(),
+                    target: Some(target.to_string()),
+                    job_id: job_id.clone(),
+                    features: None,
+                };
+                return build_daemon(build_config).await;
+            }
+            // For explicit paths (not keywords), fail if not found
+            n!("binary_not_found", "❌ Binary not found at: {}", resolved_path.display());
+            anyhow::bail!("Binary not found at: {}", resolved_path.display());
         }
-        n!("using_binary", "📦 Using pre-built binary: {}", path.display());
-        Ok(path)
+        n!("using_binary", "📦 Using pre-built binary: {}", resolved_path.display());
+        Ok(resolved_path)
     } else {
         // Build from source
         let build_config = BuildConfig {

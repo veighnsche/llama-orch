@@ -206,27 +206,50 @@ async fn main() -> anyhow::Result<()> {
         .route("/v1/jobs/{job_id}", delete(http::jobs::handle_cancel_job)) // TEAM-305-FIX: Cancel job endpoint
         .with_state(job_state);
 
-    // TEAM-374: Development proxy - forwards /dev/* to Vite dev server (port 7836)
-    // CRITICAL: Axum requires {*path} syntax for wildcard capture, NOT *path
-    // Using *path will panic: "Path segments must not start with `*`"
-    // CRITICAL: Must be added BEFORE static router merge, otherwise static fallback catches it!
-    // CRITICAL: Need both /dev and /dev/{*path} to handle root and subpaths
-    app = app
-        .route("/dev", get(http::dev_proxy_handler))
-        .route("/dev/", get(http::dev_proxy_handler))
-        .route("/dev/{*path}", get(http::dev_proxy_handler));
-
-    // TEAM-374: Add CORS layer to allow web UI access
+    // TEAM-378: Add CORS layer BEFORE dev proxy routes
     let cors = CorsLayer::new()
         .allow_origin(Any) // Allow any origin for development
         .allow_methods(Any) // Allow any HTTP method
         .allow_headers(Any); // Allow any headers
 
     app = app.layer(cors); // TEAM-374: Apply CORS to all routes
+    
+    // TEAM-378: Development proxy - Extract Vite dev server URL from queen_url
+    // For remote hives, proxy to the dev machine (where queen is running)
+    // CRITICAL: Axum requires {*path} syntax for wildcard capture, NOT *path
+    // Using *path will panic: "Path segments must not start with `*`"
+    // CRITICAL: Must be added BEFORE static router merge, otherwise static fallback catches it!
+    // CRITICAL: Need both /dev and /dev/{*path} to handle root and subpaths
+    
+    // Extract hostname from queen_url (e.g., "http://localhost:7833" → "localhost")
+    let vite_host = if let Ok(queen_uri) = args.queen_url.parse::<axum::http::Uri>() {
+        queen_uri.host().unwrap_or("localhost").to_string()
+    } else {
+        "localhost".to_string()
+    };
+    let vite_url = format!("http://{}:7836", vite_host);
+    
+    n!("dev_proxy_config", "🔧 Dev proxy configured: /dev → {}", vite_url);
+    
+    let dev_proxy_state = http::DevProxyState {
+        vite_url: std::sync::Arc::new(vite_url),
+    };
+    
+    // Create dev proxy router with its own state
+    let dev_router = Router::new()
+        .route("/dev", get(http::dev_proxy_handler))
+        .route("/dev/", get(http::dev_proxy_handler))
+        .route("/dev/{*path}", get(http::dev_proxy_handler))
+        .with_state(dev_proxy_state);
+    
+    // Merge dev router into main app
+    app = app.merge(dev_router);
 
-    // TEAM-374: TODO - Add static file serving for production
-    // For now, UI is accessed via /dev in development mode
-    // In production, we'll need to embed static files like Queen does
+    // TEAM-378: Add static file serving for production
+    // Merge static router AFTER API routes so API takes priority
+    // Static router has fallback handler for SPA routing
+    let static_router = http::create_static_router();
+    app = app.merge(static_router);
 
     // TEAM-335: Bind to 0.0.0.0 to allow remote access (needed for remote hives)
     // Localhost-only binding (127.0.0.1) would prevent health checks from remote machines

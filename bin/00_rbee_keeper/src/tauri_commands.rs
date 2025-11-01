@@ -277,16 +277,11 @@ pub async fn hive_status(alias: String) -> Result<lifecycle_ssh::DaemonStatus, S
     n!("hive_status_check", "🔍 Checking status for hive '{}'", alias);
 
     // TEAM-374: RULE ZERO - Use lifecycle-local for localhost, lifecycle-ssh for remote
+    // TEAM-378: RULE ZERO - Both local and remote now return complete DaemonStatus with SSH fields
     let status = if alias == "localhost" {
         // Localhost - use lifecycle-local (no SSH, fast)
         let health_url = "http://localhost:7835/health";
-        let local_status = lifecycle_local::check_daemon_health(health_url, "rbee-hive").await;
-        
-        // Convert to lifecycle_ssh::DaemonStatus for return type compatibility
-        lifecycle_ssh::DaemonStatus {
-            is_running: local_status.is_running,
-            is_installed: local_status.is_installed,
-        }
+        lifecycle_local::check_daemon_health(health_url, "rbee-hive").await
     } else {
         // Remote - use lifecycle-ssh
         use crate::ssh_resolver::resolve_ssh_config;
