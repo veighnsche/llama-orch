@@ -29,6 +29,7 @@ clap = { version = "4", features = ["derive"] }
 
 # Error handling
 anyhow = "1.0"
+thiserror = "1.0"  # TEAM-378: For PKGBUILD parser/executor error types
 tracing = "0.1"  # TEAM-284: For heartbeat logging
 chrono = "0.4"  # TEAM-372: For RFC3339 timestamps in SSE events
 
@@ -78,6 +79,9 @@ rbee-hive-worker-catalog = { path = "../25_rbee_hive_crates/worker-catalog" }
 
 # TEAM-366: URL validation for heartbeat edge cases
 url = "2.5"
+
+# TEAM-378: Worker installation dependencies
+tempfile = "3.8"  # Temporary directories for PKGBUILD build process
 
 # TEAM-334: For process management (Unix only)
 [target.'cfg(unix)'.dependencies]

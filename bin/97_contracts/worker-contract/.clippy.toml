@@ -1,0 +1,29 @@
+# TEAM-378: Enforce WASM compatibility for contract types
+#
+# Contracts should be pure types that can compile to WASM for use in:
+# - Browser environments (TypeScript SDK)
+# - Edge workers (Cloudflare Workers, Deno Deploy)
+# - WASM-based plugins
+#
+# These rules prevent non-WASM-compatible code from being added to contracts.
+
+# Disallow std::io operations (not available in WASM)
+disallowed-types = [
+    "std::io::Error",
+    "std::io::Read",
+    "std::io::Write",
+    "std::fs::File",
+    "std::path::PathBuf",
+    "std::path::Path",
+]
+
+# Disallow methods that require OS-specific features
+disallowed-methods = [
+    "std::env::var",
+    "std::env::current_dir",
+    "std::thread::spawn",
+    "tokio::spawn",
+]
+
+# Warn on functions that might not be WASM-compatible
+# (These can be allowed case-by-case with #[allow(clippy::...)])

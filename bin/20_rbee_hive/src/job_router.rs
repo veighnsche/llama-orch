@@ -142,17 +142,35 @@ async fn execute_operation(operation: Operation, operation_name: String, job_id:
         // ========================================================================
         //
         // TEAM-334: Worker lifecycle uses daemon-lifecycle directly
-        //
-        // IMPORTANT: Worker binary installation/uninstallation is NOT handled here!
-        // - Worker binaries are managed by worker-catalog
-        // - Hive only spawns/stops worker PROCESSES
-        // - There are unlimited types of workers (cpu, cuda, metal, vulkan, etc.)
-        // - Each worker type is a separate binary in the catalog
+        // TEAM-378: Worker binary installation via PKGBUILD
         //
         // Worker operations:
+        // - WorkerInstall: Download PKGBUILD from catalog, build, and install binary
         // - WorkerSpawn: Start a worker process (assumes binary exists in catalog)
         // - WorkerProcessList/Get/Delete: Manage running processes (ps/kill)
         //
+        Operation::WorkerInstall(request) => {
+            // TEAM-378: Worker binary installation from catalog
+            n!(
+                "worker_install_start",
+                "📦 Installing worker '{}' on hive '{}'",
+                request.worker_id,
+                request.hive_id
+            );
+
+            rbee_hive::worker_install::handle_worker_install(
+                request.worker_id.clone(),
+                state.worker_catalog.clone(),
+            )
+            .await?;
+
+            n!(
+                "worker_install_complete",
+                "✅ Worker '{}' installation complete",
+                request.worker_id
+            );
+        }
+
         Operation::WorkerSpawn(request) => {
             use lifecycle_local::{start_daemon, HttpDaemonConfig, StartConfig};
             use rbee_hive_worker_catalog::{Platform, WorkerType};

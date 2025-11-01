@@ -1,0 +1,64 @@
+name: Contracts WASM Compatibility
+
+on:
+  push:
+    branches:
+      - main
+      - develop
+    paths:
+      - 'bin/97_contracts/**'
+  pull_request:
+    paths:
+      - 'bin/97_contracts/**'
+
+jobs:
+  wasm-check:
+    name: Check WASM Compatibility
+    runs-on: ubuntu-latest
+    
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: wasm32-unknown-unknown
+      
+      - name: Cache cargo registry
+        uses: actions/cache@v4
+        with:
+          path: ~/.cargo/registry
+          key: ${{ runner.os }}-cargo-registry-${{ hashFiles('**/Cargo.lock') }}
+      
+      - name: Cache cargo index
+        uses: actions/cache@v4
+        with:
+          path: ~/.cargo/git
+          key: ${{ runner.os }}-cargo-index-${{ hashFiles('**/Cargo.lock') }}
+      
+      - name: Cache cargo build
+        uses: actions/cache@v4
+        with:
+          path: target
+          key: ${{ runner.os }}-cargo-build-wasm-${{ hashFiles('**/Cargo.lock') }}
+      
+      - name: Check all contracts for WASM compatibility
+        run: |
+          # All contract crates in bin/97_contracts/
+          cargo check -p operations-contract --target wasm32-unknown-unknown
+          cargo clippy -p operations-contract --target wasm32-unknown-unknown -- -D warnings
+          
+          cargo check -p hive-contract --target wasm32-unknown-unknown
+          cargo clippy -p hive-contract --target wasm32-unknown-unknown -- -D warnings
+          
+          cargo check -p worker-contract --target wasm32-unknown-unknown
+          cargo clippy -p worker-contract --target wasm32-unknown-unknown -- -D warnings
+          
+          cargo check -p shared-contract --target wasm32-unknown-unknown
+          cargo clippy -p shared-contract --target wasm32-unknown-unknown -- -D warnings
+          
+          cargo check -p keeper-config-contract --target wasm32-unknown-unknown
+          cargo clippy -p keeper-config-contract --target wasm32-unknown-unknown -- -D warnings
+          
+          cargo check -p job-server --target wasm32-unknown-unknown
+          cargo clippy -p job-server --target wasm32-unknown-unknown -- -D warnings

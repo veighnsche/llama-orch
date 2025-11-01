@@ -5,7 +5,7 @@
 export type { ProcessStats } from '@rbee/rbee-hive-react'
 
 // UI-specific types
-export type ViewMode = 'active' | 'spawn'
+export type ViewMode = 'catalog' | 'active' | 'spawn'
 
 export interface SpawnFormState {
   modelId: string

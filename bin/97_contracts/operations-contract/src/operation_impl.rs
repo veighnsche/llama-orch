@@ -24,6 +24,7 @@ impl Operation {
             Operation::Infer { .. } => "infer",
             
             // Hive operations - Worker lifecycle
+            Operation::WorkerInstall { .. } => "worker_install", // TEAM-378: Worker binary installation
             Operation::WorkerSpawn { .. } => "worker_spawn",
             Operation::WorkerProcessList { .. } => "worker_process_list",
             Operation::WorkerProcessGet { .. } => "worker_process_get",
@@ -54,6 +55,7 @@ impl Operation {
     pub fn hive_id(&self) -> Option<&str> {
         match self {
             // Operations with hive_id in typed requests
+            Operation::WorkerInstall(req) => Some(&req.hive_id), // TEAM-378: Worker binary installation
             Operation::WorkerSpawn(req) => Some(&req.hive_id),
             Operation::WorkerProcessList(req) => Some(&req.hive_id),
             Operation::WorkerProcessGet(req) => Some(&req.hive_id),
@@ -105,7 +107,8 @@ impl Operation {
             Operation::Status | Operation::Infer(_) => TargetServer::Queen,
             
             // Hive operations (worker/model lifecycle)
-            Operation::WorkerSpawn(_)
+            Operation::WorkerInstall(_) // TEAM-378: Worker binary installation
+                | Operation::WorkerSpawn(_)
                 | Operation::WorkerProcessList(_)
                 | Operation::WorkerProcessGet(_)
                 | Operation::WorkerProcessDelete(_)

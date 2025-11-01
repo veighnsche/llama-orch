@@ -10,6 +10,15 @@ use serde::{Deserialize, Serialize};
 // Worker Operation Requests
 // ============================================================================
 
+/// Request to install a worker binary from catalog
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+pub struct WorkerInstallRequest {
+    /// Hive ID where worker should be installed
+    pub hive_id: String,
+    /// Worker ID from catalog (e.g., "llm-worker-rbee-cpu")
+    pub worker_id: String,
+}
+
 /// Request to spawn a worker process
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct WorkerSpawnRequest {

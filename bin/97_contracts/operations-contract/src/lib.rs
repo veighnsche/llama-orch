@@ -127,6 +127,8 @@ pub enum Operation {
     
     // Worker Lifecycle
     // ───────────────────────────────────────────────────────────────────────
+    /// Install a worker binary from catalog (download PKGBUILD, build, install)
+    WorkerInstall(WorkerInstallRequest),
     /// Spawn a worker process on hive
     WorkerSpawn(WorkerSpawnRequest),
     /// List worker processes running on hive (local ps, not registry)

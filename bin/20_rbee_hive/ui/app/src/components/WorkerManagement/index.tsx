@@ -1,7 +1,8 @@
 // TEAM-382: Worker Management - Main component with clean composition
+// Updated to focus on worker installation lifecycle first
 
 import { useState } from 'react'
-import { Server, Plus, Activity } from 'lucide-react'
+import { Server, Plus, Activity, Package } from 'lucide-react'
 import {
   Card,
   CardContent,
@@ -18,13 +19,14 @@ import { useWorkers, useHiveOperations } from '@rbee/rbee-hive-react'
 import { useModels } from '@rbee/rbee-hive-react'
 import { ActiveWorkersView } from './ActiveWorkersView'
 import { SpawnWorkerView } from './SpawnWorkerView'
+import { WorkerCatalogView } from './WorkerCatalogView'
 import type { ViewMode, SpawnFormState } from './types'
 
 export function WorkerManagement() {
   const { workers, loading, error } = useWorkers()
   const { models } = useModels()
   const { spawnWorker, isPending } = useHiveOperations()
-  const [viewMode, setViewMode] = useState<ViewMode>('active')
+  const [viewMode, setViewMode] = useState<ViewMode>('catalog') // Start with catalog - install workers first!
 
   // Separate idle and active workers
   const idleWorkers = workers.filter((w: any) => w.gpu_util_pct === 0.0)
@@ -37,6 +39,18 @@ export function WorkerManagement() {
       deviceId: params.deviceId,
     })
   }
+  
+  const handleInstallWorker = async (workerId: string) => {
+    // TODO: Call hive backend to install worker
+    console.log('Installing worker:', workerId)
+    // POST /v1/workers/install { worker_id: workerId }
+  }
+  
+  const handleRemoveWorker = async (workerId: string) => {
+    // TODO: Call hive backend to remove worker
+    console.log('Removing worker:', workerId)
+    // DELETE /v1/workers/{workerId}
+  }
 
   return (
     <Card className="col-span-2">
@@ -48,7 +62,7 @@ export function WorkerManagement() {
               Worker Management
             </CardTitle>
             <CardDescription>
-              Spawn workers, monitor performance, and manage processes
+              Install workers, monitor performance, and manage processes
             </CardDescription>
           </div>
           <div className="flex gap-2">
@@ -61,7 +75,11 @@ export function WorkerManagement() {
       <CardContent className="space-y-4">
         {/* View Mode Tabs */}
         <Tabs value={viewMode} onValueChange={(v) => setViewMode(v as ViewMode)}>
-          <TabsList className="grid w-full grid-cols-2">
+          <TabsList className="grid w-full grid-cols-3">
+            <TabsTrigger value="catalog">
+              <Package className="h-4 w-4 mr-2" />
+              Worker Catalog
+            </TabsTrigger>
             <TabsTrigger value="active">
               <Activity className="h-4 w-4 mr-2" />
               Active Workers ({workers.length})
@@ -72,6 +90,14 @@ export function WorkerManagement() {
             </TabsTrigger>
           </TabsList>
 
+          {/* Worker Catalog Tab - FIRST PRIORITY */}
+          <TabsContent value="catalog" className="space-y-4">
+            <WorkerCatalogView
+              onInstall={handleInstallWorker}
+              onRemove={handleRemoveWorker}
+            />
+          </TabsContent>
+
           {/* Active Workers Tab */}
           <TabsContent value="active" className="space-y-4">
             <ActiveWorkersView
@@ -81,7 +107,7 @@ export function WorkerManagement() {
             />
           </TabsContent>
 
-          {/* Spawn Worker Tab */}
+          {/* Spawn Worker Tab - REQUIRES INSTALLED WORKERS + MODELS */}
           <TabsContent value="spawn" className="space-y-4">
             <SpawnWorkerView
               models={models}
