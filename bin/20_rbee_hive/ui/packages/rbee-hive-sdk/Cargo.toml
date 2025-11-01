@@ -17,7 +17,8 @@ crate-type = ["cdylib", "rlib"]
 [dependencies]
 # TEAM-353: Reuse existing shared crates (same as Queen SDK)
 job-client = { path = "../../../../99_shared_crates/job-client" }
-operations-contract = { path = "../../../../97_contracts/operations-contract" }
+# TEAM-381: Enable wasm feature for TypeScript type generation
+operations-contract = { path = "../../../../97_contracts/operations-contract", features = ["wasm"] }
 
 # TEAM-353: WASM bindings
 wasm-bindgen = "0.2"

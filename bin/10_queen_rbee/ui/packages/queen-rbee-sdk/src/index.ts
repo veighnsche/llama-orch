@@ -7,54 +7,26 @@
 //
 // Note: Worker/Model/Infer operations belong to Hive UI
 
-// TEAM-364: Updated to match backend ProcessStats structure
-export interface ProcessStats {
-  pid: number
-  group: string
-  instance: string
-  cpu_pct: number
-  rss_mb: number
-  io_r_mb_s: number
-  io_w_mb_s: number
-  uptime_s: number
-  gpu_util_pct: number
-  vram_mb: number
-  total_vram_mb: number
-  model: string | null
-}
+// ============================================================================
+// TEAM-381: IMPORTANT - Types Should Come From Rust!
+// ============================================================================
+// 
+// The following types are MANUALLY DEFINED but should be AUTO-GENERATED from Rust.
+// 
+// WHY? Single source of truth - types defined once in Rust, generated for TypeScript.
+// HOW? Using `tsify` crate to auto-generate TypeScript from Rust structs.
+// 
+// TODO: Migrate these types to Rust:
+// 1. Add `#[cfg_attr(feature = "wasm", derive(Tsify))]` to Rust struct
+// 2. Enable `wasm` feature in SDK Cargo.toml
+// 3. Re-export in SDK lib.rs
+// 4. Re-export in this file from './pkg/bundler/rbee_sdk'
+// 
+// See: bin/.plan/TEAM_381_HOW_TO_ADD_TYPES_FROM_RUST.md
+// ============================================================================
 
-// TEAM-364: Hive telemetry event (sent every 1s from each hive)
-export interface HiveTelemetry {
-  type: 'hive_telemetry'
-  hive_id: string
-  timestamp: string
-  workers: ProcessStats[]
-}
 
-// TEAM-364: Queen heartbeat event (sent every 2.5s)
-export interface QueenHeartbeat {
-  type: 'queen'
-  workers_online: number
-  workers_available: number
-  hives_online: number
-  hives_available: number
-  worker_ids: string[]
-  hive_ids: string[]
-  timestamp: string
-}
-
-// TEAM-364: Union type for all heartbeat events
-export type HeartbeatEvent = HiveTelemetry | QueenHeartbeat
-
-// Legacy interface (deprecated, use HeartbeatEvent instead)
-export interface HeartbeatSnapshot {
-  workers_online: number
-  hives_online: number
-  timestamp: string
-  workers: ProcessStats[]
-}
-
-// Re-export WASM SDK types
+// Re-export WASM SDK types (including Rust-generated types via tsify)
 export type { 
   QueenClient, 
   HeartbeatMonitor, 
@@ -62,4 +34,8 @@ export type {
   RhaiClient,
   RhaiScript,
   TestResult,
+  // TEAM-381: Auto-generated from Rust via tsify
+  ProcessStats,
+  HiveInfo,
+  HiveDevice,
 } from './pkg/bundler/rbee_sdk'

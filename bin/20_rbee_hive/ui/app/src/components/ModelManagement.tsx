@@ -1,8 +1,8 @@
 // Model Management - Comprehensive model lifecycle management
 // Features: Download, Load to RAM, Search HuggingFace, Deploy to Workers
 
-import { useState } from 'react'
-import { HardDrive, Search, Download, Play, Trash2, Info } from 'lucide-react'
+import { useState, useEffect } from 'react'
+import { HardDrive, Search, Download, Play, Trash2, Info, Loader2 } from 'lucide-react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, Badge } from '@rbee/ui/atoms'
 import { useModels, useModelOperations } from '@rbee/rbee-hive-react'
 
@@ -326,6 +326,18 @@ function LoadedModelsTable({
   )
 }
 
+// HuggingFace model interface
+interface HFModel {
+  id: string
+  modelId: string
+  author: string
+  downloads: number
+  likes: number
+  tags: string[]
+  private: boolean
+  gated: boolean | string
+}
+
 // Search Results Table (HuggingFace search)
 function SearchResultsTable({
   query,
@@ -334,22 +346,141 @@ function SearchResultsTable({
   query: string
   onSelect: (model: any) => void
 }) {
-  // TODO: Implement HuggingFace search using @huggingface/hub
-  // const { models, loading } = useHuggingFaceSearch(query)
+  const [results, setResults] = useState<HFModel[]>([])
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+
+  // TEAM-381: Frontend-only HuggingFace search
+  useEffect(() => {
+    if (!query || query.length < 2) {
+      setResults([])
+      return
+    }
+
+    const searchHF = async () => {
+      setLoading(true)
+      setError(null)
+      
+      try {
+        // HuggingFace API endpoint for model search
+        const response = await fetch(
+          `https://huggingface.co/api/models?search=${encodeURIComponent(query)}&limit=20&filter=text-generation`,
+          {
+            headers: {
+              'Accept': 'application/json',
+            },
+          }
+        )
+
+        if (!response.ok) {
+          throw new Error(`HuggingFace API error: ${response.status}`)
+        }
+
+        const data = await response.json()
+        setResults(data)
+      } catch (err) {
+        console.error('HuggingFace search error:', err)
+        setError(err instanceof Error ? err.message : 'Failed to search HuggingFace')
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    // Debounce search by 500ms
+    const timeoutId = setTimeout(searchHF, 500)
+    return () => clearTimeout(timeoutId)
+  }, [query])
 
   if (!query || query.length < 2) {
     return (
       <div className="text-center py-12 text-muted-foreground">
-        Enter a search query to find models on HuggingFace
+        <Search className="h-12 w-12 mx-auto mb-4 opacity-50" />
+        <p>Enter a search query to find models on HuggingFace</p>
+        <p className="text-xs mt-2">Search for LLMs like "llama", "mistral", "phi", etc.</p>
+      </div>
+    )
+  }
+
+  if (loading) {
+    return (
+      <div className="text-center py-12 text-muted-foreground">
+        <Loader2 className="h-8 w-8 mx-auto mb-4 animate-spin" />
+        <p>Searching HuggingFace for "{query}"...</p>
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div className="text-center py-12 text-destructive">
+        <p>Error: {error}</p>
+        <p className="text-xs mt-2 text-muted-foreground">Try a different search query</p>
+      </div>
+    )
+  }
+
+  if (results.length === 0) {
+    return (
+      <div className="text-center py-12 text-muted-foreground">
+        <p>No models found for "{query}"</p>
+        <p className="text-xs mt-2">Try a different search query</p>
       </div>
     )
   }
 
   return (
-    <div className="text-center py-12 text-muted-foreground">
-      Search results for "{query}" will appear here
-      <div className="text-xs mt-2">
-        TODO: Integrate @huggingface/hub package
+    <div className="border rounded-md">
+      <table className="w-full">
+        <thead className="bg-muted/50">
+          <tr className="text-left text-sm">
+            <th className="p-3 font-medium">Model</th>
+            <th className="p-3 font-medium">Downloads</th>
+            <th className="p-3 font-medium">Likes</th>
+            <th className="p-3 font-medium">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {results.map((model) => (
+            <tr
+              key={model.id}
+              onClick={() => onSelect(model)}
+              className="border-t cursor-pointer hover:bg-accent/50 transition-colors"
+            >
+              <td className="p-3">
+                <div className="font-medium">{model.modelId}</div>
+                <div className="text-xs text-muted-foreground flex gap-1 flex-wrap mt-1">
+                  {model.tags.slice(0, 3).map((tag) => (
+                    <span key={tag} className="px-1.5 py-0.5 bg-muted rounded text-xs">
+                      {tag}
+                    </span>
+                  ))}
+                </div>
+              </td>
+              <td className="p-3 text-sm">
+                {model.downloads.toLocaleString()}
+              </td>
+              <td className="p-3 text-sm">
+                {model.likes.toLocaleString()}
+              </td>
+              <td className="p-3">
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    // TODO: Trigger download
+                    console.log('Download:', model.modelId)
+                  }}
+                  className="p-1 hover:bg-primary/10 rounded"
+                  title="Download model"
+                >
+                  <Download className="h-4 w-4" />
+                </button>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+      <div className="p-3 text-xs text-muted-foreground border-t">
+        Showing {results.length} results from HuggingFace
       </div>
     </div>
   )

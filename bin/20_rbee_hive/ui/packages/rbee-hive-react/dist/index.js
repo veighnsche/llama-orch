@@ -37,11 +37,16 @@ export function useModels() {
             const hiveId = client.hiveId; // TEAM-353: Get hive_id from client
             const op = OperationBuilder.modelList(hiveId);
             const lines = [];
-            await client.submitAndStream(op, (line) => {
+            // TEAM-381: Add timeout to prevent infinite hanging if backend doesn't respond
+            const timeoutPromise = new Promise((_, reject) => {
+                setTimeout(() => reject(new Error('Request timeout: Backend did not respond within 10 seconds. Is rbee-hive running?')), 10000);
+            });
+            const streamPromise = client.submitAndStream(op, (line) => {
                 if (line !== '[DONE]') {
                     lines.push(line);
                 }
             });
+            await Promise.race([streamPromise, timeoutPromise]);
             // Find the JSON line (starts with '[' or '{')
             // Backend emits narration lines first, then JSON on last line
             const jsonLine = lines.reverse().find(line => {
@@ -51,8 +56,8 @@ export function useModels() {
             return jsonLine ? JSON.parse(jsonLine) : [];
         },
         staleTime: 30000, // Models change less frequently (30 seconds)
-        retry: 3,
-        retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
+        retry: 2, // TEAM-381: Reduced from 3 to fail faster
+        retryDelay: 1000, // TEAM-381: Fixed 1s delay instead of exponential
     });
     return {
         models: models || [],

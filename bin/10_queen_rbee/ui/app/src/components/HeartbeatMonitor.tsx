@@ -14,25 +14,8 @@ import {
 } from "@rbee/ui/atoms";
 import { StatusKPI, PulseBadge, IconPlate } from "@rbee/ui/molecules";
 import { Activity, Server, Cpu, ChevronDown, Gauge, HardDrive } from "lucide-react";
-
-interface ProcessStats {
-  pid: number;
-  group: string;
-  instance: string;
-  cpu_pct: number;
-  rss_mb: number;
-  gpu_util_pct: number;
-  vram_mb: number;
-  total_vram_mb: number;
-  model: string | null;
-  uptime_s: number;
-}
-
-interface HiveData {
-  hive_id: string;
-  workers: ProcessStats[];
-  last_update: string;
-}
+// TEAM-381: Import types from React hooks (single source of truth)
+import type { HiveData } from "@rbee/queen-rbee-react";
 
 interface HeartbeatMonitorProps {
   workersOnline: number;

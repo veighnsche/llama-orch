@@ -1,8 +1,4 @@
-export interface Model {
-    id: string;
-    name: string;
-    size_bytes: number;
-}
+export type { ModelInfo, HFModel } from '@rbee/rbee-hive-sdk';
 export interface Worker {
     pid: number;
     model: string;

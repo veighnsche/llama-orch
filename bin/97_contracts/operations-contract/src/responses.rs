@@ -26,12 +26,21 @@
 
 use serde::{Deserialize, Serialize};
 
+// TEAM-381: Optional WASM support for TypeScript type generation
+#[cfg(feature = "wasm")]
+use tsify::Tsify;
+
 // ============================================================================
 // Worker Operation Responses
 // ============================================================================
 
 /// Response from spawning a worker
+/// 
+/// TEAM-381: This type is auto-generated for TypeScript via tsify.
+/// DO NOT manually define this type in TypeScript - it will be generated automatically.
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[cfg_attr(feature = "wasm", derive(Tsify))]
+#[cfg_attr(feature = "wasm", tsify(into_wasm_abi, from_wasm_abi))]
 pub struct WorkerSpawnResponse {
     /// Assigned worker ID
     pub worker_id: String,
@@ -44,7 +53,12 @@ pub struct WorkerSpawnResponse {
 }
 
 /// Worker process information
+/// 
+/// TEAM-381: This type is auto-generated for TypeScript via tsify.
+/// DO NOT manually define this type in TypeScript - it will be generated automatically.
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[cfg_attr(feature = "wasm", derive(Tsify))]
+#[cfg_attr(feature = "wasm", tsify(into_wasm_abi, from_wasm_abi))]
 pub struct WorkerProcessInfo {
     /// Process ID
     pub pid: u32,
@@ -59,7 +73,12 @@ pub struct WorkerProcessInfo {
 }
 
 /// Response from listing worker processes
+/// 
+/// TEAM-381: This type is auto-generated for TypeScript via tsify.
+/// DO NOT manually define this type in TypeScript - it will be generated automatically.
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[cfg_attr(feature = "wasm", derive(Tsify))]
+#[cfg_attr(feature = "wasm", tsify(into_wasm_abi, from_wasm_abi))]
 pub struct WorkerProcessListResponse {
     /// List of worker processes
     pub workers: Vec<WorkerProcessInfo>,
@@ -87,6 +106,8 @@ pub struct WorkerProcessDeleteResponse {
 
 /// Model information
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[cfg_attr(feature = "wasm", derive(Tsify))]
+#[cfg_attr(feature = "wasm", tsify(into_wasm_abi, from_wasm_abi))]
 pub struct ModelInfo {
     /// Model ID
     pub id: String,
@@ -96,6 +117,12 @@ pub struct ModelInfo {
     pub size_bytes: u64,
     /// Download status
     pub status: String,
+    /// Whether model is loaded in RAM
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub loaded: Option<bool>,
+    /// VRAM usage in MB (if loaded)
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub vram_mb: Option<u64>,
 }
 
 /// Response from downloading a model
@@ -173,12 +200,16 @@ mod tests {
                     name: "Test Model 1".to_string(),
                     size_bytes: 1024,
                     status: "ready".to_string(),
+                    loaded: None,
+                    vram_mb: None,
                 },
                 ModelInfo {
                     id: "model-2".to_string(),
                     name: "Test Model 2".to_string(),
                     size_bytes: 2048,
                     status: "downloading".to_string(),
+                    loaded: None,
+                    vram_mb: None,
                 },
             ],
         };

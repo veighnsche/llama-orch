@@ -38,6 +38,9 @@ pub use client::HiveClient;
 pub use operations::OperationBuilder;
 pub use heartbeat::HeartbeatMonitor; // TEAM-374: Heartbeat monitoring
 
+// TEAM-381: Re-export types from operations-contract (with TypeScript generation)
+pub use operations_contract::ModelInfo;
+
 /// Initialize the WASM module
 ///
 /// TEAM-286: This is called automatically when the WASM module is loaded

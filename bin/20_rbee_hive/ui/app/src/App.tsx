@@ -45,7 +45,8 @@ function useDevices() {
           ? `${window.location.protocol}//${window.location.hostname}:7835`
           : window.location.origin
         
-        const response = await fetch(`${baseUrl}/capabilities`)
+        // TEAM-381: Capabilities endpoint moved to /v1/capabilities
+        const response = await fetch(`${baseUrl}/v1/capabilities`)
         const data = await response.json()
         setDevices(data.devices || [])
       } catch (err) {

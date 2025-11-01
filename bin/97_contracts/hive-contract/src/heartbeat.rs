@@ -8,11 +8,24 @@ use serde::{Deserialize, Serialize};
 use shared_contract::{HeartbeatPayload, HeartbeatTimestamp, HEARTBEAT_TIMEOUT_SECS};
 
 // TEAM-361: Worker telemetry from cgroup + GPU monitoring
+#[cfg(not(feature = "wasm"))]
 use rbee_hive_monitor::ProcessStats;
+#[cfg(feature = "wasm")]
+pub use rbee_hive_monitor::ProcessStats;
+
+// TEAM-381: Optional WASM support for TypeScript type generation
+#[cfg(feature = "wasm")]
+use tsify::Tsify;
 
 /// TEAM-367: Device information for capabilities
 /// TEAM-380: Added field documentation
+/// 
+/// TEAM-381: This type is auto-generated for TypeScript via tsify.
+/// DO NOT manually define this type in TypeScript - it will be generated automatically.
+/// Import from SDK: `import type { HiveDevice } from '@rbee/queen-rbee-sdk'`
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[cfg_attr(feature = "wasm", derive(Tsify))]
+#[cfg_attr(feature = "wasm", tsify(into_wasm_abi, from_wasm_abi))]
 pub struct HiveDevice {
     /// Unique device identifier (e.g., "gpu-0", "cpu")
     pub id: String,

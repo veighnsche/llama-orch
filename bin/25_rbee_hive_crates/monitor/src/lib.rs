@@ -41,8 +41,18 @@ pub struct MonitorConfig {
     pub memory_limit: Option<String>,
 }
 
+// TEAM-381: Optional WASM support for TypeScript type generation
+#[cfg(feature = "wasm")]
+use tsify::Tsify;
+
 /// Process statistics
+/// 
+/// TEAM-381: This type is auto-generated for TypeScript via tsify.
+/// DO NOT manually define this type in TypeScript - it will be generated automatically.
+/// Import from SDK: `import type { ProcessStats } from '@rbee/queen-rbee-sdk'`
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[cfg_attr(feature = "wasm", derive(Tsify))]
+#[cfg_attr(feature = "wasm", tsify(into_wasm_abi, from_wasm_abi))]
 pub struct ProcessStats {
     /// Process ID
     pub pid: u32,

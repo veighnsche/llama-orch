@@ -16,6 +16,14 @@ anyhow = "1.0"
 tokio = { workspace = true, features = ["process", "fs"] }  # TEAM-359: For async process spawning
 tracing = "0.1"  # TEAM-364: For logging warnings in error handling
 
+# TEAM-381: Optional WASM support for TypeScript type generation
+tsify = { version = "0.4", optional = true }
+wasm-bindgen = { version = "0.2", optional = true }
+
+[features]
+# TEAM-381: Enable WASM bindings and TypeScript type generation
+wasm = ["tsify", "wasm-bindgen"]
+
 [dev-dependencies]
 # TEAM-364: Telemetry testing infrastructure
 tokio = { workspace = true, features = ["full", "test-util", "time"] }

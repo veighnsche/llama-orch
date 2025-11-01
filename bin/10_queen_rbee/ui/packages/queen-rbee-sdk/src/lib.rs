@@ -39,6 +39,10 @@ pub use heartbeat::HeartbeatMonitor;
 pub use operations::OperationBuilder;
 pub use rhai::{RhaiClient, RhaiScript, TestResult};
 
+// TEAM-381: Re-export Rust types for TypeScript generation
+pub use rbee_hive_monitor::ProcessStats;
+pub use hive_contract::{HiveDevice, HiveInfo};
+
 /// Initialize the WASM module
 ///
 /// TEAM-286: This is called automatically when the WASM module is loaded

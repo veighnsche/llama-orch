@@ -93,18 +93,32 @@ pub async fn execute_job(
 /// Internal: Route operation to appropriate handler
 ///
 /// TEAM-261: Parse payload and dispatch to worker/model handlers
+/// TEAM-381: Set narration context once for ALL operations (not just HiveCheck)
 async fn route_operation(
     job_id: String,
     payload: serde_json::Value,
     state: JobState, // TEAM-268: Changed from _registry to full state
 ) -> Result<()> {
-    // Parse payload into typed Operation enum
-    let operation: Operation = serde_json::from_value(payload)
-        .map_err(|e| anyhow::anyhow!("Failed to parse operation: {}", e))?;
+    use observability_narration_core::{with_narration_context, NarrationContext};
+    
+    // TEAM-381: Set narration context for ALL operations so n!() calls route to SSE
+    let ctx = NarrationContext::new().with_job_id(&job_id);
+    
+    with_narration_context(ctx, async move {
+        // Parse payload into typed Operation enum
+        let operation: Operation = serde_json::from_value(payload)
+            .map_err(|e| anyhow::anyhow!("Failed to parse operation: {}", e))?;
 
-    let operation_name = operation.name();
+        let operation_name = operation.name().to_string();
 
-    n!("route_job", "Executing operation: {}", operation_name);
+        n!("route_job", "Executing operation: {}", operation_name);
+        
+        execute_operation(operation, operation_name, job_id, state).await
+    }).await
+}
+
+/// TEAM-381: Execute the actual operation logic (extracted for cleaner context wrapping)
+async fn execute_operation(operation: Operation, operation_name: String, job_id: String, state: JobState) -> Result<()> {
 
     // ============================================================================
     // OPERATION ROUTING
@@ -116,15 +130,10 @@ async fn route_operation(
     match operation {
         // TEAM-313: HiveCheck - narration test through hive SSE
         // TEAM-314: Migrated to n!() macro
+        // TEAM-381: Narration context now set at router level, no need to set here
         Operation::HiveCheck { .. } => {
-            use observability_narration_core::{with_narration_context, NarrationContext};
-
             n!("hive_check_start", "🔍 Starting hive narration check");
-
-            // Set narration context so n!() calls route to SSE
-            let ctx = NarrationContext::new().with_job_id(&job_id);
-            with_narration_context(ctx, rbee_hive::hive_check::handle_hive_check()).await?;
-
+            rbee_hive::hive_check::handle_hive_check().await?;
             n!("hive_check_complete", "✅ Hive narration check complete");
         }
 

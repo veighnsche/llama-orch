@@ -6,22 +6,9 @@
 "use client";
 
 import * as React from "react";
-
-// TEAM-364: Updated to match backend HeartbeatEvent structure
-export interface ProcessStats {
-  pid: number;
-  group: string;
-  instance: string;
-  cpu_pct: number;
-  rss_mb: number;
-  io_r_mb_s: number;
-  io_w_mb_s: number;
-  uptime_s: number;
-  gpu_util_pct: number;
-  vram_mb: number;
-  total_vram_mb: number;
-  model: string | null;
-}
+// TEAM-381: Import types from SDK (single source of truth)
+// These types should eventually be auto-generated from Rust
+import type { ProcessStats } from "@rbee/queen-rbee-sdk";
 
 export interface HiveData {
   hive_id: string;

@@ -193,9 +193,10 @@ async fn main() -> anyhow::Result<()> {
     // TEAM-365: Create router with two different states
     // - HiveState for capabilities endpoint (needs queen_url)
     // - JobState for job endpoints (existing pattern)
+    // TEAM-381: Moved /capabilities to /v1/capabilities for API consistency
     let mut app = Router::new()
         .route("/health", get(health_check))
-        .route("/capabilities", get(get_capabilities))
+        .route("/v1/capabilities", get(get_capabilities))
         .with_state(hive_state.clone()) // TEAM-365: HiveState for capabilities
         // TEAM-372: SSE heartbeat stream (for Queen and Hive SDK)
         .route("/v1/heartbeats/stream", get(http::handle_heartbeat_stream))
@@ -206,14 +207,6 @@ async fn main() -> anyhow::Result<()> {
         .route("/v1/jobs/{job_id}", delete(http::jobs::handle_cancel_job)) // TEAM-305-FIX: Cancel job endpoint
         .with_state(job_state);
 
-    // TEAM-378: Add CORS layer BEFORE dev proxy routes
-    let cors = CorsLayer::new()
-        .allow_origin(Any) // Allow any origin for development
-        .allow_methods(Any) // Allow any HTTP method
-        .allow_headers(Any); // Allow any headers
-
-    app = app.layer(cors); // TEAM-374: Apply CORS to all routes
-    
     // TEAM-378: Development proxy - Extract Vite dev server URL from queen_url
     // For remote hives, proxy to the dev machine (where queen is running)
     // CRITICAL: Axum requires {*path} syntax for wildcard capture, NOT *path
@@ -250,6 +243,14 @@ async fn main() -> anyhow::Result<()> {
     // Static router has fallback handler for SPA routing
     let static_router = http::create_static_router();
     app = app.merge(static_router);
+
+    // TEAM-381: Add CORS layer AFTER all router merges to ensure it applies to ALL routes
+    let cors = CorsLayer::new()
+        .allow_origin(Any) // Allow any origin for development
+        .allow_methods(Any) // Allow any HTTP method
+        .allow_headers(Any); // Allow any headers
+
+    app = app.layer(cors);
 
     // TEAM-335: Bind to 0.0.0.0 to allow remote access (needed for remote hives)
     // Localhost-only binding (127.0.0.1) would prevent health checks from remote machines

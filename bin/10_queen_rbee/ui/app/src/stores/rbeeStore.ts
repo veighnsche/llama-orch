@@ -3,18 +3,9 @@
 // TEAM-294: Updated to use @rbee/queen-rbee-react
 
 import type { HeartbeatMonitor } from '@rbee/queen-rbee-react'
+// TEAM-381: Import from SDK (single source of truth) - Rule Zero compliance
+import type { HeartbeatSnapshot } from '@rbee/queen-rbee-sdk'
 import { create } from 'zustand'
-
-// TEAM-292: Types from heartbeat snapshot
-export interface HeartbeatSnapshot {
-  timestamp: string
-  workers_online: number
-  workers_available: number
-  hives_online: number
-  hives_available: number
-  worker_ids: string[]
-  hive_ids: string[]
-}
 
 export interface QueenStatus {
   connected: boolean

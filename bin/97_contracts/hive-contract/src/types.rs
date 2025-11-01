@@ -5,9 +5,17 @@
 use serde::{Deserialize, Serialize};
 use shared_contract::{HealthStatus, OperationalStatus};
 
+// TEAM-381: Optional WASM support for TypeScript type generation
+#[cfg(feature = "wasm")]
+use tsify::Tsify;
+
 /// Complete hive information
 ///
 /// Contains all information about a hive that queen needs to track.
+///
+/// TEAM-381: This type is auto-generated for TypeScript via tsify.
+/// DO NOT manually define this type in TypeScript - it will be generated automatically.
+/// Import from SDK: `import type { HiveInfo } from '@rbee/queen-rbee-sdk'`
 ///
 /// # Example
 ///
@@ -25,6 +33,8 @@ use shared_contract::{HealthStatus, OperationalStatus};
 /// };
 /// ```
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "wasm", derive(Tsify))]
+#[cfg_attr(feature = "wasm", tsify(into_wasm_abi, from_wasm_abi))]
 pub struct HiveInfo {
     /// Hive ID (alias from config, e.g., "localhost", "gpu-server-1")
     pub id: String,

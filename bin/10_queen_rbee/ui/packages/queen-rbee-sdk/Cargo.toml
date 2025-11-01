@@ -32,6 +32,10 @@ job-client = { path = "../../../../99_shared_crates/job-client" }
 # TEAM-286: Reuse operations-contract for all operation types
 operations-contract = { path = "../../../../97_contracts/operations-contract" }
 
+# TEAM-381: Enable wasm features for TypeScript type generation
+hive-contract = { path = "../../../../97_contracts/hive-contract", features = ["wasm"] }
+rbee-hive-monitor = { path = "../../../../25_rbee_hive_crates/monitor", features = ["wasm"] }
+
 
 # ============================================================================
 # WASM DEPENDENCIES
