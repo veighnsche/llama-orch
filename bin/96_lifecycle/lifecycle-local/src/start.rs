@@ -59,8 +59,6 @@ use crate::utils::local::local_exec;
 use anyhow::{Context, Result};
 use observability_narration_core::n;
 use observability_narration_macros::with_job_id;
-use std::path::PathBuf;
-use timeout_enforcer::with_timeout;
 
 // TEAM-367: Import shared types and utilities
 // TEAM-378: Removed find_binary_command (moved to lifecycle-ssh)

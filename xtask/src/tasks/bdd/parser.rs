@@ -35,6 +35,7 @@ pub fn parse_test_output(output: &str, exit_code: i32) -> TestResults {
 }
 
 /// Extract failed test information
+#[allow(dead_code)]
 pub fn extract_failures(output: &str) -> Vec<FailureInfo> {
     let mut failures = Vec::new();
 
@@ -80,6 +81,7 @@ fn extract_count(output: &str, pattern: &str) -> Option<usize> {
     re.captures(output).and_then(|cap| cap.get(1)).and_then(|m| m.as_str().parse().ok())
 }
 
+#[allow(dead_code)]
 fn extract_failure_context(output: &str, test_name: &str) -> Option<String> {
     let lines: Vec<&str> = output.lines().collect();
     let marker = format!("test {} ... FAILED", test_name);

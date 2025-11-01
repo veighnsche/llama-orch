@@ -12,7 +12,7 @@ use axum::{
     response::sse::{Event, Sse},
     Json,
 };
-use futures::stream::{Stream, StreamExt};
+use futures::stream::Stream;
 use job_server::JobRegistry;
 use observability_narration_core::sse_sink;
 // TEAM-290: DELETED rbee_config import (file-based config deprecated)

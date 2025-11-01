@@ -106,13 +106,11 @@ pub use core::{NarrationFields, NarrationLevel};
 // API functions
 pub use api::narrate;
 
-// Legacy function (deprecated)
-#[deprecated(since = "0.1.0", note = "Use narrate() with NarrationFields instead")]
-pub use api::emit::human;
+// TEAM-380: DELETED deprecated human() function (RULE ZERO)
+// TEAM-380: DELETED Narration and NarrationFactory (RULE ZERO - use n!() macro)
 
 #[doc(hidden)]
-pub use api::macro_emit;
-pub use api::{Narration, NarrationFactory}; // TEAM-312: Only function needed by n!() macro (deleted 5 wrappers)
+pub use api::macro_emit; // TEAM-312: Only function needed by n!() macro
 
 // Context
 pub use context::{with_narration_context, NarrationContext};

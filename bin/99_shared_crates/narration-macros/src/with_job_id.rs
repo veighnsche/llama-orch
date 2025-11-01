@@ -33,10 +33,10 @@
 
 use proc_macro::TokenStream;
 use quote::quote;
-use syn::{parse_macro_input, parse_quote, ItemFn, Meta};
+use syn::{parse_macro_input, ItemFn, Meta};
 
 pub fn with_job_id_impl(attr: TokenStream, item: TokenStream) -> TokenStream {
-    let mut input_fn = parse_macro_input!(item as ItemFn);
+    let input_fn = parse_macro_input!(item as ItemFn);
 
     // Parse attribute to get config parameter name
     let config_param = if attr.is_empty() {
@@ -98,13 +98,33 @@ pub fn with_job_id_impl(attr: TokenStream, item: TokenStream) -> TokenStream {
     let where_clause = &sig.generics.where_clause;
     let original_block = &input_fn.block;
     
+    // TEAM-381: Filter attributes - keep doc comments and allow/warn/deny, skip proc macros
+    let filtered_attrs: Vec<_> = input_fn.attrs.iter()
+        .filter(|attr| {
+            // Keep doc comments (/// or //!)
+            if attr.path().is_ident("doc") {
+                return true;
+            }
+            // Keep allow/warn/deny/cfg attributes
+            if attr.path().is_ident("allow") || attr.path().is_ident("warn") || 
+               attr.path().is_ident("deny") || attr.path().is_ident("cfg") {
+                return true;
+            }
+            // Skip other proc macros (with_timeout, etc.)
+            false
+        })
+        .collect();
+    
     // Create inner function name
     let inner_name = syn::Ident::new(&format!("__{}_inner", fn_name), fn_name.span());
 
     // TEAM-350: Transform to avoid nested async blocks
+    // TEAM-381: Preserve filtered attributes on outer function
     let expanded: proc_macro2::TokenStream = quote! {
+        #(#filtered_attrs)*
         #vis #sig {
             // Inner async function with original logic
+            #[allow(missing_docs)]
             async fn #inner_name #generics ( #inputs ) #output #where_clause {
                 #original_block
             }

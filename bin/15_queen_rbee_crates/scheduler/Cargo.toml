@@ -20,8 +20,9 @@ tokio = { workspace = true, features = ["full"] }
 reqwest = { version = "0.12", features = ["json", "stream"] }
 futures = "0.3"
 
-# Narration
+# Narration (TEAM-380: Added stdext for n!() macro function_name!() support)
 observability-narration-core = { path = "../../99_shared_crates/narration-core" }
+stdext = "0.3" # TEAM-380: Required by n!() macro
 
 # TEAM-374: Telemetry registry for finding workers
 queen-rbee-telemetry-registry = { path = "../telemetry-registry" }

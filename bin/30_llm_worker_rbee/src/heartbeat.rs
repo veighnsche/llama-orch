@@ -2,6 +2,7 @@
 //!
 //! TEAM-164: Binary-specific heartbeat logic for llm-worker-rbee
 //! TEAM-261: Changed to send heartbeats directly to queen (not hive)
+//! TEAM-380: Migrated to n!() macro (no job_id needed for worker-side)
 //!
 //! **What lives here:**
 //! - Worker sends heartbeats to queen (TEAM-261: changed from hive)
@@ -14,11 +15,8 @@
 //! - Common heartbeat logic
 
 use anyhow::Result;
-use observability_narration_core::Narration;
+use observability_narration_core::n; // TEAM-380: Migrated to n!() macro
 use worker_contract::{WorkerHeartbeat, WorkerInfo}; // TEAM-284: Use worker-contract types
-
-const ACTOR_WORKER_HEARTBEAT: &str = "👷 worker-heartbeat";
-const ACTION_SEND: &str = "send_heartbeat";
 
 /// Send heartbeat to queen
 ///
@@ -35,9 +33,8 @@ pub async fn send_heartbeat_to_queen(
     worker_info: &WorkerInfo, // TEAM-284: Pass full worker info
     queen_url: &str,
 ) -> Result<()> {
-    Narration::new(ACTOR_WORKER_HEARTBEAT, ACTION_SEND, &worker_info.id)
-        .human(format!("Sending heartbeat to queen at {}", queen_url))
-        .emit();
+    // TEAM-380: Migrated to n!() macro (worker-side, no job_id needed)
+    n!("send_heartbeat", "Sending heartbeat to queen at {}", queen_url);
 
     // TEAM-285: Fixed unused variable warning
     let _heartbeat = WorkerHeartbeat::new(worker_info.clone());

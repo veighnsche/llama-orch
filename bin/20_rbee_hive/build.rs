@@ -25,9 +25,16 @@ fn main() {
     let ui_app_dir = ui_base_dir.join("app");
     let ui_dist = ui_app_dir.join("dist");
 
-    // TEAM-374: Skip ALL UI builds if Vite dev server is running (port 7836)
+    // TEAM-381: Skip ALL UI builds if Vite dev server is running (port 7836)
     // This avoids conflicts with the dev server and speeds up cargo builds during development
-    let vite_dev_running = std::net::TcpStream::connect("127.0.0.1:7836").is_ok();
+    // TEAM-381: Use HTTP check instead of TCP to avoid false positives from TIME_WAIT sockets
+    let vite_dev_running = Command::new("curl")
+        .args(&["-s", "-o", "/dev/null", "-w", "%{http_code}", "http://127.0.0.1:7836"])
+        .output()
+        .ok()
+        .and_then(|output| String::from_utf8(output.stdout).ok())
+        .map(|code| code.starts_with('2') || code.starts_with('3')) // 2xx or 3xx response
+        .unwrap_or(false);
 
     if vite_dev_running {
         println!("cargo:warning=⚡ Vite dev server detected on port 7836 - SKIPPING ALL UI builds");

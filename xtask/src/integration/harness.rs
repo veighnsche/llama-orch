@@ -1,6 +1,8 @@
 // TEAM-251: Test harness for integration tests
 // Purpose: Spawn actual binaries, manage lifecycle, capture output, validate state
 
+#![allow(dead_code)]
+
 use anyhow::{bail, Context, Result};
 use std::collections::HashMap;
 use std::env;
@@ -71,6 +73,7 @@ impl TestHarness {
     }
 
     /// Find a free port
+    #[allow(dead_code)]
     fn find_free_port() -> Result<u16> {
         use std::net::TcpListener;
 

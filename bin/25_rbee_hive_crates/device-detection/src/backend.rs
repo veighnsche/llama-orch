@@ -168,6 +168,7 @@ fn detect_metal_devices() -> Option<u32> {
 }
 
 #[cfg(not(target_os = "macos"))]
+#[allow(dead_code)]
 fn detect_metal_devices() -> Option<u32> {
     None
 }

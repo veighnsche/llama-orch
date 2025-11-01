@@ -26,9 +26,7 @@
 use crate::backend::request_queue::{RequestQueue, TokenResponse};
 use crate::http::{jobs, middleware::auth_middleware, stream}; // TEAM-353: Renamed execute → jobs
 use axum::{
-    extract::State,
-    middleware::{self, Next},
-    response::Response,
+    middleware::{self},
     routing::{get, post},
     Json, Router,
 };

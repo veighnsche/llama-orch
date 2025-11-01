@@ -8,6 +8,7 @@ pub struct BddConfig {
     pub tags: Option<String>,
     pub feature: Option<String>,
     pub quiet: bool,
+    #[allow(dead_code)]
     pub really_quiet: bool,
     pub show_quiet_warning: bool,
     pub run_all: bool, // If true, run all tests. If false, run only failing tests from last run.
@@ -24,6 +25,7 @@ pub struct TestResults {
 
 /// Information about a failed test
 #[derive(Debug, Clone)]
+#[allow(dead_code)]
 pub struct FailureInfo {
     pub test_name: String,
     pub context: String,

@@ -48,7 +48,6 @@ use anyhow::{Context, Result};
 use observability_narration_core::n;
 use observability_narration_macros::with_job_id;
 use std::time::Duration;
-use timeout_enforcer::with_timeout;
 use tokio::time::sleep;
 
 /// Configuration for stopping daemon on remote machine

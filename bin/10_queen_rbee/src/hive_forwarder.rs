@@ -3,6 +3,7 @@
 //! TEAM-258: Consolidate hive-forwarding operations
 //! TEAM-259: Refactored to use job-client shared crate
 //! TEAM-265: Documented three communication modes
+//! TEAM-380: Migrated to n!() macro with #[with_job_id]
 //!
 //! This module handles forwarding of Worker and Model operations
 //! to the appropriate hive. This allows new operations to be added
@@ -79,13 +80,11 @@
 
 use anyhow::Result;
 use job_client::JobClient;
-use observability_narration_core::NarrationFactory;
+use observability_narration_core::{n, with_narration_context, NarrationContext}; // TEAM-380: Migrated to n!() macro
 // TEAM-285: DELETED execute_hive_start, HiveStartRequest (localhost-only, no lifecycle management)
 // TEAM-290: DELETED rbee_config import (file-based config deprecated)
 use operations_contract::Operation; // TEAM-284: Renamed from rbee_operations
                                     // TEAM-290: DELETED Duration import (not needed anymore)
-
-const NARRATE: NarrationFactory = NarrationFactory::new("qn-fwd");
 
 /// Forward an operation to the appropriate hive
 ///
@@ -127,7 +126,12 @@ const NARRATE: NarrationFactory = NarrationFactory::new("qn-fwd");
 /// - HTTP communication failure
 ///
 /// TEAM-290: Localhost-only mode (rbee-config removed)
+/// TEAM-380: Migrated to n!() macro (manual context - no config parameter)
 pub async fn forward_to_hive(job_id: &str, operation: Operation) -> Result<()> {
+    // TEAM-380: Manual context setup
+    let ctx = NarrationContext::new().with_job_id(job_id);
+    
+    with_narration_context(ctx, async move {
     // Extract metadata before moving operation
     let operation_name = operation.name();
     let hive_id = operation
@@ -145,50 +149,39 @@ pub async fn forward_to_hive(job_id: &str, operation: Operation) -> Result<()> {
         );
     }
 
-    NARRATE
-        .action("forward_start")
-        .job_id(job_id)
-        .context(operation_name)
-        .context(&hive_id)
-        .human("Forwarding {} operation to localhost hive")
-        .emit();
+    // TEAM-380: Migrated to n!() macro
+    n!("forward_start", "Forwarding {} operation to localhost hive", operation_name);
 
     // TEAM-290: Hardcoded localhost URL (no config needed)
     let hive_url = "http://localhost:9000";
 
     // TEAM-290: Skip ensure_hive_running (no lifecycle management in localhost-only mode)
 
-    NARRATE
-        .action("forward_connect")
-        .job_id(job_id)
-        .context(hive_url)
-        .human("Connecting to hive at {}")
-        .emit();
+    // TEAM-380: Migrated to n!() macro
+    n!("forward_connect", "Connecting to hive at {}", hive_url);
 
     // Forward to hive and stream responses
     stream_from_hive(job_id, &hive_url, operation).await?;
 
-    NARRATE
-        .action("forward_complete")
-        .job_id(job_id)
-        .context(&hive_id)
-        .human("Operation completed on hive '{}'")
-        .emit();
+    // TEAM-380: Migrated to n!() macro
+    n!("forward_complete", "Operation completed on hive '{}'", hive_id);
 
     Ok(())
+    }).await // TEAM-380: Close with_narration_context
 }
 
 /// Stream responses from hive back to client
 ///
 /// TEAM-259: Extracted to separate function for clarity (mirrors job_client.rs)
-async fn stream_from_hive(job_id: &str, hive_url: &str, operation: Operation) -> Result<()> {
+/// TEAM-380: job_id unused but kept for API consistency
+async fn stream_from_hive(_job_id: &str, hive_url: &str, operation: Operation) -> Result<()> {
     // TEAM-259: Use shared JobClient for submission and streaming
     let client = JobClient::new(hive_url);
 
     client
         .submit_and_stream(operation, |line| {
-            // Forward each line to client via narration
-            NARRATE.action("forward_data").job_id(job_id).context(line).human("{}").emit();
+            // TEAM-380: Forward each line to client via narration
+            n!("forward_data", "{}", line);
             Ok(())
         })
         .await?;

@@ -37,6 +37,14 @@ pub struct HuggingFaceVendor {
     api: Api,
 }
 
+impl std::fmt::Debug for HuggingFaceVendor {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("HuggingFaceVendor")
+            .field("api", &"<hf_hub::Api>")
+            .finish()
+    }
+}
+
 impl HuggingFaceVendor {
     /// Create a new HuggingFace vendor
     ///
@@ -108,7 +116,7 @@ impl Default for HuggingFaceVendor {
 
 #[async_trait::async_trait]
 impl VendorSource for HuggingFaceVendor {
-    async fn download(&self, id: &str, dest: &Path, job_id: &str) -> Result<u64> {
+    async fn download(&self, id: &str, dest: &Path, _job_id: &str) -> Result<u64> {
         n!("hf_download_start", "📥 Downloading model '{}' from HuggingFace", id);
         
         // Parse ID: "repo/model" or "repo/model:filename.gguf"

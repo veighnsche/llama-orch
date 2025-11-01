@@ -19,6 +19,7 @@ impl BinaryFinder {
     /// # Returns
     /// * `Ok(PathBuf)` - Path to binary
     /// * `Err` - Binary not found
+    #[allow(dead_code)]
     pub fn find(updater: &AutoUpdater) -> Result<PathBuf> {
         Self::find_path(updater)
     }

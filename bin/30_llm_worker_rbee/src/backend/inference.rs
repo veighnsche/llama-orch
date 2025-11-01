@@ -13,8 +13,7 @@ use crate::common::{InferenceResult, SamplingConfig};
 use crate::http::InferenceBackend;
 use crate::narration::{
     ACTION_CACHE_RESET, ACTION_INFERENCE_COMPLETE, ACTION_INFERENCE_START, ACTION_MODEL_LOAD,
-    ACTION_TOKENIZE, ACTION_TOKEN_GENERATE, ACTION_WARMUP, ACTOR_CANDLE_BACKEND,
-    ACTOR_MODEL_LOADER, ACTOR_TOKENIZER,
+    ACTION_TOKENIZE, ACTION_TOKEN_GENERATE, ACTION_WARMUP,
 };
 use crate::token_output_stream::TokenOutputStream;
 use anyhow::{Context, Result};

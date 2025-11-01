@@ -134,18 +134,5 @@ pub fn narrate(fields: NarrationFields, level: NarrationLevel) {
     capture::notify(fields);
 }
 
-/// Legacy compatibility function for existing callers.
-/// Prefer `narrate()` with full `NarrationFields` for new code.
-#[deprecated(since = "0.1.0", note = "Use narrate() with NarrationFields instead")]
-pub fn human<S: AsRef<str>>(actor: &'static str, action: &'static str, target: &str, msg: S) {
-    narrate(
-        NarrationFields {
-            actor,
-            action,
-            target: target.to_string(),
-            human: msg.as_ref().to_string(),
-            ..Default::default()
-        },
-        NarrationLevel::Info,
-    );
-}
+// TEAM-380: DELETED human() function (RULE ZERO - deprecated code removed)
+// Use narrate() with NarrationFields or n!() macro instead

@@ -117,7 +117,7 @@ pub fn fix_all_duplicates() -> Result<()> {
 fn comment_out_step_definition(
     file_path: &PathBuf,
     target_line: usize,
-    pattern: &str,
+    _pattern: &str, // TEAM-380: Reserved for future pattern matching
     reason: &str,
 ) -> Result<bool> {
     let content =

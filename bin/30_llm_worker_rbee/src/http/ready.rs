@@ -16,7 +16,7 @@
 //! - BDD test-001.feature: Worker readiness polling
 
 use crate::http::backend::InferenceBackend;
-use crate::narration::{ACTION_HEALTH_CHECK, ACTOR_HTTP_SERVER};
+use crate::narration::ACTION_HEALTH_CHECK;
 use axum::{extract::State, Json};
 use observability_narration_core::n;
 use serde::Serialize;

@@ -11,12 +11,18 @@ use shared_contract::{HeartbeatPayload, HeartbeatTimestamp, HEARTBEAT_TIMEOUT_SE
 use rbee_hive_monitor::ProcessStats;
 
 /// TEAM-367: Device information for capabilities
+/// TEAM-380: Added field documentation
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct HiveDevice {
+    /// Unique device identifier (e.g., "gpu-0", "cpu")
     pub id: String,
+    /// Human-readable device name (e.g., "NVIDIA RTX 4090")
     pub name: String,
+    /// Device type: "cuda", "metal", "cpu", etc.
     pub device_type: String,
+    /// VRAM in GB (for GPUs)
     pub vram_gb: Option<u32>,
+    /// Compute capability (for CUDA devices, e.g., "8.9")
     pub compute_capability: Option<String>,
 }
 

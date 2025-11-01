@@ -169,7 +169,7 @@ async fn route_operation(
             // Find worker binary in catalog
             // NOTE: If binary not found, it means worker-catalog needs to install it first!
             // Hive does NOT install worker binaries - that's worker-catalog's job.
-            let worker_binary = state
+            let _worker_binary = state
                 .worker_catalog
                 .find_by_type_and_platform(worker_type, Platform::current())
                 .ok_or_else(|| {
@@ -429,7 +429,7 @@ async fn route_operation(
         }
 
         Operation::ModelLoad(request) => {
-            let hive_id = request.hive_id.clone();
+            let _hive_id = request.hive_id.clone();
             let id = request.id.clone();
             let device = request.device.clone();
             n!("model_load_start", "🚀 Loading model '{}' to RAM on device '{}'", id, device);
@@ -443,7 +443,7 @@ async fn route_operation(
         }
 
         Operation::ModelUnload(request) => {
-            let hive_id = request.hive_id.clone();
+            let _hive_id = request.hive_id.clone();
             let id = request.id.clone();
             n!("model_unload_start", "🔽 Unloading model '{}' from RAM", id);
 

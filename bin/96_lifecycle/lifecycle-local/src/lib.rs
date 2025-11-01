@@ -3,10 +3,12 @@
 //! LOCAL daemon lifecycle management
 //!
 //! TEAM-358: Refactored to remove SSH code (lifecycle-local = LOCAL only)
+//! TEAM-380: Allow missing_docs for macro-generated wrapper functions
 //!
 //! This crate provides local process execution for daemon lifecycle operations.
 //! For remote/SSH operations, use lifecycle-ssh crate instead.
 //!
+#![allow(missing_docs)] // TEAM-380: #[with_job_id] macro generates undocumented wrappers
 //! # Types/Utils Copied from daemon-lifecycle (REFERENCE)
 //!
 //! **IMPORTANT:** This crate is self-contained for LOCAL operations only.
@@ -17,7 +19,7 @@
 //! ## Utils (in src/utils/)
 //! - `utils::local::local_exec()` - Execute local shell commands
 //! - `utils::local::local_copy()` - Copy files locally
-//! - `utils::serde::*` - Serde helpers for SystemTime serialization
+//! - `utils::serde` - Serde helpers for SystemTime serialization
 //!
 //! ## Health Polling
 //! - Uses `health-poll` crate (shared across lifecycle-local, lifecycle-ssh, lifecycle-monitored)

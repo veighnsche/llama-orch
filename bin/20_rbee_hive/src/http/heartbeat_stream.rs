@@ -34,7 +34,10 @@ pub enum HiveHeartbeatEvent {
 /// State for heartbeat stream
 #[derive(Clone)]
 pub struct HeartbeatStreamState {
+    /// Hive information (currently unused in stream, kept for future use)
+    #[allow(dead_code)]
     pub hive_info: HiveInfo,
+    /// Broadcast channel for heartbeat events
     pub event_tx: broadcast::Sender<HiveHeartbeatEvent>,
 }
 

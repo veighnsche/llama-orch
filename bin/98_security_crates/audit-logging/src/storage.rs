@@ -65,6 +65,7 @@ impl AuditEventEnvelope {
 
 /// Manifest entry for audit file
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[allow(dead_code)]
 pub struct ManifestEntry {
     /// Filename
     pub filename: String,
@@ -93,6 +94,7 @@ pub struct ManifestEntry {
 
 /// Manifest file (index of all audit files)
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[allow(dead_code)]
 pub struct Manifest {
     /// Service ID
     pub service_id: String,
@@ -106,22 +108,26 @@ pub struct Manifest {
 
 impl Manifest {
     /// Create new manifest
+    #[allow(dead_code)]
     pub fn new(service_id: String) -> Self {
         Self { service_id, created_at: Utc::now(), files: Vec::new() }
     }
 
     /// Add file entry
+    #[allow(dead_code)]
     pub fn add_file(&mut self, entry: ManifestEntry) {
         self.files.push(entry);
     }
 
     /// Load manifest from file
+    #[allow(dead_code)]
     pub fn load(_path: &std::path::Path) -> Result<Self> {
         // TODO: Implement
         todo!("Load manifest from file")
     }
 
     /// Save manifest to file
+    #[allow(dead_code)]
     pub fn save(&self, _path: &std::path::Path) -> Result<()> {
         // TODO: Implement
         todo!("Save manifest to file")

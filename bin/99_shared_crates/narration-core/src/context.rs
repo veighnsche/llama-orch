@@ -33,18 +33,8 @@ impl NarrationContext {
         self
     }
 
-    // TEAM-300: Phase 2 - Add actor builder
-    /// ⚠️ **DEPRECATED** - Actor is now auto-detected from crate name via env!("CARGO_CRATE_NAME").
-    ///
-    /// Use `n!()` macro directly - it will automatically use the crate name as actor.
-    #[deprecated(
-        since = "0.5.0",
-        note = "Actor is now auto-detected from crate name. Just use n!() macro directly."
-    )]
-    pub fn with_actor(mut self, actor: &'static str) -> Self {
-        self.actor = Some(actor);
-        self
-    }
+    // TEAM-380: DELETED with_actor() method (RULE ZERO - deprecated code removed)
+    // Actor is now auto-detected from crate name via env!("CARGO_CRATE_NAME")
 }
 
 /// Run a task with narration context

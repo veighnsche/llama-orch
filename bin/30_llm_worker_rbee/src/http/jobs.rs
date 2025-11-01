@@ -8,15 +8,9 @@
 //! Modified by: TEAM-154 (dual-call pattern - POST returns JSON, not SSE)
 //! Modified by: TEAM-353 (job-based architecture with operations-contract)
 
-use crate::backend::request_queue::GenerationRequest;
-use crate::common::SamplingConfig;
 use crate::http::routes::WorkerState;
-use crate::http::validation::{ExecuteRequest, ValidationErrorResponse};
-use crate::narration::{self, ACTION_ERROR, ACTION_EXECUTE_REQUEST, ACTOR_HTTP_SERVER};
 use axum::{extract::State, Json};
-use observability_narration_core::NarrationFields;
 use serde::Serialize;
-use tracing::{info, warn};
 
 /// Response from creating a job
 ///

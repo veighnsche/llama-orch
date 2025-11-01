@@ -44,13 +44,7 @@ pub struct QueenInfo {
 /// }
 /// ```
 pub async fn handle_info() -> Json<QueenInfo> {
-    let features = {
-        let mut f = vec![];
-
-        #[cfg(feature = "local-hive")]
-        f.push("local-hive".to_string());
-        f
-    };
+    let features = vec![];
 
     // TEAM-292: Hardcoded for localhost-only mode
     // In the future, this could be configurable

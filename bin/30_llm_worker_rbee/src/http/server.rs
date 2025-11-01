@@ -15,7 +15,6 @@
 
 use crate::narration::{
     ACTION_ERROR, ACTION_SERVER_BIND, ACTION_SERVER_SHUTDOWN, ACTION_SERVER_START,
-    ACTOR_HTTP_SERVER,
 };
 use axum::Router;
 use observability_narration_core::n;

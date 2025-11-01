@@ -62,6 +62,8 @@ n!("build_start", "Building...");
 **Impact:** Low - deprecation warnings, code still works  
 **Action:** Migrate remaining code to `n!()` macro over time
 
+**📋 See:** [NARRATE_DEPRECATION_CATALOG.md](./NARRATE_DEPRECATION_CATALOG.md) for complete migration plan
+
 ---
 
 ## 3. rbee-hive-monitor Unused Imports (6)

@@ -65,7 +65,6 @@ use crate::SshConfig;
 use anyhow::{Context, Result};
 use observability_narration_core::n;
 use observability_narration_macros::with_job_id;
-use timeout_enforcer::with_timeout;
 
 /// Configuration for rebuilding daemon on remote machine
 ///

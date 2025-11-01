@@ -13,7 +13,9 @@ use super::RhaiListConfig;
 /// * `list_config` - Config containing job_id
 ///
 /// TEAM-350: Uses #[with_job_id] macro for automatic context wrapping
+/// TEAM-380: list_config used by macro for job_id extraction
 #[with_job_id(config_param = "list_config")]
+#[allow(unused_variables)] // TEAM-380: Used by macro, not in function body
 pub async fn execute_rhai_script_list(list_config: RhaiListConfig) -> Result<()> {
     n!("rhai_list_start", "📋 Listing all RHAI scripts");
 

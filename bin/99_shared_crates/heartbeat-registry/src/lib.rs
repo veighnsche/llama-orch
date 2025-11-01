@@ -90,6 +90,7 @@ pub trait HeartbeatItem: Clone + Send + Sync {
 /// # Example
 ///
 /// See module-level documentation for usage example.
+#[derive(Debug)]
 pub struct HeartbeatRegistry<T: HeartbeatItem> {
     items: RwLock<HashMap<String, T>>,
 }

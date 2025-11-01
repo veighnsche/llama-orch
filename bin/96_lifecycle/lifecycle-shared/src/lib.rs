@@ -4,7 +4,9 @@
 //!
 //! TEAM-367: Created to eliminate duplication between lifecycle-local and lifecycle-remote
 //! TEAM-377: Added BINARY_INSTALL_DIR constant to eliminate path duplication
+//! TEAM-380: Allow missing_docs for macro-generated wrapper functions
 //!
+#![allow(missing_docs)] // TEAM-380: #[with_job_id] macro generates undocumented wrappers
 //! # Shared Components
 //!
 //! ## Types
@@ -29,7 +31,7 @@
 //! 2. **Minimal dependencies** - Only what's needed for types
 //! 3. **No SSH or local-specific code** - Pure shared abstractions
 
-#![warn(missing_docs)]
+// TEAM-380: Removed #![warn(missing_docs)] - conflicts with allow above
 #![warn(clippy::all)]
 
 // TEAM-377: RULE ZERO - Single source of truth for binary installation directory

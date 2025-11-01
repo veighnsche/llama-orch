@@ -17,12 +17,17 @@ use tokio::sync::broadcast;
 #[derive(Clone, Debug, Deserialize)]
 #[serde(tag = "type", rename_all = "snake_case")]
 pub enum HiveHeartbeatEvent {
+    /// Telemetry event with worker stats
     Telemetry {
+        /// Hive identifier
         hive_id: String,
+        /// Hive info (unused, we only need workers)
         #[serde(rename = "hive_info")]
-        _hive_info: serde_json::Value, // We only need workers
+        _hive_info: serde_json::Value,
+        /// Timestamp of telemetry
         timestamp: String,
-        workers: Vec<serde_json::Value>, // ProcessStats as JSON
+        /// Worker process stats as JSON
+        workers: Vec<serde_json::Value>,
     },
 }
 

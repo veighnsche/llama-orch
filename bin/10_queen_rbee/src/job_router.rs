@@ -39,14 +39,18 @@ mod queen_check;
 /// State required for job routing and execution
 #[derive(Clone)]
 pub struct JobState {
+    /// Job registry for tracking job lifecycle
     pub registry: Arc<JobRegistry<String>>,
+    /// Telemetry registry for hives and workers
     pub hive_registry: Arc<queen_rbee_telemetry_registry::TelemetryRegistry>, // TEAM-374
 }
 
 /// Response from job creation
 #[derive(Debug, serde::Serialize)]
 pub struct JobResponse {
+    /// Unique job identifier
     pub job_id: String,
+    /// SSE stream URL for job events
     pub sse_url: String,
 }
 

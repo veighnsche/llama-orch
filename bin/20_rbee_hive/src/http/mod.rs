@@ -14,6 +14,6 @@ pub mod static_files; // TEAM-378: Static file serving
 
 // Re-export commonly used types
 pub use shutdown::handle_shutdown; // TEAM-339: Graceful shutdown handler
-pub use heartbeat_stream::{handle_heartbeat_stream, HeartbeatStreamState}; // TEAM-372
+pub use heartbeat_stream::handle_heartbeat_stream; // TEAM-372
 pub use dev_proxy::{dev_proxy_handler, DevProxyState}; // TEAM-378: Development proxy handler with state
 pub use static_files::create_static_router; // TEAM-378: Static file router

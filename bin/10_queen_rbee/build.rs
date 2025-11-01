@@ -17,7 +17,7 @@ fn main() {
 
     // Get workspace root (2 levels up from bin/10_queen_rbee)
     let manifest_dir = std::env::var("CARGO_MANIFEST_DIR").unwrap();
-    let workspace_root = Path::new(&manifest_dir).parent().unwrap().parent().unwrap();
+    let _workspace_root = Path::new(&manifest_dir).parent().unwrap().parent().unwrap(); // TEAM-380: Reserved for future use
 
     // TEAM-350: REAL FIX - Build packages FIRST, then app
     // This allows cargo watch to rebuild everything without needing turbo dev server
@@ -28,7 +28,14 @@ fn main() {
 
     // TEAM-350: Skip ALL UI builds if Vite dev server is running (port 7834)
     // This avoids conflicts with the dev server and speeds up cargo builds during development
-    let vite_dev_running = std::net::TcpStream::connect("127.0.0.1:7834").is_ok();
+    // TEAM-381: Use HTTP check instead of TCP to avoid false positives from TIME_WAIT sockets
+    let vite_dev_running = Command::new("curl")
+        .args(&["-s", "-o", "/dev/null", "-w", "%{http_code}", "http://127.0.0.1:7834"])
+        .output()
+        .ok()
+        .and_then(|output| String::from_utf8(output.stdout).ok())
+        .map(|code| code.starts_with('2') || code.starts_with('3')) // 2xx or 3xx response
+        .unwrap_or(false);
 
     if vite_dev_running {
         println!("cargo:warning=⚡ Vite dev server detected on port 7834 - SKIPPING ALL UI builds");

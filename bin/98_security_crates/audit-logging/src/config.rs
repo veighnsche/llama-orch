@@ -201,6 +201,7 @@ impl Default for RetentionPolicy {
 /// # Errors
 ///
 /// Returns `InvalidPath` if any security check fails.
+#[allow(dead_code)]
 pub fn validate_audit_dir(path: &Path) -> Result<PathBuf> {
     // Canonicalize to resolve .. and symlinks
     let canonical = path

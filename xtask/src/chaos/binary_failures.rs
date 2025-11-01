@@ -2,16 +2,12 @@
 // Purpose: Test behavior when binaries are missing or corrupt
 // TEAM-255: Fixed missing imports
 
-use crate::integration::assertions::{assert_failure, assert_output_contains};
-use crate::integration::harness::TestHarness;
 use std::env;
-use std::fs;
 use std::path::PathBuf;
 
-#[cfg(unix)]
-use std::os::unix::fs::PermissionsExt;
 
 // TEAM-255: Helper to find workspace root
+#[allow(dead_code)]
 fn workspace_root() -> PathBuf {
     let mut current = env::current_dir().unwrap();
     loop {

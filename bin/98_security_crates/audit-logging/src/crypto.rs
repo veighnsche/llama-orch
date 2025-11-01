@@ -60,6 +60,7 @@ pub fn compute_event_hash(envelope: &AuditEventEnvelope) -> Result<String> {
 ///
 /// Returns `InvalidChain` if any hash doesn't match.
 /// Returns `BrokenChain` if prev_hash link is broken.
+#[allow(dead_code)]
 pub fn verify_hash_chain(events: &[AuditEventEnvelope]) -> Result<()> {
     for (i, event) in events.iter().enumerate() {
         // Verify event hash
@@ -128,6 +129,7 @@ pub fn verify_signature_ed25519(
 }
 
 /// Compute file checksum (SHA-256)
+#[allow(dead_code)]
 pub fn compute_file_checksum(_path: &std::path::Path) -> Result<String> {
     // TODO: Implement file checksum
     todo!("Implement file checksum computation")

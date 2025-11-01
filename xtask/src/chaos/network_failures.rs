@@ -2,10 +2,6 @@
 // Purpose: Test behavior with network issues
 // TEAM-255: Fixed missing imports
 
-use crate::integration::assertions::{assert_failure, assert_output_contains, assert_success};
-use crate::integration::harness::TestHarness;
-use std::net::TcpListener;
-use std::time::Duration;
 
 #[tokio::test]
 async fn test_port_already_in_use() {

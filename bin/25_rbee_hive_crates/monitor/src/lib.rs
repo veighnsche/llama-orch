@@ -16,16 +16,9 @@
 //! - Grouping processes for management
 //! - Cross-platform abstraction (Linux, macOS, Windows)
 
-use anyhow::{Context, Result};
 use serde::{Deserialize, Serialize};
-use std::path::PathBuf;
-use std::process::Stdio;
 
 // TEAM-359: Platform-specific imports
-#[cfg(target_os = "linux")]
-use std::fs;
-#[cfg(target_os = "linux")]
-use std::io::Write;
 
 /// Configuration for process monitoring
 #[derive(Debug, Clone, Serialize, Deserialize)]

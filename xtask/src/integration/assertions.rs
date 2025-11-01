@@ -1,6 +1,8 @@
 // TEAM-251: Assertions library for integration tests
 // Purpose: Reusable assertions for command results and state validation
 
+#![allow(dead_code)]
+
 use crate::integration::harness::{CommandResult, TestHarness};
 
 /// Assert command succeeded (exit code 0)

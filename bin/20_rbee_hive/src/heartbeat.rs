@@ -8,17 +8,17 @@
 
 use anyhow::Result;
 use hive_contract::heartbeat::HiveDevice; // TEAM-372: Import from heartbeat module
-use hive_contract::{HiveHeartbeat, HiveInfo};
+use hive_contract::HiveInfo;
 use observability_narration_core::n; // TEAM-365: Narration for discovery
-use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering}; // TEAM-366: Circuit breaker
+use std::sync::atomic::{AtomicBool, Ordering}; // TEAM-366: Circuit breaker
 use std::sync::Arc; // TEAM-366: Shared state
 
 // TEAM-361: Worker telemetry collection
-use rbee_hive_monitor;
 
 /// TEAM-367: Detect hive capabilities (devices)
 /// 
 /// Returns Vec<HiveDevice> with all GPUs + CPU-0
+#[allow(dead_code)]
 fn detect_capabilities() -> Vec<HiveDevice> {
     let mut devices = Vec::new();
     

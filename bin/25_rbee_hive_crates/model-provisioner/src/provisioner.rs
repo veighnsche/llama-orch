@@ -34,6 +34,15 @@ pub struct ModelProvisioner {
     cache_dir: PathBuf,
 }
 
+impl std::fmt::Debug for ModelProvisioner {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("ModelProvisioner")
+            .field("vendor", &self.vendor)
+            .field("cache_dir", &self.cache_dir)
+            .finish()
+    }
+}
+
 impl ModelProvisioner {
     /// Create a new model provisioner
     ///

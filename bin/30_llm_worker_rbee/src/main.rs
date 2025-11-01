@@ -99,7 +99,7 @@ async fn main() -> anyhow::Result<()> {
         std::process::exit(0);
     }
 
-    let args = Args::parse();
+    let _args = Args::parse(); // TEAM-380: Parsed but not yet used - reserved for future config
 
     // TEAM-088: Initialize tracing with human-friendly format for development
     // Use LLORCH_LOG_FORMAT=json for machine-readable output (production/SSH)

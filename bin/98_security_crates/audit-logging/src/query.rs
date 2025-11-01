@@ -58,6 +58,7 @@ pub enum VerifyResult {
 
 /// Checksum status
 #[derive(Debug, Clone)]
+#[allow(dead_code)]
 pub enum ChecksumStatus {
     /// Checksum valid
     Valid,
@@ -68,6 +69,7 @@ pub enum ChecksumStatus {
 
 /// File verification result
 #[derive(Debug, Clone)]
+#[allow(dead_code)]
 pub struct FileVerifyResult {
     /// Filename
     pub filename: String,
@@ -78,6 +80,7 @@ pub struct FileVerifyResult {
 
 /// Checksum verification results
 #[derive(Debug, Clone)]
+#[allow(dead_code)]
 pub struct ChecksumVerifyResult {
     /// Per-file results
     pub files: Vec<FileVerifyResult>,
@@ -128,12 +131,14 @@ impl AuditQuery {
 }
 
 /// Query executor (internal)
+#[allow(dead_code)]
 pub(crate) struct QueryExecutor {
     // TODO: Add fields for file access
 }
 
 impl QueryExecutor {
     /// Execute query
+    #[allow(dead_code)]
     pub fn execute(&self, _query: &AuditQuery) -> Result<Vec<AuditEventEnvelope>> {
         // TODO: Implement
         // 1. Scan audit files
@@ -144,6 +149,7 @@ impl QueryExecutor {
     }
 
     /// Verify integrity
+    #[allow(dead_code)]
     pub fn verify_integrity(&self, _options: &VerifyOptions) -> Result<VerifyResult> {
         // TODO: Implement
         // 1. Load events based on mode
@@ -153,6 +159,7 @@ impl QueryExecutor {
     }
 
     /// Verify file checksums
+    #[allow(dead_code)]
     pub fn verify_file_checksums(&self) -> Result<ChecksumVerifyResult> {
         // TODO: Implement
         // 1. Load manifest

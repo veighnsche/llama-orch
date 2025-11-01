@@ -1,13 +1,12 @@
 // TEAM-275: Simple scheduler implementation (first available worker)
+// TEAM-380: Migrated to n!() macro (manual context for trait methods)
 use crate::types::{
     JobRequest, ScheduleResult, SchedulerError, WorkerInferenceRequest, WorkerJobResponse,
 };
 use crate::JobScheduler;
-use observability_narration_core::NarrationFactory;
+use observability_narration_core::{n, with_narration_context, NarrationContext}; // TEAM-380: Migrated to n!() macro
 use queen_rbee_telemetry_registry::TelemetryRegistry; // TEAM-374
 use std::sync::Arc;
-
-const NARRATE: NarrationFactory = NarrationFactory::new("scheduler");
 
 /// Simple scheduler: Pick first available worker for model
 ///
@@ -51,6 +50,8 @@ impl SimpleScheduler {
     /// * `result` - Schedule result with worker info
     /// * `request` - Original job request
     /// * `line_handler` - Callback for each SSE line
+    ///
+    /// TEAM-380: Migrated to n!() macro (manual context - can't use macro on methods)
     pub async fn execute_job<F>(
         &self,
         result: ScheduleResult,
@@ -60,16 +61,16 @@ impl SimpleScheduler {
     where
         F: FnMut(&str) -> Result<(), SchedulerError>,
     {
+        // TEAM-380: Manual context setup for trait method
         let job_id = &request.job_id;
+        let ctx = NarrationContext::new().with_job_id(job_id);
+        
+        with_narration_context(ctx, async move {
         let worker_url = &result.worker_url;
 
         // Step 1: POST to worker's /v1/inference endpoint
-        NARRATE
-            .action("infer_post_start")
-            .job_id(job_id)
-            .context(worker_url)
-            .human("📤 Sending inference request to worker at {}")
-            .emit();
+        // TEAM-380: Migrated to n!() macro
+        n!("infer_post_start", "📤 Sending inference request to worker at {}", worker_url);
 
         let client = reqwest::Client::new();
         let worker_request = WorkerInferenceRequest {
@@ -90,81 +91,46 @@ impl SimpleScheduler {
             let status = response.status().as_u16();
             let error_text = response.text().await.unwrap_or_else(|_| "Unknown error".to_string());
 
-            NARRATE
-                .action("infer_post_err")
-                .job_id(job_id)
-                .context(&status.to_string())
-                .context(&error_text)
-                .human("❌ Worker returned error {}: {}")
-                .error_kind("worker_error")
-                .emit();
+            // TEAM-380: Migrated to n!() macro
+            n!("infer_post_err", "❌ Worker returned error {}: {}", status, error_text);
 
             return Err(SchedulerError::WorkerError { status, message: error_text });
         }
 
         let worker_job: WorkerJobResponse = response.json().await.map_err(|e| {
-            NARRATE
-                .action("infer_parse_fail")
-                .job_id(job_id)
-                .context(&e.to_string())
-                .human("❌ Failed to parse worker response: {}")
-                .error_kind("parse_failed")
-                .emit();
-
+            // TEAM-380: Migrated to n!() macro
+            n!("infer_parse_fail", "❌ Failed to parse worker response: {}", e);
             SchedulerError::ParseError(e.to_string())
         })?;
 
-        NARRATE
-            .action("infer_job_created")
-            .job_id(job_id)
-            .context(&worker_job.job_id)
-            .human("✅ Worker job created: {}")
-            .emit();
+        // TEAM-380: Migrated to n!() macro
+        n!("infer_job_created", "✅ Worker job created: {}", worker_job.job_id);
 
         // Step 2: Connect to worker's SSE stream
         let stream_url = format!("{}{}", worker_url, worker_job.sse_url);
 
-        NARRATE
-            .action("infer_stream_conn")
-            .job_id(job_id)
-            .context(&stream_url)
-            .human("🔗 Connecting to worker SSE stream: {}")
-            .emit();
+        // TEAM-380: Migrated to n!() macro
+        n!("infer_stream_conn", "🔗 Connecting to worker SSE stream: {}", stream_url);
 
         let stream_response = client.get(&stream_url).send().await.map_err(|e| {
-            NARRATE
-                .action("infer_stream_fail")
-                .job_id(job_id)
-                .context(&e.to_string())
-                .human("❌ Failed to connect to worker stream: {}")
-                .error_kind("stream_connection_failed")
-                .emit();
-
+            // TEAM-380: Migrated to n!() macro
+            n!("infer_stream_fail", "❌ Failed to connect to worker stream: {}", e);
             SchedulerError::StreamConnectionFailed(e.to_string())
         })?;
 
         // Step 3: Stream tokens back to client
         use futures::StreamExt;
 
-        NARRATE
-            .action("infer_streaming")
-            .job_id(job_id)
-            .human("📡 Streaming tokens from worker...")
-            .emit();
+        // TEAM-380: Migrated to n!() macro
+        n!("infer_streaming", "📡 Streaming tokens from worker...");
 
         let mut stream = stream_response.bytes_stream();
         let mut buffer = String::new();
 
         while let Some(chunk) = stream.next().await {
             let chunk = chunk.map_err(|e| {
-                NARRATE
-                    .action("infer_chunk_err")
-                    .job_id(job_id)
-                    .context(&e.to_string())
-                    .human("❌ Error reading stream chunk: {}")
-                    .error_kind("stream_read_error")
-                    .emit();
-
+                // TEAM-380: Migrated to n!() macro
+                n!("infer_chunk_err", "❌ Error reading stream chunk: {}", e);
                 SchedulerError::StreamReadError(e.to_string())
             })?;
 
@@ -184,11 +150,8 @@ impl SimpleScheduler {
 
                     // Check for [DONE] marker
                     if clean_line == "[DONE]" {
-                        NARRATE
-                            .action("infer_complete")
-                            .job_id(job_id)
-                            .human("✅ Inference complete")
-                            .emit();
+                        // TEAM-380: Migrated to n!() macro
+                        n!("infer_complete", "✅ Inference complete");
                         return Ok(());
                     }
                 }
@@ -201,35 +164,32 @@ impl SimpleScheduler {
             line_handler(clean_line.trim())?;
         }
 
-        NARRATE.action("infer_done").job_id(job_id).human("✅ Inference streaming complete").emit();
+        // TEAM-380: Migrated to n!() macro
+        n!("infer_done", "✅ Inference streaming complete");
 
         Ok(())
+        }).await // TEAM-380: Close with_narration_context
     }
 }
 
 #[async_trait::async_trait]
 impl JobScheduler for SimpleScheduler {
+    /// TEAM-380: Migrated to n!() macro (manual context for trait method)
     async fn schedule(&self, request: JobRequest) -> Result<ScheduleResult, SchedulerError> {
+        // TEAM-380: Manual context setup for trait method
         let job_id = &request.job_id;
         let model = &request.model;
+        let ctx = NarrationContext::new().with_job_id(job_id);
+        
+        with_narration_context(ctx, async move {
 
-        NARRATE
-            .action("infer_schedule")
-            .job_id(job_id)
-            .context(model)
-            .human("🔍 Finding worker for model '{}'")
-            .emit();
+        // TEAM-380: Migrated to n!() macro
+        n!("infer_schedule", "🔍 Finding worker for model '{}'", model);
 
         // Find best worker for model
         let worker = self.worker_registry.find_best_worker_for_model(model).ok_or_else(|| {
-            NARRATE
-                .action("infer_no_worker")
-                .job_id(job_id)
-                .context(model)
-                .human("❌ No available worker found for model '{}'")
-                .error_kind("no_worker")
-                .emit();
-
+            // TEAM-380: Migrated to n!() macro
+            n!("infer_no_worker", "❌ No available worker found for model '{}'", model);
             SchedulerError::NoWorkersAvailable { model: model.clone() }
         })?;
 
@@ -238,14 +198,8 @@ impl JobScheduler for SimpleScheduler {
         let worker_port: u16 = worker.instance.parse().unwrap_or(8080);
         let model_name = worker.model.clone().unwrap_or_else(|| model.to_string());
         
-        NARRATE
-            .action("infer_worker_sel")
-            .job_id(job_id)
-            .context(&worker_id)
-            .context(model)
-            .context(&format!("localhost:{}", worker_port))
-            .human("✅ Selected worker '{}' for model '{}' at {}")
-            .emit();
+        // TEAM-380: Migrated to n!() macro
+        n!("infer_worker_sel", "✅ Selected worker '{}' for model '{}' at localhost:{}", worker_id, model, worker_port);
 
         Ok(ScheduleResult {
             worker_id,
@@ -254,6 +208,7 @@ impl JobScheduler for SimpleScheduler {
             model: model_name,
             device: worker.group.clone(), // TEAM-374: Use group as device
         })
+        }).await // TEAM-380: Close with_narration_context
     }
 }
 

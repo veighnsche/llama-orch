@@ -400,7 +400,7 @@ impl ProcessMonitor {
     #[cfg(target_os = "linux")]
     fn query_nvidia_smi(pid: u32) -> Result<(f64, u64)> {
         use std::process::Command;
-        use std::time::Duration;
+        
         
         // Query: nvidia-smi --query-compute-apps=pid,used_memory,sm --format=csv
         // TEAM-364: Use thread-based execution to prevent indefinite hangs
