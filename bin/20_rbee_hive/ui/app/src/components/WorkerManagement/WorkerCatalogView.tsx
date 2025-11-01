@@ -28,9 +28,10 @@ import {
 interface WorkerCatalogViewProps {
   onInstall?: (workerId: string) => void
   onRemove?: (workerId: string) => void
+  installProgress?: string[]
 }
 
-export function WorkerCatalogView({ onInstall, onRemove }: WorkerCatalogViewProps) {
+export function WorkerCatalogView({ onInstall, onRemove, installProgress = [] }: WorkerCatalogViewProps) {
   const { data: catalog, isLoading, error } = useWorkerCatalog()
   const currentPlatform = getCurrentPlatform()
   const [installingWorker, setInstallingWorker] = useState<string | null>(null)
@@ -41,12 +42,18 @@ export function WorkerCatalogView({ onInstall, onRemove }: WorkerCatalogViewProp
   const [installedWorkers] = useState<Set<string>>(new Set())
   
   const handleInstall = async (workerId: string) => {
+    console.log('[WorkerCatalogView] 🎯 Install button clicked for worker:', workerId)
     setInstallingWorker(workerId)
     try {
+      console.log('[WorkerCatalogView] 📞 Calling onInstall callback...')
       await onInstall?.(workerId)
+      console.log('[WorkerCatalogView] ✅ onInstall callback completed')
       // TODO: Add to installedWorkers set
+    } catch (error) {
+      console.error('[WorkerCatalogView] ❌ Install failed:', error)
     } finally {
       setInstallingWorker(null)
+      console.log('[WorkerCatalogView] 🏁 Install process finished')
     }
   }
   
@@ -133,6 +140,27 @@ export function WorkerCatalogView({ onInstall, onRemove }: WorkerCatalogViewProp
           Download, build, and install worker binaries on your system
         </p>
       </div>
+      
+      {/* Installation Progress */}
+      {installProgress.length > 0 && (
+        <Card className="border-blue-500 bg-blue-50 dark:bg-blue-950">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-blue-700 dark:text-blue-300">
+              <Loader2 className="h-5 w-5 animate-spin" />
+              Installing Worker...
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-1 font-mono text-xs max-h-48 overflow-y-auto">
+              {installProgress.map((msg, idx) => (
+                <div key={idx} className="text-blue-900 dark:text-blue-100">
+                  {msg}
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
       
       {/* Platform Info */}
       <Card className="bg-muted/50">

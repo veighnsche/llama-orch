@@ -15,7 +15,7 @@ import {
   TabsTrigger,
   TabsContent,
 } from '@rbee/ui/atoms'
-import { useWorkers, useHiveOperations } from '@rbee/rbee-hive-react'
+import { useWorkers, useWorkerOperations } from '@rbee/rbee-hive-react'
 import { useModels } from '@rbee/rbee-hive-react'
 import { ActiveWorkersView } from './ActiveWorkersView'
 import { SpawnWorkerView } from './SpawnWorkerView'
@@ -25,7 +25,7 @@ import type { ViewMode, SpawnFormState } from './types'
 export function WorkerManagement() {
   const { workers, loading, error } = useWorkers()
   const { models } = useModels()
-  const { spawnWorker, isPending } = useHiveOperations()
+  const { spawnWorker, installWorker, isPending, installProgress } = useWorkerOperations()
   const [viewMode, setViewMode] = useState<ViewMode>('catalog') // Start with catalog - install workers first!
 
   // Separate idle and active workers
@@ -41,9 +41,11 @@ export function WorkerManagement() {
   }
   
   const handleInstallWorker = async (workerId: string) => {
-    // TODO: Call hive backend to install worker
-    console.log('Installing worker:', workerId)
-    // POST /v1/workers/install { worker_id: workerId }
+    // TEAM-378: Call hive backend via SDK → JobClient → Job Server
+    console.log('[WorkerManagement] 📥 Received install request for:', workerId)
+    console.log('[WorkerManagement] 🚀 Calling useWorkerOperations.installWorker()...')
+    installWorker(workerId)
+    console.log('[WorkerManagement] ✓ installWorker() called (async operation started)')
   }
   
   const handleRemoveWorker = async (workerId: string) => {
@@ -95,6 +97,7 @@ export function WorkerManagement() {
             <WorkerCatalogView
               onInstall={handleInstallWorker}
               onRemove={handleRemoveWorker}
+              installProgress={installProgress}
             />
           </TabsContent>
 

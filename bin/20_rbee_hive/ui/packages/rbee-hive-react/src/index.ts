@@ -190,3 +190,7 @@ export type {
   UnloadModelParams,
   DeleteModelParams
 } from './hooks/useModelOperations'
+
+// TEAM-378: Worker operations (install + spawn)
+export { useWorkerOperations } from './hooks/useWorkerOperations'
+export type { UseWorkerOperationsResult } from './hooks/useWorkerOperations'

@@ -45,6 +45,7 @@ export interface SpawnWorkerParams {
 
 export interface UseHiveOperationsResult {
   spawnWorker: (params: SpawnWorkerParams) => void
+  installWorker: (workerId: string) => void
   isPending: boolean
   isSuccess: boolean
   isError: boolean
@@ -80,7 +81,7 @@ export interface UseHiveOperationsResult {
  * ```
  */
 export function useHiveOperations(): UseHiveOperationsResult {
-  const mutation = useMutation<any, Error, SpawnWorkerParams>({
+  const spawnMutation = useMutation<any, Error, SpawnWorkerParams>({
     mutationFn: async ({ modelId, workerType = 'cuda', deviceId = 0 }) => {
       await ensureWasmInit()
       const hiveId = client.hiveId
@@ -104,12 +105,38 @@ export function useHiveOperations(): UseHiveOperationsResult {
     retryDelay: 1000,
   })
 
+  // TEAM-378: Worker installation mutation
+  const installMutation = useMutation<any, Error, string>({
+    mutationFn: async (workerId: string) => {
+      await ensureWasmInit()
+      const hiveId = client.hiveId
+      // TEAM-378: workerInstall(hive_id, worker_id)
+      const op = OperationBuilder.workerInstall(hiveId, workerId)
+      const lines: string[] = []
+      
+      await client.submitAndStream(op, (line: string) => {
+        if (line !== '[DONE]') {
+          lines.push(line)
+          console.log('[Hive] Worker install:', line)
+        }
+      })
+      
+      return { success: true, workerId }
+    },
+    retry: 1,
+    retryDelay: 1000,
+  })
+
   return {
-    spawnWorker: mutation.mutate,
-    isPending: mutation.isPending,
-    isSuccess: mutation.isSuccess,
-    isError: mutation.isError,
-    error: mutation.error,
-    reset: mutation.reset,
+    spawnWorker: spawnMutation.mutate,
+    installWorker: installMutation.mutate,
+    isPending: spawnMutation.isPending || installMutation.isPending,
+    isSuccess: spawnMutation.isSuccess || installMutation.isSuccess,
+    isError: spawnMutation.isError || installMutation.isError,
+    error: spawnMutation.error || installMutation.error,
+    reset: () => {
+      spawnMutation.reset()
+      installMutation.reset()
+    },
   }
 }

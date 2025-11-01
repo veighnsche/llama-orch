@@ -116,3 +116,5 @@ export function useWorkers() {
 // Export operation hooks
 export { useHiveOperations, WORKER_TYPE_OPTIONS, WORKER_TYPES } from './hooks/useHiveOperations';
 export { useModelOperations } from './hooks/useModelOperations';
+// TEAM-378: Worker operations (install + spawn)
+export { useWorkerOperations } from './hooks/useWorkerOperations';

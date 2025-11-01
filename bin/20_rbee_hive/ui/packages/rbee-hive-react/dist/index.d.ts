@@ -48,3 +48,5 @@ export { useHiveOperations, WORKER_TYPE_OPTIONS, WORKER_TYPES } from './hooks/us
 export type { UseHiveOperationsResult, WorkerType, WorkerTypeOption, SpawnWorkerParams } from './hooks/useHiveOperations';
 export { useModelOperations } from './hooks/useModelOperations';
 export type { UseModelOperationsResult, LoadModelParams, UnloadModelParams, DeleteModelParams } from './hooks/useModelOperations';
+export { useWorkerOperations } from './hooks/useWorkerOperations';
+export type { UseWorkerOperationsResult } from './hooks/useWorkerOperations';

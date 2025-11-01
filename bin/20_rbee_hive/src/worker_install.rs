@@ -83,6 +83,12 @@ pub async fn handle_worker_install(
     let temp_dir = create_temp_directories(&worker_id)?;
     n!("create_temp_ok", "✓ Temp directory: {}", temp_dir.display());
 
+    // 6.5. Fetch sources (git clone, etc.)
+    n!("fetch_sources", "📦 Fetching sources from PKGBUILD...");
+    let srcdir = temp_dir.join("src");
+    crate::source_fetcher::fetch_sources(&pkgbuild.source, &srcdir).await?;
+    n!("fetch_sources_ok", "✓ Sources fetched to: {}", srcdir.display());
+
     // 7. Execute build()
     n!("build_start", "🏗️  Starting build phase...");
     let executor = crate::pkgbuild_executor::PkgBuildExecutor::new(
@@ -191,14 +197,20 @@ async fn download_pkgbuild(worker_id: &str) -> Result<String> {
         .unwrap_or_else(|_| "http://localhost:8787".to_string());
 
     let url = format!("{}/workers/{}/PKGBUILD", catalog_url, worker_id);
+    n!("pkgbuild_url", "📡 Fetching from: {}", url);
 
+    n!("pkgbuild_http_start", "🌐 Creating HTTP client...");
     let client = reqwest::Client::new();
+    
+    n!("pkgbuild_http_get", "📤 Sending GET request...");
     let response = client
         .get(&url)
         .send()
         .await
         .context("Failed to download PKGBUILD")?;
 
+    n!("pkgbuild_http_response", "📥 Response status: {}", response.status());
+    
     if !response.status().is_success() {
         anyhow::bail!(
             "PKGBUILD not found for worker '{}' (HTTP {})",
@@ -207,10 +219,13 @@ async fn download_pkgbuild(worker_id: &str) -> Result<String> {
         );
     }
 
+    n!("pkgbuild_read_body", "📖 Reading response body...");
     let content = response
         .text()
         .await
         .context("Failed to read PKGBUILD content")?;
+    
+    n!("pkgbuild_read_ok", "✓ PKGBUILD content received ({} bytes)", content.len());
 
     Ok(content)
 }
