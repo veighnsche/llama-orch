@@ -13,5 +13,7 @@
 
 pub mod heartbeat; // TEAM-284: Hive heartbeat to queen
 pub mod hive_check; // TEAM-313: Hive narration check (tests SSE streaming)
+pub mod pkgbuild_parser; // PKGBUILD parser for worker installation
+pub mod pkgbuild_executor; // PKGBUILD executor for worker installation
 
 // TODO: Implement library functionality

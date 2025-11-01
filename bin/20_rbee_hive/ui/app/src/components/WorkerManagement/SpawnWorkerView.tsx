@@ -1,7 +1,8 @@
 // TEAM-382: Spawn worker form view
+// Enhanced with worker catalog integration for build instructions
 
 import { useState } from 'react'
-import { Rocket, Cpu } from 'lucide-react'
+import { Rocket, Cpu, AlertCircle, Info } from 'lucide-react'
 import {
   Card,
   CardContent,
@@ -16,8 +17,10 @@ import {
   SelectTrigger,
   SelectValue,
   Input,
+  Badge,
 } from '@rbee/ui/atoms'
 import { WORKER_TYPE_OPTIONS } from '@rbee/rbee-hive-react'
+import { useWorkerCatalog, getWorkerByType, isWorkerSupported, getCurrentPlatform } from '../../hooks/useWorkerCatalog'
 import type { ModelInfo } from '../ModelManagement/types'
 import type { SpawnFormState } from './types'
 
@@ -28,6 +31,10 @@ interface SpawnWorkerViewProps {
 }
 
 export function SpawnWorkerView({ models, onSpawn, isPending }: SpawnWorkerViewProps) {
+  // Fetch worker catalog for build instructions and metadata
+  const { data: catalog, isLoading: catalogLoading, error: catalogError } = useWorkerCatalog()
+  const currentPlatform = getCurrentPlatform()
+  
   const [formState, setFormState] = useState<SpawnFormState>({
     modelId: '',
     workerType: 'cuda',
@@ -99,18 +106,91 @@ export function SpawnWorkerView({ models, onSpawn, isPending }: SpawnWorkerViewP
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                {WORKER_TYPE_OPTIONS.map((option) => (
-                  <SelectItem key={option.value} value={option.value}>
-                    <div className="flex flex-col">
-                      <span>{option.label}</span>
-                      <span className="text-xs text-muted-foreground">
-                        {option.description}
-                      </span>
-                    </div>
-                  </SelectItem>
-                ))}
+                {WORKER_TYPE_OPTIONS.map((option) => {
+                  const workerEntry = getWorkerByType(catalog, option.value)
+                  const supported = workerEntry ? isWorkerSupported(workerEntry, currentPlatform) : true
+                  
+                  return (
+                    <SelectItem 
+                      key={option.value} 
+                      value={option.value}
+                      disabled={!supported}
+                    >
+                      <div className="flex items-center justify-between gap-2 w-full">
+                        <div className="flex flex-col">
+                          <span>{option.label}</span>
+                          <span className="text-xs text-muted-foreground">
+                            {option.description}
+                          </span>
+                          {workerEntry && (
+                            <span className="text-xs text-muted-foreground mt-1">
+                              v{workerEntry.version} • {workerEntry.supported_formats.join(', ')}
+                            </span>
+                          )}
+                        </div>
+                        {!supported && (
+                          <Badge variant="outline" className="text-xs">
+                            <AlertCircle className="h-3 w-3 mr-1" />
+                            Not supported on {currentPlatform}
+                          </Badge>
+                        )}
+                      </div>
+                    </SelectItem>
+                  )
+                })}
               </SelectContent>
             </Select>
+            
+            {/* Catalog Loading/Error State */}
+            {catalogLoading && (
+              <p className="text-xs text-muted-foreground flex items-center gap-1">
+                <Info className="h-3 w-3" />
+                Loading worker catalog...
+              </p>
+            )}
+            {catalogError && (
+              <p className="text-xs text-destructive flex items-center gap-1">
+                <AlertCircle className="h-3 w-3" />
+                Failed to load catalog: {catalogError.message}
+              </p>
+            )}
+            
+            {/* Worker Details */}
+            {formState.workerType && catalog && (
+              <div className="mt-2 p-3 bg-muted rounded-md text-xs space-y-1">
+                {(() => {
+                  const worker = getWorkerByType(catalog, formState.workerType)
+                  if (!worker) return null
+                  
+                  return (
+                    <>
+                      <div className="flex items-center gap-2">
+                        <Info className="h-3 w-3" />
+                        <span className="font-medium">{worker.name}</span>
+                        <Badge variant="secondary" className="text-xs">
+                          {worker.implementation}
+                        </Badge>
+                      </div>
+                      <p className="text-muted-foreground">{worker.description}</p>
+                      <div className="grid grid-cols-2 gap-2 mt-2 pt-2 border-t">
+                        <div>
+                          <span className="text-muted-foreground">Build:</span> {worker.build_system}
+                        </div>
+                        <div>
+                          <span className="text-muted-foreground">Streaming:</span> {worker.supports_streaming ? '✓' : '✗'}
+                        </div>
+                        <div>
+                          <span className="text-muted-foreground">Max Context:</span> {worker.max_context_length?.toLocaleString() || 'N/A'}
+                        </div>
+                        <div>
+                          <span className="text-muted-foreground">Platforms:</span> {worker.platforms.join(', ')}
+                        </div>
+                      </div>
+                    </>
+                  )
+                })()}
+              </div>
+            )}
           </div>
 
           {/* Device ID (for CUDA/Metal) */}

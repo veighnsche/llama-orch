@@ -263,6 +263,9 @@ importers:
       '@rbee/ui':
         specifier: workspace:*
         version: link:../../../../frontend/packages/rbee-ui
+      '@tanstack/react-query':
+        specifier: ^5.62.14
+        version: 5.90.5(react@19.2.0)
       lucide-react:
         specifier: ^0.460.0
         version: 0.460.0(react@19.2.0)
