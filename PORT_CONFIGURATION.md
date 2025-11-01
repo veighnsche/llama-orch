@@ -15,6 +15,7 @@ Backend APIs:
 8000 ← vllm-worker
 8080 ← llm-worker
 8188 ← comfy-worker
+8787 ← hono-worker-catalog
 
 Frontend (Development):
 5173 ← keeper GUI (Tauri)
@@ -41,6 +42,7 @@ Frontend (Development):
 | **llm-worker** | `8080` | LLM worker (HTTP API) |
 | **comfy-worker** | `8188` | ComfyUI worker (HTTP API) |
 | **vllm-worker** | `8000` | vLLM worker (HTTP API) |
+| **hono-worker-catalog** | `8787` | Hono worker catalog (Cloudflare Worker dev) |
 
 ### Frontend Services (Development)
 
@@ -327,6 +329,7 @@ Tests use **dynamic port allocation** to avoid conflicts.
 | `8000` | vLLM worker API | Backend HTTP API |
 | `8080` | LLM worker API | Backend HTTP API |
 | `8188` | ComfyUI worker API | Backend HTTP API |
+| `8787` | Hono worker catalog | Cloudflare Worker dev server |
 
 **Port Assignment Strategy:**
 - **5173:** Keeper GUI (Vite default for Tauri)
@@ -366,6 +369,9 @@ When you change a port in this document, update these files:
 
 **vllm-worker (Port 8000):**
 - `bin/30_vllm_worker_rbee/src/main.rs` - Default port argument
+
+**hono-worker-catalog (Port 8787):**
+- `bin/80-hono-worker-catalog/wrangler.jsonc` - Cloudflare Worker configuration (uses wrangler default)
 
 ### Documentation & Examples
 
@@ -613,6 +619,9 @@ rbee-hive -p 7835 --queen-url http://localhost:7833 --hive-id localhost &
 llm-worker --port 8080 &
 comfy-worker --port 8188 &
 vllm-worker --port 8000 &
+
+# Catalog service
+cd bin/80-hono-worker-catalog && pnpm dev &  # Port 8787
 ```
 
 **Frontend (Development):**
@@ -648,6 +657,7 @@ curl http://localhost:7835/health  # rbee-hive
 curl http://localhost:8080/health  # llm-worker
 curl http://localhost:8188/health  # comfy-worker
 curl http://localhost:8000/health  # vllm-worker
+curl http://localhost:8787/health  # hono-worker-catalog
 ```
 
 **Frontend (Development):**
@@ -695,9 +705,9 @@ curl http://localhost:8080/        # llm-worker UI (served by binary)
 
 ## Summary
 
-**Total Ports Tracked:** 14
+**Total Ports Tracked:** 15
 
-**Backend APIs:** 5 (queen, hive, 3 worker types)  
+**Backend APIs:** 6 (queen, hive, 3 worker types, catalog service)  
 **Frontend Dev:** 9 (keeper, queen, hive, 3 workers, storybook, commercial, user-docs)  
 **Deprecated:** 1 (web-ui)
 

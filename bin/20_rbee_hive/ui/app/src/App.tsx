@@ -18,6 +18,7 @@ import {
 } from '@rbee/ui/molecules'
 import { Activity, Cpu, HardDrive } from 'lucide-react'
 import { ModelManagement } from './components/ModelManagement'
+import { WorkerManagement } from './components/WorkerManagement'
 
 // TEAM-374: Use shared startup logging
 logStartupMode("HIVE UI", import.meta.env.DEV, 7836)
@@ -237,29 +238,8 @@ function App() {
             {/* Model Management */}
             <ModelManagement />
 
-            {/* Worker Management */}
-            <Card>
-              <CardHeader>
-                <div className="flex items-center justify-between">
-                  <CardTitle className="flex items-center gap-2">
-                    <Cpu className="h-5 w-5" />
-                    Worker Management
-                  </CardTitle>
-                  <Badge variant="secondary">0 Workers</Badge>
-                </div>
-                <CardDescription>Build and manage worker processes</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="text-sm text-muted-foreground text-center py-8">
-                  No workers available
-                </div>
-                <div className="flex gap-2">
-                  <button className="flex-1 px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors">
-                    Build Worker
-                  </button>
-                </div>
-              </CardContent>
-            </Card>
+            {/* Worker Management - TEAM-382 */}
+            <WorkerManagement />
           </div>
 
           {/* Spawn Worker */}

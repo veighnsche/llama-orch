@@ -22,6 +22,7 @@ packages:
   - bin/30_llm_worker_rbee/ui/app
   - bin/30_llm_worker_rbee/ui/packages/llm-worker-sdk
   - bin/30_llm_worker_rbee/ui/packages/llm-worker-react
+  - bin/80-hono-worker-catalog
 
 onlyBuiltDependencies:
   - esbuild
