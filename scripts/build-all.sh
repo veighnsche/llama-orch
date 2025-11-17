@@ -16,6 +16,8 @@ detect_os() {
       echo "arch"
     elif [ -f /etc/debian_version ]; then
       echo "ubuntu"
+    elif [ -f /etc/NIXOS ] || { [ -f /etc/os-release ] && grep -qi 'ID=nixos' /etc/os-release; }; then
+      echo "nixos"
     else
       echo "linux"
     fi
@@ -38,7 +40,7 @@ FAILED=0
 MISSING_DEPS=()
 
 # Check Node.js
-echo "[1/5] Checking Node.js..."
+echo "[1/6] Checking Node.js..."
 if ! command -v node &> /dev/null; then
   echo "  ✗ node is not installed"
   FAILED=1
@@ -49,7 +51,7 @@ else
 fi
 
 # Check pnpm
-echo "[2/5] Checking pnpm..."
+echo "[2/6] Checking pnpm..."
 if ! command -v pnpm &> /dev/null; then
   echo "  ✗ pnpm is not installed"
   FAILED=1
@@ -60,7 +62,7 @@ else
 fi
 
 # Check Cargo
-echo "[3/5] Checking Cargo..."
+echo "[3/6] Checking Cargo..."
 if ! command -v cargo &> /dev/null; then
   echo "  ✗ cargo is not installed"
   FAILED=1
@@ -71,7 +73,7 @@ else
 fi
 
 # Check wasm-pack
-echo "[4/5] Checking wasm-pack..."
+echo "[4/6] Checking wasm-pack..."
 if ! command -v wasm-pack &> /dev/null; then
   echo "  ✗ wasm-pack is not installed"
   FAILED=1
@@ -95,8 +97,52 @@ else
   fi
 fi
 
+# TEAM_519: Rust toolchain / WASI targets health check so broken rustup fails preflight, not pnpm build
+echo "[5/6] Checking Rust toolchain (rustup targets)..."
+if command -v rustup &> /dev/null; then
+  if ! rustup show active-toolchain > /dev/null 2>&1; then
+    echo "  → No default Rust toolchain configured; setting 'stable' as default via rustup..."
+    if rustup default stable > /dev/null 2>&1; then
+      echo "  ✓ Rust default toolchain set to 'stable'"
+    else
+      echo "  ✗ Failed to set default Rust toolchain with 'rustup default stable' (check network and write permissions under $RUSTUP_HOME or ~/.rustup)"
+      FAILED=1
+    fi
+  fi
+
+  if ! rustc -vV > /dev/null 2>&1; then
+    echo "  ✗ rustc -vV failed; Rust toolchain is not usable"
+    FAILED=1
+  else
+    echo "  ✓ rustc is usable"
+  fi
+
+  for target in wasm32-wasip1 wasm32-wasip1-threads; do
+    if rustup target list --installed | grep -q "$target"; then
+      echo "  ✓ $target target already installed"
+    else
+      echo "  → Installing $target target via rustup..."
+      if rustup target add "$target"; then
+        echo "  ✓ $target target installed"
+      else
+        echo "  ✗ Failed to install $target target with rustup (check write permissions under $RUSTUP_HOME or ~/.rustup and try: rustup target add $target)"
+        FAILED=1
+      fi
+    fi
+  done
+
+  if command -v wasm-bindgen &> /dev/null; then
+    WASM_BINDGEN_VERSION=$(wasm-bindgen --version 2>/dev/null || echo "installed")
+    echo "  ✓ wasm-bindgen CLI $WASM_BINDGEN_VERSION"
+  else
+    echo "  ⚠ wasm-bindgen CLI not found; wasm-pack will download its bundled version during build"
+  fi
+else
+  echo "  ⚠ rustup not found - skipping Rust WASI target checks"
+fi
+
 # Check for required system libraries (pkg-config)
-echo "[5/5] Checking system libraries..."
+echo "[6/6] Checking system libraries..."
 if command -v pkg-config &> /dev/null; then
   # Check glib-2.0
   if ! pkg-config --exists glib-2.0; then
@@ -171,6 +217,19 @@ if [ $FAILED -eq 1 ]; then
         esac
       done
       ;;
+    nixos)
+      echo "📦 NixOS:"
+      for dep in "${MISSING_DEPS[@]}"; do
+        case "$dep" in
+          node) echo "  • Node.js:   add pkgs.nodejs to environment.systemPackages or use: nix-shell -p nodejs" ;;
+          pnpm) echo "  • pnpm:      add pkgs.pnpm to environment.systemPackages or use: nix-shell -p pnpm" ;;
+          cargo) echo "  • Rust:      add pkgs.rustup to environment.systemPackages and run: rustup default stable" ;;
+          wasm-pack) echo "  • wasm-pack: add pkgs.wasm-pack to environment.systemPackages or use: nix-shell -p wasm-pack" ;;
+          glib) echo "  • glib-2.0:  add pkgs.glib to environment.systemPackages or a devShell" ;;
+          gdk) echo "  • gdk-3.0:   add pkgs.gtk3 to environment.systemPackages or a devShell" ;;
+        esac
+      done
+      ;;
     *)
       echo "📦 Generic (visit official sites):"
       for dep in "${MISSING_DEPS[@]}"; do
@@ -200,10 +259,6 @@ echo ""
 # TEAM-XXX: mac compat - Ensure cargo bin is on PATH and wasm-bindgen is installed to avoid wasm-pack race conditions
 if [[ -d "$HOME/.cargo/bin" ]]; then
   export PATH="$HOME/.cargo/bin:$PATH"
-fi
-if ! command -v wasm-bindgen &> /dev/null; then
-  echo "→ Installing wasm-bindgen CLI (via cargo) to avoid wasm-pack auto-install conflicts..."
-  cargo install wasm-bindgen-cli || true
 fi
 
 # Install dependencies
