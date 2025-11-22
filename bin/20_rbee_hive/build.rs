@@ -21,6 +21,12 @@ fn main() {
 
     // TEAM-374: Build packages FIRST, then app
 
+    // TEAM_527: Allow tests and CI to skip expensive UI build when RBEE_SKIP_UI_BUILD is set
+    if std::env::var("RBEE_SKIP_UI_BUILD").is_ok() {
+        println!("cargo:warning=⏭️  Skipping rbee-hive UI build (RBEE_SKIP_UI_BUILD set)");
+        return;
+    }
+
     let ui_base_dir = Path::new(&manifest_dir).join("ui");
     let ui_app_dir = ui_base_dir.join("app");
     let ui_dist = ui_app_dir.join("dist");
@@ -28,7 +34,7 @@ fn main() {
     // TEAM-381: Skip ALL UI builds if Vite dev server is running (port 7836)
     // TEAM-386: Also check for turbo dev process to prevent killing active dev sessions
     // This avoids conflicts with the dev server and speeds up cargo builds during development
-    
+
     // Check 1: HTTP check for rbee-hive Vite dev server (port 7836)
     let vite_dev_running = Command::new("curl")
         .args(&["-s", "-o", "/dev/null", "-w", "%{http_code}", "http://127.0.0.1:7836"])
@@ -48,7 +54,9 @@ fn main() {
 
     if vite_dev_running || turbo_dev_running {
         if vite_dev_running {
-            println!("cargo:warning=⚡ Vite dev server detected on port 7836 - SKIPPING ALL UI builds");
+            println!(
+                "cargo:warning=⚡ Vite dev server detected on port 7836 - SKIPPING ALL UI builds"
+            );
         }
         if turbo_dev_running {
             println!("cargo:warning=⚡ Turbo dev process detected - SKIPPING ALL UI builds");
@@ -83,7 +91,9 @@ fn main() {
         .expect("Failed to run vite build for rbee-hive UI");
 
     if !app_status.success() {
-        panic!("UI build failed! Run 'cd bin/20_rbee_hive/ui/app && pnpm exec vite build' to debug.");
+        panic!(
+            "UI build failed! Run 'cd bin/20_rbee_hive/ui/app && pnpm exec vite build' to debug."
+        );
     }
 
     // Verify dist exists

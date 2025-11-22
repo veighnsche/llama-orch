@@ -167,16 +167,22 @@ mod tests {
 
     #[test]
     fn test_request_id_display() {
-        let id = RequestId::from_string("test-123".to_string());
-        assert_eq!(id.to_string(), "test-123");
-        assert_eq!(id.as_str(), "test-123");
+        // TEAM_527: Round-trip a valid UUID string instead of hardcoded non-UUID literal
+        let original = RequestId::new();
+        let s = original.to_string();
+        let parsed = RequestId::from_string(s.clone());
+        assert_eq!(parsed.to_string(), s);
+        assert_eq!(parsed.as_str(), s);
     }
 
     #[test]
     fn test_job_id_display() {
-        let id = JobId::from_string("job-456".to_string());
-        assert_eq!(id.to_string(), "job-456");
-        assert_eq!(id.as_str(), "job-456");
+        // TEAM_527: Round-trip a valid UUID string instead of hardcoded non-UUID literal
+        let original = JobId::new();
+        let s = original.to_string();
+        let parsed = JobId::from_string(s.clone());
+        assert_eq!(parsed.to_string(), s);
+        assert_eq!(parsed.as_str(), s);
     }
 
     #[test]

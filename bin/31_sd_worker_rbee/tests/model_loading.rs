@@ -4,6 +4,8 @@
 
 use sd_worker_rbee::backend::model_loader::load_model;
 use sd_worker_rbee::backend::models::SDVersion;
+use sd_worker_rbee::backend::traits::ImageModel;
+#[cfg(feature = "cpu")]
 use shared_worker_rbee::device::init_cpu_device;
 
 mod fixtures;
@@ -13,6 +15,7 @@ use fixtures::models::{get_model_path, TEST_MODELS};
 ///
 /// TEAM-487: Smoke test for model loading
 #[test]
+#[cfg(feature = "cpu")]
 fn test_all_models_load() {
     let mut loaded_count = 0;
     let mut skipped_count = 0;
@@ -51,23 +54,22 @@ fn test_all_models_load() {
         );
 
         match result {
-            Ok(components) => {
+            Ok(model) => {
                 println!("   ✅ Loaded successfully");
 
-                // Verify model properties
-                assert_eq!(components.version, fixture.version, "Model version mismatch");
+                // Verify model capabilities match expected fixture
+                let capabilities = model.capabilities();
                 assert_eq!(
-                    components.version.default_size(),
-                    fixture.expected_size,
+                    capabilities.default_size, fixture.expected_size,
                     "Model {:?} has wrong default size",
                     fixture.version
                 );
 
                 println!(
                     "   ✓ Default size: {}x{}",
-                    fixture.expected_size.0, fixture.expected_size.1
+                    capabilities.default_size.0, capabilities.default_size.1
                 );
-                println!("   ✓ Is inpainting: {}", components.version.is_inpainting());
+                println!("   ✓ Is inpainting: {}", capabilities.inpainting);
                 println!();
 
                 loaded_count += 1;
@@ -117,7 +119,9 @@ fn test_models_load_f16() {
         let result = load_model(
             fixture.version,
             &device,
-            true, // use_f16
+            true,  // use_f16
+            &[],   // TEAM-487: No LoRAs
+            false, // Not quantized in this test
         );
 
         assert!(

@@ -22,6 +22,12 @@ fn main() {
     // TEAM-350: REAL FIX - Build packages FIRST, then app
     // This allows cargo watch to rebuild everything without needing turbo dev server
 
+    // TEAM_527: Allow tests and CI to skip expensive UI build when RBEE_SKIP_UI_BUILD is set
+    if std::env::var("RBEE_SKIP_UI_BUILD").is_ok() {
+        println!("cargo:warning=⏭️  Skipping queen-rbee UI build (RBEE_SKIP_UI_BUILD set)");
+        return;
+    }
+
     let ui_base_dir = Path::new(&manifest_dir).join("ui");
     let ui_app_dir = ui_base_dir.join("app");
     let ui_dist = ui_app_dir.join("dist");

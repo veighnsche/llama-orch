@@ -1,5 +1,2 @@
-// TEAM-252: xtask library for integration and chaos tests
-// Purpose: Enable test compilation for integration and chaos testing modules
-
-pub mod chaos;
-pub mod integration;
+// TEAM_527: xtask lib crate is now empty; legacy chaos/integration modules were removed.
+// TEAM_527: Kept only so binary tests can still compile a library target.

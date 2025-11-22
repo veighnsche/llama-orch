@@ -20,8 +20,8 @@ fn test_greedy_generation() -> Result<()> {
     let model_path = std::env::var("LLORCH_TEST_MODEL_PATH")
         .expect("Set LLORCH_TEST_MODEL_PATH to run this test");
 
-    let device = init_cpu_device()?;
-    let mut backend = CandleInferenceBackend::load(&model_path, device)?;
+    let _device = init_cpu_device()?;
+    let mut backend = CandleInferenceBackend::load(&model_path)?;
 
     let config = SamplingConfig {
         max_tokens: 20,
@@ -60,8 +60,8 @@ fn test_temperature_sampling() -> Result<()> {
     let model_path = std::env::var("LLORCH_TEST_MODEL_PATH")
         .expect("Set LLORCH_TEST_MODEL_PATH to run this test");
 
-    let device = init_cpu_device()?;
-    let mut backend = CandleInferenceBackend::load(&model_path, device)?;
+    let _device = init_cpu_device()?;
+    let mut backend = CandleInferenceBackend::load(&model_path)?;
 
     let config =
         SamplingConfig { max_tokens: 10, temperature: 0.8, seed: 42, ..Default::default() };
@@ -97,8 +97,8 @@ fn test_long_generation() -> Result<()> {
     let model_path = std::env::var("LLORCH_TEST_MODEL_PATH")
         .expect("Set LLORCH_TEST_MODEL_PATH to run this test");
 
-    let device = init_cpu_device()?;
-    let mut backend = CandleInferenceBackend::load(&model_path, device)?;
+    let _device = init_cpu_device()?;
+    let mut backend = CandleInferenceBackend::load(&model_path)?;
 
     let config =
         SamplingConfig { max_tokens: 100, temperature: 0.7, seed: 42, ..Default::default() };
@@ -135,8 +135,8 @@ fn test_eos_detection() -> Result<()> {
     let model_path = std::env::var("LLORCH_TEST_MODEL_PATH")
         .expect("Set LLORCH_TEST_MODEL_PATH to run this test");
 
-    let device = init_cpu_device()?;
-    let mut backend = CandleInferenceBackend::load(&model_path, device)?;
+    let _device = init_cpu_device()?;
+    let mut backend = CandleInferenceBackend::load(&model_path)?;
 
     // Use a prompt that might trigger EOS
     let config =
@@ -165,8 +165,8 @@ fn test_multiple_prompts() -> Result<()> {
     let model_path = std::env::var("LLORCH_TEST_MODEL_PATH")
         .expect("Set LLORCH_TEST_MODEL_PATH to run this test");
 
-    let device = init_cpu_device()?;
-    let mut backend = CandleInferenceBackend::load(&model_path, device)?;
+    let _device = init_cpu_device()?;
+    let mut backend = CandleInferenceBackend::load(&model_path)?;
 
     let config =
         SamplingConfig { max_tokens: 10, temperature: 0.0, seed: 42, ..Default::default() };
@@ -202,8 +202,8 @@ fn test_story_generation() -> Result<()> {
     let model_path = std::env::var("LLORCH_TEST_MODEL_PATH")
         .expect("Set LLORCH_TEST_MODEL_PATH to run this test");
 
-    let device = init_cpu_device()?;
-    let mut backend = CandleInferenceBackend::load(&model_path, device)?;
+    let _device = init_cpu_device()?;
+    let mut backend = CandleInferenceBackend::load(&model_path)?;
 
     // TEAM-012: Use only 5 tokens to keep debug build test under 2 minutes
     let config = SamplingConfig { max_tokens: 5, temperature: 0.7, seed: 42, ..Default::default() };
@@ -262,8 +262,8 @@ fn test_extended_story_generation() -> Result<()> {
     let model_path = std::env::var("LLORCH_TEST_MODEL_PATH")
         .expect("Set LLORCH_TEST_MODEL_PATH to run this test");
 
-    let device = init_cpu_device()?;
-    let mut backend = CandleInferenceBackend::load(&model_path, device)?;
+    let _device = init_cpu_device()?;
+    let mut backend = CandleInferenceBackend::load(&model_path)?;
 
     // TEAM-012: 20 tokens for a more complete story
     let config =
