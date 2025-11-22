@@ -16,6 +16,10 @@
       rust-overlay,
     }:
     let
+      toolVersions = {
+        pnpm = "10.23.0";
+        wrangler = "4.50.0";
+      };
       systems = [
         "x86_64-linux"
         "aarch64-linux"
@@ -30,9 +34,34 @@
           config.allowUnfree = true;
           overlays = [
             rust-overlay.outputs.overlays.default
-            (import ./nix/node-dev-tools-overlay.nix)
           ];
         };
+      pnpmVersion = toolVersions.pnpm;
+      wranglerVersion = toolVersions.wrangler;
+      pnpmCorepackHook = ''
+        export PNPM_HOME="$PWD/.pnpm"
+        export COREPACK_HOME="$PNPM_HOME"
+        export PLAYWRIGHT_BROWSERS_PATH="$PWD/.cache/playwright"
+
+        mkdir -p "$PNPM_HOME/bin"
+        export PATH="$PNPM_HOME/bin:$PATH"
+
+        corepack install --global pnpm@${pnpmVersion} >/dev/null 2>&1 || true
+
+        if [ ! -x "$PNPM_HOME/bin/pnpm" ]; then
+          cat >"$PNPM_HOME/bin/pnpm" <<'EOF'
+#!/usr/bin/env bash
+exec corepack pnpm "$@"
+EOF
+          chmod +x "$PNPM_HOME/bin/pnpm"
+        fi
+
+        cat >"$PNPM_HOME/bin/wrangler" <<'EOF'
+#!/usr/bin/env bash
+exec pnpm dlx wrangler@${wranglerVersion} "$@"
+EOF
+        chmod +x "$PNPM_HOME/bin/wrangler"
+      '';
     in
     {
       formatter = forAllSystems (system: (pkgsFor system).nixfmt-rfc-style);
@@ -72,8 +101,7 @@
             {
               type = "app";
               program = pkgs.writeShellScript name ''
-                export PNPM_HOME="${toString "$PWD/.pnpm"}"
-                export PATH="$PNPM_HOME:$PATH"
+                ${pnpmCorepackHook}
                 exec pnpm ${script} "$@"
               '';
             };
@@ -100,9 +128,8 @@
           };
 
           commonNodeTooling = with pkgs; [
-            nodejs_22
-            wrangler
             biome
+            nodejs_22
           ];
           rustCliTools = with pkgs; [
             rustToolchain
@@ -133,18 +160,19 @@
             cairo.dev
             gdk-pixbuf
             gdk-pixbuf.dev
+            libsoup_3
+            webkitgtk_4_1
             libdrm
             libxkbcommon
             libGL
             libGL.dev
+            openssl
           ];
           commonHook = ''
             export CARGO_HOME="$PWD/.cargo"
             export RUSTUP_HOME="$PWD/.rustup"
             export CARGO_TARGET_DIR="$PWD/target"
-            export PNPM_HOME="$PWD/.pnpm"
-            export PLAYWRIGHT_BROWSERS_PATH="$PWD/.cache/playwright"
-            export PATH="$PNPM_HOME:$PATH"
+            ${pnpmCorepackHook}
           '';
         in
         {
@@ -163,9 +191,7 @@
             nativeBuildInputs = [ pkgs.wrapGAppsHook4 ];
             buildInputs = commonBuildInputs;
             shellHook = ''
-              export PNPM_HOME="$PWD/.pnpm"
-              export PLAYWRIGHT_BROWSERS_PATH="$PWD/.cache/playwright"
-              export PATH="$PNPM_HOME:$PATH"
+              ${pnpmCorepackHook}
               echo "[rbee] frontend shell → node $(node --version)"
             '';
           };

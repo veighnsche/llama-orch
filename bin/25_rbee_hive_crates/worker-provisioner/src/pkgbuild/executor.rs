@@ -506,7 +506,12 @@ mod tests {
             depends: vec![],
             makedepends: vec![],
             source: vec![],
+            source_x86_64: vec![],
+            source_aarch64: vec![],
             sha256sums: vec![],
+            sha256sums_x86_64: vec![],
+            sha256sums_aarch64: vec![],
+            noextract: vec![],
             build_fn: Some("echo 'test'".to_string()),
             package_fn: None,
             variables: Default::default(),
@@ -552,7 +557,12 @@ mod tests {
             depends: vec![],
             makedepends: vec![],
             source: vec![],
+            source_x86_64: vec![],
+            source_aarch64: vec![],
             sha256sums: vec![],
+            sha256sums_x86_64: vec![],
+            sha256sums_aarch64: vec![],
+            noextract: vec![],
             build_fn: Some(r#"
                 echo "Step 1: Downloading dependencies"
                 echo "Step 2: Compiling source"
@@ -605,7 +615,12 @@ mod tests {
             depends: vec![],
             makedepends: vec![],
             source: vec![],
+            source_x86_64: vec![],
+            source_aarch64: vec![],
             sha256sums: vec![],
+            sha256sums_x86_64: vec![],
+            sha256sums_aarch64: vec![],
+            noextract: vec![],
             build_fn: Some(r#"
                 echo "Starting build..."
                 exit 42
@@ -658,7 +673,12 @@ mod tests {
             depends: vec![],
             makedepends: vec![],
             source: vec![],
+            source_x86_64: vec![],
+            source_aarch64: vec![],
             sha256sums: vec![],
+            sha256sums_x86_64: vec![],
+            sha256sums_aarch64: vec![],
+            noextract: vec![],
             build_fn: Some(format!(
                 r#"
                 echo "Building binary..."
@@ -726,7 +746,12 @@ mod tests {
             depends: vec![],
             makedepends: vec![],
             source: vec![],
+            source_x86_64: vec![],
+            source_aarch64: vec![],
             sha256sums: vec![],
+            sha256sums_x86_64: vec![],
+            sha256sums_aarch64: vec![],
+            noextract: vec![],
             build_fn: Some("echo 'BUILD_PHASE'".to_string()),
             package_fn: Some("echo 'PACKAGE_PHASE'".to_string()),
             variables: Default::default(),
@@ -771,7 +796,12 @@ mod tests {
             depends: vec![],
             makedepends: vec![],
             source: vec![],
+            source_x86_64: vec![],
+            source_aarch64: vec![],
             sha256sums: vec![],
+            sha256sums_x86_64: vec![],
+            sha256sums_aarch64: vec![],
+            noextract: vec![],
             build_fn: None,  // Missing!
             package_fn: Some("echo 'test'".to_string()),
             variables: Default::default(),
@@ -806,7 +836,12 @@ mod tests {
             depends: vec![],
             makedepends: vec![],
             source: vec![],
+            source_x86_64: vec![],
+            source_aarch64: vec![],
             sha256sums: vec![],
+            sha256sums_x86_64: vec![],
+            sha256sums_aarch64: vec![],
+            noextract: vec![],
             build_fn: Some("echo 'test'".to_string()),
             package_fn: None,  // Missing!
             variables: Default::default(),
@@ -844,7 +879,12 @@ mod tests {
             depends: vec![],
             makedepends: vec![],
             source: vec![],
+            source_x86_64: vec![],
+            source_aarch64: vec![],
             sha256sums: vec![],
+            sha256sums_x86_64: vec![],
+            sha256sums_aarch64: vec![],
+            noextract: vec![],
             build_fn: Some(r#"
                 echo "Normal output"
                 echo "Warning message" >&2
@@ -895,7 +935,12 @@ mod tests {
             depends: vec![],
             makedepends: vec![],
             source: vec![],
+            source_x86_64: vec![],
+            source_aarch64: vec![],
             sha256sums: vec![],
+            sha256sums_x86_64: vec![],
+            sha256sums_aarch64: vec![],
+            noextract: vec![],
             build_fn: Some("exit 1".to_string()),
             package_fn: Some("echo 'SHOULD_NOT_RUN'".to_string()),
             variables: Default::default(),

@@ -5,8 +5,7 @@
   "editor.tabSize": 4,
   "editor.formatOnSave": true,
   "editor.codeActionsOnSave": {
-    "quickfix.biome": "explicit",
-    "source.organizeImports.biome": "explicit"
+    "source.fixAll.biome": "explicit"
   },
   // TEAM-464: Using Biome for formatting and linting
   "editor.defaultFormatter": "biomejs.biome",
@@ -147,5 +146,14 @@
     "node_modules",
     "reference/llama.cpp"
   ],
-  "typescript.tsdk": "node_modules/typescript/lib"
+  "typescript.tsdk": "node_modules/typescript/lib",
+
+  "terminal.integrated.profiles.linux": {
+    "zsh": {
+      "path": "/etc/profiles/per-user/vince/bin/zsh",
+      "args": ["-l"]
+    }
+  },
+  "terminal.integrated.defaultProfile.linux": "zsh",
+  "terminal.integrated.automationProfile.linux": "zsh"
 }

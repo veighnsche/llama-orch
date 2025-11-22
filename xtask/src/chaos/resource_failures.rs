@@ -2,7 +2,13 @@
 // Purpose: Test behavior with resource constraints
 // TEAM-255: Fixed missing imports
 
+use crate::integration::assertions::*;
+use crate::integration::harness::TestHarness;
+use std::fs;
+use std::time::Duration;
 
+#[cfg(unix)]
+use std::os::unix::fs::PermissionsExt;
 
 #[tokio::test]
 async fn test_disk_full_simulation() {
