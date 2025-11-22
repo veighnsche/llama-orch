@@ -15,7 +15,7 @@ export default async function CivitAIModelsPage({
 }) {
   // Next.js 15: searchParams is now a Promise
   const params = await searchParams
-  
+
   // Build vendor-specific filters from URL params
   const filters: CivitAIListModelsParams = {
     ...(params.query && { query: params.query }),
@@ -35,7 +35,6 @@ export default async function CivitAIModelsPage({
         message="🔨 Marketplace MVP: Currently showing Stable Diffusion models compatible with sd-worker-rbee."
         details="More workers (LLM, Audio, Video) are actively in development. Model compatibility will expand as new workers are released."
       />
-
       <ModelPageContainer
         vendor="civitai"
         title="CivitAI Models"

@@ -71,6 +71,7 @@ export type {
   SourceConfig,
   WorkerCapabilities,
   WorkerImplementation,
+  WorkerAvailability,
   WorkerType,
 } from './adapters/gwc/types'
 export { fetchGWCWorker, fetchGWCWorkerReadme } from './adapters/gwc/details'

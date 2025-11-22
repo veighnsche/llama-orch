@@ -1,10 +1,10 @@
 // TEAM-502: Worker Filter Component
 // Shows available workers as checkboxes
 
-import React from 'react'
-import type { HFFilterWorker } from './HFFilterSidebar'
 import { Checkbox } from '@rbee/ui/atoms/Checkbox'
 import { Label } from '@rbee/ui/atoms/Label'
+import type React from 'react'
+import type { HFFilterWorker } from './HFFilterSidebar'
 
 interface WorkerFilterProps {
   workers: HFFilterWorker[]
@@ -15,15 +15,11 @@ interface WorkerFilterProps {
 /**
  * Worker checkbox list component
  */
-export const WorkerFilter: React.FC<WorkerFilterProps> = ({
-  workers,
-  selectedWorkers,
-  onWorkersChange
-}) => {
+export const WorkerFilter: React.FC<WorkerFilterProps> = ({ workers, selectedWorkers, onWorkersChange }) => {
   const handleWorkerToggle = (workerId: string) => {
     if (selectedWorkers.includes(workerId)) {
       // Remove worker
-      onWorkersChange(selectedWorkers.filter(id => id !== workerId))
+      onWorkersChange(selectedWorkers.filter((id) => id !== workerId))
     } else {
       // Add worker
       onWorkersChange([...selectedWorkers, workerId])
@@ -35,7 +31,7 @@ export const WorkerFilter: React.FC<WorkerFilterProps> = ({
     if (compat) {
       const taskCount = compat.tasks.length
       const formatCount = compat.formats.length
-      
+
       if (taskCount > 0 && formatCount > 0) {
         return `${taskCount} task${taskCount > 1 ? 's' : ''}, ${formatCount} format${formatCount > 1 ? 's' : ''}`
       }
@@ -60,15 +56,16 @@ export const WorkerFilter: React.FC<WorkerFilterProps> = ({
     <div className="space-y-2">
       {workers.map((worker) => {
         const isSelected = selectedWorkers.includes(worker.id)
-        
+
         return (
           <div
             key={worker.id}
             className={`
               flex items-start gap-3 p-3 rounded-lg transition-all
-              ${isSelected 
-                ? 'bg-sidebar-accent/10 border border-sidebar-accent hover:bg-sidebar-accent/20' 
-                : 'bg-muted border border-sidebar-border hover:bg-muted/80'
+              ${
+                isSelected
+                  ? 'bg-sidebar-accent/10 border border-sidebar-accent hover:bg-sidebar-accent/20'
+                  : 'bg-muted border border-sidebar-border hover:bg-muted/80'
               }
             `}
           >
@@ -77,19 +74,12 @@ export const WorkerFilter: React.FC<WorkerFilterProps> = ({
               checked={isSelected}
               onCheckedChange={() => handleWorkerToggle(worker.id)}
             />
-            <Label
-              htmlFor={`worker-${worker.id}`}
-              className="flex-1 min-w-0 cursor-pointer"
-            >
+            <Label htmlFor={`worker-${worker.id}`} className="flex-1 min-w-0 cursor-pointer">
               <div className="flex items-center gap-2 mb-1">
                 <span className="text-lg">{getWorkerIcon(worker)}</span>
-                <span className="font-medium text-sidebar-foreground text-sm">
-                  {worker.name}
-                </span>
+                <span className="font-medium text-sidebar-foreground text-sm">{worker.name}</span>
               </div>
-              <p className="text-xs text-muted-foreground leading-relaxed">
-                {getWorkerDescription(worker)}
-              </p>
+              <p className="text-xs text-muted-foreground leading-relaxed">{getWorkerDescription(worker)}</p>
               {worker.marketplaceCompatibility?.huggingface && (
                 <div className="flex flex-wrap gap-1 mt-2">
                   {worker.marketplaceCompatibility?.huggingface?.tasks.slice(0, 3).map((task: string) => (
@@ -114,11 +104,9 @@ export const WorkerFilter: React.FC<WorkerFilterProps> = ({
           </div>
         )
       })}
-      
+
       {workers.length === 0 && (
-        <div className="text-center py-4 text-muted-foreground text-sm">
-          No workers available
-        </div>
+        <div className="text-center py-4 text-muted-foreground text-sm">No workers available</div>
       )}
     </div>
   )

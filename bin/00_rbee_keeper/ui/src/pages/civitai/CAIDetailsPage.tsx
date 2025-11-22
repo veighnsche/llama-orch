@@ -47,6 +47,57 @@ export function CAIDetailsPage() {
   }
 
   // Convert MarketplaceModel to CivitAIModelDetailProps
+  const primaryVersionMetadata = model.metadata?.primaryVersion as
+    | { id: number; name: string; baseModel?: string; downloadUrl?: string }
+    | undefined
+
+  const parsedModelId = Number.parseInt(model.id, 10)
+
+  const primaryVersion = {
+    id: primaryVersionMetadata?.id ?? (Number.isNaN(parsedModelId) ? 0 : parsedModelId),
+    name:
+      primaryVersionMetadata?.name ||
+      (model.metadata?.version as string | undefined) ||
+      'Latest',
+    ...(primaryVersionMetadata?.baseModel || model.metadata?.baseModel
+      ? { baseModel: (primaryVersionMetadata?.baseModel || model.metadata?.baseModel) as string }
+      : {}),
+    ...(model.description ? { description: model.description } : {}),
+    createdAt: model.createdAt.toISOString(),
+    updatedAt: model.updatedAt.toISOString(),
+    ...(model.metadata?.publishedAt
+      ? { publishedAt: model.metadata.publishedAt as string }
+      : {}),
+    ...(model.metadata?.trainedWords
+      ? { trainedWords: model.metadata.trainedWords as string[] }
+      : {}),
+    images:
+      model.imageUrl && !model.nsfw
+        ? [
+            {
+              url: model.imageUrl,
+              nsfw: false,
+              width: 1024,
+              height: 1024,
+            },
+          ]
+        : [],
+    files: [],
+    ...(primaryVersionMetadata?.downloadUrl
+      ? { downloadUrl: primaryVersionMetadata.downloadUrl }
+      : {}),
+    ...(model.metadata?.stats
+      ? {
+          stats: model.metadata.stats as {
+            downloadCount: number
+            ratingCount: number
+            rating: number
+            thumbsUpCount: number
+          },
+        }
+      : {}),
+  }
+
   const civitaiModelData = {
     id: model.id,
     name: model.name,
@@ -66,6 +117,7 @@ export function CAIDetailsPage() {
     allowCommercialUse: model.metadata?.allowCommercialUse || 'Unknown',
     externalUrl: model.url,
     externalLabel: 'View on CivitAI',
+    versions: [primaryVersion],
   }
 
   return (

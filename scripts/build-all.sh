@@ -272,7 +272,7 @@ echo ""
 
 # Build frontend (Turborepo handles everything)
 echo "→ [BUILD 2/3] Building frontend (Turborepo)..."
-if ! pnpm run build; then
+if ! turbo build; then
   echo "✗ Frontend build failed!"
   exit 1
 fi

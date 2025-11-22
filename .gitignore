@@ -84,3 +84,5 @@ __pycache__
 
 # Weird Nixos files
 /result
+
+.pnpm

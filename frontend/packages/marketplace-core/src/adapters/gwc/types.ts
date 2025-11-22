@@ -2,6 +2,7 @@
 // TEAM-483: SOURCE OF TRUTH - bin/80-global-worker-catalog imports from here
 // TEAM-484: Added marketplace compatibility matrix, cover images, README URLs
 // TEAM-485: Complete redesign - fixed contradictions, separated global vs per-variant
+// TEAM_503: Added worker availability stages (alpha, beta, release, coming-soon)
 // CANONICAL SOURCE: bin/97_contracts/artifacts-contract/src/worker.rs (via WASM)
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -22,6 +23,9 @@ export type WorkerImplementation = 'rust' | 'python' | 'cpp'
 
 /** Build system */
 export type BuildSystem = 'cargo' | 'cmake' | 'pip' | 'npm'
+
+/** Worker availability stage (lifecycle) */
+export type WorkerAvailability = 'alpha' | 'beta' | 'release' | 'coming-soon'
 
 /** Marketplace vendor (where models come from) */
 export type MarketplaceVendor = 'huggingface' | 'civitai'
@@ -206,6 +210,8 @@ export interface GWCWorker {
   description: string
   /** License (SPDX identifier) */
   license: string
+  /** Availability stage (alpha, beta, release, coming-soon) */
+  availability?: WorkerAvailability
   /** Cover image URL (preferably 1:1 ratio) */
   coverImage?: string
   /** README URL (raw markdown) */

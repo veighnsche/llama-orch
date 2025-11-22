@@ -17,6 +17,7 @@ export const WORKERS: GWCWorker[] = [
     description:
       'Candle-based LLM inference worker for text generation and chat. Supports CPU, CUDA, Metal, and ROCm acceleration.',
     license: 'GPL-3.0-or-later',
+    availability: 'release',
     coverImage: 'https://backend.rbee.dev/images/llm-worker-rbee.png',
     readmeUrl:
       'https://raw.githubusercontent.com/rbee-keeper/rbee/development/bin/30_llm_worker_rbee/README.md',
@@ -138,6 +139,7 @@ export const WORKERS: GWCWorker[] = [
     description:
       'Candle-based Stable Diffusion inference worker for image generation. Supports CPU, CUDA, Metal, and ROCm acceleration.',
     license: 'GPL-3.0-or-later',
+    availability: 'release',
     coverImage: 'https://backend.rbee.dev/images/sd-worker-rbee.png',
     readmeUrl: 'https://raw.githubusercontent.com/rbee-keeper/rbee/development/bin/31_sd_worker_rbee/README.md',
     buildSystem: 'cargo',
@@ -307,6 +309,7 @@ export const WORKERS: GWCWorker[] = [
     description:
       'COMING SOON: Candle-based vLLM-style LLM inference worker for high-throughput text generation on rbee.',
     license: 'GPL-3.0-or-later',
+    availability: 'coming-soon',
     buildSystem: 'cargo',
     source: {
       type: 'git',
@@ -410,6 +413,7 @@ export const WORKERS: GWCWorker[] = [
     description:
       'COMING SOON: C++ llama.cpp-based LLM worker integrated with the rbee job architecture for predictable performance.',
     license: 'GPL-3.0-or-later',
+    availability: 'coming-soon',
     buildSystem: 'cmake',
     source: {
       type: 'git',
@@ -513,6 +517,7 @@ export const WORKERS: GWCWorker[] = [
     description:
       'COMING SOON: LLaVA-style multimodal worker built on Candle for image + text understanding in the rbee architecture.',
     license: 'GPL-3.0-or-later',
+    availability: 'coming-soon',
     buildSystem: 'cargo',
     source: {
       type: 'git',
@@ -606,6 +611,7 @@ export const WORKERS: GWCWorker[] = [
     description:
       'COMING SOON: Candle-based Whisper ASR worker for fast speech-to-text on rbee clusters.',
     license: 'GPL-3.0-or-later',
+    availability: 'coming-soon',
     buildSystem: 'cargo',
     source: {
       type: 'git',

@@ -8,9 +8,9 @@
     ".": "./pkg/bundler/llm_worker_sdk.js"
   },
   "scripts": {
-    "build": "wasm-pack build --target bundler --out-dir pkg/bundler",
-    "build:web": "wasm-pack build --target web --out-dir pkg/web",
-    "build:nodejs": "wasm-pack build --target nodejs --out-dir pkg/nodejs"
+    "build": "RUSTUP_TOOLCHAIN=stable wasm-pack build --target bundler --out-dir pkg/bundler",
+    "build:web": "RUSTUP_TOOLCHAIN=stable wasm-pack build --target web --out-dir pkg/web",
+    "build:nodejs": "RUSTUP_TOOLCHAIN=stable wasm-pack build --target nodejs --out-dir pkg/nodejs"
   },
   "files": ["pkg"]
 }

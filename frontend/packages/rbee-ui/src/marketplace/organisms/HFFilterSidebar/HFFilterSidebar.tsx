@@ -1,11 +1,11 @@
 // TEAM-502: HuggingFace Filter Sidebar Component
 // Design: .docs/TEAM_502_FILTER_SIDEBAR_DESIGN.md
 
+import { Button } from '@rbee/ui/atoms/Button'
+import { Input } from '@rbee/ui/atoms/Input'
 import { ChevronDown, ChevronUp, RotateCcw, Search } from 'lucide-react'
 import type React from 'react'
 import { useState } from 'react'
-import { Input } from '@rbee/ui/atoms/Input'
-import { Button } from '@rbee/ui/atoms/Button'
 import { FormatFilter } from './FormatFilter'
 import { LanguageFilter } from './LanguageFilter'
 import { LicenseFilter } from './LicenseFilter'
