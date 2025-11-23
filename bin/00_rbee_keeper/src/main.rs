@@ -98,6 +98,8 @@ fn launch_gui() {
         // TEAM-412: Register deep link plugin for rbee:// protocol
         // TEAM-XXX: mac compat - Temporarily disabled
         // .plugin(tauri_plugin_deep_link::init())
+        // TEAM_529: Register HTTP plugin for TLS support in fetch/XHR requests
+        .plugin(tauri_plugin_http::init())
         .invoke_handler(tauri::generate_handler![
             // TEAM-336: Test command for narration
             test_narration,

@@ -1,13 +1,15 @@
 // TEAM-405: Marketplace Rbee Workers page - Using reusable components
 // TEAM-421: Implemented with WorkerListTemplate and marketplace_list_workers command
 // TEAM-423: Updated to match Next.js version with CategoryFilterBar and proper filtering
-// DATA LAYER: Tauri commands + React Query
+// TEAM_529: Migrated to GWC adapters - replaced Tauri commands with fetchGWCWorkers
+// DATA LAYER: @rbee/marketplace-core GWC adapter + React Query
 // PRESENTATION: CategoryFilterBar + WorkerCard grid (matching Next.js)
 
+import type { GWCListWorkersParams } from '@rbee/marketplace-core'
+import { fetchGWCWorkers } from '@rbee/marketplace-core'
 import { UniversalFilterBar, WorkerCard } from '@rbee/ui/marketplace'
 import { PageContainer } from '@rbee/ui/molecules'
 import { useQuery } from '@tanstack/react-query'
-import { invoke } from '@tauri-apps/api/core'
 import { useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 
@@ -60,7 +62,7 @@ export function MarketplaceRbeeWorkers() {
     platform: 'all',
   })
 
-  // DATA LAYER: Fetch workers from Tauri
+  // TEAM_529: DATA LAYER: Fetch workers from GWC API
   const {
     data: rawWorkers = [],
     isLoading,
@@ -68,13 +70,16 @@ export function MarketplaceRbeeWorkers() {
   } = useQuery({
     queryKey: ['marketplace', 'rbee-workers'],
     queryFn: async () => {
-      const result = await invoke<any[]>('marketplace_list_workers')
-      return result
+      const params: GWCListWorkersParams = {
+        limit: 50,
+      }
+      const workers = await fetchGWCWorkers(params)
+      return workers
     },
     staleTime: 5 * 60 * 1000,
   })
 
-  // TEAM-423: Filter workers based on current filter state (matching Next.js logic)
+  // TEAM_529: Filter workers based on current filter state (adapted for GWC structure)
   const filteredWorkers = useMemo(() => {
     return rawWorkers.filter((worker) => {
       // Category filter (based on worker ID prefix)
@@ -86,14 +91,16 @@ export function MarketplaceRbeeWorkers() {
         if (filters.category === 'image' && !isImage) return false
       }
 
-      // Backend filter (workerType)
-      if (filters.backend !== 'all' && worker.workerType !== filters.backend) {
-        return false
+      // Backend filter (check variants for backend support)
+      if (filters.backend !== 'all') {
+        const hasBackend = worker.variants.some((variant) => variant.backend === filters.backend)
+        if (!hasBackend) return false
       }
 
-      // Platform filter
-      if (filters.platform !== 'all' && !worker.platforms.includes(filters.platform as 'linux' | 'macos' | 'windows')) {
-        return false
+      // Platform filter (check variants for platform support)
+      if (filters.platform !== 'all') {
+        const hasPlatform = worker.variants.some((variant) => variant.platform === filters.platform)
+        if (!hasPlatform) return false
       }
 
       return true
@@ -117,16 +124,24 @@ export function MarketplaceRbeeWorkers() {
     return parts.length > 0 ? parts.join(' · ') : 'All Workers'
   }, [filters])
 
-  // Transform to WorkerCard format
-  const workers = filteredWorkers.map((worker) => ({
-    id: worker.id,
-    name: worker.name,
-    description: worker.description,
-    version: worker.version,
-    platform: worker.platforms.map((p: string) => p.toLowerCase()),
-    architecture: worker.architectures.map((a: string) => a.toLowerCase()),
-    workerType: worker.workerType.toLowerCase() as 'cpu' | 'cuda' | 'metal',
-  }))
+  // TEAM_529: Transform GWC workers to WorkerCard format
+  const workers = filteredWorkers.map((worker) => {
+    // Get unique platforms and architectures from all variants
+    const platforms = [...new Set(worker.variants.map((v) => v.platform))]
+    const architectures = [...new Set(worker.variants.map((v) => v.architecture))]
+    // Get primary backend (first variant's backend)
+    const primaryBackend = worker.variants[0]?.backend || 'cpu'
+
+    return {
+      id: worker.id,
+      name: worker.name,
+      description: worker.description,
+      version: worker.version,
+      platform: platforms,
+      architecture: architectures,
+      workerType: primaryBackend as 'cpu' | 'cuda' | 'metal' | 'rocm',
+    }
+  })
 
   // PRESENTATION LAYER: Render with CategoryFilterBar + WorkerCard grid (matching Next.js)
   return (

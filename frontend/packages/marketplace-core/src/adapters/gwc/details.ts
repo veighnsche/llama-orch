@@ -2,13 +2,27 @@
 // TEAM-501: Added fetchGWCWorkerReadme for README markdown
 
 import type { MarketplaceModel } from '../common'
-import type { GWCWorker } from './types'
 import { convertGWCWorker } from './list'
+import type { GWCWorker } from './types'
 
 /**
  * GWC API base URL
+ * - Next.js Dev: http://localhost:7811 (global-worker-catalog dev port)
+ * - Tauri: https://gwc.rbee.dev (Tauri can't access localhost)
+ * - Prod: https://gwc.rbee.dev
+ * - Override: NEXT_PUBLIC_GWC_API_URL (Next.js) or VITE_GWC_API_URL (Tauri)
+ *
+ * TEAM_529: marketplace-core serves both Next.js backend and Tauri frontend
+ * - Next.js: Uses process.env.NEXT_PUBLIC_GWC_API_URL
+ * - Tauri: Uses process.env.VITE_GWC_API_URL
+ * - Check for window object to detect browser/Tauri environment
  */
-const GWC_API_BASE = process.env.NEXT_PUBLIC_GWC_API_URL || 'https://gwc.rbee.dev'
+const GWC_API_BASE =
+  process.env.NEXT_PUBLIC_GWC_API_URL ||
+  process.env.VITE_GWC_API_URL ||
+  (process.env.NODE_ENV === 'development' && typeof window !== 'undefined' && !(window as any).__TAURI__
+    ? 'http://localhost:7811'
+    : 'https://gwc.rbee.dev')
 
 /**
  * Fetch a single worker by ID (DETAILS API)
@@ -75,7 +89,7 @@ export async function fetchGWCWorkerReadme(workerId: string): Promise<string | n
     console.log('[GWC API] Fetching README:', worker.readmeUrl)
     const readmeResponse = await fetch(worker.readmeUrl, {
       headers: {
-        'Accept': 'text/plain, text/markdown, text/x-markdown, */*',
+        Accept: 'text/plain, text/markdown, text/x-markdown, */*',
       },
     })
 

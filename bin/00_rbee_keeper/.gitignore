@@ -32,3 +32,5 @@ pnpm-debug.log*
 .env
 .env.local
 .env.*.local
+
+gen

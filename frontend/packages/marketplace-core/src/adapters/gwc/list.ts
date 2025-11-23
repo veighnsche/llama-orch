@@ -5,13 +5,20 @@ import type { GWCListWorkersParams, GWCListWorkersResponse, GWCWorker } from './
 
 /**
  * GWC API base URL
- * - Dev: http://localhost:7811 (global-worker-catalog dev port, see PORT_CONFIGURATION.md)
+ * - Next.js Dev: http://localhost:7811 (global-worker-catalog dev port)
+ * - Tauri: https://gwc.rbee.dev (Tauri can't access localhost)
  * - Prod: https://gwc.rbee.dev
- * - Override: NEXT_PUBLIC_GWC_API_URL
+ * - Override: NEXT_PUBLIC_GWC_API_URL (Next.js) or VITE_GWC_API_URL (Tauri)
+ *
+ * TEAM_529: marketplace-core serves both Next.js backend and Tauri frontend
+ * - Next.js: Uses process.env.NEXT_PUBLIC_GWC_API_URL
+ * - Tauri: Uses process.env.VITE_GWC_API_URL
+ * - Check for window object to detect browser/Tauri environment
  */
 const GWC_API_BASE =
-  process.env.NEXT_PUBLIC_GWC_API_URL
-  || (process.env.NODE_ENV === 'development'
+  process.env.NEXT_PUBLIC_GWC_API_URL ||
+  process.env.VITE_GWC_API_URL ||
+  (process.env.NODE_ENV === 'development' && typeof window !== 'undefined' && !(window as any).__TAURI__
     ? 'http://localhost:7811'
     : 'https://gwc.rbee.dev')
 
@@ -21,9 +28,9 @@ const GWC_API_BASE =
 export function convertGWCWorker(worker: GWCWorker): MarketplaceModel {
   // Get primary backend (first variant's backend)
   const primaryBackend = worker.variants?.[0]?.backend || 'cpu'
-  
+
   // Get all supported backends
-  const backends = worker.variants?.map(v => v.backend).join(', ') || 'cpu'
+  const backends = worker.variants?.map((v) => v.backend).join(', ') || 'cpu'
 
   return {
     id: worker.id,
@@ -35,7 +42,7 @@ export function convertGWCWorker(worker: GWCWorker): MarketplaceModel {
     ...(worker.coverImage && { imageUrl: worker.coverImage }),
     tags: [
       worker.implementation, // rust, python, cpp
-      ...(worker.variants?.map(v => v.backend) || []), // cpu, cuda, metal, rocm
+      ...(worker.variants?.map((v) => v.backend) || []), // cpu, cuda, metal, rocm
       ...(worker.capabilities.supportedFormats || []), // gguf, safetensors, etc.
     ],
     downloads: 0, // GWC doesn't track downloads yet
@@ -63,9 +70,7 @@ export function convertGWCWorker(worker: GWCWorker): MarketplaceModel {
  * @param params - Filter parameters (optional)
  * @returns Raw GWCWorker entries from the catalog
  */
-export async function fetchGWCWorkers(
-  params?: GWCListWorkersParams
-): Promise<GWCWorker[]> {
+export async function fetchGWCWorkers(params?: GWCListWorkersParams): Promise<GWCWorker[]> {
   const url = `${GWC_API_BASE}/workers`
 
   console.log('[GWC API] Fetching:', url)

@@ -57,7 +57,7 @@
           "description": "Main window capabilities",
           "windows": ["main"],
           "remote": {
-            "urls": ["http://localhost:7843"]
+            "urls": ["http://localhost:7843", "https://huggingface.co", "https://civitai.com", "https://gwc.rbee.dev"]
           },
           "permissions": [
             "core:default",
@@ -65,7 +65,9 @@
             "core:event:allow-emit",
             "core:window:allow-create",
             "core:webview:allow-create-webview",
-            "core:webview:allow-internal-toggle-devtools"
+            "core:webview:allow-internal-toggle-devtools",
+            "http:default",
+            "http:allow-fetch"
           ]
         }
       ]
