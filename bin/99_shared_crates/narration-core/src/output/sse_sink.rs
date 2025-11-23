@@ -456,10 +456,7 @@ pub fn send(fields: &NarrationFields) {
 /// );
 /// ```
 pub fn emit_data(job_id: &str, action: impl Into<String>, payload: serde_json::Value) {
-    let data = DataEvent {
-        action: action.into(),
-        payload,
-    };
+    let data = DataEvent { action: action.into(), payload };
     SSE_CHANNEL_REGISTRY.send_data_to_job(job_id, data);
 }
 
@@ -595,15 +592,15 @@ mod team_201_formatting_tests {
         let event = NarrationEvent::from(fields);
 
         // Formatted field should match new format: bold first line, message on second line, trailing newline
-        // Format: \x1b[1m[actor              ] action              \x1b[0m\nmessage\n
-        // test-actor (10 chars) + 10 spaces = 20, test-action (11 chars) + 9 spaces = 20
+        // Format: \x1b[1mtest-actor                              \x1b[0m \x1b[2mtest-action         \x1b[0m\nmessage\n
+        // test-actor (10 chars) + 30 spaces = 40, test-action (11 chars) + 9 spaces = 20
         assert_eq!(
             event.formatted,
-            "\x1b[1m[test-actor          ] test-action         \x1b[0m\nTest message\n"
+            "\x1b[1mtest-actor                              \x1b[0m \x1b[2mtest-action         \x1b[0m\nTest message\n"
         );
 
         // Verify components
-        assert!(event.formatted.contains("[test-actor"));
+        assert!(event.formatted.contains("test-actor"));
         assert!(event.formatted.contains("test-action"));
         assert!(event.formatted.contains("\nTest message"));
     }
@@ -614,11 +611,11 @@ mod team_201_formatting_tests {
         let fields = minimal_fields("abc", "xyz", "Short");
         let event = NarrationEvent::from(fields);
 
-        // Should pad to ACTOR_WIDTH (20) chars for actor, ACTION_WIDTH (20) for action
+        // Should pad to ACTOR_WIDTH (40) chars for actor, ACTION_WIDTH (20) for action
         // TEAM-310: New format with bold, newline, and trailing newline
         assert_eq!(
             event.formatted,
-            "\x1b[1m[abc                 ] xyz                 \x1b[0m\nShort\n"
+            "\x1b[1mabc                                     \x1b[0m \x1b[2mxyz                 \x1b[0m\nShort\n"
         );
     }
 
@@ -694,13 +691,22 @@ mod team_200_isolation_tests {
 
         // Job A should only receive its message
         let event_a = rx_a.recv().await.unwrap();
-        assert_eq!(event_a.human, "Message for Job A");
+        match event_a {
+            SseEvent::Narration(narration) => {
+                assert_eq!(narration.human, "Message for Job A");
+            }
+            _ => panic!("Expected narration event"),
+        }
         assert!(rx_a.try_recv().is_err()); // No more messages
 
         // Job B should only receive its message
         let event_b = rx_b.recv().await.unwrap();
-        assert_eq!(event_b.human, "Message for Job B");
-        assert!(rx_b.try_recv().is_err()); // No more messages
+        match event_b {
+            SseEvent::Narration(narration) => {
+                assert_eq!(narration.human, "Message for Job B");
+            }
+            _ => panic!("Expected narration event"),
+        }
 
         // Cleanup
         remove_job_channel("job-a");
@@ -758,7 +764,12 @@ mod team_200_isolation_tests {
 
         // 5. This event should be in JOB channel
         let event2 = job_rx.recv().await.expect("Should be in job channel");
-        assert_eq!(event2.human, "This happened after channel was created!");
+        match event2 {
+            SseEvent::Narration(narration) => {
+                assert_eq!(narration.human, "This happened after channel was created!");
+            }
+            _ => panic!("Expected narration event"),
+        }
 
         remove_job_channel(job_id);
     }

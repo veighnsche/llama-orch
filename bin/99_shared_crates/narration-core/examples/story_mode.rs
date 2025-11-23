@@ -6,7 +6,7 @@
 //!
 //! Run with: cargo run --example story_mode -p observability-narration-core
 
-use observability_narration_core::{narrate, NarrationFields};
+use observability_narration_core::{narrate, NarrationFields, NarrationLevel};
 
 fn main() {
     // Initialize tracing subscriber for pretty output
@@ -27,7 +27,7 @@ fn main() {
         pool_id: Some("default".to_string()),
         device: Some("GPU0".to_string()),
         ..Default::default()
-    });
+    }, NarrationLevel::Info);
 
     println!();
 
@@ -44,7 +44,7 @@ fn main() {
         device: Some("GPU0".to_string()),
         error_kind: Some("insufficient_vram".to_string()),
         ..Default::default()
-    });
+    }, NarrationLevel::Warn);
 
     println!();
 
@@ -61,7 +61,7 @@ fn main() {
         pool_id: Some("default".to_string()),
         engine: Some("llamacpp-v1".to_string()),
         ..Default::default()
-    });
+    }, NarrationLevel::Info);
 
     println!();
 
@@ -78,7 +78,7 @@ fn main() {
         worker_id: Some("worker-gpu0-r1".to_string()),
         predicted_start_ms: Some(420),
         ..Default::default()
-    });
+    }, NarrationLevel::Info);
 
     println!();
 
@@ -94,7 +94,7 @@ fn main() {
         worker_id: Some("worker-gpu0-r1".to_string()),
         pool_id: Some("default".to_string()),
         ..Default::default()
-    });
+    }, NarrationLevel::Debug);
 
     println!();
 
@@ -110,101 +110,115 @@ fn main() {
         job_id: Some("job-789".to_string()),
         worker_id: Some("worker-gpu1-r0".to_string()),
         ..Default::default()
-    });
+    }, NarrationLevel::Info);
 
     println!();
 
     // Example 7: Model Verification
     println!("📖 Scene 7: Verifying the Model");
-    narrate(NarrationFields {
-        actor: "vram-residency",
-        action: "seal_verify",
-        target: "llama-7b".to_string(),
-        human: "Verifying seal for model 'llama-7b' on GPU 0".to_string(),
-        cute: Some(
-            "Vram-residency checks on llama-7b — everything looks perfect! 🔍💕".to_string(),
-        ),
-        story: Some(
-            "\"Is the seal intact?\" asked vram-residency. \"Yes, verified!\" confirmed GPU0."
-                .to_string(),
-        ),
-        device: Some("GPU0".to_string()),
-        model_ref: Some("llama-7b".to_string()),
-        ..Default::default()
-    });
+    narrate(
+        NarrationFields {
+            actor: "vram-residency",
+            action: "seal_verify",
+            target: "llama-7b".to_string(),
+            human: "Verifying seal for model 'llama-7b' on GPU 0".to_string(),
+            cute: Some(
+                "Vram-residency checks on llama-7b — everything looks perfect! 🔍💕".to_string(),
+            ),
+            story: Some(
+                "\"Is the seal intact?\" asked vram-residency. \"Yes, verified!\" confirmed GPU0."
+                    .to_string(),
+            ),
+            device: Some("GPU0".to_string()),
+            model_ref: Some("llama-7b".to_string()),
+            ..Default::default()
+        },
+        NarrationLevel::Debug,
+    );
 
     println!();
 
     // Example 8: Multi-Party Conversation
     println!("📖 Scene 8: Three-Way Conversation");
-    narrate(NarrationFields {
-        actor: "orchestratord",
-        action: "pool_query",
-        target: "all-pools".to_string(),
-        human: "Querying all pools for available capacity".to_string(),
-        cute: Some(
-            "Orchestratord asks everyone for capacity — three pools wave their hands! 🙋"
-                .to_string(),
-        ),
-        story: Some(
-            "\"Who has capacity?\" asked orchestratord. \
+    narrate(
+        NarrationFields {
+            actor: "orchestratord",
+            action: "pool_query",
+            target: "all-pools".to_string(),
+            human: "Querying all pools for available capacity".to_string(),
+            cute: Some(
+                "Orchestratord asks everyone for capacity — three pools wave their hands! 🙋"
+                    .to_string(),
+            ),
+            story: Some(
+                "\"Who has capacity?\" asked orchestratord. \
             \"I do!\" said pool-managerd-1. \
             \"Me too!\" said pool-managerd-2. \
             \"I have 8GB free!\" added pool-managerd-3."
-                .to_string(),
-        ),
-        ..Default::default()
-    });
+                    .to_string(),
+            ),
+            ..Default::default()
+        },
+        NarrationLevel::Info,
+    );
 
     println!();
 
     // Example 9: Error Dialogue
     println!("📖 Scene 9: Something Went Wrong");
-    narrate(NarrationFields {
-        actor: "worker-gpu0-r1",
-        action: "inference_error",
-        target: "job-999".to_string(),
-        human: "CRITICAL: Inference failed for job 'job-999': CUDA out of memory".to_string(),
-        cute: Some("Oh no! Worker-gpu0-r1 ran out of memory! \"I'm so sorry!\" 😟💔".to_string()),
-        story: Some(
-            "\"Processing job-999...\" said worker-gpu0-r1. \
+    narrate(
+        NarrationFields {
+            actor: "worker-gpu0-r1",
+            action: "inference_error",
+            target: "job-999".to_string(),
+            human: "CRITICAL: Inference failed for job 'job-999': CUDA out of memory".to_string(),
+            cute: Some(
+                "Oh no! Worker-gpu0-r1 ran out of memory! \"I'm so sorry!\" 😟💔".to_string(),
+            ),
+            story: Some(
+                "\"Processing job-999...\" said worker-gpu0-r1. \
             Suddenly: \"ERROR! Out of memory!\" \
             \"What happened?\" asked orchestratord. \
             \"CUDA OOM,\" replied worker sadly."
-                .to_string(),
-        ),
-        job_id: Some("job-999".to_string()),
-        worker_id: Some("worker-gpu0-r1".to_string()),
-        error_kind: Some("cuda_oom".to_string()),
-        ..Default::default()
-    });
+                    .to_string(),
+            ),
+            job_id: Some("job-999".to_string()),
+            worker_id: Some("worker-gpu0-r1".to_string()),
+            error_kind: Some("cuda_oom".to_string()),
+            ..Default::default()
+        },
+        NarrationLevel::Error,
+    );
 
     println!();
 
     // Example 10: Success Celebration
     println!("📖 Scene 10: Job Complete!");
-    narrate(NarrationFields {
-        actor: "worker-gpu0-r1",
-        action: "job_complete",
-        target: "job-456".to_string(),
-        human: "Completed job 'job-456' successfully (2500 ms, 150 tokens)".to_string(),
-        cute: Some(
-            "\"All done!\" cheers worker-gpu0-r1! \"Excellent work!\" says orchestratord! 🎉"
-                .to_string(),
-        ),
-        story: Some(
-            "\"Job done!\" announced worker-gpu0-r1 proudly. \
+    narrate(
+        NarrationFields {
+            actor: "worker-gpu0-r1",
+            action: "job_complete",
+            target: "job-456".to_string(),
+            human: "Completed job 'job-456' successfully (2500 ms, 150 tokens)".to_string(),
+            cute: Some(
+                "\"All done!\" cheers worker-gpu0-r1! \"Excellent work!\" says orchestratord! 🎉"
+                    .to_string(),
+            ),
+            story: Some(
+                "\"Job done!\" announced worker-gpu0-r1 proudly. \
             \"How'd it go?\" asked orchestratord. \
             \"Perfect! 150 tokens in 2.5 seconds!\" \
             \"Excellent!\" replied orchestratord."
-                .to_string(),
-        ),
-        job_id: Some("job-456".to_string()),
-        worker_id: Some("worker-gpu0-r1".to_string()),
-        duration_ms: Some(2500),
-        tokens_out: Some(150),
-        ..Default::default()
-    });
+                    .to_string(),
+            ),
+            job_id: Some("job-456".to_string()),
+            worker_id: Some("worker-gpu0-r1".to_string()),
+            duration_ms: Some(2500),
+            tokens_out: Some(150),
+            ..Default::default()
+        },
+        NarrationLevel::Info,
+    );
 
     println!("\n✨ End of story mode examples! ✨");
     println!("\n💡 Tip: Use story mode to make distributed system logs read like a screenplay!");

@@ -16,17 +16,15 @@
       rust-overlay,
     }:
     let
-      toolVersions = {
-        pnpm = "10.23.0";
-        wrangler = "4.50.0";
-      };
+      lib = nixpkgs.lib;
+
       systems = [
         "x86_64-linux"
         "aarch64-linux"
         "x86_64-darwin"
         "aarch64-darwin"
       ];
-      forAllSystems = nixpkgs.lib.genAttrs systems;
+      forAllSystems = lib.genAttrs systems;
 
       pkgsFor = system:
         import nixpkgs {
@@ -36,31 +34,33 @@
             rust-overlay.outputs.overlays.default
           ];
         };
-      pnpmVersion = toolVersions.pnpm;
-      wranglerVersion = toolVersions.wrangler;
+
+      mkRustToolchain = pkgs:
+        let
+          rust-bin = rust-overlay.outputs.lib.mkRustBin { } pkgs;
+        in
+        rust-bin.stable.latest.default.override {
+          extensions = [
+            "rust-analyzer"
+            "rust-src"
+            "clippy-preview"
+            "rustfmt-preview"
+          ];
+        };
+
       pnpmCorepackHook = ''
-        export PNPM_HOME="$PWD/.pnpm"
-        export COREPACK_HOME="$PNPM_HOME"
-        export PLAYWRIGHT_BROWSERS_PATH="$PWD/.cache/playwright"
+        source "${./nix/pnpm-corepack-hook.sh}"
+      '';
 
-        mkdir -p "$PNPM_HOME/bin"
-        export PATH="$PNPM_HOME/bin:$PATH"
+      rustEnvHook = ''
+        export CARGO_HOME="$PWD/.cargo"
+        export RUSTUP_HOME="$PWD/.rustup"
+        export CARGO_TARGET_DIR="$PWD/target"
+      '';
 
-        corepack install --global pnpm@${pnpmVersion} >/dev/null 2>&1 || true
-
-        if [ ! -x "$PNPM_HOME/bin/pnpm" ]; then
-          cat >"$PNPM_HOME/bin/pnpm" <<'EOF'
-#!/usr/bin/env bash
-exec corepack pnpm "$@"
-EOF
-          chmod +x "$PNPM_HOME/bin/pnpm"
-        fi
-
-        cat >"$PNPM_HOME/bin/wrangler" <<'EOF'
-#!/usr/bin/env bash
-exec pnpm dlx wrangler@${wranglerVersion} "$@"
-EOF
-        chmod +x "$PNPM_HOME/bin/wrangler"
+      fullStackHook = ''
+        ${rustEnvHook}
+        ${pnpmCorepackHook}
       '';
     in
     {
@@ -70,15 +70,7 @@ EOF
         system:
         let
           pkgs = pkgsFor system;
-          rust-bin = rust-overlay.outputs.lib.mkRustBin { } pkgs;
-          rustToolchain = rust-bin.stable.latest.default.override {
-            extensions = [
-              "rust-analyzer"
-              "rust-src"
-              "clippy-preview"
-              "rustfmt-preview"
-            ];
-          };
+          rustToolchain = mkRustToolchain pkgs;
         in
         {
           # TEAM_526: cargo xtask wrapper so CI / dev shells can call via `nix run .#xtask -- <cmd>`
@@ -117,27 +109,21 @@ EOF
         system:
         let
           pkgs = pkgsFor system;
-          rust-bin = rust-overlay.outputs.lib.mkRustBin { } pkgs;
-          rustToolchain = rust-bin.stable.latest.default.override {
-            extensions = [
-              "rust-analyzer"
-              "rust-src"
-              "clippy-preview"
-              "rustfmt-preview"
-            ];
-          };
+          rustToolchain = mkRustToolchain pkgs;
 
           commonNodeTooling = with pkgs; [
             biome
             nodejs_22
           ];
           rustCliTools = with pkgs; [
+            rustup
             rustToolchain
             cargo-edit
             cargo-watch
             cargo-outdated
             cargo-expand
             wasm-pack
+            wasm-bindgen-cli
             binaryen
           ];
           nativeInputs = with pkgs; [
@@ -168,12 +154,7 @@ EOF
             libGL.dev
             openssl
           ];
-          commonHook = ''
-            export CARGO_HOME="$PWD/.cargo"
-            export RUSTUP_HOME="$PWD/.rustup"
-            export CARGO_TARGET_DIR="$PWD/target"
-            ${pnpmCorepackHook}
-          '';
+          commonHook = fullStackHook;
         in
         {
           default = pkgs.mkShell {
@@ -201,9 +182,7 @@ EOF
             nativeBuildInputs = nativeInputs;
             buildInputs = commonBuildInputs;
             shellHook = ''
-              export CARGO_HOME="$PWD/.cargo"
-              export RUSTUP_HOME="$PWD/.rustup"
-              export CARGO_TARGET_DIR="$PWD/target"
+              ${rustEnvHook}
               echo "[rbee] backend shell → $(rustc --version)"
             '';
           };

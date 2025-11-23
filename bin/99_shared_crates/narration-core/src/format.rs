@@ -242,19 +242,19 @@ mod tests {
     #[test]
     fn test_format_message() {
         // TEAM-312: Use format_message_with_fn() with None for fn_name
-        let formatted = format_message("queen", "start", "Starting hive", None);
+        let formatted = format_message("start", "Starting hive", "queen");
         // Format: Bold first line with actor/action, message on second line, blank line after
         // Actor: 20 chars, Action: 20 chars
         assert_eq!(
             formatted,
-            "\x1b[1m[queen               ] start               \x1b[0m\nStarting hive\n"
+            "\x1b[1mqueen                                   \x1b[0m \x1b[2mstart               \x1b[0m\nStarting hive\n"
         );
     }
 
     #[test]
     fn test_format_message_long_names() {
         // TEAM-312: Use format_message_with_fn() with None for fn_name
-        let formatted = format_message("very-long-actor", "very-long-action", "Message", None);
+        let formatted = format_message("very-long-action", "Message", "very-long-actor");
         assert!(formatted.contains("very-long-actor"));
         assert!(formatted.contains("very-long-action"));
         assert!(formatted.contains("\nMessage\n")); // Message on new line with trailing newline

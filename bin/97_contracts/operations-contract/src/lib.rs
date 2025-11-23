@@ -91,13 +91,12 @@ pub enum Operation {
     // ═══════════════════════════════════════════════════════════════════════
     // QUEEN OPERATIONS (http://localhost:7833/v1/jobs)
     // ═══════════════════════════════════════════════════════════════════════
-    
     /// Query all hives and workers from registry
     Status,
-    
+
     /// Schedule inference and route to worker
     Infer(InferRequest),
-    
+
     // Image Generation Operations (TEAM-397)
     // ───────────────────────────────────────────────────────────────────────
     /// Generate image from text prompt (Stable Diffusion)
@@ -106,7 +105,7 @@ pub enum Operation {
     ImageTransform(ImageTransformRequest),
     /// Inpaint image with mask
     ImageInpaint(ImageInpaintRequest),
-    
+
     // RHAI Script Management
     // ───────────────────────────────────────────────────────────────────────
     /// Save a RHAI script
@@ -129,11 +128,11 @@ pub enum Operation {
     RhaiScriptDelete {
         id: String,
     },
-    
+
     // ═══════════════════════════════════════════════════════════════════════
     // HIVE OPERATIONS (http://localhost:7835/v1/jobs)
     // ═══════════════════════════════════════════════════════════════════════
-    
+
     // Worker Lifecycle
     // ───────────────────────────────────────────────────────────────────────
     /// List available workers from catalog server (Hono)
@@ -160,7 +159,7 @@ pub enum Operation {
     WorkerProcessGet(WorkerProcessGetRequest),
     /// Delete (kill) a worker process on hive
     WorkerProcessDelete(WorkerProcessDeleteRequest),
-    
+
     // Model Management
     // ───────────────────────────────────────────────────────────────────────
     ModelDownload(ModelDownloadRequest),
@@ -169,11 +168,10 @@ pub enum Operation {
     ModelDelete(ModelDeleteRequest),
     ModelLoad(ModelLoadRequest),
     ModelUnload(ModelUnloadRequest),
-    
+
     // ═══════════════════════════════════════════════════════════════════════
     // DIAGNOSTIC OPERATIONS
     // ═══════════════════════════════════════════════════════════════════════
-    
     /// Deep narration test through queen job server
     QueenCheck,
 
@@ -293,6 +291,7 @@ mod tests {
             width: 512,
             height: 512,
             seed: None,
+            loras: vec![], // Empty loras vector
             worker_id: None,
         });
         let json = serde_json::to_string(&op).unwrap();
@@ -335,6 +334,7 @@ mod tests {
             width: 512,
             height: 512,
             seed: None,
+            loras: vec![], // Empty loras vector
             worker_id: None,
         });
         assert_eq!(op1.name(), "image_generation");
@@ -344,11 +344,12 @@ mod tests {
             model: "sd".to_string(),
             prompt: "test".to_string(),
             negative_prompt: None,
-            init_image: "base64".to_string(),
+            input_image: "base64".to_string(),
             strength: 0.8,
             steps: 20,
             guidance_scale: 7.5,
             seed: None,
+            loras: vec![], // Empty loras vector
             worker_id: None,
         });
         assert_eq!(op2.name(), "image_transform");
@@ -363,6 +364,7 @@ mod tests {
             steps: 20,
             guidance_scale: 7.5,
             seed: None,
+            loras: vec![], // Empty loras vector
             worker_id: None,
         });
         assert_eq!(op3.name(), "image_inpaint");
@@ -371,7 +373,7 @@ mod tests {
     #[test]
     fn test_image_operation_target_server() {
         use crate::operation_impl::TargetServer;
-        
+
         let op = Operation::ImageGeneration(ImageGenerationRequest {
             hive_id: "localhost".to_string(),
             model: "sd".to_string(),
@@ -382,6 +384,7 @@ mod tests {
             width: 512,
             height: 512,
             seed: None,
+            loras: vec![], // Empty loras vector
             worker_id: None,
         });
         assert_eq!(op.target_server(), TargetServer::Queen);

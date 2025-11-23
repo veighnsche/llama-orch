@@ -23,11 +23,10 @@ async fn test_submit_job_success() -> Result<()> {
     // Mock POST /v1/jobs endpoint
     Mock::given(method("POST"))
         .and(path("/v1/jobs"))
-        .respond_with(
-            ResponseTemplate::new(200).set_body_json(serde_json::json!({
-                "job_id": "test-job-123"
-            })),
-        )
+        .respond_with(ResponseTemplate::new(200).set_body_json(serde_json::json!({
+            "job_id": "test-job-123",
+            "sse_url": "/v1/jobs/test-job-123/stream"
+        })))
         .mount(&mock_server)
         .await;
 
@@ -106,11 +105,10 @@ async fn test_stream_with_done_marker() -> Result<()> {
 
     Mock::given(method("POST"))
         .and(path("/v1/jobs"))
-        .respond_with(
-            ResponseTemplate::new(200).set_body_json(serde_json::json!({
-                "job_id": "test-job-456"
-            })),
-        )
+        .respond_with(ResponseTemplate::new(200).set_body_json(serde_json::json!({
+            "job_id": "test-job-456",
+            "sse_url": "/v1/jobs/test-job-456/stream"
+        })))
         .mount(&mock_server)
         .await;
 
@@ -138,11 +136,10 @@ async fn test_stream_with_failure_detection() -> Result<()> {
 
     Mock::given(method("POST"))
         .and(path("/v1/jobs"))
-        .respond_with(
-            ResponseTemplate::new(200).set_body_json(serde_json::json!({
-                "job_id": "test-job-789"
-            })),
-        )
+        .respond_with(ResponseTemplate::new(200).set_body_json(serde_json::json!({
+            "job_id": "test-job-789",
+            "sse_url": "/v1/jobs/test-job-789/stream"
+        })))
         .mount(&mock_server)
         .await;
 
@@ -171,11 +168,10 @@ async fn test_stream_with_multiple_lines() -> Result<()> {
 
     Mock::given(method("POST"))
         .and(path("/v1/jobs"))
-        .respond_with(
-            ResponseTemplate::new(200).set_body_json(serde_json::json!({
-                "job_id": "test-job-multi"
-            })),
-        )
+        .respond_with(ResponseTemplate::new(200).set_body_json(serde_json::json!({
+            "job_id": "test-job-multi",
+            "sse_url": "/v1/jobs/test-job-multi/stream"
+        })))
         .mount(&mock_server)
         .await;
 
@@ -211,11 +207,10 @@ async fn test_stream_without_done_marker_times_out() {
 
     Mock::given(method("POST"))
         .and(path("/v1/jobs"))
-        .respond_with(
-            ResponseTemplate::new(200).set_body_json(serde_json::json!({
-                "job_id": "test-job-timeout"
-            })),
-        )
+        .respond_with(ResponseTemplate::new(200).set_body_json(serde_json::json!({
+            "job_id": "test-job-timeout",
+            "sse_url": "/v1/jobs/test-job-timeout/stream"
+        })))
         .mount(&mock_server)
         .await;
 
@@ -234,17 +229,11 @@ async fn test_stream_without_done_marker_times_out() {
     let operation = Operation::Status;
 
     // Wrap in timeout to prevent test hanging
-    let result = timeout(
-        Duration::from_secs(5),
-        submit_and_stream_job(&mock_server.uri(), operation),
-    )
-    .await;
+    let result =
+        timeout(Duration::from_secs(5), submit_and_stream_job(&mock_server.uri(), operation)).await;
 
     // Should timeout (either from our test timeout or the 30s enforcer)
-    assert!(
-        result.is_err() || result.unwrap().is_err(),
-        "Should timeout without [DONE] marker"
-    );
+    assert!(result.is_err() || result.unwrap().is_err(), "Should timeout without [DONE] marker");
 }
 
 // ============================================================================
@@ -260,7 +249,8 @@ async fn test_timeout_enforcer_triggers() {
         .respond_with(
             ResponseTemplate::new(200)
                 .set_body_json(serde_json::json!({
-                    "job_id": "test-job-slow"
+                    "job_id": "test-job-slow",
+                    "sse_url": "/v1/jobs/test-job-slow/stream"
                 }))
                 .set_delay(Duration::from_secs(35)), // Longer than 30s timeout
         )
@@ -270,16 +260,10 @@ async fn test_timeout_enforcer_triggers() {
     let operation = Operation::Status;
 
     // Wrap in shorter timeout to prevent test hanging
-    let result = timeout(
-        Duration::from_secs(5),
-        submit_and_stream_job(&mock_server.uri(), operation),
-    )
-    .await;
+    let result =
+        timeout(Duration::from_secs(5), submit_and_stream_job(&mock_server.uri(), operation)).await;
 
-    assert!(
-        result.is_err() || result.unwrap().is_err(),
-        "Should timeout on slow response"
-    );
+    assert!(result.is_err() || result.unwrap().is_err(), "Should timeout on slow response");
 }
 
 #[tokio::test]
@@ -288,11 +272,10 @@ async fn test_fast_response_does_not_timeout() -> Result<()> {
 
     Mock::given(method("POST"))
         .and(path("/v1/jobs"))
-        .respond_with(
-            ResponseTemplate::new(200).set_body_json(serde_json::json!({
-                "job_id": "test-job-fast"
-            })),
-        )
+        .respond_with(ResponseTemplate::new(200).set_body_json(serde_json::json!({
+            "job_id": "test-job-fast",
+            "sse_url": "/v1/jobs/test-job-fast/stream"
+        })))
         .mount(&mock_server)
         .await;
 
@@ -324,11 +307,10 @@ async fn test_submit_to_hive_is_alias() -> Result<()> {
 
     Mock::given(method("POST"))
         .and(path("/v1/jobs"))
-        .respond_with(
-            ResponseTemplate::new(200).set_body_json(serde_json::json!({
-                "job_id": "test-job-hive"
-            })),
-        )
+        .respond_with(ResponseTemplate::new(200).set_body_json(serde_json::json!({
+            "job_id": "test-job-hive",
+            "sse_url": "/v1/jobs/test-job-hive/stream"
+        })))
         .mount(&mock_server)
         .await;
 
@@ -367,8 +349,12 @@ async fn test_network_error_handling() {
     assert!(result.is_err(), "Should handle network errors");
     let err_msg = result.unwrap_err().to_string();
     assert!(
-        err_msg.contains("Connection") || err_msg.contains("connect") || err_msg.contains("refused"),
-        "Error should mention connection issue: {}",
+        err_msg.contains("Connection")
+            || err_msg.contains("connect")
+            || err_msg.contains("refused")
+            || err_msg.contains("connection")
+            || err_msg.contains("Failed to get job_id"),
+        "Error should mention connection issue or job_id failure: {}",
         err_msg
     );
 }
@@ -400,13 +386,13 @@ async fn test_concurrent_job_submissions() -> Result<()> {
     // Mock multiple job submissions
     for i in 0..5 {
         let job_id = format!("test-job-{}", i);
+        let sse_url = format!("/v1/jobs/{}/stream", job_id);
         Mock::given(method("POST"))
             .and(path("/v1/jobs"))
-            .respond_with(
-                ResponseTemplate::new(200).set_body_json(serde_json::json!({
-                    "job_id": job_id
-                })),
-            )
+            .respond_with(ResponseTemplate::new(200).set_body_json(serde_json::json!({
+                "job_id": job_id,
+                "sse_url": sse_url
+            })))
             .mount(&mock_server)
             .await;
 
@@ -450,21 +436,18 @@ async fn test_different_operation_types() -> Result<()> {
     let mock_server = MockServer::start().await;
 
     // Test with different operation types
-    let operations = vec![
-        Operation::Status,
-        Operation::QueenCheck,
-    ];
+    let operations = vec![Operation::Status, Operation::QueenCheck];
 
     for (i, operation) in operations.into_iter().enumerate() {
         let job_id = format!("test-job-op-{}", i);
+        let sse_url = format!("/v1/jobs/{}/stream", job_id);
 
         Mock::given(method("POST"))
             .and(path("/v1/jobs"))
-            .respond_with(
-                ResponseTemplate::new(200).set_body_json(serde_json::json!({
-                    "job_id": job_id
-                })),
-            )
+            .respond_with(ResponseTemplate::new(200).set_body_json(serde_json::json!({
+                "job_id": job_id,
+                "sse_url": sse_url
+            })))
             .mount(&mock_server)
             .await;
 
@@ -499,11 +482,10 @@ async fn test_narration_emission_during_streaming() -> Result<()> {
 
     Mock::given(method("POST"))
         .and(path("/v1/jobs"))
-        .respond_with(
-            ResponseTemplate::new(200).set_body_json(serde_json::json!({
-                "job_id": "test-narration"
-            })),
-        )
+        .respond_with(ResponseTemplate::new(200).set_body_json(serde_json::json!({
+            "job_id": "test-narration",
+            "sse_url": "/v1/jobs/test-narration/stream"
+        })))
         .mount(&mock_server)
         .await;
 

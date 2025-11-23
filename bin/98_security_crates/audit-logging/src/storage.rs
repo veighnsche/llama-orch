@@ -209,9 +209,9 @@ mod tests {
                 "actor": {
                     "user_id": "test@example.com",
                     "ip": "127.0.0.1",
-                    "auth_method": "bearer_token"
+                    "auth_method": "bearertoken"
                 },
-                "method": "bearer_token",
+                "method": "bearertoken",
                 "path": "/test",
                 "service_id": "test"
             },

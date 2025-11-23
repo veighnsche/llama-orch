@@ -264,8 +264,16 @@ fn test_trailing_comma_all_modes() {
 fn test_comparison_old_vs_new() {
     let adapter = CaptureAdapter::install();
 
-    // Old way (builder)
-    Narration::new("test-actor", "test-action", "target").human("Old way message").emit();
+    // Old way (builder) - now uses NarrationFields directly
+    let fields = NarrationFields {
+        actor: "test-actor",
+        action: "test-action",
+        target: "target".to_string(),
+        human: "Old way message".to_string(),
+        fn_name: Some("test_old_way".to_string()),
+        ..Default::default()
+    };
+    narrate(fields, NarrationLevel::Info);
 
     // New way (macro)
     n!("test-action", "New way message");
@@ -289,12 +297,16 @@ fn test_comparison_old_vs_new() {
 fn test_backward_compatibility_builder_still_works() {
     let adapter = CaptureAdapter::install();
 
-    // Old builder API should still work
-    Narration::new("test-actor", "test-action", "target")
-        .context("value1")
-        .context("value2")
-        .human("Message {0} and {1}")
-        .emit();
+    // Old builder API - now uses NarrationFields directly
+    let fields = NarrationFields {
+        actor: "test-actor",
+        action: "test-action",
+        target: "target".to_string(),
+        human: "Message value1 and value2".to_string(), // Pre-formatted since context interpolation was removed
+        fn_name: Some("test_backward_compat".to_string()),
+        ..Default::default()
+    };
+    narrate(fields, NarrationLevel::Info);
 
     let captured = adapter.captured();
     assert_eq!(captured.len(), 1);

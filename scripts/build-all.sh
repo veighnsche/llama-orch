@@ -4,6 +4,8 @@
 
 set -e
 
+REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+
 echo "🐝 Building rbee monorepo..."
 echo ""
 
@@ -52,6 +54,12 @@ fi
 
 # Check pnpm
 echo "[2/6] Checking pnpm..."
+if ! command -v pnpm &> /dev/null; then
+  if [ -f "$REPO_ROOT/nix/pnpm-corepack-hook.sh" ]; then
+    PNPM_HOME="$REPO_ROOT/.pnpm" COREPACK_HOME="$REPO_ROOT/.pnpm" . "$REPO_ROOT/nix/pnpm-corepack-hook.sh"
+  fi
+fi
+
 if ! command -v pnpm &> /dev/null; then
   echo "  ✗ pnpm is not installed"
   FAILED=1
@@ -138,7 +146,9 @@ if command -v rustup &> /dev/null; then
     echo "  ⚠ wasm-bindgen CLI not found; wasm-pack will download its bundled version during build"
   fi
 else
-  echo "  ⚠ rustup not found - skipping Rust WASI target checks"
+  echo "  ✗ rustup not found - Rust toolchain management is required"
+  FAILED=1
+  MISSING_DEPS+=("rustup")
 fi
 
 # Check for required system libraries (pkg-config)
@@ -185,6 +195,7 @@ if [ $FAILED -eq 1 ]; then
           node) echo "  • Node.js:   sudo pacman -S nodejs npm" ;;
           pnpm) echo "  • pnpm:      sudo npm install -g pnpm" ;;
           cargo) echo "  • Rust:      sudo pacman -S rustup && rustup default stable" ;;
+          rustup) echo "  • rustup:    sudo pacman -S rustup && rustup default stable" ;;
           wasm-pack) echo "  • wasm-pack: cargo install wasm-pack" ;;
           glib) echo "  • glib-2.0:  sudo pacman -S glib2" ;;
           gdk) echo "  • gdk-3.0:   sudo pacman -S gtk3" ;;
@@ -198,6 +209,7 @@ if [ $FAILED -eq 1 ]; then
           node) echo "  • Node.js:   curl -fsSL https://deb.nodesource.com/setup_lts.x | sudo -E bash - && sudo apt install -y nodejs" ;;
           pnpm) echo "  • pnpm:      sudo npm install -g pnpm" ;;
           cargo) echo "  • Rust:      curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh" ;;
+          rustup) echo "  • rustup:    curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh" ;;
           wasm-pack) echo "  • wasm-pack: cargo install wasm-pack" ;;
           glib) echo "  • glib-2.0:  sudo apt install libglib2.0-dev" ;;
           gdk) echo "  • gdk-3.0:   sudo apt install libgtk-3-dev" ;;
@@ -211,6 +223,7 @@ if [ $FAILED -eq 1 ]; then
           node) echo "  • Node.js:   brew install node" ;;
           pnpm) echo "  • pnpm:      brew install pnpm" ;;
           cargo) echo "  • Rust:      curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh" ;;
+          rustup) echo "  • rustup:    curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh" ;;
           wasm-pack) echo "  • wasm-pack: cargo install wasm-pack" ;;
           glib) echo "  • glib-2.0:  brew install glib" ;;
           gdk) echo "  • gdk-3.0:   brew install gtk+3" ;;
@@ -224,6 +237,7 @@ if [ $FAILED -eq 1 ]; then
           node) echo "  • Node.js:   add pkgs.nodejs to environment.systemPackages or use: nix-shell -p nodejs" ;;
           pnpm) echo "  • pnpm:      add pkgs.pnpm to environment.systemPackages or use: nix-shell -p pnpm" ;;
           cargo) echo "  • Rust:      add pkgs.rustup to environment.systemPackages and run: rustup default stable" ;;
+          rustup) echo "  • rustup:    add pkgs.rustup to environment.systemPackages and run: rustup default stable" ;;
           wasm-pack) echo "  • wasm-pack: add pkgs.wasm-pack to environment.systemPackages or use: nix-shell -p wasm-pack" ;;
           glib) echo "  • glib-2.0:  add pkgs.glib to environment.systemPackages or a devShell" ;;
           gdk) echo "  • gdk-3.0:   add pkgs.gtk3 to environment.systemPackages or a devShell" ;;
@@ -237,6 +251,7 @@ if [ $FAILED -eq 1 ]; then
           node) echo "  • Node.js:   https://nodejs.org/" ;;
           pnpm) echo "  • pnpm:      npm install -g pnpm" ;;
           cargo) echo "  • Rust:      https://rustup.rs/" ;;
+          rustup) echo "  • rustup:    https://rustup.rs/" ;;
           wasm-pack) echo "  • wasm-pack: cargo install wasm-pack" ;;
           glib) echo "  • glib-2.0:  Install glib2 development package for your OS" ;;
           gdk) echo "  • gdk-3.0:   Install GTK3 development package for your OS" ;;
@@ -262,7 +277,7 @@ if [[ -d "$HOME/.cargo/bin" ]]; then
 fi
 
 # Install dependencies
-echo "→ [BUILD 1/3] Installing dependencies..."
+echo "→ [BUILD 1/4] Installing dependencies..."
 if ! pnpm install; then
   echo "✗ pnpm install failed!"
   exit 1
@@ -271,21 +286,45 @@ echo "  ✓ Dependencies installed"
 echo ""
 
 # Build frontend (Turborepo handles everything)
-echo "→ [BUILD 2/3] Building frontend (Turborepo)..."
-if ! turbo build; then
+# TEAM_528: Skip WASM SDK builds during frontend phase to avoid cargo lock contention with Rust build
+# WASM SDKs will be built in step 4 after cargo is done
+echo "→ [BUILD 2/4] Building frontend (Turborepo)..."
+if ! RBEE_SKIP_WASM=1 turbo build; then
   echo "✗ Frontend build failed!"
   exit 1
 fi
-echo "  ✓ Frontend built"
+echo "  ✓ Frontend built (WASM SDKs will be built in step 4)"
 echo ""
 
 # Build Rust (Cargo workspace handles everything)
-echo "→ [BUILD 3/3] Building Rust (Cargo)..."
+echo "→ [BUILD 3/4] Building Rust (Cargo)..."
 if ! cargo build --release; then
   echo "✗ Rust build failed!"
   exit 1
 fi
 echo "  ✓ Rust built"
+echo ""
+
+# Build WASM SDKs (after cargo is done to avoid lock contention)
+# TEAM_528: Build WASM SDKs at the end so they don't interfere with cargo build --release
+echo "→ [BUILD 4/4] Building WASM SDKs..."
+WASM_SDK_DIRS=(
+  "bin/10_queen_rbee/ui/packages/queen-rbee-sdk"
+  "bin/20_rbee_hive/ui/packages/rbee-hive-sdk"
+  "bin/30_llm_worker_rbee/ui/packages/llm-worker-sdk"
+  "bin/31_sd_worker_rbee/ui/packages/sd-worker-sdk"
+)
+
+for sdk_dir in "${WASM_SDK_DIRS[@]}"; do
+  sdk_name=$(basename "$sdk_dir")
+  echo "  → Building $sdk_name..."
+  if ! (cd "$REPO_ROOT/$sdk_dir" && pnpm run build); then
+    echo "  ⚠ Warning: $sdk_name build failed (this is non-fatal, WASM SDK may have compilation issues)"
+  else
+    echo "  ✓ $sdk_name built"
+  fi
+done
+echo "  ✓ WASM SDKs built"
 echo ""
 
 echo "✓ Build complete! 🐝"

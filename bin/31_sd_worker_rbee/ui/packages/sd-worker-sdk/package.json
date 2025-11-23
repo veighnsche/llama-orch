@@ -8,7 +8,7 @@
     ".": "./pkg/bundler/sd_worker_sdk.js"
   },
   "scripts": {
-    "build": "wasm-pack build --target bundler --out-dir pkg/bundler",
+    "build": "node -e \"process.env.RBEE_SKIP_WASM === '1' ? console.log('Skipping wasm-pack build (RBEE_SKIP_WASM=1)') : process.exit(1)\" || wasm-pack build --target bundler --out-dir pkg/bundler",
     "build:web": "wasm-pack build --target web --out-dir pkg/web",
     "build:nodejs": "wasm-pack build --target nodejs --out-dir pkg/nodejs"
   },

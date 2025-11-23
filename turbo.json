@@ -1,6 +1,6 @@
 {
   "$schema": "https://turbo.build/schema.json",
-  "globalPassThroughEnv": ["PLAYWRIGHT_*"],
+  "globalPassThroughEnv": ["PLAYWRIGHT_*", "RBEE_SKIP_WASM"],
   "tasks": {
     "build": {
       "dependsOn": ["^build"],

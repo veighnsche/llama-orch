@@ -89,7 +89,7 @@ impl From<NarrationFields> for CapturedNarration {
 ///
 /// # Example
 /// ```rust
-/// use observability_narration_core::{CaptureAdapter, narrate, NarrationFields};
+/// use observability_narration_core::{CaptureAdapter, narrate, NarrationFields, NarrationLevel};
 ///
 /// // In test setup
 /// let adapter = CaptureAdapter::install();
@@ -101,7 +101,7 @@ impl From<NarrationFields> for CapturedNarration {
 ///     target: "session-123".to_string(),
 ///     human: "Accepted request".to_string(),
 ///     ..Default::default()
-/// });
+/// }, NarrationLevel::Info);
 ///
 /// // Assert on captured narration
 /// let captured = adapter.captured();

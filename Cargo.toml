@@ -88,9 +88,14 @@ members = [
 ]
 
 # TEAM-488: Exclude external dependencies (they have their own workspaces)
+# TEAM_528: Exclude WASM SDK packages (standalone workspaces built via wasm-pack, not cargo)
 exclude = [
     "deps/candle",      # Candle fork (has its own workspace)
     "deps/rocm-rs",     # ROCm bindings (has its own workspace)
+    "bin/10_queen_rbee/ui/packages/queen-rbee-sdk",    # WASM SDK (built via wasm-pack)
+    "bin/20_rbee_hive/ui/packages/rbee-hive-sdk",      # WASM SDK (built via wasm-pack)
+    "bin/30_llm_worker_rbee/ui/packages/llm-worker-sdk", # WASM SDK (built via wasm-pack)
+    "bin/31_sd_worker_rbee/ui/packages/sd-worker-sdk",  # WASM SDK (built via wasm-pack)
 ]
 
 resolver = "2"

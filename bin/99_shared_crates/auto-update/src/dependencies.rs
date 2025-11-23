@@ -191,8 +191,9 @@ mod tests {
         // rbee-keeper should have dependencies
         assert!(!deps.is_empty());
 
-        // Should include daemon-lifecycle
-        assert!(deps.iter().any(|d| d.to_string_lossy().contains("daemon-lifecycle")));
+        // Should include lifecycle-local and lifecycle-ssh (replaces daemon-lifecycle)
+        assert!(deps.iter().any(|d| d.to_string_lossy().contains("lifecycle-local")));
+        assert!(deps.iter().any(|d| d.to_string_lossy().contains("lifecycle-ssh")));
 
         // Should include narration-core
         assert!(deps.iter().any(|d| d.to_string_lossy().contains("narration-core")));

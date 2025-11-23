@@ -52,16 +52,18 @@ pub async fn handle_heartbeat_stream(
 
 /// Create queen's own heartbeat with current system status
 fn create_queen_heartbeat(state: &HeartbeatState) -> HeartbeatEvent {
-    let workers_online = state.worker_registry.count_online();
-    let workers_available = state.worker_registry.count_available();
+    let workers_online = state.worker_registry.get_all_workers().len();
+    let workers_available = workers_online; // All workers are considered available
     let hives_online = state.hive_registry.count_online();
     let hives_available = state.hive_registry.count_available();
 
     // TEAM-374: ProcessStats doesn't have id field, use group-instance format
-    let worker_ids: Vec<String> =
-        state.worker_registry.list_online_workers().into_iter()
-            .map(|w| format!("{}-{}", w.group, w.instance))
-            .collect();
+    let worker_ids: Vec<String> = state
+        .worker_registry
+        .list_online_workers()
+        .into_iter()
+        .map(|w| format!("{}-{}", w.group, w.instance))
+        .collect();
 
     let hive_ids: Vec<String> =
         state.hive_registry.list_online_hives().into_iter().map(|h| h.id).collect();
@@ -80,13 +82,13 @@ fn create_queen_heartbeat(state: &HeartbeatState) -> HeartbeatEvent {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use hive_contract::{HealthStatus, OperationalStatus};
     use hive_contract::{HiveHeartbeat, HiveInfo};
-    use queen_rbee_hive_registry::HiveRegistry;
-    use queen_rbee_worker_registry::WorkerRegistry;
-    use shared_contract::{HealthStatus, OperationalStatus};
+    use queen_rbee_telemetry_registry::HiveRegistry;
+    use queen_rbee_telemetry_registry::WorkerRegistry;
+    use rbee_hive_monitor::ProcessStats;
     use std::sync::Arc;
     use tokio::sync::broadcast;
-    use worker_contract::{WorkerHeartbeat, WorkerInfo, WorkerStatus};
 
     #[test]
     fn test_create_queen_heartbeat_empty() {
@@ -101,11 +103,7 @@ mod tests {
 
         match event {
             HeartbeatEvent::Queen {
-                workers_online,
-                hives_online,
-                worker_ids,
-                hive_ids,
-                ..
+                workers_online, hives_online, worker_ids, hive_ids, ..
             } => {
                 assert_eq!(workers_online, 0);
                 assert_eq!(hives_online, 0);
@@ -122,16 +120,21 @@ mod tests {
         let hive_registry = Arc::new(HiveRegistry::new());
 
         // Add worker
-        let worker = WorkerInfo {
-            id: "worker-1".to_string(),
-            model_id: "test-model".to_string(),
-            device: "cpu:0".to_string(),
-            port: 9301,
-            status: WorkerStatus::Ready,
-            implementation: "test".to_string(),
-            version: "0.1.0".to_string(),
+        let worker = ProcessStats {
+            pid: 1234,
+            group: "worker".to_string(),
+            instance: "1".to_string(),
+            cpu_pct: 50.0,
+            rss_mb: 512,
+            io_r_mb_s: 10.0,
+            io_w_mb_s: 5.0,
+            uptime_s: 3600,
+            gpu_util_pct: 80.0,
+            vram_mb: 2048,
+            total_vram_mb: 24576,
+            model: Some("test-model".to_string()),
         };
-        worker_registry.update_worker(WorkerHeartbeat::new(worker));
+        worker_registry.update_workers("hive-1", vec![worker]);
 
         // Add hive
         let hive = HiveInfo {
@@ -142,24 +145,16 @@ mod tests {
             health_status: HealthStatus::Healthy,
             version: "0.1.0".to_string(),
         };
-        hive_registry.update_hive(HiveHeartbeat::new(hive));
+        hive_registry.update_hive(hive);
 
         let (event_tx, _) = broadcast::channel(100);
-        let state = HeartbeatState {
-            worker_registry,
-            hive_registry,
-            event_tx,
-        };
+        let state = HeartbeatState { worker_registry, hive_registry, event_tx };
 
         let event = create_queen_heartbeat(&state);
 
         match event {
             HeartbeatEvent::Queen {
-                workers_online,
-                hives_online,
-                worker_ids,
-                hive_ids,
-                ..
+                workers_online, hives_online, worker_ids, hive_ids, ..
             } => {
                 assert_eq!(workers_online, 1);
                 assert_eq!(hives_online, 1);

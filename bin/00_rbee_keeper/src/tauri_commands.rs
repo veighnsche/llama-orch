@@ -46,20 +46,10 @@ mod tests {
                 hive_install,
                 hive_uninstall,
                 hive_rebuild,
-                marketplace_list_models,
-                marketplace_search_models,
-                marketplace_get_model,
-                marketplace_list_civitai_models, // TEAM-423: Civitai models
-                marketplace_list_workers, // TEAM-421: Worker catalog listing
                 // TEAM-420: Removed check_model_compatibility, list_compatible_workers, list_compatible_models (incomplete stubs)
             ])
             .typ::<NarrationEvent>()
-            .typ::<lifecycle_local::DaemonStatus>()
-            .typ::<marketplace_sdk::Model>()
-            .typ::<marketplace_sdk::WorkerCatalogEntry>() // TEAM-421: Worker catalog type (re-exported from artifacts-contract)
-            .typ::<marketplace_sdk::WorkerType>()
-            .typ::<marketplace_sdk::Platform>()
-            .typ::<marketplace_sdk::Architecture>();
+            .typ::<lifecycle_local::DaemonStatus>();
 
         builder
             .export(Typescript::default(), "ui/src/generated/bindings.ts")
@@ -296,10 +286,10 @@ pub async fn hive_status(alias: String) -> Result<lifecycle_ssh::DaemonStatus, S
     } else {
         // Remote - use lifecycle-ssh
         use crate::ssh_resolver::resolve_ssh_config;
-        
+
         let ssh = resolve_ssh_config(&alias)
             .map_err(|e| format!("Failed to resolve SSH config for '{}': {}", alias, e))?;
-        
+
         let health_url = format!("http://{}:7835/health", ssh.hostname);
         lifecycle_ssh::check_daemon_health(&health_url, "rbee-hive", &ssh).await
     };
@@ -441,11 +431,11 @@ pub async fn ssh_list() -> Result<Vec<SshTarget>, String> {
 
     // TEAM-365: Use shared SSH config parser
     let ssh_config_path = ssh_config_parser::get_default_ssh_config_path();
-    
+
     // Parse SSH config using shared crate
     let parsed_targets = ssh_config_parser::parse_ssh_config(&ssh_config_path)
         .map_err(|e| format!("Failed to parse SSH config: {}", e))?;
-    
+
     // TEAM-365: Convert ssh_config_parser::SshTarget to our SshTarget type
     let mut hosts: std::collections::HashMap<String, lifecycle_ssh::SshConfig> = HashMap::new();
     for target in parsed_targets {
@@ -491,14 +481,17 @@ pub async fn ssh_list() -> Result<Vec<SshTarget>, String> {
 
     // TEAM-360: Add localhost as an available target
     // Localhost is always available for installation
-    targets.insert(0, SshTarget {
-        host: "localhost".to_string(),
-        host_subtitle: Some("This machine".to_string()),
-        hostname: "localhost".to_string(),
-        user: std::env::var("USER").unwrap_or_else(|_| "user".to_string()),
-        port: 22,
-        status: SshTargetStatus::Unknown,
-    });
+    targets.insert(
+        0,
+        SshTarget {
+            host: "localhost".to_string(),
+            host_subtitle: Some("This machine".to_string()),
+            hostname: "localhost".to_string(),
+            user: std::env::var("USER").unwrap_or_else(|_| "user".to_string()),
+            port: 22,
+            status: SshTargetStatus::Unknown,
+        },
+    );
 
     n!("ssh_list", "Found {} unique SSH targets (including localhost)", targets.len());
 
@@ -511,11 +504,11 @@ pub async fn ssh_list() -> Result<Vec<SshTarget>, String> {
 #[specta::specta]
 pub async fn get_installed_hives() -> Result<Vec<String>, String> {
     use observability_narration_core::n;
-    
+
     n!("get_installed_hives", "Checking which hives are installed");
-    
+
     let mut installed = Vec::new();
-    
+
     // Check localhost
     match hive_status("localhost".to_string()).await {
         Ok(status) => {
@@ -528,7 +521,7 @@ pub async fn get_installed_hives() -> Result<Vec<String>, String> {
             n!("get_installed_hives", "Failed to check localhost: {}", e);
         }
     }
-    
+
     // Check all SSH targets
     match ssh_list().await {
         Ok(targets) => {
@@ -536,7 +529,7 @@ pub async fn get_installed_hives() -> Result<Vec<String>, String> {
                 if target.host == "localhost" {
                     continue; // Already checked
                 }
-                
+
                 match hive_status(target.host.clone()).await {
                     Ok(status) => {
                         if status.is_installed {
@@ -554,7 +547,7 @@ pub async fn get_installed_hives() -> Result<Vec<String>, String> {
             n!("get_installed_hives", "Failed to get SSH targets: {}", e);
         }
     }
-    
+
     n!("get_installed_hives", "Found {} installed hives", installed.len());
     Ok(installed)
 }
@@ -562,195 +555,12 @@ pub async fn get_installed_hives() -> Result<Vec<String>, String> {
 // ============================================================================
 // MARKETPLACE COMMANDS
 // ============================================================================
-
-/// List models from HuggingFace with full filtering and sorting
-/// TEAM-405: Marketplace integration with HuggingFace API
-#[tauri::command]
-#[specta::specta]
-pub async fn marketplace_list_models(
-    query: Option<String>,
-    sort: Option<String>,
-    filter_tags: Option<Vec<String>>,
-    limit: Option<u32>,
-) -> Result<Vec<marketplace_sdk::Model>, String> {
-    use marketplace_sdk::HuggingFaceClient;
-    use observability_narration_core::n;
-
-    n!(
-        "marketplace_list_models",
-        "🔍 Listing models (query: {:?}, sort: {:?}, tags: {:?}, limit: {:?})",
-        query,
-        sort,
-        filter_tags,
-        limit
-    );
-
-    let client = HuggingFaceClient::new();
-    client
-        .list_models(query, sort, filter_tags, limit)
-        .await
-        .map_err(|e| {
-            n!("marketplace_list_models", "❌ Error: {}", e);
-            format!("Failed to list models: {}", e)
-        })
-        .map(|models| {
-            n!("marketplace_list_models", "✅ Found {} models", models.len());
-            models
-        })
-}
-
-/// Search models from HuggingFace by query
-/// TEAM-405: Convenience wrapper for marketplace_list_models with required query
-#[tauri::command]
-#[specta::specta]
-pub async fn marketplace_search_models(
-    query: String,
-    limit: Option<u32>,
-) -> Result<Vec<marketplace_sdk::Model>, String> {
-    marketplace_list_models(Some(query), None, None, limit).await
-}
-
-/// Get a specific model by ID from HuggingFace
-/// TEAM-405: Fetch detailed information for a single model
-/// TEAM-463: Updated to handle both HuggingFace and CivitAI models
-#[tauri::command]
-#[specta::specta]
-pub async fn marketplace_get_model(
-    model_id: String,
-) -> Result<marketplace_sdk::Model, String> {
-    use marketplace_sdk::{CivitaiClient, HuggingFaceClient};
-    use observability_narration_core::n;
-
-    n!("marketplace_get_model", "🔍 Fetching model: {}", model_id);
-    n!("marketplace_get_model", "🚨 TEAM-463 NEW CODE IS RUNNING - BUILD TIMESTAMP: 2025-11-10 15:35 🚨");
-
-    // TEAM-463: Detect source from model ID prefix
-    if model_id.starts_with("civitai-") {
-        // CivitAI model - extract numeric ID
-        let civitai_id = model_id
-            .strip_prefix("civitai-")
-            .and_then(|id_str| id_str.parse::<i64>().ok())
-            .ok_or_else(|| {
-                n!("marketplace_get_model", "❌ Invalid CivitAI ID format: {}", model_id);
-                format!("Invalid CivitAI model ID format: {}", model_id)
-            })?;
-
-        n!("marketplace_get_model", "🎨 Fetching CivitAI model ID: {}", civitai_id);
-
-        let client = CivitaiClient::new();
-        client
-            .get_marketplace_model(civitai_id)
-            .await
-            .map_err(|e| {
-                n!("marketplace_get_model", "❌ CivitAI Error: {}", e);
-                format!("Failed to fetch CivitAI model: {}", e)
-            })
-            .map(|model| {
-                n!("marketplace_get_model", "✅ Found CivitAI model: {}", model.name);
-                model
-            })
-    } else {
-        // HuggingFace model (default)
-        // TEAM-463: Strip "huggingface-" prefix if present (SDK adds it back)
-        let hf_model_id = model_id
-            .strip_prefix("huggingface-")
-            .unwrap_or(&model_id);
-
-        n!("marketplace_get_model", "🤗 Fetching HuggingFace model");
-        n!("marketplace_get_model", "   Original ID: {}", model_id);
-        n!("marketplace_get_model", "   Stripped ID: {}", hf_model_id);
-
-        let client = HuggingFaceClient::new();
-        
-        n!("marketplace_get_model", "📡 Calling HuggingFaceClient::get_model()...");
-        
-        match client.get_model(hf_model_id).await {
-            Ok(model) => {
-                n!("marketplace_get_model", "✅ Successfully fetched model: {}", model.name);
-                n!("marketplace_get_model", "   Model ID: {}", model.id);
-                n!("marketplace_get_model", "   Author: {:?}", model.author);
-                n!("marketplace_get_model", "   Downloads: {}", model.downloads);
-                Ok(model)
-            }
-            Err(e) => {
-                n!("marketplace_get_model", "❌ HuggingFace Error: {}", e);
-                n!("marketplace_get_model", "   Error details: {:?}", e);
-                n!("marketplace_get_model", "   Model ID attempted: {}", hf_model_id);
-                Err(format!("Failed to fetch model: {}", e))
-            }
-        }
-    }
-}
-
-/// List models from Civitai
-/// TEAM-423: Marketplace integration with Civitai API
-/// TEAM-429: Updated to use CivitaiFilters for type-safe filtering
-#[tauri::command]
-#[specta::specta]
-pub async fn marketplace_list_civitai_models(
-    filters: artifacts_contract::CivitaiFilters,
-) -> Result<Vec<marketplace_sdk::Model>, String> {
-    use marketplace_sdk::CivitaiClient;
-    use observability_narration_core::n;
-
-    n!("marketplace_list_civitai_models", "🔍 Listing Civitai models with filters");
-    n!("marketplace_list_civitai_models", "  Time period: {:?}", filters.time_period);
-    n!("marketplace_list_civitai_models", "  Model type: {:?}", filters.model_type);
-    n!("marketplace_list_civitai_models", "  Base model: {:?}", filters.base_model);
-    n!("marketplace_list_civitai_models", "  Sort: {:?}", filters.sort);
-    n!("marketplace_list_civitai_models", "  NSFW level: {:?}", filters.nsfw.max_level);
-
-    let client = CivitaiClient::new();
-    client
-        .list_marketplace_models(&filters)
-        .await
-        .map_err(|e| {
-            n!("marketplace_list_civitai_models", "❌ Error: {}", e);
-            format!("Failed to list Civitai models: {}", e)
-        })
-        .map(|models| {
-            n!("marketplace_list_civitai_models", "✅ Found {} models", models.len());
-            models
-        })
-}
-
-/// List workers from catalog API
-/// TEAM-421: Marketplace integration with worker catalog
-#[tauri::command]
-#[specta::specta]
-pub async fn marketplace_list_workers() -> Result<Vec<marketplace_sdk::WorkerCatalogEntry>, String> {
-    use marketplace_sdk::WorkerCatalogClient;
-    use observability_narration_core::n;
-
-    n!("marketplace_list_workers", "🔍 Listing workers from catalog");
-
-    let client = WorkerCatalogClient::default();
-    client
-        .list_workers()
-        .await
-        .map_err(|e| {
-            n!("marketplace_list_workers", "❌ Error: {}", e);
-            format!("Failed to list workers: {}", e)
-        })
-        .map(|workers| {
-            n!("marketplace_list_workers", "✅ Found {} workers", workers.len());
-            workers
-        })
-}
-
-// ============================================================================
-// TEAM-413: MODEL/WORKER DOWNLOAD COMMANDS
-// ============================================================================
-
 /// Download a model from HuggingFace
 /// TEAM-413: GUI model download with progress tracking via narration
 /// Returns job_id for tracking progress
 #[tauri::command]
 #[specta::specta]
-pub async fn model_download(
-    hive_id: String,
-    model_id: String,
-) -> Result<String, String> {
+pub async fn model_download(hive_id: String, model_id: String) -> Result<String, String> {
     use crate::cli::ModelAction;
     use crate::handlers::model::handle_model;
     use observability_narration_core::n;
@@ -759,20 +569,18 @@ pub async fn model_download(
 
     // Submit job and stream progress (via narration)
     // The handle_model function will emit narration events with progress
-    handle_model(hive_id, ModelAction::Download { 
-        model: Some(model_id.clone()) 
-    })
-    .await
-    .map(|_| {
-        n!("model_download", "✅ Download job submitted: {}", model_id);
-        // Return model_id as job identifier
-        // TODO: Return actual job_id from JobClient
-        model_id
-    })
-    .map_err(|e| {
-        n!("model_download", "❌ Download failed: {}", e);
-        format!("Failed to download model: {}", e)
-    })
+    handle_model(hive_id, ModelAction::Download { model: Some(model_id.clone()) })
+        .await
+        .map(|_| {
+            n!("model_download", "✅ Download job submitted: {}", model_id);
+            // Return model_id as job identifier
+            // TODO: Return actual job_id from JobClient
+            model_id
+        })
+        .map_err(|e| {
+            n!("model_download", "❌ Download failed: {}", e);
+            format!("Failed to download model: {}", e)
+        })
 }
 
 /// Download a worker binary
@@ -780,10 +588,7 @@ pub async fn model_download(
 /// Returns job_id for tracking progress
 #[tauri::command]
 #[specta::specta]
-pub async fn worker_download(
-    hive_id: String,
-    worker_id: String,
-) -> Result<String, String> {
+pub async fn worker_download(hive_id: String, worker_id: String) -> Result<String, String> {
     use crate::cli::WorkerAction;
     use crate::handlers::worker::handle_worker;
     use observability_narration_core::n;
@@ -791,20 +596,18 @@ pub async fn worker_download(
     n!("worker_download", "📥 Starting worker install: {}", worker_id);
 
     // Submit job and stream progress (via narration)
-    handle_worker(hive_id, WorkerAction::Download { 
-        worker_id: worker_id.clone() 
-    })
-    .await
-    .map(|_| {
-        n!("worker_download", "✅ Worker install job submitted: {}", worker_id);
-        // Return worker_id as job identifier
-        // TODO: Return actual job_id from JobClient
-        worker_id
-    })
-    .map_err(|e| {
-        n!("worker_download", "❌ Worker install failed: {}", e);
-        format!("Failed to install worker: {}", e)
-    })
+    handle_worker(hive_id, WorkerAction::Download { worker_id: worker_id.clone() })
+        .await
+        .map(|_| {
+            n!("worker_download", "✅ Worker install job submitted: {}", worker_id);
+            // Return worker_id as job identifier
+            // TODO: Return actual job_id from JobClient
+            worker_id
+        })
+        .map_err(|e| {
+            n!("worker_download", "❌ Worker install failed: {}", e);
+            format!("Failed to install worker: {}", e)
+        })
 }
 
 // ============================================================================

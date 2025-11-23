@@ -67,7 +67,7 @@ async fn test_context_auto_injects_actor() {
     let adapter = CaptureAdapter::install();
     adapter.clear();
 
-    let ctx = context::NarrationContext::new().with_actor("test-actor");
+    let ctx = context::NarrationContext::new();
 
     context::with_narration_context(ctx, async {
         n!("test", "Message with auto-injected actor");
@@ -76,7 +76,7 @@ async fn test_context_auto_injects_actor() {
 
     let captured = adapter.captured();
     assert_eq!(captured.len(), 1);
-    assert_eq!(captured[0].actor, "test-actor");
+    assert_eq!(captured[0].actor, "thread_local_context_tests");
 }
 
 #[tokio::test]
@@ -89,8 +89,7 @@ async fn test_context_auto_injects_all_fields() {
 
     let ctx = context::NarrationContext::new()
         .with_job_id("job-complete-test")
-        .with_correlation_id("corr-complete-test")
-        .with_actor("complete-actor");
+        .with_correlation_id("corr-complete-test");
 
     context::with_narration_context(ctx, async {
         n!("test", "Message with all fields auto-injected");
@@ -101,7 +100,7 @@ async fn test_context_auto_injects_all_fields() {
     assert_eq!(captured.len(), 1);
     assert_eq!(captured[0].job_id, Some("job-complete-test".to_string()));
     assert_eq!(captured[0].correlation_id, Some("corr-complete-test".to_string()));
-    assert_eq!(captured[0].actor, "complete-actor");
+    assert_eq!(captured[0].actor, "thread_local_context_tests");
 }
 
 #[tokio::test]
@@ -112,9 +111,7 @@ async fn test_multiple_narrations_in_context() {
     let adapter = CaptureAdapter::install();
     adapter.clear();
 
-    let ctx = context::NarrationContext::new()
-        .with_job_id("multi-narration-test")
-        .with_actor("multi-actor");
+    let ctx = context::NarrationContext::new().with_job_id("multi-narration-test");
 
     context::with_narration_context(ctx, async {
         n!("step1", "First step");
@@ -129,7 +126,7 @@ async fn test_multiple_narrations_in_context() {
     // All should have same job_id and actor (auto-injected)
     for event in &captured {
         assert_eq!(event.job_id, Some("multi-narration-test".to_string()));
-        assert_eq!(event.actor, "multi-actor");
+        assert_eq!(event.actor, "thread_local_context_tests");
     }
 }
 
@@ -151,7 +148,7 @@ async fn test_narration_without_context() {
     assert_eq!(captured.len(), 1);
     assert_eq!(captured[0].job_id, None);
     assert_eq!(captured[0].correlation_id, None);
-    assert_eq!(captured[0].actor, "unknown"); // Default
+    assert_eq!(captured[0].actor, "thread_local_context_tests"); // Default
 }
 
 #[tokio::test]
@@ -162,7 +159,7 @@ async fn test_context_without_job_id() {
     let adapter = CaptureAdapter::install();
     adapter.clear();
 
-    let ctx = context::NarrationContext::new().with_actor("actor-only");
+    let ctx = context::NarrationContext::new();
 
     context::with_narration_context(ctx, async {
         n!("test", "Message with actor but no job_id");
@@ -172,7 +169,7 @@ async fn test_context_without_job_id() {
     let captured = adapter.captured();
     assert_eq!(captured.len(), 1);
     assert_eq!(captured[0].job_id, None);
-    assert_eq!(captured[0].actor, "actor-only");
+    assert_eq!(captured[0].actor, "thread_local_context_tests");
 }
 
 // ============================================================================
@@ -188,8 +185,7 @@ async fn test_context_not_inherited_by_tokio_spawn() {
     let adapter = CaptureAdapter::install();
     adapter.clear();
 
-    let ctx =
-        context::NarrationContext::new().with_job_id("spawned-task-test").with_actor("spawner");
+    let ctx = context::NarrationContext::new().with_job_id("spawned-task-test");
 
     context::with_narration_context(ctx, async {
         // Main task narration
@@ -210,12 +206,12 @@ async fn test_context_not_inherited_by_tokio_spawn() {
     // Main task event has context
     assert_eq!(captured[0].action, "main_task");
     assert_eq!(captured[0].job_id, Some("spawned-task-test".to_string()));
-    assert_eq!(captured[0].actor, "spawner");
+    assert_eq!(captured[0].actor, "thread_local_context_tests");
 
     // Spawned task event does NOT have context (expected!)
     assert_eq!(captured[1].action, "spawned_task");
     assert_eq!(captured[1].job_id, None);
-    assert_eq!(captured[1].actor, "unknown");
+    assert_eq!(captured[1].actor, "thread_local_context_tests");
 }
 
 #[tokio::test]
@@ -226,9 +222,7 @@ async fn test_manual_context_propagation_to_spawned_task() {
     let adapter = CaptureAdapter::install();
     adapter.clear();
 
-    let ctx = context::NarrationContext::new()
-        .with_job_id("manual-propagation-test")
-        .with_actor("spawner");
+    let ctx = context::NarrationContext::new().with_job_id("manual-propagation-test");
 
     context::with_narration_context(ctx.clone(), async {
         // Main task narration
@@ -248,9 +242,9 @@ async fn test_manual_context_propagation_to_spawned_task() {
 
     // Both tasks have context (manual propagation worked!)
     assert_eq!(captured[0].job_id, Some("manual-propagation-test".to_string()));
-    assert_eq!(captured[0].actor, "spawner");
+    assert_eq!(captured[0].actor, "thread_local_context_tests");
     assert_eq!(captured[1].job_id, Some("manual-propagation-test".to_string()));
-    assert_eq!(captured[1].actor, "spawner");
+    assert_eq!(captured[1].actor, "thread_local_context_tests");
 }
 
 #[tokio::test]
@@ -261,7 +255,7 @@ async fn test_context_within_same_task() {
     let adapter = CaptureAdapter::install();
     adapter.clear();
 
-    let ctx = context::NarrationContext::new().with_job_id("same-task-test").with_actor("root");
+    let ctx = context::NarrationContext::new().with_job_id("same-task-test");
 
     context::with_narration_context(ctx, async {
         n!("level0", "Root level");
@@ -277,7 +271,7 @@ async fn test_context_within_same_task() {
     // All levels have same context (within same task)
     for event in &captured {
         assert_eq!(event.job_id, Some("same-task-test".to_string()));
-        assert_eq!(event.actor, "root");
+        assert_eq!(event.actor, "thread_local_context_tests");
     }
 }
 
@@ -298,8 +292,7 @@ async fn test_context_with_sequential_calls() {
     let adapter = CaptureAdapter::install();
     adapter.clear();
 
-    let ctx =
-        context::NarrationContext::new().with_job_id("sequential-test").with_actor("coordinator");
+    let ctx = context::NarrationContext::new().with_job_id("sequential-test");
 
     context::with_narration_context(ctx, async {
         // Sequential async calls preserve context
@@ -315,7 +308,7 @@ async fn test_context_with_sequential_calls() {
     // All tasks have same context
     for event in &captured {
         assert_eq!(event.job_id, Some("sequential-test".to_string()));
-        assert_eq!(event.actor, "coordinator");
+        assert_eq!(event.actor, "thread_local_context_tests");
     }
 }
 
@@ -343,14 +336,12 @@ async fn test_nested_contexts() {
     let adapter = CaptureAdapter::install();
     adapter.clear();
 
-    let outer_ctx =
-        context::NarrationContext::new().with_job_id("outer-job").with_actor("outer-actor");
+    let outer_ctx = context::NarrationContext::new().with_job_id("outer-job");
 
     context::with_narration_context(outer_ctx, async {
         n!("outer", "Outer context");
 
-        let inner_ctx =
-            context::NarrationContext::new().with_job_id("inner-job").with_actor("inner-actor");
+        let inner_ctx = context::NarrationContext::new().with_job_id("inner-job");
 
         context::with_narration_context(inner_ctx, async {
             n!("inner", "Inner context");
@@ -366,15 +357,15 @@ async fn test_nested_contexts() {
 
     // Outer context
     assert_eq!(captured[0].job_id, Some("outer-job".to_string()));
-    assert_eq!(captured[0].actor, "outer-actor");
+    assert_eq!(captured[0].actor, "thread_local_context_tests");
 
     // Inner context (overrides)
     assert_eq!(captured[1].job_id, Some("inner-job".to_string()));
-    assert_eq!(captured[1].actor, "inner-actor");
+    assert_eq!(captured[1].actor, "thread_local_context_tests");
 
     // Back to outer
     assert_eq!(captured[2].job_id, Some("outer-job".to_string()));
-    assert_eq!(captured[2].actor, "outer-actor");
+    assert_eq!(captured[2].actor, "thread_local_context_tests");
 }
 
 // ============================================================================
@@ -392,7 +383,7 @@ async fn test_job_router_pattern() {
     // Simulate job router receiving a job
     let job_id = "real-world-job-123";
 
-    let ctx = context::NarrationContext::new().with_job_id(job_id).with_actor("qn-router");
+    let ctx = context::NarrationContext::new().with_job_id(job_id);
 
     context::with_narration_context(ctx, async {
         // Router narration
@@ -411,7 +402,7 @@ async fn test_job_router_pattern() {
     // All should have same job_id and actor
     for event in &captured {
         assert_eq!(event.job_id, Some("real-world-job-123".to_string()));
-        assert_eq!(event.actor, "qn-router");
+        assert_eq!(event.actor, "thread_local_context_tests");
     }
 }
 
@@ -432,8 +423,7 @@ async fn test_multi_step_workflow() {
 
     let ctx = context::NarrationContext::new()
         .with_job_id("workflow-test")
-        .with_correlation_id("corr-workflow")
-        .with_actor("workflow-engine");
+        .with_correlation_id("corr-workflow");
 
     context::with_narration_context(ctx, async {
         // Step 1: Initialize
@@ -456,7 +446,7 @@ async fn test_multi_step_workflow() {
     // Verify workflow integrity (all steps have same context)
     let expected_job_id = Some("workflow-test".to_string());
     let expected_corr_id = Some("corr-workflow".to_string());
-    let expected_actor = "workflow-engine";
+    let expected_actor = "thread_local_context_tests";
 
     for (i, event) in captured.iter().enumerate() {
         assert_eq!(event.job_id, expected_job_id, "Step {} job_id mismatch", i);
@@ -480,7 +470,7 @@ async fn test_before_and_after_comparison() {
     // BEFORE Phase 2: Would need to pass job_id to every function
     // AFTER Phase 2: Set once, use everywhere
 
-    let ctx = context::NarrationContext::new().with_job_id("comparison-test").with_actor("demo");
+    let ctx = context::NarrationContext::new().with_job_id("comparison-test");
 
     context::with_narration_context(ctx, async {
         // All these narrations automatically get job_id and actor
@@ -497,7 +487,7 @@ async fn test_before_and_after_comparison() {
     // All steps have context (automatic!)
     for event in &captured {
         assert_eq!(event.job_id, Some("comparison-test".to_string()));
-        assert_eq!(event.actor, "demo");
+        assert_eq!(event.actor, "thread_local_context_tests");
     }
 }
 
@@ -534,7 +524,7 @@ async fn perform_step_c() {
 //   ```rust
 //   let ctx = NarrationContext::new()
 //       .with_job_id(&job_id)
-//       .with_actor("qn-router");
+//       ;
 //
 //   with_narration_context(ctx, async {
 //       n!("step1", "Step 1");  // Auto-injected!

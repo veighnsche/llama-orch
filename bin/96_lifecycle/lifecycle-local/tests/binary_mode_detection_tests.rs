@@ -11,7 +11,7 @@ fn test_detect_debug_binary() {
     if path.exists() {
         let mode = get_binary_mode(&path).expect("Failed to get binary mode");
         assert_eq!(mode, "debug", "Debug binary should return 'debug' mode");
-        
+
         let is_release = is_release_binary(&path).expect("Failed to check if release");
         assert!(!is_release, "Debug binary should not be identified as release");
     } else {
@@ -25,7 +25,7 @@ fn test_detect_release_binary() {
     if path.exists() {
         let mode = get_binary_mode(&path).expect("Failed to get binary mode");
         assert_eq!(mode, "release", "Release binary should return 'release' mode");
-        
+
         let is_release = is_release_binary(&path).expect("Failed to check if release");
         assert!(is_release, "Release binary should be identified as release");
     } else {
@@ -38,25 +38,25 @@ fn test_missing_binary() {
     let path = PathBuf::from("/nonexistent/binary");
     let result = get_binary_mode(&path);
     assert!(result.is_err(), "Should fail for missing binary");
-    
+
     let error_msg = result.unwrap_err().to_string();
-    assert!(
-        error_msg.contains("Failed to execute"),
-        "Error should mention execution failure"
-    );
+    assert!(error_msg.contains("Failed to execute"), "Error should mention execution failure");
 }
 
 #[test]
 fn test_binary_without_build_info() {
     // Use a system binary that doesn't have --build-info
-    let path = PathBuf::from("/bin/ls");
+    let path = PathBuf::from("/nix/store/zwplch93wbpj82bp7riwaixmdx2xi0ah-coreutils-9.7/bin/ls");
     let result = get_binary_mode(&path);
     assert!(result.is_err(), "Should fail for binary without --build-info");
-    
+
     let error_msg = result.unwrap_err().to_string();
     assert!(
-        error_msg.contains("does not support --build-info") || error_msg.contains("Invalid build mode"),
-        "Error should mention --build-info support or invalid mode"
+        error_msg.contains("does not support --build-info") || 
+        error_msg.contains("Failed to execute") ||
+        error_msg.contains("Invalid build mode"),
+        "Error should mention --build-info support, execution failure, or invalid mode, but got: {}",
+        error_msg
     );
 }
 

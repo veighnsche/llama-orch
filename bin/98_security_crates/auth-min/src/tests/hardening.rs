@@ -73,6 +73,7 @@ fn test_bind_policy_rejects_very_long_address() {
 }
 
 #[test]
+#[serial_test::serial]
 fn test_bind_policy_rejects_short_token() {
     // Set a token that's too short
     std::env::set_var("LLORCH_API_TOKEN", "short");
@@ -84,6 +85,7 @@ fn test_bind_policy_rejects_short_token() {
 }
 
 #[test]
+#[serial_test::serial]
 fn test_bind_policy_accepts_minimum_length_token() {
     // 16 chars is minimum
     std::env::set_var("LLORCH_API_TOKEN", "1234567890123456");

@@ -31,8 +31,8 @@ fn test_context_with_unicode() {
     // TEAM-244: Test context with unicode (should count chars correctly)
     let context = "Hello 世界 🌍";
 
-    assert_eq!(context.chars().count(), 9); // 6 ASCII + 2 Chinese + 1 emoji
-                                            // In real code, unicode should be handled correctly
+    assert_eq!(context.chars().count(), 10); // 5 ASCII + 1 space + 2 Chinese + 1 space + 1 emoji = 10
+                                             // In real code, unicode should be handled correctly
 }
 
 #[test]

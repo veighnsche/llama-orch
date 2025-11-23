@@ -10,7 +10,6 @@ import { useQuery } from '@tanstack/react-query'
 import { invoke } from '@tauri-apps/api/core'
 import { useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import type { WorkerCatalogEntry } from '@/generated/bindings'
 
 // Worker filter state (matching Next.js filters.ts)
 interface WorkerFilters {
@@ -69,7 +68,7 @@ export function MarketplaceRbeeWorkers() {
   } = useQuery({
     queryKey: ['marketplace', 'rbee-workers'],
     queryFn: async () => {
-      const result = await invoke<WorkerCatalogEntry[]>('marketplace_list_workers')
+      const result = await invoke<any[]>('marketplace_list_workers')
       return result
     },
     staleTime: 5 * 60 * 1000,

@@ -18,3 +18,10 @@ pub use registry::TelemetryRegistry;
 // Legacy types for backward compatibility
 mod types;
 pub use types::HiveInfo;
+
+// TEAM-374: Backward compatibility type aliases
+/// Legacy type alias for TelemetryRegistry (hive operations)
+pub type HiveRegistry = TelemetryRegistry;
+
+/// Legacy type alias for TelemetryRegistry (worker operations)  
+pub type WorkerRegistry = TelemetryRegistry;

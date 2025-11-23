@@ -3,7 +3,7 @@
 // Scale: Reasonable for NUC (5-10 concurrent, 100 channels total)
 // Historical Context: TEAM-243 implemented Priority 1 critical tests for observability infrastructure
 
-use observability_narration_core::{sse_sink, NarrationFields};
+use observability_narration_core::{sse_sink, NarrationFields, SseEvent};
 
 /// Test SSE channel creation
 #[tokio::test]
@@ -42,7 +42,12 @@ async fn test_sse_channel_send_receive() {
     let mut receiver = sse_sink::take_job_receiver(job_id).unwrap();
     let event = receiver.recv().await.unwrap();
 
-    assert_eq!(event.human, "test message");
+    match event {
+        SseEvent::Narration(narration) => {
+            assert_eq!(narration.human, "test message");
+        }
+        _ => panic!("Expected narration event"),
+    }
     println!("✓ SSE channel send/receive completed successfully");
 }
 
@@ -169,11 +174,21 @@ async fn test_channel_isolation() {
     // Verify isolation
     let mut receiver1 = sse_sink::take_job_receiver("job-1").unwrap();
     let event1 = receiver1.recv().await.unwrap();
-    assert_eq!(event1.human, "message-1");
+    match event1 {
+        SseEvent::Narration(narration) => {
+            assert_eq!(narration.human, "message-1");
+        }
+        _ => panic!("Expected narration event"),
+    }
 
     let mut receiver2 = sse_sink::take_job_receiver("job-2").unwrap();
     let event2 = receiver2.recv().await.unwrap();
-    assert_eq!(event2.human, "message-2");
+    match event2 {
+        SseEvent::Narration(narration) => {
+            assert_eq!(narration.human, "message-2");
+        }
+        _ => panic!("Expected narration event"),
+    }
 
     println!("✓ Channel isolation verified (job_id routing works)");
 }

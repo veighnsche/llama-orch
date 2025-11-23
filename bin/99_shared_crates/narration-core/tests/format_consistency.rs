@@ -5,7 +5,7 @@
 //!
 //! Created by: TEAM-203
 
-use observability_narration_core::{sse_sink, NarrationFields};
+use observability_narration_core::{sse_sink, NarrationFields, SseEvent};
 
 #[tokio::test]
 #[serial_test::serial(capture_adapter)]
@@ -35,9 +35,14 @@ async fn test_formatted_field_matches_stderr_format() {
     // Actor: 20 chars left-aligned, BOLD
     // Action: 20 chars left-aligned, light (not bold)
     // Message: on second line
-    assert!(event.formatted.contains("[test-actor"));
-    assert!(event.formatted.contains("test-action"));
-    assert!(event.formatted.contains("Test message"));
+    match event {
+        SseEvent::Narration(narration) => {
+            assert!(narration.formatted.contains("test-actor"));
+            assert!(narration.formatted.contains("test-action"));
+            assert!(narration.formatted.contains("Test message"));
+        }
+        _ => panic!("Expected narration event"),
+    }
 
     sse_sink::remove_job_channel("format-test");
 }
@@ -69,9 +74,14 @@ async fn test_formatted_with_padding() {
     // Format: [actor              ] action              \nmessage\n
     // Without fn_name, no bold on fn_name (only actor is bold, action is light)
     // With ANSI codes stripped conceptually: "[abc                ] xyz                 \nShort\n"
-    assert!(event.formatted.contains("[abc"));
-    assert!(event.formatted.contains("xyz"));
-    assert!(event.formatted.contains("Short"));
+    match event {
+        SseEvent::Narration(narration) => {
+            assert!(narration.formatted.contains("abc"));
+            assert!(narration.formatted.contains("xyz"));
+            assert!(narration.formatted.contains("Short"));
+        }
+        _ => panic!("Expected narration event"),
+    }
 
     sse_sink::remove_job_channel("format-test-2");
 }

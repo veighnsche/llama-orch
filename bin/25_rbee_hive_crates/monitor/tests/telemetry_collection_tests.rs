@@ -8,18 +8,16 @@
 //! - Single instance collection
 //! - Empty cgroup handling
 
-use rbee_hive_monitor::{collect_all_workers, collect_group, collect_instance, MonitorConfig, ProcessMonitor};
+use rbee_hive_monitor::{
+    collect_all_workers, collect_group, collect_instance, MonitorConfig, ProcessMonitor,
+};
 
 #[tokio::test]
 #[cfg(target_os = "linux")]
+#[ignore = "requires root privileges to create cgroups"]
 async fn test_collect_all_workers_returns_all() {
     // GIVEN: Multiple workers across groups
-    let workers = vec![
-        ("llm", "8080"),
-        ("llm", "8081"),
-        ("vllm", "9000"),
-        ("comfy", "7000"),
-    ];
+    let workers = vec![("llm", "8080"), ("llm", "8081"), ("vllm", "9000"), ("comfy", "7000")];
 
     let mut pids = Vec::new();
     for (group, instance) in &workers {
@@ -30,13 +28,9 @@ async fn test_collect_all_workers_returns_all() {
             memory_limit: None,
         };
 
-        let pid = ProcessMonitor::spawn_monitored(
-            config,
-            "/bin/sleep",
-            vec!["300".to_string()],
-        )
-        .await
-        .unwrap();
+        let pid = ProcessMonitor::spawn_monitored(config, "/bin/sleep", vec!["300".to_string()])
+            .await
+            .unwrap();
         pids.push(pid);
     }
 
@@ -65,6 +59,7 @@ async fn test_collect_all_workers_returns_all() {
 
 #[tokio::test]
 #[cfg(target_os = "linux")]
+#[ignore = "requires root privileges to create cgroups"]
 async fn test_collect_group_filters_by_group() {
     // GIVEN: Workers in multiple groups
     let llm_workers = vec!["8080", "8081", "8082"];
@@ -80,13 +75,9 @@ async fn test_collect_group_filters_by_group() {
             cpu_limit: None,
             memory_limit: None,
         };
-        let pid = ProcessMonitor::spawn_monitored(
-            config,
-            "/bin/sleep",
-            vec!["300".to_string()],
-        )
-        .await
-        .unwrap();
+        let pid = ProcessMonitor::spawn_monitored(config, "/bin/sleep", vec!["300".to_string()])
+            .await
+            .unwrap();
         pids.push(pid);
     }
 
@@ -98,13 +89,9 @@ async fn test_collect_group_filters_by_group() {
             cpu_limit: None,
             memory_limit: None,
         };
-        let pid = ProcessMonitor::spawn_monitored(
-            config,
-            "/bin/sleep",
-            vec!["300".to_string()],
-        )
-        .await
-        .unwrap();
+        let pid = ProcessMonitor::spawn_monitored(config, "/bin/sleep", vec!["300".to_string()])
+            .await
+            .unwrap();
         pids.push(pid);
     }
 
@@ -138,6 +125,7 @@ async fn test_collect_group_filters_by_group() {
 
 #[tokio::test]
 #[cfg(target_os = "linux")]
+#[ignore = "requires root privileges to create cgroups"]
 async fn test_collect_instance_single_worker() {
     // GIVEN: Specific worker instance
     let config = MonitorConfig {
@@ -147,13 +135,9 @@ async fn test_collect_instance_single_worker() {
         memory_limit: None,
     };
 
-    let pid = ProcessMonitor::spawn_monitored(
-        config,
-        "/bin/sleep",
-        vec!["300".to_string()],
-    )
-    .await
-    .unwrap();
+    let pid = ProcessMonitor::spawn_monitored(config, "/bin/sleep", vec!["300".to_string()])
+        .await
+        .unwrap();
 
     tokio::time::sleep(tokio::time::Duration::from_millis(100)).await;
 
@@ -215,6 +199,7 @@ async fn test_collect_instance_nonexistent() {
 
 #[tokio::test]
 #[cfg(target_os = "linux")]
+#[ignore = "requires root privileges to create cgroups"]
 async fn test_collect_all_workers_partial_failure() {
     // GIVEN: Mix of healthy and dead workers
     let config1 = MonitorConfig {
@@ -232,18 +217,14 @@ async fn test_collect_all_workers_partial_failure() {
     };
 
     // Spawn two workers
-    let pid1 = ProcessMonitor::spawn_monitored(
-        config1,
-        "/bin/sleep",
-        vec!["300".to_string()],
-    )
-    .await
-    .unwrap();
+    let pid1 = ProcessMonitor::spawn_monitored(config1, "/bin/sleep", vec!["300".to_string()])
+        .await
+        .unwrap();
 
     let pid2 = ProcessMonitor::spawn_monitored(
         config2,
         "/bin/sleep",
-        vec!["1".to_string()],  // Dies quickly
+        vec!["1".to_string()], // Dies quickly
     )
     .await
     .unwrap();
@@ -259,12 +240,10 @@ async fn test_collect_all_workers_partial_failure() {
     // This test documents expected behavior after fix
     assert!(result.is_ok());
     let workers = result.unwrap();
-    
+
     // Should include at least the alive worker
-    let alive_workers: Vec<_> = workers.iter()
-        .filter(|w| w.group == "test")
-        .collect();
-    
+    let alive_workers: Vec<_> = workers.iter().filter(|w| w.group == "test").collect();
+
     // Current behavior: may be 0 (collection fails on dead worker)
     // Expected behavior: should be 1 (skips dead, returns alive)
     // TODO: Fix collection to continue on errors

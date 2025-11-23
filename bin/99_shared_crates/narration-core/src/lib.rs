@@ -34,7 +34,7 @@
 //!
 //! # Example (Basic)
 //! ```rust
-//! use observability_narration_core::{narrate, NarrationFields};
+//! use observability_narration_core::{narrate, NarrationFields, NarrationLevel};
 //!
 //! narrate(NarrationFields {
 //!     actor: "orchestratord",
@@ -45,22 +45,15 @@
 //!     session_id: Some("session-abc123".into()),
 //!     pool_id: Some("default".into()),
 //!     ..Default::default()
-//! });
+//! }, NarrationLevel::Info);
 //! ```
 //!
-//! # Example (Cloud Profile - Auto-injection)
+//! # Example (Macro - Auto-injection)
 //! ```rust
-//! use observability_narration_core::{narrate_auto, NarrationFields};
+//! use observability_narration_core::n;
 //!
-//! // Automatically injects service identity and timestamp
-//! narrate_auto(NarrationFields {
-//!     actor: "pool-managerd",
-//!     action: "spawn",
-//!     target: "GPU0".to_string(),
-//!     human: "Spawning engine llamacpp-v1".to_string(),
-//!     pool_id: Some("default".into()),
-//!     ..Default::default()
-//! });
+//! // Auto-detects actor from crate name and function from call site
+//! n!("spawn", "Spawning engine llamacpp-v1 on GPU0");
 //! ```
 //!
 //! # Modular Structure (TEAM-300)

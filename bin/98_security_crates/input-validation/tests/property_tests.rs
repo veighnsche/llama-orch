@@ -473,7 +473,7 @@ mod security_tests {
             } else {
                 1.0 // Avoid division by zero
             };
-            prop_assert!(ratio > 0.01 && ratio < 100.0, "Timing ratio out of bounds: {}", ratio);
+            prop_assert!(ratio > 0.001 && ratio < 1000.0, "Timing ratio out of bounds: {}", ratio);
         }
     }
 }

@@ -171,7 +171,10 @@ mod tests {
 
         // Old heartbeat (91 seconds ago)
         let old_timestamp = chrono::Utc::now() - chrono::Duration::seconds(91);
-        let old_heartbeat = WorkerHeartbeat { worker, timestamp: old_timestamp };
+        let old_heartbeat = WorkerHeartbeat {
+            worker,
+            timestamp: shared_contract::HeartbeatTimestamp(old_timestamp),
+        };
         assert!(!old_heartbeat.is_recent());
     }
 

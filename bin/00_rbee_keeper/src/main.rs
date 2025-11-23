@@ -121,12 +121,6 @@ fn launch_gui() {
             hive_install,
             hive_uninstall,
             hive_rebuild,
-            // TEAM-405: Marketplace commands
-            marketplace_list_models,
-            marketplace_search_models,
-            marketplace_get_model,
-            marketplace_list_civitai_models, // TEAM-463: CivitAI models listing
-            marketplace_list_workers, // TEAM-421: Worker catalog listing
             // TEAM-413: Download commands
             model_download,
             worker_download,
@@ -136,7 +130,7 @@ fn launch_gui() {
             // TEAM-336: Initialize tracing with Tauri event streaming
             // Events emitted on "narration" channel for React sidebar
             rbee_keeper::init_gui_tracing(app.handle().clone());
-            
+
             // TEAM-464: Open DevTools in debug mode
             #[cfg(debug_assertions)]
             {
@@ -146,7 +140,7 @@ fn launch_gui() {
                     eprintln!("🔍 DevTools opened");
                 }
             }
-            
+
             Ok(())
         })
         .run(tauri::generate_context!())

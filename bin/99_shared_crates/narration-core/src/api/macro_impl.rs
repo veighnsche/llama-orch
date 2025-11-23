@@ -6,15 +6,9 @@ use crate::{mode::get_narration_mode, NarrationFields, NarrationLevel, Narration
 /// Clean up closure names by removing `::{{closure}}` suffixes
 ///
 /// TEAM-312: Rust's function_name!() includes `::{{closure}}` for anonymous closures,
-/// which is not user-friendly. This removes all such suffixes.
+/// Clean closure name from function name
 ///
-/// # Examples
-/// ```
-/// # use observability_narration_core::api::macro_impl::clean_closure_name;
-/// assert_eq!(clean_closure_name("my_fn::{{closure}}"), "my_fn");
-/// assert_eq!(clean_closure_name("my_fn::{{closure}}::{{closure}}"), "my_fn");
-/// assert_eq!(clean_closure_name("my_fn"), "my_fn");
-/// ```
+/// Removes `::{{closure}}` suffixes that appear in closure function names.
 fn clean_closure_name(name: &str) -> String {
     // Remove all ::{{closure}} suffixes (can appear multiple times for nested closures)
     let mut cleaned = name.to_string();

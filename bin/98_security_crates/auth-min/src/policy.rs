@@ -243,6 +243,7 @@ mod tests {
     }
 
     #[test]
+    #[serial_test::serial]
     fn test_bind_policy_loopback_without_token() {
         std::env::remove_var("LLORCH_API_TOKEN");
 
@@ -253,6 +254,7 @@ mod tests {
     }
 
     #[test]
+    #[serial_test::serial]
     fn test_bind_policy_non_loopback_without_token() {
         std::env::remove_var("LLORCH_API_TOKEN");
 
@@ -263,6 +265,7 @@ mod tests {
     }
 
     #[test]
+    #[serial_test::serial]
     fn test_bind_policy_non_loopback_with_token() {
         // Token must be at least 16 chars
         std::env::set_var("LLORCH_API_TOKEN", "test-token-123456");
@@ -275,6 +278,7 @@ mod tests {
     }
 
     #[test]
+    #[serial_test::serial]
     fn test_bind_policy_empty_token() {
         std::env::set_var("LLORCH_API_TOKEN", "");
 
@@ -286,12 +290,14 @@ mod tests {
     }
 
     #[test]
+    #[serial_test::serial]
     fn test_trust_proxy_auth_default() {
         std::env::remove_var("TRUST_PROXY_AUTH");
         assert!(!trust_proxy_auth());
     }
 
     #[test]
+    #[serial_test::serial]
     fn test_trust_proxy_auth_true() {
         std::env::set_var("TRUST_PROXY_AUTH", "true");
         assert!(trust_proxy_auth());
@@ -306,6 +312,7 @@ mod tests {
     }
 
     #[test]
+    #[serial_test::serial]
     fn test_trust_proxy_auth_one() {
         std::env::set_var("TRUST_PROXY_AUTH", "1");
         assert!(trust_proxy_auth());
@@ -314,6 +321,7 @@ mod tests {
     }
 
     #[test]
+    #[serial_test::serial]
     fn test_trust_proxy_auth_false() {
         std::env::set_var("TRUST_PROXY_AUTH", "false");
         assert!(!trust_proxy_auth());

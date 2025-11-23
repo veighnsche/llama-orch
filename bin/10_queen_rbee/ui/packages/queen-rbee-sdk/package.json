@@ -10,7 +10,7 @@
   },
   "files": ["pkg"],
   "scripts": {
-    "build": "RUSTUP_TOOLCHAIN=stable wasm-pack build --target bundler --out-dir pkg/bundler",
+    "build": "node -e \"process.env.RBEE_SKIP_WASM === '1' ? console.log('Skipping wasm-pack build (RBEE_SKIP_WASM=1)') : process.exit(1)\" || RUSTUP_TOOLCHAIN=stable wasm-pack build --target bundler --out-dir pkg/bundler",
     "build:web": "wasm-pack build --target web --out-dir pkg/web",
     "build:all": "./build-wasm.sh"
   },

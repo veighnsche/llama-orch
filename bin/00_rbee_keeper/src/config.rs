@@ -78,9 +78,31 @@ impl Config {
     }
 
     /// Get the path to the config file: ~/.config/rbee/config.toml
-    fn config_path() -> Result<PathBuf> {
-        let config_dir = dirs::config_dir().context("Failed to get config directory")?;
+    pub fn config_path() -> Result<PathBuf> {
+        // For testing, respect HOME environment variable if set
+        if let Ok(home) = std::env::var("HOME") {
+            let home_path = PathBuf::from(home);
 
+            // For test isolation, include thread ID in path when running tests
+            let thread_id = std::thread::current().id();
+            let thread_suffix = format!("{:?}", thread_id).replace(['(', ')', ' ', '-'], "_");
+
+            let config_path = if std::env::var("RUST_TEST_THREADS").is_ok() || cfg!(test) {
+                // Use thread-specific config directory for tests
+                home_path
+                    .join(".config")
+                    .join("rbee")
+                    .join(format!("test_{}", thread_suffix))
+                    .join("config.toml")
+            } else {
+                // Normal config path for production
+                home_path.join(".config").join("rbee").join("config.toml")
+            };
+
+            return Ok(config_path);
+        }
+
+        let config_dir = dirs::config_dir().context("Failed to get config directory")?;
         Ok(config_dir.join("rbee").join("config.toml"))
     }
 }

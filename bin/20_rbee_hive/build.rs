@@ -70,11 +70,13 @@ fn main() {
     println!("cargo:warning=🔨 Building rbee-hive UI packages and app...");
 
     // Step 1: Build the WASM SDK package (rbee-hive-sdk)
+    // TEAM_528: Skip WASM SDK build during cargo build to avoid lock contention
     println!("cargo:warning=  📦 Building @rbee/rbee-hive-sdk (WASM)...");
     let sdk_dir = ui_base_dir.join("packages/rbee-hive-sdk");
     let sdk_status = Command::new("pnpm")
         .args(&["build"])
         .current_dir(&sdk_dir)
+        .env("RBEE_SKIP_WASM", "1") // TEAM_528: Skip wasm-pack during cargo build
         .status()
         .expect("Failed to build rbee-hive-sdk");
 

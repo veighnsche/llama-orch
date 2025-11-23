@@ -125,23 +125,49 @@ async fn test_multi_tenant_isolation() {
     let event_a1 = rx_a.recv().await.expect("User A event 1");
     let event_a2 = rx_a.recv().await.expect("User A event 2");
 
-    assert!(event_a1.human.contains("User A"), "User A's first event");
-    assert!(event_a1.human.contains("sk-abc123xyz"), "User A's API key");
-    assert!(!event_a1.human.contains("User B"), "Should NOT contain User B data");
+    match event_a1 {
+        SseEvent::Narration(narration) => {
+            assert!(narration.human.contains("User A"), "User A's first event");
+            assert!(narration.human.contains("sk-abc123xyz"), "User A's API key");
+            assert!(!narration.human.contains("User B"), "Should NOT contain User B data");
+        }
+        _ => panic!("Expected narration event"),
+    }
 
-    assert!(event_a2.human.contains("confidential data"), "User A's second event");
-    assert!(!event_a2.human.contains("private information"), "Should NOT contain User B data");
+    match event_a2 {
+        SseEvent::Narration(narration) => {
+            assert!(narration.human.contains("confidential data"), "User A's second event");
+            assert!(
+                !narration.human.contains("private information"),
+                "Should NOT contain User B data"
+            );
+        }
+        _ => panic!("Expected narration event"),
+    }
 
     // Verify User B's channel has ONLY User B's data
     let event_b1 = rx_b.recv().await.expect("User B event 1");
     let event_b2 = rx_b.recv().await.expect("User B event 2");
 
-    assert!(event_b1.human.contains("User B"), "User B's first event");
-    assert!(event_b1.human.contains("sk-def456uvw"), "User B's API key");
-    assert!(!event_b1.human.contains("User A"), "Should NOT contain User A data");
+    match event_b1 {
+        SseEvent::Narration(narration) => {
+            assert!(narration.human.contains("User B"), "User B's first event");
+            assert!(narration.human.contains("sk-def456uvw"), "User B's API key");
+            assert!(!narration.human.contains("User A"), "Should NOT contain User A data");
+        }
+        _ => panic!("Expected narration event"),
+    }
 
-    assert!(event_b2.human.contains("private information"), "User B's second event");
-    assert!(!event_b2.human.contains("confidential data"), "Should NOT contain User A data");
+    match event_b2 {
+        SseEvent::Narration(narration) => {
+            assert!(narration.human.contains("private information"), "User B's second event");
+            assert!(
+                !narration.human.contains("confidential data"),
+                "Should NOT contain User A data"
+            );
+        }
+        _ => panic!("Expected narration event"),
+    }
 
     // CRITICAL: Verified no cross-contamination!
     // User A never saw User B's data
@@ -192,9 +218,24 @@ async fn test_concurrent_jobs_isolation() {
         let event3 = rx.recv().await.expect("Event 3");
 
         // All events should contain the word "job" (sanity check)
-        assert!(event1.human.contains("job"), "Event 1 is job-related");
-        assert!(event2.human.contains("job"), "Event 2 is job-related");
-        assert!(event3.human.contains("job"), "Event 3 is job-related");
+        match event1 {
+            SseEvent::Narration(narration) => {
+                assert!(narration.human.contains("job"), "Event 1 is job-related");
+            }
+            _ => panic!("Expected narration event"),
+        }
+        match event2 {
+            SseEvent::Narration(narration) => {
+                assert!(narration.human.contains("job"), "Event 2 is job-related");
+            }
+            _ => panic!("Expected narration event"),
+        }
+        match event3 {
+            SseEvent::Narration(narration) => {
+                assert!(narration.human.contains("job"), "Event 3 is job-related");
+            }
+            _ => panic!("Expected narration event"),
+        }
 
         // Should not have events from other jobs
         assert!(
@@ -229,7 +270,12 @@ async fn test_job_scoped_narration_only() {
 
     // Only the scoped narration should arrive
     let event = rx.recv().await.expect("Should receive scoped event");
-    assert_eq!(event.action, "scoped", "Should be the scoped narration");
+    match event {
+        SseEvent::Narration(narration) => {
+            assert_eq!(narration.action, "scoped", "Should be the scoped narration");
+        }
+        _ => panic!("Expected narration event"),
+    }
 
     // No unscoped event should arrive (secure!)
     assert!(
@@ -324,7 +370,12 @@ async fn test_gdpr_data_minimization() {
 
     // Data exists in job-scoped channel (necessary)
     let event = rx.recv().await.expect("Event in channel");
-    assert!(event.human.contains("email@example.com"), "Data in job channel");
+    match event {
+        SseEvent::Narration(narration) => {
+            assert!(narration.human.contains("email@example.com"), "Data in job channel");
+        }
+        _ => panic!("Expected narration event"),
+    }
 
     // Data does NOT exist in global stderr (minimization)
     // (No global stderr = GDPR compliant)
@@ -357,7 +408,12 @@ async fn test_soc2_access_control() {
 
     // User A can ONLY see their own data (access control)
     let event = rx_a.recv().await.unwrap();
-    assert!(event.human.contains("User A"));
+    match event {
+        SseEvent::Narration(narration) => {
+            assert!(narration.human.contains("User A"));
+        }
+        _ => panic!("Expected narration event"),
+    }
 
     // User A CANNOT see User B's data (enforced by job-scoped channels)
 }

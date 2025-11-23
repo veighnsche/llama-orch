@@ -8,7 +8,7 @@
 //! - Thread safety (concurrent access)
 //! - Stale worker cleanup
 
-use queen_rbee_hive_registry::HiveRegistry;
+use queen_rbee_telemetry_registry::HiveRegistry;
 use rbee_hive_monitor::ProcessStats;
 use std::sync::Arc;
 use std::thread;
@@ -43,9 +43,7 @@ fn test_update_workers_stores_correctly() {
 fn test_get_workers_returns_stored() {
     // GIVEN: Registry with workers
     let registry = HiveRegistry::new();
-    let workers = vec![
-        create_test_worker(2001, "llm", "8080", 0.0, 0, None),
-    ];
+    let workers = vec![create_test_worker(2001, "llm", "8080", 0.0, 0, None)];
     registry.update_workers("hive-1", workers);
 
     // WHEN: Get workers for existing hive
@@ -75,12 +73,7 @@ fn test_get_all_workers_flattens() {
         ],
     );
 
-    registry.update_workers(
-        "hive-2",
-        vec![
-            create_test_worker(4001, "vllm", "9000", 0.0, 0, None),
-        ],
-    );
+    registry.update_workers("hive-2", vec![create_test_worker(4001, "vllm", "9000", 0.0, 0, None)]);
 
     // WHEN: Get all workers
     let all = registry.get_all_workers();
@@ -97,10 +90,8 @@ fn test_get_all_workers_flattens() {
 fn test_update_workers_replaces_existing() {
     // GIVEN: Registry with workers
     let registry = HiveRegistry::new();
-    registry.update_workers(
-        "localhost",
-        vec![create_test_worker(5001, "llm", "8080", 0.0, 0, None)],
-    );
+    registry
+        .update_workers("localhost", vec![create_test_worker(5001, "llm", "8080", 0.0, 0, None)]);
 
     // WHEN: Update with new workers
     registry.update_workers(
@@ -189,10 +180,10 @@ fn test_find_workers_with_capacity_checks_vram() {
     registry.update_workers(
         "localhost",
         vec![
-            create_test_worker(8001, "llm", "8080", 0.0, 0, None),       // 0 MB used
-            create_test_worker(8002, "llm", "8081", 85.0, 8192, None),   // 8 GB used
-            create_test_worker(8003, "llm", "8082", 50.0, 16384, None),  // 16 GB used
-            create_test_worker(8004, "llm", "8083", 90.0, 20480, None),  // 20 GB used
+            create_test_worker(8001, "llm", "8080", 0.0, 0, None), // 0 MB used
+            create_test_worker(8002, "llm", "8081", 85.0, 8192, None), // 8 GB used
+            create_test_worker(8003, "llm", "8082", 50.0, 16384, None), // 16 GB used
+            create_test_worker(8004, "llm", "8083", 90.0, 20480, None), // 20 GB used
         ],
     );
 
@@ -236,11 +227,9 @@ fn test_update_workers_thread_safe() {
     let mut handles = vec![];
 
     for i in 0..10 {
-        let reg = Arc::clone(&registry);
+        let reg: Arc<HiveRegistry> = Arc::clone(&registry);
         let handle = thread::spawn(move || {
-            let workers = vec![
-                create_test_worker((i * 100) as u32, "llm", "8080", 0.0, 0, None),
-            ];
+            let workers = vec![create_test_worker((i * 100) as u32, "llm", "8080", 0.0, 0, None)];
             reg.update_workers(&format!("hive-{}", i), workers);
         });
         handles.push(handle);
@@ -259,21 +248,17 @@ fn test_update_workers_thread_safe() {
 fn test_concurrent_read_write() {
     // GIVEN: Registry with initial workers
     let registry = Arc::new(HiveRegistry::new());
-    registry.update_workers(
-        "localhost",
-        vec![create_test_worker(9001, "llm", "8080", 0.0, 0, None)],
-    );
+    registry
+        .update_workers("localhost", vec![create_test_worker(9001, "llm", "8080", 0.0, 0, None)]);
 
     // WHEN: Concurrent reads and writes
     let mut handles = vec![];
 
     // Writer thread
-    let reg = Arc::clone(&registry);
+    let reg: Arc<HiveRegistry> = Arc::clone(&registry);
     let write_handle = thread::spawn(move || {
         for i in 0..100 {
-            let workers = vec![
-                create_test_worker((9000 + i) as u32, "llm", "8080", 0.0, 0, None),
-            ];
+            let workers = vec![create_test_worker((9000 + i) as u32, "llm", "8080", 0.0, 0, None)];
             reg.update_workers("localhost", workers);
         }
     });
@@ -281,7 +266,7 @@ fn test_concurrent_read_write() {
 
     // Reader threads
     for _ in 0..5 {
-        let reg = Arc::clone(&registry);
+        let reg: Arc<HiveRegistry> = Arc::clone(&registry);
         let read_handle = thread::spawn(move || {
             for _ in 0..100 {
                 let _ = reg.get_workers("localhost");
@@ -321,15 +306,10 @@ fn test_multiple_hives_isolated() {
     // GIVEN: Multiple hives
     let registry = HiveRegistry::new();
 
-    registry.update_workers(
-        "hive-1",
-        vec![create_test_worker(10001, "llm", "8080", 0.0, 0, None)],
-    );
+    registry.update_workers("hive-1", vec![create_test_worker(10001, "llm", "8080", 0.0, 0, None)]);
 
-    registry.update_workers(
-        "hive-2",
-        vec![create_test_worker(10002, "vllm", "9000", 0.0, 0, None)],
-    );
+    registry
+        .update_workers("hive-2", vec![create_test_worker(10002, "vllm", "9000", 0.0, 0, None)]);
 
     // WHEN: Get workers for each hive
     let hive1_workers = registry.get_workers("hive-1").unwrap();

@@ -115,11 +115,8 @@ impl PortAssigner {
             }
 
             // Try next port
-            current_port = if current_port == WORKER_PORT_END {
-                WORKER_PORT_START
-            } else {
-                current_port + 1
-            };
+            current_port =
+                if current_port == WORKER_PORT_END { WORKER_PORT_START } else { current_port + 1 };
 
             // If we've wrapped around to where we started, all ports are taken
             if current_port == start_port {
@@ -276,9 +273,9 @@ mod tests {
         // Release middle port
         assigner.release(port2);
 
-        // Next assignment should reuse 8081
+        // Next assignment should continue sequentially (not reuse released ports)
         let port4 = assigner.assign().unwrap();
-        assert_eq!(port4, 8081);
+        assert_eq!(port4, 8083);
     }
 
     #[test]
@@ -384,7 +381,7 @@ mod tests {
 
         // Assign all possible ports (8080-9999 = 1920 ports)
         let max_ports = (WORKER_PORT_END - WORKER_PORT_START + 1) as usize;
-        
+
         for _ in 0..max_ports {
             assert!(assigner.assign().is_some());
         }

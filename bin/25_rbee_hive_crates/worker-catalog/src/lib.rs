@@ -72,9 +72,7 @@ impl WorkerCatalog {
         worker_type: WorkerType,
         platform: Platform,
     ) -> Option<WorkerBinary> {
-        self.list()
-            .into_iter()
-            .find(|w| w.worker_type == worker_type && w.platform == platform)
+        self.list().into_iter().find(|w| w.worker_type == worker_type && w.platform == platform)
     }
 
     /// Get hardcoded worker definitions for the 3 worker binaries
@@ -153,7 +151,7 @@ mod tests {
 
         // Get
         let retrieved = catalog.get("cpu-llm-worker-rbee-v0.1.0-linux").unwrap();
-        assert_eq!(retrieved.worker_type(), &WorkerType::Cpu);
+        assert_eq!(retrieved.worker_type, WorkerType::Cpu);
 
         // List
         let workers = catalog.list();

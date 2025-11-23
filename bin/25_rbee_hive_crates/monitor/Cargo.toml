@@ -28,3 +28,5 @@ wasm = ["tsify", "wasm-bindgen"]
 # TEAM-364: Telemetry testing infrastructure
 tokio = { workspace = true, features = ["full", "test-util", "time"] }
 rbee-hive-monitor = { path = "." }
+libc = "0.2"
+nix = { version = "0.29", features = ["user"] }

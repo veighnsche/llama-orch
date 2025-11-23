@@ -61,7 +61,7 @@ fn test_metal_device_init() -> Result<()> {
 fn test_backend_requires_model_file() {
     // TEAM-009: Verify backend fails gracefully without model
     let device = init_cpu_device().unwrap();
-    let result = CandleInferenceBackend::load("/nonexistent/model.safetensors", device);
+    let result = CandleInferenceBackend::load("/nonexistent/model.safetensors");
 
     assert!(result.is_err(), "Should fail with nonexistent model");
 }
@@ -71,7 +71,7 @@ fn test_backend_requires_model_file() {
 fn test_backend_rejects_gguf() {
     // TEAM-009: Verify GGUF is properly rejected (not yet implemented)
     let device = init_cpu_device().unwrap();
-    let result = CandleInferenceBackend::load("/fake/model.gguf", device);
+    let result = CandleInferenceBackend::load("/fake/model.gguf");
 
     assert!(result.is_err(), "Should reject GGUF format");
     if let Err(e) = result {
@@ -104,7 +104,7 @@ fn test_device_residency_enforcement() -> Result<()> {
         .expect("Set LLORCH_TEST_MODEL_PATH to run this test");
 
     let device = init_cpu_device()?;
-    let mut backend = CandleInferenceBackend::load(&model_path, device)?;
+    let mut backend = CandleInferenceBackend::load(&model_path)?;
 
     // Try a simple generation
     let config = SamplingConfig { max_tokens: 5, temperature: 0.0, seed: 42, ..Default::default() };

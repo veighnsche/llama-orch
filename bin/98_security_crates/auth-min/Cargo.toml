@@ -16,3 +16,6 @@ path = "src/lib.rs"
 sha2 = { workspace = true }
 http = { workspace = true }
 hex = "0.4"
+
+[dev-dependencies]
+serial_test = "3.0"

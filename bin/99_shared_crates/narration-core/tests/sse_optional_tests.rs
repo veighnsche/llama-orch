@@ -54,8 +54,13 @@ async fn test_narration_before_channel_creation() {
 
         // 4. Only second event in channel
         let event = rx.recv().await.expect("Should receive");
-        assert_eq!(event.action, "later");
-        assert_eq!(event.human, "This goes to SSE");
+        match event {
+            SseEvent::Narration(narration) => {
+                assert_eq!(narration.action, "later");
+                assert_eq!(narration.human, "This goes to SSE");
+            }
+            _ => panic!("Expected narration event"),
+        }
 
         // First event went to stdout only (correct behavior!)
     })
@@ -81,8 +86,13 @@ async fn test_sse_still_works_when_available() {
 
         // Should receive event
         let event = rx.recv().await.expect("Should receive");
-        assert_eq!(event.action, "test");
-        assert_eq!(event.human, "This goes to SSE");
+        match event {
+            SseEvent::Narration(narration) => {
+                assert_eq!(narration.action, "test");
+                assert_eq!(narration.human, "This goes to SSE");
+            }
+            _ => panic!("Expected narration event"),
+        }
     })
     .await;
 }
@@ -197,7 +207,12 @@ async fn test_multiple_narrations_before_channel() {
 
         // Only the last one in channel
         let event = rx.recv().await.expect("Should receive");
-        assert_eq!(event.action, "later");
+        match event {
+            SseEvent::Narration(narration) => {
+                assert_eq!(narration.action, "later");
+            }
+            _ => panic!("Expected narration event"),
+        }
     })
     .await;
 }
@@ -235,9 +250,14 @@ async fn test_narration_modes_with_channel() {
         );
 
         let event = rx.recv().await.expect("Should receive");
-        assert_eq!(event.human, "Human message");
-        assert_eq!(event.cute, Some("🐝 Cute message".to_string()));
-        assert_eq!(event.story, Some("Story message".to_string()));
+        match event {
+            SseEvent::Narration(narration) => {
+                assert_eq!(narration.human, "Human message");
+                assert_eq!(narration.cute, Some("🐝 Cute message".to_string()));
+                assert_eq!(narration.story, Some("Story message".to_string()));
+            }
+            _ => panic!("Expected narration event"),
+        }
     })
     .await;
 }
@@ -296,7 +316,12 @@ async fn test_backward_compatibility_old_pattern_still_works() {
         n!("test", "Old pattern still works");
 
         let event = rx.recv().await.expect("Should receive");
-        assert_eq!(event.human, "Old pattern still works");
+        match event {
+            SseEvent::Narration(narration) => {
+                assert_eq!(narration.human, "Old pattern still works");
+            }
+            _ => panic!("Expected narration event"),
+        }
     })
     .await;
 }
@@ -317,7 +342,12 @@ async fn test_narration_after_channel_removal() {
         // Send one event
         n!("before", "Before removal");
         let event = rx.recv().await.expect("Should receive");
-        assert_eq!(event.action, "before");
+        match event {
+            SseEvent::Narration(narration) => {
+                assert_eq!(narration.action, "before");
+            }
+            _ => panic!("Expected narration event"),
+        }
 
         // Remove channel
         sse_sink::remove_job_channel(job_id);

@@ -10,7 +10,6 @@ import { useQuery } from '@tanstack/react-query'
 import { invoke } from '@tauri-apps/api/core'
 import { ArrowLeft, Cpu, Download, GitBranch, Package } from 'lucide-react'
 import { useNavigate, useParams } from 'react-router-dom'
-import type { WorkerCatalogEntry } from '@/generated/bindings'
 
 export function WorkerDetailsPage() {
   const { workerId } = useParams<{ workerId: string }>()
@@ -34,7 +33,7 @@ export function WorkerDetailsPage() {
   } = useQuery({
     queryKey: ['marketplace', 'rbee-worker', workerId],
     queryFn: async () => {
-      const workers = await invoke<WorkerCatalogEntry[]>('marketplace_list_workers')
+      const workers = await invoke<any[]>('marketplace_list_workers')
       const found = workers.find((w) => w.id === workerId)
       if (!found) throw new Error('Worker not found')
       return found
@@ -77,6 +76,7 @@ export function WorkerDetailsPage() {
     cpu: { label: 'CPU', variant: 'secondary' as const },
     cuda: { label: 'CUDA', variant: 'default' as const },
     metal: { label: 'Metal', variant: 'accent' as const },
+    rocm: { label: 'ROCm', variant: 'accent' as const },
   }
 
   const typeConfig = workerTypeConfig[worker.workerType as keyof typeof workerTypeConfig]
@@ -97,7 +97,7 @@ export function WorkerDetailsPage() {
             <div>
               <div className="text-sm font-medium text-muted-foreground mb-2">Platforms</div>
               <div className="flex flex-wrap gap-2">
-                {worker.platforms.map((platform) => (
+                {worker.platforms.map((platform: string) => (
                   <Badge key={platform} variant="outline">
                     {platform}
                   </Badge>
@@ -107,7 +107,7 @@ export function WorkerDetailsPage() {
             <div>
               <div className="text-sm font-medium text-muted-foreground mb-2">Architectures</div>
               <div className="flex flex-wrap gap-2">
-                {worker.architectures.map((arch) => (
+                {worker.architectures.map((arch: string) => (
                   <Badge key={arch} variant="secondary">
                     {arch}
                   </Badge>
@@ -179,7 +179,7 @@ export function WorkerDetailsPage() {
             <div>
               <div className="text-sm font-medium text-muted-foreground">Supported Formats</div>
               <div className="flex flex-wrap gap-2 mt-1">
-                {worker.supportedFormats.map((format) => (
+                {worker.supportedFormats.map((format: string) => (
                   <Badge key={format} variant="outline">
                     {format}
                   </Badge>
