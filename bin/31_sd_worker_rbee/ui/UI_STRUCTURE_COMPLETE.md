@@ -2,7 +2,8 @@
 
 **Created by:** TEAM-391  
 **Date:** 2025-11-03  
-**Status:** ✅ Stub Implementation Complete
+**Status:** ✅ Structure Complete, Backend Ready  
+**Updated:** 2025-11-23 (TEAM-528: Clarified backend vs UI status)
 
 ---
 
@@ -12,6 +13,8 @@ Created complete UI structure for SD Worker following the same pattern as:
 - `bin/10_queen_rbee/ui/` (Queen)
 - `bin/20_rbee_hive/ui/` (Hive)
 - `bin/30_llm_worker_rbee/ui/` (LLM Worker)
+
+**IMPORTANT:** The worker **backend is fully implemented and production ready**. Only the UI SDK remains stubbed.
 
 ---
 
@@ -131,23 +134,25 @@ bin/31_sd_worker_rbee/ui/
 
 ---
 
-## ⏳ What's NOT Implemented (For TEAM-399+)
+## ⏳ What's NOT Implemented (UI SDK Only)
 
-### SDK Implementation
-- [ ] Real job submission using `job-client`
-- [ ] SSE streaming connection
-- [ ] Progress event parsing
-- [ ] Image base64 handling
-- [ ] Error handling
+**Backend Status:** ✅ FULLY IMPLEMENTED (text-to-image, img2img, inpainting, LoRA, etc.)
 
-### React Hooks
-- [ ] Real backend integration
-- [ ] SSE event processing
-- [ ] Progress state management
-- [ ] Image caching
-- [ ] Cancellation support
+### UI SDK Implementation Only
+- [ ] Real job submission using `job-client` (currently stubbed)
+- [ ] SSE streaming connection (currently stubbed)
+- [ ] Progress event parsing (currently stubbed)
+- [ ] Image base64 handling (currently stubbed)
+- [ ] Error handling (currently stubbed)
 
-### UI Features
+### React Hooks (UI Only)
+- [ ] Real backend integration (currently stubbed)
+- [ ] SSE event processing (currently stubbed)
+- [ ] Progress state management (currently stubbed)
+- [ ] Image caching (currently stubbed)
+- [ ] Cancellation support (currently stubbed)
+
+### UI Features (UI Only)
 - [ ] Parameter controls (steps, guidance, seed, dimensions)
 - [ ] Image upload for img2img
 - [ ] Canvas mask editor for inpainting

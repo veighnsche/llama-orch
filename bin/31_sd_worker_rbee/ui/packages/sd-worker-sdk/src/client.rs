@@ -1,8 +1,8 @@
 // TEAM-391: SD Worker Client - WASM wrapper around job-client
 // Pattern: Same as llm-worker-sdk client
 
-use wasm_bindgen::prelude::*;
 use serde::{Deserialize, Serialize};
+use wasm_bindgen::prelude::*;
 
 /// SD Worker Client for submitting image generation jobs
 ///
@@ -33,7 +33,9 @@ impl SDWorkerClient {
     /// * `worker_id` - Worker identifier
     #[wasm_bindgen(constructor)]
     pub fn new(base_url: String, worker_id: String) -> Self {
-        web_sys::console::log_1(&format!("🎨 [SD Worker SDK] Creating client for {}", base_url).into());
+        web_sys::console::log_1(
+            &format!("🎨 [SD Worker SDK] Creating client for {}", base_url).into(),
+        );
         Self { base_url, worker_id }
     }
 
@@ -66,7 +68,9 @@ impl SDWorkerClient {
     #[wasm_bindgen(js_name = getJobStatus)]
     pub async fn get_job_status(&self, job_id: String) -> Result<JsValue, JsValue> {
         // TODO: TEAM-392+ will implement this
-        web_sys::console::log_1(&format!("🎨 [SD Worker SDK] getJobStatus({}) called (stub)", job_id).into());
+        web_sys::console::log_1(
+            &format!("🎨 [SD Worker SDK] getJobStatus({}) called (stub)", job_id).into(),
+        );
         Ok(JsValue::NULL)
     }
 
@@ -77,35 +81,15 @@ impl SDWorkerClient {
     /// * `job_id` - Job identifier
     /// * `callback` - Callback function for progress events
     #[wasm_bindgen(js_name = streamProgress)]
-    pub fn stream_progress(&self, job_id: String, callback: js_sys::Function) -> Result<(), JsValue> {
+    pub fn stream_progress(
+        &self,
+        job_id: String,
+        callback: js_sys::Function,
+    ) -> Result<(), JsValue> {
         // TODO: TEAM-392+ will implement SSE streaming
-        web_sys::console::log_1(&format!("🎨 [SD Worker SDK] streamProgress({}) called (stub)", job_id).into());
+        web_sys::console::log_1(
+            &format!("🎨 [SD Worker SDK] streamProgress({}) called (stub)", job_id).into(),
+        );
         Ok(())
     }
-}
-
-/// Text-to-image generation request
-#[derive(Debug, Clone, Serialize, Deserialize)]
-#[wasm_bindgen]
-pub struct TextToImageRequest {
-    /// Text prompt describing the desired image
-    pub prompt: String,
-    
-    /// Optional negative prompt (what to avoid)
-    pub negative_prompt: Option<String>,
-    
-    /// Number of diffusion steps (default: 20)
-    pub steps: Option<u32>,
-    
-    /// Guidance scale (default: 7.5)
-    pub guidance_scale: Option<f32>,
-    
-    /// Random seed for reproducibility
-    pub seed: Option<u64>,
-    
-    /// Image width in pixels (default: 512)
-    pub width: Option<u32>,
-    
-    /// Image height in pixels (default: 512)
-    pub height: Option<u32>,
 }
