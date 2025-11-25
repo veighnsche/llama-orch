@@ -10,7 +10,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "@rbee/iframe-bridge": "workspace:*",
+    "@rbee/narration-bridge": "workspace:*",
     "@rbee/marketplace-core": "workspace:*",
     "@rbee/narration-client": "workspace:*",
     "@rbee/shared-config": "workspace:*",

@@ -10,7 +10,7 @@ packages:
   - frontend/packages/shared-config
   - frontend/packages/env-config
   - frontend/packages/narration-client
-  - frontend/packages/iframe-bridge
+  - frontend/packages/narration-bridge
   - frontend/packages/dev-utils
   - frontend/packages/sdk-loader
   - frontend/packages/react-hooks

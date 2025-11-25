@@ -1,0 +1,79 @@
+# TEAM_531: Turbo dev bundles (single source of truth for xtask dev-scope)
+#
+# Each bundle is a named set of workspace packages (by package.json `name`) that
+# should have their `dev` script run together under `turbo dev`.
+#
+# You can freely edit these lists; `xtask dev-scope` will:
+# - Use them as presets in the interactive selector.
+# - Allow you to start from any bundle and then tweak packages before running.
+#
+# NOTE: Only packages that actually define a `dev` script will appear in the TUI.
+# If a name listed here has no `dev` script, it will simply be ignored in the
+# default selection, but you can still keep it here for documentation.
+
+bundles:
+  ui:
+    description: "Design system Storybook only (@rbee/ui)"
+    packages:
+      - "@rbee/ui"
+
+  keeper:
+    description: "Keeper desktop UI (Tauri) + shared UI kit"
+    packages:
+      - "@rbee/ui"
+      - "@rbee/keeper-ui"
+
+  commercial:
+    description: "Marketing/commercial site + marketplace app + UI kit"
+    packages:
+      - "@rbee/ui"
+      - "@rbee/commercial"
+      - "@rbee/marketplace"
+
+  marketplace:
+    description: "Marketplace stack (web app + SDK) + keeper UI + UI kit"
+    packages:
+      - "@rbee/ui"
+      - "@rbee/marketplace"
+      - "@rbee/keeper-ui"
+
+  queen:
+    description: "Queen admin stack (UI + React package + SDK)"
+    packages:
+      - "@rbee/ui"
+      - "@rbee/keeper-ui"
+      - "@rbee/queen-rbee-ui"
+      - "@rbee/queen-rbee-react"
+      - "@rbee/queen-rbee-sdk"
+
+  hive:
+    description: "Hive stack (UI + React package + SDK)"
+    packages:
+      - "@rbee/ui"
+      - "@rbee/keeper-ui"
+      - "@rbee/rbee-hive-ui"
+      - "@rbee/rbee-hive-react"
+      - "@rbee/rbee-hive-sdk"
+
+  worker:
+    description: "Worker stack (UI + React package + SDK)"
+    packages:
+      - "@rbee/ui"
+      - "@rbee/llm-worker-ui"
+      - "@rbee/llm-worker-react"
+      - "@rbee/llm-worker-sdk"
+
+  product:
+    description: "Full product bundle (all Keeper/Queen/Hive/Worker UIs)"
+    packages:
+      - "@rbee/ui"
+      - "@rbee/keeper-ui"
+      - "@rbee/queen-rbee-ui"
+      - "@rbee/queen-rbee-react"
+      - "@rbee/queen-rbee-sdk"
+      - "@rbee/rbee-hive-ui"
+      - "@rbee/rbee-hive-react"
+      - "@rbee/rbee-hive-sdk"
+      - "@rbee/llm-worker-ui"
+      - "@rbee/llm-worker-react"
+      - "@rbee/llm-worker-sdk"

@@ -26,7 +26,7 @@ beforeEach(() => {
   cleanupAllReceivers()
 })
 
-describe('@rbee/iframe-bridge - receiver', () => {
+describe('@rbee/narration-bridge - receiver', () => {
   describe('createMessageReceiver()', () => {
     it('should create receiver and return cleanup function', () => {
       const onMessage = vi.fn()

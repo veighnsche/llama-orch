@@ -19,7 +19,7 @@ import {
   validateOrigin,
 } from './validator'
 
-describe('@rbee/iframe-bridge - validator', () => {
+describe('@rbee/narration-bridge - validator', () => {
   describe('isValidOriginFormat()', () => {
     it('should accept wildcard', () => {
       expect(isValidOriginFormat('*')).toBe(true)

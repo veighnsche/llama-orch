@@ -10,26 +10,25 @@
 // TEAM-463: Separated model detail pages by source (HuggingFace, CivitAI)
 // TEAM-477: Migrated to marketplace-core adapters and reusable templates
 
-import { broadcastThemeChanges } from '@rbee/iframe-bridge'
+import { broadcastThemeChanges } from '@rbee/narration-bridge'
 import { SidebarProvider } from '@rbee/ui/atoms'
 import { useEffect } from 'react'
 import { BrowserRouter, Route, Routes } from 'react-router-dom'
 import { Shell } from './components/Shell'
 import { useProtocol } from './hooks/useProtocol'
+// TEAM-477: New marketplace pages using marketplace-core adapters
+import { CAIDetailsPage } from './pages/civitai/CAIDetailsPage'
+import { CAIListPage } from './pages/civitai/CAIListPage'
 import HelpPage from './pages/HelpPage'
 import HivePage from './pages/HivePage'
+import { HFDetailsPage } from './pages/huggingface/HFDetailsPage'
+import { HFListPage } from './pages/huggingface/HFListPage'
 import { MarketplaceRbeeWorkers } from './pages/MarketplaceRbeeWorkers'
 import QueenPage from './pages/QueenPage'
 import KeeperPage from './pages/ServicesPage'
 import SettingsPage from './pages/SettingsPage'
 import { WorkerDetailsPage } from './pages/WorkerDetailsPage'
 import { setupNarrationListener } from './utils/narrationListener'
-
-// TEAM-477: New marketplace pages using marketplace-core adapters
-import { CAIDetailsPage } from './pages/civitai/CAIDetailsPage'
-import { CAIListPage } from './pages/civitai/CAIListPage'
-import { HFDetailsPage } from './pages/huggingface/HFDetailsPage'
-import { HFListPage } from './pages/huggingface/HFListPage'
 
 // TEAM-350: Log build mode on startup
 const isDev = import.meta.env.DEV

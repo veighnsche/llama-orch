@@ -36,7 +36,7 @@
 // ============================================================
 
 import { logStartupMode } from '@rbee/dev-utils'
-import { receiveThemeChanges } from '@rbee/iframe-bridge'
+import { receiveThemeChanges } from '@rbee/narration-bridge'
 import { QueryProvider } from '@rbee/ui/providers'
 import { useEffect } from 'react'
 import DashboardPage from './pages/DashboardPage'

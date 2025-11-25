@@ -1,10 +1,10 @@
 // TEAM-352: FIXED - Listen for narration events from service iframes
-// Uses @rbee/iframe-bridge for proper message validation
+// Uses @rbee/narration-bridge for proper message validation
 // Uses @rbee/narration-client types for type safety
 // Uses @rbee/shared-config for port configuration
 // TEAM-413: Added download progress tracking from narration events
 
-import { createMessageReceiver } from '@rbee/iframe-bridge'
+import { createMessageReceiver } from '@rbee/narration-bridge'
 import type { BackendNarrationEvent } from '@rbee/narration-client'
 import { getAllowedOrigins } from '@rbee/shared-config'
 import type { NarrationEvent } from '../generated/bindings'

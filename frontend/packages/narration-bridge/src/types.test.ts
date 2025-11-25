@@ -19,7 +19,7 @@ import {
   validateMessage,
 } from './types'
 
-describe('@rbee/iframe-bridge - types', () => {
+describe('@rbee/narration-bridge - types', () => {
   describe('isValidBaseMessage()', () => {
     it('should validate valid base message', () => {
       const msg = {

@@ -29,7 +29,7 @@ beforeEach(() => {
   })
 })
 
-describe('@rbee/iframe-bridge - sender', () => {
+describe('@rbee/narration-bridge - sender', () => {
   describe('isValidSenderConfig()', () => {
     it('should validate valid config', () => {
       const config: SenderConfig = {

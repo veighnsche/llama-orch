@@ -44,6 +44,13 @@ pub enum Cmd {
         #[arg(long)]
         dry_run: bool,
     },
+    /// TEAM_531: Interactive Turbo dev scope selector (wraps `turbo dev` with presets)
+    #[command(name = "dev-scope")]
+    DevScope {
+        /// Print discovered packages & presets, do not start TUI or turbo
+        #[arg(long)]
+        print_only: bool,
+    },
     /// Smart wrapper for rbee-keeper: auto-builds if needed, then forwards command
     #[command(name = "rbee", trailing_var_arg = true, allow_hyphen_values = true)]
     Rbee {

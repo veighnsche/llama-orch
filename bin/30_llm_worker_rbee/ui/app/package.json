@@ -11,7 +11,7 @@
   },
   "dependencies": {
     "@rbee/dev-utils": "workspace:*",
-    "@rbee/iframe-bridge": "workspace:*",
+    "@rbee/narration-bridge": "workspace:*",
     "@rbee/llm-worker-react": "workspace:*",
     "@rbee/llm-worker-sdk": "workspace:*",
     "@rbee/narration-client": "workspace:*",

@@ -11,7 +11,7 @@
   },
   "dependencies": {
     "@rbee/dev-utils": "workspace:*",
-    "@rbee/iframe-bridge": "workspace:*",
+    "@rbee/narration-bridge": "workspace:*",
     "@rbee/rbee-hive-react": "workspace:*",
     "@rbee/rbee-hive-sdk": "workspace:*",
     "@rbee/shared-config": "workspace:*",

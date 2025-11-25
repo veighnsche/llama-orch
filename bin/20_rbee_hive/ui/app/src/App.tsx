@@ -2,7 +2,7 @@
 // Uses @rbee/ui for consistent styling across all rbee applications
 
 import { logStartupMode } from '@rbee/dev-utils'
-import { receiveThemeChanges } from '@rbee/iframe-bridge'
+import { receiveThemeChanges } from '@rbee/narration-bridge'
 import { Badge, Card, CardContent, CardDescription, CardHeader, CardTitle } from '@rbee/ui/atoms'
 import { MetricCard, StatusKPI } from '@rbee/ui/molecules'
 import { QueryProvider } from '@rbee/ui/providers'

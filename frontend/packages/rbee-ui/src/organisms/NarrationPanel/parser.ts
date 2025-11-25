@@ -14,7 +14,7 @@ import type { NarrationEvent } from './types'
  *    🔄 Rebuilding rbee-hive locally
  *    ```
  *
- * 2. JSON format (rbee-keeper via iframe-bridge):
+ * 2. JSON format (rbee-keeper via narration-bridge):
  *    ```json
  *    {
  *      "level": "info",
@@ -172,7 +172,7 @@ function detectLevel(message: string, action: string | null): 'error' | 'warn' |
  * Format: "\x1b[1mfunction_name\x1b[0m \x1b[2maction\x1b[0m\nmessage"
  * The \x1b[1m...\x1b[0m is the function name in bold
  *
- * Used by rbee-keeper when receiving events via iframe-bridge
+ * Used by rbee-keeper when receiving events via narration-bridge
  */
 export function extractFnNameFromFormatted(formatted?: string): string | null {
   if (!formatted) return null

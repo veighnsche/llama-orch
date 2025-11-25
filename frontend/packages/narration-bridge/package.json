@@ -1,5 +1,5 @@
 {
-  "name": "@rbee/iframe-bridge",
+  "name": "@rbee/narration-bridge",
   "version": "0.1.0",
   "type": "module",
   "main": "./dist/index.js",

@@ -119,6 +119,8 @@ fn main() -> Result<()> {
         Cmd::Deploy { app, bump, production, dry_run } => {
             deploy::run(&app, bump.as_deref(), production, dry_run)?
         }
+        // TEAM_531: Interactive Turbo dev scope selector
+        Cmd::DevScope { print_only } => tasks::dev_scope::run(print_only)?,
         Cmd::Rbee { args } => tasks::rbee::run_rbee_keeper(args)?,
     }
     Ok(())

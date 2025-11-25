@@ -11,7 +11,7 @@
   },
   "dependencies": {
     "@rbee/dev-utils": "workspace:*",
-    "@rbee/iframe-bridge": "workspace:*",
+    "@rbee/narration-bridge": "workspace:*",
     "@rbee/queen-rbee-react": "workspace:*",
     "@rbee/ui": "workspace:*",
     "class-variance-authority": "^0.7.1",

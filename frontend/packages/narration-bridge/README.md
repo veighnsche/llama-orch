@@ -1,11 +1,11 @@
-# @rbee/iframe-bridge
+# @rbee/narration-bridge
 
-Generic iframe ↔ parent window communication utilities.
+Generic iframe ↔ parent window communication utilities for narration events.
 
 ## Installation
 
 ```bash
-pnpm add @rbee/iframe-bridge
+pnpm add @rbee/narration-bridge
 ```
 
 ## Usage
@@ -14,7 +14,7 @@ pnpm add @rbee/iframe-bridge
 
 ```typescript
 // In iframe (Queen/Hive)
-import { createMessageSender } from '@rbee/iframe-bridge'
+import { createMessageSender } from '@rbee/narration-bridge'
 
 const sendMessage = createMessageSender({
   targetOrigin: 'http://localhost:5173',
@@ -31,7 +31,7 @@ sendMessage({
 
 ```typescript
 // In parent (Keeper)
-import { createMessageReceiver } from '@rbee/iframe-bridge'
+import { createMessageReceiver } from '@rbee/narration-bridge'
 
 const cleanup = createMessageReceiver({
   allowedOrigins: ['http://localhost:7833', 'http://localhost:7834'],
@@ -47,7 +47,7 @@ const cleanup = createMessageReceiver({
 
 ```typescript
 // In parent (Keeper) - broadcast to ALL iframes
-import { broadcastToIframes } from '@rbee/iframe-bridge'
+import { broadcastToIframes } from '@rbee/narration-bridge'
 
 broadcastToIframes({
   type: 'THEME_CHANGE',
@@ -59,7 +59,7 @@ broadcastToIframes({
 
 ```typescript
 // In iframe (Queen/Hive) - receive from parent
-import { receiveFromParent } from '@rbee/iframe-bridge'
+import { receiveFromParent } from '@rbee/narration-bridge'
 
 const cleanup = receiveFromParent((message) => {
   console.log('Received from parent:', message)
@@ -73,7 +73,7 @@ const cleanup = receiveFromParent((message) => {
 
 ```typescript
 // In parent (Keeper) - auto-broadcast theme changes
-import { broadcastThemeChanges } from '@rbee/iframe-bridge'
+import { broadcastThemeChanges } from '@rbee/narration-bridge'
 
 useEffect(() => {
   const cleanup = broadcastThemeChanges()
@@ -83,7 +83,7 @@ useEffect(() => {
 
 ```typescript
 // In iframe (Queen/Hive) - auto-receive theme changes
-import { receiveThemeChanges } from '@rbee/iframe-bridge'
+import { receiveThemeChanges } from '@rbee/narration-bridge'
 
 useEffect(() => {
   const cleanup = receiveThemeChanges()

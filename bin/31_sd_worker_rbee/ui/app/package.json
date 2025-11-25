@@ -15,7 +15,7 @@
     "@rbee/ui": "workspace:*",
     "@rbee/dev-utils": "workspace:*",
     "@rbee/shared-config": "workspace:*",
-    "@rbee/iframe-bridge": "workspace:*",
+    "@rbee/narration-bridge": "workspace:*",
     "@rbee/narration-client": "workspace:*",
     "@rbee/react-hooks": "workspace:*",
     "@rbee/sdk-loader": "workspace:*",
